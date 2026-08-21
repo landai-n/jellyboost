@@ -98,7 +98,42 @@ PATTERNS = {
         "regex": re.compile(r"\bLocale\.(US|ENGLISH|ROOT)\b"),
         "main_only": True,
     },
+    # ARCH-2 (audits 2026-08-06/08, twice): modules in the layered core kept accreting public
+    # top-level declarations with zero external consumers — :player needed a 129→28 sweep,
+    # then :data needed a 14-declaration sweep the next audit. Every NEW public top-level
+    # declaration in data/* or core/* now requires a deliberate baseline bump; default to
+    # `internal`. (Feature modules and :app are exempt — screens are public by nature.)
+    "public-toplevel-layered": {
+        "regex": re.compile(
+            r"^(?:@\w+(?:\([^)]*\))?\s+)*"
+            r"(?:(?:sealed|data|enum|open|abstract|value|annotation|inline|fun)\s+)*"
+            r"(?:class|interface|object|fun|val|var)\s"
+        ),
+        "main_only": True,
+        # core/ui is exempt: a design system exports composables by design, and ratchet
+        # fatigue there would devalue the gate everywhere else.
+        "path_filter": re.compile(r"^(data|core/(common|network|database|datastore))/"),
+        "exclude_line": re.compile(r"^\s|^(internal|private)\b"),
+    },
+    # ARCH-1/9/10 (audits 2026-08-06/08): `api(...)` exports leaked the SDK, Coil and Media3
+    # onto consumers' compile classpaths; each demotion to `implementation` was an audit
+    # finding. A new `api(` in any build file is now a deliberate, baselined act.
+    "api-dependency": {
+        "regex": re.compile(r"^\s*api\((?!.*projects\.)"),
+        "main_only": False,
+        "path_filter": re.compile(r"build\.gradle\.kts$"),
+        "keep_comments": False,
+    },
+    # Agent-process voice in code comments. Most of this codebase is written by delegated
+    # agents, and a comment addressed to the reviewer/orchestrator ("as requested", "per the
+    # brief", "this wave", first-person narration) is noise the moment the change lands — it
+    # describes the conversation, not the code. House style still WANTS audit citations
+    # ("audit UI-9") and historical KDoc ("this used to be a runBlocking"); those are about
+    # the code and are deliberately not matched here. Comments only; zero tolerance.
 }
+# Comment-voice checking is out of scope for this file: the offending vocabulary
+# ("session", "the user", first person) is also legitimate app-domain vocabulary, so the
+# distinction needs judgment, not a regex. It lives in .claude/hooks/comment-voice-gate.sh.
 
 COMMENT = re.compile(r"^\s*(//|\*|/\*)")
 
@@ -107,7 +142,7 @@ def tracked_kotlin() -> list[Path]:
     out = subprocess.run(
         ["git", "ls-files", "*.kt", "*.kts"], cwd=REPO, capture_output=True, text=True
     ).stdout.split()
-    return [REPO / p for p in out if not p.startswith(".claude/")]
+    return [REPO / p for p in out if not p.startswith(".claude/worktrees/")]
 
 
 def scan() -> dict[str, dict[str, int]]:
@@ -124,7 +159,21 @@ def scan() -> dict[str, dict[str, int]]:
             for name, spec in PATTERNS.items():
                 if spec.get("main_only") and not is_main:
                     continue
-                if stripped_comment and not spec.get("keep_comments"):
+                if "path_filter" in spec and not spec["path_filter"].search(rel):
+                    continue
+                if spec.get("comments_only"):
+                    # A "comment line" for this purpose: block/KDoc continuation, or any
+                    # line with a line comment — check only the comment tail there.
+                    if stripped_comment:
+                        pass
+                    elif "//" in line:
+                        line_for_match = line[line.index("//"):]
+                        if spec["regex"].search(line_for_match):
+                            counts[name][rel] += 1
+                        continue
+                    else:
+                        continue
+                elif stripped_comment and not spec.get("keep_comments"):
                     continue
                 if "exclude_line" in spec and spec["exclude_line"].search(line):
                     continue

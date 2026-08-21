@@ -23,7 +23,8 @@ declaring the task done.
    Then run the audit-derived guardrail scripts (each sub-second, all must pass):
 
    ```bash
-   python3 scripts/check_docs.py && python3 scripts/check_identifiers.py && python3 scripts/check_patterns.py
+   python3 scripts/check_docs.py && python3 scripts/check_identifiers.py && \
+   python3 scripts/check_patterns.py && python3 scripts/check_redaction.py
    ```
 
    `check_patterns.py` is a ratchet: if it flags a file you changed, fix the code rather

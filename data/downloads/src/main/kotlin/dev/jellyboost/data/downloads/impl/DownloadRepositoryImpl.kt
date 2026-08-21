@@ -67,7 +67,7 @@ import kotlin.time.Duration.Companion.seconds
 internal class DownloadRepositoryImpl
     @Suppress(
         // Thirteen DI collaborators: this is the facade over the entire downloads module. Splitting it is tracked as
-        // the `DownloadedMediaProvider` seam work (audit ARCH-3), not this wave.
+        // the `DownloadedMediaProvider` seam work (audit ARCH-3, STATUS backlog).
         "LongParameterList",
     )
     @Inject

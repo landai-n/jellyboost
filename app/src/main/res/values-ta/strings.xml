@@ -28,5 +28,6 @@
     <string name="mini_player_pause">இடைநிறுத்து</string>
     <string name="mini_player_next">அடுத்தது</string>
     <string name="mini_player_previous">முந்தையது</string>
+    <string name="mini_player_dismiss">இயக்கத்தை நிறுத்தி மூடு</string>
     <string name="mini_player_open_now_playing">இப்போது இயங்குவதைத் திற</string>
 </resources>

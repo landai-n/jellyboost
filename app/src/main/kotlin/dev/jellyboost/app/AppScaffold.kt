@@ -296,12 +296,13 @@ internal fun AppScaffold(
                         .padding(bottom = miniPlayerBottomOffset(isTopLevel = isTopLevel, bottomNav = bottomNav)),
             ) {
                 (musicState as? MusicPlaybackState.Active)?.let { active ->
-                    MiniPlayer(
+                    DismissableMiniPlayer(
                         state = active,
                         onTogglePlayPause = musicViewModel::togglePlayPause,
                         onPrevious = musicViewModel::previous,
                         onNext = musicViewModel::next,
                         onClick = { navController.navigate(Routes.NowPlaying) },
+                        onDismiss = musicViewModel::stop,
                     )
                 }
             }

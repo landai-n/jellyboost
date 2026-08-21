@@ -67,6 +67,7 @@
     <string name="music_now_playing_queue">रांग</string>
     <string name="music_now_playing_queue_empty">रांग रिकामी आहे</string>
     <string name="music_now_playing_queue_close">रांग बंद करा</string>
+    <string name="music_now_playing_stop">प्लेबॅक थांबवा</string>
     <string name="music_now_playing_queue_playing">आता प्ले होत आहे</string>
     <string name="music_now_playing_queue_move_up">वर हलवा</string>
     <string name="music_now_playing_queue_move_down">खाली हलवा</string>

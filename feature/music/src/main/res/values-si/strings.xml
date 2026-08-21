@@ -67,6 +67,7 @@
     <string name="music_now_playing_queue">පෝලිම</string>
     <string name="music_now_playing_queue_empty">පෝලිම හිස් ය</string>
     <string name="music_now_playing_queue_close">පෝලිම වසන්න</string>
+    <string name="music_now_playing_stop">වාදනය නවත්වන්න</string>
     <string name="music_now_playing_queue_playing">දැන් වාදනය වේ</string>
     <string name="music_now_playing_queue_move_up">ඉහළට ගෙන යන්න</string>
     <string name="music_now_playing_queue_move_down">පහළට ගෙන යන්න</string>

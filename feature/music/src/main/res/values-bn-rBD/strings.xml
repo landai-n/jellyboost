@@ -74,6 +74,7 @@
     <string name="music_now_playing_queue">সারি</string>
     <string name="music_now_playing_queue_empty">সারি খালি</string>
     <string name="music_now_playing_queue_close">সারি বন্ধ করুন</string>
+    <string name="music_now_playing_stop">প্লেব্যাক বন্ধ করুন</string>
     <string name="music_now_playing_queue_playing">এখন চলছে</string>
     <string name="music_now_playing_queue_move_up">উপরে নিন</string>
     <string name="music_now_playing_queue_move_down">নিচে নিন</string>

@@ -67,6 +67,7 @@
     <string name="music_now_playing_queue">Jono</string>
     <string name="music_now_playing_queue_empty">Jono on tyhjä</string>
     <string name="music_now_playing_queue_close">Sulje jono</string>
+    <string name="music_now_playing_stop">Lopeta toisto</string>
     <string name="music_now_playing_queue_playing">Toistetaan nyt</string>
     <string name="music_now_playing_queue_move_up">Siirrä ylemmäs</string>
     <string name="music_now_playing_queue_move_down">Siirrä alemmas</string>

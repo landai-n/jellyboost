@@ -67,6 +67,7 @@
     <string name="music_now_playing_queue">Kö</string>
     <string name="music_now_playing_queue_empty">Kön är tom</string>
     <string name="music_now_playing_queue_close">Stäng kön</string>
+    <string name="music_now_playing_stop">Stoppa uppspelning</string>
     <string name="music_now_playing_queue_playing">Spelas nu</string>
     <string name="music_now_playing_queue_move_up">Flytta upp</string>
     <string name="music_now_playing_queue_move_down">Flytta ner</string>

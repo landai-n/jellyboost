@@ -66,6 +66,7 @@
     <string name="music_now_playing_queue">Antrean</string>
     <string name="music_now_playing_queue_empty">Antrean kosong</string>
     <string name="music_now_playing_queue_close">Tutup antrean</string>
+    <string name="music_now_playing_stop">Hentikan pemutaran</string>
     <string name="music_now_playing_queue_playing">Sedang diputar</string>
     <string name="music_now_playing_queue_move_up">Naikkan</string>
     <string name="music_now_playing_queue_move_down">Turunkan</string>

@@ -28,5 +28,6 @@
     <string name="mini_player_pause">పాజ్ చేయండి</string>
     <string name="mini_player_next">తర్వాతిది</string>
     <string name="mini_player_previous">మునుపటిది</string>
+    <string name="mini_player_dismiss">ప్లేబ్యాక్ ఆపి మూసివేయండి</string>
     <string name="mini_player_open_now_playing">ఇప్పుడు ప్లే అవుతున్నది తెరవండి</string>
 </resources>

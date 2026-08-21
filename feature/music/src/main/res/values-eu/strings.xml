@@ -67,6 +67,7 @@
     <string name="music_now_playing_queue">Ilara</string>
     <string name="music_now_playing_queue_empty">Ilara hutsik dago</string>
     <string name="music_now_playing_queue_close">Itxi ilara</string>
+    <string name="music_now_playing_stop">Gelditu erreprodukzioa</string>
     <string name="music_now_playing_queue_playing">Orain erreproduzitzen</string>
     <string name="music_now_playing_queue_move_up">Igo</string>
     <string name="music_now_playing_queue_move_down">Jaitsi</string>

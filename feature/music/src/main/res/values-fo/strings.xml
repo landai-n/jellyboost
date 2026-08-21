@@ -67,6 +67,7 @@
     <string name="music_now_playing_queue">Bíðirøð</string>
     <string name="music_now_playing_queue_empty">Bíðirøðin er tóm</string>
     <string name="music_now_playing_queue_close">Lat bíðirøðina aftur</string>
+    <string name="music_now_playing_stop">Steðga avspælingini</string>
     <string name="music_now_playing_queue_playing">Spælir nú</string>
     <string name="music_now_playing_queue_move_up">Flyt upp</string>
     <string name="music_now_playing_queue_move_down">Flyt niður</string>

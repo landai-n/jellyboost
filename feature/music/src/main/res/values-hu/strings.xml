@@ -67,6 +67,7 @@
     <string name="music_now_playing_queue">Sor</string>
     <string name="music_now_playing_queue_empty">A sor üres</string>
     <string name="music_now_playing_queue_close">Sor bezárása</string>
+    <string name="music_now_playing_stop">Lejátszás leállítása</string>
     <string name="music_now_playing_queue_playing">Most játszik</string>
     <string name="music_now_playing_queue_move_up">Feljebb</string>
     <string name="music_now_playing_queue_move_down">Lejjebb</string>

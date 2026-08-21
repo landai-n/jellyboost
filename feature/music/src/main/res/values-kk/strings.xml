@@ -67,6 +67,7 @@
     <string name="music_now_playing_queue">Кезек</string>
     <string name="music_now_playing_queue_empty">Кезек бос</string>
     <string name="music_now_playing_queue_close">Кезекті жабу</string>
+    <string name="music_now_playing_stop">Ойнатуды тоқтату</string>
     <string name="music_now_playing_queue_playing">Қазір ойнатылуда</string>
     <string name="music_now_playing_queue_move_up">Жоғары жылжыту</string>
     <string name="music_now_playing_queue_move_down">Төмен жылжыту</string>

@@ -28,5 +28,6 @@
     <string name="mini_player_pause">Пауза</string>
     <string name="mini_player_next">Следващо</string>
     <string name="mini_player_previous">Предишно</string>
+    <string name="mini_player_dismiss">Спри възпроизвеждането и затвори</string>
     <string name="mini_player_open_now_playing">Отвори текущото възпроизвеждане</string>
 </resources>

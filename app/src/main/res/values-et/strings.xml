@@ -28,5 +28,6 @@
     <string name="mini_player_pause">Peata</string>
     <string name="mini_player_next">Järgmine</string>
     <string name="mini_player_previous">Eelmine</string>
+    <string name="mini_player_dismiss">Peata esitus ja sulge</string>
     <string name="mini_player_open_now_playing">Ava praegu esitatav</string>
 </resources>

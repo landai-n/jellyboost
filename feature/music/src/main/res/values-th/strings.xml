@@ -66,6 +66,7 @@
     <string name="music_now_playing_queue">คิว</string>
     <string name="music_now_playing_queue_empty">คิวว่างเปล่า</string>
     <string name="music_now_playing_queue_close">ปิดคิว</string>
+    <string name="music_now_playing_stop">หยุดเล่น</string>
     <string name="music_now_playing_queue_playing">กำลังเล่นอยู่</string>
     <string name="music_now_playing_queue_move_up">เลื่อนขึ้น</string>
     <string name="music_now_playing_queue_move_down">เลื่อนลง</string>

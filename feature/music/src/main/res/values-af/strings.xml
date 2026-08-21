@@ -74,6 +74,7 @@
     <string name="music_now_playing_queue">Wagtou</string>
     <string name="music_now_playing_queue_empty">Die wagtou is leeg</string>
     <string name="music_now_playing_queue_close">Maak wagtou toe</string>
+    <string name="music_now_playing_stop">Stop weergawe</string>
     <string name="music_now_playing_queue_playing">Speel tans</string>
     <string name="music_now_playing_queue_move_up">Skuif op</string>
     <string name="music_now_playing_queue_move_down">Skuif af</string>

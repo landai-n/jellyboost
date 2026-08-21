@@ -14,6 +14,17 @@ baseline profile still compiles into the release APK (`assets/dexopt/baseline.pr
 
 ## Planned milestone: M13 — Music (approved 2026-08-05; all 6 phases landed, code complete; device DoD owed)
 
+**2026-08-21 — blur input-scale fix + queue dismissal.** The mini-player's
+checkerboard was PERF-1's `HazeInputScale.Auto` downsampling at ~1/3 on the
+wide bars; `glassSurface` gains a per-caller scale and the two bars pin
+`Fixed(0.5f)` — measured clean on the tablet (DECISIONS 2026-08-21).
+`MusicController.stop()` finally gets UI: swipe-to-dismiss on the mini-player
+(stock M3, with a TalkBack custom action), Stop in the queue-sheet header, and
+Stop in NowPlaying's overlay nav (the wide layout has no sheet header). Two new
+strings, base + 69 locales each. **Owed to a device walk:** the swipe gesture
+and the two Stop buttons (wiring unit-pinned; adb could not exercise the
+gesture — both attempts triggered system navigation instead).
+
 **2026-08-15 — rebased onto post-audit main and merged.** The branch predated
 the audit remediation and the 2026-08-08 history rewrite; landing it meant a
 10-commit rebase onto the rewritten `main` (DECISIONS 2026-08-15): the music

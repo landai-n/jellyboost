@@ -23,13 +23,20 @@ import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -83,7 +90,13 @@ internal fun MiniPlayer(
                 .widthIn(max = MiniPlayerMaxWidth)
                 .heightIn(min = MiniPlayerHeight)
                 .popShadow(shape)
-                .glassSurface(shape = shape, tint = GlassDefaults.BottomNavFill),
+                // A *wide* bar, so it blurs at a pinned half resolution rather than at `Auto`'s
+                // factor — see [GlassDefaults.WideBarInputScale] for the checkerboard that is.
+                .glassSurface(
+                    shape = shape,
+                    tint = GlassDefaults.BottomNavFill,
+                    inputScale = GlassDefaults.WideBarInputScale,
+                ),
     ) {
         // The nice-to-have progress line (spec item 2): a track this thin reads as decoration, not
         // as a second, less precise seek bar, so it carries no semantics of its own — the full
@@ -101,6 +114,75 @@ internal fun MiniPlayer(
         MiniPlayerRow(
             track = track,
             isPlaying = state.isPlaying,
+            onTogglePlayPause = onTogglePlayPause,
+            onPrevious = onPrevious,
+            onNext = onNext,
+            onClick = onClick,
+        )
+    }
+}
+
+/**
+ * [MiniPlayer] with the swipe that ends the session — the repo's first gesture-driven interaction,
+ * and deliberately M3's stock [SwipeToDismissBox] rather than a hand-rolled drag
+ * (DECISIONS.md 2026-08-21).
+ *
+ * Both directions are enabled (the component's own default): `start`/`end` are layout-direction
+ * relative, so allowing one would mean an RTL reader swiping the opposite way from an LTR one for
+ * no reason the gesture itself expresses.
+ *
+ * @param onDismiss ends the session — a *stop*, not a hide, so the bar does not come back the
+ *   moment anything recomposes. [AppScaffold] shows this bar off the queue's own state, so nothing
+ *   here hides anything itself.
+ */
+@Composable
+internal fun DismissableMiniPlayer(
+    state: MusicPlaybackState.Active,
+    onTogglePlayPause: () -> Unit,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
+    onClick: () -> Unit,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val dismissState = rememberSwipeToDismissBoxState()
+    val dismissLabel = stringResource(R.string.mini_player_dismiss)
+
+    // Once per transition out of `Settled`, and the key *is* the guard against re-firing: an effect
+    // keyed on the value restarts only when that value changes, so the recompositions the settle
+    // animation drives cannot re-enter it.
+    LaunchedEffect(dismissState.currentValue) {
+        if (dismissState.currentValue != SwipeToDismissBoxValue.Settled) onDismiss()
+    }
+
+    // Deliberately *not* snapped back after `onDismiss`: the bar is already on its way out through
+    // `AppScaffold`'s `AnimatedVisibility`, and resetting the offset mid-exit reads as a bounce.
+    // What resets it for the next session is disposal — the exit empties that `AnimatedVisibility`
+    // and takes `dismissState` with it, so the next queue composes a fresh one. That is the
+    // load-bearing mechanism. This effect only covers what disposal misses: a new queue starting
+    // while this bar is still composed (a dismiss racing a `play()` elsewhere), which swaps the
+    // session without the state ever passing through Idle.
+    val sessionKey = state.queue.firstOrNull()?.id to state.queue.size
+    LaunchedEffect(sessionKey) { dismissState.snapTo(SwipeToDismissBoxValue.Settled) }
+
+    SwipeToDismissBox(
+        state = dismissState,
+        // A gesture no screen reader can perform is a control only some users have, so the same
+        // verb is published as a custom action; `SwipeToDismissBox` adds none of its own.
+        backgroundContent = {},
+        modifier =
+            modifier.semantics {
+                customActions =
+                    listOf(
+                        CustomAccessibilityAction(label = dismissLabel) {
+                            onDismiss()
+                            true
+                        },
+                    )
+            },
+    ) {
+        MiniPlayer(
+            state = state,
             onTogglePlayPause = onTogglePlayPause,
             onPrevious = onPrevious,
             onNext = onNext,

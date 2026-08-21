@@ -78,6 +78,7 @@
     <string name="music_now_playing_queue">قائمة الانتظار</string>
     <string name="music_now_playing_queue_empty">قائمة الانتظار فارغة</string>
     <string name="music_now_playing_queue_close">إغلاق قائمة الانتظار</string>
+    <string name="music_now_playing_stop">إيقاف التشغيل</string>
     <string name="music_now_playing_queue_playing">قيد التشغيل الآن</string>
     <string name="music_now_playing_queue_move_up">تحريك للأعلى</string>
     <string name="music_now_playing_queue_move_down">تحريك للأسفل</string>

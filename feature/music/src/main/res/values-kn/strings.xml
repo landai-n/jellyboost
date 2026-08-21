@@ -67,6 +67,7 @@
     <string name="music_now_playing_queue">ಸರತಿ</string>
     <string name="music_now_playing_queue_empty">ಸರತಿ ಖಾಲಿ ಇದೆ</string>
     <string name="music_now_playing_queue_close">ಸರತಿ ಮುಚ್ಚಿ</string>
+    <string name="music_now_playing_stop">ಪ್ಲೇಬ್ಯಾಕ್ ನಿಲ್ಲಿಸಿ</string>
     <string name="music_now_playing_queue_playing">ಈಗ ಪ್ಲೇ ಆಗುತ್ತಿದೆ</string>
     <string name="music_now_playing_queue_move_up">ಮೇಲಕ್ಕೆ ಸರಿಸಿ</string>
     <string name="music_now_playing_queue_move_down">ಕೆಳಕ್ಕೆ ಸರಿಸಿ</string>

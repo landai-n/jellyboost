@@ -67,6 +67,7 @@
     <string name="music_now_playing_queue">Warteschlaang</string>
     <string name="music_now_playing_queue_empty">D\'Warteschlaang ass eidel</string>
     <string name="music_now_playing_queue_close">Warteschlaang zoumaachen</string>
+    <string name="music_now_playing_stop">Widderginn stoppen</string>
     <string name="music_now_playing_queue_playing">Spillt elo</string>
     <string name="music_now_playing_queue_move_up">No uewen</string>
     <string name="music_now_playing_queue_move_down">No ënnen</string>

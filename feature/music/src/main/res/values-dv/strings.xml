@@ -74,6 +74,7 @@
     <string name="music_now_playing_queue">ކިއޫ</string>
     <string name="music_now_playing_queue_empty">ކިއޫ ހުސް</string>
     <string name="music_now_playing_queue_close">ކިއޫ ބަންދުކުރޭ</string>
+    <string name="music_now_playing_stop">ޕްލޭބެކް ހުއްޓާލާ</string>
     <string name="music_now_playing_queue_playing">މިހާރު ޕްލޭވަނީ</string>
     <string name="music_now_playing_queue_move_up">މައްޗަށް ޖައްސާ</string>
     <string name="music_now_playing_queue_move_down">ދަށަށް ޖައްސާ</string>

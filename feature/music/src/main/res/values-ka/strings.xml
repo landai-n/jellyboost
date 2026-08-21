@@ -67,6 +67,7 @@
     <string name="music_now_playing_queue">რიგი</string>
     <string name="music_now_playing_queue_empty">რიგი ცარიელია</string>
     <string name="music_now_playing_queue_close">რიგის დახურვა</string>
+    <string name="music_now_playing_stop">დაკვრის შეწყვეტა</string>
     <string name="music_now_playing_queue_playing">ახლა უკრავს</string>
     <string name="music_now_playing_queue_move_up">აწევა</string>
     <string name="music_now_playing_queue_move_down">ჩამოწევა</string>

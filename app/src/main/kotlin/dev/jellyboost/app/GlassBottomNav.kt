@@ -63,6 +63,18 @@ internal fun GlassBottomNav(
     onSelectTab: (Any) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // The pill's own darker tint, not ChromeFill: this bar's labels are the smallest text in the
+    // chrome and it sits over full-bleed artwork — see [GlassDefaults.BottomNavFill] for the
+    // arithmetic. And a pinned half-resolution blur rather than `Auto`'s factor, which a bar this
+    // wide shows as a checkerboard — see [GlassDefaults.WideBarInputScale]. Hoisted out of the
+    // chain below only because it no longer fits on one line of it.
+    val glass =
+        Modifier.glassSurface(
+            shape = CircleShape,
+            tint = GlassDefaults.BottomNavFill,
+            inputScale = GlassDefaults.WideBarInputScale,
+        )
+
     Row(
         modifier =
             modifier
@@ -73,10 +85,7 @@ internal fun GlassBottomNav(
                 // bar exists to show. The pill floats, so growing costs nothing but overlap slack.
                 .heightIn(min = BottomNavHeight)
                 .popShadow(CircleShape)
-                // The pill's own darker tint, not ChromeFill: this bar's labels are the smallest
-                // text in the chrome and it sits over full-bleed artwork — see [GlassDefaults
-                // .BottomNavFill] for the arithmetic.
-                .glassSurface(shape = CircleShape, tint = GlassDefaults.BottomNavFill)
+                .then(glass)
                 .padding(horizontal = BarHorizontalPadding),
         horizontalArrangement = Arrangement.SpaceAround,
         verticalAlignment = Alignment.CenterVertically,

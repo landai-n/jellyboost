@@ -66,6 +66,7 @@
     <string name="music_now_playing_queue">佇列</string>
     <string name="music_now_playing_queue_empty">佇列是空的</string>
     <string name="music_now_playing_queue_close">關閉佇列</string>
+    <string name="music_now_playing_stop">停止播放</string>
     <string name="music_now_playing_queue_playing">正在播放</string>
     <string name="music_now_playing_queue_move_up">上移</string>
     <string name="music_now_playing_queue_move_down">下移</string>

@@ -28,5 +28,6 @@
     <string name="mini_player_pause">Szünet</string>
     <string name="mini_player_next">Következő</string>
     <string name="mini_player_previous">Előző</string>
+    <string name="mini_player_dismiss">Lejátszás leállítása és bezárás</string>
     <string name="mini_player_open_now_playing">Most játszott megnyitása</string>
 </resources>

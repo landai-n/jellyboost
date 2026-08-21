@@ -67,6 +67,7 @@
     <string name="music_now_playing_queue">Wachtrij</string>
     <string name="music_now_playing_queue_empty">De wachtrij is leeg</string>
     <string name="music_now_playing_queue_close">Wachtrij sluiten</string>
+    <string name="music_now_playing_stop">Afspelen stoppen</string>
     <string name="music_now_playing_queue_playing">Speelt nu</string>
     <string name="music_now_playing_queue_move_up">Omhoog verplaatsen</string>
     <string name="music_now_playing_queue_move_down">Omlaag verplaatsen</string>

@@ -75,6 +75,7 @@
     <string name="music_now_playing_queue">Cola</string>
     <string name="music_now_playing_queue_empty">La cola está vacía</string>
     <string name="music_now_playing_queue_close">Cerrar la cola</string>
+    <string name="music_now_playing_stop">Detener la reproducción</string>
     <string name="music_now_playing_queue_playing">Reproduciendo ahora</string>
     <string name="music_now_playing_queue_move_up">Subir</string>
     <string name="music_now_playing_queue_move_down">Bajar</string>

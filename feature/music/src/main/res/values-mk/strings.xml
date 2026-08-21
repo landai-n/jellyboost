@@ -67,6 +67,7 @@
     <string name="music_now_playing_queue">Редица</string>
     <string name="music_now_playing_queue_empty">Редицата е празна</string>
     <string name="music_now_playing_queue_close">Затвори ја редицата</string>
+    <string name="music_now_playing_stop">Запри го пуштањето</string>
     <string name="music_now_playing_queue_playing">Се репродуцира сега</string>
     <string name="music_now_playing_queue_move_up">Помести нагоре</string>
     <string name="music_now_playing_queue_move_down">Помести надолу</string>

@@ -28,5 +28,6 @@
     <string name="mini_player_pause">Premor</string>
     <string name="mini_player_next">Naslednja</string>
     <string name="mini_player_previous">Prejšnja</string>
+    <string name="mini_player_dismiss">Ustavi predvajanje in zapri</string>
     <string name="mini_player_open_now_playing">Odpri Zdaj se predvaja</string>
 </resources>

@@ -67,6 +67,7 @@
     <string name="music_now_playing_queue">Pila</string>
     <string name="music_now_playing_queue_empty">Walang laman ang pila</string>
     <string name="music_now_playing_queue_close">Isara ang pila</string>
+    <string name="music_now_playing_stop">Ihinto ang pag-play</string>
     <string name="music_now_playing_queue_playing">Playing ngayon</string>
     <string name="music_now_playing_queue_move_up">Ilipat pataas</string>
     <string name="music_now_playing_queue_move_down">Ilipat pababa</string>

@@ -67,6 +67,7 @@
     <string name="music_now_playing_queue">Järjekord</string>
     <string name="music_now_playing_queue_empty">Järjekord on tühi</string>
     <string name="music_now_playing_queue_close">Sulge järjekord</string>
+    <string name="music_now_playing_stop">Peata esitus</string>
     <string name="music_now_playing_queue_playing">Esitatakse praegu</string>
     <string name="music_now_playing_queue_move_up">Liiguta üles</string>
     <string name="music_now_playing_queue_move_down">Liiguta alla</string>

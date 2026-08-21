@@ -69,6 +69,7 @@
     <string name="music_now_playing_queue">Čakalna vrsta</string>
     <string name="music_now_playing_queue_empty">Čakalna vrsta je prazna</string>
     <string name="music_now_playing_queue_close">Zapri čakalno vrsto</string>
+    <string name="music_now_playing_stop">Ustavi predvajanje</string>
     <string name="music_now_playing_queue_playing">Trenutno predvajano</string>
     <string name="music_now_playing_queue_move_up">Pomakni navzgor</string>
     <string name="music_now_playing_queue_move_down">Pomakni navzdol</string>

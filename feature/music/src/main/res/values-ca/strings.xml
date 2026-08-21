@@ -75,6 +75,7 @@
     <string name="music_now_playing_queue">Cua</string>
     <string name="music_now_playing_queue_empty">La cua és buida</string>
     <string name="music_now_playing_queue_close">Tanca la cua</string>
+    <string name="music_now_playing_stop">Atura la reproducció</string>
     <string name="music_now_playing_queue_playing">Reproduint ara</string>
     <string name="music_now_playing_queue_move_up">Puja</string>
     <string name="music_now_playing_queue_move_down">Baixa</string>

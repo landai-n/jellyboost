@@ -68,6 +68,7 @@
     <string name="music_now_playing_queue">Coadă</string>
     <string name="music_now_playing_queue_empty">Coada este goală</string>
     <string name="music_now_playing_queue_close">Închide coada</string>
+    <string name="music_now_playing_stop">Oprește redarea</string>
     <string name="music_now_playing_queue_playing">Se redă acum</string>
     <string name="music_now_playing_queue_move_up">Mută mai sus</string>
     <string name="music_now_playing_queue_move_down">Mută mai jos</string>

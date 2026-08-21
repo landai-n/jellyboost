@@ -74,6 +74,7 @@
     <string name="music_now_playing_queue">Atendovico</string>
     <string name="music_now_playing_queue_empty">La atendovico estas malplena</string>
     <string name="music_now_playing_queue_close">Fermi la atendovicon</string>
+    <string name="music_now_playing_stop">Halti la ludadon</string>
     <string name="music_now_playing_queue_playing">Nun ludante</string>
     <string name="music_now_playing_queue_move_up">Movi supren</string>
     <string name="music_now_playing_queue_move_down">Movi malsupren</string>

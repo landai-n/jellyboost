@@ -74,6 +74,7 @@
     <string name="music_now_playing_queue">Kø</string>
     <string name="music_now_playing_queue_empty">Køen er tom</string>
     <string name="music_now_playing_queue_close">Luk kø</string>
+    <string name="music_now_playing_stop">Stop afspilning</string>
     <string name="music_now_playing_queue_playing">Afspiller nu</string>
     <string name="music_now_playing_queue_move_up">Flyt op</string>
     <string name="music_now_playing_queue_move_down">Flyt ned</string>

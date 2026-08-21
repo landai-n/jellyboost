@@ -68,6 +68,7 @@
     <string name="music_now_playing_queue">Red čekanja</string>
     <string name="music_now_playing_queue_empty">Red čekanja je prazan</string>
     <string name="music_now_playing_queue_close">Zatvori red čekanja</string>
+    <string name="music_now_playing_stop">Zaustavi reprodukciju</string>
     <string name="music_now_playing_queue_playing">Trenutno se reproducira</string>
     <string name="music_now_playing_queue_move_up">Pomakni gore</string>
     <string name="music_now_playing_queue_move_down">Pomakni dolje</string>

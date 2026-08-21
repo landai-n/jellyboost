@@ -74,6 +74,7 @@
     <string name="music_now_playing_queue">Növbə</string>
     <string name="music_now_playing_queue_empty">Növbə boşdur</string>
     <string name="music_now_playing_queue_close">Növbəni bağla</string>
+    <string name="music_now_playing_stop">Oxutmanı dayandır</string>
     <string name="music_now_playing_queue_playing">Hazırda oxudulur</string>
     <string name="music_now_playing_queue_move_up">Yuxarı köçür</string>
     <string name="music_now_playing_queue_move_down">Aşağı köçür</string>

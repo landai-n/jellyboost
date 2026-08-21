@@ -68,6 +68,7 @@
     <string name="music_now_playing_queue">Rinda</string>
     <string name="music_now_playing_queue_empty">Rinda ir tukša</string>
     <string name="music_now_playing_queue_close">Aizvērt rindu</string>
+    <string name="music_now_playing_stop">Apturēt atskaņošanu</string>
     <string name="music_now_playing_queue_playing">Atskaņo tagad</string>
     <string name="music_now_playing_queue_move_up">Pārvietot augšup</string>
     <string name="music_now_playing_queue_move_down">Pārvietot lejup</string>

@@ -67,6 +67,7 @@
     <string name="music_now_playing_queue">صف</string>
     <string name="music_now_playing_queue_empty">صف خالی است</string>
     <string name="music_now_playing_queue_close">بستن صف</string>
+    <string name="music_now_playing_stop">توقف پخش</string>
     <string name="music_now_playing_queue_playing">اکنون در حال پخش</string>
     <string name="music_now_playing_queue_move_up">انتقال به بالا</string>
     <string name="music_now_playing_queue_move_down">انتقال به پایین</string>

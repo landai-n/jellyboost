@@ -66,6 +66,7 @@
     <string name="music_now_playing_queue">Hàng đợi</string>
     <string name="music_now_playing_queue_empty">Hàng đợi đang trống</string>
     <string name="music_now_playing_queue_close">Đóng hàng đợi</string>
+    <string name="music_now_playing_stop">Dừng phát</string>
     <string name="music_now_playing_queue_playing">Đang phát</string>
     <string name="music_now_playing_queue_move_up">Di chuyển lên</string>
     <string name="music_now_playing_queue_move_down">Di chuyển xuống</string>

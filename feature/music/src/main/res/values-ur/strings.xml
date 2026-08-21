@@ -67,6 +67,7 @@
     <string name="music_now_playing_queue">قطار</string>
     <string name="music_now_playing_queue_empty">قطار خالی ہے</string>
     <string name="music_now_playing_queue_close">قطار بند کریں</string>
+    <string name="music_now_playing_stop">پلے بیک روکیں</string>
     <string name="music_now_playing_queue_playing">اب چل رہا ہے</string>
     <string name="music_now_playing_queue_move_up">اوپر منتقل کریں</string>
     <string name="music_now_playing_queue_move_down">نیچے منتقل کریں</string>

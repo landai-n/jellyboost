@@ -67,6 +67,7 @@
     <string name="music_now_playing_queue">Kuyruk</string>
     <string name="music_now_playing_queue_empty">Kuyruk boş</string>
     <string name="music_now_playing_queue_close">Kuyruğu kapat</string>
+    <string name="music_now_playing_stop">Oynatmayı durdur</string>
     <string name="music_now_playing_queue_playing">Şu anda oynatılıyor</string>
     <string name="music_now_playing_queue_move_up">Yukarı taşı</string>
     <string name="music_now_playing_queue_move_down">Aşağı taşı</string>

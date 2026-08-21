@@ -67,6 +67,7 @@
     <string name="music_now_playing_queue">ਕਤਾਰ</string>
     <string name="music_now_playing_queue_empty">ਕਤਾਰ ਖਾਲੀ ਹੈ</string>
     <string name="music_now_playing_queue_close">ਕਤਾਰ ਬੰਦ ਕਰੋ</string>
+    <string name="music_now_playing_stop">ਪਲੇਬੈਕ ਬੰਦ ਕਰੋ</string>
     <string name="music_now_playing_queue_playing">ਹੁਣ ਚੱਲ ਰਿਹਾ ਹੈ</string>
     <string name="music_now_playing_queue_move_up">ਉੱਪਰ ਲਿਜਾਓ</string>
     <string name="music_now_playing_queue_move_down">ਹੇਠਾਂ ਲਿਜਾਓ</string>

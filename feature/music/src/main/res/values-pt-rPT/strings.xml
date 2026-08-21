@@ -68,6 +68,7 @@
     <string name="music_now_playing_queue">Fila</string>
     <string name="music_now_playing_queue_empty">A fila está vazia</string>
     <string name="music_now_playing_queue_close">Fechar a fila</string>
+    <string name="music_now_playing_stop">Parar a reprodução</string>
     <string name="music_now_playing_queue_playing">A reproduzir agora</string>
     <string name="music_now_playing_queue_move_up">Mover para cima</string>
     <string name="music_now_playing_queue_move_down">Mover para baixo</string>

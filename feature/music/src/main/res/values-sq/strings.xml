@@ -67,6 +67,7 @@
     <string name="music_now_playing_queue">Radha</string>
     <string name="music_now_playing_queue_empty">Radha është bosh</string>
     <string name="music_now_playing_queue_close">Mbyll radhën</string>
+    <string name="music_now_playing_stop">Ndalo luajtjen</string>
     <string name="music_now_playing_queue_playing">Po luhet tani</string>
     <string name="music_now_playing_queue_move_up">Zhvendos lart</string>
     <string name="music_now_playing_queue_move_down">Zhvendos poshtë</string>

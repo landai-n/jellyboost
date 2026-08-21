@@ -69,6 +69,7 @@
     <string name="music_now_playing_queue">Kolejka</string>
     <string name="music_now_playing_queue_empty">Kolejka jest pusta</string>
     <string name="music_now_playing_queue_close">Zamknij kolejkę</string>
+    <string name="music_now_playing_stop">Zatrzymaj odtwarzanie</string>
     <string name="music_now_playing_queue_playing">Odtwarzane teraz</string>
     <string name="music_now_playing_queue_move_up">Przesuń w górę</string>
     <string name="music_now_playing_queue_move_down">Przesuń w dół</string>

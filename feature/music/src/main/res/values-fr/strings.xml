@@ -68,6 +68,7 @@
     <string name="music_now_playing_queue">File d\'attente</string>
     <string name="music_now_playing_queue_empty">La file d\'attente est vide</string>
     <string name="music_now_playing_queue_close">Fermer la file d\'attente</string>
+    <string name="music_now_playing_stop">Arrêter la lecture</string>
     <string name="music_now_playing_queue_playing">En cours de lecture</string>
     <string name="music_now_playing_queue_move_up">Monter</string>
     <string name="music_now_playing_queue_move_down">Descendre</string>

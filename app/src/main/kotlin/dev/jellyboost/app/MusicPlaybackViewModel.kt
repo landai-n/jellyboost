@@ -104,6 +104,15 @@ class MusicPlaybackViewModel
         fun previous() = controller.previous()
 
         /**
+         * The mini-player's dismiss gesture — ends the session rather than merely pausing it.
+         *
+         * [MusicController.stop] takes the state to [MusicPlaybackState.Idle], which is what makes
+         * the bar go away: `AppScaffold` shows it off the same state, so nothing here has to hide
+         * anything itself.
+         */
+        fun stop() = controller.stop()
+
+        /**
          * A downloaded track tapped on the Downloads screen (M13).
          *
          * Audio must not ride the Downloads tab's video path — `Routes.Player` is the immersive

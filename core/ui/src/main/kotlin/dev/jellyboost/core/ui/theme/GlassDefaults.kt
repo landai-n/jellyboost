@@ -5,12 +5,14 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import dev.chrisbanes.haze.HazeEffectScope
 import dev.chrisbanes.haze.HazeInputScale
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.HazeStyle
@@ -102,6 +104,25 @@ object GlassDefaults {
     val BottomNavFill: Color = JellyfinColors.Background.copy(alpha = 0.72f)
 
     /**
+     * The input scale the two full-width chrome bars — the floating nav pill and the mini-player —
+     * blur their backdrop at, instead of [HazeInputScale.Auto].
+     *
+     * `Auto` derives its factor from the blur radius, and at [BlurRadius] it picks aggressively
+     * enough that the downscaled backdrop's pixels survive the blur as visible structure once the
+     * surface is large: on the 2560×1600 test tablet both bars — 64dp tall and up to 640dp wide —
+     * showed an ~8–24px checkerboard across the whole bar (device analysis, 2026-08-21). The small
+     * [dev.jellyboost.core.ui.component.GlassIconButton] circles that motivated the audit's PERF-1
+     * do not: at that size the same factor lands under a pixel of visible structure, so `Auto`
+     * stays the default everywhere and this token overrides it only where the defect was measured.
+     *
+     * Half resolution rather than [HazeInputScale.None]: a quarter of the pixels is still most of
+     * PERF-1's saving, and 0.5 is the one factor that maps whole source pixels onto whole
+     * destination ones, which is what keeps the downscale from inventing the pattern in the first
+     * place.
+     */
+    val WideBarInputScale: HazeInputScale = HazeInputScale.Fixed(0.5f)
+
+    /**
      * The Haze style every glass surface blurs with.
      *
      * `backgroundColor` is the app background rather than transparent: Haze composites the blurred
@@ -153,29 +174,38 @@ val LocalHazeState = compositionLocalOf<HazeState?> { null }
  *   the flat fill that stands in for it). [GlassDefaults.Fill] — white@6% — for anything sitting
  *   inside a screen's own content; chrome that floats over arbitrary artwork passes
  *   [GlassDefaults.ChromeFill] instead, for the reason spelled out there.
+ * @param inputScale the resolution the backdrop is sampled and blurred at (audit 2026-08-08,
+ *   PERF-1). [HazeInputScale.Auto] — Haze picking the factor from the blur radius — for every
+ *   surface small enough that the downscale stays invisible, which is what the audit's own
+ *   motivating case (the 18dp-blur icon circles over a poster grid) is. The two full-width chrome
+ *   bars pass [GlassDefaults.WideBarInputScale] instead, for the reason spelled out there.
  */
 @Composable
 fun Modifier.glassSurface(
     shape: Shape,
     borderColor: Color = GlassDefaults.Hairline,
     tint: Color = GlassDefaults.Fill,
+    inputScale: HazeInputScale = HazeInputScale.Auto,
 ): Modifier {
     val hazeState = LocalHazeState.current
+    // Blur the backdrop at reduced resolution — GPU cost otherwise paid per frame for detail an
+    // 18dp blur throws away anyway. The structural half of PERF-1 (dropping `hazeSource` where the
+    // glass could be flat `mSurface`) is deliberately left until a systrace fling measures it, as
+    // the audit asks.
+    //
+    // The block is remembered on [inputScale] rather than written inline: it now *captures* that
+    // parameter, so a fresh lambda per recomposition would make the `hazeEffect` element compare
+    // unequal to its predecessor every time and defeat the node reuse this factory exists for (see
+    // above). `remember` gives back the same instance while the caller passes the same scale — and
+    // both scales callers pass are stable values ([HazeInputScale.Auto] an object,
+    // [HazeInputScale.Fixed] a value class over its float), so the key compares by value.
+    val effect: HazeEffectScope.() -> Unit =
+        remember(inputScale) {
+            { this.inputScale = inputScale }
+        }
     val backdrop =
         if (hazeState != null) {
-            Modifier.hazeEffect(state = hazeState, style = GlassDefaults.style(tint = tint)) {
-                // Blur the backdrop at reduced resolution (audit 2026-08-08, PERF-1). Every glass
-                // surface in the app is this one call, and none of them was setting an input scale,
-                // so each blur node sampled and blurred at full device resolution — on a screen
-                // whose chrome carries three 18dp-blur icon buttons over a poster grid that is
-                // GPU cost paid per frame for a result an 18dp blur throws away anyway. `Auto` lets
-                // Haze pick the factor from the blur radius rather than pinning one here; the
-                // structural half of PERF-1 (dropping `hazeSource` where the glass could be flat
-                // `mSurface`) is deliberately left until a systrace fling measures it, as the audit
-                // asks. The lambda captures nothing, so it is a singleton and the modifier element
-                // still compares equal across recompositions.
-                inputScale = HazeInputScale.Auto
-            }
+            Modifier.hazeEffect(state = hazeState, style = GlassDefaults.style(tint = tint), block = effect)
         } else {
             Modifier.background(color = tint, shape = shape)
         }

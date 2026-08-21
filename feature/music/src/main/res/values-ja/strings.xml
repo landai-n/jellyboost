@@ -66,6 +66,7 @@
     <string name="music_now_playing_queue">キュー</string>
     <string name="music_now_playing_queue_empty">キューは空です</string>
     <string name="music_now_playing_queue_close">キューを閉じる</string>
+    <string name="music_now_playing_stop">再生を停止</string>
     <string name="music_now_playing_queue_playing">再生中</string>
     <string name="music_now_playing_queue_move_up">上へ移動</string>
     <string name="music_now_playing_queue_move_down">下へ移動</string>

@@ -68,6 +68,7 @@
     <string name="music_now_playing_queue">Coda</string>
     <string name="music_now_playing_queue_empty">La coda è vuota</string>
     <string name="music_now_playing_queue_close">Chiudi la coda</string>
+    <string name="music_now_playing_stop">Interrompi la riproduzione</string>
     <string name="music_now_playing_queue_playing">In riproduzione ora</string>
     <string name="music_now_playing_queue_move_up">Sposta su</string>
     <string name="music_now_playing_queue_move_down">Sposta giù</string>

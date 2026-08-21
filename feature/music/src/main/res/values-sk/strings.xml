@@ -69,6 +69,7 @@
     <string name="music_now_playing_queue">Front</string>
     <string name="music_now_playing_queue_empty">Front je prázdny</string>
     <string name="music_now_playing_queue_close">Zavrieť front</string>
+    <string name="music_now_playing_stop">Zastaviť prehrávanie</string>
     <string name="music_now_playing_queue_playing">Práve sa prehráva</string>
     <string name="music_now_playing_queue_move_up">Posunúť vyššie</string>
     <string name="music_now_playing_queue_move_down">Posunúť nižšie</string>

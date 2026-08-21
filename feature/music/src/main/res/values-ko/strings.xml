@@ -66,6 +66,7 @@
     <string name="music_now_playing_queue">대기열</string>
     <string name="music_now_playing_queue_empty">대기열이 비어 있습니다</string>
     <string name="music_now_playing_queue_close">대기열 닫기</string>
+    <string name="music_now_playing_stop">재생 중지</string>
     <string name="music_now_playing_queue_playing">지금 재생 중</string>
     <string name="music_now_playing_queue_move_up">위로 이동</string>
     <string name="music_now_playing_queue_move_down">아래로 이동</string>

@@ -56,6 +56,7 @@ class NowPlayingViewModelTest {
             every { jumpTo(any()) } returns Unit
             every { removeAt(any()) } returns Unit
             every { moveItem(any(), any()) } returns Unit
+            every { stop() } returns Unit
         }
 
     private val userDataChanges =
@@ -134,6 +135,16 @@ class NowPlayingViewModelTest {
             verify(exactly = 1) { controller.jumpTo(2) }
             verify(exactly = 1) { controller.removeAt(1) }
             verify(exactly = 1) { controller.moveItem(0, 3) }
+        }
+
+    @Test
+    fun `stop forwards straight to the controller — the Stop button ends the session`() =
+        runTest(dispatcher) {
+            val viewModel = viewModel()
+
+            viewModel.stop()
+
+            verify(exactly = 1) { controller.stop() }
         }
 
     @Test

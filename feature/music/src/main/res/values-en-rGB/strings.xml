@@ -74,6 +74,7 @@
     <string name="music_now_playing_queue">Queue</string>
     <string name="music_now_playing_queue_empty">The queue is empty</string>
     <string name="music_now_playing_queue_close">Close queue</string>
+    <string name="music_now_playing_stop">Stop playback</string>
     <string name="music_now_playing_queue_playing">Now playing</string>
     <string name="music_now_playing_queue_move_up">Move up</string>
     <string name="music_now_playing_queue_move_down">Move down</string>

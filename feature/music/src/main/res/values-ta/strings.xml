@@ -67,6 +67,7 @@
     <string name="music_now_playing_queue">வரிசை</string>
     <string name="music_now_playing_queue_empty">வரிசை காலியாக உள்ளது</string>
     <string name="music_now_playing_queue_close">வரிசையை மூடு</string>
+    <string name="music_now_playing_stop">இயக்கத்தை நிறுத்து</string>
     <string name="music_now_playing_queue_playing">இப்போது இயங்குகிறது</string>
     <string name="music_now_playing_queue_move_up">மேலே நகர்த்து</string>
     <string name="music_now_playing_queue_move_down">கீழே நகர்த்து</string>

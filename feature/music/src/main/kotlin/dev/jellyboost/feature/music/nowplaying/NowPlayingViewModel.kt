@@ -95,6 +95,16 @@ class NowPlayingViewModel
         /** The remove button in [QueueSheet]. */
         fun removeAt(index: Int) = controller.removeAt(index)
 
+        /**
+         * The Stop button — [QueueSheet]'s header, and the overlay nav's, which is the wide
+         * layout's only reachable one since its inline queue has no header.
+         *
+         * Ends the session rather than pausing it, so the state goes [MusicPlaybackState.Idle] and
+         * `NowPlayingScreen`'s existing idle `LaunchedEffect` pops the screen; nothing here
+         * navigates.
+         */
+        fun stop() = controller.stop()
+
         /** The up/down reorder buttons in [QueueSheet] — see that file's KDoc for why buttons. */
         fun moveItem(
             from: Int,

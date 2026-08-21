@@ -67,6 +67,7 @@
     <string name="music_now_playing_queue">Дараалал</string>
     <string name="music_now_playing_queue_empty">Дараалал хоосон байна</string>
     <string name="music_now_playing_queue_close">Дарааллыг хаах</string>
+    <string name="music_now_playing_stop">Тоглуулалтыг зогсоох</string>
     <string name="music_now_playing_queue_playing">Одоо тоглуулж байна</string>
     <string name="music_now_playing_queue_move_up">Дээш зөөх</string>
     <string name="music_now_playing_queue_move_down">Доош зөөх</string>

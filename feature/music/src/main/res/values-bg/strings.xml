@@ -74,6 +74,7 @@
     <string name="music_now_playing_queue">Опашка</string>
     <string name="music_now_playing_queue_empty">Опашката е празна</string>
     <string name="music_now_playing_queue_close">Затвори опашката</string>
+    <string name="music_now_playing_stop">Спри възпроизвеждането</string>
     <string name="music_now_playing_queue_playing">В момента се възпроизвежда</string>
     <string name="music_now_playing_queue_move_up">Премести нагоре</string>
     <string name="music_now_playing_queue_move_down">Премести надолу</string>

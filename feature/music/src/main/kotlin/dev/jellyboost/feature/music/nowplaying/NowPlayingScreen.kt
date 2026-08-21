@@ -36,6 +36,7 @@ import androidx.compose.material.icons.filled.RepeatOne
 import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.MusicNote
 import androidx.compose.material3.Button
@@ -122,6 +123,7 @@ fun NowPlayingScreen(
                 onJumpTo = viewModel::jumpTo,
                 onRemove = viewModel::removeAt,
                 onMoveItem = viewModel::moveItem,
+                onStop = viewModel::stop,
             )
         }
 
@@ -150,6 +152,7 @@ private data class NowPlayingActions(
     val onJumpTo: (Int) -> Unit,
     val onRemove: (Int) -> Unit,
     val onMoveItem: (from: Int, to: Int) -> Unit,
+    val onStop: () -> Unit,
 )
 
 /** Stateless rendering — a pure function of [state], previewable without a ViewModel. */
@@ -197,6 +200,7 @@ private fun NowPlayingContent(
             onOpenQueue = if (wide) null else ({ showQueue = true }),
             onToggleLyrics = if (!wide && state.lyricsAvailable) ({ showLyrics = !showLyrics }) else null,
             lyricsShown = showLyrics,
+            onStop = actions.onStop,
         )
     }
 
@@ -208,6 +212,7 @@ private fun NowPlayingContent(
             onRemove = actions.onRemove,
             onMoveUp = { index -> actions.onMoveItem(index, index - 1) },
             onMoveDown = { index -> actions.onMoveItem(index, index + 1) },
+            onStop = actions.onStop,
             onDismiss = { showQueue = false },
         )
     }
@@ -218,6 +223,10 @@ private fun NowPlayingContent(
  *   second way to reach the same list would be redundant chrome.
  * @param onToggleLyrics `null` hides the button — no lyrics for this track (M13 Phase 6), or the
  *   wide layout, which shows its own Queue/Lyrics tab instead.
+ * @param onStop ends the session; the screen then pops itself off the idle state, so this button
+ *   never navigates. Unconditional, unlike its two neighbours: the wide layout draws the queue
+ *   inline with no header of its own, so [QueueSheet]'s Stop is unreachable there and this is the
+ *   only one it has.
  */
 @Composable
 private fun NowPlayingOverlayNav(
@@ -225,6 +234,7 @@ private fun NowPlayingOverlayNav(
     onOpenQueue: (() -> Unit)?,
     onToggleLyrics: (() -> Unit)?,
     lyricsShown: Boolean,
+    onStop: () -> Unit,
 ) {
     Row(
         modifier =
@@ -265,6 +275,12 @@ private fun NowPlayingOverlayNav(
                 surfaceTint = GlassDefaults.ChromeFill,
             )
         }
+        GlassIconButton(
+            icon = Icons.Filled.Stop,
+            contentDescription = stringResource(R.string.music_now_playing_stop),
+            onClick = onStop,
+            surfaceTint = GlassDefaults.ChromeFill,
+        )
     }
 }
 
@@ -742,6 +758,7 @@ private val PreviewActions =
         onJumpTo = {},
         onRemove = {},
         onMoveItem = { _, _ -> },
+        onStop = {},
     )
 
 private fun previewTrack() =

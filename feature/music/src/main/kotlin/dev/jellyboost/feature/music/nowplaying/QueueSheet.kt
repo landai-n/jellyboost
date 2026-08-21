@@ -22,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Equalizer
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.outlined.ArrowDownward
 import androidx.compose.material.icons.outlined.ArrowUpward
 import androidx.compose.material.icons.outlined.Delete
@@ -96,6 +97,7 @@ fun QueueSheet(
     onRemove: (Int) -> Unit,
     onMoveUp: (Int) -> Unit,
     onMoveDown: (Int) -> Unit,
+    onStop: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     ModalBottomSheet(
@@ -110,6 +112,7 @@ fun QueueSheet(
             onRemove = onRemove,
             onMoveUp = onMoveUp,
             onMoveDown = onMoveDown,
+            onStop = onStop,
             onClose = onDismiss,
         )
     }
@@ -123,6 +126,7 @@ private fun QueueSheetContent(
     onRemove: (Int) -> Unit,
     onMoveUp: (Int) -> Unit,
     onMoveDown: (Int) -> Unit,
+    onStop: () -> Unit,
     onClose: () -> Unit,
 ) {
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
@@ -137,7 +141,7 @@ private fun QueueSheetContent(
                     .padding(bottom = Dimens.SpaceExtraLarge),
             verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
         ) {
-            QueueHeader(count = queue.size, onClose = onClose)
+            QueueHeader(count = queue.size, onStop = onStop, onClose = onClose)
 
             HorizontalDivider()
 
@@ -157,9 +161,17 @@ private fun QueueSheetContent(
 /** See `SyncPlayQueueSheet.queueListMaxHeight` — the same landscape-sheet-height problem. */
 internal fun queueListMaxHeight(maxHeight: Dp): Dp = minOf(LIST_MAX_HEIGHT, maxHeight * LIST_MAX_HEIGHT_FRACTION)
 
+/**
+ * The sheet's title, its track count, and the two verbs that act on the queue as a whole.
+ *
+ * Stop comes *before* Close, in the order the two are destructive: ending the session is the one
+ * that throws the queue away, and putting it last would put a queue-destroying button where the
+ * muscle memory for "close this sheet" already is.
+ */
 @Composable
 private fun QueueHeader(
     count: Int,
+    onStop: () -> Unit,
     onClose: () -> Unit,
 ) {
     Row(
@@ -175,6 +187,12 @@ private fun QueueHeader(
                 text = pluralStringResource(R.plurals.music_now_playing_queue_count, count, count),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        IconButton(onClick = onStop) {
+            Icon(
+                imageVector = Icons.Filled.Stop,
+                contentDescription = stringResource(R.string.music_now_playing_stop),
             )
         }
         IconButton(onClick = onClose) {
@@ -457,6 +475,7 @@ private fun QueueSheetContentPreview() {
             onRemove = {},
             onMoveUp = {},
             onMoveDown = {},
+            onStop = {},
             onClose = {},
         )
     }

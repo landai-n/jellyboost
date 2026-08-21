@@ -69,6 +69,7 @@
     <string name="music_now_playing_queue">Eilė</string>
     <string name="music_now_playing_queue_empty">Eilė tuščia</string>
     <string name="music_now_playing_queue_close">Uždaryti eilę</string>
+    <string name="music_now_playing_stop">Stabdyti grojimą</string>
     <string name="music_now_playing_queue_playing">Leidžiama dabar</string>
     <string name="music_now_playing_queue_move_up">Perkelti aukštyn</string>
     <string name="music_now_playing_queue_move_down">Perkelti žemyn</string>

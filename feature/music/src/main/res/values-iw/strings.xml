@@ -68,6 +68,7 @@
     <string name="music_now_playing_queue">תור</string>
     <string name="music_now_playing_queue_empty">התור ריק</string>
     <string name="music_now_playing_queue_close">סגירת התור</string>
+    <string name="music_now_playing_stop">עצירת ההפעלה</string>
     <string name="music_now_playing_queue_playing">מתנגן כעת</string>
     <string name="music_now_playing_queue_move_up">הזזה למעלה</string>
     <string name="music_now_playing_queue_move_down">הזזה למטה</string>

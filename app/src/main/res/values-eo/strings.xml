@@ -24,5 +24,6 @@
     <string name="mini_player_pause">Paŭzo</string>
     <string name="mini_player_next">Sekva</string>
     <string name="mini_player_previous">Antaŭa</string>
+    <string name="mini_player_dismiss">Halti la ludadon kaj forigi</string>
     <string name="mini_player_open_now_playing">Malfermi nun ludatan</string>
 </resources>

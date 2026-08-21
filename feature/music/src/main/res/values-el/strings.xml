@@ -74,6 +74,7 @@
     <string name="music_now_playing_queue">Ουρά</string>
     <string name="music_now_playing_queue_empty">Η ουρά είναι άδεια</string>
     <string name="music_now_playing_queue_close">Κλείσιμο ουράς</string>
+    <string name="music_now_playing_stop">Διακοπή αναπαραγωγής</string>
     <string name="music_now_playing_queue_playing">Αναπαράγεται τώρα</string>
     <string name="music_now_playing_queue_move_up">Μετακίνηση επάνω</string>
     <string name="music_now_playing_queue_move_down">Μετακίνηση κάτω</string>

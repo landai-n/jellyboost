@@ -69,6 +69,7 @@
     <string name="music_now_playing_queue">Черга</string>
     <string name="music_now_playing_queue_empty">Черга порожня</string>
     <string name="music_now_playing_queue_close">Закрити чергу</string>
+    <string name="music_now_playing_stop">Зупинити відтворення</string>
     <string name="music_now_playing_queue_playing">Відтворюється зараз</string>
     <string name="music_now_playing_queue_move_up">Перемістити вгору</string>
     <string name="music_now_playing_queue_move_down">Перемістити вниз</string>

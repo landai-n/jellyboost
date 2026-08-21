@@ -36,6 +36,7 @@ class MusicPlaybackViewModelTest {
             coEvery { play(any(), any(), any(), any()) } returns true
             every { togglePlayPause() } returns Unit
             every { next() } returns Unit
+            every { stop() } returns Unit
         }
     private val repository = mockk<JellyfinRepository>()
 
@@ -92,6 +93,14 @@ class MusicPlaybackViewModelTest {
 
             verify(exactly = 1) { controller.togglePlayPause() }
             verify(exactly = 1) { controller.next() }
+        }
+
+    @Test
+    fun `stop forwards straight to the controller — the mini-player's dismiss ends the session`() =
+        runTest {
+            viewModel().stop()
+
+            verify(exactly = 1) { controller.stop() }
         }
 
     // ---- playDownloadedAudio (Downloads tab, M13 review fix) -----------------------------------

@@ -76,6 +76,7 @@
     <string name="music_now_playing_queue">Fronta</string>
     <string name="music_now_playing_queue_empty">Fronta je prázdná</string>
     <string name="music_now_playing_queue_close">Zavřít frontu</string>
+    <string name="music_now_playing_stop">Zastavit přehrávání</string>
     <string name="music_now_playing_queue_playing">Právě se přehrává</string>
     <string name="music_now_playing_queue_move_up">Posunout výš</string>
     <string name="music_now_playing_queue_move_down">Posunout níž</string>

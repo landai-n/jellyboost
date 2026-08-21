@@ -385,8 +385,10 @@ docs-only), CI (docs + patterns), and `/verify`. Review-only classes became the 
 checklist. **First run of the identifier gate caught three live leaks** (M13-era docs had
 re-mentioned the scrubbed server/device names — cleaned, and the history re-scrub re-run
 since those commits were still unpushed). Open tooling gaps, named: contrast-ratio unit
-test over color tokens; Compose compiler metrics (PERF-11). **The force-push of the
-rewritten history to origin is STILL owed** (`git push --force origin main`).
+test over color tokens; Compose compiler metrics (PERF-11). **Force-push DONE
+(2026-08-21): origin/main = 5d9b0988, the fully-scrubbed history — both scrubs are now
+public-side complete.** Unmerged worktree branches (music-m13's new commits) must still
+be rebased onto the rewritten main before merging.
 
 ## Audit 2026-08-08 — remediation COMPLETE (2026-08-09); identifier scrub + history rewrite
 

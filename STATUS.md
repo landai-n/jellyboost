@@ -194,6 +194,28 @@ one that doesn't; SyncPlay⊕music refusal; favorites reflected in jellyfin-web;
 mid-playback; the minified build repeating the background/transcode/offline checks (items 3, 6, 9
 of the walk).
 
+## Player: Up Next card during the ending (2026-08-21 — landed, gate green; device walk owed)
+
+The `:player` half of "Up Next button + episode detail shortcuts" (DECISIONS.md 2026-08-21).
+While an episode's ending plays — the OUTRO segment's start, else the last 30 s of anything
+longer than a minute — a glass card in the bottom-right corner offers the positional next
+episode (cross-season, via `getSeriesEpisodes`; never next-*unwatched*); tapping "Play next
+episode" swaps the item into the same session through `replaceItem`, the extraction of
+SyncPlay's `loadItem`, with `playWhenReady = true` and the session's quality cap carried.
+Button only by user decision: no countdown, no auto-advance, no preference — an untouched
+ending pops the route exactly as before. Dismissal is sticky per session; the card absorbs the
+outro Skip *offer* (auto-skip and intros untouched); the whole feature is inert in a SyncPlay
+group; offline it offers the next downloaded episode or nothing. New `upnext/UpNextResolver` +
+`UpNextController` (pure), `ActiveSession.upNext` (identity-guarded prefetch from
+`loadPlaybackExtras`), the `advancing` guard against the tap-vs-`Ended` race, `UpNextCard` +
+two `PlayerActions`. Three strings, base + 69 locales. Tests: `UpNextResolverTest` (10),
+`UpNextControllerTest` (11), `PlayerUpNextTest` (17, incl. both stop-report orders),
+`PlayerActionsInteractionTest` extended, `UpNextCardA11yTest` (instrumented, compile-gated).
+Full detail in `docs/features/playback.md` § "Up next". **Owed to a device walk:** the walk in
+that section's DECISIONS entry — outro trigger, fallback trigger, tap mid-credits with a manual
+quality cap and speed ≠ 1×, dismiss, last episode, SyncPlay group, cast, offline pair — plus
+`connectedDebugAndroidTest` for the card's a11y suite.
+
 ## Episode detail: next-episode row, season siblings row, origin chips (2026-08-21 — landed, gate green; device walk owed)
 
 The `:feature:detail` half of "Up Next button + episode detail shortcuts" (DECISIONS.md

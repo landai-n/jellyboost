@@ -9,6 +9,7 @@ import dev.jellyboost.core.common.AppError
 import dev.jellyboost.core.common.getOrNull
 import dev.jellyboost.core.common.model.MediaSegmentKind
 import dev.jellyboost.core.common.model.SegmentSkipMode
+import dev.jellyboost.core.common.runCatchingUnlessCancelled
 import dev.jellyboost.core.datastore.AppPreferences
 import dev.jellyboost.core.network.connectivity.ConnectionStateProvider
 import dev.jellyboost.core.ui.error.AppErrorCopy
@@ -50,6 +51,9 @@ import dev.jellyboost.player.syncplay.SyncPlayLocalSession
 import dev.jellyboost.player.syncplay.SyncPlayPlaybackHost
 import dev.jellyboost.player.syncplay.model.SyncPlayRepeatMode
 import dev.jellyboost.player.trickplay.TrickplayResolver
+import dev.jellyboost.player.upnext.UpNextController
+import dev.jellyboost.player.upnext.UpNextEpisode
+import dev.jellyboost.player.upnext.UpNextResolver
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
@@ -135,6 +139,7 @@ internal class PlayerViewModel
         private val fallback: DecoderFallbackHandler,
         private val trickplayResolver: TrickplayResolver,
         private val segmentLoader: MediaSegmentLoader,
+        private val upNextResolver: UpNextResolver,
         private val preferences: AppPreferences,
         private val pipController: PipController,
         private val connectionState: ConnectionStateProvider,
@@ -187,6 +192,14 @@ internal class PlayerViewModel
             )
 
         private val positionTracker = PlaybackPositionTracker()
+
+        /**
+         * When the next episode should be offered; one per session, like the segment controller.
+         *
+         * Reset by [publish] alongside the position tracker's own, so a dismissal belongs to the
+         * episode it was made on and nothing else.
+         */
+        private val upNext = UpNextController()
 
         // ktlint reads `_x`/`x` as an idiom for exposing a mutable field *publicly*, and refuses it
         // when the read-only half is not `public`. Here the read-only half is `internal` because
@@ -298,6 +311,21 @@ internal class PlayerViewModel
          * *predecessor*, so this handle by definition outlives the session it belongs to.
          */
         private var openJob: Job? = null
+
+        /**
+         * `true` between an up-next tap and the episode it asks for being open.
+         *
+         * The guard against one race and only that one: [onEnded] is what publishes `hasEnded`, and
+         * `PlayerScreen` turns `hasEnded` into a `onBack()` on the very next frame — so a tap
+         * landing in the last half-second of an episode would pop the route out from under the
+         * episode it just asked for. Exactly parallel to the `groupContinues` guard beside it: the
+         * item really has ended, and something is really taking its place, so the screen must stay.
+         *
+         * Not part of [ActiveSession] and could not be: it is armed *before* the replacement session
+         * exists and cleared once it does, so it spans two sessions by construction — the same
+         * reason [openJob] stays out.
+         */
+        private var advancing = false
 
         /** The user's per-type segment preference, kept current for the position ticker to read. */
         private var skipModes: Map<MediaSegmentKind, SegmentSkipMode> = emptyMap()
@@ -578,28 +606,67 @@ internal class PlayerViewModel
             startPositionTicks: Long,
         ): Boolean =
             withContext(viewModelScope.coroutineContext) {
-                endCurrentSource()
-                _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-                // The queue advanced to a different item in the same open session (B4): every other
-                // item-bound field on `PlayerUiState` comes off the resolved `PlaybackMediaSource`
-                // below and refreshes on its own, but the title is fetched separately and was still
-                // asking for the item this screen was *opened* with.
-                loadTitleAndArtwork(itemId.toString())
-                val result =
-                    sessionController.open(
-                        PlaybackResolveRequest(
-                            itemId = itemId,
-                            startPositionTicks = startPositionTicks,
-                            castTarget = isCasting,
-                            // Same reasoning as the route's own open: nobody has picked a quality
-                            // for the item the group just moved to, so it is Auto's to measure.
-                            autoBitrate = true,
-                        ),
-                        playWhenReady = false,
-                    )
-                publish(result, message = null)
-                result is SessionOpenResult.Opened
+                replaceItem(
+                    itemId = itemId,
+                    startPositionTicks = startPositionTicks,
+                    playWhenReady = false,
+                    // Same reasoning as the route's own open: nobody has picked a quality for the
+                    // item the group just moved to, so it is Auto's to measure.
+                    autoBitrate = true,
+                )
             }
+
+        /**
+         * Puts a **different item** into the session that is playing, without leaving the screen.
+         *
+         * Two callers, and they are the two ways one item follows another in the same player: the
+         * group moving through its queue ([loadItem]) and the user taking the up-next card
+         * ([playNextEpisode]). What they share is the whole of the sequence — the outgoing item is
+         * stopped and reported first, so a queue that moves on cannot strand its transcode on the
+         * server; the title fetch is re-aimed, because it is the one item-bound field this class
+         * fetches for itself rather than receiving from the resolve (every other one comes off the
+         * resolved `PlaybackMediaSource` in [publish] and refreshes on its own); and the open is
+         * published exactly as any other.
+         *
+         * What they do **not** share is why they exist, which is the whole parameter list: the group
+         * opens paused because the group decides when playback starts, and an up-next tap opens
+         * playing because a tap *is* the decision. The quality terms likewise: the group's next item
+         * is nobody's choice yet, while the up-next episode inherits whatever cap the episode before
+         * it was watched at.
+         *
+         * ### Known gap: process death after a swap
+         * [PlayerSessionStore.itemId] is the navigation argument, and this method does not — cannot —
+         * rewrite it. A process death after a swap therefore restores the *original* episode, at the
+         * position the swapped-in one had reached. SyncPlay has lived with exactly this since M11 and
+         * it is not fixed here; the route argument is the user's tap and rewriting it is a larger
+         * change than this feature.
+         *
+         * @return `true` when something is playing at the end of it.
+         */
+        private suspend fun replaceItem(
+            itemId: UUID,
+            startPositionTicks: Long,
+            playWhenReady: Boolean,
+            autoBitrate: Boolean,
+            maxStreamingBitrate: Int? = null,
+        ): Boolean {
+            endCurrentSource()
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            loadTitleAndArtwork(itemId.toString())
+            val result =
+                sessionController.open(
+                    PlaybackResolveRequest(
+                        itemId = itemId,
+                        startPositionTicks = startPositionTicks,
+                        maxStreamingBitrate = maxStreamingBitrate,
+                        castTarget = isCasting,
+                        autoBitrate = autoBitrate,
+                    ),
+                    playWhenReady = playWhenReady,
+                )
+            publish(result, message = null)
+            return result is SessionOpenResult.Opened
+        }
 
         /** Where this player is, for the controller's "do you already have this open?" check. */
         override fun snapshot(): SyncPlayHostSnapshot {
@@ -615,9 +682,14 @@ internal class PlayerViewModel
          * Closes the outgoing session before something else takes its place.
          *
          * Two callers, and they are the two ways a live session can be replaced rather than
-         * re-negotiated: the group moving to another item ([loadItem]), and the film moving to or
-         * from a receiver ([onCastStarted], [onCastEnded]). Either way the stop report is what kills
-         * the encoder and records where the user got to.
+         * re-negotiated: another item taking this one's place ([replaceItem] — the group's queue
+         * moving on, or the up-next card being taken), and the film moving to or from a receiver
+         * ([onCastStarted], [onCastEnded]). Either way the stop report is what kills the encoder and
+         * records where the user got to.
+         *
+         * Idempotent per source, which is what makes the up-next tap safe in either order: a tap
+         * before the end reports here, and a tap after `Ended` has already reported finds
+         * [ActiveSession.stopReported] armed and does nothing.
          *
          * @param at where to report the stop from. Defaulted to asking the player, which is right
          *   for the group's case and wrong for a transfer: by then [playerHandle] is the *other*
@@ -877,6 +949,60 @@ internal class PlayerViewModel
         }
 
         /**
+         * Takes the up-next card: the next episode starts here, in this session.
+         *
+         * Deliberately not a navigation event. Popping the player and pushing it again for the next
+         * episode would tear down the ExoPlayer, the media session and the surface between two
+         * episodes of the same series — a visible black gap for something the user experiences as
+         * "carry on". [replaceItem] is the same swap the group's queue already performs.
+         *
+         * The session's quality terms come with it: an episode the user pinned to Low is followed by
+         * an episode at Low, and an Auto session stays Auto and is measured again. The *track*
+         * choices deliberately do not — audio and subtitles are resolved per item from the server's
+         * defaults, which is what a different episode's stream list actually supports.
+         *
+         * A no-op in a group: the server owns what everyone watches next, and a member opening its
+         * own next episode would silently leave the group behind (key decision 11).
+         */
+        internal fun playNextEpisode() {
+            if (syncPlay.isInGroup) return
+            val next = session?.upNext ?: return
+            val itemId =
+                runCatchingUnlessCancelled { UUID.fromString(next.itemId) }.getOrNull() ?: run {
+                    Timber.w("Ignoring an up-next tap for a malformed item id")
+                    return
+                }
+            val quality = _uiState.value.quality
+            Timber.i("Playing the next episode %s in the current session", itemId)
+            // Armed before anything suspends: `Ended` can arrive during the very first suspension
+            // here, and it is precisely that interleaving the flag exists for.
+            advancing = true
+            _uiState.update { it.copy(upNext = null) }
+            viewModelScope.launch {
+                try {
+                    replaceItem(
+                        itemId = itemId,
+                        startPositionTicks = 0L,
+                        playWhenReady = true,
+                        autoBitrate = quality == PlaybackQuality.AUTO,
+                        maxStreamingBitrate = quality.maxStreamingBitrate,
+                    )
+                } finally {
+                    // Cleared whether the new source published or the resolve failed: a flag left
+                    // standing would suppress the *next* natural end, leaving the screen up on an
+                    // episode that has finished.
+                    advancing = false
+                }
+            }
+        }
+
+        /** Closes the up-next card; nothing offers it again for this episode. */
+        internal fun dismissUpNext() {
+            upNext.dismiss()
+            _uiState.update { if (it.upNext == null) it else it.copy(upNext = null) }
+        }
+
+        /**
          * Starts or stops the position poll that drives the seek bar.
          *
          * Driven by the screen's presence rather than by playback because it is purely cosmetic —
@@ -937,6 +1063,44 @@ internal class PlayerViewModel
             }
             publishPipState()
             applySegmentDecision(decision)
+            applyUpNextDecision(snapshot)
+        }
+
+        /**
+         * Puts the next episode on screen once the current one is ending, or takes it away again.
+         *
+         * Runs *after* [applySegmentDecision] on purpose: that method reads the card's state to
+         * decide whether an outro skip button would be redundant, and the reading it wants is the
+         * one the user can currently see.
+         *
+         * Nothing happens in a group — the server decides what everyone watches next, so a card
+         * offering this member its own choice would be offering something it must not do — and
+         * nothing happens before the prefetch has come back, which is what `session?.upNext` being
+         * `null` means for the first seconds of every episode.
+         *
+         * The `_uiState` write is diffed rather than unconditional: this is called twice a second,
+         * and a `copy` that produces an equal value would still be a new object for every collector
+         * of [uiState] to compare (audit PERF-04).
+         */
+        private fun applyUpNextDecision(snapshot: PlaybackSnapshot) {
+            val active = session ?: return
+            val episode = active.upNext
+            if (syncPlay.isInGroup || episode == null) return
+
+            val show =
+                upNext.shouldShow(
+                    positionMs = snapshot.positionMs,
+                    durationMs = _uiState.value.durationMs,
+                    outro = active.segments.firstOrNull { it.kind == MediaSegmentKind.OUTRO },
+                    hasNext = true,
+                )
+            _uiState.update {
+                when {
+                    show && it.upNext == null -> it.copy(upNext = UpNextState(episode))
+                    !show && it.upNext != null -> it.copy(upNext = null)
+                    else -> it
+                }
+            }
         }
 
         /**
@@ -948,6 +1112,12 @@ internal class PlayerViewModel
          * preference is auto-skip with no way to skip an intro at all, since the button is normally
          * only drawn for the other preference; offering it keeps the preference meaningful and lets
          * the whole group skip together.
+         *
+         * The other case that changes is an **outro** offer while the up-next card is up: the card
+         * is a strict superset of that button — it skips the outro and plays the next episode — and
+         * drawing both would put two competing affordances over the same seconds of screen. Only the
+         * offer is suppressed; an outro whose preference is auto-skip still seeks, because a user who
+         * asked never to see credits still means it while a card is up.
          */
         private fun applySegmentDecision(decision: SegmentSkipDecision) {
             when (decision) {
@@ -955,7 +1125,11 @@ internal class PlayerViewModel
                     _uiState.update { if (it.skippableSegment == null) it else it.copy(skippableSegment = null) }
 
                 is SegmentSkipDecision.Offer ->
-                    _uiState.update { it.copy(skippableSegment = decision.segment) }
+                    if (supersededByUpNext(decision.segment)) {
+                        _uiState.update { if (it.skippableSegment == null) it else it.copy(skippableSegment = null) }
+                    } else {
+                        _uiState.update { it.copy(skippableSegment = decision.segment) }
+                    }
 
                 is SegmentSkipDecision.AutoSkip ->
                     if (syncPlay.isInGroup) {
@@ -967,6 +1141,10 @@ internal class PlayerViewModel
                     }
             }
         }
+
+        /** Whether the up-next card already offers everything this segment's button would. */
+        private fun supersededByUpNext(segment: MediaSegment): Boolean =
+            segment.kind == MediaSegmentKind.OUTRO && _uiState.value.upNext != null
 
         /**
          * Tells [PipController] whether leaving the app right now should float the video.
@@ -1144,6 +1322,9 @@ internal class PlayerViewModel
                             // The new item's ranges are fetched by `loadPlaybackExtras` below; until
                             // they arrive this session has none, rather than the last film's.
                             segments = emptyList(),
+                            // Likewise the successor: the previous episode's next episode is this
+                            // one, and offering it again would be a loop of two.
+                            upNext = null,
                         )
                     // A re-resolve builds a fresh media item, which starts at 1×; the speed the user
                     // chose belongs to the session, not to the media item.
@@ -1153,6 +1334,9 @@ internal class PlayerViewModel
                     _videoPlayer.value = playerHandle.player
                     _uiState.update { it.withSource(resolved, isOnline, message) }
                     positionTracker.onSessionOpened(resolved.startPositionTicks.ticksToMillis())
+                    // Alongside the segment controller's own reset, and for the same reason: a
+                    // dismissal belongs to the episode it was made on.
+                    upNext.reset()
 
                     // Before the start report, not after: in a group a downloaded item reports too,
                     // and the id that report is keyed on is minted here (M11, key decision 9).
@@ -1229,17 +1413,22 @@ internal class PlayerViewModel
         }
 
         /**
-         * Fetches the two things that decorate playback but must never delay it: the scrubbing
-         * thumbnails and the intro/outro ranges.
+         * Fetches the three things that decorate playback but must never delay it: the scrubbing
+         * thumbnails, the intro/outro ranges, and the episode that follows this one.
          *
-         * Deliberately launched *after* `prepare` and never awaited. Both are optional — most items
-         * have neither — and both can involve a server round trip, so putting either on the path to
-         * the first frame would trade something the user is waiting for against something they have
-         * not asked for yet. Neither can fail visibly: absence is the resolvers' normal answer.
+         * Deliberately launched *after* `prepare` and never awaited. All three are optional — most
+         * items have none of them — and all three can involve a server round trip, so putting any of
+         * them on the path to the first frame would trade something the user is waiting for against
+         * something they have not asked for yet. None can fail visibly: absence is the resolvers'
+         * normal answer.
+         *
+         * This is also the hook that makes the up-next card work across an *in-session* swap: it runs
+         * on every successful open, so the episode taken from the card immediately prefetches its own
+         * successor and the chain keeps going.
          */
         private fun loadPlaybackExtras(resolved: PlaybackMediaSource) {
-            updateSession { it.copy(segments = emptyList()) }
-            _uiState.update { it.copy(trickplay = null, skippableSegment = null) }
+            updateSession { it.copy(segments = emptyList(), upNext = null) }
+            _uiState.update { it.copy(trickplay = null, skippableSegment = null, upNext = null) }
 
             viewModelScope.launch {
                 _uiState.update { it.copy(trickplay = trickplayResolver.resolve(resolved)) }
@@ -1247,6 +1436,18 @@ internal class PlayerViewModel
             viewModelScope.launch {
                 val loaded = segmentLoader.load(resolved)
                 updateSession { it.copy(segments = loaded) }
+            }
+            // Not in a group: there the server owns what everyone watches next, and a card offering
+            // this member its own successor would be offering something it must not act on.
+            if (!syncPlay.isInGroup) {
+                viewModelScope.launch {
+                    val next = upNextResolver.resolve(resolved.itemId.toString())
+                    // Identity-guarded, because this resolve is two server calls long and the session
+                    // can be replaced under it — by the card itself, by the fallback ladder, by a
+                    // group taking over. Episode N's successor landing on episode N + 1's session
+                    // would offer the episode already playing.
+                    updateSession { if (it.source.itemId == resolved.itemId) it.copy(upNext = next) else it }
+                }
             }
         }
 
@@ -1326,6 +1527,11 @@ internal class PlayerViewModel
          * make the launch-request path re-open one a second later (DECISIONS.md, 2026-07-30). When
          * the group's queue really is finished, the ordinary behaviour stands.
          *
+         * **Solo, an up-next tap is the same shape of exception** ([advancing]): the episode really
+         * has ended and a replacement is already being negotiated into this very session, so popping
+         * the route would close the player the swap is about to fill. An episode that simply plays
+         * out, with nobody touching the card, still pops exactly as it always has.
+         *
          * The stop report is unconditional either way: the outgoing item has to be recorded and its
          * encoder killed whether or not something follows it.
          */
@@ -1333,7 +1539,7 @@ internal class PlayerViewModel
             val active = session ?: return
             val current = active.source
             val groupContinues = syncPlay.isInGroup && syncPlay.hasNextInQueue
-            _uiState.update { it.copy(hasEnded = !groupContinues, isPlaying = false) }
+            _uiState.update { it.copy(hasEnded = !groupContinues && !advancing, isPlaying = false) }
             setReportingActive(false)
             if (active.stopReported) return
             updateSession { it.copy(stopReported = true) }
@@ -1533,12 +1739,13 @@ internal class PlayerViewModel
 /**
  * Everything one playback session remembers, in one value (audit CPX-5).
  *
- * These eight facts used to be eight `private var`s on `PlayerViewModel`, and what bound them
+ * These facts used to be eight `private var`s on `PlayerViewModel`, and what bound them
  * together was nothing but the order the methods happened to run in: a new open had to remember to
  * re-arm two of them, clear one, leave two alone and never touch the last. Boxed, "a new session"
- * is a single assignment in `PlayerViewModel.publish` and the compiler asks about every field.
+ * is a single assignment in `PlayerViewModel.publish`, and every field added since — [upNext] is the
+ * ninth — is reset there with the rest rather than by a `var` somebody has to remember.
  *
- * The eight are the ones whose lifetime really is one session. The other eight mutable fields on
+ * They are the ones whose lifetime really is one session. The other mutable fields on
  * that class deliberately stay where they are, each because its lifetime is something else's:
  * connectivity and the segment/PiP preferences are observed continuously, `screenPresent` is the
  * screen's, the three `Job`s are cancelled by identity — and `openJob` in particular outlives its
@@ -1574,8 +1781,14 @@ internal class PlayerViewModel
  *   session being replaced, and the screen going away — against reporting it twice.
  * @property segments the item's intro/outro ranges; empty offline and on a server without the
  *   segments API, and empty until `loadPlaybackExtras`' fetch comes back.
+ * @property upNext the episode that follows this one, once the prefetch has answered; `null` for
+ *   every non-episode, for the last episode of a series, in a group (where the server owns what
+ *   comes next), and for the first seconds of every session while the resolve is in flight. It is a
+ *   fact about *this* session for exactly the reason the boxing exists: the successor of the episode
+ *   playing is not the successor of the one it replaced, and `PlayerViewModel.publish` reassigning
+ *   the whole value is what makes forgetting that a compile error.
  */
-@Suppress("LongParameterList") // Eight facts about one session; a value type is the point, not a smell.
+@Suppress("LongParameterList") // Nine facts about one session; a value type is the point, not a smell.
 private data class ActiveSession(
     val source: PlaybackMediaSource,
     val pendingAudioIndex: Int?,
@@ -1585,6 +1798,7 @@ private data class ActiveSession(
     val forcedRemote: Boolean,
     val stopReported: Boolean,
     val segments: List<MediaSegment>,
+    val upNext: UpNextEpisode? = null,
 )
 
 /**

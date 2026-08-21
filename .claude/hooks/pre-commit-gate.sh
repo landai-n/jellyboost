@@ -78,6 +78,9 @@ fi
 if [ -f scripts/check_redaction.py ]; then
   RED_OUT="$(python3 scripts/check_redaction.py 2>&1)" || deny "check_redaction failed: $RED_OUT"
 fi
+if [ -f scripts/check_a11y_scaffolding.py ]; then
+  A11Y_OUT="$(python3 scripts/check_a11y_scaffolding.py 2>&1)" || deny "check_a11y_scaffolding failed: $A11Y_OUT"
+fi
 # Agent gate (not a regex): a headless model reviews the staged diff's ADDED comment lines
 # for authoring-process voice ("not this wave", "as requested", first-person edit
 # narration). Fail-open on plumbing, deny on verdict — see comment-voice-gate.sh.

@@ -66,6 +66,15 @@ jobs:
       - name: credential-redaction gate
         run: python3 scripts/check_redaction.py
 
+      # Accessibility scaffolding (audit 2026-08-05, CR-7): every module that draws @Composable
+      # screens either has an instrumented a11y suite or an allowlist entry explaining why not.
+      # A presence check, not a quality one — the suites themselves need a device, and CI has none
+      # (see the note at the top of this file), which is exactly why the *existence* of the
+      # scaffolding has to be gated somewhere device-less. Seeded with the seven real gaps of
+      # 2026-08-21, so it holds the line rather than pretending it is already clean.
+      - name: a11y test scaffolding
+        run: python3 scripts/check_a11y_scaffolding.py
+
       # Java toolchain 21 — pinned in gradle/libs.versions.toml (javaToolchain) and set locally by
       # ../env.sh. Temurin is what the toolchain resolver would download anyway; providing it here
       # saves the auto-provisioning round trip.

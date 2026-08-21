@@ -1,0 +1,20 @@
+{
+  "_comment": [
+    "Modules that draw @Composable screens and have no instrumented accessibility test.",
+    "Read by scripts/check_a11y_scaffolding.py (accessibility audit 2026-08-05, CR-7).",
+    "Seeded 2026-08-21 with the gaps as they actually were: the audit's remediation left ATF /",
+    "semantics suites in :app, :core:ui, :player and :feature:detail, and nowhere else. These",
+    "seven are debt with an address, not permission — every one of them had findings fixed in it",
+    "and nothing pins those fixes. A NEW module with composables cannot be added here without",
+    "someone writing a sentence about why. Entries are removed by the script itself the moment a",
+    "module grows a suite (a stale entry is a failure).",
+    "Keys are Gradle paths as declared in settings.gradle.kts; values are reason + owed-since."
+  ],
+  ":feature:auth": "Wave 4 fixed error/progress live regions, Quick Connect grouping, the user picker's selectable group and password/autofill semantics — all of it in components no test composes. Owed since 2026-08-05.",
+  ":feature:home": "The hero's fontScale-aware shed threshold, MediaRow headings and the N identical 'See all' labels were fixed by reading; the row is also the app's densest card surface (CR-6). Owed since 2026-08-05.",
+  ":feature:library": "PillChip's selectable semantics land here across eleven filter chips plus the sort menu's active tick — the exact case ATF's own checks would have caught. Owed since 2026-08-05.",
+  ":feature:music": "Queue and now-playing sheets carry the same row/selection patterns the audit flagged elsewhere; no suite followed the fixes. Owed since 2026-08-05.",
+  ":feature:search": "Result-count and empty/error announcements were added to a screen with no instrumented coverage, and a live region that stops firing is invisible on screen. Owed since 2026-08-05.",
+  ":feature:downloads": "Progress semantics (rows, badges, the usage bar) and selection-mode announcements were all wave-4 fixes here, and progress is the app's most regression-prone semantics. Owed since 2026-08-05.",
+  ":feature:settings": "The audit called these rows textbook (toggleable/selectable whole row, inert inner control, 48dp floor) — which is precisely the pattern worth pinning before someone 'simplifies' it. Owed since 2026-08-05."
+}

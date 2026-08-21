@@ -171,6 +171,30 @@ internal class ItemDetailDownloadTest : ItemDetailViewModelFixture() {
         }
 
     @Test
+    fun `download badges reach the next episode and season siblings rows on an episode page`() =
+        runTest(dispatcher) {
+            val sibling = JellyfinItem(id = EPISODE_1, name = "The Original", type = ItemType.EPISODE)
+            val next = JellyfinItem(id = "e3", name = "Dissonance Theory", type = ItemType.EPISODE)
+            coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(episode)
+            coEvery { repository.getSeriesEpisodes(SERIES_ID) } returns
+                AppResult.Success(listOf(sibling, episode, next))
+            coEvery { repository.getEpisodes(SERIES_ID, SEASON_ID) } returns
+                AppResult.Success(listOf(sibling, episode))
+
+            val model = viewModel()
+            advanceUntilIdle()
+            downloadStates.value =
+                mapOf(EPISODE_1 to DownloadState.Downloaded, "e3" to DownloadState.Downloaded)
+            advanceUntilIdle()
+
+            model.uiState.value.seasonEpisodes
+                .first { it.id == EPISODE_1 }
+                .downloadState shouldBe DownloadState.Downloaded
+            model.uiState.value.nextEpisode!!
+                .downloadState shouldBe DownloadState.Downloaded
+        }
+
+    @Test
     fun `a download state that arrived before the item survives the load`() =
         runTest(dispatcher) {
             downloadStates.value = mapOf(ITEM_ID to DownloadState.Downloaded)

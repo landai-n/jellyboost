@@ -34,6 +34,10 @@
     <string name="player_done">Done</string>
     <string name="player_skip_intro">Skip intro</string>
     <string name="player_skip_outro">Skip outro</string>
+
+    <string name="player_up_next_title">Next up</string>
+    <string name="player_up_next_play">Play next episode</string>
+    <string name="player_up_next_dismiss">Watch credits</string>
     <string name="player_quality_auto">Auto</string>
     <string name="player_quality_high">High — 20 Mbps</string>
     <string name="player_quality_medium">Medium — 8 Mbps</string>

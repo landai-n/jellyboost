@@ -145,6 +145,8 @@ class PlayerActionsInteractionTest {
                 onSelectQuality = {},
                 onSelectSpeed = {},
                 onSkipSegment = {},
+                onPlayNext = {},
+                onDismissUpNext = {},
                 onBack = {},
             ).reportingInteraction { order += "report" }
 
@@ -167,6 +169,11 @@ class PlayerActionsInteractionTest {
                 "quality:AUTO" to { actions.onSelectQuality(PlaybackQuality.AUTO) },
                 "speed:NORMAL" to { actions.onSelectSpeed(PlaybackSpeed.NORMAL) },
                 "skipSegment" to { actions.onSkipSegment() },
+                // The up-next card's two, which are taps on the player exactly as much as the skip
+                // pill's is: a user reading the card is still here, and the controls must not hide
+                // out from under the decision they are making.
+                "playNext" to { actions.onPlayNext() },
+                "dismissUpNext" to { actions.onDismissUpNext() },
                 "back" to { actions.onBack() },
                 "panel:AUDIO" to { actions.onOpenPanel(PlayerPanel.AUDIO) },
                 "shuffle:true" to { actions.onSetGroupShuffle(true) },
@@ -190,6 +197,8 @@ class PlayerActionsInteractionTest {
             onSelectQuality = { quality -> forwarded += "quality:$quality" },
             onSelectSpeed = { speed -> forwarded += "speed:$speed" },
             onSkipSegment = { forwarded += "skipSegment" },
+            onPlayNext = { forwarded += "playNext" },
+            onDismissUpNext = { forwarded += "dismissUpNext" },
             onBack = { forwarded += "back" },
             onOpenPanel = { panel -> forwarded += "panel:$panel" },
             onSetGroupShuffle = { shuffle -> forwarded += "shuffle:$shuffle" },

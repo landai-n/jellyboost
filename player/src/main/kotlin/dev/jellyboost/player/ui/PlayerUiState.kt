@@ -155,9 +155,13 @@ internal const val PLAYER_LABEL_SEPARATOR = Separators.DOT
  * The up-next card, as much of it as the player screen draws.
  *
  * A wrapper around the one episode rather than the episode itself, so that "is the card up" is a
- * question about *this* type: the card grows a countdown and a dismissal affordance in the follow-up
- * step, and both belong beside the episode rather than as further nullable fields on
- * [PlayerUiState].
+ * question about *this* type rather than about a field that happens to be non-null: the screen, the
+ * segment rules (`PlayerViewModel.supersededByUpNext`) and the dismissal all ask it, and a named
+ * type is what keeps the three asking the same question.
+ *
+ * It is also the seam any further card state would arrive at — a countdown was considered for the
+ * follow-up step and cut (the card is buttons only), and had it shipped it would have belonged
+ * beside the episode here rather than as another nullable field on [PlayerUiState].
  */
 internal data class UpNextState(
     val episode: UpNextEpisode,
@@ -387,6 +391,10 @@ internal data class PlayerActions(
     val onSelectQuality: (PlaybackQuality) -> Unit,
     val onSelectSpeed: (PlaybackSpeed) -> Unit,
     val onSkipSegment: () -> Unit,
+    /** Leaves the ending for the next episode, in this same session — see `UpNextCard`. */
+    val onPlayNext: () -> Unit,
+    /** Closes the up-next card; nothing offers it again for this episode. */
+    val onDismissUpNext: () -> Unit,
     val onBack: () -> Unit,
     /**
      * Opens one of the player's seven panels — every one of them hosted by `PlayerScreen`, above the
@@ -421,6 +429,8 @@ internal fun PlayerActions.reportingInteraction(onInteraction: () -> Unit): Play
         onSelectQuality = reporting(onInteraction, onSelectQuality),
         onSelectSpeed = reporting(onInteraction, onSelectSpeed),
         onSkipSegment = reporting(onInteraction, onSkipSegment),
+        onPlayNext = reporting(onInteraction, onPlayNext),
+        onDismissUpNext = reporting(onInteraction, onDismissUpNext),
         onBack = reporting(onInteraction, onBack),
         onOpenPanel = reporting(onInteraction, onOpenPanel),
         onSetGroupShuffle = reporting(onInteraction, onSetGroupShuffle),

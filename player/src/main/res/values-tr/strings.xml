@@ -34,6 +34,10 @@
     <string name="player_done">Bitti</string>
     <string name="player_skip_intro">Girişi atla</string>
     <string name="player_skip_outro">Kapanışı atla</string>
+
+    <string name="player_up_next_title">Sırada</string>
+    <string name="player_up_next_play">Sonraki bölümü oynat</string>
+    <string name="player_up_next_dismiss">Jeneriği izle</string>
     <string name="player_quality_auto">Otomatik</string>
     <string name="player_quality_high">Yüksek — 20 Mbps</string>
     <string name="player_quality_medium">Orta — 8 Mbps</string>

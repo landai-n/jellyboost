@@ -37,6 +37,10 @@
     <string name="player_skip_intro">इंट्रो छोड़ें</string>
     <string name="player_skip_outro">आउट्रो छोड़ें</string>
 
+    <string name="player_up_next_title">आगे देखें</string>
+    <string name="player_up_next_play">अगला एपिसोड चलाएँ</string>
+    <string name="player_up_next_dismiss">क्रेडिट देखें</string>
+
     <string name="player_quality_auto">स्वतः</string>
     <string name="player_quality_high">उच्च — 20 Mbps</string>
     <string name="player_quality_medium">मध्यम — 8 Mbps</string>

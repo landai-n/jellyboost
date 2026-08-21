@@ -34,6 +34,10 @@
     <string name="player_done">მზადაა</string>
     <string name="player_skip_intro">შესავლის გამოტოვება</string>
     <string name="player_skip_outro">დასასრულის გამოტოვება</string>
+
+    <string name="player_up_next_title">შემდეგი</string>
+    <string name="player_up_next_play">შემდეგი ეპიზოდის დაკვრა</string>
+    <string name="player_up_next_dismiss">ტიტრების ყურება</string>
     <string name="player_quality_auto">ავტომატური</string>
     <string name="player_quality_high">მაღალი — 20 Mbps</string>
     <string name="player_quality_medium">საშუალო — 8 Mbps</string>

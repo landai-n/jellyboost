@@ -43,6 +43,10 @@
     <string name="player_skip_intro">Pomiń intro</string>
     <string name="player_skip_outro">Pomiń napisy końcowe</string>
 
+    <string name="player_up_next_title">Następne</string>
+    <string name="player_up_next_play">Odtwórz następny odcinek</string>
+    <string name="player_up_next_dismiss">Obejrzyj napisy końcowe</string>
+
     <string name="player_quality_auto">Automatyczna</string>
     <string name="player_quality_high">Wysoka — 20 Mbps</string>
     <string name="player_quality_medium">Średnia — 8 Mbps</string>

@@ -37,6 +37,10 @@
     <string name="player_skip_intro">Intro overslaan</string>
     <string name="player_skip_outro">Outro overslaan</string>
 
+    <string name="player_up_next_title">Volgende</string>
+    <string name="player_up_next_play">Volgende aflevering afspelen</string>
+    <string name="player_up_next_dismiss">Aftiteling bekijken</string>
+
     <string name="player_quality_auto">Automatisch</string>
     <string name="player_quality_high">Hoog – 20 Mbps</string>
     <string name="player_quality_medium">Gemiddeld – 8 Mbps</string>

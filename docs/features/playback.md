@@ -299,6 +299,48 @@ rest of the session instead of looping. Segments shorter than one second are ign
 A server without the Media Segments API (pre-10.10) or without a detection plugin answers 404 or
 with nothing, and the feature is silently absent. A downloaded item is never asked at all.
 
+### Up next (2026-08-21, beyond-plan feature — DECISIONS.md 2026-08-21)
+
+While an episode's ending plays, a card in the bottom-right corner offers the next episode;
+tapping it swaps the item into the *same* session. Button only — no countdown, no auto-advance,
+no preference: an episode nobody touches ends exactly as it always has, with the route popping.
+
+| Step | Where |
+|---|---|
+| Resolve the successor (fire-and-forget, per open) | `PlayerViewModel.loadPlaybackExtras` → `UpNextResolver.resolve` |
+| Decide whether the card is up at a position | `UpNextController.shouldShow(positionMs, durationMs, outro, hasNext)` |
+| Draw the card | `PlayerScreen`'s `UpNextCard`, stacked above `SkipSegmentButton`, independent of the controls' visibility |
+| Play the next episode | `PlayerViewModel.playNextEpisode()` → `replaceItem(playWhenReady = true)` |
+
+The successor is the **positional** next episode — `getSeriesEpisodes` and index + 1, cross-season
+— never `getNextUpForSeries`, which answers "next unwatched" and is wrong on a rewatch. Every miss
+(last episode, not an episode, either call failing) is `null`, and `null` is simply no card.
+Offline, the delegating repository lists only downloads, so the card offers the next *downloaded*
+episode or nothing. The prefetch write is identity-guarded against the session it resolved for
+(`ActiveSession.upNext`, reset per session by construction), so a slow resolve for episode N can
+never offer on episode N+1.
+
+The window opens at the OUTRO segment's start when the server knows one, else the last 30 s of any
+item longer than a minute. A dismissal ("Watch credits") is sticky for the session; seeking back
+out of the window hides the card and re-entering shows it again. While the card is up, an OUTRO
+*offer* from the segment machinery is suppressed (`applySegmentDecision`) — the card is a strict
+superset of that button — but OUTRO *auto-skip* still seeks, and INTRO decisions are untouched.
+
+The swap rides the same seam SyncPlay's queue uses (`replaceItem`, the extraction of `loadItem`),
+with three deliberate carry rules: the session's quality terms come along (a manual cap stays a
+cap, Auto stays Auto and is re-measured); playback speed survives (`publish` reapplies it); audio
+and subtitle selections deliberately reset to the new item's server defaults, because episode N's
+stream indices mean nothing in episode N+1's stream list. The `advancing` flag keeps a tap that
+races `Ended` from popping the route mid-swap, exactly parallel to the SyncPlay `groupContinues`
+guard, and the stop-report invariant holds in both orders because `endCurrentSource` is idempotent
+per source. In a SyncPlay group the whole feature is inert — no prefetch, no card — since the
+server owns what everyone watches next. Casting needs no branch: the card draws over the
+`CastingBackdrop` and `replaceItem` opens on the receiver like any other cast open.
+
+Known, accepted gap (pre-existing, hit more often now): `PlayerSessionStore.itemId` is the route
+argument, so process death after an in-session swap restores the *original* episode at the new
+episode's position — the same limitation SyncPlay's queue has carried since M11.
+
 ### Picture-in-picture
 
 ```

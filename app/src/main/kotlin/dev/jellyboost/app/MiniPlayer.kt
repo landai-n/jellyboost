@@ -90,13 +90,7 @@ internal fun MiniPlayer(
                 .widthIn(max = MiniPlayerMaxWidth)
                 .heightIn(min = MiniPlayerHeight)
                 .popShadow(shape)
-                // A *wide* bar, so it blurs at a pinned half resolution rather than at `Auto`'s
-                // factor — see [GlassDefaults.WideBarInputScale] for the checkerboard that is.
-                .glassSurface(
-                    shape = shape,
-                    tint = GlassDefaults.BottomNavFill,
-                    inputScale = GlassDefaults.WideBarInputScale,
-                ),
+                .glassSurface(shape = shape, tint = GlassDefaults.BottomNavFill),
     ) {
         // The nice-to-have progress line (spec item 2): a track this thin reads as decoration, not
         // as a second, less precise seek bar, so it carries no semantics of its own — the full

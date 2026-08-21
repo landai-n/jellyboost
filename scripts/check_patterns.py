@@ -71,6 +71,33 @@ PATTERNS = {
         "regex": re.compile(r"\bcomposed\s*[({]"),
         "main_only": True,
     },
+    # DL-01 (audit 2026-07): readTimeout(0) = a socket that never fails, never retries, and
+    # wedges the drain lease for the process. Zero-baseline; timeouts must be finite.
+    "readtimeout-zero": {
+        "regex": re.compile(r"readTimeout\(\s*(0[,)]|Duration\.ZERO)"),
+        "main_only": True,
+    },
+    # PERF-18 / DL-05 / PERF-3 (audits 2026-07/08): full-row reads of the `items` table pull
+    # multi-KB dto blobs per row; hot paths must use projections (ItemCacheKey/FacetKey
+    # pattern). Existing full-row reads are baselined; new ones need the projection question
+    # answered first.
+    "select-star-items": {
+        "regex": re.compile(r"(?i)SELECT\s+(\*|\w+\.\*)\s+FROM\s+items\b"),
+        "main_only": True,
+    },
+    # UI-03 / a11y text-scaling wave (2026-08-05): fixed-height frames around sp text clip at
+    # font scale 2.0. requiredHeight is the sharpest offender shape; ratcheted, shrink-only.
+    "required-height": {
+        "regex": re.compile(r"\brequiredHeight\s*\("),
+        "main_only": True,
+    },
+    # UI-6 (audit 2026-08-08): user-visible formatting hardcoded to a fixed locale draws
+    # `8.6` beside `8,6` on the same screen. Protocol formatting belongs in named helpers;
+    # display formatting takes the UI locale.
+    "hardcoded-locale": {
+        "regex": re.compile(r"\bLocale\.(US|ENGLISH|ROOT)\b"),
+        "main_only": True,
+    },
 }
 
 COMMENT = re.compile(r"^\s*(//|\*|/\*)")

@@ -49,6 +49,18 @@ Distilled from the 2026-07…2026-08 audits; the recidivist classes:
   (file walks, blob parses, full-table scans) on a per-progress-tick emission.
 - **Compose params: pass what it draws.** Whole-UiState params defeat skipping under strong
   skipping; pass scalars/narrow value types, remember callback bundles once.
+- **Secrets never reach a `toString()`, log, or URL.** Any new type carrying a token,
+  password, or server-issued URL gets a redacting `toString()` pinned by a test
+  (NET-02/SEC-12 precedent); URLs are signed with headers, not query params, wherever the
+  consumer allows.
+- **Await what you start.** A returned `Operation`/`ListenableFuture`/`PendingResult`/`Job`
+  that is dropped is a fire-and-forget bug waiting for its interleaving (STAB-04, DL-09,
+  CAST-03) — await it, or document precisely why abandonment is safe.
+- **Dynamic a11y ships with the surface.** New async state (loading, errors, progress,
+  group membership) announces via `liveRegion`/`stateDescription`/`progressBarRangeInfo`;
+  new cards/rows merge descendants with one spoken sentence; new screens get an ATF
+  `androidTest` case and survive a fontScale-2.0 pass. Static lint cannot see Compose
+  semantics — the instrumented suite is the only gate that can (CR-1..6).
 - **A gate that isn't wired is a wish.** Any new script/config/check must be referenced by
   `/verify`, the pre-commit hook, or CI in the same commit that adds it.
 

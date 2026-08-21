@@ -16,6 +16,12 @@
     <string name="detail_section_episodes">פרקים</string>
     <string name="detail_section_similar">תכנים דומים</string>
     <string name="detail_section_cast">שחקנים</string>
+    <string name="detail_section_next_episode">הפרק הבא</string>
+    <string name="detail_section_more_from_season">עוד מעונה %1$d</string>
+    <string name="detail_section_more_from_season_unnumbered">עוד מהעונה הזו</string>
+    <string name="detail_go_to_series">מעבר לסדרה %1$s</string>
+    <string name="detail_go_to_season">עונה %1$d</string>
+    <string name="detail_go_to_season_description">מעבר לעונה %1$d</string>
     <string name="detail_type_movie">סרט</string>
     <string name="detail_type_series">סדרה</string>
     <string name="detail_type_season">עונה</string>

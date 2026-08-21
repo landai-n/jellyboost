@@ -15,6 +15,12 @@
     <string name="detail_section_episodes">Episoade</string>
     <string name="detail_section_similar">Titluri similare</string>
     <string name="detail_section_cast">Distribuție</string>
+    <string name="detail_section_next_episode">Episodul următor</string>
+    <string name="detail_section_more_from_season">Mai multe din Sezonul %1$d</string>
+    <string name="detail_section_more_from_season_unnumbered">Mai multe din acest sezon</string>
+    <string name="detail_go_to_series">Mergi la serialul %1$s</string>
+    <string name="detail_go_to_season">Sezonul %1$d</string>
+    <string name="detail_go_to_season_description">Mergi la sezonul %1$d</string>
     <string name="detail_type_movie">Film</string>
     <string name="detail_type_series">Serial</string>
     <string name="detail_type_season">Sezon</string>

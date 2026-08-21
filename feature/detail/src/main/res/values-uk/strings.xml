@@ -16,6 +16,12 @@
     <string name="detail_section_episodes">Епізоди</string>
     <string name="detail_section_similar">Схоже</string>
     <string name="detail_section_cast">Акторський склад</string>
+    <string name="detail_section_next_episode">Наступний епізод</string>
+    <string name="detail_section_more_from_season">Ще з Сезону %1$d</string>
+    <string name="detail_section_more_from_season_unnumbered">Ще з цього сезону</string>
+    <string name="detail_go_to_series">Перейти до серіалу %1$s</string>
+    <string name="detail_go_to_season">Сезон %1$d</string>
+    <string name="detail_go_to_season_description">Перейти до сезону %1$d</string>
     <string name="detail_type_movie">Фільм</string>
     <string name="detail_type_series">Серіал</string>
     <string name="detail_type_season">Сезон</string>

@@ -16,6 +16,12 @@
     <string name="detail_section_episodes">އެޕިސޯޑްތައް</string>
     <string name="detail_section_similar">މިކަހަލަ އިތުރު</string>
     <string name="detail_section_cast">ކާސްޓް</string>
+    <string name="detail_section_next_episode">ދެން އޮތް އެޕިސޯޑް</string>
+    <string name="detail_section_more_from_season">ސީޒަން %1$d އިން އިތުރު</string>
+    <string name="detail_section_more_from_season_unnumbered">މި ސީޒަނުން އިތުރު</string>
+    <string name="detail_go_to_series">ސީރީޒް %1$s އަށް ދާން</string>
+    <string name="detail_go_to_season">ސީޒަން %1$d</string>
+    <string name="detail_go_to_season_description">ސީޒަން %1$d އަށް ދާން</string>
     <string name="detail_type_movie">ފިލްމު</string>
     <string name="detail_type_series">ސީރީޒް</string>
     <string name="detail_type_season">ސީޒަން</string>

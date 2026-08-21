@@ -16,6 +16,12 @@
     <string name="detail_section_episodes">ಸಂಚಿಕೆಗಳು</string>
     <string name="detail_section_similar">ಇದೇ ರೀತಿಯ ಇನ್ನಷ್ಟು</string>
     <string name="detail_section_cast">ನಟವರ್ಗ</string>
+    <string name="detail_section_next_episode">ಮುಂದಿನ ಸಂಚಿಕೆ</string>
+    <string name="detail_section_more_from_season">ಸೀಸನ್ %1$d ರಿಂದ ಇನ್ನಷ್ಟು</string>
+    <string name="detail_section_more_from_season_unnumbered">ಈ ಸೀಸನ್‌ನಿಂದ ಇನ್ನಷ್ಟು</string>
+    <string name="detail_go_to_series">%1$s ಸರಣಿಗೆ ಹೋಗಿ</string>
+    <string name="detail_go_to_season">ಸೀಸನ್ %1$d</string>
+    <string name="detail_go_to_season_description">ಸೀಸನ್ %1$d ಗೆ ಹೋಗಿ</string>
     <string name="detail_type_movie">ಚಲನಚಿತ್ರ</string>
     <string name="detail_type_series">ಸರಣಿ</string>
     <string name="detail_type_season">ಸೀಸನ್</string>

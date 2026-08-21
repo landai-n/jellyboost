@@ -15,6 +15,12 @@
     <string name="detail_section_episodes">পর্বসমূহ</string>
     <string name="detail_section_similar">এই ধরনের আরও</string>
     <string name="detail_section_cast">কলাকুশলী</string>
+    <string name="detail_section_next_episode">পরবর্তী পর্ব</string>
+    <string name="detail_section_more_from_season">সিজন %1$d থেকে আরও</string>
+    <string name="detail_section_more_from_season_unnumbered">এই সিজন থেকে আরও</string>
+    <string name="detail_go_to_series">%1$s সিরিজে যান</string>
+    <string name="detail_go_to_season">সিজন %1$d</string>
+    <string name="detail_go_to_season_description">সিজন %1$d-এ যান</string>
     <string name="detail_type_movie">সিনেমা</string>
     <string name="detail_type_series">সিরিজ</string>
     <string name="detail_type_season">সিজন</string>

@@ -15,6 +15,12 @@
     <string name="detail_section_episodes">Epizodlar</string>
     <string name="detail_section_similar">Buna bənzər digərləri</string>
     <string name="detail_section_cast">Aktyor heyəti</string>
+    <string name="detail_section_next_episode">Növbəti epizod</string>
+    <string name="detail_section_more_from_season">Fəsil %1$d-dən daha çox</string>
+    <string name="detail_section_more_from_season_unnumbered">Bu fəsildən daha çox</string>
+    <string name="detail_go_to_series">Serial %1$s-ə keç</string>
+    <string name="detail_go_to_season">Fəsil %1$d</string>
+    <string name="detail_go_to_season_description">Fəsil %1$d-ə keç</string>
     <string name="detail_type_movie">Film</string>
     <string name="detail_type_series">Serial</string>
     <string name="detail_type_season">Fəsil</string>

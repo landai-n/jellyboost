@@ -29,7 +29,11 @@ import timber.log.Timber
  *   the source being merge child `k + 1` because `ExoPlayerHandle.prepare` builds them in exactly
  *   that order (DECISIONS.md 2026-07-31, "Offline multi-track Phase 2");
  * - **embedded streams** are matched by their position among the *embedded* streams of the same
- *   type, which is the order ExoPlayer exposes them in.
+ *   type, which is the order ExoPlayer exposes them in. Since 2026-08-21 a transcode's subtitles
+ *   are in that third group too: they arrive as `#EXT-X-MEDIA` renditions of the transcoding
+ *   master playlist, one per text stream, in Jellyfin stream order — the very order
+ *   `PlaybackMediaSource.subtitleTracks` is in — and Media3 publishes them as ordinary text groups
+ *   with a manifest id, so the same positional count finds them (DECISIONS.md, 2026-08-21).
  *
  * The id the player hands back is not the id that went in — merging a side-loaded source prefixes
  * every format and group with the child's index — which is why the subtitle read goes through
@@ -118,9 +122,14 @@ internal class TrackSelectionController(
     /**
      * Selects the subtitle stream [jellyfinIndex], or turns subtitles off when it is `null`.
      *
-     * Side-loaded subtitles are found by track id, which is exact. Embedded ones fall back to
-     * positional matching; a subtitle the server burned into the video has neither and forces a
-     * re-resolve.
+     * Side-loaded subtitles are found by track id, which is exact. Embedded ones — and a
+     * transcode's HLS renditions — fall back to positional matching; a subtitle the server burned
+     * into the video has neither and forces a re-resolve.
+     *
+     * "Off" disables the whole text renderer rather than merely clearing the override, and that is
+     * load-bearing on a transcode: every rendition is advertised `AUTOSELECT=YES` and one of them
+     * `DEFAULT=YES`, so a cleared selector picks one on its own. A `SubtitleConfiguration` never
+     * carries `SELECTION_FLAG_DEFAULT`, which is why side-loading made "off" look passive.
      */
     @Suppress(
         // Mirrors `CastPlayerHandle.selectSubtitleTrack` deliberately — the two must pick the same track.

@@ -12,6 +12,7 @@
     <string name="server_setup_connect">Konektatu</string>
     <string name="server_setup_connecting">Zerbitzariarekin harremanetan…</string>
     <string name="server_setup_session_lost">Ezin izan da gordetako saioa berreskuratu, beraz saioa itxi da. Hasi saioa berriro.</string>
+    <string name="server_setup_cleartext_warning">%1$s zerbitzariak zifratu gabeko konexio baten bidez erantzun du. Zure saio-hasierako tokena eta ikusten duzun guztia testu argian ibiliko lirateke sarean, eta bidean dagoen edonork irakur ditzake. Hala ere jarraitzeko, sakatu “Konektatu” berriro.</string>
     <string name="login_title">Hasi saioa</string>
     <string name="login_server_version">%1$s bertsioa</string>
     <string name="login_server_version_unknown">Bertsio ezezaguna</string>

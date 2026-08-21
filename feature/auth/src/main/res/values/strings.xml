@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
     <!-- Shared -->
     <string name="auth_app_name">Jellyboost</string>
     <string name="auth_logo_description" translatable="false">Jellyboost</string>
@@ -19,18 +19,10 @@
     <!--
       Shown when the server answered over plain http:// and its host is not on the local network
       (audit SEC-10). %1$s is that host. The last sentence names the Connect button
-      (server_setup_connect) — translate it to match whatever that button says in this language.
-
-      UNTRANSLATED, DELIBERATELY AND TEMPORARILY. Every other translatable string in this repo
-      exists in all 69 locales, which is what lets `MissingTranslation` be an error in
-      `config/lint/lint.xml` — and the gate is not being relaxed here: `tools:ignore` names this
-      one string and nothing else, so the next untranslated string still fails the build. It is
-      *this* string because it is a security warning: a wrong translation of "your token crosses
-      the network in the clear" misleads the user about a security property, which is worse than
-      the same sentence in English. The 69 translations are owed — see DECISIONS.md 2026-08-08
-      and the STATUS.md "owed" list — and this attribute comes out with them.
+      (server_setup_connect) — each translation names it by that locale's own label for that
+      button, so the two must be changed together.
     -->
-    <string name="server_setup_cleartext_warning" tools:ignore="MissingTranslation">%1$s answered over an unencrypted connection. Your sign-in token and everything you watch would cross the network in the clear, where anyone in between can read them. Press Connect again to continue anyway.</string>
+    <string name="server_setup_cleartext_warning">%1$s answered over an unencrypted connection. Your sign-in token and everything you watch would cross the network in the clear, where anyone in between can read them. Press Connect again to continue anyway.</string>
 
     <!-- Login -->
     <string name="login_title">Sign in</string>

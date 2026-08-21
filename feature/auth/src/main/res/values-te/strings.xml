@@ -13,6 +13,7 @@
     <string name="server_setup_connect">కనెక్ట్ అవ్వండి</string>
     <string name="server_setup_connecting">సర్వర్‌ను సంప్రదిస్తోంది…</string>
     <string name="server_setup_session_lost">మీ సేవ్ చేసిన సైన్ ఇన్‌ను పునరుద్ధరించలేకపోయాము, కాబట్టి మిమ్మల్ని సైన్ అవుట్ చేశాము. దయచేసి మళ్లీ సైన్ ఇన్ అవ్వండి.</string>
+    <string name="server_setup_cleartext_warning">%1$s గుప్తీకరించని కనెక్షన్ ద్వారా స్పందించింది. మీ సైన్-ఇన్ టోకెన్ మరియు మీరు చూసేదంతా నెట్‌వర్క్‌లో స్పష్టమైన రూపంలో ప్రయాణిస్తాయి, మధ్యలో ఉన్న ఎవరైనా వాటిని చదవగలరు. అయినా కొనసాగించడానికి మళ్లీ “కనెక్ట్ అవ్వండి” నొక్కండి.</string>
 
     <string name="login_title">సైన్ ఇన్</string>
     <string name="login_server_version">వెర్షన్ %1$s</string>

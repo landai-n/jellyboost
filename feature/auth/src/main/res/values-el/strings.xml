@@ -13,6 +13,7 @@
     <string name="server_setup_connect">Σύνδεση</string>
     <string name="server_setup_connecting">Επικοινωνία με τον διακομιστή…</string>
     <string name="server_setup_session_lost">Η αποθηκευμένη σύνδεσή σας δεν ήταν δυνατό να ανακτηθεί, οπότε αποσυνδεθήκατε. Συνδεθείτε ξανά.</string>
+    <string name="server_setup_cleartext_warning">%1$s απάντησε μέσω μη κρυπτογραφημένης σύνδεσης. Το διακριτικό σύνδεσής σας και όλα όσα παρακολουθείτε θα διασχίζουν το δίκτυο σε καθαρό κείμενο, όπου οποιοσδήποτε ενδιάμεσος μπορεί να τα διαβάσει. Πατήστε ξανά «Σύνδεση» για να συνεχίσετε ούτως ή άλλως.</string>
 
     <string name="login_title">Σύνδεση</string>
     <string name="login_server_version">Έκδοση %1$s</string>

@@ -12,6 +12,7 @@
     <string name="server_setup_connect">Connetti</string>
     <string name="server_setup_connecting">Contatto del server in corso…</string>
     <string name="server_setup_session_lost">Non è stato possibile ripristinare il tuo accesso salvato, quindi sei stato disconnesso. Accedi di nuovo.</string>
+    <string name="server_setup_cleartext_warning">%1$s ha risposto tramite una connessione non cifrata. Il tuo token di accesso e tutto ciò che guardi attraverserebbero la rete in chiaro, dove chiunque si trovi nel mezzo può leggerli. Premi di nuovo “Connetti” per continuare comunque.</string>
     <string name="login_title">Accedi</string>
     <string name="login_server_version">Versione %1$s</string>
     <string name="login_server_version_unknown">Versione sconosciuta</string>

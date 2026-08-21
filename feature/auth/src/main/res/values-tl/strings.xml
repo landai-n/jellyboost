@@ -12,6 +12,7 @@
     <string name="server_setup_connect">Kumonekta</string>
     <string name="server_setup_connecting">Kinokontak ang server…</string>
     <string name="server_setup_session_lost">Hindi na-restore ang naka-save mong sign-in, kaya na-sign out ka. Mangyaring mag-sign in ulit.</string>
+    <string name="server_setup_cleartext_warning">Sumagot ang %1$s sa isang hindi naka-encrypt na koneksyon. Ang iyong sign-in token at lahat ng pinapanood mo ay dadaan sa network nang hindi naka-encrypt, kung saan mababasa ito ng sinumang nasa gitna. Pindutin ulit ang “Kumonekta” para magpatuloy pa rin.</string>
     <string name="login_title">Mag-sign in</string>
     <string name="login_server_version">Bersyon %1$s</string>
     <string name="login_server_version_unknown">Hindi alam ang bersyon</string>

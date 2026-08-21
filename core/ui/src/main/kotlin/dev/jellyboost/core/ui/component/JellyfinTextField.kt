@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -202,10 +203,24 @@ fun JellyfinTextField(
                         innerTextField()
                     }
                     if (trailingIcon != null) {
-                        CompositionLocalProvider(
-                            LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant,
-                            content = trailingIcon,
-                        )
+                        // The slot usually holds a 48dp `IconButton` (password reveal, search
+                        // clear), and letting that measure normally inflated the whole field past
+                        // [FieldMinHeight] — the password field stood visibly taller than the
+                        // username field one line above it (device walk, 2026-08-21).
+                        // `requiredSize` reports the row's own height back to the layout while the
+                        // 48dp touch target draws and hit-tests centred over it, the same
+                        // visual-inside-a-bigger-invisible-frame trade the chip and pill
+                        // components already make; nothing in the field's modifier chain clips,
+                        // so the overflowing target stays tappable.
+                        Box(
+                            modifier = Modifier.requiredSize(Dimens.MinTouchTarget),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            CompositionLocalProvider(
+                                LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant,
+                                content = trailingIcon,
+                            )
+                        }
                     }
                 }
             },

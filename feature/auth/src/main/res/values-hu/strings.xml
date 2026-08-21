@@ -13,6 +13,7 @@
     <string name="server_setup_connect">Kapcsolódás</string>
     <string name="server_setup_connecting">Kapcsolódás a szerverhez…</string>
     <string name="server_setup_session_lost">A mentett bejelentkezésed nem volt visszaállítható, ezért kijelentkeztünk. Jelentkezz be újra.</string>
+    <string name="server_setup_cleartext_warning">A(z) %1$s titkosítatlan kapcsolaton válaszolt. A bejelentkezési tokened és minden, amit nézel, titkosítatlanul haladna át a hálózaton, ahol bárki az útvonalon elolvashatja. Ha mégis folytatod, nyomd meg újra a(z) „Kapcsolódás” gombot.</string>
 
     <string name="login_title">Bejelentkezés</string>
     <string name="login_server_version">%1$s verzió</string>

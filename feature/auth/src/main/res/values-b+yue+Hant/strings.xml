@@ -13,6 +13,7 @@
     <string name="server_setup_connect">連接</string>
     <string name="server_setup_connecting">連緊伺服器…</string>
     <string name="server_setup_session_lost">冇辦法還原已儲存嘅登入資料，你已經被登出咗。請重新登入。</string>
+    <string name="server_setup_cleartext_warning">%1$s 用未加密嘅連線回應。你嘅登入權杖同你睇嘅所有嘢都會以明文喺網絡上面傳送，中間任何人都睇得到。如果照樣繼續，請再撳一次「連接」。</string>
 
     <string name="login_title">登入</string>
     <string name="login_server_version">版本 %1$s</string>

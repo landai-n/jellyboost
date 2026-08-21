@@ -13,6 +13,7 @@
     <string name="server_setup_connect">اتصال</string>
     <string name="server_setup_connecting">در حال تماس با سرور…</string>
     <string name="server_setup_session_lost">ورود ذخیره‌شده شما بازیابی نشد، بنابراین از حساب شما خارج شدید. لطفاً دوباره وارد شوید.</string>
+    <string name="server_setup_cleartext_warning">%1$s از طریق یک اتصال رمزگذاری‌نشده پاسخ داد. توکن ورود شما و هر آنچه تماشا می‌کنید به‌صورت رمزنگاری‌نشده از شبکه عبور می‌کند و هر کسی در میانه راه می‌تواند آن را بخواند. برای ادامه به هر حال، دوباره «اتصال» را بزنید.</string>
 
     <string name="login_title">ورود</string>
     <string name="login_server_version">نسخه %1$s</string>

@@ -13,6 +13,7 @@
     <string name="server_setup_connect">Повежи се</string>
     <string name="server_setup_connecting">Контактирање сервера…</string>
     <string name="server_setup_session_lost">Ваша сачувана пријава није могла да се обнови, па сте одјављени. Пријавите се поново.</string>
+    <string name="server_setup_cleartext_warning">%1$s је одговорио преко нешифроване везе. Ваш токен за пријаву и све што гледате путовали би кроз мрежу у отвореном облику, где их свако на путу може прочитати. Ако ипак желите да наставите, поново притисните „Повежи се”.</string>
 
     <string name="login_title">Пријава</string>
     <string name="login_server_version">Верзија %1$s</string>

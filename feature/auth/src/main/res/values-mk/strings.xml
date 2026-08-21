@@ -13,6 +13,7 @@
     <string name="server_setup_connect">Поврзи се</string>
     <string name="server_setup_connecting">Контактирање со серверот…</string>
     <string name="server_setup_session_lost">Зачуваната најава не можеше да се обнови, па бевте одјавени. Најавете се повторно.</string>
+    <string name="server_setup_cleartext_warning">%1$s одговори преку нешифрирана врска. Вашиот токен за најава и сè што гледате би патувале низ мрежата во отворен облик, каде што секој на патот може да ги прочита. Сепак, за да продолжите, притиснете „Поврзи се” повторно.</string>
 
     <string name="login_title">Најава</string>
     <string name="login_server_version">Верзија %1$s</string>

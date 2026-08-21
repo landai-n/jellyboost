@@ -13,6 +13,7 @@
     <string name="server_setup_connect">Připojit</string>
     <string name="server_setup_connecting">Kontaktuje se server…</string>
     <string name="server_setup_session_lost">Vaše uložené přihlášení se nepodařilo obnovit, proto jste byli odhlášeni. Přihlaste se prosím znovu.</string>
+    <string name="server_setup_cleartext_warning">%1$s odpověděl přes nešifrované připojení. Váš přihlašovací token i vše, co sledujete, by putovaly sítí v otevřené podobě, kde si je může přečíst kdokoli po cestě. Chcete-li přesto pokračovat, stiskněte znovu „Připojit“.</string>
 
     <string name="login_title">Přihlášení</string>
     <string name="login_server_version">Verze %1$s</string>

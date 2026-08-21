@@ -13,6 +13,7 @@
     <string name="server_setup_connect">ಸಂಪರ್ಕಿಸಿ</string>
     <string name="server_setup_connecting">ಸರ್ವರ್ ಅನ್ನು ಸಂಪರ್ಕಿಸಲಾಗುತ್ತಿದೆ…</string>
     <string name="server_setup_session_lost">ನಿಮ್ಮ ಉಳಿಸಿದ ಸೈನ್-ಇನ್ ಅನ್ನು ಮರುಸ್ಥಾಪಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ, ಆದ್ದರಿಂದ ನಿಮ್ಮನ್ನು ಸೈನ್ ಔಟ್ ಮಾಡಲಾಗಿದೆ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಸೈನ್ ಇನ್ ಮಾಡಿ.</string>
+    <string name="server_setup_cleartext_warning">%1$s ಎನ್‌ಕ್ರಿಪ್ಟ್ ಆಗಿಲ್ಲದ ಸಂಪರ್ಕದ ಮೂಲಕ ಪ್ರತಿಕ್ರಿಯಿಸಿದೆ. ನಿಮ್ಮ ಸೈನ್-ಇನ್ ಟೋಕನ್ ಮತ್ತು ನೀವು ನೋಡುವ ಎಲ್ಲವೂ ನೆಟ್‌ವರ್ಕ್‌ನಲ್ಲಿ ಸರಳ ಪಠ್ಯವಾಗಿ ಸಾಗುತ್ತವೆ, ನಡುವೆ ಇರುವ ಯಾರಾದರೂ ಅವುಗಳನ್ನು ಓದಬಹುದು. ಹಾಗಿದ್ದರೂ ಮುಂದುವರಿಸಲು ಮತ್ತೆ “ಸಂಪರ್ಕಿಸಿ” ಒತ್ತಿ.</string>
 
     <string name="login_title">ಸೈನ್ ಇನ್</string>
     <string name="login_server_version">ಆವೃತ್ತಿ %1$s</string>

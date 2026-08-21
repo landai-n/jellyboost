@@ -13,6 +13,7 @@
     <string name="server_setup_connect">Anslut</string>
     <string name="server_setup_connecting">Kontaktar servern…</string>
     <string name="server_setup_session_lost">Din sparade inloggning kunde inte återställas, så du har loggats ut. Logga in igen.</string>
+    <string name="server_setup_cleartext_warning">%1$s svarade över en okrypterad anslutning. Din inloggningstoken och allt du tittar på skulle skickas i klartext över nätverket, där vem som helst däremellan kan läsa det. Tryck på ”Anslut” igen för att fortsätta ändå.</string>
 
     <string name="login_title">Logga in</string>
     <string name="login_server_version">Version %1$s</string>

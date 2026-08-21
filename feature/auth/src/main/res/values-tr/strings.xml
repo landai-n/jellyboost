@@ -12,6 +12,7 @@
     <string name="server_setup_connect">Bağlan</string>
     <string name="server_setup_connecting">Sunucuyla iletişime geçiliyor…</string>
     <string name="server_setup_session_lost">Kaydedilmiş oturumunuz geri yüklenemedi, bu yüzden oturumunuz kapatıldı. Lütfen tekrar giriş yapın.</string>
+    <string name="server_setup_cleartext_warning">%1$s şifrelenmemiş bir bağlantı üzerinden yanıt verdi. Giriş jetonunuz ve izlediğiniz her şey ağ üzerinden açık şekilde geçer; aradaki herkes bunları okuyabilir. Yine de devam etmek için “Bağlan” düğmesine tekrar basın.</string>
     <string name="login_title">Giriş yap</string>
     <string name="login_server_version">Sürüm %1$s</string>
     <string name="login_server_version_unknown">Sürüm bilinmiyor</string>

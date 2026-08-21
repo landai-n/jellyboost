@@ -13,6 +13,7 @@
     <string name="server_setup_connect">Savienot</string>
     <string name="server_setup_connecting">Sazinās ar serveri…</string>
     <string name="server_setup_session_lost">Saglabāto pieteikšanos neizdevās atjaunot, tāpēc jūs tikāt atslēgts. Lūdzu, piesakieties vēlreiz.</string>
+    <string name="server_setup_cleartext_warning">%1$s atbildēja, izmantojot nešifrētu savienojumu. Jūsu pieteikšanās pilnvara un viss, ko skatāties, tīklā tiktu pārraidīts atklātā tekstā, un ikviens starpnieks to var izlasīt. Lai tomēr turpinātu, vēlreiz nospiediet “Savienot”.</string>
 
     <string name="login_title">Pieteikties</string>
     <string name="login_server_version">Versija %1$s</string>

@@ -13,6 +13,7 @@
     <string name="server_setup_connect">اتصال</string>
     <string name="server_setup_connecting">جارٍ الاتصال بالخادم…</string>
     <string name="server_setup_session_lost">تعذّرت استعادة تسجيل دخولك المحفوظ، لذا تم تسجيل خروجك. يُرجى تسجيل الدخول مرة أخرى.</string>
+    <string name="server_setup_cleartext_warning">أجاب %1$s عبر اتصال غير مشفّر. سيعبر رمز تسجيل دخولك وكل ما تشاهده الشبكة دون تشفير، حيث يمكن لأي طرف في المنتصف قراءتهما. اضغط «اتصال» مرة أخرى للمتابعة على أي حال.</string>
 
     <string name="login_title">تسجيل الدخول</string>
     <string name="login_server_version">الإصدار %1$s</string>

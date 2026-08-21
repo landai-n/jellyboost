@@ -13,6 +13,7 @@
     <string name="server_setup_connect">ގުޅާ</string>
     <string name="server_setup_connecting">ސަރވަރއަށް ގުޅަނީ…</string>
     <string name="server_setup_session_lost">ތިޔަ ސޭވްކޮށްފައިވާ ސައިން އިން އަނބުރާ ނުގެނެވުނު، ވީމާ ސައިން އައުޓް ކުރެވިއްޖެ. އަލުން ސައިން އިން ކުރައްވާ.</string>
+    <string name="server_setup_cleartext_warning">%1$s ޖަވާބު ދިނީ އެންކްރިޕްޓް ނުކުރެވޭ ގުޅުމަކުންނެވެ. ތިޔަ ސައިން އިން ޓޯކަނާއި ތިޔަ ބައްލަވާ ހުރިހާ އެއްޗެއް ނެޓްވޯކްގައި ރައްކާތެރިކަމެއް ނެތި ދަތުރުކުރާނެއެވެ. މެދުގައި ތިބި ކޮންމެ މީހަކަށްވެސް އެ ކިޔޭނެއެވެ. އެހެންވިޔަސް ކުރިއަށް ދިއުމަށް އަލުން “ގުޅާ” އަށް ފިތާލައްވާ.</string>
 
     <string name="login_title">ސައިން އިން</string>
     <string name="login_server_version">ވާރޝަން %1$s</string>

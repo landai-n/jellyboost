@@ -13,6 +13,7 @@
     <string name="server_setup_connect">Холбогдох</string>
     <string name="server_setup_connecting">Серверт хандаж байна…</string>
     <string name="server_setup_session_lost">Таны хадгалсан нэвтрэлтийг сэргээж чадаагүй тул системээс гарлаа. Дахин нэвтэрнэ үү.</string>
+    <string name="server_setup_cleartext_warning">%1$s шифрлэгдээгүй холболтоор хариулав. Таны нэвтрэх токен болон таны үзэж буй бүх зүйл сүлжээгээр ил байдлаар дамжих бөгөөд дундах хэн ч уншиж чадна. Ямартай ч үргэлжлүүлэхийн тулд «Холбогдох» товчийг дахин дарна уу.</string>
 
     <string name="login_title">Нэвтрэх</string>
     <string name="login_server_version">Хувилбар %1$s</string>

@@ -13,6 +13,7 @@
     <string name="server_setup_connect">Yhdistä</string>
     <string name="server_setup_connecting">Otetaan yhteyttä palvelimeen…</string>
     <string name="server_setup_session_lost">Tallennettua kirjautumista ei voitu palauttaa, joten sinut on kirjattu ulos. Kirjaudu sisään uudelleen.</string>
+    <string name="server_setup_cleartext_warning">%1$s vastasi salaamattoman yhteyden kautta. Kirjautumistunnuksesi ja kaikki katsomasi kulkisivat verkossa selkokielisenä, ja kuka tahansa välissä oleva voi lukea ne. Paina ”Yhdistä” uudelleen, jos haluat silti jatkaa.</string>
 
     <string name="login_title">Kirjaudu sisään</string>
     <string name="login_server_version">Versio %1$s</string>

@@ -13,6 +13,7 @@
     <string name="server_setup_connect">ਜੁੜੋ</string>
     <string name="server_setup_connecting">ਸਰਵਰ ਨਾਲ ਸੰਪਰਕ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ…</string>
     <string name="server_setup_session_lost">ਤੁਹਾਡਾ ਸੰਭਾਲਿਆ ਸਾਈਨ-ਇਨ ਬਹਾਲ ਨਹੀਂ ਹੋ ਸਕਿਆ, ਇਸ ਲਈ ਤੁਹਾਨੂੰ ਸਾਈਨ ਆਉਟ ਕਰ ਦਿੱਤਾ ਗਿਆ ਹੈ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਸਾਈਨ ਇਨ ਕਰੋ।</string>
+    <string name="server_setup_cleartext_warning">%1$s ਨੇ ਬਿਨਾਂ ਇਨਕ੍ਰਿਪਸ਼ਨ ਵਾਲੇ ਕਨੈਕਸ਼ਨ ਰਾਹੀਂ ਜਵਾਬ ਦਿੱਤਾ। ਤੁਹਾਡਾ ਸਾਈਨ-ਇਨ ਟੋਕਨ ਅਤੇ ਜੋ ਕੁਝ ਵੀ ਤੁਸੀਂ ਦੇਖਦੇ ਹੋ, ਉਹ ਨੈੱਟਵਰਕ ਉੱਤੇ ਖੁੱਲ੍ਹੇ ਰੂਪ ਵਿੱਚ ਲੰਘੇਗਾ, ਜਿੱਥੇ ਵਿਚਕਾਰਲਾ ਕੋਈ ਵੀ ਇਸਨੂੰ ਪੜ੍ਹ ਸਕਦਾ ਹੈ। ਫਿਰ ਵੀ ਜਾਰੀ ਰੱਖਣ ਲਈ ਦੁਬਾਰਾ “ਜੁੜੋ” ਦਬਾਓ।</string>
 
     <string name="login_title">ਸਾਈਨ ਇਨ ਕਰੋ</string>
     <string name="login_server_version">ਵਰਜਨ %1$s</string>

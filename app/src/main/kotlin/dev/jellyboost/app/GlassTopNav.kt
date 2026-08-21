@@ -150,11 +150,19 @@ private fun TopNavTabs(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         TopLevelTab.entries.forEach { tab ->
+            val selected = currentDestination.isSelected(tab)
             TopNavTab(
                 tab = tab,
-                selected = currentDestination.isSelected(tab),
+                selected = selected,
                 onClick = { onSelectTab(tab.route) },
-                modifier = Modifier.weight(1f, fill = false),
+                // The selected tab is the only one carrying a label, so it is deliberately NOT
+                // weighted — it hugs its word, exactly as `GlassBottomNav.UNSELECTED_ITEM_WEIGHT`'s
+                // KDoc prescribes for the pill. Weighting all four equally handed the labelled tab
+                // the same slice as an icon-only one, which on a portrait tablet (the one width
+                // where this bar is shown *and* starved) ellipsised the label — the sibling bug of
+                // the one that KDoc records (device walk, 2026-08-21). Unselected tabs keep the
+                // equal weight so starvation, when it truly runs out of room, degrades them evenly.
+                modifier = if (selected) Modifier else Modifier.weight(1f, fill = false),
             )
         }
     }

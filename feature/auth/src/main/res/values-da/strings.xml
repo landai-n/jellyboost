@@ -13,6 +13,7 @@
     <string name="server_setup_connect">Opret forbindelse</string>
     <string name="server_setup_connecting">Kontakter serveren…</string>
     <string name="server_setup_session_lost">Dit gemte login kunne ikke gendannes, så du er blevet logget ud. Log ind igen.</string>
+    <string name="server_setup_cleartext_warning">%1$s svarede over en ukrypteret forbindelse. Dit login-token og alt, hvad du ser, ville krydse netværket i klartekst, hvor enhver undervejs kan læse det. Tryk på “Opret forbindelse” igen for at fortsætte alligevel.</string>
 
     <string name="login_title">Log ind</string>
     <string name="login_server_version">Version %1$s</string>

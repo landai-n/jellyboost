@@ -13,6 +13,7 @@
     <string name="server_setup_connect">Подключиться</string>
     <string name="server_setup_connecting">Связь с сервером…</string>
     <string name="server_setup_session_lost">Не удалось восстановить сохранённый вход, поэтому вы вышли из аккаунта. Войдите снова.</string>
+    <string name="server_setup_cleartext_warning">%1$s ответил по незашифрованному соединению. Ваш токен входа и всё, что вы смотрите, будут передаваться по сети в открытом виде, и любой посредник сможет их прочитать. Чтобы всё равно продолжить, нажмите «Подключиться» ещё раз.</string>
 
     <string name="login_title">Вход</string>
     <string name="login_server_version">Версия %1$s</string>

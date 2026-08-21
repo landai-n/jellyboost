@@ -13,6 +13,7 @@
     <string name="server_setup_connect">Poveži se</string>
     <string name="server_setup_connecting">Vzpostavljanje stika s strežnikom…</string>
     <string name="server_setup_session_lost">Shranjene prijave ni bilo mogoče obnoviti, zato ste bili odjavljeni. Prosimo, znova se prijavite.</string>
+    <string name="server_setup_cleartext_warning">%1$s je odgovoril prek nešifrirane povezave. Vaš prijavni žeton in vse, kar gledate, bi po omrežju potovalo v odprti obliki, kjer lahko kdor koli na poti to prebere. Če želite kljub temu nadaljevati, znova pritisnite „Poveži se“.</string>
 
     <string name="login_title">Prijava</string>
     <string name="login_server_version">Različica %1$s</string>

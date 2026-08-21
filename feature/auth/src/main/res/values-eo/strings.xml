@@ -12,6 +12,7 @@
     <string name="server_setup_connect">Konekti</string>
     <string name="server_setup_connecting">Kontaktante la servilon…</string>
     <string name="server_setup_session_lost">Via konservita ensaluto ne povis esti restaŭrita, do vi estas adiaŭigita. Bonvolu ensaluti denove.</string>
+    <string name="server_setup_cleartext_warning">%1$s respondis per neĉifrita konekto. Via ensaluta ĵetono kaj ĉio, kion vi spektas, transirus la reton en klara teksto, kie iu ajn survoje povas legi ilin. Premu denove “Konekti” por tamen daŭrigi.</string>
     <string name="login_title">Ensaluti</string>
     <string name="login_server_version">Versio %1$s</string>
     <string name="login_server_version_unknown">Nekonata versio</string>

@@ -13,6 +13,7 @@
     <string name="server_setup_connect">연결</string>
     <string name="server_setup_connecting">서버에 연결하는 중…</string>
     <string name="server_setup_session_lost">저장된 로그인 정보를 복원할 수 없어 로그아웃되었습니다. 다시 로그인해 주세요.</string>
+    <string name="server_setup_cleartext_warning">%1$s이(가) 암호화되지 않은 연결로 응답했습니다. 로그인 토큰과 시청하는 모든 내용이 평문으로 네트워크를 지나가며, 중간에 있는 누구나 읽을 수 있습니다. 그래도 계속하려면 “연결”을(를) 다시 누르세요.</string>
 
     <string name="login_title">로그인</string>
     <string name="login_server_version">버전 %1$s</string>

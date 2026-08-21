@@ -13,6 +13,7 @@
     <string name="server_setup_connect">இணை</string>
     <string name="server_setup_connecting">சேவையகத்தைத் தொடர்பு கொள்கிறது…</string>
     <string name="server_setup_session_lost">உங்கள் சேமிக்கப்பட்ட உள்நுழைவை மீட்டெடுக்க முடியவில்லை, எனவே நீங்கள் வெளியேற்றப்பட்டுள்ளீர்கள். மீண்டும் உள்நுழையவும்.</string>
+    <string name="server_setup_cleartext_warning">%1$s குறியாக்கம் செய்யப்படாத இணைப்பின் வழியாகப் பதிலளித்தது. உங்கள் உள்நுழைவு டோக்கனும் நீங்கள் பார்க்கும் அனைத்தும் நெட்வொர்க்கில் குறியாக்கமின்றிச் செல்லும், இடையில் உள்ள யார் வேண்டுமானாலும் அவற்றைப் படிக்க முடியும். இருப்பினும் தொடர மீண்டும் “இணை” என்பதை அழுத்தவும்.</string>
 
     <string name="login_title">உள்நுழை</string>
     <string name="login_server_version">பதிப்பு %1$s</string>

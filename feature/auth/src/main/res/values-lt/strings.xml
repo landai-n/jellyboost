@@ -13,6 +13,7 @@
     <string name="server_setup_connect">Prisijungti</string>
     <string name="server_setup_connecting">Susisiekiama su serveriu…</string>
     <string name="server_setup_session_lost">Nepavyko atkurti išsaugoto prisijungimo, todėl buvote atjungti. Prisijunkite dar kartą.</string>
+    <string name="server_setup_cleartext_warning">%1$s atsakė neužšifruotu ryšiu. Jūsų prisijungimo prieigos raktas ir viskas, ką žiūrite, tinklu keliautų atviru tekstu, todėl bet kas pakeliui gali tai perskaityti. Jei vis tiek norite tęsti, dar kartą paspauskite „Prisijungti“.</string>
 
     <string name="login_title">Prisijungti</string>
     <string name="login_server_version">Versija %1$s</string>

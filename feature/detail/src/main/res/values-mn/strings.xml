@@ -16,6 +16,12 @@
     <string name="detail_section_episodes">Ангиуд</string>
     <string name="detail_section_similar">Үүнтэй төстэй</string>
     <string name="detail_section_cast">Жүжигчид</string>
+    <string name="detail_section_next_episode">Дараагийн анги</string>
+    <string name="detail_section_more_from_season">%1$d улирлаас өөр</string>
+    <string name="detail_section_more_from_season_unnumbered">Энэ улирлаас өөр</string>
+    <string name="detail_go_to_series">%1$s цувралд очих</string>
+    <string name="detail_go_to_season">%1$d улирал</string>
+    <string name="detail_go_to_season_description">%1$d улиралд очих</string>
     <string name="detail_type_movie">Кино</string>
     <string name="detail_type_series">Цуврал</string>
     <string name="detail_type_season">Улирал</string>

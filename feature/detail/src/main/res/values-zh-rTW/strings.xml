@@ -16,6 +16,12 @@
     <string name="detail_section_episodes">集數</string>
     <string name="detail_section_similar">更多類似內容</string>
     <string name="detail_section_cast">演員表</string>
+    <string name="detail_section_next_episode">下一集</string>
+    <string name="detail_section_more_from_season">第 %1$d 季更多內容</string>
+    <string name="detail_section_more_from_season_unnumbered">本季更多內容</string>
+    <string name="detail_go_to_series">前往劇集 %1$s</string>
+    <string name="detail_go_to_season">第 %1$d 季</string>
+    <string name="detail_go_to_season_description">前往第 %1$d 季</string>
     <string name="detail_type_movie">電影</string>
     <string name="detail_type_series">劇集</string>
     <string name="detail_type_season">季</string>

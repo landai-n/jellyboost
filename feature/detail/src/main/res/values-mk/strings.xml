@@ -16,6 +16,12 @@
     <string name="detail_section_episodes">Епизоди</string>
     <string name="detail_section_similar">Слично на ова</string>
     <string name="detail_section_cast">Актерска постава</string>
+    <string name="detail_section_next_episode">Следна епизода</string>
+    <string name="detail_section_more_from_season">Повеќе од Сезона %1$d</string>
+    <string name="detail_section_more_from_season_unnumbered">Повеќе од оваа сезона</string>
+    <string name="detail_go_to_series">Оди на серијата %1$s</string>
+    <string name="detail_go_to_season">Сезона %1$d</string>
+    <string name="detail_go_to_season_description">Оди на сезона %1$d</string>
     <string name="detail_type_movie">Филм</string>
     <string name="detail_type_series">Серија</string>
     <string name="detail_type_season">Сезона</string>

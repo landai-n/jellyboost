@@ -198,6 +198,7 @@ internal fun JellyfinNavHost(
                 },
                 onBack = { navController.popBackStack() },
                 onHome = { navController.navigateHome() },
+                onNavigateToItemId = { id -> navController.navigate(Routes.ItemDetail(id)) },
             )
         }
 

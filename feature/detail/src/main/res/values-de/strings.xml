@@ -16,6 +16,12 @@
     <string name="detail_section_episodes">Folgen</string>
     <string name="detail_section_similar">Ähnliche Titel</string>
     <string name="detail_section_cast">Besetzung</string>
+    <string name="detail_section_next_episode">Nächste Folge</string>
+    <string name="detail_section_more_from_season">Mehr aus Staffel %1$d</string>
+    <string name="detail_section_more_from_season_unnumbered">Mehr aus dieser Staffel</string>
+    <string name="detail_go_to_series">Zur Serie %1$s</string>
+    <string name="detail_go_to_season">Staffel %1$d</string>
+    <string name="detail_go_to_season_description">Zur Staffel %1$d</string>
     <string name="detail_type_movie">Film</string>
     <string name="detail_type_series">Serie</string>
     <string name="detail_type_season">Staffel</string>

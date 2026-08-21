@@ -16,6 +16,12 @@
     <string name="detail_section_episodes">Episoder</string>
     <string name="detail_section_similar">Mer som dette</string>
     <string name="detail_section_cast">Rollebesetning</string>
+    <string name="detail_section_next_episode">Neste episode</string>
+    <string name="detail_section_more_from_season">Mer fra Sesong %1$d</string>
+    <string name="detail_section_more_from_season_unnumbered">Mer fra denne sesongen</string>
+    <string name="detail_go_to_series">Gå til serien %1$s</string>
+    <string name="detail_go_to_season">Sesong %1$d</string>
+    <string name="detail_go_to_season_description">Gå til sesong %1$d</string>
     <string name="detail_type_movie">Film</string>
     <string name="detail_type_series">Serie</string>
     <string name="detail_type_season">Sesong</string>

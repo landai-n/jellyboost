@@ -23,13 +23,19 @@ declaring the task done.
    Then run the audit-derived guardrail scripts (each sub-second, all must pass):
 
    ```bash
-   python3 scripts/check_docs.py && python3 scripts/check_identifiers.py && python3 scripts/check_patterns.py
+   python3 scripts/check_docs.py && python3 scripts/check_identifiers.py && \
+     python3 scripts/check_patterns.py && python3 scripts/check_a11y_scaffolding.py
    ```
 
    `check_patterns.py` is a ratchet: if it flags a file you changed, fix the code rather
    than updating the baseline; a baseline update is allowed only as a deliberate, explained
    act in the same commit. `check_identifiers.py` failing means a personal/infrastructure
    identifier is in the tree — remove it, never work around the check.
+   `check_a11y_scaffolding.py` fails when a module draws `@Composable` screens with no
+   instrumented accessibility test and no entry in `scripts/a11y-scaffolding-allowlist.json`
+   (accessibility audit 2026-08-05, CR-7). Prefer writing the test; allowlisting is a
+   deliberate act that costs a sentence of justification, and the script fails on a *stale*
+   entry too, so the list cannot quietly become a graveyard.
 
 2. If any task fails:
    - Read the failure output carefully (ktlint formatting, detekt findings, test

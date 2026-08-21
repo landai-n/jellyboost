@@ -15,6 +15,12 @@
     <string name="detail_section_episodes">Epizodoj</string>
     <string name="detail_section_similar">Pli simila enhavo</string>
     <string name="detail_section_cast">Rolantaro</string>
+    <string name="detail_section_next_episode">Sekva epizodo</string>
+    <string name="detail_section_more_from_season">Pli el Sezono %1$d</string>
+    <string name="detail_section_more_from_season_unnumbered">Pli el ĉi tiu sezono</string>
+    <string name="detail_go_to_series">Iri al la serio %1$s</string>
+    <string name="detail_go_to_season">Sezono %1$d</string>
+    <string name="detail_go_to_season_description">Iri al sezono %1$d</string>
     <string name="detail_type_movie">Filmo</string>
     <string name="detail_type_series">Serio</string>
     <string name="detail_type_season">Sezono</string>

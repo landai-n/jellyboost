@@ -382,8 +382,10 @@ class ItemDetailViewModel
         private suspend fun fetchRelated(item: JellyfinItem): Related =
             coroutineScope {
                 val isSeries = item.type == ItemType.SERIES
+                val isEpisode = item.type == ItemType.EPISODE
                 val seasonId = item.id.takeIf { item.type == ItemType.SEASON }
                 val seriesId = item.seriesId
+                val episodeSeasonId = item.seasonId
 
                 val seasons =
                     if (isSeries) async { repository.getSeasons(item.id).getOrNull().orEmpty() } else null
@@ -395,6 +397,22 @@ class ItemDetailViewModel
                     } else {
                         null
                     }
+                // Episode detail's "More from this season" row — deliberately a separate fetch from
+                // the season page's own `episodes` above, which also drives batch-selection/download.
+                val seasonEpisodes =
+                    if (isEpisode && seriesId != null && episodeSeasonId != null) {
+                        async { repository.getEpisodes(seriesId, episodeSeasonId).getOrNull().orEmpty() }
+                    } else {
+                        null
+                    }
+                // The positional successor across the whole series (not `getNextUpForSeries`, which
+                // is next-*unwatched* and wrong on a rewatch) — same recipe as `groupPlayQueue`.
+                val seriesEpisodesForNext =
+                    if (isEpisode && seriesId != null) {
+                        async { repository.getSeriesEpisodes(seriesId).getOrNull().orEmpty() }
+                    } else {
+                        null
+                    }
                 val similar =
                     if (item.type in SIMILAR_TYPES) {
                         async { repository.getSimilarItems(item.id).getOrNull().orEmpty() }
@@ -402,10 +420,19 @@ class ItemDetailViewModel
                         null
                     }
 
+                val allSeriesEpisodes = seriesEpisodesForNext?.await().orEmpty()
+                val nextEpisode =
+                    allSeriesEpisodes
+                        .indexOfFirst { it.id == item.id }
+                        .takeIf { it >= 0 }
+                        ?.let { allSeriesEpisodes.getOrNull(it + 1) }
+
                 Related(
                     seasons = seasons?.await().orEmpty(),
                     episodes = episodes?.await().orEmpty(),
                     nextUp = nextUp?.await(),
+                    nextEpisode = nextEpisode,
+                    seasonEpisodes = seasonEpisodes?.await().orEmpty(),
                     similar = similar?.await().orEmpty(),
                 )
             }
@@ -425,6 +452,8 @@ class ItemDetailViewModel
                         seasons = related.seasons,
                         episodes = related.episodes,
                         nextUp = related.nextUp,
+                        nextEpisode = related.nextEpisode,
+                        seasonEpisodes = related.seasonEpisodes,
                         similar = related.similar,
                         errorMessage = null,
                     ).withDownloadStates(downloadsDelegate.states)
@@ -442,6 +471,8 @@ private data class Related(
     val seasons: List<JellyfinItem>,
     val episodes: List<JellyfinItem>,
     val nextUp: JellyfinItem?,
+    val nextEpisode: JellyfinItem?,
+    val seasonEpisodes: List<JellyfinItem>,
     val similar: List<JellyfinItem>,
 )
 

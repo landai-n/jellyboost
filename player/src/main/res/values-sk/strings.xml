@@ -43,6 +43,10 @@
     <string name="player_skip_intro">Preskočiť úvod</string>
     <string name="player_skip_outro">Preskočiť záver</string>
 
+    <string name="player_up_next_title">Ďalej</string>
+    <string name="player_up_next_play">Prehrať ďalšiu epizódu</string>
+    <string name="player_up_next_dismiss">Pozrieť záverečné titulky</string>
+
     <string name="player_quality_auto">Automaticky</string>
     <string name="player_quality_high">Vysoká — 20 Mbps</string>
     <string name="player_quality_medium">Stredná — 8 Mbps</string>

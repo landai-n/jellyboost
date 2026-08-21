@@ -16,6 +16,12 @@
     <string name="detail_section_episodes">الحلقات</string>
     <string name="detail_section_similar">أعمال مشابهة</string>
     <string name="detail_section_cast">طاقم التمثيل</string>
+    <string name="detail_section_next_episode">الحلقة التالية</string>
+    <string name="detail_section_more_from_season">المزيد من الموسم %1$d</string>
+    <string name="detail_section_more_from_season_unnumbered">المزيد من هذا الموسم</string>
+    <string name="detail_go_to_series">الانتقال إلى مسلسل %1$s</string>
+    <string name="detail_go_to_season">الموسم %1$d</string>
+    <string name="detail_go_to_season_description">الانتقال إلى الموسم %1$d</string>
     <string name="detail_type_movie">فيلم</string>
     <string name="detail_type_series">مسلسل</string>
     <string name="detail_type_season">موسم</string>

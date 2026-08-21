@@ -118,6 +118,7 @@ internal class PlayerViewModelCastTest : PlayerViewModelFixture() {
             fallback = DecoderFallbackHandler(),
             trickplayResolver = trickplayResolver,
             segmentLoader = segmentLoader,
+            upNextResolver = upNextResolver,
             preferences = preferences,
             pipController = pipController,
             connectionState = connectionState,

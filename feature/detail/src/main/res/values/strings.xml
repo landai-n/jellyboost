@@ -19,6 +19,19 @@
     <string name="detail_section_episodes">Episodes</string>
     <string name="detail_section_similar">More like this</string>
     <string name="detail_section_cast">Cast</string>
+    <!-- An episode page's own "up next" row: the episode that follows it in series order. -->
+    <string name="detail_section_next_episode">Next episode</string>
+    <!-- The rest of the episode's season, excluding the episode itself. %1$d is the season number. -->
+    <string name="detail_section_more_from_season">More from Season %1$d</string>
+    <!-- Same row, when the season has no number the server reported. -->
+    <string name="detail_section_more_from_season_unnumbered">More from this season</string>
+
+    <!-- Episode origin chips: shortcuts under the title lockup back to the series/season a
+         standalone episode page belongs to. The series chip's label is the series name itself;
+         only its contentDescription is this resource. -->
+    <string name="detail_go_to_series">Go to series %1$s</string>
+    <string name="detail_go_to_season">Season %1$d</string>
+    <string name="detail_go_to_season_description">Go to season %1$d</string>
 
     <!-- Metadata -->
     <!-- The item's kind, drawn as the title lockup's eyebrow (uppercased in code). -->

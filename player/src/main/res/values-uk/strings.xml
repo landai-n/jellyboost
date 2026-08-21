@@ -43,6 +43,10 @@
     <string name="player_skip_intro">Пропустити заставку</string>
     <string name="player_skip_outro">Пропустити завершення</string>
 
+    <string name="player_up_next_title">Далі</string>
+    <string name="player_up_next_play">Відтворити наступний епізод</string>
+    <string name="player_up_next_dismiss">Дивитися титри</string>
+
     <string name="player_quality_auto">Авто</string>
     <string name="player_quality_high">Висока — 20 Mbps</string>
     <string name="player_quality_medium">Середня — 8 Mbps</string>

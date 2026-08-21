@@ -15,6 +15,12 @@
     <string name="detail_section_episodes">Tập phim</string>
     <string name="detail_section_similar">Có thể bạn cũng thích</string>
     <string name="detail_section_cast">Diễn viên</string>
+    <string name="detail_section_next_episode">Tập tiếp theo</string>
+    <string name="detail_section_more_from_season">Thêm từ Mùa %1$d</string>
+    <string name="detail_section_more_from_season_unnumbered">Thêm từ mùa này</string>
+    <string name="detail_go_to_series">Đến phim bộ %1$s</string>
+    <string name="detail_go_to_season">Mùa %1$d</string>
+    <string name="detail_go_to_season_description">Đến Mùa %1$d</string>
     <string name="detail_type_movie">Phim</string>
     <string name="detail_type_series">Phim bộ</string>
     <string name="detail_type_season">Mùa</string>

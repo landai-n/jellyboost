@@ -37,6 +37,10 @@
     <string name="player_skip_intro">Intro überspringen</string>
     <string name="player_skip_outro">Outro überspringen</string>
 
+    <string name="player_up_next_title">Als Nächstes</string>
+    <string name="player_up_next_play">Nächste Folge abspielen</string>
+    <string name="player_up_next_dismiss">Abspann ansehen</string>
+
     <string name="player_quality_auto">Automatisch</string>
     <string name="player_quality_high">Hoch – 20 Mbps</string>
     <string name="player_quality_medium">Mittel – 8 Mbps</string>

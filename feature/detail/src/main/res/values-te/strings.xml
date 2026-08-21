@@ -16,6 +16,12 @@
     <string name="detail_section_episodes">ఎపిసోడ్‌లు</string>
     <string name="detail_section_similar">దీనిలాంటివి మరిన్ని</string>
     <string name="detail_section_cast">నటీనటులు</string>
+    <string name="detail_section_next_episode">తదుపరి ఎపిసోడ్</string>
+    <string name="detail_section_more_from_season">సీజన్ %1$d నుండి మరిన్ని</string>
+    <string name="detail_section_more_from_season_unnumbered">ఈ సీజన్ నుండి మరిన్ని</string>
+    <string name="detail_go_to_series">%1$s సిరీస్‌కి వెళ్లండి</string>
+    <string name="detail_go_to_season">సీజన్ %1$d</string>
+    <string name="detail_go_to_season_description">సీజన్ %1$dకి వెళ్లండి</string>
     <string name="detail_type_movie">సినిమా</string>
     <string name="detail_type_series">సిరీస్</string>
     <string name="detail_type_season">సీజన్</string>

@@ -16,6 +16,12 @@
     <string name="detail_section_episodes">ਐਪੀਸੋਡ</string>
     <string name="detail_section_similar">ਇਸ ਵਰਗਾ ਹੋਰ</string>
     <string name="detail_section_cast">ਕਲਾਕਾਰ</string>
+    <string name="detail_section_next_episode">ਅਗਲਾ ਐਪੀਸੋਡ</string>
+    <string name="detail_section_more_from_season">ਸੀਜ਼ਨ %1$d ਤੋਂ ਹੋਰ</string>
+    <string name="detail_section_more_from_season_unnumbered">ਇਸ ਸੀਜ਼ਨ ਤੋਂ ਹੋਰ</string>
+    <string name="detail_go_to_series">%1$s ਸੀਰੀਜ਼ ਉੱਤੇ ਜਾਓ</string>
+    <string name="detail_go_to_season">ਸੀਜ਼ਨ %1$d</string>
+    <string name="detail_go_to_season_description">ਸੀਜ਼ਨ %1$d ਉੱਤੇ ਜਾਓ</string>
     <string name="detail_type_movie">ਫ਼ਿਲਮ</string>
     <string name="detail_type_series">ਸੀਰੀਜ਼</string>
     <string name="detail_type_season">ਸੀਜ਼ਨ</string>

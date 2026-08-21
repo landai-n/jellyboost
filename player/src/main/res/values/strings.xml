@@ -63,6 +63,17 @@
     <string name="player_skip_intro">Skip intro</string>
     <string name="player_skip_outro">Skip outro</string>
 
+    <!--
+      The up-next card, drawn in the same corner as the skip pill while an episode's ending plays.
+      `player_up_next_title` is the eyebrow over the episode line and the first half of the card's
+      spoken sentence; `player_up_next_dismiss` is the close button's description, and is worded as
+      what staying does ("Watch credits") rather than as what the button is ("Close"), because that
+      is the choice being offered (WCAG 2.5.3).
+    -->
+    <string name="player_up_next_title">Up next</string>
+    <string name="player_up_next_play">Play next episode</string>
+    <string name="player_up_next_dismiss">Watch credits</string>
+
     <string name="player_quality_auto">Auto</string>
     <string name="player_quality_high">High — 20 Mbps</string>
     <string name="player_quality_medium">Medium — 8 Mbps</string>

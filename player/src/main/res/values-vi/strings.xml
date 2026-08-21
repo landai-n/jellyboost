@@ -31,6 +31,10 @@
     <string name="player_done">Xong</string>
     <string name="player_skip_intro">Bỏ qua đoạn giới thiệu</string>
     <string name="player_skip_outro">Bỏ qua đoạn kết</string>
+
+    <string name="player_up_next_title">Tiếp theo</string>
+    <string name="player_up_next_play">Phát tập tiếp theo</string>
+    <string name="player_up_next_dismiss">Xem phần credit</string>
     <string name="player_quality_auto">Tự động</string>
     <string name="player_quality_high">Cao — 20 Mbps</string>
     <string name="player_quality_medium">Trung bình — 8 Mbps</string>

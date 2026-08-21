@@ -40,6 +40,10 @@
     <string name="player_skip_intro">Izlaist ievadu</string>
     <string name="player_skip_outro">Izlaist nobeigumu</string>
 
+    <string name="player_up_next_title">Nākamais</string>
+    <string name="player_up_next_play">Atskaņot nākamo sēriju</string>
+    <string name="player_up_next_dismiss">Skatīties titrus</string>
+
     <string name="player_quality_auto">Automātiski</string>
     <string name="player_quality_high">Augsta — 20 Mbps</string>
     <string name="player_quality_medium">Vidēja — 8 Mbps</string>

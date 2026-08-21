@@ -30,6 +30,14 @@ data class ItemDetailUiState(
     val episodes: List<JellyfinItem> = emptyList(),
     /** Series detail: the next episode to watch, if any. */
     val nextUp: JellyfinItem? = null,
+    /** Episode detail: the episode that follows this one in series order, if any. */
+    val nextEpisode: JellyfinItem? = null,
+    /**
+     * Episode detail: the parent season's episodes. Deliberately separate from [episodes], which
+     * drives the season page's batch-selection/download/play semantics and stays empty on episode
+     * pages.
+     */
+    val seasonEpisodes: List<JellyfinItem> = emptyList(),
     /** Movie / series / episode detail: the *More like this* row. */
     val similar: List<JellyfinItem> = emptyList(),
     /**
@@ -296,6 +304,8 @@ internal fun ItemDetailUiState.withUserData(
         seasons = seasons.patch(itemId, userData),
         episodes = episodes.patch(itemId, userData),
         nextUp = nextUp?.patch(itemId, userData),
+        nextEpisode = nextEpisode?.patch(itemId, userData),
+        seasonEpisodes = seasonEpisodes.patch(itemId, userData),
         similar = similar.patch(itemId, userData),
     )
 
@@ -315,6 +325,8 @@ internal fun ItemDetailUiState.withDownloadStates(states: Map<String, DownloadSt
         seasons = seasons.withDownloadStates(states),
         episodes = episodes.withDownloadStates(states),
         nextUp = nextUp?.withDownloadState(states),
+        nextEpisode = nextEpisode?.withDownloadState(states),
+        seasonEpisodes = seasonEpisodes.withDownloadStates(states),
         similar = similar.withDownloadStates(states),
     )
 

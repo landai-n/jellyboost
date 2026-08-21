@@ -16,6 +16,12 @@
     <string name="detail_section_episodes">اقساط</string>
     <string name="detail_section_similar">اس جیسے مزید</string>
     <string name="detail_section_cast">اداکار</string>
+    <string name="detail_section_next_episode">اگلی قسط</string>
+    <string name="detail_section_more_from_season">سیزن %1$d سے مزید</string>
+    <string name="detail_section_more_from_season_unnumbered">اس سیزن سے مزید</string>
+    <string name="detail_go_to_series">سیریز %1$s پر جائیں</string>
+    <string name="detail_go_to_season">سیزن %1$d</string>
+    <string name="detail_go_to_season_description">سیزن %1$d پر جائیں</string>
     <string name="detail_type_movie">فلم</string>
     <string name="detail_type_series">سیریز</string>
     <string name="detail_type_season">سیزن</string>

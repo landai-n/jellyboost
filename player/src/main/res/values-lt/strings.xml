@@ -43,6 +43,10 @@
     <string name="player_skip_intro">Praleisti įžangą</string>
     <string name="player_skip_outro">Praleisti pabaigą</string>
 
+    <string name="player_up_next_title">Kas toliau</string>
+    <string name="player_up_next_play">Leisti kitą epizodą</string>
+    <string name="player_up_next_dismiss">Žiūrėti titrus</string>
+
     <string name="player_quality_auto">Automatinis</string>
     <string name="player_quality_high">Aukšta — 20 Mbps</string>
     <string name="player_quality_medium">Vidutinė — 8 Mbps</string>

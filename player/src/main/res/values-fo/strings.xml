@@ -37,6 +37,10 @@
     <string name="player_skip_intro">Sleppa intro</string>
     <string name="player_skip_outro">Sleppa outro</string>
 
+    <string name="player_up_next_title">Næsta</string>
+    <string name="player_up_next_play">Spæl næsta part</string>
+    <string name="player_up_next_dismiss">Síggj endatekstirnar</string>
+
     <string name="player_quality_auto">Sjálvvirkandi</string>
     <string name="player_quality_high">Høgt — 20 Mbps</string>
     <string name="player_quality_medium">Meðal — 8 Mbps</string>

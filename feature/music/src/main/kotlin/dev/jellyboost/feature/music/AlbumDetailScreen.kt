@@ -54,7 +54,6 @@ import dev.jellyboost.core.ui.component.JellyfinAsyncImage
 import dev.jellyboost.core.ui.component.LoadingState
 import dev.jellyboost.core.ui.component.PrimaryPillButton
 import dev.jellyboost.core.ui.theme.Dimens
-import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
 
 /**
@@ -129,14 +128,12 @@ private fun AlbumOverlayNav(
             icon = Icons.AutoMirrored.Filled.ArrowBack,
             contentDescription = stringResource(R.string.music_album_back),
             onClick = onBack,
-            surfaceTint = GlassDefaults.ChromeFill,
         )
         Box(modifier = Modifier.weight(1f))
         GlassIconButton(
             icon = Icons.Filled.Home,
             contentDescription = stringResource(R.string.music_album_home),
             onClick = onHome,
-            surfaceTint = GlassDefaults.ChromeFill,
         )
     }
 }

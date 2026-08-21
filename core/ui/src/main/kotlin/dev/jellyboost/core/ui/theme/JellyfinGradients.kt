@@ -1,5 +1,9 @@
 package dev.jellyboost.core.ui.theme
 
+import android.graphics.Paint
+import android.graphics.RadialGradient
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -8,6 +12,9 @@ import androidx.compose.ui.graphics.RadialGradientShader
 import androidx.compose.ui.graphics.Shader
 import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.graphics.TileMode
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 
 /**
  * The jellyfin-web accent gradient (`#AA5CC3 → #00A4DC`) and the scrims the design system uses to
@@ -161,37 +168,17 @@ object JellyfinGradients {
                 )
         }
 
-    /**
-     * The colour a screen with no artwork of its own carries behind its header — the library grid's
-     * glow (2026-refresh mocks, "library screen glow").
-     *
-     * Ports `radial-gradient(80% 100% at 22% 0%, rgba(170,92,195,.17) 0%, transparent 76%)`. Fainter
-     * and further to the *start* than [HeroHalo], which sits over a backdrop and has to compete with
-     * it; this one is the only colour on the screen and would read as a wash at hero strength. Fill
-     * a box anchored to the top of the screen with it — the radius is width-derived, so the box must
-     * be at least about as tall as it is wide for the gradient to finish inside it.
-     */
-    val ScreenGlow: Brush =
-        object : ShaderBrush() {
-            /** Horizontal centre of the glow, as a fraction of the box width. */
-            private val centerXFraction = 0.22f
+    /** Horizontal centre of [screenGlow], as a fraction of the box width. */
+    internal const val SCREEN_GLOW_CENTER_X_FRACTION = 0.22f
 
-            /** Radius as a fraction of the box width; the stops fade out at 76% of it. */
-            private val radiusFraction = 0.8f
+    /** [screenGlow]'s radius as a fraction of the box width. */
+    internal const val SCREEN_GLOW_RADIUS_FRACTION = 0.8f
 
-            override fun createShader(size: Size): Shader =
-                RadialGradientShader(
-                    center = Offset(x = size.width * centerXFraction, y = 0f),
-                    radius = size.width * radiusFraction,
-                    colors =
-                        listOf(
-                            JellyfinColors.Secondary.copy(alpha = 0.17f),
-                            Color.Transparent,
-                        ),
-                    colorStops = listOf(0f, 0.76f),
-                    tileMode = TileMode.Clamp,
-                )
-        }
+    /** Where [screenGlow]'s fade reaches full transparency, as a fraction of its radius. */
+    internal const val SCREEN_GLOW_FADE_STOP = 0.76f
+
+    /** The glow's peak alpha at its centre. */
+    internal const val SCREEN_GLOW_ALPHA = 0.17f
 
     /** Placeholder fill for artwork that has not loaded (or does not exist on the server). */
     val ImagePlaceholder: Brush =
@@ -203,3 +190,46 @@ object JellyfinGradients {
                 ),
         )
 }
+
+/**
+ * The colour a screen with no artwork of its own carries behind its header — the library grid's
+ * glow (2026-refresh mocks, "library screen glow").
+ *
+ * Ports `radial-gradient(80% 100% at 22% 0%, rgba(170,92,195,.17) 0%, transparent 76%)`. Fainter
+ * and further to the *start* than [JellyfinGradients.HeroHalo], which sits over a backdrop and has
+ * to compete with it; this one is the only colour on the screen and would read as a wash at hero
+ * strength. Apply to a box anchored to the top of the screen whose height follows its width (the
+ * radius is width-derived — see the callers' `GLOW_ASPECT`).
+ *
+ * A draw modifier through the framework [android.graphics.Paint] rather than a Compose [Brush],
+ * for one reason: **dithering**. A 17%-alpha fade across hundreds of dp quantises on an 8-bit
+ * surface into concentric per-channel stepping rings — visible as a pixelated texture on a large
+ * dark panel (device walk, 2026-08-16) — and `Paint.isDither` is the switch that trades them for
+ * imperceptible noise, which Compose's gradient brushes do not expose. The shader is rebuilt only
+ * when the size changes ([drawWithCache]); the paint is one allocation per size change, not per
+ * frame.
+ */
+fun Modifier.screenGlow(): Modifier =
+    drawWithCache {
+        val paint =
+            Paint().apply {
+                isDither = true
+                shader =
+                    RadialGradient(
+                        size.width * JellyfinGradients.SCREEN_GLOW_CENTER_X_FRACTION,
+                        0f,
+                        size.width * JellyfinGradients.SCREEN_GLOW_RADIUS_FRACTION,
+                        intArrayOf(
+                            JellyfinColors.Secondary.copy(alpha = JellyfinGradients.SCREEN_GLOW_ALPHA).toArgb(),
+                            android.graphics.Color.TRANSPARENT,
+                        ),
+                        floatArrayOf(0f, JellyfinGradients.SCREEN_GLOW_FADE_STOP),
+                        android.graphics.Shader.TileMode.CLAMP,
+                    )
+            }
+        onDrawBehind {
+            drawIntoCanvas { canvas ->
+                canvas.nativeCanvas.drawRect(0f, 0f, size.width, size.height, paint)
+            }
+        }
+    }

@@ -37,6 +37,10 @@
     <string name="player_skip_intro">Slaan intro oor</string>
     <string name="player_skip_outro">Slaan uittrede oor</string>
 
+    <string name="player_up_next_title">Volgende</string>
+    <string name="player_up_next_play">Speel volgende episode</string>
+    <string name="player_up_next_dismiss">Kyk aftitels</string>
+
     <string name="player_quality_auto">Outomaties</string>
     <string name="player_quality_high">Hoog — 20 Mbps</string>
     <string name="player_quality_medium">Medium — 8 Mbps</string>

@@ -15,6 +15,12 @@
     <string name="detail_section_episodes">Episode</string>
     <string name="detail_section_similar">Lainnya seperti ini</string>
     <string name="detail_section_cast">Pemeran</string>
+    <string name="detail_section_next_episode">Episode berikutnya</string>
+    <string name="detail_section_more_from_season">Lainnya dari Musim %1$d</string>
+    <string name="detail_section_more_from_season_unnumbered">Lainnya dari musim ini</string>
+    <string name="detail_go_to_series">Buka serial %1$s</string>
+    <string name="detail_go_to_season">Musim %1$d</string>
+    <string name="detail_go_to_season_description">Buka musim %1$d</string>
     <string name="detail_type_movie">Film</string>
     <string name="detail_type_series">Serial</string>
     <string name="detail_type_season">Musim</string>

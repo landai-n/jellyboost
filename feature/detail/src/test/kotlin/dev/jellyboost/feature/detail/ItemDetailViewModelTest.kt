@@ -55,8 +55,11 @@ internal class ItemDetailViewModelTest : ItemDetailViewModelFixture() {
             state.similar shouldContainExactly listOf(related)
             state.seasons.shouldBeEmpty()
             state.episodes.shouldBeEmpty()
+            state.nextEpisode.shouldBeNull()
+            state.seasonEpisodes.shouldBeEmpty()
             coVerify(exactly = 0) { repository.getSeasons(any()) }
             coVerify(exactly = 0) { repository.getEpisodes(any(), any()) }
+            coVerify(exactly = 0) { repository.getSeriesEpisodes(any()) }
         }
 
     @Test
@@ -75,6 +78,11 @@ internal class ItemDetailViewModelTest : ItemDetailViewModelFixture() {
             state.seasons shouldContainExactly listOf(seasonItem)
             state.nextUp shouldBe next
             state.episodes.shouldBeEmpty()
+            // A series page has no single episode to resolve a successor from — that is an episode
+            // page's row, not this one's.
+            state.nextEpisode.shouldBeNull()
+            state.seasonEpisodes.shouldBeEmpty()
+            coVerify(exactly = 0) { repository.getSeriesEpisodes(any()) }
         }
 
     @Test
@@ -91,6 +99,113 @@ internal class ItemDetailViewModelTest : ItemDetailViewModelFixture() {
             coVerify(exactly = 1) { repository.getEpisodes(SERIES_ID, ITEM_ID) }
             // A season is browsed through its series, so "more like this" would be noise.
             coVerify(exactly = 0) { repository.getSimilarItems(any(), any()) }
+            // The next-episode / season-siblings rows belong to an episode page, not this one.
+            val state = model.uiState.value
+            state.nextEpisode.shouldBeNull()
+            state.seasonEpisodes.shouldBeEmpty()
+            coVerify(exactly = 0) { repository.getSeriesEpisodes(any()) }
+        }
+
+    // ---- episode detail: next episode and season siblings --------------------------------------
+
+    @Test
+    fun `an episode loads its next episode from mid-season and its season siblings`() =
+        runTest(dispatcher) {
+            val sibling = JellyfinItem(id = EPISODE_1, name = "The Original", type = ItemType.EPISODE)
+            val next = JellyfinItem(id = "e3", name = "Dissonance Theory", type = ItemType.EPISODE)
+            coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(episode)
+            coEvery { repository.getSeriesEpisodes(SERIES_ID) } returns
+                AppResult.Success(listOf(sibling, episode, next))
+            coEvery { repository.getEpisodes(SERIES_ID, SEASON_ID) } returns
+                AppResult.Success(listOf(sibling, episode))
+
+            val model = viewModel()
+            advanceUntilIdle()
+
+            val state = model.uiState.value
+            state.nextEpisode shouldBe next
+            state.seasonEpisodes shouldContainExactly listOf(sibling, episode)
+        }
+
+    @Test
+    fun `an episode's next episode can cross into the next season`() =
+        runTest(dispatcher) {
+            val next = JellyfinItem(id = "e-s2-1", name = "Chestnut", type = ItemType.EPISODE)
+            coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(episode)
+            coEvery { repository.getSeriesEpisodes(SERIES_ID) } returns AppResult.Success(listOf(episode, next))
+            coEvery { repository.getEpisodes(SERIES_ID, SEASON_ID) } returns AppResult.Success(listOf(episode))
+
+            val model = viewModel()
+            advanceUntilIdle()
+
+            // Comes free of getSeriesEpisodes spanning seasons — no season-boundary special case.
+            model.uiState.value.nextEpisode shouldBe next
+        }
+
+    @Test
+    fun `rewatching a watched episode still shows the positional successor, not the next-up one`() =
+        runTest(dispatcher) {
+            val watched = episode.copy(userData = UserData(played = true))
+            val next = JellyfinItem(id = "e3", name = "Dissonance Theory", type = ItemType.EPISODE)
+            coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(watched)
+            coEvery { repository.getSeriesEpisodes(SERIES_ID) } returns AppResult.Success(listOf(watched, next))
+            coEvery { repository.getEpisodes(SERIES_ID, SEASON_ID) } returns AppResult.Success(listOf(watched))
+
+            val model = viewModel()
+            advanceUntilIdle()
+
+            // Positional, deliberately not `getNextUpForSeries` (next-unwatched) — a rewatch of a
+            // watched episode still points at what comes after it in series order.
+            model.uiState.value.nextEpisode shouldBe next
+            coVerify(exactly = 0) { repository.getNextUpForSeries(any()) }
+        }
+
+    @Test
+    fun `the last episode of a series has no next episode`() =
+        runTest(dispatcher) {
+            coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(episode)
+            coEvery { repository.getSeriesEpisodes(SERIES_ID) } returns AppResult.Success(listOf(episode))
+            coEvery { repository.getEpisodes(SERIES_ID, SEASON_ID) } returns AppResult.Success(listOf(episode))
+
+            val model = viewModel()
+            advanceUntilIdle()
+
+            model.uiState.value.nextEpisode
+                .shouldBeNull()
+        }
+
+    @Test
+    fun `an episode page's episodes list stays empty — it feeds batch selection, not this row`() =
+        runTest(dispatcher) {
+            val sibling = JellyfinItem(id = EPISODE_1, name = "The Original", type = ItemType.EPISODE)
+            coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(episode)
+            coEvery { repository.getSeriesEpisodes(SERIES_ID) } returns AppResult.Success(listOf(episode))
+            coEvery { repository.getEpisodes(SERIES_ID, SEASON_ID) } returns
+                AppResult.Success(listOf(sibling, episode))
+
+            val model = viewModel()
+            advanceUntilIdle()
+
+            model.uiState.value.episodes
+                .shouldBeEmpty()
+            model.uiState.value.seasonEpisodes shouldContainExactly listOf(sibling, episode)
+        }
+
+    @Test
+    fun `a failing next-episode or season-siblings fetch leaves both empty, with no error state`() =
+        runTest(dispatcher) {
+            coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(episode)
+            coEvery { repository.getSeriesEpisodes(SERIES_ID) } returns AppResult.Failure(AppError.Network())
+            coEvery { repository.getEpisodes(SERIES_ID, SEASON_ID) } returns AppResult.Failure(AppError.Network())
+
+            val model = viewModel()
+            advanceUntilIdle()
+
+            val state = model.uiState.value
+            state.errorMessage.shouldBeNull()
+            state.item.shouldNotBeNull()
+            state.nextEpisode.shouldBeNull()
+            state.seasonEpisodes.shouldBeEmpty()
         }
 
     @Test
@@ -223,6 +338,34 @@ internal class ItemDetailViewModelTest : ItemDetailViewModelFixture() {
                 .userData.played shouldBe true
             model.uiState.value.item!!
                 .userData.played shouldBe false
+        }
+
+    @Test
+    fun `patches the next episode and season siblings rows when a sibling's user data changes`() =
+        runTest(dispatcher) {
+            val sibling = JellyfinItem(id = EPISODE_1, name = "The Original", type = ItemType.EPISODE)
+            val next = JellyfinItem(id = "e3", name = "Dissonance Theory", type = ItemType.EPISODE)
+            coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(episode)
+            coEvery { repository.getSeriesEpisodes(SERIES_ID) } returns
+                AppResult.Success(listOf(sibling, episode, next))
+            coEvery { repository.getEpisodes(SERIES_ID, SEASON_ID) } returns
+                AppResult.Success(listOf(sibling, episode))
+
+            val model = viewModel()
+            advanceUntilIdle()
+
+            changes.emit(UserDataChange(EPISODE_1, UserData(played = true)))
+            advanceUntilIdle()
+
+            model.uiState.value.seasonEpisodes
+                .first { it.id == EPISODE_1 }
+                .userData.played shouldBe true
+
+            changes.emit(UserDataChange("e3", UserData(played = true)))
+            advanceUntilIdle()
+
+            model.uiState.value.nextEpisode!!
+                .userData.played shouldBe true
         }
 
     @Test

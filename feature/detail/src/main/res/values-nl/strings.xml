@@ -16,6 +16,12 @@
     <string name="detail_section_episodes">Afleveringen</string>
     <string name="detail_section_similar">Meer zoals dit</string>
     <string name="detail_section_cast">Rolverdeling</string>
+    <string name="detail_section_next_episode">Volgende aflevering</string>
+    <string name="detail_section_more_from_season">Meer uit Seizoen %1$d</string>
+    <string name="detail_section_more_from_season_unnumbered">Meer uit dit seizoen</string>
+    <string name="detail_go_to_series">Ga naar serie %1$s</string>
+    <string name="detail_go_to_season">Seizoen %1$d</string>
+    <string name="detail_go_to_season_description">Ga naar seizoen %1$d</string>
     <string name="detail_type_movie">Film</string>
     <string name="detail_type_series">Serie</string>
     <string name="detail_type_season">Seizoen</string>

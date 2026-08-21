@@ -37,6 +37,10 @@
     <string name="player_done">Fatto</string>
     <string name="player_skip_intro">Salta la sigla iniziale</string>
     <string name="player_skip_outro">Salta la sigla finale</string>
+
+    <string name="player_up_next_title">Prossimamente</string>
+    <string name="player_up_next_play">Riproduci il prossimo episodio</string>
+    <string name="player_up_next_dismiss">Guarda i titoli di coda</string>
     <string name="player_quality_auto">Automatica</string>
     <string name="player_quality_high">Alta — 20 Mbps</string>
     <string name="player_quality_medium">Media — 8 Mbps</string>

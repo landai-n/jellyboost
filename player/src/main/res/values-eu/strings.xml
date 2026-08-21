@@ -34,6 +34,10 @@
     <string name="player_done">Eginda</string>
     <string name="player_skip_intro">Saltatu sarrera</string>
     <string name="player_skip_outro">Saltatu amaiera</string>
+
+    <string name="player_up_next_title">Hurrengoa</string>
+    <string name="player_up_next_play">Erreproduzitu hurrengo atala</string>
+    <string name="player_up_next_dismiss">Ikusi kredituak</string>
     <string name="player_quality_auto">Automatikoa</string>
     <string name="player_quality_high">Altua — 20 Mbps</string>
     <string name="player_quality_medium">Ertaina — 8 Mbps</string>

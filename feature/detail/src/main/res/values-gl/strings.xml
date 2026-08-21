@@ -15,6 +15,12 @@
     <string name="detail_section_episodes">Episodios</string>
     <string name="detail_section_similar">Similares</string>
     <string name="detail_section_cast">Reparto</string>
+    <string name="detail_section_next_episode">Seguinte episodio</string>
+    <string name="detail_section_more_from_season">Máis da Tempada %1$d</string>
+    <string name="detail_section_more_from_season_unnumbered">Máis desta tempada</string>
+    <string name="detail_go_to_series">Ir á serie %1$s</string>
+    <string name="detail_go_to_season">Tempada %1$d</string>
+    <string name="detail_go_to_season_description">Ir á tempada %1$d</string>
     <string name="detail_type_movie">Película</string>
     <string name="detail_type_series">Serie</string>
     <string name="detail_type_season">Tempada</string>

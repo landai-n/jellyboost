@@ -37,6 +37,10 @@
     <string name="player_skip_intro">Jäta intro vahele</string>
     <string name="player_skip_outro">Jäta outro vahele</string>
 
+    <string name="player_up_next_title">Järgmisena</string>
+    <string name="player_up_next_play">Esita järgmine osa</string>
+    <string name="player_up_next_dismiss">Vaata lõputiitreid</string>
+
     <string name="player_quality_auto">Automaatne</string>
     <string name="player_quality_high">Kõrge — 20 Mbps</string>
     <string name="player_quality_medium">Keskmine — 8 Mbps</string>

@@ -40,6 +40,10 @@
     <string name="player_skip_intro">Прескочи уводну шпицу</string>
     <string name="player_skip_outro">Прескочи одјавну шпицу</string>
 
+    <string name="player_up_next_title">Следеће</string>
+    <string name="player_up_next_play">Пусти следећу епизоду</string>
+    <string name="player_up_next_dismiss">Гледај одјавну шпицу</string>
+
     <string name="player_quality_auto">Аутоматски</string>
     <string name="player_quality_high">Висок — 20 Mbps</string>
     <string name="player_quality_medium">Средњи — 8 Mbps</string>

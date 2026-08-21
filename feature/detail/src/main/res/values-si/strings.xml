@@ -15,6 +15,12 @@
     <string name="detail_section_episodes">කථාංග</string>
     <string name="detail_section_similar">මීට සමාන තවත්</string>
     <string name="detail_section_cast">රංගන ශිල්පීන්</string>
+    <string name="detail_section_next_episode">ඊළඟ කථාංගය</string>
+    <string name="detail_section_more_from_season">වාරය %1$d වෙතින් තවත්</string>
+    <string name="detail_section_more_from_season_unnumbered">මෙම වාරයෙන් තවත්</string>
+    <string name="detail_go_to_series">%1$s කතා මාලාවට යන්න</string>
+    <string name="detail_go_to_season">වාරය %1$d</string>
+    <string name="detail_go_to_season_description">වාරය %1$d වෙත යන්න</string>
     <string name="detail_type_movie">චිත්‍රපටය</string>
     <string name="detail_type_series">කතා මාලාව</string>
     <string name="detail_type_season">වාරය</string>

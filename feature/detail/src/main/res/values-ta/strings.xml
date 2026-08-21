@@ -16,6 +16,12 @@
     <string name="detail_section_episodes">எபிசோடுகள்</string>
     <string name="detail_section_similar">இது போன்ற மேலும்</string>
     <string name="detail_section_cast">நடிகர்கள்</string>
+    <string name="detail_section_next_episode">அடுத்த எபிசோட்</string>
+    <string name="detail_section_more_from_season">சீசன் %1$d இலிருந்து மேலும்</string>
+    <string name="detail_section_more_from_season_unnumbered">இந்த சீசனிலிருந்து மேலும்</string>
+    <string name="detail_go_to_series">%1$s தொடருக்குச் செல்லவும்</string>
+    <string name="detail_go_to_season">சீசன் %1$d</string>
+    <string name="detail_go_to_season_description">சீசன் %1$d க்குச் செல்லவும்</string>
     <string name="detail_type_movie">திரைப்படம்</string>
     <string name="detail_type_series">தொடர்</string>
     <string name="detail_type_season">சீசன்</string>

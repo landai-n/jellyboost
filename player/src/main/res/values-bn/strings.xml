@@ -34,6 +34,10 @@
     <string name="player_done">সম্পন্ন</string>
     <string name="player_skip_intro">ইন্ট্রো এড়িয়ে যান</string>
     <string name="player_skip_outro">আউট্রো এড়িয়ে যান</string>
+
+    <string name="player_up_next_title">পরবর্তী</string>
+    <string name="player_up_next_play">পরবর্তী পর্ব চালান</string>
+    <string name="player_up_next_dismiss">ক্রেডিট দেখুন</string>
     <string name="player_quality_auto">স্বয়ংক্রিয়</string>
     <string name="player_quality_high">উচ্চ — 20 Mbps</string>
     <string name="player_quality_medium">মাঝারি — 8 Mbps</string>

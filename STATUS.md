@@ -194,6 +194,48 @@ one that doesn't; SyncPlay⊕music refusal; favorites reflected in jellyfin-web;
 mid-playback; the minified build repeating the background/transcode/offline checks (items 3, 6, 9
 of the walk).
 
+## Player: Up Next card during the ending (2026-08-21 — landed, gate green; device walk owed)
+
+The `:player` half of "Up Next button + episode detail shortcuts" (DECISIONS.md 2026-08-21).
+While an episode's ending plays — the OUTRO segment's start, else the last 30 s of anything
+longer than a minute — a glass card in the bottom-right corner offers the positional next
+episode (cross-season, via `getSeriesEpisodes`; never next-*unwatched*); tapping "Play next
+episode" swaps the item into the same session through `replaceItem`, the extraction of
+SyncPlay's `loadItem`, with `playWhenReady = true` and the session's quality cap carried.
+Button only by user decision: no countdown, no auto-advance, no preference — an untouched
+ending pops the route exactly as before. Dismissal is sticky per session; the card absorbs the
+outro Skip *offer* (auto-skip and intros untouched); the whole feature is inert in a SyncPlay
+group; offline it offers the next downloaded episode or nothing. New `upnext/UpNextResolver` +
+`UpNextController` (pure), `ActiveSession.upNext` (identity-guarded prefetch from
+`loadPlaybackExtras`), the `advancing` guard against the tap-vs-`Ended` race, `UpNextCard` +
+two `PlayerActions`. Three strings, base + 69 locales. Tests: `UpNextResolverTest` (10),
+`UpNextControllerTest` (11), `PlayerUpNextTest` (17, incl. both stop-report orders),
+`PlayerActionsInteractionTest` extended, `UpNextCardA11yTest` (instrumented, compile-gated).
+Full detail in `docs/features/playback.md` § "Up next". **Owed to a device walk:** the walk in
+that section's DECISIONS entry — outro trigger, fallback trigger, tap mid-credits with a manual
+quality cap and speed ≠ 1×, dismiss, last episode, SyncPlay group, cast, offline pair — plus
+`connectedDebugAndroidTest` for the card's a11y suite.
+
+## Episode detail: next-episode row, season siblings row, origin chips (2026-08-21 — landed, gate green; device walk owed)
+
+The `:feature:detail` half of "Up Next button + episode detail shortcuts" (DECISIONS.md
+2026-08-21; the player's Up Next card is separate scope, tracked in the same entry). An
+episode's own detail page — previously identical to a movie's beyond its subtitle — now
+carries three additions, all reusing existing rows/idioms rather than inventing new ones:
+a *Next episode* `MediaRow` (`state.nextEpisode`, the series-order successor, byte-for-byte
+the series page's Next-up precedent); a *More from Season N* `MediaRow` (`state.seasonEpisodes`
+minus the item on screen, "See all" → the season); and two tappable origin chips — series and
+season — under the title lockup in `TitleLockup`, shared by both the compact and wide hero so
+one call site serves both layouts. Both rows sit in the same shared `LazyColumn` every layout
+flows through; no layout branch was added. `JellyfinNavHost` gains `onNavigateToItemId`,
+threaded scalar-only (never whole `UiState`) from `ItemDetailScreen` down to the chips. Six new
+strings, base + all 69 locales, `validate_i18n.py` clean (759 locale files, 0 problems).
+Tests: `SeasonSiblingsTest` (JUnit5, the siblings-filter pure function) plus three instrumented
+suites (`EpisodeDetailSectionsTest`, `EpisodeOriginChipsTest`, `EpisodeOriginChipsA11yTest`) —
+compiled and gated by `:feature:detail:compileDebugAndroidTestKotlin`, not yet run on device.
+**Owed to a device walk:** the two new rows and the chips' tap targets/focus order at both
+compact and tablet widths, and the instrumented suite itself (`connectedDebugAndroidTest`).
+
 ## Current milestone: M10 — Release hardening (**COMPLETE**, 2026-07-30, tag `m10`)
 
 **DoD walk (all five items verified on the test tablet):**

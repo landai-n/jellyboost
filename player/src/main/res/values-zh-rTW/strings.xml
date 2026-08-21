@@ -34,6 +34,10 @@
     <string name="player_skip_intro">跳過片頭</string>
     <string name="player_skip_outro">跳過片尾</string>
 
+    <string name="player_up_next_title">接下來</string>
+    <string name="player_up_next_play">播放下一集</string>
+    <string name="player_up_next_dismiss">觀看片尾</string>
+
     <string name="player_quality_auto">自動</string>
     <string name="player_quality_high">高——20 Mbps</string>
     <string name="player_quality_medium">中——8 Mbps</string>

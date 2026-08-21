@@ -70,6 +70,7 @@ import dev.jellyboost.core.common.model.DownloadState
 import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.common.model.PersonKind
+import dev.jellyboost.core.ui.component.ActionPillChip
 import dev.jellyboost.core.ui.component.BackdropHeader
 import dev.jellyboost.core.ui.component.GhostPillButton
 import dev.jellyboost.core.ui.component.GlassIconButton
@@ -114,6 +115,7 @@ internal fun DetailHero(
     backdropHeight: Dp,
     downloadState: DownloadState,
     actions: DetailActionHandlers,
+    onNavigateToItemId: (String) -> Unit,
     modifier: Modifier = Modifier,
     downloadedBytes: Long? = null,
 ) {
@@ -124,6 +126,7 @@ internal fun DetailHero(
             backdropHeight = backdropHeight,
             downloadState = downloadState,
             actions = actions,
+            onNavigateToItemId = onNavigateToItemId,
             downloadedBytes = downloadedBytes,
             modifier = modifier,
         )
@@ -136,6 +139,7 @@ internal fun DetailHero(
                     downloadState = downloadState,
                     downloadedBytes = downloadedBytes,
                     expanded = false,
+                    onNavigateToItemId = onNavigateToItemId,
                     modifier =
                         Modifier
                             .align(Alignment.BottomStart)
@@ -179,6 +183,7 @@ private fun WideStage(
     backdropHeight: Dp,
     downloadState: DownloadState,
     actions: DetailActionHandlers,
+    onNavigateToItemId: (String) -> Unit,
     modifier: Modifier = Modifier,
     downloadedBytes: Long? = null,
 ) {
@@ -213,6 +218,7 @@ private fun WideStage(
                     downloadState = downloadState,
                     downloadedBytes = downloadedBytes,
                     expanded = true,
+                    onNavigateToItemId = onNavigateToItemId,
                 )
                 ProgressLine(item = item)
                 DetailActions(
@@ -304,6 +310,7 @@ private fun TitleLockup(
     downloadState: DownloadState,
     downloadedBytes: Long?,
     expanded: Boolean,
+    onNavigateToItemId: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -346,7 +353,66 @@ private fun TitleLockup(
             )
         }
 
+        EpisodeOriginChips(item = item, onNavigateToItemId = onNavigateToItemId)
+
         MetaRow(item = item, downloadState = downloadState, downloadedBytes = downloadedBytes)
+    }
+}
+
+/**
+ * The series and season an episode belongs to, as tappable chips under the title lockup —
+ * a shortcut past the season page an episode used to require (episode-detail-shortcuts,
+ * DECISIONS.md).
+ *
+ * Lives in [TitleLockup] and nowhere else: that composable is shared by both the compact and the
+ * wide hero, so one call site serves both layouts (the point of putting it here rather than in
+ * [DetailHero] or [WideStage] directly).
+ *
+ * Either chip is skipped independently when its own target is missing — a series page's episode
+ * may carry a `seasonId` the server has not resolved a [JellyfinItem.parentIndexNumber] for, or vice
+ * versa — and the whole row draws nothing for a non-episode item, or an episode with neither target.
+ */
+@Composable
+internal fun EpisodeOriginChips(
+    item: JellyfinItem,
+    onNavigateToItemId: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    if (item.type != ItemType.EPISODE) return
+
+    val seriesId = item.seriesId
+    val seriesName = item.seriesName
+    val seasonId = item.seasonId
+    val seasonNumber = item.parentIndexNumber
+    val showSeries = seriesId != null && seriesName != null
+    val showSeason = seasonId != null && seasonNumber != null
+    if (!showSeries && !showSeason) return
+
+    FlowRow(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
+        verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
+    ) {
+        if (seriesId != null && seriesName != null) {
+            val description = stringResource(R.string.detail_go_to_series, seriesName)
+            ActionPillChip(
+                text = seriesName,
+                onClick = { onNavigateToItemId(seriesId) },
+                modifier =
+                    Modifier
+                        .widthIn(max = OriginChipMaxWidth)
+                        .semantics(mergeDescendants = true) { contentDescription = description },
+            )
+        }
+        if (seasonId != null && seasonNumber != null) {
+            val label = stringResource(R.string.detail_go_to_season, seasonNumber)
+            val description = stringResource(R.string.detail_go_to_season_description, seasonNumber)
+            ActionPillChip(
+                text = label,
+                onClick = { onNavigateToItemId(seasonId) },
+                modifier = Modifier.semantics(mergeDescendants = true) { contentDescription = description },
+            )
+        }
     }
 }
 
@@ -1005,6 +1071,9 @@ private val FACTS_MAX_WIDTH = 660.dp
 /** Long-form text stops growing here; a full-width paragraph on a tablet is unreadable. */
 private val TEXT_MAX_WIDTH = 680.dp
 
+/** Ellipsis point for the series origin chip — long titles stop here rather than stretching. */
+private val OriginChipMaxWidth = 200.dp
+
 private val MetaGap = 10.dp
 
 private val RatingStarSize = 13.dp
@@ -1069,6 +1138,7 @@ private fun DetailHeroPreview() {
             backdropHeight = 416.dp,
             downloadState = DownloadState.NotDownloaded,
             actions = previewActionHandlers,
+            onNavigateToItemId = {},
         )
     }
 }
@@ -1090,6 +1160,7 @@ private fun DetailHeroCompactPreview() {
             backdropHeight = 416.dp,
             downloadState = DownloadState.Downloaded,
             actions = previewActionHandlers,
+            onNavigateToItemId = {},
         )
     }
 }
@@ -1111,6 +1182,7 @@ private fun DetailHeroWidePreview() {
             backdropHeight = 360.dp,
             downloadState = DownloadState.NotDownloaded,
             actions = previewActionHandlers,
+            onNavigateToItemId = {},
         )
     }
 }

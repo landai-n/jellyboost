@@ -16,6 +16,12 @@
     <string name="detail_section_episodes">Епизоди</string>
     <string name="detail_section_similar">Подобни на това</string>
     <string name="detail_section_cast">Актьорски състав</string>
+    <string name="detail_section_next_episode">Следващ епизод</string>
+    <string name="detail_section_more_from_season">Още от Сезон %1$d</string>
+    <string name="detail_section_more_from_season_unnumbered">Още от този сезон</string>
+    <string name="detail_go_to_series">Към сериала %1$s</string>
+    <string name="detail_go_to_season">Сезон %1$d</string>
+    <string name="detail_go_to_season_description">Към сезон %1$d</string>
     <string name="detail_type_movie">Филм</string>
     <string name="detail_type_series">Сериал</string>
     <string name="detail_type_season">Сезон</string>

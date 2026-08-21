@@ -37,6 +37,10 @@
     <string name="player_skip_intro">Hopp over intro</string>
     <string name="player_skip_outro">Hopp over avslutning</string>
 
+    <string name="player_up_next_title">Neste</string>
+    <string name="player_up_next_play">Spill av neste episode</string>
+    <string name="player_up_next_dismiss">Se rulleteksten</string>
+
     <string name="player_quality_auto">Auto</string>
     <string name="player_quality_high">Høy — 20 Mbps</string>
     <string name="player_quality_medium">Middels — 8 Mbps</string>

@@ -16,6 +16,12 @@
     <string name="detail_section_episodes">قسمت‌ها</string>
     <string name="detail_section_similar">موارد مشابه</string>
     <string name="detail_section_cast">بازیگران</string>
+    <string name="detail_section_next_episode">قسمت بعدی</string>
+    <string name="detail_section_more_from_season">بیشتر از فصل %1$d</string>
+    <string name="detail_section_more_from_season_unnumbered">بیشتر از این فصل</string>
+    <string name="detail_go_to_series">رفتن به سریال %1$s</string>
+    <string name="detail_go_to_season">فصل %1$d</string>
+    <string name="detail_go_to_season_description">رفتن به فصل %1$d</string>
     <string name="detail_type_movie">فیلم</string>
     <string name="detail_type_series">سریال</string>
     <string name="detail_type_season">فصل</string>

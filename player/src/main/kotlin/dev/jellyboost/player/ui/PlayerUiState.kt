@@ -9,6 +9,7 @@ import dev.jellyboost.player.model.PlaybackTrack
 import dev.jellyboost.player.model.TrickplayTiles
 import dev.jellyboost.player.segments.MediaSegment
 import dev.jellyboost.player.syncplay.model.SyncPlayRepeatMode
+import dev.jellyboost.player.upnext.UpNextEpisode
 
 /**
  * Everything the player screen draws **except** the position, which ticks twice a second and lives
@@ -110,6 +111,17 @@ internal data class PlayerUiState(
     val syncPlay: PlayerSyncPlayState = PlayerSyncPlayState(),
     /** The receiver this session is playing on, or its default "playing here" value (M12). */
     val cast: PlayerCastState = PlayerCastState(),
+    /**
+     * The next episode, while the current one's ending is playing — or `null`, which is most of the
+     * time and every non-episode.
+     *
+     * Slow state despite being driven by the 500 ms tick: it is written exactly when the answer
+     * *changes* (`PlayerViewModel.applyUpNextDecision` diffs before it updates), which is a handful
+     * of times per session — the card appearing, a seek taking it away, a dismissal. Publishing it
+     * per tick would put the whole control surface back on the recompose treadmill PERF-04 took it
+     * off.
+     */
+    val upNext: UpNextState? = null,
 ) {
     /** `true` once there is something on screen to control. */
     val isReady: Boolean get() = !isLoading && errorMessage == null
@@ -138,6 +150,22 @@ internal data class PlayerUiState(
  * by retyping.
  */
 internal const val PLAYER_LABEL_SEPARATOR = Separators.DOT
+
+/**
+ * The up-next card, as much of it as the player screen draws.
+ *
+ * A wrapper around the one episode rather than the episode itself, so that "is the card up" is a
+ * question about *this* type rather than about a field that happens to be non-null: the screen, the
+ * segment rules (`PlayerViewModel.supersededByUpNext`) and the dismissal all ask it, and a named
+ * type is what keeps the three asking the same question.
+ *
+ * It is also the seam any further card state would arrive at — a countdown was considered for the
+ * follow-up step and cut (the card is buttons only), and had it shipped it would have belonged
+ * beside the episode here rather than as another nullable field on [PlayerUiState].
+ */
+internal data class UpNextState(
+    val episode: UpNextEpisode,
+)
 
 /**
  * The receiver, as much of it as the player screen draws (M12 Phase 3).
@@ -363,6 +391,10 @@ internal data class PlayerActions(
     val onSelectQuality: (PlaybackQuality) -> Unit,
     val onSelectSpeed: (PlaybackSpeed) -> Unit,
     val onSkipSegment: () -> Unit,
+    /** Leaves the ending for the next episode, in this same session — see `UpNextCard`. */
+    val onPlayNext: () -> Unit,
+    /** Closes the up-next card; nothing offers it again for this episode. */
+    val onDismissUpNext: () -> Unit,
     val onBack: () -> Unit,
     /**
      * Opens one of the player's seven panels — every one of them hosted by `PlayerScreen`, above the
@@ -397,6 +429,8 @@ internal fun PlayerActions.reportingInteraction(onInteraction: () -> Unit): Play
         onSelectQuality = reporting(onInteraction, onSelectQuality),
         onSelectSpeed = reporting(onInteraction, onSelectSpeed),
         onSkipSegment = reporting(onInteraction, onSkipSegment),
+        onPlayNext = reporting(onInteraction, onPlayNext),
+        onDismissUpNext = reporting(onInteraction, onDismissUpNext),
         onBack = reporting(onInteraction, onBack),
         onOpenPanel = reporting(onInteraction, onOpenPanel),
         onSetGroupShuffle = reporting(onInteraction, onSetGroupShuffle),

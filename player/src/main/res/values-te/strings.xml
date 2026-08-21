@@ -37,6 +37,10 @@
     <string name="player_skip_intro">ఇంట్రోను దాటవేయండి</string>
     <string name="player_skip_outro">అవుట్రోను దాటవేయండి</string>
 
+    <string name="player_up_next_title">తర్వాత రానున్నవి</string>
+    <string name="player_up_next_play">తదుపరి ఎపిసోడ్‌ను ప్లే చేయండి</string>
+    <string name="player_up_next_dismiss">క్రెడిట్‌లను చూడండి</string>
+
     <string name="player_quality_auto">ఆటో</string>
     <string name="player_quality_high">అధిక — 20 Mbps</string>
     <string name="player_quality_medium">మధ్యస్థ — 8 Mbps</string>

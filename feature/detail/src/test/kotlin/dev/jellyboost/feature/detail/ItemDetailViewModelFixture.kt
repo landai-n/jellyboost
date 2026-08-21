@@ -85,6 +85,14 @@ internal abstract class ItemDetailViewModelFixture {
     protected val series = JellyfinItem(id = ITEM_ID, name = "Westworld", type = ItemType.SERIES)
     protected val season =
         JellyfinItem(id = ITEM_ID, name = "Season 1", type = ItemType.SEASON, seriesId = SERIES_ID)
+    protected val episode =
+        JellyfinItem(
+            id = ITEM_ID,
+            name = "The Original",
+            type = ItemType.EPISODE,
+            seriesId = SERIES_ID,
+            seasonId = SEASON_ID,
+        )
 
     @RegisterExtension
     val mainDispatcher = MainDispatcherExtension(dispatcher)
@@ -127,6 +135,7 @@ internal abstract class ItemDetailViewModelFixture {
     protected companion object {
         const val ITEM_ID = "item-1"
         const val SERIES_ID = "series-1"
+        const val SEASON_ID = "season-1"
         const val EPISODE_1 = "episode-1"
         const val EPISODE_2 = "episode-2"
     }

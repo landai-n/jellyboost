@@ -210,6 +210,29 @@ of the walk).
 storage, Quality control disappeared, server progress posts stopped), clickable
 download rows (`a60274d`).
 
+## Subtitle drift on transcodes — in-manifest HLS renditions (2026-08-21 — landed, gate green; device walk owed)
+
+Text subtitles no longer drift on a heavy transcode. They were side-loaded as
+`MediaItem.SubtitleConfiguration`s, which bypass Media3's `TimestampAdjuster` while the
+transcode's A/V timeline re-anchors to Jellyfin's nominal `EXTINF` grid on every seek and
+track toggle and absorbs the sub-200 ms audio gaps an unsignaled ffmpeg restart leaves —
+two clocks, and the gap only grows. A transcode's text subtitles are now delivered as
+in-manifest `#EXT-X-MEDIA` WebVTT renditions, which share the A/V adjuster (server
+`X-TIMESTAMP-MAP` + `CopyTimestamps=true`), so the drift is structurally impossible rather
+than corrected. Direct play and direct stream keep EXTERNAL side-loading, where nothing
+drifts. Mechanism: a **second** `PlaybackInfo` post with a profile variant that advertises
+no text `External` profile (the server picks External whenever both are offered), fired only
+on `TRANSCODE ∧ side-loaded text subs ∧ !castTarget`, with every failure falling back to the
+first answer. `DECISIONS.md` 2026-08-21; server measurements in
+`docs/notes/subtitle-drift-hls-delivery-spike.md`; feature docs in
+`docs/features/playback.md`, *"Subtitles on a transcode"*.
+**Device walk owed (user-run):** force a transcode on a long film with an external `.srt`,
+seek repeatedly over ≥30 min and check the cues stay in sync; check subtitle switching among
+renditions is instant (no reload); check "off" really shows nothing on a fresh transcode
+(the renditions are `AUTOSELECT=YES` with one `DEFAULT=YES`); check a direct-played file with
+a sidecar `.srt` still direct-plays (dashboard: no ffmpeg) rather than burning in; check a
+PGS-only source still burns in and re-resolves as before.
+
 ## M12 phase-2a — 4K/HEVC cast receivers by model name (2026-08-15 — landed, gate green; Chromecast walk owed)
 
 Cast receivers are now classified by `CastDevice.modelName` (`CastReceiverClass`:

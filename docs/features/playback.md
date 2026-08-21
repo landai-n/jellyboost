@@ -51,11 +51,12 @@ PlayerViewModel ──► PlaybackInfoResolver ──► POST /Items/{id}/Playba
 
 | Call | When |
 |---|---|
-| `POST /Items/{itemId}/PlaybackInfo` | Opening an item, and on **every** re-negotiation (quality change, track change the server has to perform, decoder fallback). |
+| `POST /Items/{itemId}/PlaybackInfo` | Opening an item, and on **every** re-negotiation (quality change, track change the server has to perform, decoder fallback). Posted **twice** when the first answer is a transcode that would side-load text subtitles — see *Subtitles on a transcode*. |
 | `GET /Videos/{id}/stream?static=true` | Direct play. |
 | `GET /Videos/{id}/stream.{container}` | Direct stream. |
 | `{transcodingUrl}` (HLS) | Transcode. |
-| `{deliveryUrl}` per subtitle stream | Side-loaded external subtitles. |
+| `{deliveryUrl}` per subtitle stream | Side-loaded external subtitles (direct play and direct stream only). |
+| `#EXT-X-MEDIA` rendition playlists off `{transcodingUrl}` | A transcode's text subtitles, as WebVTT segments. |
 | `POST /Sessions/Playing` | Playback started or restarted. |
 | `POST /Sessions/Playing/Progress` | Every 5 seconds. |
 | `POST /Sessions/Playing/Stopped` | Playback ended, for any reason. |
@@ -101,7 +102,11 @@ only sees the streams it was given. Two bridges close the gap:
   `MergingMediaSource`, whose period re-ids every format as `"<childIndex>:<originalId>"` — so
   `jellyfinIndexOfTrackId` strips a leading numeric prefix before reading the index. Matching the
   raw id refused every downloaded sidecar as "not in the downloaded file".
-- **Embedded streams** are matched by position among the embedded streams of the same type.
+- **Embedded streams** are matched by position among the embedded streams of the same type. A
+  transcode's subtitle **renditions** are in this group: they are ordinary text groups of the
+  transcoding master playlist, one per text stream in MediaStream-index order — the order
+  `subtitleTracks` is in — and Media3 ids them `"<GROUP-ID>:<NAME>"`, which carries no Jellyfin
+  index to match on.
 
 A switch is applied locally when the track is already in the stream. When it is not — the
 transcoding case, where the server sent only the track it was asked for — the source is
@@ -139,7 +144,8 @@ Two consequences worth stating:
 
 - **"Subtitles off" is applied, not assumed.** `null` is a choice like any other. The reset below
   re-enables the text renderer, and ExoPlayer's selector will pick up a default-flagged text track
-  on its own if nobody says otherwise.
+  on its own if nobody says otherwise. On a transcode that is not hypothetical: every subtitle
+  rendition is `AUTOSELECT=YES` and one of them `DEFAULT=YES`.
 - **A refused apply never re-resolves.** The stream *is* the one the server built for this
   selection, so the only way it can lack the track is that the server burned it in — a subtitle
   already on screen, with no text group to select. Asking again would restart playback in a loop for
@@ -154,6 +160,47 @@ disabled text renderer that "subtitles off" leaves behind — governs whatever i
 film watched without subtitles would keep every later one from ever showing any. So
 `ExoPlayerHandle.prepare` calls `TrackSelectionController.reset()` before `setMediaItem`, clearing
 both types' overrides and re-enabling text; the session's own choice is applied afterwards, above.
+
+## Subtitles on a transcode
+
+Text subtitles are side-loaded for direct play and direct stream, and delivered **in the manifest**
+for a transcode. That split exists because a transcode has a timeline of its own: it re-anchors to
+Jellyfin's nominal `EXTINF` grid on every seek and track toggle and absorbs the sub-200 ms audio
+gaps an unsignaled ffmpeg restart leaves. Side-loaded cues never pass through the `TimestampAdjuster`
+that audio and video do, so they are pinned to the file's clock while the picture is not — and they
+drift, progressively. In-manifest cues share the adjuster (the server emits `X-TIMESTAMP-MAP` and
+transcodes with `CopyTimestamps=true`) and cannot.
+
+Getting them requires **two `PlaybackInfo` posts**, because the server will not offer both shapes:
+given an `External` and an `Hls` profile for the same format it picks External every time. So the
+HLS shape has to advertise *no* text External profile — and that profile cannot be the one we always
+send, since a direct-playable file with a sidecar `.srt` would then negotiate `Encode` and burn a
+transcode out of nothing.
+
+```
+pass 1  ──►  normal profile
+             ├─ direct play / direct stream        → done, subtitles side-loaded
+             ├─ transcode, nothing side-loaded     → done
+             ├─ cast target                        → done (the receiver's business)
+             └─ transcode ∧ side-loaded text subs  ─┐
+                                                    ▼
+pass 2  ──►  same request, EMBED + {vtt, Hls} profile
+             ├─ transcode with a URL   → used; cues ride in the master playlist
+             └─ anything else, or a failure → pass 1's answer, unchanged
+```
+
+Neither pass starts an encoder — ffmpeg is spawned by the first *segment* fetch, and nothing here
+fetches one. Two knock-on rules:
+
+- an HLS-delivered stream is **not** `isExternal`, even when it is a sidecar file on the server,
+  because a rendition has no `external:<index>` id and is matched by position;
+- a subtitle the server had to burn in (`Encode`) *is* marked side-loaded, so that it takes no place
+  in that positional count — Jellyfin builds renditions only for text streams, and a graphical one
+  left in the count would push every text track after it onto the wrong rendition.
+
+SSA/ASS reaching a transcode are converted to WebVTT and lose their styling; ExoPlayer's SSA
+renderer ignores most of it anyway. Background and measurements:
+docs/notes/subtitle-drift-hls-delivery-spike.md.
 
 ## Decoder fallback
 

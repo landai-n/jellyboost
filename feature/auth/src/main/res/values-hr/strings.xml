@@ -13,6 +13,7 @@
     <string name="server_setup_connect">Poveži se</string>
     <string name="server_setup_connecting">Kontaktiranje poslužitelja…</string>
     <string name="server_setup_session_lost">Vaša spremljena prijava nije mogla biti obnovljena, pa ste odjavljeni. Prijavite se ponovno.</string>
+    <string name="server_setup_cleartext_warning">%1$s je odgovorio putem nešifrirane veze. Vaš token za prijavu i sve što gledate putovali bi mrežom u otvorenom obliku, gdje ih svatko na putu može pročitati. Ponovno pritisnite “Poveži se” da ipak nastavite.</string>
 
     <string name="login_title">Prijava</string>
     <string name="login_server_version">Verzija %1$s</string>

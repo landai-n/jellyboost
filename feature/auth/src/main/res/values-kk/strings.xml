@@ -13,6 +13,7 @@
     <string name="server_setup_connect">Қосылу</string>
     <string name="server_setup_connecting">Серверге хабарласуда…</string>
     <string name="server_setup_session_lost">Сақталған кіру деректерін қалпына келтіру мүмкін болмады, сондықтан жүйеден шықтыңыз. Қайта кіріңіз.</string>
+    <string name="server_setup_cleartext_warning">%1$s шифрланбаған қосылым арқылы жауап берді. Кіру токеніңіз бен көретін барлық нәрсе желі арқылы ашық түрде жіберіледі, оны аралықтағы кез келген адам оқи алады. Бәрібір жалғастыру үшін «Қосылу» түймесін қайта басыңыз.</string>
 
     <string name="login_title">Кіру</string>
     <string name="login_server_version">Нұсқа %1$s</string>

@@ -455,8 +455,10 @@ leaves "Preparing…"; cold launch + SyncPlay presence + cast session (lazy star
 3-hop GMS probe); the ten restyled dialogs; detail on tablet portrait + ~600dp split
 screen with a download in flight (progress ring, middle-band overview clamp); v9 index
 migration on an install with downloads; long browse session then offline library open.
-**Translations owed:** `server_setup_cleartext_warning` ×69 locales (English-only with a
-narrow lint exemption).
+**Translations owed:** ~~`server_setup_cleartext_warning` ×69 locales (English-only with a
+narrow lint exemption)~~ — DONE 2026-08-21; the exemption is gone with them (it was also
+what CI's standalone i18n gate, which ignores `tools:ignore`, was failing on since the
+first pushed run).
 
 ## Fresh audit — new dimensions + prior-audit verification (2026-08-08 — report committed; findings only)
 
@@ -586,10 +588,11 @@ Gate green: ktlint, detekt, **2 315 unit tests in 183 classes** (+69), `:app:lin
 1. **A device walk for PERF-2** — cold launch, background/foreground with a SyncPlay group
    held, and a cast session started from the top bar. What changed is *when* five singletons
    are constructed, which no JVM test can see.
-2. **The 69 translations of `server_setup_cleartext_warning`** — the one English-only string
-   in the tree. It carries a `tools:ignore="MissingTranslation"` on that single element with
-   the reasoning inline; `config/lint/lint.xml` is untouched, so the next untranslated string
-   still fails the build. The attribute comes out with the translations.
+2. ~~**The 69 translations of `server_setup_cleartext_warning`**~~ — DONE 2026-08-21: all 69
+   locales carry the warning (each naming the Connect button by that locale's own
+   `server_setup_connect` label), and the `tools:ignore` attribute is gone with the module's
+   `xmlns:tools` declaration. `scripts/validate_i18n.py` — the CI step this was failing —
+   reports 759 locale files, 0 problems.
 ## Audit Tier 4C — the data-layer performance wave: PERF-3/4/6..9/12/13/15..19/22..25/28 + DUP-6 tail (2026-08-08 — landed, gate green)
 
 `docs/notes/audit-2026-08-08.md` §2–§4, the `:core:database` / `:data` / `:data:downloads`

@@ -13,6 +13,7 @@
     <string name="server_setup_connect">Knýt saman</string>
     <string name="server_setup_connecting">Kann samband við ambætaran…</string>
     <string name="server_setup_session_lost">Tín goymda innritan kundi ikki verða endurstovnað, so tú ert nú útritað(ur). Innrita teg aftur.</string>
+    <string name="server_setup_cleartext_warning">%1$s svaraði um eina ókryptaða sambindingu. Tín innritanartekin og alt, tú hyggur at, fara óvarin gjøgnum netið, har hvør sum helst ímillum kann lesa tað. Trýst “Knýt saman” aftur fyri kortini at halda á.</string>
 
     <string name="login_title">Innrita</string>
     <string name="login_server_version">Útgáva %1$s</string>

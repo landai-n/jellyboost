@@ -12,6 +12,7 @@
     <string name="server_setup_connect">Connecta</string>
     <string name="server_setup_connecting">Contactant amb el servidor…</string>
     <string name="server_setup_session_lost">La teva sessió desada no s\'ha pogut restaurar, per la qual cosa s\'ha tancat la sessió. Torna a iniciar sessió.</string>
+    <string name="server_setup_cleartext_warning">%1$s ha respost per una connexió sense xifrar. El teu testimoni d\'inici de sessió i tot el que miris viatjarien per la xarxa sense xifrar, on qualsevol que hi hagi pel mig els pot llegir. Torna a prémer “Connecta” per continuar igualment.</string>
     <string name="login_title">Inicia la sessió</string>
     <string name="login_server_version">Versió %1$s</string>
     <string name="login_server_version_unknown">Versió desconeguda</string>

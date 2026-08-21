@@ -13,6 +13,7 @@
     <string name="server_setup_connect">Verbannen</string>
     <string name="server_setup_connecting">Server gëtt kontaktéiert…</string>
     <string name="server_setup_session_lost">Deng gespäichert Umeldung konnt net erëmhier gestallt ginn, dofir bass du ofgemellt ginn. Mell dech w.e.g. nach eng Kéier un.</string>
+    <string name="server_setup_cleartext_warning">%1$s huet iwwer eng onverschlësselt Verbindung geäntwert. Däin Umeldungstoken an alles, wats du kucks, géingen am Kloertext duerch d\'Netzwierk goen, wou jiddereen dertëschent matliese kann. Dréck nach eng Kéier op „Verbannen“, fir trotzdeem virunzefueren.</string>
 
     <string name="login_title">Umellen</string>
     <string name="login_server_version">Versioun %1$s</string>

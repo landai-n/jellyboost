@@ -13,6 +13,7 @@
     <string name="server_setup_connect">Lidhu</string>
     <string name="server_setup_connecting">Duke kontaktuar serverin…</string>
     <string name="server_setup_session_lost">Identifikimi i ruajtur nuk u rikthye dot, prandaj u çkyçe. Identifikohu përsëri.</string>
+    <string name="server_setup_cleartext_warning">%1$s u përgjigj përmes një lidhjeje të pakriptuar. Token-i yt i identifikimit dhe gjithçka që sheh do të kalonin nëpër rrjet të pambrojtura, ku kushdo në mes mund t\'i lexojë. Për të vazhduar sidoqoftë, shtyp përsëri «Lidhu».</string>
 
     <string name="login_title">Identifikohu</string>
     <string name="login_server_version">Versioni %1$s</string>

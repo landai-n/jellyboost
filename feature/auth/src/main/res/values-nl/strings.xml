@@ -13,6 +13,7 @@
     <string name="server_setup_connect">Verbinden</string>
     <string name="server_setup_connecting">Contact maken met de server…</string>
     <string name="server_setup_session_lost">Je opgeslagen aanmelding kon niet worden hersteld, dus je bent afgemeld. Meld je opnieuw aan.</string>
+    <string name="server_setup_cleartext_warning">%1$s antwoordde via een onversleutelde verbinding. Je aanmeldtoken en alles wat je bekijkt zouden onversleuteld over het netwerk gaan, waar iedereen ertussen kan meelezen. Druk nogmaals op “Verbinden” om toch door te gaan.</string>
 
     <string name="login_title">Aanmelden</string>
     <string name="login_server_version">Versie %1$s</string>

@@ -13,6 +13,7 @@
     <string name="server_setup_connect">Ühenda</string>
     <string name="server_setup_connecting">Serveriga ühenduse loomine…</string>
     <string name="server_setup_session_lost">Salvestatud sisselogimist ei õnnestunud taastada, seega oled välja logitud. Logi uuesti sisse.</string>
+    <string name="server_setup_cleartext_warning">%1$s vastas krüptimata ühenduse kaudu. Sinu sisselogimisluba ja kõik, mida vaatad, liiguksid võrgus avatekstina ja igaüks vahepeal saab neid lugeda. Kui soovid siiski jätkata, vajuta uuesti „Ühenda”.</string>
 
     <string name="login_title">Logi sisse</string>
     <string name="login_server_version">Versioon %1$s</string>

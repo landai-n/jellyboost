@@ -12,6 +12,7 @@
     <string name="server_setup_connect">დაკავშირება</string>
     <string name="server_setup_connecting">სერვერთან დაკავშირება მიმდინარეობს…</string>
     <string name="server_setup_session_lost">თქვენი შენახული ავტორიზაცია ვერ აღდგა, ამიტომ სისტემიდან გამოხვედით. გთხოვთ, ხელახლა შეხვიდეთ.</string>
+    <string name="server_setup_cleartext_warning">%1$s უპასუხა დაუშიფრავი კავშირით. თქვენი შესვლის ტოკენი და ყველაფერი, რასაც უყურებთ, ქსელში ღია სახით გაივლის, სადაც მათი წაკითხვა ნებისმიერ შუამავალს შეუძლია. მაინც გასაგრძელებლად ხელახლა დააჭირეთ „დაკავშირება“.</string>
     <string name="login_title">შესვლა</string>
     <string name="login_server_version">ვერსია %1$s</string>
     <string name="login_server_version_unknown">ვერსია უცნობია</string>

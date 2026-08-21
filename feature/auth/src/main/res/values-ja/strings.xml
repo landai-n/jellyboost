@@ -13,6 +13,7 @@
     <string name="server_setup_connect">接続</string>
     <string name="server_setup_connecting">サーバーに接続しています…</string>
     <string name="server_setup_session_lost">保存されたサインイン情報を復元できなかったため、サインアウトされました。もう一度サインインしてください。</string>
+    <string name="server_setup_cleartext_warning">%1$s は暗号化されていない接続で応答しました。サインイントークンと視聴内容がすべて平文でネットワークを通過するため、経路上の誰でも読み取れます。それでも続けるには、もう一度「接続」を押してください。</string>
 
     <string name="login_title">サインイン</string>
     <string name="login_server_version">バージョン %1$s</string>

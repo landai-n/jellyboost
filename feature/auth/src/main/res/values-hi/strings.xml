@@ -15,6 +15,7 @@
     <string name="server_setup_connect">कनेक्ट करें</string>
     <string name="server_setup_connecting">सर्वर से संपर्क किया जा रहा है…</string>
     <string name="server_setup_session_lost">आपका सहेजा गया साइन-इन बहाल नहीं किया जा सका, इसलिए आपको साइन आउट कर दिया गया है। कृपया फिर से साइन इन करें।</string>
+    <string name="server_setup_cleartext_warning">%1$s ने बिना एन्क्रिप्शन वाले कनेक्शन पर जवाब दिया। आपका साइन-इन टोकन और आप जो कुछ भी देखते हैं, वह नेटवर्क पर बिना सुरक्षा के जाएगा, जहाँ बीच में मौजूद कोई भी उसे पढ़ सकता है। फिर भी जारी रखने के लिए “कनेक्ट करें” दोबारा दबाएँ।</string>
 
     <!-- Login -->
     <string name="login_title">साइन इन करें</string>

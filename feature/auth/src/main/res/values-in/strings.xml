@@ -12,6 +12,7 @@
     <string name="server_setup_connect">Hubungkan</string>
     <string name="server_setup_connecting">Menghubungi server…</string>
     <string name="server_setup_session_lost">Info masuk yang tersimpan tidak dapat dipulihkan, sehingga Anda telah keluar. Silakan masuk lagi.</string>
+    <string name="server_setup_cleartext_warning">%1$s menjawab melalui koneksi yang tidak terenkripsi. Token masuk Anda dan semua yang Anda tonton akan melintasi jaringan tanpa enkripsi, sehingga siapa pun di antaranya dapat membacanya. Tekan “Hubungkan” lagi untuk tetap melanjutkan.</string>
     <string name="login_title">Masuk</string>
     <string name="login_server_version">Versi %1$s</string>
     <string name="login_server_version_unknown">Versi tidak diketahui</string>

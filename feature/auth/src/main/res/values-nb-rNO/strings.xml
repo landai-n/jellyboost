@@ -13,6 +13,7 @@
     <string name="server_setup_connect">Koble til</string>
     <string name="server_setup_connecting">Kontakter serveren…</string>
     <string name="server_setup_session_lost">Den lagrede innloggingen kunne ikke gjenopprettes, så du er blitt logget ut. Logg inn på nytt.</string>
+    <string name="server_setup_cleartext_warning">%1$s svarte over en ukryptert forbindelse. Innloggingstokenet ditt og alt du ser på, ville gå i klartekst over nettverket, der hvem som helst underveis kan lese det. Trykk «Koble til» på nytt for å fortsette likevel.</string>
 
     <string name="login_title">Logg inn</string>
     <string name="login_server_version">Versjon %1$s</string>

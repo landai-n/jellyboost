@@ -13,6 +13,7 @@
     <string name="server_setup_connect">Падключыцца</string>
     <string name="server_setup_connecting">Звязванне з серверам…</string>
     <string name="server_setup_session_lost">Не ўдалося аднавіць захаваны ўваход, таму вы выйшлі з сістэмы. Увайдзіце зноў.</string>
+    <string name="server_setup_cleartext_warning">%1$s адказаў праз незашыфраванае злучэнне. Ваш токен уваходу і ўсё, што вы глядзіце, будуць перадавацца па сетцы ў адкрытым выглядзе, дзе іх можа прачытаць любы пасярэднік. Націсніце «Падключыцца» яшчэ раз, каб усё роўна працягнуць.</string>
 
     <string name="login_title">Увайсці</string>
     <string name="login_server_version">Версія %1$s</string>

@@ -13,6 +13,7 @@
     <string name="server_setup_connect">Підключитися</string>
     <string name="server_setup_connecting">З’єднання із сервером…</string>
     <string name="server_setup_session_lost">Не вдалося відновити збережений вхід, тому вас було вилогінено. Увійдіть знову.</string>
+    <string name="server_setup_cleartext_warning">%1$s відповів через незашифроване з’єднання. Ваш токен входу і все, що ви дивитеся, передаватимуться мережею у відкритому вигляді, і будь-хто посередині зможе їх прочитати. Щоб усе одно продовжити, натисніть «Підключитися» ще раз.</string>
 
     <string name="login_title">Вхід</string>
     <string name="login_server_version">Версія %1$s</string>

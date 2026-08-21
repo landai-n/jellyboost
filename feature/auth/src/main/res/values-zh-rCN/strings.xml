@@ -13,6 +13,7 @@
     <string name="server_setup_connect">连接</string>
     <string name="server_setup_connecting">正在联系服务器…</string>
     <string name="server_setup_session_lost">无法恢复已保存的登录信息，你已被登出。请重新登录。</string>
+    <string name="server_setup_cleartext_warning">%1$s 通过未加密的连接作出了响应。你的登录令牌和你观看的一切都会以明文经过网络，中间的任何人都能读取。若仍要继续，请再次点按“连接”。</string>
 
     <string name="login_title">登录</string>
     <string name="login_server_version">版本 %1$s</string>

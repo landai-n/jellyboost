@@ -13,6 +13,7 @@
     <string name="server_setup_connect">कनेक्ट करा</string>
     <string name="server_setup_connecting">सर्व्हरशी संपर्क साधत आहे…</string>
     <string name="server_setup_session_lost">आपले जतन केलेले साइन-इन पुनर्संचयित करता आले नाही, त्यामुळे आपल्याला साइन आउट करण्यात आले आहे. कृपया पुन्हा साइन इन करा.</string>
+    <string name="server_setup_cleartext_warning">%1$s ने एन्क्रिप्ट न केलेल्या कनेक्शनवरून प्रतिसाद दिला. आपले साइन-इन टोकन आणि आपण पाहत असलेले सर्व काही नेटवर्कवरून उघड स्वरूपात जाईल, जिथे मध्ये असलेला कोणीही ते वाचू शकतो. तरीही सुरू ठेवण्यासाठी पुन्हा “कनेक्ट करा” दाबा.</string>
 
     <string name="login_title">साइन इन करा</string>
     <string name="login_server_version">आवृत्ती %1$s</string>

@@ -12,6 +12,7 @@
     <string name="server_setup_connect">සම්බන්ධ වන්න</string>
     <string name="server_setup_connecting">සේවාදායකය සම්බන්ධ කරමින්…</string>
     <string name="server_setup_session_lost">ඔබගේ සුරකින ලද පිවිසුම ප්‍රතිස්ථාපනය කළ නොහැකි වූ බැවින්, ඔබ නික්මවා ඇත. කරුණාකර නැවත පිවිසෙන්න.</string>
+    <string name="server_setup_cleartext_warning">%1$s ගුප්තකේතනය නොකළ සම්බන්ධතාවයක් හරහා පිළිතුරු දුන්නේය. ඔබගේ පිවිසුම් ටෝකනය සහ ඔබ නරඹන සියල්ල ජාලය හරහා විවෘත පෙළක් ලෙස ගමන් කරන අතර, අතරමැදි ඕනෑම කෙනෙකුට ඒවා කියවිය හැකිය. එසේ වුවද ඉදිරියට යාමට නැවත “සම්බන්ධ වන්න” ඔබන්න.</string>
     <string name="login_title">පිවිසෙන්න</string>
     <string name="login_server_version">අනුවාදය %1$s</string>
     <string name="login_server_version_unknown">අනුවාදය නොදනී</string>

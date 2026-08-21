@@ -12,6 +12,7 @@
     <string name="server_setup_connect">Ligar</string>
     <string name="server_setup_connecting">A contactar o servidor…</string>
     <string name="server_setup_session_lost">Não foi possível restaurar a sessão guardada, pelo que a sua sessão foi terminada. Inicie sessão novamente.</string>
+    <string name="server_setup_cleartext_warning">%1$s respondeu através de uma ligação não encriptada. O seu token de início de sessão e tudo o que vir atravessariam a rede em texto simples, onde qualquer pessoa pelo meio os pode ler. Prima “Ligar” novamente para continuar mesmo assim.</string>
     <string name="login_title">Iniciar sessão</string>
     <string name="login_server_version">Versão %1$s</string>
     <string name="login_server_version_unknown">Versão desconhecida</string>

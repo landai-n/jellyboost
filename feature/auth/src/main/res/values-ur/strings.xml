@@ -13,6 +13,7 @@
     <string name="server_setup_connect">منسلک ہوں</string>
     <string name="server_setup_connecting">سرور سے رابطہ کیا جا رہا ہے…</string>
     <string name="server_setup_session_lost">آپ کا محفوظ شدہ سائن ان بحال نہیں ہو سکا، اس لیے آپ کو سائن آؤٹ کر دیا گیا ہے۔ براہ کرم دوبارہ سائن ان کریں۔</string>
+    <string name="server_setup_cleartext_warning">%1$s نے غیر مرموز کنکشن کے ذریعے جواب دیا۔ آپ کا سائن ان ٹوکن اور جو کچھ آپ دیکھتے ہیں وہ سب نیٹ ورک پر بغیر خفیہ کاری کے گزرے گا، جہاں درمیان میں موجود کوئی بھی اسے پڑھ سکتا ہے۔ پھر بھی جاری رکھنے کے لیے دوبارہ “منسلک ہوں” دبائیں۔</string>
 
     <string name="login_title">سائن ان</string>
     <string name="login_server_version">ورژن %1$s</string>

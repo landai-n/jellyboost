@@ -12,6 +12,7 @@
     <string name="server_setup_connect">সংযোগ করুন</string>
     <string name="server_setup_connecting">সার্ভারের সাথে যোগাযোগ করা হচ্ছে…</string>
     <string name="server_setup_session_lost">আপনার সংরক্ষিত সাইন-ইন পুনরুদ্ধার করা যায়নি, তাই আপনাকে সাইন আউট করা হয়েছে। আবার সাইন ইন করুন।</string>
+    <string name="server_setup_cleartext_warning">%1$s এনক্রিপ্ট করা হয়নি এমন একটি সংযোগের মাধ্যমে সাড়া দিয়েছে। আপনার সাইন-ইন টোকেন এবং আপনি যা কিছু দেখেন সব নেটওয়ার্কের উপর দিয়ে অরক্ষিতভাবে যাবে, যেখানে মাঝখানের যে কেউ তা পড়তে পারে। তবুও চালিয়ে যেতে আবার “সংযোগ করুন” চাপুন।</string>
     <string name="login_title">সাইন ইন করুন</string>
     <string name="login_server_version">সংস্করণ %1$s</string>
     <string name="login_server_version_unknown">সংস্করণ অজানা</string>

@@ -12,6 +12,7 @@
     <string name="server_setup_connect">เชื่อมต่อ</string>
     <string name="server_setup_connecting">กำลังติดต่อเซิร์ฟเวอร์…</string>
     <string name="server_setup_session_lost">ไม่สามารถกู้คืนการเข้าสู่ระบบที่บันทึกไว้ได้ คุณจึงถูกออกจากระบบ กรุณาเข้าสู่ระบบอีกครั้ง</string>
+    <string name="server_setup_cleartext_warning">%1$s ตอบกลับผ่านการเชื่อมต่อที่ไม่ได้เข้ารหัส โทเค็นการเข้าสู่ระบบและทุกสิ่งที่คุณดูจะถูกส่งผ่านเครือข่ายแบบไม่เข้ารหัส ซึ่งใครก็ตามที่อยู่ระหว่างทางสามารถอ่านได้ หากต้องการดำเนินการต่อ ให้กด “เชื่อมต่อ” อีกครั้ง</string>
     <string name="login_title">เข้าสู่ระบบ</string>
     <string name="login_server_version">เวอร์ชัน %1$s</string>
     <string name="login_server_version_unknown">ไม่ทราบเวอร์ชัน</string>

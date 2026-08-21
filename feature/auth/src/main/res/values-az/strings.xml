@@ -12,6 +12,7 @@
     <string name="server_setup_connect">Qoşul</string>
     <string name="server_setup_connecting">Serverlə əlaqə saxlanılır…</string>
     <string name="server_setup_session_lost">Saxlanılmış girişiniz bərpa edilə bilmədi, ona görə də sistemdən çıxarıldınız. Zəhmət olmasa yenidən daxil olun.</string>
+    <string name="server_setup_cleartext_warning">%1$s şifrələnməmiş bir bağlantı üzərindən cavab verdi. Giriş tokeniniz və izlədiyiniz hər şey şəbəkədən açıq şəkildə keçəcək və aradakı hər kəs onları oxuya bilər. Yenə də davam etmək üçün “Qoşul” düyməsinə yenidən basın.</string>
     <string name="login_title">Daxil ol</string>
     <string name="login_server_version">Versiya %1$s</string>
     <string name="login_server_version_unknown">Versiya naməlumdur</string>

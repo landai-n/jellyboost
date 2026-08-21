@@ -13,6 +13,7 @@
     <string name="server_setup_connect">התחברות</string>
     <string name="server_setup_connecting">יוצר קשר עם השרת…</string>
     <string name="server_setup_session_lost">לא ניתן היה לשחזר את ההתחברות השמורה שלך, ולכן נותקת. אנא התחבר מחדש.</string>
+    <string name="server_setup_cleartext_warning">%1$s השיב דרך חיבור לא מוצפן. אסימון ההתחברות שלך וכל מה שאתה צופה בו יעברו ברשת ללא הצפנה, וכל מי שנמצא בדרך יכול לקרוא אותם. כדי להמשיך בכל זאת, לחץ שוב על ״התחברות״.</string>
 
     <string name="login_title">התחברות</string>
     <string name="login_server_version">גרסה %1$s</string>

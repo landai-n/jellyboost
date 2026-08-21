@@ -13,6 +13,7 @@
     <string name="server_setup_connect">Połącz</string>
     <string name="server_setup_connecting">Łączenie z serwerem…</string>
     <string name="server_setup_session_lost">Nie udało się przywrócić zapisanego logowania, dlatego zostałeś wylogowany. Zaloguj się ponownie.</string>
+    <string name="server_setup_cleartext_warning">%1$s odpowiedział przez nieszyfrowane połączenie. Twój token logowania i wszystko, co oglądasz, przechodziłyby przez sieć otwartym tekstem, gdzie każdy po drodze może to odczytać. Aby mimo to kontynuować, naciśnij ponownie „Połącz”.</string>
 
     <string name="login_title">Zaloguj się</string>
     <string name="login_server_version">Wersja %1$s</string>

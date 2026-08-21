@@ -13,6 +13,7 @@
     <string name="server_setup_connect">Verbinden</string>
     <string name="server_setup_connecting">Server wird kontaktiert …</string>
     <string name="server_setup_session_lost">Deine gespeicherte Anmeldung konnte nicht wiederhergestellt werden, daher wurdest du abgemeldet. Bitte melde dich erneut an.</string>
+    <string name="server_setup_cleartext_warning">%1$s hat über eine unverschlüsselte Verbindung geantwortet. Dein Anmeldetoken und alles, was du ansiehst, würden im Klartext durchs Netzwerk gehen, wo jeder dazwischen mitlesen kann. Tippe erneut auf „Verbinden“, um trotzdem fortzufahren.</string>
 
     <string name="login_title">Anmelden</string>
     <string name="login_server_version">Version %1$s</string>

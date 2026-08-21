@@ -13,6 +13,7 @@
     <string name="server_setup_connect">Свързване</string>
     <string name="server_setup_connecting">Свързване със сървъра…</string>
     <string name="server_setup_session_lost">Записаният вход не можа да бъде възстановен, затова бяхте излезли от профила. Моля, влезте отново.</string>
+    <string name="server_setup_cleartext_warning">%1$s отговори по нешифрована връзка. Токенът ви за вход и всичко, което гледате, ще преминават през мрежата в явен вид, където всеки по пътя може да ги прочете. Натиснете „Свързване“ отново, за да продължите въпреки това.</string>
 
     <string name="login_title">Вход</string>
     <string name="login_server_version">Версия %1$s</string>

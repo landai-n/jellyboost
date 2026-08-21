@@ -11,7 +11,13 @@
   },
   "double-bang": {},
   "globalscope": {},
+  "hardcoded-locale": {
+    "data/downloads/src/main/kotlin/dev/jellyboost/data/downloads/plan/DownloadPaths.kt": 5,
+    "player/src/main/kotlin/dev/jellyboost/player/ui/PlayerControls.kt": 2
+  },
   "modifier-composed": {},
+  "readtimeout-zero": {},
+  "required-height": {},
   "runBlocking": {},
   "runCatching": {
     "app/src/main/kotlin/dev/jellyboost/app/MainActivity.kt": 2,
@@ -36,6 +42,9 @@
     "player/src/main/kotlin/dev/jellyboost/player/syncplay/socket/OkHttpSyncPlaySocket.kt": 4,
     "player/src/main/kotlin/dev/jellyboost/player/ui/PlayerGestureLayer.kt": 1,
     "player/src/main/kotlin/dev/jellyboost/player/ui/PlayerScreen.kt": 1
+  },
+  "select-star-items": {
+    "core/database/src/main/kotlin/dev/jellyboost/core/database/dao/ItemDao.kt": 11
   },
   "uppercase-no-locale": {
     "core/ui/src/main/kotlin/dev/jellyboost/core/ui/component/FieldSemantics.kt": 1,

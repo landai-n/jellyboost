@@ -62,6 +62,20 @@ case "$COMMAND" in
   *) exit 0 ;;
 esac
 
+# Audit-derived guardrails (2026-08-21). These run on EVERY commit, including docs-only
+# ones — the QUAL-1 DECISIONS corruption and both identifier scrubs arrived via docs
+# commits that the verify fast-path below deliberately lets through. Each script is a
+# sub-second scan; a missing script (older checkout) falls through to allow.
+if [ -f scripts/check_docs.py ]; then
+  DOCS_OUT="$(python3 scripts/check_docs.py 2>&1)" || deny "check_docs failed: $DOCS_OUT"
+fi
+if [ -f scripts/check_identifiers.py ]; then
+  IDS_OUT="$(python3 scripts/check_identifiers.py 2>&1)" || deny "check_identifiers failed: $IDS_OUT"
+fi
+if [ -f scripts/check_patterns.py ]; then
+  PAT_OUT="$(python3 scripts/check_patterns.py 2>&1)" || deny "check_patterns failed: $PAT_OUT"
+fi
+
 # Determine whether this commit touches only docs/markdown files.
 DOCS_ONLY=0
 STAGED_FILES="$(git diff --cached --name-only 2>/dev/null)"

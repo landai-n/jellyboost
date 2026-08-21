@@ -53,6 +53,17 @@ jobs:
       - name: i18n completeness
         run: python3 scripts/validate_i18n.py
 
+      # Audit-derived guardrails (2026-08-21): governance-doc integrity (the QUAL-1 45x-paste
+      # signature), and the ratcheted source-pattern gate (runBlocking/runCatching/Dispatchers
+      # literals/!!/no-locale uppercase/composed{} — see scripts/check_patterns.py for the audit
+      # lineage of each). check_identifiers.py is deliberately NOT run here: its denylist lives
+      # outside the repo by design and the script skips silently without it, which would be the
+      # "guardrail wired into no gate" illusion — locally the pre-commit hook runs it for real.
+      - name: governance-doc integrity
+        run: python3 scripts/check_docs.py
+      - name: source-pattern ratchet
+        run: python3 scripts/check_patterns.py
+
       # Java toolchain 21 — pinned in gradle/libs.versions.toml (javaToolchain) and set locally by
       # ../env.sh. Temurin is what the toolchain resolver would download anyway; providing it here
       # saves the auto-provisioning round trip.

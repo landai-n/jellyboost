@@ -65,15 +65,8 @@ internal fun GlassBottomNav(
 ) {
     // The pill's own darker tint, not ChromeFill: this bar's labels are the smallest text in the
     // chrome and it sits over full-bleed artwork — see [GlassDefaults.BottomNavFill] for the
-    // arithmetic. And a pinned half-resolution blur rather than `Auto`'s factor, which a bar this
-    // wide shows as a checkerboard — see [GlassDefaults.WideBarInputScale]. Hoisted out of the
-    // chain below only because it no longer fits on one line of it.
-    val glass =
-        Modifier.glassSurface(
-            shape = CircleShape,
-            tint = GlassDefaults.BottomNavFill,
-            inputScale = GlassDefaults.WideBarInputScale,
-        )
+    // arithmetic. (The half-resolution blur is `glassSurface`'s default for all glass now.)
+    val glass = Modifier.glassSurface(shape = CircleShape, tint = GlassDefaults.BottomNavFill)
 
     Row(
         modifier =

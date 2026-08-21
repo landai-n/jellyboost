@@ -104,23 +104,24 @@ object GlassDefaults {
     val BottomNavFill: Color = JellyfinColors.Background.copy(alpha = 0.72f)
 
     /**
-     * The input scale the two full-width chrome bars — the floating nav pill and the mini-player —
-     * blur their backdrop at, instead of [HazeInputScale.Auto].
+     * The input scale every glass surface blurs its backdrop at, instead of
+     * [HazeInputScale.Auto].
      *
      * `Auto` derives its factor from the blur radius, and at [BlurRadius] it picks aggressively
-     * enough that the downscaled backdrop's pixels survive the blur as visible structure once the
-     * surface is large: on the 2560×1600 test tablet both bars — 64dp tall and up to 640dp wide —
-     * showed an ~8–24px checkerboard across the whole bar (device analysis, 2026-08-21). The small
-     * [dev.jellyboost.core.ui.component.GlassIconButton] circles that motivated the audit's PERF-1
-     * do not: at that size the same factor lands under a pixel of visible structure, so `Auto`
-     * stays the default everywhere and this token overrides it only where the defect was measured.
+     * enough that the downscaled backdrop's pixels survive the blur as visible structure: on the
+     * 2560×1600 test tablet the two full-width chrome bars showed an ~8–24px checkerboard
+     * (device analysis, 2026-08-21), and after they were fixed the same texture was reported on
+     * the small [dev.jellyboost.core.ui.component.GlassIconButton] circles too (device walk, same
+     * day) — this token started as a wide-bars-only override on the guess that small glass hid
+     * the artifact, and the guess did not survive contact with the device. So half resolution is
+     * now the default for all glass, replacing PERF-1's `Auto` outright.
      *
      * Half resolution rather than [HazeInputScale.None]: a quarter of the pixels is still most of
      * PERF-1's saving, and 0.5 is the one factor that maps whole source pixels onto whole
      * destination ones, which is what keeps the downscale from inventing the pattern in the first
      * place.
      */
-    val WideBarInputScale: HazeInputScale = HazeInputScale.Fixed(0.5f)
+    val DefaultInputScale: HazeInputScale = HazeInputScale.Fixed(0.5f)
 
     /**
      * The Haze style every glass surface blurs with.
@@ -175,17 +176,17 @@ val LocalHazeState = compositionLocalOf<HazeState?> { null }
  *   inside a screen's own content; chrome that floats over arbitrary artwork passes
  *   [GlassDefaults.ChromeFill] instead, for the reason spelled out there.
  * @param inputScale the resolution the backdrop is sampled and blurred at (audit 2026-08-08,
- *   PERF-1). [HazeInputScale.Auto] — Haze picking the factor from the blur radius — for every
- *   surface small enough that the downscale stays invisible, which is what the audit's own
- *   motivating case (the 18dp-blur icon circles over a poster grid) is. The two full-width chrome
- *   bars pass [GlassDefaults.WideBarInputScale] instead, for the reason spelled out there.
+ *   PERF-1). Defaults to [GlassDefaults.DefaultInputScale] — half resolution — because `Auto`'s
+ *   aggressive factor at this blur radius shows as visible texture on every surface size it was
+ *   checked on (that token's KDoc has the history). The parameter survives for the day a surface
+ *   measurably wants something else; no caller passes it today.
  */
 @Composable
 fun Modifier.glassSurface(
     shape: Shape,
     borderColor: Color = GlassDefaults.Hairline,
     tint: Color = GlassDefaults.Fill,
-    inputScale: HazeInputScale = HazeInputScale.Auto,
+    inputScale: HazeInputScale = GlassDefaults.DefaultInputScale,
 ): Modifier {
     val hazeState = LocalHazeState.current
     // Blur the backdrop at reduced resolution — GPU cost otherwise paid per frame for detail an

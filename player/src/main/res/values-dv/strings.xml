@@ -37,6 +37,10 @@
     <string name="player_skip_intro">އިންޓްރޯ ސްކިޕްކުރޭ</string>
     <string name="player_skip_outro">އައުޓްރޯ ސްކިޕްކުރޭ</string>
 
+    <string name="player_up_next_title">ދެން އޮތީ</string>
+    <string name="player_up_next_play">ދެން އޮތް އެޕިސޯޑް ޕްލޭކުރޭ</string>
+    <string name="player_up_next_dismiss">ކްރެޑިޓްސް ބަލާ</string>
+
     <string name="player_quality_auto">އޮޓޯ</string>
     <string name="player_quality_high">މަތި — 20 Mbps</string>
     <string name="player_quality_medium">މެދު — 8 Mbps</string>

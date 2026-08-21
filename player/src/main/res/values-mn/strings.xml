@@ -37,6 +37,10 @@
     <string name="player_skip_intro">Эхлэлийг алгасах</string>
     <string name="player_skip_outro">Төгсгөлийг алгасах</string>
 
+    <string name="player_up_next_title">Дараагийн</string>
+    <string name="player_up_next_play">Дараагийн ангийг тоглуулах</string>
+    <string name="player_up_next_dismiss">Төгсгөлийн бичвэрийг үзэх</string>
+
     <string name="player_quality_auto">Автомат</string>
     <string name="player_quality_high">Өндөр — 20 Mbps</string>
     <string name="player_quality_medium">Дунд — 8 Mbps</string>

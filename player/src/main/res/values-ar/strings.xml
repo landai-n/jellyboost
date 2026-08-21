@@ -49,6 +49,10 @@
     <string name="player_skip_intro">تخطي المقدمة</string>
     <string name="player_skip_outro">تخطي الخاتمة</string>
 
+    <string name="player_up_next_title">التالي</string>
+    <string name="player_up_next_play">تشغيل الحلقة التالية</string>
+    <string name="player_up_next_dismiss">مشاهدة الشارة الختامية</string>
+
     <string name="player_quality_auto">تلقائي</string>
     <string name="player_quality_high">عالية — 20 ميغابت/ث</string>
     <string name="player_quality_medium">متوسطة — 8 ميغابت/ث</string>

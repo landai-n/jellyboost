@@ -37,6 +37,10 @@
     <string name="player_done">Terminé</string>
     <string name="player_skip_intro">Ignorer le générique</string>
     <string name="player_skip_outro">Ignorer la fin</string>
+
+    <string name="player_up_next_title">À suivre</string>
+    <string name="player_up_next_play">Lire l\'épisode suivant</string>
+    <string name="player_up_next_dismiss">Regarder le générique</string>
     <string name="player_quality_auto">Auto</string>
     <string name="player_quality_high">Haute — 20 Mbps</string>
     <string name="player_quality_medium">Moyenne — 8 Mbps</string>

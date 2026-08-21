@@ -40,6 +40,10 @@
     <string name="player_skip_intro">דילוג על הפתיח</string>
     <string name="player_skip_outro">דילוג על הסיום</string>
 
+    <string name="player_up_next_title">הבא בתור</string>
+    <string name="player_up_next_play">הפעלת הפרק הבא</string>
+    <string name="player_up_next_dismiss">צפייה בקרדיטים</string>
+
     <string name="player_quality_auto">אוטומטי</string>
     <string name="player_quality_high">גבוהה — 20 Mbps</string>
     <string name="player_quality_medium">בינונית — 8 Mbps</string>

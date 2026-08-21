@@ -34,6 +34,10 @@
     <string name="player_skip_intro">オープニングをスキップ</string>
     <string name="player_skip_outro">エンディングをスキップ</string>
 
+    <string name="player_up_next_title">次のエピソード</string>
+    <string name="player_up_next_play">次のエピソードを再生</string>
+    <string name="player_up_next_dismiss">エンディングを見る</string>
+
     <string name="player_quality_auto">自動</string>
     <string name="player_quality_high">高 — 20Mbps</string>
     <string name="player_quality_medium">中 — 8Mbps</string>

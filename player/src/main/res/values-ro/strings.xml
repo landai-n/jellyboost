@@ -37,6 +37,10 @@
     <string name="player_done">Gata</string>
     <string name="player_skip_intro">Sari peste genericul de început</string>
     <string name="player_skip_outro">Sari peste genericul de final</string>
+
+    <string name="player_up_next_title">Urmează</string>
+    <string name="player_up_next_play">Redă episodul următor</string>
+    <string name="player_up_next_dismiss">Vezi genericul de final</string>
     <string name="player_quality_auto">Automată</string>
     <string name="player_quality_high">Înaltă — 20 Mbps</string>
     <string name="player_quality_medium">Medie — 8 Mbps</string>

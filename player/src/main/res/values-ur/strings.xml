@@ -37,6 +37,10 @@
     <string name="player_skip_intro">انٹرو نظر انداز کریں</string>
     <string name="player_skip_outro">آؤٹرو نظر انداز کریں</string>
 
+    <string name="player_up_next_title">اگلا</string>
+    <string name="player_up_next_play">اگلی قسط چلائیں</string>
+    <string name="player_up_next_dismiss">کریڈٹس دیکھیں</string>
+
     <string name="player_quality_auto">خودکار</string>
     <string name="player_quality_high">زیادہ — 20 Mbps</string>
     <string name="player_quality_medium">درمیانہ — 8 Mbps</string>

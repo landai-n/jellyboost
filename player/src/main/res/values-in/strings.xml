@@ -31,6 +31,10 @@
     <string name="player_done">Selesai</string>
     <string name="player_skip_intro">Lewati intro</string>
     <string name="player_skip_outro">Lewati outro</string>
+
+    <string name="player_up_next_title">Berikutnya</string>
+    <string name="player_up_next_play">Putar episode berikutnya</string>
+    <string name="player_up_next_dismiss">Tonton kredit</string>
     <string name="player_quality_auto">Otomatis</string>
     <string name="player_quality_high">Tinggi — 20 Mbps</string>
     <string name="player_quality_medium">Sedang — 8 Mbps</string>

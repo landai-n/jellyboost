@@ -37,6 +37,10 @@
     <string name="player_skip_intro">தொடக்கத்தைத் தவிர்</string>
     <string name="player_skip_outro">முடிவைத் தவிர்</string>
 
+    <string name="player_up_next_title">அடுத்தது</string>
+    <string name="player_up_next_play">அடுத்த எபிசோடை இயக்கு</string>
+    <string name="player_up_next_dismiss">இறுதிப் பட்டியலைப் பார்</string>
+
     <string name="player_quality_auto">தானியங்கி</string>
     <string name="player_quality_high">உயர்தரம் — 20 Mbps</string>
     <string name="player_quality_medium">நடுத்தரம் — 8 Mbps</string>

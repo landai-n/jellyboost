@@ -43,6 +43,10 @@
     <string name="player_skip_intro">Пропустить заставку</string>
     <string name="player_skip_outro">Пропустить титры</string>
 
+    <string name="player_up_next_title">Далее</string>
+    <string name="player_up_next_play">Воспроизвести следующий эпизод</string>
+    <string name="player_up_next_dismiss">Смотреть титры</string>
+
     <string name="player_quality_auto">Авто</string>
     <string name="player_quality_high">Высокое — 20 Мбит/с</string>
     <string name="player_quality_medium">Среднее — 8 Мбит/с</string>

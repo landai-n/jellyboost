@@ -37,6 +37,10 @@
     <string name="player_skip_intro">Hoppa över intro</string>
     <string name="player_skip_outro">Hoppa över outro</string>
 
+    <string name="player_up_next_title">Näst på tur</string>
+    <string name="player_up_next_play">Spela upp nästa avsnitt</string>
+    <string name="player_up_next_dismiss">Se eftertexterna</string>
+
     <string name="player_quality_auto">Automatisk</string>
     <string name="player_quality_high">Hög – 20 Mbps</string>
     <string name="player_quality_medium">Medel – 8 Mbps</string>

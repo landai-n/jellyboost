@@ -34,6 +34,10 @@
     <string name="player_done">Farita</string>
     <string name="player_skip_intro">Preterlasi la enkondukon</string>
     <string name="player_skip_outro">Preterlasi la finaĵon</string>
+
+    <string name="player_up_next_title">Sekve</string>
+    <string name="player_up_next_play">Ludi la sekvan epizodon</string>
+    <string name="player_up_next_dismiss">Spekti la finaĵon</string>
     <string name="player_quality_auto">Aŭtomata</string>
     <string name="player_quality_high">Alta — 20 Mbps</string>
     <string name="player_quality_medium">Meza — 8 Mbps</string>

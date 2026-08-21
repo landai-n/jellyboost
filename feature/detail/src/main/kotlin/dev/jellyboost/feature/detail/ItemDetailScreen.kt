@@ -86,6 +86,10 @@ import dev.jellyboost.core.ui.R as CoreUiR
  * @param onBack pops one entry — the plain back affordance.
  * @param onHome leaves the whole pushed chain at once and lands on the Home tab; see
  *   `AppScaffold.navigateHome`.
+ * @param onNavigateToItemId an episode page's series/season origin chip, or the season-siblings
+ *   row's "See all", was tapped — the caller pushes another `Routes.ItemDetail` for the given id.
+ *   A plain id rather than an [JellyfinItem] like [onItemClick]: the origin chips and "See all" know
+ *   only the id they point at, not the item itself.
  */
 @Composable
 fun ItemDetailScreen(
@@ -94,6 +98,7 @@ fun ItemDetailScreen(
     onPlay: (itemId: String, startPositionTicks: Long) -> Unit,
     onBack: () -> Unit,
     onHome: () -> Unit,
+    onNavigateToItemId: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -138,6 +143,7 @@ fun ItemDetailScreen(
             actions = detailActions(state = state, activeGroup = activeGroup, viewModel = viewModel),
             selection = selectionState,
             onSelection = viewModel::onSelection,
+            onNavigateToItemId = onNavigateToItemId,
         )
 
         DetailTopOverlay(
@@ -348,6 +354,8 @@ private fun DeleteDownloadDialog(
  * @param onPlay an episode row's play button was tapped. It hands over the *item*, not an id and a
  *   position: what a play means depends on whether there is a group, and that is the ViewModel's
  *   answer to give (DECISIONS.md, 2026-07-31).
+ * @param onNavigateToItemId an episode page's series/season origin chip, or the season-siblings
+ *   row's "See all", was tapped, by id rather than by item.
  */
 @Composable
 fun ItemDetailContent(
@@ -359,6 +367,7 @@ fun ItemDetailContent(
     modifier: Modifier = Modifier,
     selection: State<ItemSelection> = remember { mutableStateOf(ItemSelection()) },
     onSelection: (SelectionIntent) -> Unit = {},
+    onNavigateToItemId: (String) -> Unit = {},
 ) {
     val detail = state.item
     when {
@@ -391,6 +400,7 @@ fun ItemDetailContent(
                     actions = actions,
                     selection = selection,
                     onSelection = onSelection,
+                    onNavigateToItemId = onNavigateToItemId,
                 )
             }
     }
@@ -407,6 +417,7 @@ private fun DetailSections(
     actions: DetailActionHandlers,
     selection: State<ItemSelection>,
     onSelection: (SelectionIntent) -> Unit,
+    onNavigateToItemId: (String) -> Unit,
 ) {
     val handlers =
         EpisodeHandlers(
@@ -430,6 +441,7 @@ private fun DetailSections(
                 backdropHeight = backdropHeight,
                 downloadState = state.downloadState,
                 actions = actions,
+                onNavigateToItemId = onNavigateToItemId,
                 downloadedBytes = state.downloadedBytes,
             )
         }
@@ -454,9 +466,57 @@ private fun DetailSections(
             }
         }
 
+        episodeOriginRows(
+            state = state,
+            detail = detail,
+            onItemClick = onItemClick,
+            onNavigateToItemId = onNavigateToItemId,
+        )
+
         episodeSection(episodes = state.episodes, layout = layout, handlers = handlers)
 
         relatedSections(people = detail.people, similar = state.similar, onItemClick = onItemClick)
+    }
+}
+
+/**
+ * The episode page's own two rows: the positional next episode, and the rest of its season
+ * (episode-detail-shortcuts, DECISIONS.md 2026-08-21). Both stay empty — and so undrawn — on every
+ * other item type, since only `fetchRelated`'s episode branch populates [ItemDetailUiState.nextEpisode]
+ * / [ItemDetailUiState.seasonEpisodes].
+ */
+private fun LazyListScope.episodeOriginRows(
+    state: ItemDetailUiState,
+    detail: JellyfinItem,
+    onItemClick: (JellyfinItem) -> Unit,
+    onNavigateToItemId: (String) -> Unit,
+) {
+    state.nextEpisode?.let { next ->
+        item(key = SECTION_NEXT_EPISODE, contentType = DetailContentType.SECTION) {
+            MediaRow(
+                title = stringResource(R.string.detail_section_next_episode),
+                items = listOf(next),
+                key = JellyfinItem::id,
+            ) { episode -> ThumbCard(item = episode, onClick = { onItemClick(episode) }) }
+        }
+    }
+
+    val siblings = seasonSiblings(state.seasonEpisodes, detail.id)
+    if (siblings.isNotEmpty()) {
+        item(key = SECTION_SEASON_SIBLINGS, contentType = DetailContentType.SECTION) {
+            val seasonNumber = detail.parentIndexNumber
+            MediaRow(
+                title =
+                    if (seasonNumber != null) {
+                        stringResource(R.string.detail_section_more_from_season, seasonNumber)
+                    } else {
+                        stringResource(R.string.detail_section_more_from_season_unnumbered)
+                    },
+                items = siblings,
+                key = JellyfinItem::id,
+                onSeeAll = detail.seasonId?.let { seasonId -> { onNavigateToItemId(seasonId) } },
+            ) { sibling -> ThumbCard(item = sibling, onClick = { onItemClick(sibling) }) }
+        }
     }
 }
 
@@ -582,6 +642,18 @@ private fun SelectableEpisode(
 }
 
 /**
+ * The episode page's "More from this season" row: every episode `fetchRelated` loaded for the
+ * parent season, minus the episode already on screen.
+ *
+ * A plain function rather than inline in [DetailSections] so the exclusion is pinned by a JVM test
+ * rather than only ever exercised by whatever season a device happens to be browsing.
+ */
+internal fun seasonSiblings(
+    seasonEpisodes: List<JellyfinItem>,
+    currentEpisodeId: String,
+): List<JellyfinItem> = seasonEpisodes.filterNot { it.id == currentEpisodeId }
+
+/**
  * The two node shapes this screen's `LazyColumn` draws (audit PERF-08).
  *
  * `SECTION` covers the hero, and every `MediaRow`/`SectionTitle` block: each is structurally
@@ -658,6 +730,8 @@ private fun userMessageText(message: UserMessage): String =
 private const val SECTION_HERO = "section-hero"
 private const val SECTION_NEXT_UP = "section-next-up"
 private const val SECTION_SEASONS = "section-seasons"
+private const val SECTION_NEXT_EPISODE = "section-next-episode"
+private const val SECTION_SEASON_SIBLINGS = "section-season-siblings"
 private const val SECTION_EPISODES = "section-episodes"
 private const val SECTION_CAST = "section-cast"
 private const val SECTION_SIMILAR = "section-similar"

@@ -16,6 +16,12 @@
     <string name="detail_section_episodes">Partar</string>
     <string name="detail_section_similar">Meira sum hetta</string>
     <string name="detail_section_cast">Leikarar</string>
+    <string name="detail_section_next_episode">Næsti partur</string>
+    <string name="detail_section_more_from_season">Meira frá Sesong %1$d</string>
+    <string name="detail_section_more_from_season_unnumbered">Meira frá hesum sesongi</string>
+    <string name="detail_go_to_series">Far til seriuna %1$s</string>
+    <string name="detail_go_to_season">Sesong %1$d</string>
+    <string name="detail_go_to_season_description">Far til sesong %1$d</string>
     <string name="detail_type_movie">Film</string>
     <string name="detail_type_series">Sería</string>
     <string name="detail_type_season">Sesong</string>

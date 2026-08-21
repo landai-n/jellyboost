@@ -16,6 +16,12 @@
     <string name="detail_section_episodes">Epizódok</string>
     <string name="detail_section_similar">Hasonlók</string>
     <string name="detail_section_cast">Szereplők</string>
+    <string name="detail_section_next_episode">Következő epizód</string>
+    <string name="detail_section_more_from_season">Több a(z) %1$d. évadból</string>
+    <string name="detail_section_more_from_season_unnumbered">Több ebből az évadból</string>
+    <string name="detail_go_to_series">Ugrás a(z) %1$s sorozathoz</string>
+    <string name="detail_go_to_season">%1$d. évad</string>
+    <string name="detail_go_to_season_description">Ugrás a(z) %1$d. évadhoz</string>
     <string name="detail_type_movie">Film</string>
     <string name="detail_type_series">Sorozat</string>
     <string name="detail_type_season">Évad</string>

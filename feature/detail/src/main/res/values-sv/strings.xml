@@ -16,6 +16,12 @@
     <string name="detail_section_episodes">Avsnitt</string>
     <string name="detail_section_similar">Mer i samma stil</string>
     <string name="detail_section_cast">Medverkande</string>
+    <string name="detail_section_next_episode">Nästa avsnitt</string>
+    <string name="detail_section_more_from_season">Mer från Säsong %1$d</string>
+    <string name="detail_section_more_from_season_unnumbered">Mer från den här säsongen</string>
+    <string name="detail_go_to_series">Gå till serien %1$s</string>
+    <string name="detail_go_to_season">Säsong %1$d</string>
+    <string name="detail_go_to_season_description">Gå till säsong %1$d</string>
     <string name="detail_type_movie">Film</string>
     <string name="detail_type_series">Serie</string>
     <string name="detail_type_season">Säsong</string>

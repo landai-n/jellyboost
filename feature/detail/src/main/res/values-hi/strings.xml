@@ -18,6 +18,12 @@
     <string name="detail_section_episodes">एपिसोड</string>
     <string name="detail_section_similar">इससे मिलते-जुलते</string>
     <string name="detail_section_cast">कलाकार</string>
+    <string name="detail_section_next_episode">अगला एपिसोड</string>
+    <string name="detail_section_more_from_season">सीज़न %1$d से और</string>
+    <string name="detail_section_more_from_season_unnumbered">इस सीज़न से और</string>
+    <string name="detail_go_to_series">सीरीज़ %1$s पर जाएं</string>
+    <string name="detail_go_to_season">सीज़न %1$d</string>
+    <string name="detail_go_to_season_description">सीज़न %1$d पर जाएं</string>
     <string name="detail_type_movie">फ़िल्म</string>
     <string name="detail_type_series">सीरीज़</string>
     <string name="detail_type_season">सीज़न</string>

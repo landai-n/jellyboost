@@ -16,6 +16,12 @@
     <string name="detail_section_episodes">Епизоде</string>
     <string name="detail_section_similar">Слично овоме</string>
     <string name="detail_section_cast">Глумачка постава</string>
+    <string name="detail_section_next_episode">Следећа епизода</string>
+    <string name="detail_section_more_from_season">Још из Сезоне %1$d</string>
+    <string name="detail_section_more_from_season_unnumbered">Још из ове сезоне</string>
+    <string name="detail_go_to_series">Иди на серију %1$s</string>
+    <string name="detail_go_to_season">Сезона %1$d</string>
+    <string name="detail_go_to_season_description">Иди на сезону %1$d</string>
     <string name="detail_type_movie">Филм</string>
     <string name="detail_type_series">Серија</string>
     <string name="detail_type_season">Сезона</string>

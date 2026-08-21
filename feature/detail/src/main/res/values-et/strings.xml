@@ -16,6 +16,12 @@
     <string name="detail_section_episodes">Osad</string>
     <string name="detail_section_similar">Rohkem sarnaseid</string>
     <string name="detail_section_cast">Osatäitjad</string>
+    <string name="detail_section_next_episode">Järgmine osa</string>
+    <string name="detail_section_more_from_season">Rohkem hooajast %1$d</string>
+    <string name="detail_section_more_from_season_unnumbered">Rohkem sellest hooajast</string>
+    <string name="detail_go_to_series">Ava sari %1$s</string>
+    <string name="detail_go_to_season">Hooaeg %1$d</string>
+    <string name="detail_go_to_season_description">Ava hooaeg %1$d</string>
     <string name="detail_type_movie">Film</string>
     <string name="detail_type_series">Sari</string>
     <string name="detail_type_season">Hooaeg</string>

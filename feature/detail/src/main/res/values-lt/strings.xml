@@ -16,6 +16,12 @@
     <string name="detail_section_episodes">Epizodai</string>
     <string name="detail_section_similar">Panašūs</string>
     <string name="detail_section_cast">Aktoriai</string>
+    <string name="detail_section_next_episode">Kitas epizodas</string>
+    <string name="detail_section_more_from_season">Daugiau iš %1$d sezono</string>
+    <string name="detail_section_more_from_season_unnumbered">Daugiau iš šio sezono</string>
+    <string name="detail_go_to_series">Eiti į serialą %1$s</string>
+    <string name="detail_go_to_season">%1$d sezonas</string>
+    <string name="detail_go_to_season_description">Eiti į %1$d sezoną</string>
     <string name="detail_type_movie">Filmas</string>
     <string name="detail_type_series">Serialas</string>
     <string name="detail_type_season">Sezonas</string>

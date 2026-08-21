@@ -16,6 +16,12 @@
     <string name="detail_section_episodes">에피소드</string>
     <string name="detail_section_similar">비슷한 콘텐츠</string>
     <string name="detail_section_cast">출연진</string>
+    <string name="detail_section_next_episode">다음 에피소드</string>
+    <string name="detail_section_more_from_season">시즌 %1$d의 다른 에피소드</string>
+    <string name="detail_section_more_from_season_unnumbered">이 시즌의 다른 에피소드</string>
+    <string name="detail_go_to_series">%1$s 시리즈로 이동</string>
+    <string name="detail_go_to_season">시즌 %1$d</string>
+    <string name="detail_go_to_season_description">시즌 %1$d(으)로 이동</string>
     <string name="detail_type_movie">영화</string>
     <string name="detail_type_series">시리즈</string>
     <string name="detail_type_season">시즌</string>

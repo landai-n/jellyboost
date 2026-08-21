@@ -458,6 +458,83 @@ class PlaybackInfoResolverTest {
         }
 
     @Test
+    fun `marks an external delivery as side-loaded even for a stream inside the container`() =
+        runTest {
+            // What a transcode does to an embedded subrip today: the server extracts it and hands
+            // back a delivery URL, so `MediaStream.isExternal` is false and the track is still one
+            // ExoPlayer opens as its own source.
+            val result =
+                resolveWith(
+                    PlayerFixtures.mediaSourceInfo(
+                        supportsDirectPlay = true,
+                        mediaStreams =
+                            listOf(PlayerFixtures.subtitleStream(index = 3, isExternal = false)),
+                    ),
+                )
+
+            result.subtitleTracks
+                .single()
+                .isExternal shouldBe true
+        }
+
+    @Test
+    fun `a burned-in subtitle is never counted among the tracks the stream carries`() =
+        runTest {
+            // A graphical subtitle on a transcode: the server burns it into the picture and builds
+            // it no HLS rendition, so it must not take a place in the positional count that
+            // `TrackSelectionController` runs over the renditions that *are* there.
+            val result =
+                resolveWith(
+                    PlayerFixtures.mediaSourceInfo(
+                        supportsDirectPlay = true,
+                        mediaStreams =
+                            listOf(
+                                PlayerFixtures.subtitleStream(
+                                    index = 3,
+                                    codec = "pgssub",
+                                    deliveryMethod = SubtitleDeliveryMethod.ENCODE,
+                                    deliveryUrl = null,
+                                    isExternal = false,
+                                ),
+                            ),
+                    ),
+                )
+
+            result.subtitleTracks
+                .single()
+                .isExternal shouldBe true
+            result.externalSubtitles.shouldBeEmpty()
+        }
+
+    @Test
+    fun `an HLS rendition is a track the stream carries, never a side-load`() =
+        runTest {
+            // The whole point of the second pass: the cues ride in the transcode's own master
+            // playlist, share its `TimestampAdjuster`, and are matched by position — so a sidecar
+            // file delivered this way is emphatically not external, whatever the stream says.
+            val result =
+                resolveWith(
+                    PlayerFixtures.mediaSourceInfo(
+                        transcodingUrl = TRANSCODING_URL,
+                        mediaStreams =
+                            listOf(
+                                PlayerFixtures.subtitleStream(
+                                    index = 3,
+                                    deliveryMethod = SubtitleDeliveryMethod.HLS,
+                                    deliveryUrl = null,
+                                    isExternal = true,
+                                ),
+                            ),
+                    ),
+                )
+
+            result.subtitleTracks
+                .single()
+                .isExternal shouldBe false
+            result.externalSubtitles.shouldBeEmpty()
+        }
+
+    @Test
     fun `treats a subtitle index of minus one as subtitles off`() =
         runTest {
             val result =
@@ -472,6 +549,120 @@ class PlaybackInfoResolverTest {
 
             // -1 must not fall back to the item's default, which is what `null` means.
             result.selectedSubtitleIndex.shouldBeNull()
+        }
+
+    // ---- the second pass: in-manifest subtitles for a transcode --------------------------------
+
+    @Test
+    fun `re-asks a transcode for HLS renditions when its text subtitles would be side-loaded`() =
+        runTest {
+            val requests = mutableListOf<PlaybackInfoDto>()
+            coEvery { api.getPlaybackInfo(any(), capture(requests)) } returnsMany
+                listOf(
+                    PlayerFixtures.playbackInfoResponse(listOf(sideLoadingTranscode())),
+                    PlayerFixtures.playbackInfoResponse(listOf(renditionTranscode())),
+                )
+
+            val result = resolver.resolve(PlaybackResolveRequest(itemId = PlayerFixtures.ITEM_ID))
+
+            result.shouldBeInstanceOf<AppResult.Success<*>>()
+            requests.size shouldBe 2
+            // Pass 1 asks the honest question — the answer decides whether pass 2 is worth a round
+            // trip at all — and only pass 2 drops external delivery.
+            requests[0].subtitleProfiles().any { it.method == SubtitleDeliveryMethod.EXTERNAL } shouldBe true
+            requests[1].subtitleProfiles().none { it.method == SubtitleDeliveryMethod.EXTERNAL } shouldBe true
+            requests[1].subtitleProfiles().any {
+                it.format == "vtt" && it.method == SubtitleDeliveryMethod.HLS
+            } shouldBe true
+
+            val source = result.value as dev.jellyboost.player.model.RemotePlaybackMediaSource
+            // Pass 2's answer, and nothing side-loaded is left to drift.
+            source.externalSubtitles.shouldBeEmpty()
+            source.subtitleTracks.map { it.isExternal } shouldBe listOf(false)
+        }
+
+    @Test
+    fun `does not re-ask a direct play`() =
+        runTest {
+            val requests = mutableListOf<PlaybackInfoDto>()
+            coEvery { api.getPlaybackInfo(any(), capture(requests)) } returns
+                PlayerFixtures.playbackInfoResponse(
+                    listOf(
+                        PlayerFixtures.mediaSourceInfo(
+                            supportsDirectPlay = true,
+                            mediaStreams = listOf(PlayerFixtures.subtitleStream(index = 3)),
+                        ),
+                    ),
+                )
+
+            resolver.resolve(PlaybackResolveRequest(itemId = PlayerFixtures.ITEM_ID))
+
+            // Sent the rendition profile, a direct-played file with a sidecar `.srt` negotiates
+            // `Encode` instead — a burn-in transcode of something that needed none.
+            requests.size shouldBe 1
+        }
+
+    @Test
+    fun `does not re-ask a transcode that side-loads nothing`() =
+        runTest {
+            val requests = mutableListOf<PlaybackInfoDto>()
+            coEvery { api.getPlaybackInfo(any(), capture(requests)) } returns
+                PlayerFixtures.playbackInfoResponse(listOf(renditionTranscode()))
+
+            resolver.resolve(PlaybackResolveRequest(itemId = PlayerFixtures.ITEM_ID))
+
+            requests.size shouldBe 1
+        }
+
+    @Test
+    fun `does not re-ask for a cast receiver`() =
+        runTest {
+            val requests = mutableListOf<PlaybackInfoDto>()
+            coEvery { api.getPlaybackInfo(any(), capture(requests)) } returns
+                PlayerFixtures.playbackInfoResponse(listOf(sideLoadingTranscode()))
+
+            resolver.resolve(
+                PlaybackResolveRequest(itemId = PlayerFixtures.ITEM_ID, castTarget = true),
+            )
+
+            // The receiver's subtitle handling is its own, and `CastSpecMapper` builds its tracks
+            // from the side-loaded list.
+            requests.size shouldBe 1
+        }
+
+    @Test
+    fun `keeps the side-loaded answer when the second pass stops transcoding`() =
+        runTest {
+            coEvery { api.getPlaybackInfo(any(), any()) } returnsMany
+                listOf(
+                    PlayerFixtures.playbackInfoResponse(listOf(sideLoadingTranscode())),
+                    PlayerFixtures.playbackInfoResponse(
+                        listOf(PlayerFixtures.mediaSourceInfo(supportsDirectPlay = true)),
+                    ),
+                )
+
+            val result = resolver.resolve(PlaybackResolveRequest(itemId = PlayerFixtures.ITEM_ID))
+
+            result.shouldBeInstanceOf<AppResult.Success<*>>()
+            val source = result.value as dev.jellyboost.player.model.RemotePlaybackMediaSource
+            source.playMethod shouldBe PlayMethod.TRANSCODE
+            source.externalSubtitles.map { it.index } shouldBe listOf(3)
+        }
+
+    @Test
+    fun `keeps the side-loaded answer when the second pass fails outright`() =
+        runTest {
+            coEvery { api.getPlaybackInfo(any(), any()) } returns
+                PlayerFixtures.playbackInfoResponse(listOf(sideLoadingTranscode())) andThenThrows
+                TimeoutException("slow", null)
+
+            val result = resolver.resolve(PlaybackResolveRequest(itemId = PlayerFixtures.ITEM_ID))
+
+            // A playable stream with drifting cues beats an error screen.
+            result.shouldBeInstanceOf<AppResult.Success<*>>()
+            (result.value as dev.jellyboost.player.model.RemotePlaybackMediaSource)
+                .externalSubtitles
+                .map { it.index } shouldBe listOf(3)
         }
 
     // ---- failures -----------------------------------------------------------------------------
@@ -584,7 +775,34 @@ class PlaybackInfoResolverTest {
             transcodingSubProtocol = MediaStreamProtocol.HLS,
         )
 
+    /** What pass 1 gets back today: a transcode whose one text subtitle is a side-loaded file. */
+    private fun sideLoadingTranscode() =
+        PlayerFixtures.mediaSourceInfo(
+            transcodingUrl = TRANSCODING_URL,
+            mediaStreams = listOf(PlayerFixtures.subtitleStream(index = 3, isExternal = false)),
+        )
+
+    /** What pass 2 gets back: the same transcode with the subtitle in the master playlist. */
+    private fun renditionTranscode() =
+        PlayerFixtures.mediaSourceInfo(
+            transcodingUrl = TRANSCODING_URL,
+            mediaStreams =
+                listOf(
+                    PlayerFixtures.subtitleStream(
+                        index = 3,
+                        deliveryMethod = SubtitleDeliveryMethod.HLS,
+                        deliveryUrl = null,
+                        isExternal = false,
+                    ),
+                ),
+        )
+
+    private fun PlaybackInfoDto.subtitleProfiles() = deviceProfile?.subtitleProfiles.orEmpty()
+
     private companion object {
+        /** With `SubtitleMethod=Hls` appended by the server once pass 2 wins; unused by the test. */
+        const val TRANSCODING_URL = "/videos/x/master.m3u8"
+
         /** Deliberately not one of `PlaybackQuality`'s rungs: a measurement lands where it lands. */
         const val MEASURED_CAP = 5_600_000
 

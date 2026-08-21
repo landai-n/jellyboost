@@ -11,6 +11,7 @@ import org.jellyfin.sdk.model.api.MediaStreamProtocol
 import org.jellyfin.sdk.model.api.ProfileConditionType
 import org.jellyfin.sdk.model.api.ProfileConditionValue
 import org.jellyfin.sdk.model.api.SubtitleDeliveryMethod
+import org.jellyfin.sdk.model.api.SubtitleProfile
 import org.junit.jupiter.api.Test
 
 /**
@@ -211,6 +212,45 @@ class DeviceProfileBuilderTest {
             .any { it.format == "srt" && it.method == SubtitleDeliveryMethod.EMBED } shouldBe true
         profile.subtitleProfiles
             .any { it.format == "srt" && it.method == SubtitleDeliveryMethod.EXTERNAL } shouldBe true
+    }
+
+    @Test
+    fun `never offers HLS subtitle delivery unless it is asked for`() {
+        // The everyday profile is the one a direct play is negotiated against, and there the HLS
+        // shape would be actively harmful — see the variant below.
+        val profile = builder(codecs()).getDeviceProfile()
+
+        profile.subtitleProfiles.none { it.method == SubtitleDeliveryMethod.HLS } shouldBe true
+    }
+
+    @Test
+    fun `the transcode variant swaps external delivery for one HLS rendition profile`() {
+        val profile = builder(codecs()).getDeviceProfile(hlsTextSubtitles = true)
+
+        profile.subtitleProfiles.filter { it.method == SubtitleDeliveryMethod.HLS } shouldBe
+            listOf(SubtitleProfile(format = "vtt", method = SubtitleDeliveryMethod.HLS))
+        // Not "as well as": offered both, the server picks External every time (10.11.11), so the
+        // only way to be given renditions is to leave it nothing else to choose.
+        profile.subtitleProfiles.none { it.method == SubtitleDeliveryMethod.EXTERNAL } shouldBe true
+    }
+
+    @Test
+    fun `the transcode variant leaves embedded delivery exactly as it was`() {
+        // A subtitle that travels inside the container has never drifted; only the side-loaded ones
+        // were being fixed, and the embedded half is what keeps a direct-playable mkv direct-played.
+        val subject = builder(codecs())
+
+        subject.getDeviceProfile(hlsTextSubtitles = true).subtitleProfiles.filter {
+            it.method == SubtitleDeliveryMethod.EMBED
+        } shouldBe
+            subject.getDeviceProfile().subtitleProfiles.filter { it.method == SubtitleDeliveryMethod.EMBED }
+    }
+
+    @Test
+    fun `the knob turned off is the profile that was always sent`() {
+        val subject = builder(codecs())
+
+        subject.getDeviceProfile(hlsTextSubtitles = false) shouldBe subject.getDeviceProfile()
     }
 
     @Test

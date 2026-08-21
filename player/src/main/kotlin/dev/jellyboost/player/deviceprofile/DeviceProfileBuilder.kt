@@ -57,6 +57,11 @@ internal class DeviceProfileBuilder
 
         private val defaultProfile: DeviceProfile by lazy { build(directPlayAss = DEFAULT_DIRECT_PLAY_ASS) }
 
+        /** The default profile's twin for the transcode pass; see [getDeviceProfile]. */
+        private val hlsSubtitleProfile: DeviceProfile by lazy {
+            build(directPlayAss = DEFAULT_DIRECT_PLAY_ASS, hlsTextSubtitles = true)
+        }
+
         /**
          * The profile to send with a `PlaybackInfo` request.
          *
@@ -67,19 +72,33 @@ internal class DeviceProfileBuilder
          * @param directPlayAss whether ASS/SSA subtitles are claimed as directly renderable.
          *   Advertising them avoids a full transcode of subtitled content, at the cost of
          *   ExoPlayer's approximate SSA rendering.
+         * @param hlsTextSubtitles whether text subtitles should be asked for as **in-manifest HLS
+         *   renditions** instead of side-loaded files. Only meaningful for a negotiation that is
+         *   already known to end in a transcode — see [subtitleProfiles] for why the two shapes
+         *   cannot be advertised together, and `PlaybackInfoResolver` for who asks for which
+         *   (DECISIONS.md, 2026-08-21).
          */
         fun getDeviceProfile(
             maxStreamingBitrate: Int? = null,
             directPlayAss: Boolean = DEFAULT_DIRECT_PLAY_ASS,
+            hlsTextSubtitles: Boolean = false,
         ): DeviceProfile {
-            val base = if (directPlayAss == DEFAULT_DIRECT_PLAY_ASS) defaultProfile else build(directPlayAss)
+            val base =
+                when {
+                    directPlayAss != DEFAULT_DIRECT_PLAY_ASS -> build(directPlayAss, hlsTextSubtitles)
+                    hlsTextSubtitles -> hlsSubtitleProfile
+                    else -> defaultProfile
+                }
             return when (maxStreamingBitrate) {
                 null -> base
                 else -> base.copy(maxStreamingBitrate = maxStreamingBitrate)
             }
         }
 
-        private fun build(directPlayAss: Boolean): DeviceProfile {
+        private fun build(
+            directPlayAss: Boolean,
+            hlsTextSubtitles: Boolean = false,
+        ): DeviceProfile {
             val containerProfiles = mutableListOf<ContainerProfile>()
             val directPlayProfiles = mutableListOf<DirectPlayProfile>()
             val playableVideoCodecs = mutableSetOf<String>()
@@ -119,7 +138,7 @@ internal class DeviceProfileBuilder
                 transcodingProfiles = TRANSCODING_PROFILES,
                 containerProfiles = containerProfiles,
                 codecProfiles = playableVideoCodecs.sorted().mapNotNull(::codecProfile),
-                subtitleProfiles = subtitleProfiles(directPlayAss),
+                subtitleProfiles = subtitleProfiles(directPlayAss, hlsTextSubtitles),
                 maxStreamingBitrate = DeviceProfileDefaults.MAX_STREAMING_BITRATE,
                 maxStaticBitrate = DeviceProfileDefaults.MAX_STATIC_BITRATE,
                 musicStreamingTranscodingBitrate = DeviceProfileDefaults.MAX_MUSIC_TRANSCODING_BITRATE,
@@ -183,12 +202,38 @@ internal class DeviceProfileBuilder
             )
         }
 
-        private fun subtitleProfiles(directPlayAss: Boolean): List<SubtitleProfile> {
+        /**
+         * What the server may do with each subtitle format.
+         *
+         * The embedded half is the same either way — a subtitle that travels inside the container
+         * is ExoPlayer's to demux and nothing about it drifts.
+         *
+         * The other half is exclusive, and that is a fact about the *server*, not a design choice
+         * (measured against 10.11.11, 2026-08-21): offered both an `External` and an `Hls` profile
+         * for the same format, `StreamBuilder.GetExternalSubtitleProfile` returns the first match in
+         * profile order and that is always External. Asking for HLS renditions therefore means
+         * advertising **no** text External profile at all — which is exactly why this variant is
+         * reserved for a negotiation already known to end in a transcode. Sent for a direct-played
+         * file with a sidecar `.srt`, the server would find no way to deliver it and fall back to
+         * `Encode`, burning it in and transcoding a file that needed no transcode.
+         *
+         * ASS/SSA drop out of the external half too when [hlsTextSubtitles] is set: the server
+         * converts them to WebVTT for the rendition, which loses positioning and styling ExoPlayer's
+         * SSA renderer largely ignores anyway (DECISIONS.md, 2026-08-21).
+         */
+        private fun subtitleProfiles(
+            directPlayAss: Boolean,
+            hlsTextSubtitles: Boolean,
+        ): List<SubtitleProfile> {
             val embedded = if (directPlayAss) EMBEDDED_SUBTITLES + SSA_SUBTITLES else EMBEDDED_SUBTITLES
             val external = if (directPlayAss) EXTERNAL_SUBTITLES + SSA_SUBTITLES else EXTERNAL_SUBTITLES
             return buildList {
                 embedded.mapTo(this) { SubtitleProfile(format = it, method = SubtitleDeliveryMethod.EMBED) }
-                external.mapTo(this) { SubtitleProfile(format = it, method = SubtitleDeliveryMethod.EXTERNAL) }
+                if (hlsTextSubtitles) {
+                    add(SubtitleProfile(format = HLS_SUBTITLE_FORMAT, method = SubtitleDeliveryMethod.HLS))
+                } else {
+                    external.mapTo(this) { SubtitleProfile(format = it, method = SubtitleDeliveryMethod.EXTERNAL) }
+                }
             }
         }
 
@@ -303,6 +348,12 @@ internal class DeviceProfileBuilder
              */
             private val FORCED_AUDIO_CODECS =
                 PCM_CODECS + listOf("alac", "aac", "ac3", "eac3", "dts", "mlp", "truehd")
+
+            /**
+             * The one format an HLS subtitle rendition is ever served in — the server writes
+             * `stream.vtt` segments with an `X-TIMESTAMP-MAP` header, whatever the source codec was.
+             */
+            private const val HLS_SUBTITLE_FORMAT = "vtt"
 
             private val EMBEDDED_SUBTITLES = listOf("dvbsub", "pgssub", "srt", "subrip", "ttml")
             private val EXTERNAL_SUBTITLES = listOf("srt", "subrip", "ttml", "vtt", "webvtt")

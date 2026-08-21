@@ -127,12 +127,92 @@ internal class PlaybackInfoResolver
                 else -> copy(maxStreamingBitrate = autoBitrateDetector.currentCap())
             }
 
-        /** The negotiation itself; every throw it makes is [resolve]'s to translate. */
+        /**
+         * Negotiates [request], and re-negotiates once when a transcode would side-load its
+         * subtitles (DECISIONS.md, 2026-08-21).
+         *
+         * Side-loaded cues are their own `MediaItem.SubtitleConfiguration`, so they never pass
+         * through the `TimestampAdjuster` that the transcode's audio and video do — and that
+         * timeline is not the file's. It re-anchors to Jellyfin's nominal `EXTINF` grid on every
+         * seek and track toggle (≈1 ms per segment on a fractional frame rate) and silently absorbs
+         * the sub-200 ms audio gaps an unsignaled ffmpeg restart leaves. Cues fixed to the file's
+         * clock drift away from a picture that is not on it, progressively and unfixably. Delivered
+         * *in* the manifest they share the adjuster with A/V — the server emits `X-TIMESTAMP-MAP`
+         * and `CopyTimestamps=true` — and the drift stops being possible rather than being corrected.
+         *
+         * Two passes rather than one profile because the server will not offer both: given an
+         * `External` and an `Hls` profile for the same format it always picks External, so the HLS
+         * shape has to advertise no text External profile at all — and that shape sent for a
+         * direct-played file with a sidecar `.srt` would negotiate `Encode` and burn a transcode out
+         * of nothing (see `DeviceProfileBuilder.subtitleProfiles`). So pass 1 asks the honest
+         * question, and only an answer that is *already* a transcode with side-loaded text is asked
+         * again.
+         *
+         * Like the ceiling re-negotiation above, the abandoned pass costs one round trip and no
+         * encoder: ffmpeg is spawned by the first *segment* fetch, and nothing here fetches one.
+         *
+         * Cast is never re-asked — `CastDeviceProfile` describes a receiver whose subtitle handling
+         * is its own, and `CastSpecMapper` builds its tracks from the side-loaded list.
+         */
         private suspend fun negotiate(request: PlaybackResolveRequest): AppResult<RemotePlaybackMediaSource> {
+            val first = negotiateWith(request, hlsTextSubtitles = false)
+            if (request.castTarget || !first.sideLoadsTranscodedSubtitles()) return first
+
+            Timber.i("Transcode side-loads text subtitles for %s; re-asking for HLS renditions", request.itemId)
+            return inManifestSubtitles(request) ?: first
+        }
+
+        /**
+         * The second pass, or `null` when it did not produce something better than pass 1.
+         *
+         * Every way it can disappoint is the same non-event: a transport failure, a server that
+         * answered with a direct play after all, a transcode with no URL to fetch. Pass 1's answer is
+         * still a perfectly playable stream — with cues that drift — so none of them is worth
+         * failing the open for, and none of them is worth an error the user sees.
+         */
+        @Suppress("TooGenericExceptionCaught") // Any failure of an optimisation pass keeps pass 1's answer.
+        private suspend fun inManifestSubtitles(
+            request: PlaybackResolveRequest,
+        ): AppResult<RemotePlaybackMediaSource>? =
+            try {
+                negotiateWith(request, hlsTextSubtitles = true).takeIf { negotiated ->
+                    negotiated is AppResult.Success &&
+                        negotiated.value.playMethod == PlayMethod.TRANSCODE &&
+                        negotiated.value.transcodingUrl != null
+                } ?: run {
+                    Timber.w("HLS subtitle pass for %s did not transcode; keeping side-loaded cues", request.itemId)
+                    null
+                }
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                Timber.w(error, "HLS subtitle pass for %s failed; keeping side-loaded cues", request.itemId)
+                null
+            }
+
+        /**
+         * Whether this outcome is the one worth re-asking: a transcode whose text subtitles reach
+         * ExoPlayer as separate sources.
+         *
+         * Read off [RemotePlaybackMediaSource.externalSubtitles] rather than off the raw delivery
+         * methods, because that list is exactly the set that would drift — a text stream the server
+         * offers as External but that has no delivery URL, or a codec ExoPlayer cannot render, is
+         * never side-loaded and has nothing to gain from a second round trip.
+         */
+        private fun AppResult<RemotePlaybackMediaSource>.sideLoadsTranscodedSubtitles(): Boolean =
+            this is AppResult.Success &&
+                value.playMethod == PlayMethod.TRANSCODE &&
+                value.externalSubtitles.isNotEmpty()
+
+        /** One negotiation round trip; every throw it makes is [resolve]'s to translate. */
+        private suspend fun negotiateWith(
+            request: PlaybackResolveRequest,
+            hlsTextSubtitles: Boolean,
+        ): AppResult<RemotePlaybackMediaSource> {
             val response =
                 api.getPlaybackInfo(
                     itemId = request.itemId,
-                    request = request.toPlaybackInfoDto(),
+                    request = request.toPlaybackInfoDto(hlsTextSubtitles),
                 )
 
             val playSessionId = response.playSessionId
@@ -208,7 +288,7 @@ internal class PlaybackInfoResolver
                 null
             }
 
-        private fun PlaybackResolveRequest.toPlaybackInfoDto(): PlaybackInfoDto =
+        private fun PlaybackResolveRequest.toPlaybackInfoDto(hlsTextSubtitles: Boolean): PlaybackInfoDto =
             PlaybackInfoDto(
                 // THE DASH-LESS QUIRK. The server looks media sources up by a *dash-less* id, and
                 // when it cannot find the one we asked for it silently ignores our stream indices
@@ -231,7 +311,10 @@ internal class PlaybackInfoResolver
                             receiver = castStatus.receiver,
                         )
                     } else {
-                        deviceProfileBuilder.getDeviceProfile(maxStreamingBitrate = maxStreamingBitrate)
+                        deviceProfileBuilder.getDeviceProfile(
+                            maxStreamingBitrate = maxStreamingBitrate,
+                            hlsTextSubtitles = hlsTextSubtitles,
+                        )
                     },
                 maxStreamingBitrate = maxStreamingBitrate,
                 startTimeTicks = startPositionTicks.takeIf { it > 0L },
@@ -295,7 +378,7 @@ internal class PlaybackInfoResolver
                 runTimeTicks = runTimeTicks ?: 0L,
                 startPositionTicks = request.startPositionTicks,
                 audioTracks = audio.map { it.toTrack(defaultAudioStreamIndex) },
-                subtitleTracks = subtitles.map { it.toTrack(defaultSubtitleStreamIndex) },
+                subtitleTracks = subtitles.map { it.toTrack(defaultSubtitleStreamIndex, it.sideLoadedSubtitle()) },
                 externalSubtitles = subtitles.mapNotNull(MediaStream::toExternalSubtitle),
                 selectedAudioIndex = request.audioStreamIndex ?: defaultAudioStreamIndex,
                 selectedSubtitleIndex =
@@ -328,9 +411,11 @@ internal class PlaybackInfoResolver
  *   container — which is what [PlaybackTrack.isExternal] actually drives, since
  *   `TrackSelectionController` matches side-loaded groups by their `external:<index>` id and counts
  *   everything else by position among the *embedded* groups. It defaults to
- *   [MediaStream.isExternal] because online the two coincide. Offline they need not: a transcoded
- *   download side-loads a sidecar for an **embedded** subtitle the server extracted for it, and
- *   calling that track embedded would have it looked for among container groups the encode dropped.
+ *   [MediaStream.isExternal] because that is the offline caller's own rule of thumb; neither online
+ *   caller takes the default. Offline, a transcoded download side-loads a sidecar for an **embedded**
+ *   subtitle the server extracted for it, and calling that track embedded would have it looked for
+ *   among container groups the encode dropped. Online it is the delivery method that decides — see
+ *   `sideLoadedSubtitle`, where an HLS rendition of a sidecar file is emphatically *not* side-loaded.
  */
 internal fun MediaStream.toTrack(
     defaultIndex: Int?,
@@ -344,6 +429,31 @@ internal fun MediaStream.toTrack(
         isDefault = index == defaultIndex,
         isExternal = sideLoaded,
     )
+
+/**
+ * Whether this subtitle reaches ExoPlayer as a **source of its own** rather than out of the stream
+ * it was handed — which is the question [MediaStream.toTrack]'s `sideLoaded` really asks, and it is
+ * the server's chosen delivery that answers it, not whether the stream happens to be a file:
+ *
+ * - `EMBED` and `HLS` both arrive *inside* what the player opens — in the container, or as an
+ *   `#EXT-X-MEDIA` rendition of the transcode's own master playlist. Both are matched by position,
+ *   and an HLS-delivered **sidecar** is one of them, `MediaStream.isExternal` notwithstanding: a
+ *   rendition carries no `external:<index>` id to match on.
+ * - `EXTERNAL` is the side-loaded case proper, matched by that id.
+ * - `ENCODE` is burned into the picture. Nothing selects it, and calling it side-loaded is what
+ *   keeps it out of the positional count — a graphical subtitle the server had to burn in gets no
+ *   rendition (Jellyfin only builds them for `IsTextSubtitleStream`), so counting it would push
+ *   every text track after it onto the wrong rendition. Both lookups miss it, `selectSubtitle`
+ *   answers `false`, and the ViewModel re-resolves — which is the only way to see it anyway.
+ *
+ * Anything else — `DROP`, or a server that sent no method at all — keeps the old default.
+ */
+private fun MediaStream.sideLoadedSubtitle(): Boolean =
+    when (deliveryMethod) {
+        SubtitleDeliveryMethod.EMBED, SubtitleDeliveryMethod.HLS -> false
+        SubtitleDeliveryMethod.EXTERNAL, SubtitleDeliveryMethod.ENCODE -> true
+        else -> isExternal
+    }
 
 /**
  * A subtitle stream ExoPlayer has to fetch separately, or `null` when it travels in the container.

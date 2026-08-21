@@ -9,6 +9,7 @@ import androidx.media3.common.TrackGroup
 import androidx.media3.common.TrackSelectionOverride
 import androidx.media3.common.TrackSelectionParameters
 import androidx.media3.common.Tracks
+import dev.jellyboost.player.PlayMethod
 import dev.jellyboost.player.PlayerFixtures
 import dev.jellyboost.player.model.PlaybackTrack
 import dev.jellyboost.player.model.externalSubtitleTrackId
@@ -290,6 +291,96 @@ class TrackSelectionControllerTest {
         applied.captured.disabledTrackTypes.contains(C.TRACK_TYPE_TEXT) shouldBe true
     }
 
+    // ---- a transcode's in-manifest HLS subtitle renditions ---------------------------------------
+
+    @Test
+    fun `selects an HLS rendition by its position in the master playlist`() {
+        // A transcode to `ts` carries no text at all, so every text group here is an `#EXT-X-MEDIA`
+        // rendition — and the server writes one per text stream, in Jellyfin stream order, which is
+        // the order `subtitleTracks` is in. Media3 ids them "<groupId>:<NAME>"; nothing about that
+        // is a Jellyfin index, so position is all there is.
+        val controller =
+            controller(
+                textGroup(id = "subs:English"),
+                textGroup(id = "subs:French"),
+                textGroup(id = "subs:German"),
+            )
+
+        val controllerSource =
+            PlayerFixtures.remoteSource(
+                playMethod = PlayMethod.TRANSCODE,
+                subtitleTracks =
+                    listOf(
+                        renditionTrack(index = 2, label = "English", language = "eng"),
+                        renditionTrack(index = 3, label = "French", language = "fra"),
+                        renditionTrack(index = 4, label = "German", language = "deu"),
+                    ),
+            )
+
+        controller.selectSubtitle(controllerSource, jellyfinIndex = 4) shouldBe true
+
+        applied.captured.overrides.values
+            .single()
+            .mediaTrackGroup
+            .getFormat(0)
+            .id shouldBe "subs:German"
+    }
+
+    @Test
+    fun `selecting a rendition re-enables the text renderer that off had disabled`() {
+        val controller = controller(textGroup(id = "subs:English"))
+
+        val controllerSource =
+            PlayerFixtures.remoteSource(
+                playMethod = PlayMethod.TRANSCODE,
+                subtitleTracks = listOf(renditionTrack(index = 2, label = "English", language = "eng")),
+            )
+
+        controller.selectSubtitle(controllerSource, jellyfinIndex = 2) shouldBe true
+
+        applied.captured.disabledTrackTypes.contains(C.TRACK_TYPE_TEXT) shouldBe false
+    }
+
+    @Test
+    fun `a burned-in subtitle takes no place in the rendition count`() {
+        // Jellyfin only builds renditions for text streams, so the graphical one it had to burn in
+        // has none — and counting it would push German onto French's rendition. The resolver marks
+        // such a track side-loaded precisely so that both lookups miss it and the ViewModel
+        // re-resolves, which is the only way to see a burned-in subtitle anyway.
+        val controller =
+            controller(
+                textGroup(id = "subs:English"),
+                textGroup(id = "subs:German"),
+            )
+
+        val controllerSource =
+            PlayerFixtures.remoteSource(
+                playMethod = PlayMethod.TRANSCODE,
+                subtitleTracks =
+                    listOf(
+                        renditionTrack(index = 2, label = "English", language = "eng"),
+                        PlaybackTrack(
+                            index = 3,
+                            label = "French PGS",
+                            language = "fra",
+                            codec = "pgssub",
+                            isExternal = true,
+                        ),
+                        renditionTrack(index = 4, label = "German", language = "deu"),
+                    ),
+            )
+
+        controller.selectSubtitle(controllerSource, jellyfinIndex = 4) shouldBe true
+
+        applied.captured.overrides.values
+            .single()
+            .mediaTrackGroup
+            .getFormat(0)
+            .id shouldBe "subs:German"
+
+        controller.selectSubtitle(controllerSource, jellyfinIndex = 3) shouldBe false
+    }
+
     // ---- the slate a new media item starts from ------------------------------------------------
 
     @Test
@@ -510,6 +601,17 @@ class TrackSelectionControllerTest {
                 .setSampleMimeType(MimeTypes.AUDIO_AC3)
                 .build(),
         )
+
+    /**
+     * A subtitle track as `PlaybackInfoResolver` builds one for an HLS-delivered stream: not
+     * side-loaded, whatever the stream itself was, because a rendition carries no
+     * `external:<index>` id to match on.
+     */
+    private fun renditionTrack(
+        index: Int,
+        label: String,
+        language: String,
+    ): PlaybackTrack = PlaybackTrack(index = index, label = label, language = language, codec = "srt")
 
     /** A subtitle track as `LocalPlaybackResolver` builds one for a sidecar on disk. */
     private fun sidecarTrack(

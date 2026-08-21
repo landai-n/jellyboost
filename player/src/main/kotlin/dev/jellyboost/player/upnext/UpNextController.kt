@@ -1,0 +1,93 @@
+package dev.jellyboost.player.upnext
+
+import dev.jellyboost.player.segments.MediaSegment
+
+/**
+ * Decides when the up-next card belongs on screen.
+ *
+ * Modelled on `SegmentSkipController`, and for the same reason: the whole judgement is a pure
+ * function of the position plus one remembered fact, and keeping it out of the ViewModel is what
+ * makes it testable without a player. The one remembered fact is the dismissal —
+ *
+ * > **a dismissal is sticky for the session.** A user who closes the card has said they do not want
+ * > the next episode offered for *this* one; re-showing it half a second later, because the position
+ * > is still inside the window, would be a card that cannot be closed. Seeking back out of the
+ * > window and returning is not a dismissal, so that path shows it again.
+ *
+ * Stateful and one per playback session; [reset] starts a new one. Constructed by `PlayerViewModel`
+ * rather than injected, exactly as `SegmentSkipController` is: "one per playback session" is that
+ * class's own lifetime, and a Hilt scope would only be a longer way to say so.
+ */
+internal class UpNextController {
+    /** `true` once the user has closed the card for this session. */
+    private var dismissed = false
+
+    /** Forgets the dismissal — called when a new item, or a new source, is opened. */
+    fun reset() {
+        dismissed = false
+    }
+
+    /** The user closed the card; nothing shows it again until [reset]. */
+    fun dismiss() {
+        dismissed = true
+    }
+
+    /**
+     * Whether the card should be on screen at [positionMs].
+     *
+     * Re-decided from scratch on every tick, which is what makes seeking work in both directions:
+     * jumping back out of the window hides the card, and returning shows it again.
+     *
+     * @param outro the item's outro range, when the segments API knew of one. Its start is the
+     *   *right* moment — it is where the episode is actually over — and it is why this is preferred
+     *   to any arithmetic on the runtime.
+     * @param hasNext whether there is a successor to offer at all; `false` is a card that would have
+     *   nothing to play.
+     */
+    fun shouldShow(
+        positionMs: Long,
+        durationMs: Long,
+        outro: MediaSegment?,
+        hasNext: Boolean,
+    ): Boolean {
+        if (!hasNext || dismissed) return false
+        val start = windowStartMs(durationMs, outro) ?: return false
+        return positionMs >= start
+    }
+
+    /**
+     * The first millisecond the card may appear at, or `null` when this item has no window at all.
+     *
+     * The outro's start when there is one. Otherwise the last [UP_NEXT_FALLBACK_MS] of the item —
+     * but only for something long enough that the tail is a *tail*: on a five-minute extra, thirty
+     * seconds is a tenth of the item, and a card offering the next thing for that long is covering
+     * content rather than following it. Below the floor there is no window, and no card.
+     */
+    private fun windowStartMs(
+        durationMs: Long,
+        outro: MediaSegment?,
+    ): Long? {
+        if (outro != null) return outro.startMs
+        if (durationMs <= UP_NEXT_MIN_DURATION_MS) return null
+        return durationMs - UP_NEXT_FALLBACK_MS
+    }
+
+    private companion object {
+        /**
+         * How long before the end the card appears when the item has no outro segment.
+         *
+         * Thirty seconds is roughly what an end-credits sequence runs to, and it is long enough that
+         * a user who wants the next episode does not have to catch it.
+         */
+        const val UP_NEXT_FALLBACK_MS = 30_000L
+
+        /**
+         * Shorter than this and the fallback window is not offered at all.
+         *
+         * A minute is the floor at which "the last thirty seconds" is still a minority of the item.
+         * An item *with* an outro is exempt: the server has said where the ending is, and a short
+         * item with a real outro is a short item that really does end there.
+         */
+        const val UP_NEXT_MIN_DURATION_MS = 60_000L
+    }
+}

@@ -9,6 +9,7 @@ import dev.jellyboost.player.model.PlaybackTrack
 import dev.jellyboost.player.model.TrickplayTiles
 import dev.jellyboost.player.segments.MediaSegment
 import dev.jellyboost.player.syncplay.model.SyncPlayRepeatMode
+import dev.jellyboost.player.upnext.UpNextEpisode
 
 /**
  * Everything the player screen draws **except** the position, which ticks twice a second and lives
@@ -110,6 +111,17 @@ internal data class PlayerUiState(
     val syncPlay: PlayerSyncPlayState = PlayerSyncPlayState(),
     /** The receiver this session is playing on, or its default "playing here" value (M12). */
     val cast: PlayerCastState = PlayerCastState(),
+    /**
+     * The next episode, while the current one's ending is playing — or `null`, which is most of the
+     * time and every non-episode.
+     *
+     * Slow state despite being driven by the 500 ms tick: it is written exactly when the answer
+     * *changes* (`PlayerViewModel.applyUpNextDecision` diffs before it updates), which is a handful
+     * of times per session — the card appearing, a seek taking it away, a dismissal. Publishing it
+     * per tick would put the whole control surface back on the recompose treadmill PERF-04 took it
+     * off.
+     */
+    val upNext: UpNextState? = null,
 ) {
     /** `true` once there is something on screen to control. */
     val isReady: Boolean get() = !isLoading && errorMessage == null
@@ -138,6 +150,18 @@ internal data class PlayerUiState(
  * by retyping.
  */
 internal const val PLAYER_LABEL_SEPARATOR = Separators.DOT
+
+/**
+ * The up-next card, as much of it as the player screen draws.
+ *
+ * A wrapper around the one episode rather than the episode itself, so that "is the card up" is a
+ * question about *this* type: the card grows a countdown and a dismissal affordance in the follow-up
+ * step, and both belong beside the episode rather than as further nullable fields on
+ * [PlayerUiState].
+ */
+internal data class UpNextState(
+    val episode: UpNextEpisode,
+)
 
 /**
  * The receiver, as much of it as the player screen draws (M12 Phase 3).

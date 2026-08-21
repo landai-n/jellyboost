@@ -75,6 +75,15 @@ fi
 if [ -f scripts/check_patterns.py ]; then
   PAT_OUT="$(python3 scripts/check_patterns.py 2>&1)" || deny "check_patterns failed: $PAT_OUT"
 fi
+if [ -f scripts/check_redaction.py ]; then
+  RED_OUT="$(python3 scripts/check_redaction.py 2>&1)" || deny "check_redaction failed: $RED_OUT"
+fi
+# Agent gate (not a regex): a headless model reviews the staged diff's ADDED comment lines
+# for authoring-process voice ("not this wave", "as requested", first-person edit
+# narration). Fail-open on plumbing, deny on verdict — see comment-voice-gate.sh.
+if [ -x .claude/hooks/comment-voice-gate.sh ]; then
+  VOICE_OUT="$(.claude/hooks/comment-voice-gate.sh 2>/dev/null)" || deny "comment-voice gate: agent-process voice in added comments — rewrite them to describe the code, not the conversation: $VOICE_OUT"
+fi
 
 # Determine whether this commit touches only docs/markdown files.
 DOCS_ONLY=0

@@ -1,7 +1,6 @@
 package dev.jellyboost.feature.library
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,6 +10,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -80,9 +80,9 @@ import dev.jellyboost.core.ui.component.SelectionAppBar
 import dev.jellyboost.core.ui.component.batchOutcomeText
 import dev.jellyboost.core.ui.component.rememberOneShotSnackbar
 import dev.jellyboost.core.ui.theme.Dimens
-import dev.jellyboost.core.ui.theme.JellyfinGradients
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
+import dev.jellyboost.core.ui.theme.screenGlow
 import dev.jellyboost.core.ui.R as CoreUiR
 
 /**
@@ -156,7 +156,10 @@ fun LibraryGridScreen(
 
             // Behind everything, anchored to the top of the window: the screen has no artwork of
             // its own, and this is what keeps the header from reading as text on a black rectangle.
-            Box(modifier = Modifier.fillMaxWidth().height(GlowHeight).background(JellyfinGradients.ScreenGlow))
+            // Height follows width because the brush's radius does (fade-out ≈ 61% of width) — a
+            // fixed height that fits a phone chops the gradient mid-fade on a tablet and draws a
+            // hard seam across the page (found on the music screens' copy of this box, 2026-08-15).
+            Box(modifier = Modifier.fillMaxWidth().aspectRatio(GLOW_ASPECT).screenGlow())
 
             Column(modifier = Modifier.fillMaxSize()) {
                 // The contextual bar *replaces* the header and the chip row rather than stacking
@@ -661,13 +664,14 @@ private val MIN_CELL_WIDTH = Dimens.PosterWidth
 private val GridRowGap = 20.dp
 
 /**
- * How tall the accent glow behind the header is.
- *
- * The gradient's radius is derived from the *width* of the box it fills, so the box has to be at
- * least roughly as tall as the glow is wide or the fade is cut off at the bottom edge — a hard seam
- * across the background. 320dp clears that on every phone and covers the header plus the chip row.
+ * The preview frames' height for the glow-backed header. Previews only: the live screen sizes the
+ * glow by [GLOW_ASPECT], because 320dp cleared the width-derived fade on every *phone* but chopped
+ * it mid-fade on a tablet.
  */
 private val GlowHeight = 320.dp
+
+/** Width : height of the glow box; height ≈ 70% of width, past the brush's ~61%-of-width fade-out. */
+private const val GLOW_ASPECT = 10f / 7f
 
 /** Width at which the header grows its title and sort moves into the chip row as a label. */
 private val WIDE_WIDTH = 600.dp
@@ -701,7 +705,7 @@ private const val CHIP_SHEET_KEY = "chip-filters"
 private fun LibraryHeaderPreview() {
     JellyfinTheme {
         Box(modifier = Modifier.height(GlowHeight)) {
-            Box(modifier = Modifier.fillMaxWidth().height(GlowHeight).background(JellyfinGradients.ScreenGlow))
+            Box(modifier = Modifier.fillMaxWidth().height(GlowHeight).screenGlow())
             Column {
                 LibraryHeader(
                     title = "Movies",
@@ -749,7 +753,7 @@ private fun LibraryHeaderWidePreview() {
 
     JellyfinTheme {
         Box(modifier = Modifier.width(900.dp).height(GlowHeight)) {
-            Box(modifier = Modifier.fillMaxWidth().height(GlowHeight).background(JellyfinGradients.ScreenGlow))
+            Box(modifier = Modifier.fillMaxWidth().height(GlowHeight).screenGlow())
             Column {
                 LibraryHeader(
                     title = state.libraryName,

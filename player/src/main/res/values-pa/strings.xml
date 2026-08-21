@@ -37,6 +37,10 @@
     <string name="player_skip_intro">ਇੰਟਰੋ ਛੱਡੋ</string>
     <string name="player_skip_outro">ਆਉਟਰੋ ਛੱਡੋ</string>
 
+    <string name="player_up_next_title">ਅੱਗੇ</string>
+    <string name="player_up_next_play">ਅਗਲਾ ਐਪੀਸੋਡ ਚਲਾਓ</string>
+    <string name="player_up_next_dismiss">ਕ੍ਰੈਡਿਟ ਦੇਖੋ</string>
+
     <string name="player_quality_auto">ਆਟੋ</string>
     <string name="player_quality_high">ਉੱਚ — 20 Mbps</string>
     <string name="player_quality_medium">ਦਰਮਿਆਨੀ — 8 Mbps</string>

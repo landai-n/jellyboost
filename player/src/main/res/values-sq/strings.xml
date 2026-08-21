@@ -37,6 +37,10 @@
     <string name="player_skip_intro">Kapërce hyrjen</string>
     <string name="player_skip_outro">Kapërce mbylljen</string>
 
+    <string name="player_up_next_title">Në vijim</string>
+    <string name="player_up_next_play">Luaj episodin tjetër</string>
+    <string name="player_up_next_dismiss">Shiko titrat</string>
+
     <string name="player_quality_auto">Automatike</string>
     <string name="player_quality_high">E lartë — 20 Mbps</string>
     <string name="player_quality_medium">Mesatare — 8 Mbps</string>

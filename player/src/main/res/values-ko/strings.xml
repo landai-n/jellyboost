@@ -34,6 +34,10 @@
     <string name="player_skip_intro">인트로 건너뛰기</string>
     <string name="player_skip_outro">아웃트로 건너뛰기</string>
 
+    <string name="player_up_next_title">다음 시청</string>
+    <string name="player_up_next_play">다음 에피소드 재생</string>
+    <string name="player_up_next_dismiss">엔딩 크레딧 보기</string>
+
     <string name="player_quality_auto">자동</string>
     <string name="player_quality_high">고화질 — 20Mbps</string>
     <string name="player_quality_medium">중화질 — 8Mbps</string>

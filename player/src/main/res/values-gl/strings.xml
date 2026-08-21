@@ -34,6 +34,10 @@
     <string name="player_done">Feito</string>
     <string name="player_skip_intro">Saltar introdución</string>
     <string name="player_skip_outro">Saltar créditos finais</string>
+
+    <string name="player_up_next_title">A seguir</string>
+    <string name="player_up_next_play">Reproducir o seguinte episodio</string>
+    <string name="player_up_next_dismiss">Ver os créditos</string>
     <string name="player_quality_auto">Automática</string>
     <string name="player_quality_high">Alta — 20 Mbps</string>
     <string name="player_quality_medium">Media — 8 Mbps</string>

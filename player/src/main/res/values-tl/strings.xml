@@ -34,6 +34,10 @@
     <string name="player_done">Tapos na</string>
     <string name="player_skip_intro">Laktawan ang intro</string>
     <string name="player_skip_outro">Laktawan ang outro</string>
+
+    <string name="player_up_next_title">Susunod</string>
+    <string name="player_up_next_play">I-play ang susunod na episode</string>
+    <string name="player_up_next_dismiss">Panoorin ang credits</string>
     <string name="player_quality_auto">Auto</string>
     <string name="player_quality_high">Mataas — 20 Mbps</string>
     <string name="player_quality_medium">Katamtaman — 8 Mbps</string>

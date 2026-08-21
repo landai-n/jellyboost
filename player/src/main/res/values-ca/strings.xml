@@ -37,6 +37,10 @@
     <string name="player_done">Fet</string>
     <string name="player_skip_intro">Omet la introducció</string>
     <string name="player_skip_outro">Omet els crèdits finals</string>
+
+    <string name="player_up_next_title">A continuació</string>
+    <string name="player_up_next_play">Reprodueix l\'episodi següent</string>
+    <string name="player_up_next_dismiss">Mira els crèdits</string>
     <string name="player_quality_auto">Automàtica</string>
     <string name="player_quality_high">Alta — 20 Mbps</string>
     <string name="player_quality_medium">Mitjana — 8 Mbps</string>

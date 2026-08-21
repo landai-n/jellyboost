@@ -37,6 +37,10 @@
     <string name="player_skip_intro">رد کردن مقدمه</string>
     <string name="player_skip_outro">رد کردن پایان‌بندی</string>
 
+    <string name="player_up_next_title">بعدی</string>
+    <string name="player_up_next_play">پخش قسمت بعدی</string>
+    <string name="player_up_next_dismiss">تماشای تیتراژ پایانی</string>
+
     <string name="player_quality_auto">خودکار</string>
     <string name="player_quality_high">بالا — 20 مگابیت بر ثانیه</string>
     <string name="player_quality_medium">متوسط — 8 مگابیت بر ثانیه</string>

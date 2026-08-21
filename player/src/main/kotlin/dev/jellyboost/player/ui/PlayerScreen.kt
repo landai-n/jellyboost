@@ -97,10 +97,11 @@ import timber.log.Timber
  * ### What M9 added to the layering
  * The order of the children in the root `Box` is load-bearing. The gesture surface sits *under* the
  * controls, so a tap on a button is consumed by the button and everything else falls through to
- * gestures. The skip-segment button sits *over* both and is deliberately not tied to the controls'
- * visibility: an intro arrives while the controls are hidden, which is exactly when the offer is
- * worth something. In picture-in-picture none of it is drawn — the window is a few hundred pixels
- * wide and the transport controls that belong there are the media notification's.
+ * gestures. The bottom-right corner's offers — the skip-segment button, and since the up-next work
+ * the card stacked above it — sit *over* both and are deliberately not tied to the controls'
+ * visibility: an intro, or an ending, arrives while the controls are hidden, which is exactly when
+ * the offer is worth something. In picture-in-picture none of it is drawn — the window is a few
+ * hundred pixels wide and the transport controls that belong there are the media notification's.
  *
  * This is the module's entry point, and it mints its own ViewModel: `PlayerViewModel` is `internal`
  * (audit ARCH-2), so `:app` names the destination and nothing else.
@@ -161,6 +162,8 @@ internal fun PlayerScreen(
                 onSelectQuality = viewModel::selectQuality,
                 onSelectSpeed = viewModel::selectSpeed,
                 onSkipSegment = viewModel::skipCurrentSegment,
+                onPlayNext = viewModel::playNextEpisode,
+                onDismissUpNext = viewModel::dismissUpNext,
                 onBack = onBack,
                 onOpenPanel = { panel -> openPanel = panel },
                 onSetGroupShuffle = viewModel::setGroupShuffle,
@@ -320,20 +323,43 @@ internal fun PlayerScreen(
                 BufferingIndicator(state = state, modifier = Modifier.align(Alignment.Center))
             }
 
-            state.skippableSegment?.let { segment ->
-                SkipSegmentButton(
-                    kind = segment.kind,
-                    onClick = actions.onSkipSegment,
-                    modifier =
-                        Modifier
-                            .align(Alignment.BottomEnd)
-                            .padding(end = Dimens.SpaceExtraLarge, bottom = SKIP_BUTTON_BOTTOM_PADDING)
-                            // The offer is time-boxed — it is gone once the segment is — so a user
-                            // who is not looking at the screen has to be *told* it exists, not left
-                            // to find it by traversal (audit CR-3). Polite: it is an offer, not an
-                            // emergency.
-                            .semantics { liveRegion = LiveRegionMode.Polite },
-                )
+            // The bottom-right corner's two offers, stacked rather than aligned independently.
+            //
+            // For an **outro** the two never co-occur: the card is a strict superset of that
+            // button, and `PlayerViewModel.applySegmentDecision` suppresses the outro offer for as
+            // long as the card is up — so nothing here has to gate on it. An *intro* offer this
+            // late needs odd segment data to happen at all, but it is representable, and two
+            // overlays that share one corner must not be left to draw on top of each other: the
+            // column keeps the skip pill the bottom element, where it has always been, and puts
+            // the card above it. Neither is tied to `controlsVisible` — an ending arrives while
+            // the chrome is hidden, which is exactly when the offer is worth something.
+            Column(
+                modifier =
+                    Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(end = Dimens.SpaceExtraLarge, bottom = SKIP_BUTTON_BOTTOM_PADDING),
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
+            ) {
+                state.upNext?.let { upNext ->
+                    UpNextCard(
+                        episode = upNext.episode,
+                        onPlayNext = actions.onPlayNext,
+                        onDismiss = actions.onDismissUpNext,
+                    )
+                }
+
+                state.skippableSegment?.let { segment ->
+                    SkipSegmentButton(
+                        kind = segment.kind,
+                        onClick = actions.onSkipSegment,
+                        // The offer is time-boxed — it is gone once the segment is — so a user
+                        // who is not looking at the screen has to be *told* it exists, not left
+                        // to find it by traversal (audit CR-3). Polite: it is an offer, not an
+                        // emergency.
+                        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+                    )
+                }
             }
 
             // The player consumes no window insets of its own — it is immersive and full-bleed — so

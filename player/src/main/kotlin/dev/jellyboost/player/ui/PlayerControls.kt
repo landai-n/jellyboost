@@ -1252,5 +1252,7 @@ private fun previewActions() =
         onSelectQuality = {},
         onSelectSpeed = {},
         onSkipSegment = {},
+        onPlayNext = {},
+        onDismissUpNext = {},
         onBack = {},
     )

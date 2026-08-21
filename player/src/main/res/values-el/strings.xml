@@ -37,6 +37,10 @@
     <string name="player_skip_intro">Παράλειψη εισαγωγής</string>
     <string name="player_skip_outro">Παράλειψη τίτλων τέλους</string>
 
+    <string name="player_up_next_title">Επόμενο</string>
+    <string name="player_up_next_play">Αναπαραγωγή επόμενου επεισοδίου</string>
+    <string name="player_up_next_dismiss">Παρακολούθηση τίτλων τέλους</string>
+
     <string name="player_quality_auto">Αυτόματη</string>
     <string name="player_quality_high">Υψηλή — 20 Mbps</string>
     <string name="player_quality_medium">Μεσαία — 8 Mbps</string>

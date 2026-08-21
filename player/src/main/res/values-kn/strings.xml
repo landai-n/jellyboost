@@ -37,6 +37,10 @@
     <string name="player_skip_intro">ಇಂಟ್ರೋ ಬಿಟ್ಟುಬಿಡಿ</string>
     <string name="player_skip_outro">ಔಟ್ರೋ ಬಿಟ್ಟುಬಿಡಿ</string>
 
+    <string name="player_up_next_title">ಮುಂದಿನದು</string>
+    <string name="player_up_next_play">ಮುಂದಿನ ಸಂಚಿಕೆ ಪ್ಲೇ ಮಾಡಿ</string>
+    <string name="player_up_next_dismiss">ಕ್ರೆಡಿಟ್‌ಗಳನ್ನು ನೋಡಿ</string>
+
     <string name="player_quality_auto">ಸ್ವಯಂಚಾಲಿತ</string>
     <string name="player_quality_high">ಹೆಚ್ಚು — 20 Mbps</string>
     <string name="player_quality_medium">ಮಧ್ಯಮ — 8 Mbps</string>

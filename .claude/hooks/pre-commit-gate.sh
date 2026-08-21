@@ -75,6 +75,9 @@ fi
 if [ -f scripts/check_patterns.py ]; then
   PAT_OUT="$(python3 scripts/check_patterns.py 2>&1)" || deny "check_patterns failed: $PAT_OUT"
 fi
+if [ -f scripts/check_a11y_scaffolding.py ]; then
+  A11Y_OUT="$(python3 scripts/check_a11y_scaffolding.py 2>&1)" || deny "check_a11y_scaffolding failed: $A11Y_OUT"
+fi
 
 # Determine whether this commit touches only docs/markdown files.
 DOCS_ONLY=0

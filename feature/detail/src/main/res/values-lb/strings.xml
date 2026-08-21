@@ -16,6 +16,12 @@
     <string name="detail_section_episodes">Episoden</string>
     <string name="detail_section_similar">Méi wéi dëst</string>
     <string name="detail_section_cast">Besetzung</string>
+    <string name="detail_section_next_episode">Nächst Episod</string>
+    <string name="detail_section_more_from_season">Méi aus der Staffel %1$d</string>
+    <string name="detail_section_more_from_season_unnumbered">Méi aus dëser Staffel</string>
+    <string name="detail_go_to_series">Op d\'Serie %1$s goen</string>
+    <string name="detail_go_to_season">Staffel %1$d</string>
+    <string name="detail_go_to_season_description">Op d\'Staffel %1$d goen</string>
     <string name="detail_type_movie">Film</string>
     <string name="detail_type_series">Serie</string>
     <string name="detail_type_season">Staffel</string>

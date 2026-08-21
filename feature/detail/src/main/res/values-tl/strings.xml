@@ -15,6 +15,12 @@
     <string name="detail_section_episodes">Mga Episode</string>
     <string name="detail_section_similar">Higit pa tulad nito</string>
     <string name="detail_section_cast">Mga Aktor</string>
+    <string name="detail_section_next_episode">Susunod na episode</string>
+    <string name="detail_section_more_from_season">Higit pa mula sa Season %1$d</string>
+    <string name="detail_section_more_from_season_unnumbered">Higit pa mula sa season na ito</string>
+    <string name="detail_go_to_series">Pumunta sa serye na %1$s</string>
+    <string name="detail_go_to_season">Season %1$d</string>
+    <string name="detail_go_to_season_description">Pumunta sa season %1$d</string>
     <string name="detail_type_movie">Pelikula</string>
     <string name="detail_type_series">Serye</string>
     <string name="detail_type_season">Season</string>

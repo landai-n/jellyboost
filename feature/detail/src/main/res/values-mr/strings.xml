@@ -16,6 +16,12 @@
     <string name="detail_section_episodes">भाग</string>
     <string name="detail_section_similar">यासारखे आणखी</string>
     <string name="detail_section_cast">कलाकार</string>
+    <string name="detail_section_next_episode">पुढील भाग</string>
+    <string name="detail_section_more_from_season">सीझन %1$d मधून आणखी</string>
+    <string name="detail_section_more_from_season_unnumbered">या सीझनमधून आणखी</string>
+    <string name="detail_go_to_series">%1$s मालिकेकडे जा</string>
+    <string name="detail_go_to_season">सीझन %1$d</string>
+    <string name="detail_go_to_season_description">सीझन %1$d वर जा</string>
     <string name="detail_type_movie">चित्रपट</string>
     <string name="detail_type_series">मालिका</string>
     <string name="detail_type_season">सीझन</string>

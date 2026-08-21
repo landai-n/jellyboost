@@ -45,7 +45,18 @@ row draws a synopsis.
   `download_files` rows, the same figure the Downloads tab shows) — since a transcoded download
   can weigh half the server file. A fully-downloaded container aggregates to `Downloaded` but has
   no download row of its own, so its SUM is `null` and the server figure stays.
-- **Rows**: *Next up* → *Seasons* → *Episodes* → *More like this*.
+- **Rows**: *Next up* → *Seasons* → *Next episode* → *More from this season* → *Episodes* →
+  *More like this*. The middle two are episode-page-only (Up Next button + episode-detail
+  shortcuts, DECISIONS.md 2026-08-21): *Next episode* is the positional next episode in series
+  order (`state.nextEpisode`), and *More from this season* is the parent season's other episodes
+  (`state.seasonEpisodes`, excluding the one on screen), its "See all" going to the season page.
+  Both stay empty — and so undrawn — on every other item type, and never populate `episodes`,
+  which drives the season page's own batch/download/play semantics.
+- **Episode origin chips**: on an episode page only, a series chip and a season chip sit under
+  the subtitle line in the title lockup (`ItemDetailHeader.kt`'s `EpisodeOriginChips`, shared by
+  both the compact and the wide hero since both route through `TitleLockup`). Either is omitted
+  independently when its own target (`seriesId`/`seriesName`, or `seasonId`/`parentIndexNumber`)
+  is unknown.
 
 On a viewport wider than 720.dp **and at least 480.dp tall** the poster moves beside the text
 instead of above it — the same rearrangement jellyfin-web makes on a desktop, and the layout the
@@ -112,8 +123,13 @@ ItemDetailScreen(
     onItemClick = { navController.navigate(Routes.ItemDetail(it.id)) },
     onBack = navController::popBackStack,
     onHome = navController::navigateHome,
+    onNavigateToItemId = { id -> navController.navigate(Routes.ItemDetail(id)) },
 )
 ```
+
+`onNavigateToItemId` is the same destination as `onItemClick`, by id rather than by item: the
+episode origin chips and the season-siblings row's "See all" only know the id they point at, not
+the `JellyfinItem` itself.
 
 `ItemDetailViewModel` reads its argument from `SavedStateHandle` under the key
 `ItemDetailViewModel.ARG_ITEM_ID` (`"itemId"`) — the property name Navigation stores a type-safe

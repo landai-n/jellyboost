@@ -15,6 +15,12 @@
     <string name="detail_section_episodes">ตอนทั้งหมด</string>
     <string name="detail_section_similar">รายการที่คล้ายกัน</string>
     <string name="detail_section_cast">นักแสดง</string>
+    <string name="detail_section_next_episode">ตอนถัดไป</string>
+    <string name="detail_section_more_from_season">เพิ่มเติมจากซีซัน %1$d</string>
+    <string name="detail_section_more_from_season_unnumbered">เพิ่มเติมจากซีซันนี้</string>
+    <string name="detail_go_to_series">ไปที่ซีรีส์ %1$s</string>
+    <string name="detail_go_to_season">ซีซัน %1$d</string>
+    <string name="detail_go_to_season_description">ไปที่ซีซัน %1$d</string>
     <string name="detail_type_movie">ภาพยนตร์</string>
     <string name="detail_type_series">ซีรีส์</string>
     <string name="detail_type_season">ซีซัน</string>

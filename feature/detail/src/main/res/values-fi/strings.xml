@@ -16,6 +16,12 @@
     <string name="detail_section_episodes">Jaksot</string>
     <string name="detail_section_similar">Samankaltaiset</string>
     <string name="detail_section_cast">Näyttelijät</string>
+    <string name="detail_section_next_episode">Seuraava jakso</string>
+    <string name="detail_section_more_from_season">Lisää kaudelta %1$d</string>
+    <string name="detail_section_more_from_season_unnumbered">Lisää tältä kaudelta</string>
+    <string name="detail_go_to_series">Siirry sarjaan %1$s</string>
+    <string name="detail_go_to_season">Kausi %1$d</string>
+    <string name="detail_go_to_season_description">Siirry kauteen %1$d</string>
     <string name="detail_type_movie">Elokuva</string>
     <string name="detail_type_series">Sarja</string>
     <string name="detail_type_season">Kausi</string>

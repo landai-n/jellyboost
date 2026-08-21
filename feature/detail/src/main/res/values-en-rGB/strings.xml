@@ -15,6 +15,12 @@
     <string name="detail_section_episodes">Episodes</string>
     <string name="detail_section_similar">More like this</string>
     <string name="detail_section_cast">Cast</string>
+    <string name="detail_section_next_episode">Next episode</string>
+    <string name="detail_section_more_from_season">More from Season %1$d</string>
+    <string name="detail_section_more_from_season_unnumbered">More from this season</string>
+    <string name="detail_go_to_series">Go to series %1$s</string>
+    <string name="detail_go_to_season">Season %1$d</string>
+    <string name="detail_go_to_season_description">Go to season %1$d</string>
     <string name="detail_type_movie">Film</string>
     <string name="detail_type_series">Series</string>
     <string name="detail_type_season">Season</string>

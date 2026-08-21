@@ -15,6 +15,12 @@
     <string name="detail_section_episodes">ეპიზოდები</string>
     <string name="detail_section_similar">მსგავსი კონტენტი</string>
     <string name="detail_section_cast">მსახიობები</string>
+    <string name="detail_section_next_episode">შემდეგი ეპიზოდი</string>
+    <string name="detail_section_more_from_season">მეტი სეზონი %1$d-დან</string>
+    <string name="detail_section_more_from_season_unnumbered">მეტი ამ სეზონიდან</string>
+    <string name="detail_go_to_series">გადადით სერიალზე %1$s</string>
+    <string name="detail_go_to_season">სეზონი %1$d</string>
+    <string name="detail_go_to_season_description">გადადით სეზონზე %1$d</string>
     <string name="detail_type_movie">ფილმი</string>
     <string name="detail_type_series">სერიალი</string>
     <string name="detail_type_season">სეზონი</string>

@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test
  *
  * Two rules carry the whole feature and neither is discoverable by clicking around: a card that
  * cannot be dismissed for good is a card sitting over the last minute of every episode, and a
- * fallback window applied to a two-minute extra would cover a sixth of it. Both are pinned here,
+ * fallback window applied to a three-minute extra would cover a third of it. Both are pinned here,
  * away from a player.
  */
 class UpNextControllerTest {
@@ -30,23 +30,23 @@ class UpNextControllerTest {
     }
 
     @Test
-    fun `falls back to the last thirty seconds when the item has no outro`() {
-        controller.shouldShow(HOUR_MS - 30_001L, HOUR_MS, outro = null, hasNext = true) shouldBe false
-        controller.shouldShow(HOUR_MS - 30_000L, HOUR_MS, outro = null, hasNext = true) shouldBe true
+    fun `falls back to the last sixty seconds when the item has no outro`() {
+        controller.shouldShow(HOUR_MS - 60_001L, HOUR_MS, outro = null, hasNext = true) shouldBe false
+        controller.shouldShow(HOUR_MS - 60_000L, HOUR_MS, outro = null, hasNext = true) shouldBe true
     }
 
     @Test
     fun `the outro wins over the arithmetic, even when it starts much earlier`() {
-        // The fallback would have waited until 59:30; the server says the episode is over at 58:20.
+        // The fallback would have waited until 59:00; the server says the episode is over at 58:20.
         controller.shouldShow(outro.startMs, HOUR_MS, outro, hasNext = true) shouldBe true
     }
 
     @Test
     fun `a short item never reaches the fallback window`() {
-        // A minute is the floor: on anything at or below it, "the last thirty seconds" is half the
-        // item, and a card covering half of something is covering it rather than following it.
-        controller.shouldShow(59_999L, 60_000L, outro = null, hasNext = true) shouldBe false
-        controller.shouldShow(60_000L, 60_000L, outro = null, hasNext = true) shouldBe false
+        // Two minutes is the floor: on anything at or below it, "the last sixty seconds" is half
+        // the item, and a card covering half of something is covering it rather than following it.
+        controller.shouldShow(119_999L, 120_000L, outro = null, hasNext = true) shouldBe false
+        controller.shouldShow(120_000L, 120_000L, outro = null, hasNext = true) shouldBe false
     }
 
     @Test

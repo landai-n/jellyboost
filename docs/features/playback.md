@@ -320,8 +320,11 @@ episode or nothing. The prefetch write is identity-guarded against the session i
 (`ActiveSession.upNext`, reset per session by construction), so a slow resolve for episode N can
 never offer on episode N+1.
 
-The window opens at the OUTRO segment's start when the server knows one, else the last 30 s of any
-item longer than a minute. A dismissal ("Watch credits") is sticky for the session; seeking back
+The window opens at the OUTRO segment's start when the server knows one, else the last 60 s of any
+item longer than two minutes (raised from 30 s after the first device walk: on a library with no
+segment data — the dev server's, measured — every episode takes the fallback, and streaming-drama
+credits run one to two minutes, so 30 s landed deep inside them; the *right* fix on such a server
+is a segment-detection plugin, which makes the outro trigger take over). A dismissal ("Watch credits") is sticky for the session; seeking back
 out of the window hides the card and re-entering shows it again. While the card is up, an OUTRO
 *offer* from the segment machinery is suppressed (`applySegmentDecision`) — the card is a strict
 superset of that button — but OUTRO *auto-skip* still seeks, and INTRO decisions are untouched.

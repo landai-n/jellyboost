@@ -197,8 +197,9 @@ of the walk).
 ## Player: Up Next card during the ending (2026-08-21 — landed, gate green; device walk owed)
 
 The `:player` half of "Up Next button + episode detail shortcuts" (DECISIONS.md 2026-08-21).
-While an episode's ending plays — the OUTRO segment's start, else the last 30 s of anything
-longer than a minute — a glass card in the bottom-right corner offers the positional next
+While an episode's ending plays — the OUTRO segment's start, else the last 60 s of anything
+longer than two minutes (widened from 30 s after the 2026-08-22 walk: the dev server has no
+segment data, so every episode takes the fallback and 30 s sat deep inside real credits) — a glass card in the bottom-right corner offers the positional next
 episode (cross-season, via `getSeriesEpisodes`; never next-*unwatched*); tapping "Play next
 episode" swaps the item into the same session through `replaceItem`, the extraction of
 SyncPlay's `loadItem`, with `playWhenReady = true` and the session's quality cap carried.

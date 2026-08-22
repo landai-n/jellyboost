@@ -379,7 +379,7 @@ internal class PlayerUpNextTest : PlayerViewModelFixture() {
         const val OUTRO_START_MS = DURATION_MS - 100_000L
 
         /** Where the card appears on an item the segments API knows nothing about. */
-        const val FALLBACK_START_MS = DURATION_MS - 30_000L
+        const val FALLBACK_START_MS = DURATION_MS - 60_000L
 
         /** Long enough that nothing completes it by accident; the tests advance past it explicitly. */
         const val SLOW_LOOKUP_MS = 5_000L

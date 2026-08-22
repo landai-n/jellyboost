@@ -59,8 +59,8 @@ internal class UpNextController {
      * The first millisecond the card may appear at, or `null` when this item has no window at all.
      *
      * The outro's start when there is one. Otherwise the last [UP_NEXT_FALLBACK_MS] of the item —
-     * but only for something long enough that the tail is a *tail*: on a five-minute extra, thirty
-     * seconds is a tenth of the item, and a card offering the next thing for that long is covering
+     * but only for something long enough that the tail is a *tail*: on a three-minute extra, sixty
+     * seconds is a third of the item, and a card offering the next thing for that long is covering
      * content rather than following it. Below the floor there is no window, and no card.
      */
     private fun windowStartMs(
@@ -76,18 +76,22 @@ internal class UpNextController {
         /**
          * How long before the end the card appears when the item has no outro segment.
          *
-         * Thirty seconds is roughly what an end-credits sequence runs to, and it is long enough that
-         * a user who wants the next episode does not have to catch it.
+         * Sixty seconds, raised from thirty after the first device walk (2026-08-22): on a library
+         * with no segment data at all — the dev server's, measured — every episode takes this
+         * fallback, and a streaming drama's credits run one to two minutes, so thirty seconds put
+         * the card deep inside them. Sixty still trails a short credits roll rather than covering
+         * content, and the card is dismissible either way. The *right* trigger stays the outro
+         * segment above; this number only carries the library the server has not analysed.
          */
-        const val UP_NEXT_FALLBACK_MS = 30_000L
+        const val UP_NEXT_FALLBACK_MS = 60_000L
 
         /**
          * Shorter than this and the fallback window is not offered at all.
          *
-         * A minute is the floor at which "the last thirty seconds" is still a minority of the item.
-         * An item *with* an outro is exempt: the server has said where the ending is, and a short
-         * item with a real outro is a short item that really does end there.
+         * Two minutes is the floor at which "the last sixty seconds" is still a minority of the
+         * item. An item *with* an outro is exempt: the server has said where the ending is, and a
+         * short item with a real outro is a short item that really does end there.
          */
-        const val UP_NEXT_MIN_DURATION_MS = 60_000L
+        const val UP_NEXT_MIN_DURATION_MS = 120_000L
     }
 }

@@ -1,7 +1,6 @@
 package dev.jellyboost.feature.detail
 
 import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -84,10 +83,10 @@ import dev.jellyboost.core.ui.component.formatRatingBadge
 import dev.jellyboost.core.ui.text.episodeNumberLabel
 import dev.jellyboost.core.ui.text.subtitleLine
 import dev.jellyboost.core.ui.theme.Dimens
-import dev.jellyboost.core.ui.theme.JellyfinGradients
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
 import dev.jellyboost.core.ui.theme.glassSurface
+import dev.jellyboost.core.ui.theme.heroHalo
 import dev.jellyboost.core.ui.theme.popShadow
 import dev.jellyboost.core.ui.R as CoreUiR
 
@@ -246,7 +245,7 @@ private fun DetailBackdrop(
         height = height,
     )
     if (halo) {
-        Box(modifier = Modifier.fillMaxSize().background(JellyfinGradients.HeroHalo))
+        Box(modifier = Modifier.fillMaxSize().heroHalo())
     }
 }
 

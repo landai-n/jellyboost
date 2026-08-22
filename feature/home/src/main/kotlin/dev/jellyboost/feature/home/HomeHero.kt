@@ -48,6 +48,7 @@ import dev.jellyboost.core.ui.text.episodeNumberLabel
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinGradients
 import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
+import dev.jellyboost.core.ui.theme.heroHalo
 import dev.jellyboost.core.ui.R as CoreUiR
 
 /**
@@ -140,7 +141,7 @@ private fun HeroBackdrop(
         contentScale = ContentScale.Crop,
         placeholderIcon = Icons.Outlined.Movie,
     )
-    Box(modifier = Modifier.fillMaxSize().background(JellyfinGradients.HeroHalo))
+    Box(modifier = Modifier.fillMaxSize().heroHalo())
     Box(modifier = Modifier.fillMaxSize().background(JellyfinGradients.BackdropScrim))
     if (wide) {
         Box(modifier = Modifier.fillMaxSize().background(wideHeroScrim()))

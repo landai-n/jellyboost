@@ -104,24 +104,23 @@ object GlassDefaults {
     val BottomNavFill: Color = JellyfinColors.Background.copy(alpha = 0.72f)
 
     /**
-     * The input scale every glass surface blurs its backdrop at, instead of
-     * [HazeInputScale.Auto].
+     * The input scale every glass surface blurs its backdrop at: full resolution, Haze's own
+     * pre-PERF-1 default.
      *
-     * `Auto` derives its factor from the blur radius, and at [BlurRadius] it picks aggressively
-     * enough that the downscaled backdrop's pixels survive the blur as visible structure: on the
-     * 2560×1600 test tablet the two full-width chrome bars showed an ~8–24px checkerboard
-     * (device analysis, 2026-08-21), and after they were fixed the same texture was reported on
-     * the small [dev.jellyboost.core.ui.component.GlassIconButton] circles too (device walk, same
-     * day) — this token started as a wide-bars-only override on the guess that small glass hid
-     * the artifact, and the guess did not survive contact with the device. So half resolution is
-     * now the default for all glass, replacing PERF-1's `Auto` outright.
-     *
-     * Half resolution rather than [HazeInputScale.None]: a quarter of the pixels is still most of
-     * PERF-1's saving, and 0.5 is the one factor that maps whole source pixels onto whole
-     * destination ones, which is what keeps the downscale from inventing the pattern in the first
-     * place.
+     * The history is a retreat in two steps, each forced by the panel. PERF-1 (audit 2026-08-08)
+     * set [HazeInputScale.Auto] app-wide on an unmeasured "an 18dp blur discards the detail
+     * anyway" argument; at [BlurRadius] `Auto` picks aggressively enough that the downscaled
+     * backdrop survives as visible structure — an ~8–24px checkerboard on the wide chrome bars,
+     * then the same texture on the small icon circles (device walks, 2026-08-21). The first
+     * retreat pinned `Fixed(0.5f)`, the one factor that maps whole source pixels onto whole
+     * destination ones; screenshot analysis measured it clean (high-pass p99 ≈ 4/255), but the
+     * user still saw pixels on the physical panel — including on the mini-player the measurement
+     * had cleared. Screenshot amplitude evidently under-represents what a large dark panel makes
+     * visible, so the eye, not the scan, is the acceptance test, and full resolution is what
+     * passes it. PERF-1's saving is surrendered entirely; it was never measured on either side,
+     * and any future re-attempt must be judged on the panel.
      */
-    val DefaultInputScale: HazeInputScale = HazeInputScale.Fixed(0.5f)
+    val DefaultInputScale: HazeInputScale = HazeInputScale.None
 
     /**
      * The Haze style every glass surface blurs with.

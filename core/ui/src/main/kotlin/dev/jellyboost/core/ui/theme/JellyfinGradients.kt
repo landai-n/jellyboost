@@ -1,5 +1,6 @@
 package dev.jellyboost.core.ui.theme
 
+import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.RadialGradient
 import androidx.compose.ui.Modifier
@@ -129,44 +130,25 @@ object JellyfinGradients {
                 )
         }
 
-    /**
-     * The 2026 refresh's hero halo: a much stronger, off-centre accent glow than [BrandGlow], laid
-     * behind (or over) a hero backdrop so the top-right of the screen carries colour even where the
-     * artwork is dark or missing.
-     *
-     * Ports the mocks'
-     * `radial-gradient(120% 90% at 78% 18%, rgba(170,92,195,.35) 0%, rgba(0,164,220,.16) 42%,
-     * transparent 72%)`. CSS sizes a radial gradient's two axes independently; a
-     * [RadialGradientShader] has one radius, so the width-derived value is used and the ellipse
-     * becomes a circle. That is the right trade here: the halo's ellipticity is imperceptible, but
-     * a radius that stopped short of the box would not be — the gradient reaches full transparency
-     * at 72% of it, well inside the fill, so no edge of the box can cut a visible ring.
-     */
-    val HeroHalo: Brush =
-        object : ShaderBrush() {
-            /** Horizontal centre of the halo, as a fraction of the box width. */
-            private val centerXFraction = 0.78f
+    /** Horizontal centre of [heroHalo], as a fraction of the box width. */
+    internal const val HERO_HALO_CENTER_X_FRACTION = 0.78f
 
-            /** Vertical centre — high in the box, so the glow reads as coming from above. */
-            private val centerYFraction = 0.18f
+    /** Vertical centre of [heroHalo] — high in the box, so the glow reads as coming from above. */
+    internal const val HERO_HALO_CENTER_Y_FRACTION = 0.18f
 
-            /** Radius as a fraction of the box width; the colour stops fade out well within it. */
-            private val radiusFraction = 1.0f
+    /** [heroHalo]'s horizontal radius, as a fraction of the box width (the mock's `120%`). */
+    internal const val HERO_HALO_RADIUS_X_FRACTION = 1.2f
 
-            override fun createShader(size: Size): Shader =
-                RadialGradientShader(
-                    center = Offset(x = size.width * centerXFraction, y = size.height * centerYFraction),
-                    radius = size.width * radiusFraction,
-                    colors =
-                        listOf(
-                            JellyfinColors.Secondary.copy(alpha = 0.35f),
-                            JellyfinColors.Primary.copy(alpha = 0.16f),
-                            Color.Transparent,
-                        ),
-                    colorStops = listOf(0f, 0.42f, 0.72f),
-                    tileMode = TileMode.Clamp,
-                )
-        }
+    /** [heroHalo]'s vertical radius, as a fraction of the box *height* (the mock's `90%`). */
+    internal const val HERO_HALO_RADIUS_Y_FRACTION = 0.9f
+
+    /** Where [heroHalo]'s fade reaches full transparency, as a fraction of its radius. */
+    internal const val HERO_HALO_FADE_STOP = 0.72f
+
+    /** [heroHalo]'s two colour stops: the secondary's alpha at the centre, the primary's at 42%. */
+    internal const val HERO_HALO_CENTER_ALPHA = 0.35f
+    internal const val HERO_HALO_MID_ALPHA = 0.16f
+    internal const val HERO_HALO_MID_STOP = 0.42f
 
     /** Horizontal centre of [screenGlow], as a fraction of the box width. */
     internal const val SCREEN_GLOW_CENTER_X_FRACTION = 0.22f
@@ -196,7 +178,7 @@ object JellyfinGradients {
  * glow (2026-refresh mocks, "library screen glow").
  *
  * Ports `radial-gradient(80% 100% at 22% 0%, rgba(170,92,195,.17) 0%, transparent 76%)`. Fainter
- * and further to the *start* than [JellyfinGradients.HeroHalo], which sits over a backdrop and has
+ * and further to the *start* than [heroHalo], which sits over a backdrop and has
  * to compete with it; this one is the only colour on the screen and would read as a wash at hero
  * strength. Apply to a box anchored to the top of the screen whose height follows its width (the
  * radius is width-derived — see the callers' `GLOW_ASPECT`).
@@ -226,6 +208,63 @@ fun Modifier.screenGlow(): Modifier =
                         floatArrayOf(0f, JellyfinGradients.SCREEN_GLOW_FADE_STOP),
                         android.graphics.Shader.TileMode.CLAMP,
                     )
+            }
+        onDrawBehind {
+            drawIntoCanvas { canvas ->
+                canvas.nativeCanvas.drawRect(0f, 0f, size.width, size.height, paint)
+            }
+        }
+    }
+
+/**
+ * The 2026 refresh's hero halo: a much stronger, off-centre accent glow than
+ * [JellyfinGradients.BrandGlow], laid over a hero backdrop so the top-right of the screen carries
+ * colour even where the artwork is dark or missing. Fill the backdrop's own box with it (the detail
+ * and home heroes both do).
+ *
+ * Ports the mocks'
+ * `radial-gradient(120% 90% at 78% 18%, rgba(170,92,195,.35) 0%, rgba(0,164,220,.16) 42%,
+ * transparent 72%)` — **as the ellipse it is**. The first port collapsed the two axes to the
+ * width-derived one, and on a landscape tablet that radius dwarfs the hero box's height, so the box's
+ * bottom edge cut the gradient mid-fade: a hard seam across the page where the backdrop ends —
+ * the same clipped-glow bug fixed for [JellyfinGradients.BrandGlow] and (as the tablet seam,
+ * `c3153a93`) for [screenGlow]'s callers, recurring here as their missed sibling (device walk,
+ * 2026-08-22). With the vertical radius height-derived as the mock wrote it, the fade completes at
+ * ~83% of the box height and the bottom edge has nothing left to cut. The two edges that do still
+ * clip it — top and end — are window edges, where there is no page beyond them to show a seam.
+ *
+ * A dithered framework [Paint] rather than a Compose [ShaderBrush] for [screenGlow]'s reason: a
+ * low-alpha fade across hundreds of dp quantises into visible stepping rings on an 8-bit surface,
+ * and `isDither` is the switch Compose's brushes do not expose. The ellipse itself is the one
+ * geometry [RadialGradient] cannot express directly, so the circular shader is scaled vertically
+ * with a local matrix about its own centre.
+ */
+fun Modifier.heroHalo(): Modifier =
+    drawWithCache {
+        val centerX = size.width * JellyfinGradients.HERO_HALO_CENTER_X_FRACTION
+        val centerY = size.height * JellyfinGradients.HERO_HALO_CENTER_Y_FRACTION
+        val radiusX = size.width * JellyfinGradients.HERO_HALO_RADIUS_X_FRACTION
+        val radiusY = size.height * JellyfinGradients.HERO_HALO_RADIUS_Y_FRACTION
+        val paint =
+            Paint().apply {
+                isDither = true
+                shader =
+                    RadialGradient(
+                        centerX,
+                        centerY,
+                        radiusX,
+                        intArrayOf(
+                            JellyfinColors.Secondary.copy(alpha = JellyfinGradients.HERO_HALO_CENTER_ALPHA).toArgb(),
+                            JellyfinColors.Primary.copy(alpha = JellyfinGradients.HERO_HALO_MID_ALPHA).toArgb(),
+                            android.graphics.Color.TRANSPARENT,
+                        ),
+                        floatArrayOf(0f, JellyfinGradients.HERO_HALO_MID_STOP, JellyfinGradients.HERO_HALO_FADE_STOP),
+                        android.graphics.Shader.TileMode.CLAMP,
+                    ).apply {
+                        setLocalMatrix(
+                            Matrix().apply { setScale(1f, radiusY / radiusX, centerX, centerY) },
+                        )
+                    }
             }
         onDrawBehind {
             drawIntoCanvas { canvas ->

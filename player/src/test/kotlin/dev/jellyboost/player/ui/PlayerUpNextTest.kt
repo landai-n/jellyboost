@@ -301,16 +301,86 @@ internal class PlayerUpNextTest : PlayerViewModelFixture() {
         }
 
     @Test
-    fun `an episode that simply plays out still closes the screen`() =
+    fun `an episode that plays out advances to its successor on its own`() =
         runTest(dispatcher) {
-            // The other half of the same guard: nobody touched the card, so this is the commonest
-            // exit path of all and it must behave exactly as it did before the feature.
+            // The 2026-08-24 decision, reversing the button-only pin that used to live here: a
+            // natural solo end with a successor prefetched is the middle of a binge, not an exit.
+            // The screen must not pop — the same session carries straight into the next episode.
             val model = offering()
+            coEvery { resolver.resolve(any()) } returns AppResult.Success(source.copy(itemId = nextItemId))
+
+            playerHandle.emit(PlayerEvent.Ended)
+            // Before the open completes: this is the frame `PlayerScreen` would have popped on.
+            model.uiState.value.hasEnded shouldBe false
+
+            advanceUntilIdle()
+            model.uiState.value.hasEnded shouldBe false
+            playerHandle.prepared.last().playWhenReady shouldBe true
+        }
+
+    @Test
+    fun `the end advances even when the card never showed`() =
+        runTest(dispatcher) {
+            // Backgrounded playback: the ticker stops with the screen, so the card may never have
+            // been offered at all — but the episode still ends, and the binge still continues.
+            coEvery { upNextResolver.resolve(any()) } returns nextEpisode
+            val model = viewModel()
+            advanceUntilIdle()
+            model.card.shouldBeNull()
+            coEvery { resolver.resolve(any()) } returns AppResult.Success(source.copy(itemId = nextItemId))
+
+            playerHandle.emit(PlayerEvent.Ended)
+            advanceUntilIdle()
+
+            model.uiState.value.hasEnded shouldBe false
+            playerHandle.prepared.last().playWhenReady shouldBe true
+        }
+
+    @Test
+    fun `a film that plays out still closes the screen`() =
+        runTest(dispatcher) {
+            // No successor, no advance: the resolver's `null` is what "nothing follows this" means,
+            // and the pre-feature exit stands for every non-episode and every last episode.
+            val model = viewModel()
+            advanceUntilIdle()
 
             playerHandle.emit(PlayerEvent.Ended)
             advanceUntilIdle()
 
             model.uiState.value.hasEnded shouldBe true
+        }
+
+    @Test
+    fun `a dismissed card means the end closes the screen as before`() =
+        runTest(dispatcher) {
+            // "Watch credits" is the user declining the next episode, and it holds through to the
+            // end — advancing anyway would make the dismissal a lie.
+            val model = offering()
+            model.dismissUpNext()
+            playerHandle.resetCalls()
+
+            playerHandle.emit(PlayerEvent.Ended)
+            advanceUntilIdle()
+
+            model.uiState.value.hasEnded shouldBe true
+            playerHandle.prepared.shouldBeEmpty()
+        }
+
+    @Test
+    fun `the automatic advance reports the outgoing episode exactly once`() =
+        runTest(dispatcher) {
+            // `Ended` sends the detached report and arms the guard before the advance is triggered
+            // (`viewModelScope` is `Main.immediate` — an advance launched earlier would race it);
+            // the swap's own `endCurrentSource` must then stay quiet.
+            val model = offering()
+            coEvery { resolver.resolve(any()) } returns AppResult.Success(source.copy(itemId = nextItemId))
+
+            playerHandle.emit(PlayerEvent.Ended)
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) { reporter.reportStopDetached(source, any()) }
+            coVerify(exactly = 0) { reporter.reportStop(source, any()) }
+            model.uiState.value.hasEnded shouldBe false
         }
 
     // ---- the one-stop-report-per-source invariant --------------------------------------------------
@@ -329,9 +399,14 @@ internal class PlayerUpNextTest : PlayerViewModelFixture() {
         }
 
     @Test
-    fun `a tap after the end does not report the outgoing episode twice`() =
+    fun `a swap after the end does not report the outgoing episode twice`() =
         runTest(dispatcher) {
+            // Since auto-advance (2026-08-24) an undismissed end advances by itself — that order has
+            // its own pin above — so the dismissal is what arranges an episode that ended without
+            // advancing, with a swap arriving after. `endCurrentSource`'s idempotence is what this
+            // pins, whatever triggers the swap.
             val model = offering()
+            model.dismissUpNext()
             playerHandle.emit(PlayerEvent.Ended)
             advanceUntilIdle()
             coEvery { resolver.resolve(any()) } returns AppResult.Success(source.copy(itemId = nextItemId))

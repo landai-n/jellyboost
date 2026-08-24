@@ -299,18 +299,23 @@ rest of the session instead of looping. Segments shorter than one second are ign
 A server without the Media Segments API (pre-10.10) or without a detection plugin answers 404 or
 with nothing, and the feature is silently absent. A downloaded item is never asked at all.
 
-### Up next (2026-08-21, beyond-plan feature — DECISIONS.md 2026-08-21)
+### Up next (2026-08-21, beyond-plan feature — DECISIONS.md 2026-08-21 and 2026-08-24)
 
 While an episode's ending plays, a card in the bottom-right corner offers the next episode;
-tapping it swaps the item into the *same* session. Button only — no countdown, no auto-advance,
-no preference: an episode nobody touches ends exactly as it always has, with the route popping.
+tapping it swaps the item into the *same* session — and since 2026-08-24, an episode that plays
+to its natural end solo **advances to its successor automatically** through the same path,
+including from the background, where the tick-driven card may never have shown. No countdown and
+no preference; the card's dismissal ("Watch credits") is the opt-out, and it holds through to the
+end — a dismissed episode pops at its end exactly as before the feature, as do films, the last
+episode of a series, and every non-episode.
 
 | Step | Where |
 |---|---|
 | Resolve the successor (fire-and-forget, per open) | `PlayerViewModel.loadPlaybackExtras` → `UpNextResolver.resolve` |
 | Decide whether the card is up at a position | `UpNextController.shouldShow(positionMs, durationMs, outro, hasNext)` |
 | Draw the card | `PlayerScreen`'s `UpNextCard`, stacked above `SkipSegmentButton`, independent of the controls' visibility |
-| Play the next episode | `PlayerViewModel.playNextEpisode()` → `replaceItem(playWhenReady = true)` |
+| Play the next episode (tap) | `PlayerViewModel.playNextEpisode()` → `replaceItem(playWhenReady = true)` |
+| Advance at the natural end | `PlayerViewModel.onEnded()` → the same `playNextEpisode()`, *after* the detached stop report (`Main.immediate` would otherwise start the swap against an unarmed `stopReported` and report the episode twice) |
 
 The successor is the **positional** next episode — `getSeriesEpisodes` and index + 1, cross-season
 — never `getNextUpForSeries`, which answers "next unwatched" and is wrong on a rewatch. Every miss

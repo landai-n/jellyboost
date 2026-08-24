@@ -203,14 +203,16 @@ segment data, so every episode takes the fallback and 30 s sat deep inside real 
 episode (cross-season, via `getSeriesEpisodes`; never next-*unwatched*); tapping "Play next
 episode" swaps the item into the same session through `replaceItem`, the extraction of
 SyncPlay's `loadItem`, with `playWhenReady = true` and the session's quality cap carried.
-Button only by user decision: no countdown, no auto-advance, no preference — an untouched
-ending pops the route exactly as before. Dismissal is sticky per session; the card absorbs the
+Since 2026-08-24 (user decision, DECISIONS.md that date) a solo natural end **auto-advances**
+through the same path — even from the background where the card never showed — with the card's
+dismissal as the opt-out; a dismissed episode, a film, and a last episode pop exactly as before.
+Still no countdown and no preference. Dismissal is sticky per session; the card absorbs the
 outro Skip *offer* (auto-skip and intros untouched); the whole feature is inert in a SyncPlay
 group; offline it offers the next downloaded episode or nothing. New `upnext/UpNextResolver` +
 `UpNextController` (pure), `ActiveSession.upNext` (identity-guarded prefetch from
 `loadPlaybackExtras`), the `advancing` guard against the tap-vs-`Ended` race, `UpNextCard` +
 two `PlayerActions`. Three strings, base + 69 locales. Tests: `UpNextResolverTest` (10),
-`UpNextControllerTest` (11), `PlayerUpNextTest` (17, incl. both stop-report orders),
+`UpNextControllerTest` (11), `PlayerUpNextTest` (21, incl. the auto-advance ends and the stop-report orders),
 `PlayerActionsInteractionTest` extended, `UpNextCardA11yTest` (instrumented, compile-gated).
 Full detail in `docs/features/playback.md` § "Up next". **Owed to a device walk:** the walk in
 that section's DECISIONS entry — outro trigger, fallback trigger, tap mid-credits with a manual

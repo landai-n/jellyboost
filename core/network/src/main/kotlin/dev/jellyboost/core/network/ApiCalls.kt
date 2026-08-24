@@ -11,18 +11,11 @@ import java.net.HttpURLConnection
 import kotlin.coroutines.cancellation.CancellationException
 
 /**
- * Runs an SDK call and folds every failure mode of the Jellyfin SDK into an [AppError].
+ * **The** place SDK transport exceptions are translated into [AppError]; a second copy would drift apart on
+ * exactly the codes that matter.
  *
- * **The** place transport exceptions are translated. A second copy of this logic would drift apart
- * on exactly the codes that matter — a 403 read as a server fault by one copy and an authentication
- * failure by another is exactly the kind of split a duplicated mapper produces. One function,
- * public from the module every caller already depends on, is what prevents that.
- *
- * [CancellationException] is deliberately rethrown — a cancelled coroutine is not a failure, and
- * swallowing it into an [AppResult.Failure] leaves a dead ViewModel scope rendering a bogus error.
- *
- * `inline` and non-`suspend` so it wraps suspending and blocking blocks alike; every caller is
- * inside a coroutine anyway.
+ * [CancellationException] is deliberately rethrown — swallowing it into an [AppResult.Failure] leaves a dead
+ * ViewModel scope rendering a bogus error.
  */
 inline fun <T> runCatchingApi(block: () -> T): AppResult<T> =
     try {
@@ -36,24 +29,17 @@ inline fun <T> runCatchingApi(block: () -> T): AppResult<T> =
     }
 
 /**
- * Maps an SDK/transport exception onto [AppError]. The single source of truth for what a status
- * code means to this app.
+ * The single source of truth for what a status code means to this app.
  *
- * ### The status answers, and why they are these
- * - **401 and 403 → [AppError.Unauthorized].** `DelegatingJellyfinRepository` documents "401/403
- *   surfaced so the session layer can re-authenticate", and a 403 is precisely the shape a revoked
- *   token or a policy change takes on a Jellyfin server. Calling it [AppError.Server] instead
- *   would mean a 403 from `/PlaybackInfo` is reported as "the server is broken" and never reaches
- *   sign-out.
- * - **404 → [AppError.NotFound].** The item is gone, not the server. `DownloadFailure` classifies
- *   it PERMANENT (no retry is going to make it exist) and `UserDataSyncer` abandons the row.
- *   [AppError.NotFound.id] is empty here on purpose: this mapper sees an exception, not a request,
- *   and inventing an id would be worse than admitting it does not know one.
- * - **everything else → [AppError.Server]** carrying the code, which is what the delegating
- *   repository reads to tell "the server is down" (502/503/504) from "the server said no".
+ * - **401 and 403 → [AppError.Unauthorized].** A 403 is the shape a revoked token or a policy change takes
+ *   on a Jellyfin server; calling it [AppError.Server] would keep it from ever reaching sign-out.
+ * - **404 → [AppError.NotFound].** The item is gone, not the server, so retrying is pointless.
+ *   [AppError.NotFound.id] is empty on purpose: this mapper sees an exception, not a request.
+ * - **everything else → [AppError.Server]** carrying the code, which the delegating repository reads to tell
+ *   "the server is down" (502/503/504) from "the server said no".
  *
- * The transport-failure cases (network, timeout, TLS) are kept distinct from server-side errors
- * because they are the ones the delegating repository treats as "fall back to offline".
+ * Transport failures (network, timeout, TLS) stay distinct from server-side errors because they are the ones
+ * the delegating repository treats as "fall back to offline".
  */
 fun Throwable.toAppError(): AppError =
     when (this) {
@@ -65,22 +51,18 @@ fun Throwable.toAppError(): AppError =
             }
 
         is TimeoutException, is IOException -> AppError.Network(this)
-        // Everything else the SDK raises for a call that never completed: SecureConnectionException
-        // (a TLS handshake it would not make), InvalidContentException, MissingBaseUrlException…
+        // Everything else the SDK raises for a call that never completed: SecureConnectionException,
+        // InvalidContentException, MissingBaseUrlException…
         is ApiClientException -> AppError.Network(this)
         else -> {
-            // An exception outside the known taxonomy is always worth a log line: it is either a
-            // transport type this mapper should learn about or a real bug (e.g. a response the
-            // SDK's serializers reject), and the Unknown error state hides it from the UI.
+            // Always worth a log line: either a transport type this mapper should learn about or a real bug,
+            // and the Unknown error state hides it from the UI.
             Timber.e(this, "API error outside the known taxonomy")
             AppError.Unknown(this)
         }
     }
 
-/**
- * Runs [block] against local storage (Room, `SecureCredentialStore`) and folds failures into
- * [AppError.Storage]. Room raises unchecked `SQLiteException`s, hence the broad catch.
- */
+/** Room raises unchecked `SQLiteException`s, hence the broad catch. */
 @Suppress("TooGenericExceptionCaught")
 internal suspend fun <T> storageCall(block: suspend () -> T): AppResult<T> =
     try {

@@ -37,7 +37,6 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-/** Unit tests for [NowPlayingViewModel]. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class NowPlayingViewModelTest {
     private val dispatcher = StandardTestDispatcher()
@@ -97,8 +96,7 @@ class NowPlayingViewModelTest {
         runTest(dispatcher) {
             val viewModel = viewModel()
 
-            // `uiState` is `WhileSubscribed`, so the combine only runs while something is
-            // collecting it — exactly like a screen would through `collectAsStateWithLifecycle`.
+            // `uiState` is `WhileSubscribed`: the combine only runs while something collects it.
             viewModel.uiState.test {
                 awaitItem().isIdle shouldBe true
 
@@ -152,10 +150,8 @@ class NowPlayingViewModelTest {
         runTest(dispatcher) {
             val viewModel = viewModel()
 
-            // Briefly subscribed so the queue state actually reaches `uiState.value` — see the
-            // previous test's note on `WhileSubscribed`. `StateFlow.value` keeps whatever it last
-            // published after the subscriber leaves, which is what lets `toggleFavorite` below read
-            // it synchronously the way a click handler does.
+            // Briefly subscribed so the queue state reaches `uiState.value`, which keeps what it
+            // last published — that is what lets `toggleFavorite` read it synchronously.
             viewModel.uiState.test {
                 awaitItem()
                 controllerState.value = activeState()
@@ -199,12 +195,9 @@ class NowPlayingViewModelTest {
         }
 
     // ---- lyrics ---------------------------------------------------------------------------------
-    //
-    // The lyrics fetch is a second, asynchronous contributor to `uiState` alongside the queue
-    // transition itself (a track becomes current with `lyrics = null` for one tick, then the fetch
-    // resolves and patches it in), so these drive a background collector to steady state with
-    // `advanceUntilIdle()` and read `uiState.value` rather than awaiting Turbine items one at a
-    // time — the item count downstream of one `controllerState` write is not fixed.
+    // The lyrics fetch is a second async contributor to `uiState`, so the item count downstream of
+    // one `controllerState` write is not fixed: these read `uiState.value` at steady state rather
+    // than awaiting Turbine items one at a time.
 
     @Test
     fun `lyrics are fetched for the current track and land in the ui state`() =
@@ -268,7 +261,6 @@ class NowPlayingViewModelTest {
             controllerState.value = activeState()
             advanceUntilIdle()
 
-            // Same current track (t1), different transport state — a `moveItem`/shuffle change.
             controllerState.value = activeState().copy(shuffleEnabled = true)
             advanceUntilIdle()
 

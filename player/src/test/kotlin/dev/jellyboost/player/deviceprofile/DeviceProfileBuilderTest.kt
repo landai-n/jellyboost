@@ -199,7 +199,6 @@ class DeviceProfileBuilderTest {
 
         profile.subtitleProfiles.map { it.format } shouldNotContain "ass"
         profile.subtitleProfiles.map { it.format } shouldNotContain "ssa"
-        // The rest of the subtitle support is untouched.
         profile.subtitleProfiles.map { it.format } shouldContain "srt"
     }
 
@@ -215,8 +214,8 @@ class DeviceProfileBuilderTest {
 
     @Test
     fun `never offers HLS subtitle delivery unless it is asked for`() {
-        // The everyday profile is the one a direct play is negotiated against, and there the HLS
-        // shape would be actively harmful — see the variant below.
+        // Direct play is negotiated against this profile; the HLS shape would be actively harmful
+        // here (see the variant below).
         val profile = builder(codecs()).getDeviceProfile()
 
         profile.subtitleProfiles.none { it.method == SubtitleDeliveryMethod.HLS } shouldBe true
@@ -228,15 +227,15 @@ class DeviceProfileBuilderTest {
 
         profile.subtitleProfiles.filter { it.method == SubtitleDeliveryMethod.HLS } shouldBe
             listOf(SubtitleProfile(format = "vtt", method = SubtitleDeliveryMethod.HLS))
-        // Not "as well as": offered both, the server picks External every time (10.11.11), so the
-        // only way to be given renditions is to leave it nothing else to choose.
+        // Offered both, the server (10.11.11) picks External every time, so renditions require
+        // leaving nothing else to choose.
         profile.subtitleProfiles.none { it.method == SubtitleDeliveryMethod.EXTERNAL } shouldBe true
     }
 
     @Test
     fun `the transcode variant leaves embedded delivery exactly as it was`() {
-        // A subtitle that travels inside the container has never drifted; only the side-loaded ones
-        // were being fixed, and the embedded half is what keeps a direct-playable mkv direct-played.
+        // Only side-loaded subtitles were being fixed; embedded delivery is what keeps a
+        // direct-playable mkv direct-played.
         val subject = builder(codecs())
 
         subject.getDeviceProfile(hlsTextSubtitles = true).subtitleProfiles.filter {

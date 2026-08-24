@@ -27,12 +27,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-/**
- * Unit tests for [HomeLayoutRepository].
- *
- * The contract under test is "never fails, always answers with something renderable": every branch
- * here ends in a usable list of sections.
- */
+/** "Never fails, always renderable": every branch here ends in a usable list of sections. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class HomeLayoutRepositoryTest {
     private val apiClient = mockk<ApiClient>()
@@ -100,8 +95,8 @@ class HomeLayoutRepositoryTest {
 
             repository.getHomeSections()
 
-            // Both strings are load-bearing: preferences are partitioned by
-            // (userId, itemId, client), so anything else reads an unrelated — and empty — record.
+            // Load-bearing: preferences partition by (userId, itemId, client), so anything else
+            // reads an unrelated, empty record.
             id.captured shouldBe "usersettings"
             client.captured shouldBe "emby"
         }
@@ -123,7 +118,7 @@ class HomeLayoutRepositoryTest {
                 TimeoutException("timed out")
 
             repository.getHomeSections() shouldContainExactly persisted
-            // Nothing was learned, so nothing is written — the cache keeps what it had.
+            // Nothing was learned, so the cache keeps what it had.
             coVerify(exactly = 0) { store.write(any()) }
         }
 

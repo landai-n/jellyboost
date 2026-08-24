@@ -6,34 +6,22 @@ import org.jellyfin.sdk.model.api.BaseItemKind
 import java.util.Locale
 
 /**
- * Naming rules for what lands on disk: `Series - S01E02 - Title/` or `Movie (Year)/`.
- *
- * These names are user-visible — the whole point of the layout is that someone plugging the
- * tablet into a computer can tell what the folders are — so they are built from the item's metadata
- * rather than from its id, and then made safe for a FAT/exFAT volume, which is what an SD card
- * usually is.
- *
- * Everything here is pure: no `Context`, no filesystem. That is deliberate — the naming is the
- * fiddliest part of the file plan and it is fully unit-tested.
+ * Naming rules for what lands on disk: `Series - S01E02 - Title/` or `Movie (Year)/`. The names are
+ * user-visible — someone plugging the tablet into a computer can tell what the folders are — so they
+ * are built from metadata rather than ids, then made safe for the FAT/exFAT volume an SD card is.
  */
 internal object DownloadPaths {
     /**
-     * Characters no common Android filesystem accepts.
-     *
-     * `:` and `?` in particular are legal on ext4 but not on the exFAT volumes SD cards ship with,
-     * so a film called *Mission: Impossible* would otherwise fail to create its directory on some
-     * devices only. Hyphens are deliberately **kept**: the plan's directory format uses ` - ` as
-     * its separator, and stripping them would also turn `Spider-Man` into `Spider Man`.
+     * `:` and `?` are legal on ext4 but not on the exFAT volumes SD cards ship with, so a film called
+     * *Mission: Impossible* would fail to create its directory on some devices only. Hyphens are
+     * deliberately **kept**: the directory format uses ` - ` as its separator.
      */
     private val ILLEGAL = Regex("""[\\/:*?"<>|]""")
 
     /** Runs of whitespace collapse to one space so a trimmed title does not keep a double gap. */
     private val WHITESPACE = Regex("\\s+")
 
-    /**
-     * Cap on a single path segment. Well under the 255-byte limit every relevant filesystem
-     * imposes, with room for multi-byte characters in a title.
-     */
+    /** Well under the 255-byte limit every relevant filesystem imposes, with room for multi-byte titles. */
     private const val MAX_SEGMENT = 120
 
     /** Used when an item has no usable name at all — never expected, never allowed to crash. */
@@ -43,25 +31,16 @@ internal object DownloadPaths {
     private const val DEFAULT_CONTAINER = "mkv"
 
     /**
-     * The directory one item's files live in.
+     * The directory one item's files live in: `Westworld - S01E02 - Chestnut`,
+     * `Fleetwood Mac - Rumours - 04 - Go Your Own Way` (`2-04` on disc 2), or `Arrival (2016)`.
      *
-     * - episode → `Westworld - S01E02 - Chestnut`
-     * - track → `Fleetwood Mac - Rumours - 04 - Go Your Own Way`
-     *   (`2-04` on disc 2 of a multi-disc album)
-     * - anything else → `Arrival (2016)`, dropping the parenthesis when the year is unknown
+     * A track's form mirrors the episode's because it has to be **unique**: a track has no
+     * `productionYear` to disambiguate it, so two different albums' *Intro* would share one directory,
+     * share one `primary.webp`, and have either's delete take the other's files. A track with neither
+     * artist nor album takes the same id suffix the empty-name fallback uses.
      *
-     * A track's form mirrors the episode's, and for the same two reasons. It is what someone
-     * plugging the tablet into a computer can read; and it is **unique**, which the plain-name form
-     * is not for music — a track has no `productionYear` to disambiguate it, so two different
-     * albums' *Intro* would share one directory, share one `primary.webp`, and have either's delete
-     * take the other's files with it. Artist and album in front of the track number make that
-     * collision as unlikely as the series name makes it for an episode; the disc number closes the
-     * multi-disc gap ([trackCode]), and a track with *neither* artist nor album — where the title
-     * is the only distinguishing part — takes the same id suffix the empty-name fallback uses, so
-     * two albumless tracks that share a title cannot share a directory.
-     *
-     * @param fallbackId appended when the resulting name would be empty, so two nameless items
-     *   cannot collide into the same directory.
+     * @param fallbackId appended when the resulting name would be empty, so two nameless items cannot
+     *   collide into the same directory.
      */
     fun itemDirectoryName(
         item: BaseItemDto,
@@ -105,18 +84,13 @@ internal object DownloadPaths {
     }
 
     /**
-     * The media file's name.
+     * The media file's name. The server's own filename is preferred, so the file on disk matches the
+     * one on the server by name as well as by bytes; `PATH` is only returned to users allowed to see
+     * it, and without it the container extension is enough for ExoPlayer to sniff the format.
      *
-     * The server's own filename is preferred — it carries the release/edition information a user
-     * recognises, and keeping it means the file on disk matches the one on the server by name as
-     * well as by bytes. When the item carries no path (the `PATH` field is only returned to users
-     * allowed to see it) the container extension is enough for ExoPlayer to sniff the format.
-     *
-     * A transcoded download is none of that: the source's name and container describe a file
-     * this device is not going to receive, so it is named after its directory and given the
-     * container the transcode actually produces. The quality is part of the name because it is the
-     * one thing a user cannot see from the outside, and because it keeps a re-download at a
-     * different quality from silently landing on top of the old file.
+     * A transcode is named after its directory instead — the source's name and container describe a
+     * file this device is not going to receive — and carries its quality, so a re-download at another
+     * step cannot land silently on top of the old file.
      */
     fun mediaFileName(
         item: BaseItemDto,
@@ -148,14 +122,9 @@ internal object DownloadPaths {
     }
 
     /**
-     * `04` for a numbered track, `2-04` for track 4 on disc 2, `null` for one the server gives no
-     * track number.
-     *
-     * Disc-qualified when the server names a disc, because a multi-disc album repeats track
-     * numbers across its discs — two discs' fourth tracks *sharing a title* (a reprise, an
-     * `Intro`) would otherwise sanitise to the same directory, share one `primary.webp`, and have
-     * either's delete take the other's files. A track with no `parentIndexNumber` keeps the bare
-     * `04` a music file is named everywhere else the user has seen one.
+     * `04` for a numbered track, `2-04` for track 4 on disc 2, `null` when the server gives no track
+     * number. Disc-qualified because a multi-disc album repeats track numbers across its discs, and two
+     * discs' fourth tracks *sharing a title* would otherwise sanitise to the same directory.
      */
     fun trackCode(
         discNumber: Int?,

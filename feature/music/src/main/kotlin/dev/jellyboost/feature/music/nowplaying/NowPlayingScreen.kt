@@ -82,18 +82,8 @@ import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
 import dev.jellyboost.feature.music.R
 
 /**
- * The full-screen now-playing surface: artwork, transport, seek, favourite, and the queue — either
- * behind [QueueSheet] (compact) or inline beside the controls (wide).
- *
- * Pops itself the moment [dev.jellyboost.core.common.music.MusicController.state] goes
- * [dev.jellyboost.core.common.music.MusicPlaybackState.Idle] — the queue emptied from the
- * mini-player, `stop()` was called elsewhere, the app relaunched into a session with nothing
- * loaded — since there is then nothing left for this screen to show.
- *
- * Thin by design, the `AlbumDetailScreen` split: this function owns the ViewModel and the one
- * piece of screen-local UI state ([QueueSheet]'s visibility), and hands everything else to
- * [NowPlayingContent] as plain data and callbacks, so the actual layout stays previewable and
- * testable without a Hilt-backed [NowPlayingViewModel].
+ * Pops itself the moment the controller goes `Idle` — the queue emptied from the mini-player,
+ * `stop()` elsewhere, a relaunch into an empty session — since nothing is left to show.
  */
 @Composable
 fun NowPlayingScreen(
@@ -136,10 +126,6 @@ fun NowPlayingScreen(
     )
 }
 
-/**
- * Every verb the layout below can invoke, bundled the way `HomeActions` bundles Home's — one
- * parameter instead of ten at every call site that only forwards them.
- */
 private data class NowPlayingActions(
     val onTogglePlayPause: () -> Unit,
     val onNext: () -> Unit,
@@ -154,7 +140,6 @@ private data class NowPlayingActions(
     val onStop: () -> Unit,
 )
 
-/** Stateless rendering — a pure function of [state], previewable without a ViewModel. */
 @Composable
 private fun NowPlayingContent(
     state: NowPlayingUiState,
@@ -165,8 +150,8 @@ private fun NowPlayingContent(
     modifier: Modifier = Modifier,
 ) {
     var showQueue by rememberSaveable { mutableStateOf(false) }
-    // Compact-only toggle between artwork and lyrics; the wide layout has its own Queue/Lyrics tab
-    // state (`NowPlayingWideContent`'s `showLyrics`) since it shows both panes' *chrome* at once.
+    // Compact only. The wide layout keeps its own `showLyrics` in `NowPlayingWideContent`, since it
+    // shows both panes' chrome at once.
     var showLyrics by rememberSaveable { mutableStateOf(false) }
     val track = state.track
 
@@ -218,14 +203,11 @@ private fun NowPlayingContent(
 }
 
 /**
- * @param onOpenQueue `null` hides the button — the wide layout already shows the queue inline, so a
- *   second way to reach the same list would be redundant chrome.
- * @param onToggleLyrics `null` hides the button — no lyrics for this track, or the
- *   wide layout, which shows its own Queue/Lyrics tab instead.
- * @param onStop ends the session; the screen then pops itself off the idle state, so this button
- *   never navigates. Unconditional, unlike its two neighbours: the wide layout draws the queue
- *   inline with no header of its own, so [QueueSheet]'s Stop is unreachable there and this is the
- *   only one it has.
+ * @param onOpenQueue `null` hides the button — the wide layout shows the queue inline.
+ * @param onToggleLyrics `null` hides the button — no lyrics, or the wide layout's own tab.
+ * @param onStop ends the session; the screen then pops itself off the idle state, so this never
+ *   navigates. Unconditional, unlike its neighbours: the wide layout's inline queue has no header,
+ *   so [QueueSheet]'s Stop is unreachable there and this is the only one.
  */
 @Composable
 private fun NowPlayingOverlayNav(
@@ -302,8 +284,7 @@ private fun NowPlayingCompactContent(
                 .padding(top = Dimens.MinTouchTarget + Dimens.SpaceMedium, bottom = Dimens.SpaceExtraLarge),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        // The compact lyrics affordance: a toggle (the overlay nav's button) swaps this square for
-        // `LyricsPane`, same footprint, everything below unchanged.
+        // `LyricsPane` must keep this square's exact footprint: the toggle swaps them in place.
         if (showLyrics && state.lyrics != null) {
             LyricsPane(
                 lyrics = state.lyrics,
@@ -335,10 +316,6 @@ private fun NowPlayingCompactContent(
     }
 }
 
-/**
- * ≥560dp: artwork fixed to the left, everything else — including the queue, inline rather than
- * behind [QueueSheet] — in a column to the right.
- */
 @Composable
 private fun NowPlayingWideContent(
     state: NowPlayingUiState,
@@ -347,9 +324,8 @@ private fun NowPlayingWideContent(
     onArtistClick: (JellyfinItem) -> Unit,
     onStartRadio: () -> Unit,
 ) {
-    // The right pane's own Queue/Lyrics selector — independent of the compact
-    // layout's `showLyrics`, since wide shows this pane's *chrome* (the tab row) unconditionally
-    // once lyrics exist, rather than swapping the artwork the way compact does.
+    // Deliberately independent of the compact layout's `showLyrics`: wide keeps the tab row up
+    // unconditionally once lyrics exist, rather than swapping the artwork the way compact does.
     var showLyrics by rememberSaveable { mutableStateOf(false) }
     val lyricsShown = showLyrics && state.lyricsAvailable
 
@@ -408,12 +384,7 @@ private fun NowPlayingWideContent(
     }
 }
 
-/**
- * Whatever the wide layout's right pane is showing under [NowPlayingRightPaneTabRow] — the inline
- * queue, or this track's lyrics once the Lyrics tab is selected.
- *
- * The pane is the column's one flexible child, so the caller passes its `weight` in [modifier].
- */
+/** The column's one flexible child, so the caller passes its `weight` in [modifier]. */
 @Composable
 private fun NowPlayingWidePaneBody(
     state: NowPlayingUiState,
@@ -440,10 +411,6 @@ private fun NowPlayingWidePaneBody(
     }
 }
 
-/**
- * The wide layout's right-pane header: just the "Queue" title when there are no lyrics to show,
- * or a two-way Queue/Lyrics tab once there are.
- */
 @Composable
 private fun NowPlayingRightPaneTabRow(
     lyricsAvailable: Boolean,
@@ -660,9 +627,8 @@ private fun repeatContentDescription(mode: MusicRepeatMode): Int =
     }
 
 /**
- * The one solid surface on the screen — white fill, `#101010` glyph, the app's primary-action
- * treatment (mirrors `PlayerControls.PlayPauseButton` in `:player`; `:feature:music` cannot depend
- * on `:player` to reuse it directly, so the same colours are restated here).
+ * Colours restated from `PlayerControls.PlayPauseButton`: `:feature:music` cannot depend on
+ * `:player` to reuse it. Keep the two in step.
  */
 @Composable
 private fun PlayPauseButton(
@@ -701,7 +667,7 @@ private fun NowPlayingFavoriteButton(
     )
 }
 
-/** `3:45` for anything under an hour, `1:03:45` beyond it — a track can be a whole podcast episode. */
+/** Hours are not optional: a "track" can be a whole podcast episode. */
 internal fun formatDuration(ms: Long): String {
     val totalSeconds = ms.coerceAtLeast(0L) / MILLIS_PER_SECOND
     val hours = totalSeconds / SECONDS_PER_HOUR
@@ -718,17 +684,13 @@ private const val MILLIS_PER_SECOND = 1_000L
 private const val SECONDS_PER_MINUTE = 60L
 private const val SECONDS_PER_HOUR = 3_600L
 
-/** Width at which the screen switches to the two-pane layout — the chrome's own `TopNavMinWidth`. */
+/** The chrome's own `TopNavMinWidth`. */
 private val NowPlayingWideBreakpoint = 560.dp
 
 /**
- * Whether the window gets the two-pane layout; a plain function so it is unit-testable.
- *
- * Width alone is not enough: a portrait tablet is wider than the breakpoint, and the two-pane
- * split there would put the artwork in a half-width column beside the controls — the stacked
- * layout is what a taller-than-wide window wants, whatever its width. So the panes
- * additionally require the window to actually be wider than it is tall, the same width-and-height
- * reasoning `DownloadsScreen`'s `chromePinned` documents.
+ * Width alone is not enough: a portrait tablet clears the breakpoint, and splitting there puts the
+ * artwork in a half-width column. A taller-than-wide window wants the stacked layout whatever its
+ * width. Extracted so both conditions stay unit-testable.
  */
 internal fun isWideNowPlaying(
     maxWidth: Dp,

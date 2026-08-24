@@ -20,14 +20,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/**
- * The three chips and the text field.
- *
- * The chips are one component split into three because a screen reader hears three different
- * things ("an inert chip is its own component" and "a chip that opens a sheet is a
- * button"); this is where that split is a fact rather than a comment. The field's label semantics
- * ensure every field in the app announces its label, not just its value and the words "edit box".
- */
+/** Where the three chips' split — a screen reader hears three different things — is a fact. */
 @RunWith(AndroidJUnit4::class)
 class ChipAndFieldA11yTest {
     @get:Rule
@@ -63,8 +56,7 @@ class ChipAndFieldA11yTest {
         }
 
         val node = rule.onNodeWithText(SHEET).fetchSemanticsNode()
-        // The point of the component: no `selected`, so it can never announce "not selected" at a
-        // user who has no way to change that.
+        // No `selected`: it can never announce "not selected" at a user who cannot change that.
         assertNull(node.config.getOrNull(SemanticsProperties.Selected))
         assertEquals(Role.Button, node.config[SemanticsProperties.Role])
         checks.assertClean()
@@ -97,8 +89,8 @@ class ChipAndFieldA11yTest {
 
         val field = rule.onNodeWithText(ADDRESS).fetchSemanticsNode()
         assertEquals(LABEL, field.config[SemanticsProperties.ContentDescription].single())
-        // The drawn caption is `clearAndSetSemantics`-ed: "SERVER ADDRESS" spelled out letter by
-        // letter, immediately before the field says the same words, is what this replaced.
+        // Without the caption's `clearAndSetSemantics`, "SERVER ADDRESS" is spelled out letter by
+        // letter immediately before the field says the same words.
         rule.onAllNodesWithText(LABEL.uppercase()).assertCountEquals(0)
     }
 
@@ -117,15 +109,11 @@ class ChipAndFieldA11yTest {
         }
 
         val field = rule.onNodeWithText(ADDRESS)
-        // Still a named node — which `enabled = false` would have destroyed, dropping a TalkBack
-        // user to the top of the form at the moment they pressed Connect.
+        // Still a named node, which `enabled = false` would have destroyed mid-form.
         assertEquals(LABEL, field.fetchSemanticsNode().config[SemanticsProperties.ContentDescription].single())
 
-        // Asserted as behaviour rather than as the absence of a `SetText` action: a read-only field
-        // may or may not publish one depending on the Compose version, and what this test is about
-        // is that nothing lands in the field either way. `runCatching` therefore swallows the
-        // "action not defined" a version without the action would throw — a *pass* for the same
-        // reason the assertion below is.
+        // Behaviour, not the absence of a `SetText` action: whether a read-only field publishes one
+        // is Compose-version dependent, so the throw is a pass too.
         runCatching { field.performTextInput("nope") }
         rule.waitForIdle()
         assertEquals(ADDRESS, typed)
@@ -145,11 +133,9 @@ class ChipAndFieldA11yTest {
         }
 
         val field = rule.onNodeWithText(ADDRESS).fetchSemanticsNode()
-        // `error(…)` on the field's own node, not a sentence floating below it: it is what makes a
-        // screen reader say *what* went wrong instead of only that something did.
+        // `error(…)` on the field's own node is what makes a reader say *what* went wrong.
         assertEquals(FAILURE, field.config[SemanticsProperties.Error])
-        // …and the name is still the label, so the failure is added to the field rather than
-        // replacing what the field is called.
+        // …and the name is still the label: the failure adds to the field, it does not rename it.
         assertEquals(LABEL, field.config[SemanticsProperties.ContentDescription].single())
     }
 

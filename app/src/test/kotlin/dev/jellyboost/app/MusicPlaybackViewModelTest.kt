@@ -24,7 +24,6 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
-/** Unit tests for [MusicPlaybackViewModel]. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class MusicPlaybackViewModelTest {
     private val dispatcher = StandardTestDispatcher()
@@ -112,7 +111,7 @@ class MusicPlaybackViewModelTest {
             val albumTracks = listOf(track(), tapped, track().copy(id = "t3"))
             coEvery { repository.getAlbumTracks("album-1") } returns AppResult.Success(albumTracks)
 
-            // 42 seconds, in Jellyfin's 100ns ticks — the Downloads row's resume position.
+            // 42 seconds, in Jellyfin's 100ns ticks.
             viewModel().playDownloadedAudio(tapped, startPositionTicks = 420_000_000L)
             advanceUntilIdle()
 
@@ -140,7 +139,7 @@ class MusicPlaybackViewModelTest {
             viewModel().playDownloadedAudio(tapped)
             advanceUntilIdle()
 
-            // Offline with no album rows cached, a server hiccup — either way the tap still plays.
+            // Offline with no album rows cached, or a server hiccup — either way the tap still plays.
             coVerify(exactly = 1) { controller.play(listOf(tapped), 0, false, 0L) }
         }
 

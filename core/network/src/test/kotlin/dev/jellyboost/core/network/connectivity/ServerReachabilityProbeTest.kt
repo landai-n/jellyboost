@@ -27,17 +27,6 @@ import org.junit.jupiter.api.Test
 import java.io.IOException
 import java.util.UUID
 
-/**
- * Unit tests for [ServerReachabilityProbe] — candidate rotation, the per-address time budget, and
- * the server-identity check.
- *
- * The rotation is the reason a user who walks out of the house does not get an offline app: the
- * LAN address stops answering and the remote address takes over without them noticing.
- *
- * The identity check is the reason that rotation is safe: the shared client keeps
- * its credentials when re-pointed, so an address is only accepted when the server behind it reports
- * the signed-in session's server id — never merely because *something* answered there.
- */
 @OptIn(ExperimentalCoroutinesApi::class)
 class ServerReachabilityProbeTest {
     private val probeApi = mockk<ServerProbeApi>()
@@ -54,10 +43,7 @@ class ServerReachabilityProbeTest {
         sessionStateHolder.update(loggedIn())
     }
 
-    /**
-     * Built per test so the probe's IO dispatcher shares `runTest`'s scheduler — without that,
-     * `withTimeoutOrNull` would run on real time and the budget test could not be written at all.
-     */
+    /** Built per test so the probe's IO dispatcher shares `runTest`'s scheduler, or the budget is real time. */
     private fun TestScope.probe() =
         ServerReachabilityProbe(
             probeApi = probeApi,
@@ -73,7 +59,6 @@ class ServerReachabilityProbeTest {
             sessionStateHolder.update(SessionState.LoggedOut)
 
             probe().isServerReachable() shouldBe false
-            // Not "we tried and failed" — there is simply no server to probe.
             coVerify(exactly = 0) { probeApi.reachableServerId(any()) }
         }
 
@@ -85,7 +70,6 @@ class ServerReachabilityProbeTest {
             probe().isServerReachable() shouldBe true
 
             coVerify(exactly = 0) { probeApi.reachableServerId(REMOTE) }
-            // Already pointed there: no reason to touch the client.
             verify(exactly = 0) { apiClientProvider.useAddress(any()) }
         }
 
@@ -103,9 +87,8 @@ class ServerReachabilityProbeTest {
     @Test
     fun `never switches to an address that answers as a different server`() =
         runTest {
-            // The attack this guards against: the user's home LAN address is answered, on some other
-            // network, by a host that is not their server. It must not receive the client (and its
-            // token); the probe must move on as if nothing had answered.
+            // The attack this guards: the user's home LAN address answered, on some other network, by a host
+            // that is not their server. It must not receive the client — and its token.
             coEvery { probeApi.reachableServerId(LAN) } returns IMPOSTOR_ID
             coEvery { probeApi.reachableServerId(REMOTE) } returns SERVER_ID
 
@@ -141,8 +124,7 @@ class ServerReachabilityProbeTest {
     @Test
     fun `probes each address at most once even when it is stored twice`() =
         runTest {
-            // `getAddresses` also returns the address the client already uses, so the naive
-            // "current + stored" list would probe it twice.
+            // `getAddresses` also returns the address the client already uses, so a naive list probes it twice.
             coEvery { probeApi.reachableServerId(any()) } returns null
 
             probe().isServerReachable() shouldBe false
@@ -153,7 +135,6 @@ class ServerReachabilityProbeTest {
     @Test
     fun `gives each address only the probe budget before moving on`() =
         runTest {
-            // A silent server: the socket never answers, it just hangs.
             coEvery { probeApi.reachableServerId(LAN) } coAnswers {
                 delay(HANGING_FOREVER_MS)
                 SERVER_ID
@@ -163,7 +144,7 @@ class ServerReachabilityProbeTest {
             val start = testScheduler.currentTime
             probe().isServerReachable() shouldBe true
 
-            // Exactly one budget was spent on the hanging address, not a 30-second socket timeout.
+            // Exactly one budget spent on the hanging address, not a 30-second socket timeout.
             (testScheduler.currentTime - start) shouldBe ServerReachabilityProbe.PROBE_TIMEOUT_MS
         }
 

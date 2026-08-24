@@ -24,13 +24,8 @@ import java.time.Instant
 import java.time.ZoneOffset
 
 /**
- * Unit tests for [BrowseCacheMaintenance] — the eviction pass that reclaims browse-cache rows.
- *
- * The one rule worth more than the rest: **a download is never swept.** Getting that wrong deletes
- * the row an offline detail page is rebuilt from and orphans the files it points at, which is the
- * failure the whole `ItemSource` distinction exists to make impossible. It is pinned here as the
- * *arguments the sweep passes*, because that is where it is decided — the SQL predicate itself is
- * Room's side of the contract and is exercised on a device.
+ * **A download is never swept** — deleting its row orphans the files it points at. Pinned as the
+ * *arguments the sweep passes*, since the SQL predicate is Room's side and runs on a device.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class BrowseCacheMaintenanceTest {
@@ -62,8 +57,7 @@ class BrowseCacheMaintenanceTest {
         runTest {
             maintenance().evictExpired()
 
-            // Downloads are excluded by source, not by age: a download is never evicted, however
-            // stale it looks, because its files are on disk and this row is what points at them.
+            // Excluded by source, not by age: this row is what points at the files on disk.
             source.captured shouldBe ItemSource.BROWSE_CACHE
         }
 
@@ -79,8 +73,7 @@ class BrowseCacheMaintenanceTest {
     @Test
     @DisplayName("the TTL is a month, not an accident")
     fun ttlIsThirtyDays() {
-        // Pinned so that a future change to the constant is a decision someone makes on purpose:
-        // shortening it means detail pages that stop opening offline sooner.
+        // Shortening this means detail pages that stop opening offline sooner.
         BrowseCacheMaintenance.BROWSE_CACHE_TTL.toDays() shouldBe 30
     }
 
@@ -142,8 +135,7 @@ class BrowseCacheMaintenanceTest {
     @DisplayName("a sweep bounds the table by age *and* by row count")
     fun sweepAppliesBothBounds() =
         runTest {
-            // Age alone leaves within-session growth unbounded: rows are written by browsing, which
-            // happens far faster than a month passes.
+            // Age alone leaves within-session growth unbounded: browsing outruns a month.
             coEvery { itemDao.evictBrowseCacheOlderThan(any(), any()) } returns 3
             coEvery { itemDao.trimBrowseCacheTo(any(), any()) } returns 4
 
@@ -168,8 +160,7 @@ class BrowseCacheMaintenanceTest {
             repeat(BrowseCacheMaintenance.WRITES_BETWEEN_SWEEPS - 1) { maintenance.onWriteThrough() }
             advanceUntilIdle()
 
-            // The counter is the whole of the throttle: a sweep is two indexed DELETEs, cheap but
-            // not free, and it must not ride the write path.
+            // The counter is the whole throttle: two indexed DELETEs must not ride the write path.
             coVerify(exactly = 0) { itemDao.evictBrowseCacheOlderThan(any(), any()) }
         }
 
@@ -193,9 +184,8 @@ class BrowseCacheMaintenanceTest {
         runTest {
             val maintenance = maintenance()
 
-            // No `advanceUntilIdle` between the batches, so the first sweep is still in flight when
-            // the second threshold is crossed. An eviction pass that could be started again by the
-            // writes it is running behind would multiply exactly when the table is busiest.
+            // No `advanceUntilIdle`, so the first sweep is still in flight when the second threshold
+            // is crossed — a pass restartable by the writes it trails would multiply under load.
             repeat(BrowseCacheMaintenance.WRITES_BETWEEN_SWEEPS * 2) { maintenance.onWriteThrough() }
             advanceUntilIdle()
 

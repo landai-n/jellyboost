@@ -6,10 +6,6 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
-/**
- * Unit tests for [castMembers] — who the detail screen's cast rail shows, and in what order:
- * roughly twelve people, actors first.
- */
 class CastRailTest {
     @Test
     fun `actors and guest stars come before crew`() {

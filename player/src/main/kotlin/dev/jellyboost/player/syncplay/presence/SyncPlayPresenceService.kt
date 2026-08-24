@@ -16,52 +16,34 @@ import dev.jellyboost.player.R
 import timber.log.Timber
 
 /**
- * The foreground service a SyncPlay group runs behind when nothing is playing.
+ * Does no work: being a foreground service is the whole point, since that is the only way to keep a
+ * backgrounded process's network alive. MEASURED on the OEM ROM (Android 16): a backgrounded app
+ * without one loses its network in about forty seconds, which the controller reads as a lost group.
  *
- * It does no work. Its entire purpose is to be a foreground service, because that is the only thing
- * Android offers that keeps a backgrounded process's network alive — and on the test tablet
- * (the OEM ROM, Android 16) a backgrounded app with no foreground service loses its network within
- * about forty seconds, which the controller correctly reads as a lost connection and which costs the
- * user their group. The case it exists for is precisely this one: this app in a group on one half
- * of the tablet, jellyfin-web driving it on the other.
+ * Never runs alongside [PlaybackService][dev.jellyboost.player.session.PlaybackService], which does
+ * the same job while something is playing — see [syncPlayPresenceDemanded].
  *
- * [PlaybackService][dev.jellyboost.player.session.PlaybackService] already does the same job
- * while something is playing, so the two never run together — see [syncPlayPresenceDemanded].
+ * `specialUse` because the alternatives do not fit: `mediaPlayback` (nothing is playing),
+ * `connectedDevice` (demands permissions this app should not hold), `dataSync` (deprecated in
+ * Android 15, capped at six hours a day on targetSdk 35+). The network exemption is the same for
+ * any type. The manifest carries the `PROPERTY_SPECIAL_USE_FGS_SUBTYPE` API 34+ requires.
  *
- * ### `specialUse`
- * Holding a real-time group-membership session is not `mediaPlayback` (nothing is playing),
- * `connectedDevice` (the peer is a server over the ordinary network, and the type demands
- * permissions this app has no business holding) or `dataSync` (deprecated in Android 15 and capped
- * at six hours a day on targetSdk 35+). `specialUse` is the honest answer, and the manifest carries
- * the `PROPERTY_SPECIAL_USE_FGS_SUBTYPE` declaration that API 34+ asks for. The network exemption is
- * identical whichever type is declared — it comes from being in the foreground at all.
- *
- * `START_NOT_STICKY`, and a `null` intent stops the service outright: after a process death the
- * `SyncPlayController` singleton and its membership are gone, so a resurrected notification would
- * promise a group that no longer exists.
+ * `START_NOT_STICKY`, and a `null` intent stops the service: after a process death the membership is
+ * gone, so a resurrected notification would promise a group that no longer exists.
  */
 internal class SyncPlayPresenceService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     /**
-     * Promotes in `onCreate`, not in `onStartCommand` — and this is not a style choice.
-     *
-     * `startForegroundService` opens a deadline that is only closed by `startForeground`, and a
-     * `stopService` arriving *first* does not close it: the platform kills the process with
-     * `ForegroundServiceDidNotStartInTimeException`. That is not hypothetical — it happens on the
-     * device when a foreground re-check finds its group dissolved a quarter of a second after
-     * asking for it and the demand goes up and straight back down.
-     * `onCreate` always runs, and always before `onDestroy`, so promoting here means the deadline is
-     * met however quickly the demand is withdrawn.
+     * Promotion must stay in `onCreate`, never `onStartCommand`: `startForegroundService` opens a
+     * deadline that only `startForeground` closes — an earlier `stopService` does not, and the
+     * platform kills the process with `ForegroundServiceDidNotStartInTimeException`.
      */
     override fun onCreate() {
         super.onCreate()
         ensureChannel()
-        // The promotion itself can be refused: API 31+ throws
-        // `ForegroundServiceStartNotAllowedException` when the process slipped to the background
-        // between `startForegroundService` and here, and API 34+ for a type/permission mismatch.
-        // Uncaught, either one kills the whole process for a notification — the
-        // group costs at most itself, so the service stands down instead.
+        // The promotion can be refused: API 31+ throws when the process slipped to the background
+        // in between, API 34+ on a type/permission mismatch. Uncaught, either kills the process.
         runCatching {
             ServiceCompat.startForeground(this, NOTIFICATION_ID, buildNotification(), foregroundServiceType())
         }.onFailure { error ->
@@ -83,12 +65,8 @@ internal class SyncPlayPresenceService : Service() {
     }
 
     /**
-     * `FOREGROUND_SERVICE_TYPE_SPECIAL_USE` exists only from API 34.
-     *
-     * Below it the type is left unset rather than guessed at: pre-34 platforms do not parse
-     * `specialUse` out of the manifest, and a `startForeground` naming a type the manifest did not
-     * declare is refused. An untyped promotion is exactly as good for the one thing this service
-     * needs, which is to be in the foreground.
+     * Unset below API 34: pre-34 platforms do not parse `specialUse` from the manifest, and
+     * `startForeground` naming an undeclared type is refused.
      */
     private fun foregroundServiceType(): Int =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
@@ -97,7 +75,6 @@ internal class SyncPlayPresenceService : Service() {
             0
         }
 
-    /** Creates the channel; safe to call repeatedly, and minSdk is 26 so it always applies. */
     private fun ensureChannel() {
         val channel =
             NotificationChannel(
@@ -112,13 +89,7 @@ internal class SyncPlayPresenceService : Service() {
         NotificationManagerCompat.from(this).createNotificationChannel(channel)
     }
 
-    /**
-     * "In a SyncPlay group — waiting for the group", with the one action that matters.
-     *
-     * Leaving is offered on the notification because this is the state where the app is *not* on
-     * screen: a user who no longer wants to be in the group should not have to go and find it. The
-     * body tapped opens the app, which is where the group's own screen is.
-     */
+    /** Leaving is offered here because this is the state where the app is *not* on screen. */
     private fun buildNotification(): Notification =
         NotificationCompat
             .Builder(this, CHANNEL_ID)

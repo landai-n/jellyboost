@@ -21,16 +21,12 @@ import javax.inject.Singleton
 import org.jellyfin.sdk.model.api.PersonKind as SdkPersonKind
 
 /**
- * Turns the SDK's `BaseItemDto` into the domain models the rest of the app uses.
+ * The boundary that keeps a DTO from crossing downstream of the repositories. Image URLs follow
+ * jellyfin-web's artwork fallback chain — own image → series image → parent image — so an episode
+ * with no artwork of its own does not degrade into a placeholder.
  *
- * This is the boundary that keeps a DTO from ever crossing downstream of the repositories. Image
- * URLs are resolved here, following the same artwork fallback chain jellyfin-web uses (own image →
- * series image → parent image), so rows do not degrade into placeholders for episodes that carry
- * no artwork of their own.
- *
- * @param widths the pixel widths artwork is requested at, resolved from the device's display
- *   density. Defaulted so unit tests can build a mapper without a display; Hilt always supplies the
- *   real one (`DataModule.provideArtworkRequestWidths`).
+ * @param widths defaulted so unit tests can build a mapper without a display; Hilt supplies the real
+ *   one.
  */
 @Singleton
 internal class ItemMapper
@@ -39,7 +35,6 @@ internal class ItemMapper
         private val imageUrls: ImageUrlFactory,
         private val widths: ArtworkRequestWidths = ArtworkRequestWidths.Default,
     ) {
-        /** Maps one item. */
         fun toDomain(dto: BaseItemDto): JellyfinItem =
             JellyfinItem(
                 id = dto.id.toString(),
@@ -63,8 +58,8 @@ internal class ItemMapper
                 thumbImageUrl = dto.thumbImageUrl(),
                 logoImageUrl = dto.logoImageUrl(),
                 primaryImageAspectRatio = dto.primaryImageAspectRatio,
-                // Detail-only fields. A lean list request leaves them null/empty, which maps
-                // straight onto the domain defaults — no branching needed here.
+                // Detail-only fields: a lean list request leaves them null/empty, which is already
+                // the domain default.
                 taglines = dto.taglines.orEmpty(),
                 childCount = dto.childCount,
                 premiereDate = dto.premiereDate?.toSdkInstant(),
@@ -72,34 +67,26 @@ internal class ItemMapper
                 people = dto.people.orEmpty().map { it.toDomain() },
                 sizeBytes = dto.mediaSources?.firstOrNull()?.size,
                 userData = dto.userData.toDomain(),
-                // Music fields. A non-music item simply carries none of these on its DTO,
-                // which maps straight onto the domain defaults.
                 album = dto.album,
                 albumId = dto.albumId?.toString(),
                 albumArtist = dto.albumArtists?.firstOrNull()?.name,
                 artists = dto.artists.orEmpty(),
-                // A track's own `artistItems` first; an album has none of its own, so it falls
-                // back to its `albumArtists`.
+                // An album carries no `artistItems` of its own, hence the `albumArtists` fallback.
                 artistRefs = (dto.artistItems?.takeIf { it.isNotEmpty() } ?: dto.albumArtists).toArtistRefs(),
-                // The item's own container first; a `PlaybackInfo`-shaped response leaves it null
-                // and describes the container on the media source instead.
+                // A `PlaybackInfo`-shaped response leaves this null and names the container on the
+                // media source instead.
                 container = dto.container ?: dto.mediaSources?.firstOrNull()?.container,
             )
 
-        /** Maps a list of items, preserving server order (the rows are already sorted server-side). */
+        /** Preserves server order — the rows are already sorted server-side. */
         fun toDomain(dtos: List<BaseItemDto>): List<JellyfinItem> = dtos.map(::toDomain)
 
         /**
-         * Maps a `getUserViews` entry into a [LibraryView].
+         * `null` for libraries outside [CollectionKind.SUPPORTED], so callers can `mapNotNull`.
          *
-         * Returns `null` for libraries outside app scope (live TV, photos … — music is part of
-         * [CollectionKind.SUPPORTED]) so callers can simply `mapNotNull`.
-         *
-         * [LibraryView.itemCount] is always left unset here: the only count `getUserViews` carries
-         * is `ChildCount`, which counts a collection folder's *direct children* (its media folders),
-         * not its titles — the dev server reports 3 for a 177-movie library and 6 for a 20-series
-         * one. The real number comes from a recursive item query the repository issues per library
-         * (`OnlineJellyfinRepository.getUserViews`).
+         * [LibraryView.itemCount] is left unset: `getUserViews` only carries `ChildCount`, which
+         * counts a collection folder's direct media folders, not its titles. The real number comes
+         * from `OnlineJellyfinRepository.getUserViews`' recursive query.
          */
         fun toLibraryView(dto: BaseItemDto): LibraryView? {
             val kind = dto.collectionType.toCollectionKind()
@@ -113,15 +100,11 @@ internal class ItemMapper
             )
         }
 
-        /** Maps `getUserViews` results, dropping every library kind v1 does not support. */
         fun toLibraryViews(dtos: List<BaseItemDto>): List<LibraryView> = dtos.mapNotNull(::toLibraryView)
 
         // ---- people ---------------------------------------------------------------------------
 
-        /**
-         * Maps one credit. Kept here rather than as a file-level function because a person's
-         * headshot needs the same [ImageUrlFactory] the artwork chain uses.
-         */
+        /** A member, not a file-level function: a headshot needs the same [ImageUrlFactory]. */
         private fun BaseItemPerson.toDomain(): Person =
             Person(
                 id = id.toString(),
@@ -193,7 +176,6 @@ internal fun BaseItemKind.toItemType(): ItemType =
         else -> ItemType.UNKNOWN
     }
 
-/** Maps `NameGuidPair`s (`artistItems`/`albumArtists`) onto navigable [ArtistRef]s. */
 private fun List<NameGuidPair>?.toArtistRefs(): List<ArtistRef> =
     this.orEmpty().mapNotNull { pair ->
         val name = pair.name?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
@@ -207,7 +189,6 @@ private fun SdkPersonKind?.toPersonKind(): PersonKind =
         SdkPersonKind.WRITER -> PersonKind.WRITER
         SdkPersonKind.PRODUCER -> PersonKind.PRODUCER
         SdkPersonKind.GUEST_STAR -> PersonKind.GUEST_STAR
-        // Composer, lyricist, penciller … — real credit kinds, none of them in v1's scope.
         else -> PersonKind.OTHER
     }
 

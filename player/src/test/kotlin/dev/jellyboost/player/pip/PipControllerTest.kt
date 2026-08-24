@@ -7,8 +7,6 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for [PipController] and the aspect-ratio clamp it carries.
- *
  * The clamp is not cosmetic: `PictureInPictureParams.setAspectRatio` throws outside 1:2.39 … 2.39:1,
  * and it is called as the user presses Home — so an unclamped 2.76:1 film would crash the app at
  * exactly the moment it was trying to be helpful.

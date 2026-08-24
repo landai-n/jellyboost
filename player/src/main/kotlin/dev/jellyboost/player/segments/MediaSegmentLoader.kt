@@ -14,14 +14,9 @@ import javax.inject.Singleton
 import kotlin.coroutines.cancellation.CancellationException
 
 /**
- * Fetches the intro/outro ranges for a playing item.
- *
- * **Server-only, and silent about it.** A local source is never asked — the feature is server-only
- * and the download pipeline stores no segments, so offline it is not degraded, it is absent. So is
- * the everyday deployment case: the
- * Media Segments API arrived in Jellyfin 10.10 and only answers with anything when a detection
- * plugin is installed, so a 404 or an empty answer has to leave the UI exactly as it was rather
- * than surface an error the user cannot act on. Every failure therefore ends at "no segments".
+ * The Media Segments API arrived in Jellyfin 10.10 and only answers when a detection plugin is
+ * installed, so a 404 or an empty answer is the everyday case: every failure ends at "no segments",
+ * never at an error the user cannot act on.
  */
 @Singleton
 internal class MediaSegmentLoader
@@ -29,7 +24,6 @@ internal class MediaSegmentLoader
     constructor(
         private val api: PlayerApi,
     ) {
-        /** @return the item's intro and outro ranges, or an empty list when there are none to have. */
         @Suppress("TooGenericExceptionCaught")
         suspend fun load(source: PlaybackMediaSource): List<MediaSegment> =
             when (source) {
@@ -51,17 +45,11 @@ internal class MediaSegmentLoader
             }
 
         private companion object {
-            /** Only what the app can act on; asking for more would be data with no behaviour. */
             val REQUESTED_TYPES = listOf(MediaSegmentType.INTRO, MediaSegmentType.OUTRO)
         }
     }
 
-/**
- * The server's segment in the player's own vocabulary, or `null` when it is not one we act on.
- *
- * A zero- or negative-length segment is dropped rather than carried: it can never be entered, so it
- * would be a skip button that appears for a single frame or not at all.
- */
+/** A zero- or negative-length segment is dropped: it can never be entered, only flicker a button. */
 private fun MediaSegmentDto.toSegment(): MediaSegment? {
     val kind =
         when (type) {

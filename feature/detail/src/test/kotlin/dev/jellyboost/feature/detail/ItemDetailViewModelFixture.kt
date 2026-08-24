@@ -24,22 +24,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.RegisterExtension
 
 /**
- * The collaborators an [ItemDetailViewModel] needs, and the builder that assembles one.
- *
- * A base class rather than a helper object because every test in the package reaches the same six
- * mocks by name and overrides one or two of them — the same shape as `PlayerViewModelFixture`
- * (`player/src/test/.../ui/PlayerViewModelFixture.kt`), which is the in-repo model this one
- * mirrors. The four subclasses ([ItemDetailViewModelTest], [ItemDetailSelectionTest],
- * [ItemDetailDownloadTest], [ItemDetailGroupActionsTest]) exist to stay under detekt's
- * `LargeClass` ceiling; without this fixture they would each rebuild the same doubles, free to
- * drift apart.
- *
- * The base [setUp] stubs only what every one of the four needs. `getEpisodes` and
- * `getSeriesEpisodes` are deliberately **not** here: [ItemDetailSelectionTest] omits the former
- * entirely (its own `givenSeasonWithEpisodes` stubs the exact series/item pair instead), and only
- * [ItemDetailGroupActionsTest] needs the latter. Each subclass that wants either adds its own
- * `@BeforeEach`, which JUnit5 runs after this one — homogenising those stubs across all four would
- * hide the exact drift this fixture exists to stop.
+ * [setUp] stubs only what all four subclasses need. `getEpisodes` and `getSeriesEpisodes` are
+ * deliberately **not** here — each subclass that wants either adds its own `@BeforeEach`, which
+ * JUnit5 runs after this one.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 internal abstract class ItemDetailViewModelFixture {
@@ -49,10 +36,8 @@ internal abstract class ItemDetailViewModelFixture {
     protected val changes =
         MutableSharedFlow<UserDataChange>(extraBufferCapacity = 8, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 
-    /** The badge source; emits an empty map unless a test says otherwise. */
     protected val downloadStates = MutableStateFlow<Map<String, DownloadState>>(emptyMap())
 
-    /** The on-device footprint of [ITEM_ID]; `null` unless a test says otherwise. */
     protected val bytesOnDisk = MutableStateFlow<Long?>(null)
     protected val downloads =
         mockk<DownloadRepository> {
@@ -60,7 +45,6 @@ internal abstract class ItemDetailViewModelFixture {
             every { observeBytesOnDisk(any()) } returns bytesOnDisk
         }
 
-    /** The connectivity-change signal; fires only when a test says the server came back. */
     protected val connectivityChanges = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
     protected val connectivityRefresher =
         mockk<ConnectivityRefresher> {
@@ -68,11 +52,8 @@ internal abstract class ItemDetailViewModelFixture {
         }
 
     /**
-     * The group this device is in; `null` until a test joins one.
-     *
-     * Only [ItemDetailGroupActionsTest] ever writes to this. Everywhere else it stays `null` for
-     * the life of the test, which is the point: SyncPlay's arrival must change nothing about an
-     * ordinary detail page. The group actions themselves live in [ItemDetailGroupActionsTest].
+     * Only [ItemDetailGroupActionsTest] ever writes to this; everywhere else it stays `null`, which
+     * is the point — SyncPlay's arrival must change nothing about an ordinary detail page.
      */
     protected val activeGroup = MutableStateFlow<SyncPlayGroupHandle?>(null)
     protected val syncPlaySession =
@@ -115,12 +96,6 @@ internal abstract class ItemDetailViewModelFixture {
             savedStateHandle = SavedStateHandle(mapOf(ItemDetailViewModel.ARG_ITEM_ID to ITEM_ID)),
         )
 
-    /**
-     * The season page as the user reaches it: two episodes, loaded from its series.
-     *
-     * Shared by [ItemDetailSelectionTest] and [ItemDetailDownloadTest], byte-identical in both
-     * before this fixture existed.
-     */
     protected fun givenSeasonWithEpisodes() {
         coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(season)
         coEvery { repository.getEpisodes(SERIES_ID, ITEM_ID) } returns

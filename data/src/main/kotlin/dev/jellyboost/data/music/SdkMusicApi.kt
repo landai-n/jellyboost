@@ -15,14 +15,9 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * [MusicApi] backed by jellyfin-sdk-kotlin.
- *
- * `userId` is left unset on the Instant Mix request, the same convention
- * `OnlineJellyfinRepository` uses everywhere: the SDK's [ApiClient] carries the access token and an
- * unset `userId` makes the server resolve the authenticated user itself.
- *
- * Every call hops onto [ioDispatcher] — the SDK's OkHttp backend reads response bodies on the
- * calling thread, and both of these can be reached from `viewModelScope` (main).
+ * `userId` is left unset so the server resolves the authenticated user from the token, the
+ * convention `OnlineJellyfinRepository` uses everywhere. Every call hops onto [ioDispatcher]: the
+ * SDK's OkHttp backend reads response bodies on the *calling* thread.
  */
 @Singleton
 internal class SdkMusicApi

@@ -11,10 +11,6 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 
-/**
- * Unit tests for [SyncPlayBadgeViewModel] — a pass-through over the singleton [SyncPlaySession],
- * so the one thing to pin is that the badge follows the session's group, both ways.
- */
 class SyncPlayBadgeViewModelTest {
     private val groupFlow = MutableStateFlow<SyncPlayGroupHandle?>(null)
     private val session = mockk<SyncPlaySession> { every { activeGroup } returns groupFlow }

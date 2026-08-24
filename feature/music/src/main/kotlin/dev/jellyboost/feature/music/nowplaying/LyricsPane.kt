@@ -24,16 +24,11 @@ import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 
 /**
- * The current track's lyrics — synced (highlighted, auto-scrolling) or static.
+ * Always renders a list, never an empty state: the caller decides whether to show this at all
+ * (`NowPlayingUiState.lyricsAvailable`).
  *
- * The caller decides *whether* to show this at all ([dev.jellyboost.feature.music.nowplaying
- * .NowPlayingUiState.lyricsAvailable]) — this composable always renders a list, never the "hide the
- * affordance" empty state, so it stays a pure function of [lyrics] that a preview can exercise
- * directly.
- *
- * @param activeLineIndex the line [dev.jellyboost.feature.music.nowplaying.NowPlayingUiState
- *   .activeLyricLineIndex] derived from the position ticker — `null` for unsynced lyrics (nothing
- *   highlighted, no auto-scroll) or before playback reaches the first timed line.
+ * @param activeLineIndex `null` for unsynced lyrics — nothing highlighted, no auto-scroll — or
+ *   before playback reaches the first timed line.
  */
 @Composable
 fun LyricsPane(

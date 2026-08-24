@@ -15,19 +15,12 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Which rows the home screen shows, and in which order, as the user configured it in jellyfin-web
+ * Which rows the home screen shows, in the order the user configured in jellyfin-web
  * (Settings → Home).
  *
- * Deliberately **not** part of `JellyfinRepository`. That interface is the browse contract, split
- * online/offline and delegated per call; this is one small piece of configuration with a different
- * shape — it has an offline answer of its own (the last layout seen, not a Room query), it must
- * never fail, and no other screen wants it. Keeping it separate leaves both implementations of the
- * browse repository untouched.
- *
- * Failure policy: this class never throws and never returns nothing useful. A server that cannot
- * be reached, a record that will not parse, a brand-new install — every one of them resolves to a
- * layout, falling back last-persisted → jellyfin-web's defaults. The home screen's shape is not
- * worth an error state.
+ * Never throws and never returns nothing useful: unreachable server, unparseable record or fresh
+ * install all resolve to a layout, falling back last-persisted → jellyfin-web's defaults. The home
+ * screen's shape is not worth an error state.
  */
 @Singleton
 class HomeLayoutRepository
@@ -38,12 +31,7 @@ class HomeLayoutRepository
         private val connectivity: ConnectivityRefresher,
         @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     ) {
-        /**
-         * The rows to render, in order, with [HomeSectionType.NONE] dropped and duplicates removed.
-         *
-         * Online this is a fresh read, so changing the layout in jellyfin-web and pulling to
-         * refresh shows the new one; the result is persisted for the next offline load.
-         */
+        /** [HomeSectionType.NONE] dropped, duplicates removed; the result is persisted for offline. */
         suspend fun getHomeSections(): List<HomeSectionType> =
             withContext(ioDispatcher) {
                 if (!connectivity.isOnline) return@withContext persistedOrDefaults()
@@ -58,13 +46,10 @@ class HomeLayoutRepository
             }
 
         /**
-         * Reads the `usersettings` DisplayPreferences record jellyfin-web writes.
-         *
-         * Both magic strings are load-bearing. Preferences are partitioned by
-         * `(userId, itemId, client)`: any id other than `usersettings` is MD5-hashed into an
-         * unrelated record, and any client other than the legacy `emby` reads a private,
-         * always-empty one. Passing this app's own client name would therefore look exactly like
-         * "the user has configured nothing" — forever.
+         * Both magic strings are load-bearing: preferences partition by `(userId, itemId, client)`,
+         * so any id but `usersettings` is MD5-hashed into an unrelated record and any client but the
+         * legacy `emby` reads a private, always-empty one — indistinguishable from "nothing
+         * configured", forever.
          */
         private suspend fun fetchCustomPrefs(): AppResult<Map<String, String?>> =
             runCatchingApi {
@@ -78,10 +63,8 @@ class HomeLayoutRepository
         private fun persistedOrDefaults(): List<HomeSectionType> = store.read() ?: DEFAULT_HOME_SECTIONS
 
         private companion object {
-            /** The DisplayPreferences record jellyfin-web keeps the home layout in. */
             const val USER_SETTINGS_RECORD = "usersettings"
 
-            /** The partition key every client sharing the web-configured layout passes. */
             const val LEGACY_WEB_CLIENT = "emby"
         }
     }

@@ -12,18 +12,12 @@ import org.junit.jupiter.api.Test
 import java.io.File
 
 /**
- * Guards the one property that lets every version bump stay a Room `@AutoMigration`: **each schema
- * is purely additive over the last**.
+ * Guards the one property that lets every version bump stay a Room `@AutoMigration`: **each schema is purely
+ * additive over the last**. Room can only derive the `ALTER TABLE` when nothing was dropped, renamed or
+ * retyped and every new `NOT NULL` column brings a SQL default; get it wrong and the failure is a crash on
+ * upgrade, for the population a developer's own device does not represent.
  *
- * `@AutoMigration` is not free of risk, it is free of *hand-written SQL* — Room still has to be able
- * to derive the `ALTER TABLE` itself, and it can only do that when nothing was dropped, renamed or
- * retyped, and when every new `NOT NULL` column brings a SQL default. Get that wrong and the failure
- * is a crash on upgrade for users who have an install, which is precisely the population a
- * developer's own device does not represent.
- *
- * So this reads the **exported schemas** — the artefacts Room actually migrates against, written to
- * `core/database/schemas/` on every build — rather than the entity classes. Comparing v5 to v6 the
- * way Room does is what makes this a migration test and not a restatement of `DownloadEntity`.
+ * Reads the **exported schemas** — what Room actually migrates against — not the entity classes.
  */
 class SchemaMigrationTest {
     @Test
@@ -39,7 +33,6 @@ class SchemaMigrationTest {
         val before = columns(5, "downloads")
         val after = columns(6, "downloads")
 
-        // Exactly the two columns the live size projection needs.
         (after.keys - before.keys) shouldContainExactly setOf("projectedBytes", "sizeIsExact")
     }
 
@@ -48,8 +41,8 @@ class SchemaMigrationTest {
         val before = columns(5, "downloads")
         val after = columns(6, "downloads")
 
-        // A dropped or retyped column is what `@AutoMigration` cannot derive, and what would leave
-        // an existing install unable to open its own queue.
+        // A dropped or retyped column is what `@AutoMigration` cannot derive, and what would leave an
+        // existing install unable to open its own queue.
         (before.keys - after.keys).shouldBeEmpty()
         before.forEach { (name, column) -> after.getValue(name) shouldBe column }
     }
@@ -60,8 +53,8 @@ class SchemaMigrationTest {
 
         column.affinity shouldBe "INTEGER"
         column.notNull shouldBe false
-        // Nullable needs no default: every row a pre-v6 build wrote reads back as NULL, which is
-        // exactly "the ceiling is still the best answer" — what that row always meant.
+        // Nullable needs no default: a pre-v6 row reads back as NULL, which is "the ceiling is still the
+        // best answer" — what that row always meant.
         column.defaultValue shouldBe null
     }
 
@@ -85,8 +78,6 @@ class SchemaMigrationTest {
         val before = columns(7, "downloads")
         val after = columns(8, "downloads")
 
-        // One column: which audio track a transcode asked the server to bake in
-        // (docs/features/download-quality.md, docs/features/offline-playback.md).
         (after.keys - before.keys) shouldContainExactly setOf("bakedAudioStreamIndex")
     }
 
@@ -105,9 +96,8 @@ class SchemaMigrationTest {
 
         column.affinity shouldBe "INTEGER"
         column.notNull shouldBe false
-        // Nullable needs no default, and `NULL` is the honest reading of every row written before
-        // v8: that download named no audioStreamIndex, so nothing recorded which track it got.
-        // Offline playback keeps its old `defaultAudioStreamIndex` assumption for exactly those.
+        // `NULL` is the honest reading of every row written before v8: nothing recorded which track it got,
+        // so offline playback keeps its old `defaultAudioStreamIndex` assumption for exactly those.
         column.defaultValue shouldBe null
     }
 
@@ -118,9 +108,8 @@ class SchemaMigrationTest {
 
     @Test
     fun `v8 to v9 changes no column at all, on any table`() {
-        // v9 is an *index-only* bump. Room can derive index work itself, so this stays an
-        // `@AutoMigration` — but only because nothing about the columns moved, which is the
-        // property that would otherwise break the upgrade.
+        // v9 is an *index-only* bump, which Room can still derive — but only because nothing about the
+        // columns moved.
         tables(9) shouldContainExactly tables(8)
         tables(9).forEach { table -> columns(9, table) shouldBe columns(8, table) }
     }
@@ -130,15 +119,14 @@ class SchemaMigrationTest {
         val before = indices(8, "items")
         val after = indices(9, "items")
 
-        // Two composites in, because every list query in `ItemDao` leads with `source`.
         (after - before.keys) shouldBe
             mapOf(
                 "index_items_source_type" to listOf("source", "type"),
                 "index_items_source_cachedAt" to listOf("source", "cachedAt"),
             )
-        // Three single-column indices out: `sortName` was BINARY where both consumers sort
-        // `COLLATE NOCASE` (so it was never chosen at all), and `source`/`cachedAt` are subsumed by
-        // the composites — verified with EXPLAIN QUERY PLAN, which is byte-identical without them.
+        // Three single-column indices out: `sortName` was BINARY where both consumers sort `COLLATE NOCASE`
+        // (never chosen at all), and `source`/`cachedAt` are subsumed by the composites — EXPLAIN QUERY PLAN
+        // is byte-identical without them.
         (before.keys - after.keys) shouldContainExactly
             setOf("index_items_source", "index_items_cachedAt", "index_items_sortName")
     }
@@ -153,9 +141,6 @@ class SchemaMigrationTest {
         (before.keys - after.keys).shouldBeEmpty()
     }
 
-    // ---- reading the exported schemas -------------------------------------------------------------
-
-    /** One column as Room recorded it — the fields an auto-migration is derived from. */
     private data class Column(
         val affinity: String,
         val notNull: Boolean,
@@ -195,7 +180,7 @@ class SchemaMigrationTest {
                     )
             }
 
-    /** One table's indices as Room exported them: name → the columns, in index order. */
+    /** name → the columns, in index order. */
     private fun indices(
         version: Int,
         table: String,
@@ -214,7 +199,7 @@ class SchemaMigrationTest {
             }
 
     private companion object {
-        /** Where the Room convention plugin exports them (`AndroidRoomConventionPlugin`). */
+        /** Where the Room convention plugin exports them. */
         const val SCHEMA_DIR = "schemas/dev.jellyboost.core.database.JellyfinDatabase"
     }
 }

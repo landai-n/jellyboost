@@ -38,15 +38,11 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * [SyncPlayApi] backed by jellyfin-sdk-kotlin's `syncPlayApi` and `timeSyncApi`.
+ * Every call hops onto the IO dispatcher: the SDK's operations are `suspend` but block on OkHttp
+ * underneath, and these are issued from the controller's scope and from player callbacks.
  *
- * Like `SdkPlayerApi`, every call hops onto the IO dispatcher — the SDK's operations are `suspend`
- * but block on OkHttp underneath, and these are issued from the controller's own scope and from
- * player callbacks.
- *
- * The [clock] is the injected one (`UserDataModule.provideClock`) rather than
- * `System.currentTimeMillis`, so the time-sync exchange in [sampleServerTime] can be driven from a
- * fixed clock in tests.
+ * [clock] must stay the injected one — [sampleServerTime]'s exchange is driven from a fixed clock
+ * in tests.
  */
 @Singleton
 @Suppress("TooManyFunctions") // Mirrors the SyncPlayApi seam; see the interface.

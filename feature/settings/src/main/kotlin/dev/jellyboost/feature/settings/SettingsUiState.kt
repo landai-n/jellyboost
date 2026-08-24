@@ -6,14 +6,8 @@ import dev.jellyboost.data.downloads.model.StorageLocations
 import dev.jellyboost.data.downloads.model.StorageUsage
 
 /**
- * Everything the Settings screen draws.
- *
- * A flat projection of six DataStore keys, the download pipeline's storage figures and the live
- * session — the screen owns no state of its own, so a preference changed from anywhere else (the
- * home overflow's offline toggle, the Downloads tab's Wi-Fi switch) is already correct here.
- *
- * The defaults match the preference store's own defaults, so the first frame drawn before DataStore
- * has answered shows what the user is about to see rather than a flicker of the wrong switch.
+ * The screen owns no state of its own, so a preference changed elsewhere is already correct here.
+ * The defaults match the preference store's, so the first frame is not a flicker of wrong switches.
  */
 data class SettingsUiState(
     val introSkipMode: SegmentSkipMode = SegmentSkipMode.SHOW_BUTTON,
@@ -24,26 +18,18 @@ data class SettingsUiState(
     val downloadQuality: DownloadQuality = DownloadQuality.ORIGINAL,
     val forceOffline: Boolean = false,
     val storage: StorageUsage = StorageUsage(),
-    /** The volumes downloads can live on; empty until the pipeline has answered. */
     val storageLocations: StorageLocations = StorageLocations(),
-    /** Who is signed in; `null` when the session is absent or still restoring. */
     val account: AccountInfo? = null,
     /**
-     * Whether a sign-out is in flight.
-     *
-     * The one piece of transient state on the screen, and it only ever goes up: telling an
-     * unreachable server the session ended takes seconds, and without it the sign-out button looks
-     * like it did nothing. It is never lowered because the sign-out completing navigates away.
+     * Only ever goes up: telling an unreachable server the session ended takes seconds, and the
+     * sign-out completing navigates away, so there is nothing to lower it for.
      */
     val signingOut: Boolean = false,
 )
 
 /**
- * The signed-in user, as far as the settings screen is concerned.
- *
- * Only the two fields `SessionState.LoggedIn` can offer that mean anything to a user. The server
- * *address* is deliberately absent: it is not on the session state, and exposing it would mean
- * widening `:core:network`'s API for a line of text (see docs/features/settings.md).
+ * The server *address* is deliberately absent: it is not on the session state, and exposing it
+ * would mean widening `:core:network`'s API for a line of text.
  */
 data class AccountInfo(
     val userName: String,

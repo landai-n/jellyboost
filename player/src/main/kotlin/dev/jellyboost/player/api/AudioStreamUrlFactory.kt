@@ -3,50 +3,22 @@ package dev.jellyboost.player.api
 import java.util.UUID
 
 /**
- * Builds the one URL music streaming needs: `GET /Audio/{itemId}/universal`.
- *
- * Separate from [StreamUrlFactory] rather than a member on it, and that is deliberate twice over.
- * [StreamUrlFactory] is `videosApi`-only by construction — every method on it names a `/Videos`
- * endpoint — and the universal audio endpoint is not a video URL under another name: it decides
- * direct-play-versus-transcode *server side*, from a container list the client sends, which is the
- * whole property the music queue is built on. Keeping the two interfaces apart also keeps the video
- * path's three existing test doubles from having to grow a member none of them can meaningfully
- * answer.
- *
- * ### Why one URL is enough for a whole album
- * The video path asks the server how to play each item (`PlaybackInfo`) before it can build a URL.
- * The universal endpoint inverts that: the client states what it can play and the server picks,
- * so a fifty-track queue is fifty locally-built strings and no round trips — which is what lets
- * `setMediaItems` take the queue in one call.
+ * `GET /Audio/{itemId}/universal` decides direct-play-versus-transcode *server side* from the container list
+ * the client sends, so a whole queue is locally-built strings with no `PlaybackInfo` round trip each.
  */
 interface AudioStreamUrlFactory {
-    /** The universal audio URL for [request]. */
     fun audioUniversalUrl(request: AudioStreamRequest): String
 }
 
 /**
- * What the client tells the server about one track it wants to hear.
- *
- * A value object rather than seven parameters, because the terms travel together and are decided
- * in one place ([dev.jellyboost.player.music.MusicStreamResolver]'s companion): a call site that
- * could get their *order* wrong is a call site that could silently ask for a 384-bit stream in the
- * `aac` container.
- *
- * @param containers what this device can play without help. The server direct-plays a track whose
- *   container is in the list and transcodes anything else — which is also what makes the reported
- *   play method inferable client-side.
- * @param playSessionId minted by the caller, one per queue entry. The endpoint has **no**
- *   `playSessionId` parameter in the SDK's builder; jellyfin-web appends it as a plain extra query
- *   parameter and the server binds it anyway, so the implementation does the same. It is what ties
- *   this stream to the start/progress/stop reports and to `stopEncodingProcess`.
- * @param audioCodec what a transcode should produce.
- * @param transcodingContainer the container a transcode is delivered in; paired with HLS by the
- *   implementation, because the alternative — the device profile's mp3-over-HTTP audio transcoding
- *   profile — cannot be seeked and lands in the video resolver's HLS-only gate.
- * @param maxStreamingBitrate the **direct-play** ceiling: a source above it is transcoded however
- *   playable its container is. Not the transcode's quality — that is [audioBitRate], and confusing
- *   the two is what once sent every flac through the encoder.
- * @param audioBitRate what a transcode is encoded at.
+ * @param containers what the server direct-plays; anything else is transcoded, which is what makes the play
+ *   method inferable client-side.
+ * @param playSessionId one per queue entry. The SDK builder has **no** `playSessionId` parameter; jellyfin-web
+ *   appends it as a plain extra query parameter and the server binds it anyway.
+ * @param transcodingContainer paired with HLS by the implementation: the mp3-over-HTTP alternative cannot be
+ *   seeked and lands in the video resolver's HLS-only gate.
+ * @param maxStreamingBitrate the **direct-play** ceiling, not the transcode's quality ([audioBitRate]);
+ *   confusing the two once sent every flac through the encoder.
  */
 data class AudioStreamRequest(
     val itemId: UUID,

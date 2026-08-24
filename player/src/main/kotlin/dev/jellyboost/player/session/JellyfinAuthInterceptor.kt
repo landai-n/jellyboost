@@ -10,23 +10,14 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Adds the Jellyfin `Authorization` header to every stream request aimed at our own server.
+ * Without this header the server can attribute a transcode to a different session id, and
+ * `stopEncodingProcess` then no longer finds it.
  *
- * Streaming URLs already carry the token as a query parameter, but the header is what the server
- * uses to attribute the request to *this* session — without it a transcode can end up owned by a
- * different session id and `stopEncodingProcess` no longer finds it.
+ * Rebuilt per request: the access token changes over the app's lifetime while this OkHttp client
+ * does not. Scheme, host **and** port must all match ([isSameOrigin]) or the token leaks off-server.
  *
- * The header is rebuilt per request rather than baked into the client because the access token
- * changes over the app's lifetime (sign-in, sign-out, server switch) while this OkHttp client does
- * not. A request is only "ours" when its scheme, host **and** effective port all match the base
- * URL ([isSameOrigin]) — a different port is a different service, and `http://` on an
- * `https://` server would put the token on the wire in clear. Anything else is left untouched so
- * the token never leaks.
- *
- * Registered as a **network** interceptor, so the check runs once per hop rather
- * than once per call: a redirect's target goes through it too, and only earns the header if it is
- * still our server. As an application interceptor the origin-URL check would never see redirect
- * targets and the off-server guarantee would rest silently on OkHttp's own header stripping.
+ * Must stay a **network** interceptor: an application interceptor never sees redirect targets, so
+ * the origin check would not run on them.
  */
 @Singleton
 internal class JellyfinAuthInterceptor

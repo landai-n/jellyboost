@@ -10,10 +10,8 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * Owns the one piece of state the whole app is keyed off: whether there is a session.
- *
- * Restore runs once, here, because it must happen before the first frame decides between the
- * auth flow and the signed-in graph — the splash screen is held until [sessionState] leaves
+ * Restore runs once, here, because it must answer before the first frame chooses between the auth
+ * flow and the signed-in graph — the splash screen is held until [sessionState] leaves
  * [SessionState.Unknown].
  */
 @HiltViewModel
@@ -22,7 +20,6 @@ class MainViewModel
     constructor(
         private val sessionRepository: SessionRepository,
     ) : ViewModel() {
-        /** Current session; starts at [SessionState.Unknown] until the restore has answered. */
         val sessionState: StateFlow<SessionState> = sessionRepository.sessionState
 
         init {

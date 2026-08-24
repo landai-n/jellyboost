@@ -6,17 +6,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/**
- * Whether [PlaybackService] is alive, published so things outside playback can stand aside for it.
- *
- * There is exactly one consumer and one reason for it: a SyncPlay group
- * with no playback holds its own foreground service to keep the process's network up, and that
- * service must not run alongside the media one. `PlaybackService` already holds the foreground
- * while it exists, so "is it running" is the whole question — and the platform gives no way to ask
- * it that does not involve `ActivityManager` and a string comparison on a class name.
- *
- * Written only by [PlaybackService], from `onCreate` and `onDestroy`.
- */
+/** Written only by [PlaybackService], from `onCreate` and `onDestroy`. */
 @Singleton
 internal class PlaybackServiceState
     @Inject
@@ -26,7 +16,6 @@ internal class PlaybackServiceState
         /** `true` between [PlaybackService]'s `onCreate` and its `onDestroy`. */
         val running: StateFlow<Boolean> = _running.asStateFlow()
 
-        /** Publishes the service's own lifecycle. Called by [PlaybackService] only. */
         fun setRunning(running: Boolean) {
             _running.value = running
         }

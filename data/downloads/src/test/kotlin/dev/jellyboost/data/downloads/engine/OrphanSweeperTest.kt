@@ -16,12 +16,9 @@ import org.junit.jupiter.api.assertThrows
 import java.io.IOException
 
 /**
- * Unit tests for [OrphanSweeper].
- *
- * The bytes this deletes are, by definition, invisible in the UI — no row lists them and no delete
- * reaches them — so the only thing standing between "cleans up after a cancelled transfer" and
- * "eats a download the user is still waiting for" is the claimed-name check. Both directions are
- * pinned here.
+ * The bytes this deletes are invisible in the UI — no row lists them and no delete reaches them — so
+ * the only thing between "cleans up after a cancelled transfer" and "eats a download the user is still
+ * waiting for" is the claimed-name check. Both directions are pinned here.
  */
 class OrphanSweeperTest {
     private val downloadDao = mockk<DownloadDao>()
@@ -51,8 +48,8 @@ class OrphanSweeperTest {
     @Test
     fun `a directory a row still claims is never touched`() =
         runTest {
-            // Including the row that is about to be downloaded: the sweep runs at the head of a
-            // drain, so every queued item's directory is claimed but mostly empty.
+            // Including the row about to be downloaded: the sweep runs at the head of a drain, so
+            // every queued item's directory is claimed but mostly empty.
             coEvery { downloadDao.allDirectoryNames() } returns listOf("Arrival (2016)", "Dune (2021)")
             every { storage.itemDirectoryNames() } returns listOf("Arrival (2016)", "Dune (2021)")
 
@@ -64,9 +61,8 @@ class OrphanSweeperTest {
     @Test
     fun `an unmounted volume sweeps nothing rather than everything`() =
         runTest {
-            // `itemDirectoryNames` answers empty for a root it cannot read, and the rows are still
-            // there — the failure mode to avoid is the mirror image, where an unreadable *table*
-            // makes every file on disk look orphaned.
+            // The failure mode to avoid is the mirror image, where an unreadable *table* makes every
+            // file on disk look orphaned.
             coEvery { downloadDao.allDirectoryNames() } returns listOf("Arrival (2016)")
             every { storage.itemDirectoryNames() } returns emptyList()
 
@@ -78,8 +74,8 @@ class OrphanSweeperTest {
     @Test
     fun `a failing sweep is swallowed, because a drain must still run`() =
         runTest {
-            // This is the first thing a drain does. A queue that refuses to download because a
-            // stale directory could not be removed would be a worse bug than the leak.
+            // A queue that refuses to download because a stale directory could not be removed would
+            // be a worse bug than the leak.
             coEvery { downloadDao.allDirectoryNames() } throws IOException("room is busy")
 
             sweeper().sweep() shouldBe 0L

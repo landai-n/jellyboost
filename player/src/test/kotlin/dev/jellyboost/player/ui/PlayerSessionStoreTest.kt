@@ -10,10 +10,9 @@ import org.junit.jupiter.api.Test
 /**
  * Unit tests for [PlayerSessionStore] — the handle the player route arrives on and writes back to.
  *
- * Everything here is about one rule: the navigation arguments say what the user *tapped* and are
- * never overwritten, while the live-position keys say what the session had *reached* and win when
- * they exist. Getting that backwards is silent, and it costs the resume point of a half-watched
- * film on every device the account is signed in on.
+ * One rule: nav arguments say what the user *tapped* and are never overwritten; live-position
+ * keys say what the session *reached* and win when present. Getting that backwards is silent and
+ * costs the resume point of a half-watched film.
  */
 class PlayerSessionStoreTest {
     @Test
@@ -88,8 +87,7 @@ class PlayerSessionStoreTest {
 
         store.rememberLivePosition(PlaybackSnapshot(positionMs = 0L, isPlaying = true))
 
-        // Zero is indistinguishable from "no session yet", and the navigation argument is the better
-        // answer for it.
+        // Zero is indistinguishable from "no session yet" — the nav argument is the better answer.
         handle.get<Long>(PlayerViewModel.KEY_LIVE_POSITION_TICKS).shouldBeNull()
     }
 

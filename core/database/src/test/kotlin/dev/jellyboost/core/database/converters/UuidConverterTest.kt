@@ -5,7 +5,6 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import java.util.UUID
 
-/** Unit tests for [UuidConverter]'s Room type-conversion pair. */
 class UuidConverterTest {
     private val converter = UuidConverter()
 

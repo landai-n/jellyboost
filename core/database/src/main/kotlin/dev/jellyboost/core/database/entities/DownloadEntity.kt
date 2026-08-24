@@ -10,67 +10,29 @@ import java.time.Instant
 import java.util.UUID
 
 /**
- * One downloaded (or queued) item.
+ * One downloaded (or queued) item, keyed by **item id**: one download per item, so enqueueing twice is an
+ * upsert and the badge lookup is a primary-key hit.
  *
- * The primary key is the **item id**: one download per item, so enqueueing something twice is an
- * upsert rather than a duplicate, and the badge lookup is a primary-key hit.
+ * [bytesDownloaded] / [bytesTotal] are the *single source of truth* for progress — nothing keeps a second
+ * copy in memory, which is why killing the app mid-download loses nothing.
  *
- * ### Room is the progress
- * [bytesDownloaded] / [bytesTotal] are the *single source of truth* for progress. `FileDownloader`
- * reports every 64 KB and the writer throttles to a row write every 500 ms or 1 %, and everything
- * downstream — the queue tab, the app-wide `DownloadBadge`, the foreground notification — is a Room
- * Flow over this column. Nothing keeps a second copy in memory, which is why killing the app
- * mid-download loses nothing.
- *
- * ### Why the metadata columns
- * [itemName] / [seriesName] / [directoryName] are denormalised copies of what the matching
- * [ItemEntity] holds. The queue has to render a row (and the notification a title) for an item
- * whose `items` row may not be written yet, and the delete cascade has to know which directory to
- * remove **after** the item row is gone. Both are read without decoding a multi-kilobyte
- * `BaseItemDto` blob.
- *
- * @property userId owner of the download; the delete cascade needs it to decide which
- *   `UserDataEntity` rows are safe to drop.
- * @property mediaSourceId the media source the file plan was built from — the version that is
- *   actually on disk, which offline playback resolves against.
- * @property quality what the user's *download quality* preference said **when they tapped
- *   Download**. It is stored rather than re-read because the file on disk was fetched at this
- *   quality and the partial file is the resume bookmark: a plan rebuilt at a different quality
- *   mid-transfer would append incompatible bytes. Column default `ORIGINAL`, which is what every
- *   row written before schema v5 was.
- * @property projectedBytes what the finished file is now *expected* to weigh, as opposed to
- *   [bytesTotal], which is the ceiling it is promised not to exceed (schema v6). `null` means
- *   "nothing better than the ceiling to say", which is the permanent state of an `ORIGINAL`
- *   download (its total is already exact) and the opening state of a transcoded one. It is filled
- *   from two independent sources and never overwrites [bytesTotal]: at enqueue, from finished
- *   episodes of the same series at the same quality (`DownloadEnqueuer`), and in flight, from the
- *   media time the arriving Matroska stream has delivered (`TranscodeSizeProjector`). Cleared when
- *   the media file finishes, because at that point the real size is simply known.
- * @property sizeIsExact `true` when [bytesTotal] is the size the file will actually be rather than
- *   an upper bound (schema v6) — the server reported it (`ORIGINAL`), or the transcode request will
- *   be answered with a video stream copy, which is predictable to within the audio track. It is
- *   what decides between the Downloads screen's *"X"*, *"~X"* and *"up to X"* wordings. Column
- *   default `0`, which is the honest reading of every row written before v6: unknown means capped.
- * @property queuePosition ordering key for the queue tab; the queue always takes the pending row
- *   with the lowest value. Reordering rewrites this column and nothing else.
- * @property attemptCount how many times a *transient* failure has put this row back in the queue
- *   since the last thing the user did to it (schema v7). It is the cap that keeps the retry policy
- *   bounded: past it the row goes [DownloadStatus.ERROR] rather than being retried forever.
- *   Enqueue writes a whole row, and *Resume* clears the column, so a user-initiated attempt always
- *   starts from a full budget. Column default `0`, which is what every row written before v7
- *   means: nothing has failed on it yet.
- * @property bakedAudioStreamIndex the **absolute** `MediaStream.index` of the one audio track a
- *   transcoded download asked the server to encode (schema v8). `null` for an `ORIGINAL` row, which
- *   holds every audio track of the source and needs no pin; `null` too for a row the
- *   transcode-fallback downgraded to `ORIGINAL` before it was written, and for a transcoded item
- *   with no audio streams at all. It exists because the cached `BaseItemDto` describes the *source*:
- *   without it, offline playback can only guess which of the source's tracks survived into the file,
- *   and the guess it falls back to (`MediaSourceInfo.defaultAudioStreamIndex`) is not always the
- *   track that actually made it into the file. Rows written before v8 read back `NULL` and keep that
- *   fallback.
- * @property errorMessage last failure, kept so the queue tab can say *why* an item is in
- *   [DownloadStatus.ERROR] instead of just that it is.
- * @property createdAt when the item was enqueued; the *Downloaded* tab's default ordering.
+ * @property userId the delete cascade needs it to decide which `UserDataEntity` rows are safe to drop.
+ * @property mediaSourceId the version that is actually on disk, which offline playback resolves against.
+ * @property quality what the preference said **when the user tapped Download**, stored rather than re-read:
+ *   the partial file is the resume bookmark, and a plan rebuilt at another quality appends incompatible
+ *   bytes. Column default `ORIGINAL` (every pre-v5 row).
+ * @property projectedBytes what the file is now *expected* to weigh, as opposed to [bytesTotal], the ceiling
+ *   it is promised not to exceed. Never overwrites [bytesTotal]; `null` means "nothing better than the
+ *   ceiling to say", which is permanent for an `ORIGINAL` row. Cleared when the media file finishes.
+ * @property sizeIsExact `true` when [bytesTotal] is the real size rather than an upper bound — it decides
+ *   between the *"X"*, *"~X"* and *"up to X"* wordings. Column default `0`: unknown means capped.
+ * @property queuePosition the queue always takes the pending row with the lowest value.
+ * @property attemptCount transient-failure retries since the last thing the user did to this row; the cap
+ *   that keeps the retry policy bounded. *Resume* clears it, so a user-initiated attempt starts fresh.
+ * @property bakedAudioStreamIndex the **absolute** `MediaStream.index` of the one audio track a transcoded
+ *   download asked for; `null` for `ORIGINAL` (which holds every track) and for a downgraded row. The
+ *   cached `BaseItemDto` describes the *source*, so without this offline playback falls back to
+ *   `MediaSourceInfo.defaultAudioStreamIndex`, which is not always the track that made it into the file.
  */
 @Entity(
     tableName = "downloads",
@@ -78,10 +40,8 @@ import java.util.UUID
         Index(value = ["status"]),
         Index(value = ["queuePosition"]),
         Index(value = ["userId"]),
-        // `(seriesName, quality)` is the pair both sibling-size lookups filter on
-        // (`completedSiblings`, `unseededSiblings`), and they run on the enqueue path for every
-        // episode of a season. Without it `completedSiblings` would fall back to
-        // `index_downloads_status` and `unseededSiblings` would scan the table in queue order.
+        // `(seriesName, quality)` is what both sibling-size lookups filter on, on the enqueue path of every
+        // episode of a season; without it they fall back to a status index or a full scan.
         Index(value = ["seriesName", "quality"]),
     ],
 )
@@ -106,28 +66,18 @@ data class DownloadEntity(
     val directoryName: String,
     val itemName: String,
     /**
-     * The heading this row belongs under on the Downloads screen: an episode's series, a track's
-     * **album**, `null` for a film. Written by `DownloadEnqueuer` and read as
-     * `DownloadItem.seriesKey`; the name predates music and is kept because the column's meaning
-     * did not change.
+     * The heading this row belongs under: an episode's series, a track's **album**, `null` for a film. The
+     * name predates music and is kept because the column's meaning did not change.
      */
     val seriesName: String? = null,
     val errorMessage: String? = null,
     val createdAt: Instant,
     val updatedAt: Instant,
 ) {
-    /** Transfer progress in `0f..1f`, or `0f` while the total size is still unknown. */
     val progress: Float
         get() = if (bytesTotal <= 0L) 0f else (bytesDownloaded.toFloat() / bytesTotal).coerceIn(0f, 1f)
 }
 
-/**
- * Projection of just the columns a badge needs.
- *
- * Every card in the app subscribes to this via `DownloadDao.observeProgress()`, so the query that
- * feeds them must not drag whole rows — let alone the joined `items` blobs — through Room on every
- * 500 ms progress write.
- */
 data class DownloadProgress(
     val itemId: UUID,
     val status: DownloadStatus,

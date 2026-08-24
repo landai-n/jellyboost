@@ -58,25 +58,12 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * [JellyfinRepository] backed by live server calls through jellyfin-sdk-kotlin.
- *
- * The user is implicit: the SDK's [ApiClient] carries the access token and leaving `userId` unset
- * makes the server resolve the authenticated user, so this class needs no session dependency of
- * its own.
- *
- * Requests stay deliberately lean — only the fields a card actually draws — following the same
- * pattern Swiftfin uses: list calls are minimal, detail and playback calls fetch everything.
- *
- * Every successful read is **written through** to Room with `source = BROWSE_CACHE`. That write
- * is fire-and-forget — see [BrowseCacheWriter] — so this class still behaves like a pure network
- * reader from the caller's point of view.
+ * Leaving `userId` unset makes the server resolve the authenticated user, so this class needs no
+ * session dependency. List calls stay lean (cards only); detail and playback calls fetch everything.
+ * Every successful read is written through to Room as `BROWSE_CACHE`, fire-and-forget.
  */
 @Singleton
 @Suppress(
-    // One member per [JellyfinRepository] method, by construction — the interface is the
-    // implementation's whole surface. Splitting it would mean two repositories implementing one
-    // interface, which the domain layer deliberately avoids, and would be worse here, for the
-    // same reason.
     "TooManyFunctions",
 )
 internal class OnlineJellyfinRepository
@@ -92,8 +79,6 @@ internal class OnlineJellyfinRepository
             onIo {
                 val response = apiClient.userViewsApi.getUserViews(includeHidden = false)
                 browseCache.cacheViews(response.content.items)
-                // The mapper drops everything outside app scope (live TV, photos, … — music
-                // is part of `CollectionKind.SUPPORTED`).
                 val views = mapper.toLibraryViews(response.content.items)
                 coroutineScope {
                     views
@@ -103,25 +88,13 @@ internal class OnlineJellyfinRepository
             }
 
         /**
-         * How many titles the library with [libraryId] actually holds, or `null` if the server could
-         * not say.
+         * `getUserViews`' `ChildCount` is **not** this number — it counts the collection folder's
+         * direct media folders, answering 3 for a 177-title library. Only this recursive query
+         * matches what the grid pages over, so tile and grid header cannot disagree.
          *
-         * `getUserViews` carries a `ChildCount` per library and it is **not** this number: it counts
-         * the collection folder's direct children — its media folders — so the dev server answers 3
-         * for a 177-movie library and 6 for a 20-series one. Only a recursive query over the
-         * library's titles gives the count the tile promises, and it is the same query the library
-         * grid pages over (`LibraryUiState.GRID_ITEM_TYPES`, `recursive = true`), so the tile's
-         * number and the grid header's "N items" cannot disagree.
+         * `limit = 0` makes it a pure COUNT: `totalRecordCount` without serialising any item.
          *
-         * `limit = 0` makes it a pure COUNT: the server still reports `totalRecordCount` but
-         * serialises no items at all. One such request per library, all in flight together
-         * ([getUserViews] runs them under one `coroutineScope`), so the home load pays one extra
-         * round trip rather than one per library.
-         *
-         * A failure here is deliberately *not* an error for the caller: the subtitle is one line on
-         * a tile, and losing the whole libraries row — and with it the home screen — over a count
-         * would be a far worse trade than a tile that draws its name alone. Cancellation is the one
-         * exception, re-thrown so a cancelled home load does not linger.
+         * A failure is deliberately not an error: a missing subtitle beats losing the home screen.
          */
         private suspend fun itemCountOrNull(
             libraryId: String,
@@ -150,7 +123,6 @@ internal class OnlineJellyfinRepository
                 null
             }
 
-        /** Which [BaseItemKind]s [itemCountOrNull] asks for, by the library's own kind. */
         private fun CollectionKind.countItemTypes(): List<BaseItemKind> =
             if (this == CollectionKind.MUSIC) MUSIC_LIBRARY_COUNT_TYPES else LIBRARY_COUNT_TYPES
 
@@ -165,8 +137,7 @@ internal class OnlineJellyfinRepository
                             imageTypeLimit = 1,
                             enableUserData = true,
                             enableTotalRecordCount = false,
-                            // jellyfin-web's "Continue Watching" only lists video; without this an
-                            // in-progress audiobook/track would appear here but not on the web home.
+                            // jellyfin-web's Continue Watching lists video only; audio has its own row.
                             mediaTypes = listOf(MediaType.VIDEO),
                         ),
                     )
@@ -185,9 +156,8 @@ internal class OnlineJellyfinRepository
                             imageTypeLimit = 1,
                             enableUserData = true,
                             enableTotalRecordCount = false,
-                            // Mirror jellyfin-web's home: episodes with playback progress live in
-                            // Continue Watching only, and series untouched for over a year drop out
-                            // (web's "Days in Next Up" user setting, default 365).
+                            // jellyfin-web parity: in-progress episodes belong to Continue Watching,
+                            // and a series untouched past the "Days in Next Up" window drops out.
                             enableResumable = false,
                             nextUpDateCutoff = LocalDateTime.now().minusDays(NEXT_UP_WINDOW_DAYS),
                         ),
@@ -226,12 +196,11 @@ internal class OnlineJellyfinRepository
                 config =
                     PagingConfig(
                         pageSize = ItemQuery.DEFAULT_PAGE_SIZE,
-                        // Pinned to the page size so the very first load is one `limit=50` request
-                        // like every other page, instead of Paging's default 3×.
+                        // Pinned to the page size; Paging would otherwise make the first load 3x.
                         initialLoadSize = ItemQuery.DEFAULT_PAGE_SIZE,
                         prefetchDistance = PREFETCH_DISTANCE,
-                        // The grid never draws placeholder cells, which is what lets every page
-                        // but the first skip the server-side total record count.
+                        // No placeholder cells, which lets every page but the first skip the
+                        // server-side total record count.
                         enablePlaceholders = false,
                     ),
                 pagingSourceFactory = {
@@ -254,10 +223,8 @@ internal class OnlineJellyfinRepository
             getItemsPage(query).map { it.items }
 
         /**
-         * The one `getItems` round trip, with the server's total attached when [query] asked for it.
-         *
-         * `totalRecordCount` is a non-null `Int` on the wire and reads 0 when the request left the
-         * count off, so the flag — not the value — decides whether there is a number to report.
+         * `totalRecordCount` is non-null on the wire and reads 0 when the request left the count off,
+         * so the flag — not the value — decides whether there is a number to report.
          */
         private suspend fun getItemsPage(query: ItemQuery): AppResult<ItemPage> =
             onIo {
@@ -284,7 +251,6 @@ internal class OnlineJellyfinRepository
                     )
                 FilterFacets(
                     genres = response.content.genres.orEmpty(),
-                    // Newest first: the years a user filters by are almost always recent ones.
                     years =
                         response.content.years
                             .orEmpty()
@@ -296,19 +262,14 @@ internal class OnlineJellyfinRepository
         // ---- item detail -----------------------------------------------------------------------
 
         /**
-         * Note there is no `fields` argument to pass here: `/Users/{userId}/Items/{itemId}` is the
-         * one endpoint that always serialises the **complete** field set (media sources, streams,
-         * chapters, trickplay, people, taglines, genres, overview). That is exactly the "detail is
-         * full" half of the Swiftfin pattern, and it is the same call jellyfin-web makes when you
-         * open an item.
+         * There is no `fields` argument to pass: `/Users/{userId}/Items/{itemId}` is the one endpoint
+         * that always serialises the **complete** field set.
          */
         override suspend fun getItem(id: String): AppResult<JellyfinItem> =
             onIo {
                 val response = apiClient.userLibraryApi.getItem(itemId = UUID.fromString(id))
-                // The one call that returns the *complete* DTO, so this is the write that makes a
-                // cached item worth opening offline — and the only one allowed to replace the stored
-                // blob of a downloaded item, which is what `full = true` says. Every other write in
-                // this class is a lean list response and must preserve it (see `BrowseCacheWriter`).
+                // The only complete DTO, so the only write allowed to replace a downloaded item's
+                // stored blob. Every other write here is lean and must preserve it.
                 browseCache.cacheItems(listOf(response.content), full = true)
                 mapper.toDomain(response.content)
             }
@@ -323,8 +284,8 @@ internal class OnlineJellyfinRepository
                             enableImageTypes = CARD_IMAGE_TYPES,
                             imageTypeLimit = 1,
                             enableUserData = true,
-                            // jellyfin-web hides "Specials" placeholders that have no episodes on
-                            // disk; missing seasons would render as dead cards.
+                            // Missing seasons ("Specials" placeholders with nothing on disk) would
+                            // render as dead cards; jellyfin-web hides them too.
                             isMissing = false,
                         ),
                     )
@@ -342,8 +303,6 @@ internal class OnlineJellyfinRepository
                         GetEpisodesRequest(
                             seriesId = UUID.fromString(seriesId),
                             seasonId = UUID.fromString(seasonId),
-                            // The episode list is the one place a synopsis is worth the payload:
-                            // it is drawn directly under each row.
                             fields = EPISODE_FIELDS,
                             enableImageTypes = CARD_IMAGE_TYPES,
                             imageTypeLimit = 1,
@@ -356,9 +315,8 @@ internal class OnlineJellyfinRepository
             }
 
         /**
-         * The same endpoint as [getEpisodes] with the season filter left off — `/Shows/{id}/Episodes`
-         * is rooted at the series and returns the whole run, already in broadcast order, when no
-         * season narrows it.
+         * `/Shows/{id}/Episodes` with no season filter returns the whole run, already in broadcast
+         * order.
          */
         override suspend fun getSeriesEpisodes(seriesId: String): AppResult<List<JellyfinItem>> =
             onIo {
@@ -425,7 +383,6 @@ internal class OnlineJellyfinRepository
                             parentId = UUID.fromString(albumId),
                             includeItemTypes = listOf(BaseItemKind.AUDIO),
                             recursive = true,
-                            // Disc, then track, then a stable alphabetical tiebreak.
                             sortBy =
                                 listOf(ItemSortBy.PARENT_INDEX_NUMBER, ItemSortBy.INDEX_NUMBER, ItemSortBy.SORT_NAME),
                             sortOrder = listOf(SortOrder.ASCENDING),
@@ -449,7 +406,7 @@ internal class OnlineJellyfinRepository
                             recursive = true,
                             sortBy =
                                 listOf(ItemSortBy.PRODUCTION_YEAR, ItemSortBy.PREMIERE_DATE, ItemSortBy.SORT_NAME),
-                            // Index-matched to sortBy: newest year, newest exact date, A→Z tiebreak.
+                            // Index-matched to sortBy, entry for entry.
                             sortOrder = listOf(SortOrder.DESCENDING, SortOrder.DESCENDING, SortOrder.ASCENDING),
                             fields = CARD_FIELDS,
                             enableImageTypes = CARD_IMAGE_TYPES,
@@ -486,16 +443,10 @@ internal class OnlineJellyfinRepository
             }
 
         /**
-         * `/Playlists/{id}/Items` rather than a `parentId` items query: a generic items query is
-         * not guaranteed to preserve playlist order, while the dedicated endpoint is built exactly
-         * for that.
-         *
-         * Filtered to audio, because a Jellyfin playlist may legally mix in episodes and films and
-         * every consumer of this member is the audio-only pipeline — `PlaylistDetailScreen` hands
-         * the whole list to the music queue, whose resolver would build `/Audio/{id}/universal`
-         * URLs for video items. This is a view-only music app; a playlist's video members are out
-         * of its scope, exactly as `SdkDownloadApi.getPlaylistTrackIds` already drops them on the
-         * download path.
+         * `/Playlists/{id}/Items`, not a `parentId` query: only the dedicated endpoint preserves
+         * playlist order. Filtered to audio because a Jellyfin playlist may legally mix in episodes
+         * and films, and the music queue's resolver would build `/Audio/{id}/universal` URLs for
+         * them (`SdkDownloadApi.getPlaylistTrackIds` drops them the same way).
          */
         override suspend fun getPlaylistItems(playlistId: String): AppResult<List<JellyfinItem>> =
             onIo {
@@ -530,7 +481,6 @@ internal class OnlineJellyfinRepository
                             imageTypeLimit = 1,
                             enableUserData = true,
                             enableTotalRecordCount = false,
-                            // [getResumeItems]'s own mirror image: audio rather than video.
                             mediaTypes = listOf(MediaType.AUDIO),
                         ),
                     )
@@ -560,62 +510,38 @@ internal class OnlineJellyfinRepository
         // ---- end Instant Mix & lyrics ------------------------------------------------------------
 
         /**
-         * Runs an SDK call off the caller's dispatcher.
-         *
-         * The SDK's OkHttp backend reads response bodies on the calling thread, so a call
-         * launched from `viewModelScope` (main) dies with `NetworkOnMainThreadException`
-         * unless it is hopped onto [ioDispatcher] first.
+         * The SDK's OkHttp backend reads response bodies on the *calling* thread, so a call launched
+         * from `viewModelScope` dies with `NetworkOnMainThreadException` without this hop.
          */
         private suspend fun <T> onIo(block: suspend () -> T): AppResult<T> =
             withContext(ioDispatcher) { runCatchingApi { block() } }
 
         private companion object {
-            /**
-             * The only field a card needs beyond the defaults: it tells the UI whether the server's
-             * primary image is a poster or a thumbnail.
-             */
+            /** The one field beyond the defaults a card needs: poster vs thumbnail. */
             val CARD_FIELDS = listOf(ItemFields.PRIMARY_IMAGE_ASPECT_RATIO)
 
-            /** Artwork the cards can actually draw — anything else is wasted server work. */
             val CARD_IMAGE_TYPES = listOf(ImageType.PRIMARY, ImageType.BACKDROP, ImageType.THUMB)
 
             /**
-             * The item kinds a movie or TV library tile's count counts.
-             *
-             * Projected from [ItemType.LIBRARY_TILE_TYPES] via the same [toBaseItemKind]
-             * `:data` already maps query types through, rather than a second hand-written
-             * `BaseItemKind` pair: the grid a tile opens must not report a different total than the
-             * tile did, and `:data` cannot depend on `:feature:library` to share its list directly.
-             *
-             * Pinned by `OnlineJellyfinRepositoryTest`'s "counts each library's titles instead of
-             * trusting ChildCount", which asserts a movie *and* a TV library's count request both
-             * send exactly `[MOVIE, SERIES]`. Music libraries get their own list instead of
-             * extending this one — see [countItemTypes].
+             * Projected from [ItemType.LIBRARY_TILE_TYPES] rather than hand-written, so the grid a
+             * tile opens cannot report a different total than the tile did. Music libraries get
+             * their own list instead of extending this one — see [countItemTypes].
              */
             val LIBRARY_COUNT_TYPES = ItemType.LIBRARY_TILE_TYPES.mapNotNull { it.toBaseItemKind() }
 
-            /**
-             * The item kind a music library tile's count counts: its albums, the top-level
-             * browsable unit a music library shows — same role [LIBRARY_COUNT_TYPES] plays for a
-             * movie or TV library.
-             */
+            /** Albums, the top-level browsable unit a music library shows. */
             val MUSIC_LIBRARY_COUNT_TYPES = listOf(BaseItemKind.MUSIC_ALBUM)
 
             /** jellyfin-web's default "Days in Next Up" user setting. */
             const val NEXT_UP_WINDOW_DAYS = 365L
 
             /**
-             * How close to the end of the loaded list the user has to scroll before the next page
-             * is fetched. Deliberately far below Paging's default (which equals the page size and
-             * would queue page 2 the moment page 1 renders): one request per screenful, not a
-             * read-ahead race.
+             * Far below Paging's default, which equals the page size and would queue page 2 the
+             * moment page 1 renders: one request per screenful, not a read-ahead race.
              */
             const val PREFETCH_DISTANCE = 10
 
-            /**
-             * Episode rows draw a synopsis under the title, so the season list is the one list
-             * request that pays for `OVERVIEW`.
-             */
+            /** Episode rows draw a synopsis, so this is the one list request that pays for `OVERVIEW`. */
             val EPISODE_FIELDS = listOf(ItemFields.PRIMARY_IMAGE_ASPECT_RATIO, ItemFields.OVERVIEW)
         }
     }

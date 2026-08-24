@@ -12,16 +12,12 @@ import timber.log.Timber
 import javax.inject.Inject
 
 /**
- * Backs the two actions on the download notification.
+ * Backs the two actions on the download notification. A receiver rather than an activity, so pausing a
+ * download does not have to bring the app to the foreground.
  *
- * A receiver rather than an activity so that pausing a download does not have to bring the app to
- * the foreground — the whole point of the notification is that the queue is controllable from
- * wherever the user happens to be.
- *
- * `goAsync()` plus the application scope, because both actions touch Room and WorkManager and a
- * receiver's `onReceive` runs on the main thread with a hard time limit. The `PendingResult` is
- * finished in the coroutine's completion handler so the system stops holding the process open the
- * moment the work is done.
+ * `goAsync()` plus the application scope, because both actions touch Room and WorkManager while a
+ * receiver's `onReceive` runs on the main thread with a hard time limit; the `PendingResult` is
+ * finished in the coroutine's completion handler so the system stops holding the process open.
  */
 @AndroidEntryPoint
 internal class DownloadActionReceiver : BroadcastReceiver() {

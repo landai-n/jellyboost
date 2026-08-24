@@ -8,11 +8,8 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for [DecoderFallbackHandler].
- *
- * This is the mitigation for the plan's risk #5 (OEM decoder quirks), and the failure mode it
- * guards against — retrying forever, or giving up on the first hiccup — is only visible under
- * exactly the sequences exercised here.
+ * Mitigates the plan's risk #5 (OEM decoder quirks); the failure mode guarded against —
+ * retrying forever, or giving up on the first hiccup — is only visible under these sequences.
  */
 class DecoderFallbackHandlerTest {
     private val handler = DecoderFallbackHandler()

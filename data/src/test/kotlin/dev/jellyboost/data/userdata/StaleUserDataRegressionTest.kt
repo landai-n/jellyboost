@@ -41,18 +41,11 @@ import java.time.ZoneOffset
 import java.util.UUID
 
 /**
- * Regression test for **stale local user-data rows corrupting server state on playback**.
+ * The bug needs both halves to bite, so both run against one shared `user_data` store: an item
+ * marked played in-app and later unmarked from jellyfin-web was re-marked played on the server,
+ * because `setPosition` pushes a *full* state built from a row no read had refreshed.
  *
- * The bug needed two halves to bite, so this test uses both of them against one shared `user_data`
- * store: [BrowseCacheWriter] (the read path) and [UserDataRepositoryImpl] (the write path).
- *
- * The failure mode: an item marked played in-app (row `played = true`, `toBeSynced = false`),
- * later unmarked from jellyfin-web (server `Played = false`) — playing it in the app would
- * re-mark it played on the server, because `setPosition` pushes the item's *full* desired state
- * built from a local row that no read had ever refreshed.
- *
- * The rule this pins: **a server read is authoritative for an item unless a local write is still
- * waiting to be pushed.**
+ * The rule: **a server read is authoritative unless a local write is still waiting to be pushed.**
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class StaleUserDataRegressionTest {
@@ -66,7 +59,7 @@ class StaleUserDataRegressionTest {
     private val connectionState = mockk<ConnectionStateProvider>()
     private val clock = Clock.fixed(NOW, ZoneOffset.UTC)
 
-    /** The `user_data` table, in memory: both halves of the fix read and write the same rows. */
+    /** In memory: both halves of the fix read and write the same rows. */
     private val stored = mutableMapOf<UUID, UserDataEntity>()
 
     private val pushed = slot<UpdateUserItemDataDto>()
@@ -88,7 +81,7 @@ class StaleUserDataRegressionTest {
                 ),
             )
 
-        // This regression is about what a push carries, so the repository is exercised online.
+        // The regression is about what a push carries, so the repository is exercised online.
         every { connectionState.state } returns MutableStateFlow(ConnectionState.ONLINE)
 
         coEvery { itemDao.getCacheKeys(any()) } returns emptyList()
@@ -122,18 +115,15 @@ class StaleUserDataRegressionTest {
     @Test
     fun `a server read corrects a stale row, so the next position write stops resurrecting it`() =
         runTest {
-            // The device's row from an old in-app "mark played", long since pushed.
             stored[ITEM_ID] = row(played = true, toBeSynced = false)
 
-            // The user then unmarked the item in jellyfin-web; the next read in the app says so.
+            // Unmarked in jellyfin-web; the next read in the app says so.
             writer(this).writeItems(listOf(movieWithUserData(played = false)))
 
             stored.getValue(ITEM_ID).played shouldBe false
 
-            // Five seconds into playback the player records a position.
             repository().setPosition(ITEM_ID.toString(), positionTicks = 50_000_000L)
 
-            // The full-state push now carries the server's own truth instead of the stale row's.
             pushed.captured.played shouldBe false
             pushed.captured.playbackPositionTicks shouldBe 50_000_000L
         }
@@ -141,7 +131,7 @@ class StaleUserDataRegressionTest {
     @Test
     fun `a favourite the server has not accepted yet survives a read and is still pushed`() =
         runTest {
-            // A local favourite write that never reached the server (offline when it was made).
+            // A local favourite write that never reached the server.
             stored[ITEM_ID] = row(isFavorite = true, toBeSynced = true)
 
             // A read whose response predates it must not roll it back.

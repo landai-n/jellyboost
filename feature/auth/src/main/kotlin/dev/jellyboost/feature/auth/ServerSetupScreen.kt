@@ -78,50 +78,26 @@ import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 import dev.jellyboost.core.ui.R as CoreUiR
 
-/** Widest the auth forms grow to; keeps them readable on the tablet the project targets. */
 internal val AuthContentMaxWidth = 460.dp
 
-/**
- * Top/bottom breathing room for [AuthScreenScaffold]'s content column — deliberately roomier than
- * [Dimens.SpaceExtraLarge] (the design system's largest spacing token) so the form doesn't feel
- * flush against the status/gesture bars on a phone.
- */
+/** Roomier than [Dimens.SpaceExtraLarge] so the form is not flush against the system bars. */
 private val AuthContentVerticalPadding = 32.dp
 
-/**
- * [AuthContentVerticalPadding] on a compact (phone) window: a typical portrait phone window is
- * short enough that the full 32dp on both the header and the form panel, twice, is the difference
- * between the Login screen fitting without scrolling and it not.
- */
+/** The full padding twice over is the difference between the Login screen scrolling and not. */
 private val AuthContentVerticalPaddingCompact = 16.dp
 
-/**
- * How far down the screen the accent halo behind the auth content reaches. Tall enough to sit
- * behind the whole branded header on a phone, short enough that the form below stays on the flat
- * `#101010` background.
- */
+/** Tall enough to sit behind the whole header, short enough that the form stays on flat background. */
 private val AuthGlowHeight = 420.dp
 
-/** Logo size in the ServerSetup hero — the app's first impression, so it gets real space. */
 private val HeroLogoSize = 88.dp
 
-/** Logo size next to a screen title (Login), where it is a brand cue rather than the subject. */
 internal val InlineLogoSize = 36.dp
 
-/** Diameter of the leading badge on a discovered-server card. */
 private val ServerBadgeSize = 38.dp
 
-/**
- * Minimum window width for the side-by-side auth layout (branding pane + form pane). Matches the
- * Material "expanded" width class; below it, or in portrait, the two stack in one column.
- */
+/** The Material expanded width class; below it, or in portrait, the two panes stack. */
 private val AuthTwoPaneMinWidth = 840.dp
 
-/**
- * Heading atop each screen's primary panel ("Connect to server", "Sign in"). Shared between
- * [ServerSetupScreen] and `LoginScreen` because both live in this module and both want the exact
- * same restyle.
- */
 internal val AuthHeadingStyle =
     TextStyle(
         fontSize = 22.sp,
@@ -129,45 +105,27 @@ internal val AuthHeadingStyle =
         letterSpacing = (-0.01).em,
     )
 
-/** Inline failure copy below an auth form — the shared error-text size, used by both screens. */
 internal val AuthErrorTextStyle = TextStyle(fontSize = 13.sp, lineHeight = 18.sp)
 
-/** The tagline under the ServerSetup wordmark: smaller than any Material body role. */
 private val TaglineStyle = TextStyle(fontSize = 13.sp, lineHeight = 18.sp)
 
-/** Discovered-server card name — 15sp/600, a step down from `titleMedium`. */
 private val ServerCardNameStyle = TextStyle(fontSize = 15.sp, fontWeight = FontWeight.W600)
 
-/** Vertical padding of a discovered-server card, per the m-surface spec (14×16dp). */
 private val ServerCardVerticalPadding = 14.dp
 
-/** Alpha of the discovered-server badge's primary fill / border. */
 private const val SERVER_BADGE_FILL_ALPHA = 0.14f
 private const val SERVER_BADGE_BORDER_ALPHA = 0.30f
 private val ServerBadgeBorderWidth = 1.dp
 private val ServerBadgeIconSize = 18.dp
 
-/** Track colour of an inline spinner or progress bar — white held at a low alpha. */
 private val TrackColor = Color.White.copy(alpha = 0.14f)
 
-/** Track colour of the manual-connect progress bar — called out separately from [TrackColor]. */
 private val ProgressTrackColor = Color.White.copy(alpha = 0.12f)
 
 private val ConnectingProgressHeight = 4.dp
 
-/** Gap inside a manual/sign-in panel, per the m-panel spec (14dp — narrower than [Dimens.SpaceLarge]). */
 private val AuthPanelInnerGap = 14.dp
 
-/**
- * First screen of the app: pick a Jellyfin server, either from the local-network announcements or
- * by typing an address.
- *
- * Visually it is a branded landing screen: the Jellyboost mark and wordmark sit in an accent halo
- * at the top, the servers found on the network are offered as tappable cards, and the manual
- * address entry is grouped into its own panel below them.
- *
- * @param onNavigateToLogin invoked once an address has been resolved to a usable server.
- */
 @Composable
 fun ServerSetupScreen(
     onNavigateToLogin: () -> Unit,
@@ -206,8 +164,7 @@ private fun ServerSetupContent(
         )
 
         if (state.sessionWasLost) {
-            // Above the form, not in the error slot below it: this is why the screen is here at
-            // all, and it must not be mistaken for the last connection attempt having failed.
+            // Above the form, not in the error slot below it: it must not read as the last attempt failing.
             SessionLostBanner()
         }
 
@@ -231,7 +188,6 @@ private fun ServerSetupContent(
     }
 }
 
-/** Logo, wordmark and welcome line — the app's identity, centred above the form. */
 @Composable
 private fun BrandHero() {
     Column(
@@ -243,9 +199,6 @@ private fun BrandHero() {
         JellyboostLogo(size = HeroLogoSize, contentDescription = null)
         Text(
             text = stringResource(R.string.auth_app_name),
-            // Solid white rather than the accent gradient: the wordmark is the one piece of brand
-            // type kept flat, so it reads next to the gradient fin mark instead of competing with
-            // it.
             style = JellyfinTypeExtras.Wordmark,
             color = Color.White,
         )
@@ -259,12 +212,8 @@ private fun BrandHero() {
 }
 
 /**
- * The gradient fin mark, drawn from the shared vector so every auth surface uses one geometry.
- *
- * The vector itself lives in `:core:ui` rather than here: `:app`'s wide navigation bar draws the
- * same mark, and a drawable in a feature module is not reachable from outside it.
- *
- * @param contentDescription `null` wherever the wordmark is already spelled out next to the logo.
+ * The vector lives in `:core:ui` because `:app` draws the same mark, and a drawable in a feature
+ * module is not reachable from outside it.
  */
 @Composable
 internal fun JellyboostLogo(
@@ -279,7 +228,6 @@ internal fun JellyboostLogo(
     )
 }
 
-/** Why the user is back on this screen: an error-tinted banner, distinct from a failed attempt. */
 @Composable
 private fun SessionLostBanner() {
     ErrorBanner(
@@ -289,18 +237,9 @@ private fun SessionLostBanner() {
 }
 
 /**
- * The server answered, but in the clear and from off the local network.
- *
- * Below the form rather than above it, unlike [SessionLostBanner]: this is about the attempt that
- * just succeeded, and the next thing the user does about it is press the Connect button directly
- * above. It is advisory — `ServerSetupViewModel` takes that second press as the acknowledgement and
- * goes on to Login — so nothing here is a control; the banner is the whole of it.
- *
- * [ErrorBanner]'s error colouring is deliberate over a softer warning treatment. An unencrypted
- * sign-in over a network the user does not control hands the access token to whoever is on the
- * path, and the screen has no way to know that they are not; a yellow note reads as a formality.
- * The banner is already an assertive live region, which is what makes it reach a TalkBack user who
- * is still on the Connect button.
+ * Error-coloured rather than a softer warning: an unencrypted sign-in over a network the user does
+ * not control hands the access token to whoever is on the path. Advisory only — a second press of
+ * Connect is the acknowledgement — so the banner is the whole of it.
  */
 @Composable
 private fun CleartextWarningBanner(host: String) {
@@ -319,8 +258,6 @@ private fun DiscoveredServersSection(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall)) {
         Text(
-            // The mocks' k-label caption: the same tracked-out uppercase style a field label
-            // renders inside JellyfinTextField, reused here for a section heading instead.
             text = stringResource(R.string.server_setup_discovered_title).uppercase(),
             style = JellyfinTypeExtras.Eyebrow,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -340,7 +277,6 @@ private fun DiscoveredServersSection(
     }
 }
 
-/** One announced server, presented as a tappable card: brand badge, name/address, chevron. */
 @Composable
 private fun DiscoveredServerCard(
     server: DiscoveredServer,
@@ -402,7 +338,6 @@ private fun DiscoveredServerCard(
     }
 }
 
-/** Typing an address by hand, grouped into a panel so it reads as the alternative to the cards. */
 @Composable
 private fun ManualAddressSection(
     state: ServerSetupUiState,
@@ -432,10 +367,7 @@ private fun ManualAddressSection(
         )
 
         if (state.isConnecting) {
-            // Bar and caption as one polite live region, so "Contacting the server…" is spoken
-            // when it appears instead of being a line the user has to go looking for. The inner
-            // spacing repeats the panel's own [AuthPanelInnerGap] so grouping the two costs no
-            // layout change.
+            // One polite live region, so the caption is spoken rather than gone looking for.
             Column(
                 modifier =
                     Modifier
@@ -459,16 +391,9 @@ private fun ManualAddressSection(
 }
 
 /**
- * The address field itself: its caption, its three states, and the URI keyboard it asks for.
- *
- * It stays *enabled* while the probe runs: disabling a focused field drops accessibility focus with
- * no anchor to fall back to, so a TalkBack user pressing Connect
- * was thrown back to the top of the screen. The field cannot be *changed* mid-probe either —
- * `ServerSetupViewModel` ignores edits while `isConnecting`, which is a stronger guarantee than a
- * greyed-out box. [FieldState.InFlight] says the same thing to the platform: keep the node, keep the
- * name, keep the value, refuse the keystroke. The state-holder guard stays as well; it is the one a
- * JVM test can hold still. The error and in-flight states never overlap — the ViewModel clears the
- * error when a probe starts.
+ * Stays *enabled* while the probe runs: disabling a focused field drops accessibility focus with no
+ * anchor, throwing a TalkBack user back to the top. [FieldState.InFlight] refuses the keystroke
+ * instead, and the ViewModel ignores edits while `isConnecting`.
  */
 @Composable
 private fun ManualAddressField(
@@ -481,8 +406,6 @@ private fun ManualAddressField(
         onValueChange = onAddressChange,
         modifier = Modifier.fillMaxWidth(),
         singleLine = true,
-        // "Server address" is the field's own caption, drawn uppercased and *spoken* in
-        // sentence case (`FieldLabel.eyebrow`).
         label = FieldLabel.eyebrow(stringResource(R.string.server_setup_manual_title)),
         state =
             when {
@@ -494,9 +417,8 @@ private fun ManualAddressField(
         keyboardOptions =
             KeyboardOptions(
                 keyboardType = KeyboardType.Uri,
-                // Uri alone still leaves the IME's correction machinery on (the KeyboardOptions
-                // default), and an autocorrected hostname is a typo the user cannot see — the
-                // probe just fails.
+                // Uri alone leaves the IME correction machinery on, and an autocorrected hostname is a typo
+                // the user cannot see — the probe just fails.
                 autoCorrectEnabled = false,
                 imeAction = ImeAction.Done,
             ),
@@ -504,14 +426,7 @@ private fun ManualAddressField(
     )
 }
 
-/**
- * A hint line, optionally preceded by a small spinner.
- *
- * One polite live region covering both states this row has: the discovery caption while the scan
- * runs, and the "nothing announced itself" line that replaces it when the scan ends. That handover
- * is the whole point — it happens seconds after the screen opens, with the user's attention (and
- * accessibility focus) somewhere else entirely, so without the live region nothing would announce it.
- */
+/** One polite live region: the scan ends seconds later, with focus somewhere else entirely. */
 @Composable
 private fun HintRow(
     text: String,
@@ -538,17 +453,6 @@ private fun HintRow(
     }
 }
 
-/**
- * The "m-panel" both auth screens group a form onto: a solid surface, the app's panel hairline, and
- * one interior gutter.
- *
- * Both this screen's manual-address panel and `LoginScreen`'s sign-in card go through this single
- * composable rather than each hand-rolling their own, so the two panels' surface, hairline and
- * interior gutter cannot drift apart from each other.
- *
- * @param verticalArrangement overridable for a panel whose children space themselves, but
- *   [AuthPanelInnerGap] is what both current callers want.
- */
 @Composable
 internal fun AuthPanel(
     modifier: Modifier = Modifier,
@@ -570,18 +474,8 @@ internal fun AuthPanel(
 }
 
 /**
- * The frame both auth screens share: full-bleed dark background with a faint accent halo behind
- * the top of the content, insets handled.
- *
- * Portrait (and any window narrower than [AuthTwoPaneMinWidth]) stacks [header] above [content]
- * in one scrolling column. A landscape tablet instead puts them side by side — the branded
- * identity on the left, the form on the right — because stacked they overflow the short viewport
- * and the last actions end up cropped below the fold.
- *
- * [header] and [content] both receive the window's compactness so a caller can shrink oversized
- * pieces (e.g. `LoginContent`'s header) instead of just relying on [AuthPane]'s tighter padding.
- * The two-pane branch always reports `false`: the tablet layout is pixel-identical to the
- * approved design regardless of exactly how wide the expanded window is.
+ * Stacked, the two panes overflow a landscape tablet and the last actions crop below the fold, so
+ * an expanded window puts them side by side. The two-pane branch always reports `compact = false`.
  */
 @Composable
 internal fun AuthScreenScaffold(
@@ -596,9 +490,7 @@ internal fun AuthScreenScaffold(
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
             val isTwoPane = maxWidth >= AuthTwoPaneMinWidth && maxWidth > maxHeight
 
-            // Material's "compact" width class: below it, the branded header and the panel below
-            // it are shrunk just enough that the whole screen fits a typical phone window without
-            // scrolling (the two-pane branch never sees this — it always passes `false` below).
+            // Material compact width class: below it both header and panel shrink to fit a phone window.
             val compact = maxWidth < 600.dp
 
             AuthBrandGlow(isTwoPane = isTwoPane)
@@ -612,8 +504,7 @@ internal fun AuthScreenScaffold(
                 contentAlignment = Alignment.TopCenter,
             ) {
                 if (isTwoPane) {
-                    // Capped and centred as a pair: two full-half panes on a wide screen leave a
-                    // dead void in the middle and the content stranded at the edges.
+                    // Capped and centred as a pair: two half-panes leave a dead void in the middle.
                     Row(
                         modifier =
                             Modifier
@@ -648,13 +539,7 @@ internal fun AuthScreenScaffold(
     }
 }
 
-/**
- * The brand halo behind the auth screens.
- *
- * Drawn under the insets on purpose: bleeding behind the status bar is what makes it read as part of
- * the background rather than as a banner. Side by side it hangs over the branding pane instead of
- * the empty centre.
- */
+/** Drawn under the insets on purpose: bleeding behind the status bar is what keeps it a background. */
 @Composable
 private fun BoxScope.AuthBrandGlow(isTwoPane: Boolean) {
     Box(
@@ -673,13 +558,10 @@ private fun BoxScope.AuthBrandGlow(isTwoPane: Boolean) {
     )
 }
 
-/** Where the hairline between the two panes starts and stops fading, as a fraction of its run. */
 private const val PANE_RULE_FADE_FRACTION = 0.2f
 
-/** Vertical inset that keeps the pane hairline clear of the window edges. */
 private val PaneRuleVerticalInset = 64.dp
 
-/** Hairline between the branding and form panes, fading out toward both ends. */
 @Composable
 private fun PaneRule() {
     val outline = MaterialTheme.colorScheme.outline
@@ -700,14 +582,7 @@ private fun PaneRule() {
     )
 }
 
-/**
- * One column of auth content: capped at [AuthContentMaxWidth], placed per [alignment] while it
- * fits the pane, scrolling on its own once it doesn't.
- *
- * [compact] trims the pane's own padding on a phone-width window — the biggest single chunk of
- * vertical space this screen spends on anything but actual content — so the single-pane layout
- * fits a typical phone window without scrolling.
- */
+/** [compact] trims the pane padding so the single-pane layout fits a phone window without scrolling. */
 @Composable
 private fun AuthPane(
     modifier: Modifier = Modifier,
@@ -733,18 +608,9 @@ private fun AuthPane(
 }
 
 /**
- * Multi-line, error-coloured copy shared by both auth screens.
- *
- * It interrupts. This block appears *because* the thing the user just asked for did not happen, and
- * without an assertive announcement, focus would stay on the button that had apparently done
- * nothing, with the sentence explaining why several swipes away. Assertive rather than polite for
- * the same reason `:core:ui`'s `ErrorBanner` is — the user is about to retype a password into a
- * form that has already rejected it.
- *
- * Kept as plain copy rather than swapped for `ErrorBanner`: an inline auth failure gets a bare
- * error-coloured line under the form, and the banner's washed panel is the treatment reserved for
- * [SessionLostBanner] — the one message that is *not* about the last attempt. The two need to keep
- * looking different.
+ * Assertive: the block appears because what the user asked for did not happen, and focus would
+ * otherwise stay on the button that apparently did nothing. Plain copy rather than [ErrorBanner],
+ * whose washed panel is reserved for [SessionLostBanner] — the two must keep looking different.
  */
 @Composable
 internal fun AuthErrorBlock(
@@ -762,7 +628,6 @@ internal fun AuthErrorBlock(
     )
 }
 
-/** Collects a one-shot navigation [flow] for as long as this composable is in composition. */
 @Composable
 internal fun <T> OnNavigationEvent(
     flow: Flow<T>,
@@ -774,7 +639,6 @@ internal fun <T> OnNavigationEvent(
     }
 }
 
-/** Convenience overload for event flows carrying no payload. */
 @Composable
 internal fun OnNavigationEvent(
     flow: Flow<Unit>,

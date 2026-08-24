@@ -14,12 +14,9 @@ import org.junit.jupiter.api.Test
 import java.time.Instant
 
 /**
- * Unit tests for [SyncPlayDriftMonitor].
- *
- * The threshold is the whole design: correcting too eagerly makes the player stutter for drift
- * nobody can see, and correcting too late lets a member fall visibly behind the group. Both edges
- * are pinned to the millisecond here, because a threshold that quietly moves is a threshold nobody
- * will notice has moved.
+ * Correcting too eagerly makes the player stutter for drift nobody can see; correcting too late
+ * lets a member fall visibly behind. Both edges are pinned to the millisecond, because a threshold
+ * that quietly moves is a threshold nobody will notice has moved.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class SyncPlayDriftMonitorTest {
@@ -29,8 +26,7 @@ class SyncPlayDriftMonitorTest {
     fun `drift just inside the tolerance is left alone`() =
         runTest {
             val fixture = fixture()
-            // Anchor: 60 s at the origin. One second of virtual time later the player should be at
-            // 61 000 ms; put it 1 999 ms behind that.
+            // One second on, expected position is 61 000 ms; put the player 1 999 ms behind that.
             advanceTimeBy(1_000)
             fixture.player.snapshot = PlaybackSnapshot(positionMs = 61_000 - 1_999, isPlaying = true)
 
@@ -86,10 +82,8 @@ class SyncPlayDriftMonitorTest {
     fun `a player paused outside the protocol is left where it stands`() =
         runTest {
             val fixture = fixture()
-            // A phone call or a headphone unplug pauses ExoPlayer directly (audio focus), without
-            // any command and without the phase leaving `Playing` — so the monitor keeps ticking
-            // against a frozen frame. Seek-"correcting" it every second forever would only fight
-            // the user's own pause.
+            // A phone call or headphone unplug pauses ExoPlayer directly (audio focus) without the
+            // phase leaving `Playing`; correcting it would only fight the user's own pause.
             advanceTimeBy(30_000)
             fixture.player.snapshot = PlaybackSnapshot(positionMs = 60_000, isPlaying = false)
 

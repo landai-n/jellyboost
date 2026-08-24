@@ -31,72 +31,30 @@ import javax.inject.Singleton
  * Keeps every downloaded item's cached metadata **current with the server**, by re-fetching the full
  * DTO of the whole downloads table once per stretch of connectivity.
  *
- * ### This is an ongoing sync, not a one-shot migration
- * Read that first, because the class was born out of a bug and it would be easy for a later reader
- * to conclude the bug is fixed and the class is dead code. It is not. A download's copy of its
- * metadata is written once, when it is enqueued, and then never again for as long as the file lives
- * on the device — while the server's copy keeps moving. Someone fixes a mis-scraped title, an
- * identify/refresh pass replaces the artwork tags, an overview or a genre list is corrected, an
- * episode is renumbered. Without this class every one of those edits is invisible offline for the
- * lifetime of the download, and the offline library slowly drifts away from the library it is a copy
- * of. That is what it is for, permanently, on a device that never had a bug at all.
+ * **An ongoing sync, not a one-shot migration.** A download's metadata is written once, when it is
+ * enqueued, and never again for as long as the file lives on the device — while the server's copy
+ * keeps moving: a mis-scraped title fixed, artwork tags replaced, an episode renumbered. Without this
+ * the offline library drifts away from the library it is a copy of. Rows whose blob is a *lean* browse
+ * response rather than the rich `DOWNLOAD_FIELDS` one heal on the same pass; that is a side effect,
+ * not the reason the class exists.
  *
- * ### Gutted rows heal on the same pass
- * `DownloadEnqueuer` stores each downloaded item's complete `DOWNLOAD_FIELDS` response in
- * [ItemEntity.dto] — the offline detail page's only source of overview, genres, cast, taglines,
- * chapters and media streams. A row whose blob is a **lean** browse-list response instead has an
- * offline detail page of nothing but a title and a poster. `BrowseCacheWriter` refuses to write one
- * over a downloaded item, and `OnlineJellyfinRepository.getItem` (the one caller that passes
- * `full = true`) repairs a gutted row on the way past — but only for the item the user happens to
- * open while online, one by one, which is not a repair anyone would finish. A pass over the whole
- * downloads table heals every such row at once. That is a welcome side effect of keeping metadata
- * current, not the reason the sync exists.
+ * Parents are refreshed too: the series and season rows behind a downloaded episode, and the album and
+ * artist rows behind a track, are what the offline walk-up-to-the-show path reads and have no file of
+ * their own to carry them.
  *
- * Either way the work is the same: one batched `getFullItems` for the whole downloads table, written
- * exactly the way the enqueuer writes a fresh download — parents included, because the series and
- * season rows behind a downloaded episode go stale, and are gutted, for the same reasons, and they
- * are what the offline "walk up to the show" path reads.
+ * Each pass also hands its fresh DTOs to [SubtitleSidecarTopUp]: the *file plan* moves as well and an
+ * optional file is allowed to fail outright, so a row on disk would otherwise stay permanently poorer
+ * than the same item downloaded today.
  *
- * ### The files, too
- * Metadata is not the only thing a finished download can be missing. The *file plan* moves as well —
- * phase 0 of the offline multi-track work taught it to fetch a sidecar for every embedded text
- * subtitle of a transcoded download — and an optional file is allowed to fail outright. A row on
- * disk would otherwise stay permanently poorer than the same item downloaded today, with no repair
- * short of deleting and re-downloading it. So each pass hands its freshly-fetched DTOs to
- * [SubtitleSidecarTopUp], which fetches only the small files that are genuinely absent and never
- * touches the media file. It fits here and nowhere else: this is the one place in the app that is
- * online, holds current DTOs for every downloaded item, and runs at a cadence a repair can afford.
- *
- * ### When it runs
- * On [onEachOnlineStretch], the same signal `UserDataSyncTrigger` starts from: every stretch of
- * connectivity including the one the app launched in, which is what makes "the app started online"
- * and "the connection came back" one code path. That helper carries the reasoning.
- *
- * ### Once per online stretch
- * A flag is set when a refresh is attempted and cleared when the connection drops, so a stretch of
- * connectivity costs at most one pass. `distinctUntilChanged` on its own already collapses a
- * flapping probe into a single edge; the flag is what also makes a second, direct [refresh] call a
- * no-op. A failed pass is **not** retried within the stretch — the next offline → online edge picks
- * it up, and the whole thing is one request for a few dozen items.
- *
- * ### What it preserves
- * The rows are written with `source = DOWNLOAD` and, for a row that already exists, its **original**
- * [ItemEntity.cachedAt]. That column is the offline "recently downloaded" ordering key
- * (`BrowseCacheWriter`, rule one), so stamping `now` onto all eighteen downloads at once would
- * silently reshuffle the offline home into refresh order on every sync. Only a row this pass
- * creates — a parent that was never cached — gets the current time.
- *
- * ### What it tolerates
- * Everything. A failed batch is logged and skipped, so one bad chunk cannot cost the others their
- * update; an id the server no longer recognises is simply absent from the response
- * ([DownloadApi.getFullItems]) and leaves its local row exactly as it was — deleting a download
- * because the server lost the item is not this class's call to make.
+ * Runs on [onEachOnlineStretch], at most once per stretch — a flag set on attempt and cleared when the
+ * connection drops — and is never retried within one. Rows keep their **original**
+ * [ItemEntity.cachedAt]: that column is the offline "recently downloaded" ordering key, so stamping
+ * `now` on every download at once would reshuffle the offline home on every sync. A failed batch is
+ * logged and skipped, and an id the server no longer recognises leaves its local row exactly as it was.
  */
 @Singleton
 class DownloadedMetadataRefresher
     @Suppress(
-        // Ten DI collaborators: the refresher is the join point between the download rows, the item cache and the
-        // server, and it is gated on both connectivity and session.
         "LongParameterList",
     )
     @Inject
@@ -128,11 +86,8 @@ class DownloadedMetadataRefresher
         }
 
         /**
-         * Refreshes every downloaded item's stored metadata, once per stretch of connectivity.
-         *
-         * Public so a caller with a better moment than a connectivity edge can ask for it, and so
-         * the tests can await the work instead of racing the application scope. Never throws: stale
-         * metadata is a background annoyance and the app is perfectly usable until the next pass.
+         * Refreshes every downloaded item's stored metadata, once per stretch of connectivity. Never
+         * throws: stale metadata is a background annoyance and the app is usable until the next pass.
          */
         suspend fun refresh() {
             if (!refreshedThisStretch.compareAndSet(false, true)) return
@@ -143,9 +98,9 @@ class DownloadedMetadataRefresher
             val ids = downloadedItemIds()
             if (ids.isEmpty()) return
 
-            // The connection state starts optimistically `ONLINE`, so the app-start pass can easily
-            // beat `MainViewModel.restoreSession()`; without the gate the first request throws the
-            // SDK's "Required value baseUrl is null" (see SessionGate).
+            // The connection state starts optimistically `ONLINE`, so the app-start pass can beat
+            // `MainViewModel.restoreSession()`; without the gate the first request throws the SDK's
+            // "Required value baseUrl is null".
             if (!sessionGate.ensureSession()) return
 
             val items = fetch(ids)
@@ -159,10 +114,8 @@ class DownloadedMetadataRefresher
 
             val parents = fetch(parentIdsOf(items, known = items.mapTo(mutableSetOf()) { it.id }))
             store(items + parents)
-            // …and, with the same fresh DTOs already in hand, the optional files those downloads
-            // never got. Deliberately after the metadata write and never gating it: a sidecar that
-            // could not be fetched must not cost the whole table its refresh, and the next
-            // connectivity edge tries again for free.
+            // Deliberately after the metadata write and never gating it: a sidecar that could not be
+            // fetched must not cost the whole table its refresh.
             @Suppress("TooGenericExceptionCaught")
             try {
                 sidecars.topUp(items)
@@ -185,18 +138,9 @@ class DownloadedMetadataRefresher
             }
 
         /**
-         * The parent ids of [items] that are not already being written — series and season for an
-         * episode, album and album artist for a track.
-         *
-         * Mirrors `DownloadEnqueuer.fetchParents` exactly, and has to: a downloaded episode is only
-         * reachable from its show offline, and a downloaded track from its artist, because those
-         * rows were cached alongside them. They go stale exactly like the download does — a renamed
-         * show, new series artwork, an album re-tagged after a metadata fix — and the lean-write bug
-         * gutted them too.
-         *
-         * A downloaded **track** is also why this pass matters more for music than for video: the
-         * album and artist rows behind it are pure metadata with no file of their own, so nothing
-         * but this sync ever brings them up to date.
+         * The parent ids of [items] that are not already being written. Mirrors
+         * `DownloadEnqueuer.fetchParents`, and has to: those rows are the only way a downloaded episode
+         * reaches its show offline, and they go stale exactly as the download itself does.
          */
         private fun parentIdsOf(
             items: List<BaseItemDto>,
@@ -208,12 +152,9 @@ class DownloadedMetadataRefresher
                 .distinct()
 
         /**
-         * The full DTOs of [ids], in batches.
-         *
-         * Chunked defensively: the ids travel in the query string of one `getItems` request, and a
-         * user with a few hundred downloaded episodes would otherwise build a URL long enough for a
-         * reverse proxy to reject outright. A failed batch costs only its own items — returning
-         * nothing at all because the last chunk timed out would throw away the updates that worked.
+         * The full DTOs of [ids], in batches: the ids travel in the query string of one `getItems`
+         * request, and a few hundred would build a URL a reverse proxy rejects outright. A failed batch
+         * costs only its own items.
          */
         private suspend fun fetch(ids: List<UUID>): List<BaseItemDto> {
             if (ids.isEmpty()) return emptyList()
@@ -230,12 +171,9 @@ class DownloadedMetadataRefresher
         }
 
         /**
-         * Writes the refreshed metadata, straight to the DAO.
-         *
-         * Deliberately not through `BrowseCacheWriter`, for the reason `DownloadEnqueuer` gives: these
-         * DTOs came from `DOWNLOAD_FIELDS`, so this is the rich blob every lean browse write is
-         * forbidden from replacing — routing it through the writer would classify it as a browse read
-         * and preserve the very blob it is here to replace.
+         * Writes straight to the DAO, not through `BrowseCacheWriter`: these DTOs came from
+         * `DOWNLOAD_FIELDS`, and routing them through the writer would classify them as a browse read
+         * and preserve the very blob this is here to replace.
          */
         private suspend fun store(dtos: List<BaseItemDto>) {
             val unique = dtos.distinctBy { it.id }
@@ -262,10 +200,7 @@ class DownloadedMetadataRefresher
         }
 
         private companion object {
-            /**
-             * Ids per `getItems` request. Well under any URL limit at 36 characters an id, and far
-             * more than the handful of items a real downloads table holds.
-             */
+            /** Well under any URL limit at 36 characters an id. */
             const val BATCH_SIZE = 50
         }
     }

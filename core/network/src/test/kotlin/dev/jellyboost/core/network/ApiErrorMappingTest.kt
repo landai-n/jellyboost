@@ -15,13 +15,6 @@ import org.junit.jupiter.api.assertThrows
 import java.io.IOException
 import java.net.SocketTimeoutException
 
-/**
- * The app's one SDK-exception→[AppError] mapping, pinned.
- *
- * A second copy of this mapping would risk disagreeing on the two codes that decide whether the
- * user is asked to sign in again — that is the drift this file guards against. Every case below is
- * a behavioural commitment some caller depends on, named in the test name.
- */
 class ApiErrorMappingTest {
     @Test
     fun `401 is an authentication failure, so the session layer can act on it`() {
@@ -30,17 +23,15 @@ class ApiErrorMappingTest {
 
     @Test
     fun `403 is an authentication failure too, not a server fault`() {
-        // The exact drift a duplicated mapper would produce. `DelegatingJellyfinRepository`
-        // documents "401/403 surfaced so the session layer can re-authenticate", and
-        // `DownloadFailure` classifies Unauthorized as PERMANENT — a 403 reported as Server(403)
-        // reaches neither.
+        // The exact drift a duplicated mapper would produce: 401/403 must reach the session layer, and
+        // `DownloadFailure` classifies Unauthorized as PERMANENT — a 403 reported as Server(403) reaches neither.
         InvalidStatusException(HTTP_FORBIDDEN).toAppError().shouldBeInstanceOf<AppError.Unauthorized>()
     }
 
     @Test
     fun `404 is a missing item, not a server fault`() {
-        // `UserDataSyncer` abandons a pending row on NotFound and `DownloadFailure` stops retrying;
-        // both would keep hammering a deleted item if this were Server(404).
+        // `UserDataSyncer` abandons a pending row on NotFound and `DownloadFailure` stops retrying; both would
+        // keep hammering a deleted item if this were Server(404).
         InvalidStatusException(HTTP_NOT_FOUND).toAppError().shouldBeInstanceOf<AppError.NotFound>()
     }
 
@@ -59,8 +50,8 @@ class ApiErrorMappingTest {
         SocketTimeoutException("slow").toAppError().shouldBeInstanceOf<AppError.Network>()
         IOException("socket closed").toAppError().shouldBeInstanceOf<AppError.Network>()
         TimeoutException("gave up").toAppError().shouldBeInstanceOf<AppError.Network>()
-        // A TLS handshake the SDK would not make. It is an ApiClientException, not an IOException,
-        // caught via the base-class arm — this pins that the arm is still there.
+        // A TLS handshake the SDK would not make: an ApiClientException, not an IOException, so this pins that
+        // the base-class arm is still there.
         SecureConnectionException("bad certificate").toAppError().shouldBeInstanceOf<AppError.Network>()
         InvalidContentException("not json").toAppError().shouldBeInstanceOf<AppError.Network>()
     }
@@ -87,8 +78,8 @@ class ApiErrorMappingTest {
     @Test
     fun `runCatchingApi never swallows cancellation`() =
         runTest {
-            // The one thing a catch-all must not do: a cancelled coroutine is not a failed call, and
-            // absorbing it leaves a dead scope rendering an error nobody asked about.
+            // The one thing a catch-all must not do: absorbing a cancellation leaves a dead scope rendering
+            // an error nobody asked about.
             assertThrows<CancellationException> {
                 runCatchingApi { throw CancellationException("scope died") }
             }

@@ -57,17 +57,9 @@ import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
 
 /**
- * An album's header (art, title, artist, year, favourite) and its tracks, disc-grouped when the
- * album has more than one.
- *
- * Play and Shuffle hand the album's tracks straight to [onPlay]/[onShuffle], which
- * `JellyfinNavHost` wires to `MusicPlaybackViewModel`'s queue.
- *
- * @param onPlay `(tracks, startIndex)` — a track row was tapped, or the Play button at index 0.
- * @param onShuffle `(tracks)` — the Shuffle button; starts the queue shuffled from the top.
- * @param onStartRadio the album itself — "Start radio"; resolves an Instant Mix
- *   seeded from the album and hands it to the queue. `JellyfinNavHost` wires it straight to
- *   `MusicPlaybackViewModel.startRadio`, the same indirection [onPlay]/[onShuffle] go through.
+ * @param onPlay `(tracks, startIndex)` — a track row, or the Play button at index 0.
+ * @param onStartRadio takes the **album**, not its tracks: it resolves an Instant Mix seeded from
+ *   the album rather than queueing what is on screen.
  */
 @Composable
 fun AlbumDetailScreen(
@@ -84,7 +76,6 @@ fun AlbumDetailScreen(
     val errorMessage = state.errorMessage?.toMessage()
 
     Box(modifier = modifier.fillMaxSize()) {
-        // Behind everything, anchored to the top of the window — see [MusicScreenGlow].
         MusicScreenGlow()
 
         when {
@@ -215,7 +206,6 @@ private fun AlbumHeader(
         modifier = Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars).padding(Dimens.SpaceLarge),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        // Clears the overlaid back/home row before the art starts.
         Box(modifier = Modifier.size(Dimens.MinTouchTarget))
 
         JellyfinAsyncImage(
@@ -258,10 +248,7 @@ private fun AlbumHeader(
     }
 }
 
-/**
- * The album's artist, under the title — tappable through to that artist when the server named one
- * with an id, plain text when all we have is the [JellyfinItem.albumArtist] string.
- */
+/** Tappable only when the server named an artist with an id; plain text for a bare name string. */
 @Composable
 private fun AlbumArtistLine(
     album: JellyfinItem,
@@ -292,7 +279,6 @@ private fun AlbumArtistLine(
     )
 }
 
-/** The header's action row: favourite, and [AlbumDownloadButton] for the album as a whole. */
 @Composable
 private fun AlbumHeaderActions(
     album: JellyfinItem,
@@ -321,16 +307,8 @@ private fun AlbumHeaderActions(
 }
 
 /**
- * Downloads the whole album, and says what state it is in while it does.
- *
- * Three appearances, and the label is the accessible one in each: *Download album* while there is
- * something to fetch, *Downloading album* while the queue is working through the tracks, and
- * *Album downloaded* once every track is on the device. The finished state is deliberately still a
- * button-shaped control with no action rather than a hidden one — an affordance that disappears
- * reads as a bug, and its description is the confirmation the user came back to check for.
- *
- * Per-track progress is on the rows below (each `TrackRow` carries its own `DownloadBadge`), so
- * this control does not repeat it as a number.
+ * The finished state stays a button-shaped control with no action rather than disappearing: a
+ * vanished affordance reads as a bug, and its description is the confirmation the user came for.
  */
 @Composable
 private fun AlbumDownloadButton(
@@ -359,11 +337,6 @@ private fun AlbumDownloadButton(
     )
 }
 
-/**
- * Play / Shuffle — hands the album straight to [MusicPlaybackViewModel][onPlay]'s queue — plus a
- * "Start radio" affordance that hands `MusicPlaybackViewModel.startRadio` the album
- * itself rather than its tracks.
- */
 @Composable
 private fun AlbumTransportRow(
     onPlay: () -> Unit,

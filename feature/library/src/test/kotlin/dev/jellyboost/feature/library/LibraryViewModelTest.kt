@@ -47,20 +47,17 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 
-/** Unit tests for [LibraryViewModel]'s query building, sort/filter handling and facet loading. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class LibraryViewModelTest {
     private val dispatcher = StandardTestDispatcher()
     private val repository = mockk<JellyfinRepository>()
 
-    /** The badge source; emits an empty map unless a test says otherwise. */
     private val downloadStates = MutableStateFlow<Map<String, DownloadState>>(emptyMap())
     private val downloads =
         mockk<DownloadRepository> {
             every { observeStates() } returns downloadStates
         }
 
-    /** The local-first watched/favourite writer, and the bus the grid patches its cards from. */
     private val userDataChanges =
         MutableSharedFlow<UserDataChange>(extraBufferCapacity = 8, onBufferOverflow = BufferOverflow.DROP_OLDEST)
     private val userDataRepository =
@@ -68,22 +65,15 @@ class LibraryViewModelTest {
             every { changes } returns userDataChanges
         }
 
-    /** The connectivity-change signal; fires only when a test says the server came back. */
     private val connectivityChanges = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
     private val connectivityRefresher =
         mockk<ConnectivityRefresher> {
             every { connectivityChanged } returns connectivityChanges
         }
 
-    /** Every query the grid asked the repository for, in order. */
     private val queries = mutableListOf<ItemQuery>()
 
-    /**
-     * The total-count callbacks handed to the repository alongside those queries.
-     *
-     * Captured rather than ignored so a test can play the part of the paging source and report a
-     * total the way the first page of a real one does.
-     */
+    /** Captured so a test can play the paging source and report a total as a real first page does. */
     private val totalCountSinks = mutableListOf<(Int) -> Unit>()
 
     @RegisterExtension
@@ -94,8 +84,6 @@ class LibraryViewModelTest {
         every { repository.getItemsPaged(capture(queries), capture(totalCountSinks)) } returns
             flowOf(PagingData.from(listOf(movie("m1", "Dune"))))
     }
-
-    // ---- route arguments --------------------------------------------------------------------
 
     @Test
     fun `takes the library name from the route so the top bar renders immediately`() =
@@ -116,8 +104,6 @@ class LibraryViewModelTest {
             state.filters shouldBe FilterOptions()
             state.activeFilterCount shouldBe 0
         }
-
-    // ---- the paged query --------------------------------------------------------------------
 
     @Test
     fun `pages the library it was opened for, top-level titles only`() =
@@ -141,7 +127,6 @@ class LibraryViewModelTest {
 
                 queries.map { it.sortBy } shouldContainExactly
                     listOf(SortBy.SORT_NAME, SortBy.DATE_CREATED)
-                // "Date added" reads newest-first, as it does in jellyfin-web.
                 queries.last().sortOrder shouldBe SortOrder.DESCENDING
             }
         }
@@ -184,7 +169,6 @@ class LibraryViewModelTest {
                 viewModel.updateDraftFilters(FilterOptions(genres = listOf("Thriller")))
                 advanceUntilIdle()
 
-                // A chip tap must not re-query a 500-item library.
                 queries.size shouldBe 1
                 viewModel.uiState.value.filters shouldBe FilterOptions()
             }
@@ -245,8 +229,6 @@ class LibraryViewModelTest {
             }
         }
 
-    // ---- the inline filter chips ---------------------------------------------------------------
-
     @Test
     fun `a chip commits straight onto the grid, with no draft stage`() =
         runTest(dispatcher) {
@@ -258,7 +240,6 @@ class LibraryViewModelTest {
 
                 queries.size shouldBe 2
                 queries.last().filters.isPlayed shouldBe false
-                // The sheet opens on what the chips did rather than reverting it.
                 viewModel.uiState.value.draftFilters.isPlayed shouldBe false
             }
         }
@@ -334,8 +315,6 @@ class LibraryViewModelTest {
             }
         }
 
-    // ---- the item count ------------------------------------------------------------------------
-
     @Test
     fun `the total the first page reports becomes the header's count`() =
         runTest(dispatcher) {
@@ -343,7 +322,6 @@ class LibraryViewModelTest {
 
             collectingItems(viewModel) {
                 advanceUntilIdle()
-                // What the paging source does once the server has counted the library.
                 totalCountSinks.last().invoke(412)
 
                 viewModel.uiState.value.totalCount shouldBe 412
@@ -382,15 +360,12 @@ class LibraryViewModelTest {
                 viewModel.toggleFilterChip(LibraryFilterChip.Unwatched)
                 advanceUntilIdle()
 
-                // The `Pager` that was swapped out finishes counting *after* the swap.
                 staleSink.invoke(412)
 
                 viewModel.uiState.value.totalCount
                     .shouldBeNull()
             }
         }
-
-    // ---- filter facets ----------------------------------------------------------------------
 
     @Test
     fun `opening the sheet loads this library's facets`() =
@@ -462,8 +437,6 @@ class LibraryViewModelTest {
             state.facets.genres shouldContainExactly listOf("Drama")
         }
 
-    // ---- download badges -------------------------------------------------------------------
-
     @Test
     fun `a download state change re-maps the loaded pages without re-querying the server`() =
         runTest(dispatcher) {
@@ -474,8 +447,8 @@ class LibraryViewModelTest {
                 downloadStates.value = mapOf("m1" to DownloadState.Downloaded)
                 advanceUntilIdle()
 
-                // `cachedIn` sits upstream of the badge combine on purpose: otherwise every
-                // throttled progress write would reload the whole grid from the server.
+                // `cachedIn` sits upstream of the badge combine on purpose: otherwise every throttled
+                // progress write would reload the whole grid from the server.
                 queries.shouldBeEmpty()
             }
         }
@@ -494,8 +467,6 @@ class LibraryViewModelTest {
                 queries.size shouldBe 1
             }
         }
-
-    // ---- refresh when connectivity changes ---------------------------------------------------------------
 
     @Test
     fun `re-loads the facets it had already fetched when the server becomes reachable again`() =
@@ -525,8 +496,6 @@ class LibraryViewModelTest {
             connectivityChanges.emit(Unit)
             advanceUntilIdle()
 
-            // The sheet was never opened, so there is nothing stale to replace — and the facets are
-            // still fetched on the first open, as they always were.
             coVerify(exactly = 0) { repository.getFilterFacets(any(), any()) }
         }
 
@@ -536,18 +505,15 @@ class LibraryViewModelTest {
             val viewModel = viewModel()
 
             collectingItems(viewModel) {
-                // `collectingItems` runs a non-suspending block; the buffered emission reaches the
-                // ViewModel's collector on the `advanceUntilIdle` below all the same.
+                // `collectingItems` runs a non-suspending block; the buffered emission still reaches the
+                // collector on the `advanceUntilIdle` below.
                 connectivityChanges.tryEmit(Unit)
                 advanceUntilIdle()
 
-                // `getItemsPaged` re-decides online/offline on every connection change itself, so a
-                // second trigger here would only make the grid fetch twice.
+                // `getItemsPaged` re-decides online/offline itself, so a second trigger here would fetch twice.
                 queries.size shouldBe 1
             }
         }
-
-    // ---- batch selection (docs/features/batch-selection.md) -------------------------------------
 
     @Test
     fun `long-pressing a card enters selection mode and a second tap leaves it`() =
@@ -581,9 +547,6 @@ class LibraryViewModelTest {
 
             viewModel.onSelection(SelectionIntent.SelectAll)
 
-            // "All" on a paged grid would mean either "the pages loaded so far" — a different set
-            // after every scroll — or a per-page walk of the whole library. The bar does not show
-            // the action; this pins that the ViewModel would not act on it either.
             viewModel.selection.value.ids shouldContainExactly setOf("m1")
         }
 
@@ -597,8 +560,6 @@ class LibraryViewModelTest {
                 downloadStates.value = mapOf("m1" to DownloadState.Downloading(progress = 0.4f))
                 advanceUntilIdle()
 
-                // The selection is a set of ids in its own flow, so nothing the pager or the
-                // download pipeline does underneath it can disturb it.
                 viewModel.selection.value.ids shouldContainExactly setOf("m1")
             }
         }
@@ -611,8 +572,6 @@ class LibraryViewModelTest {
 
             viewModel.selectSort(SortBy.DATE_CREATED)
 
-            // The query is swapped underneath, so a kept selection would be ids the user can no
-            // longer see — and the next batch would act on items that are not on screen.
             viewModel.selection.value.isActive shouldBe false
         }
 
@@ -693,9 +652,8 @@ class LibraryViewModelTest {
             viewModel.onSelection(SelectionIntent.Run(SelectionAction.DOWNLOAD))
             advanceUntilIdle()
 
-            // Only the card with no row of its own is enqueued. A series never has one — the
-            // pipeline expands it — so it always reaches the enqueuer, which skips the episodes
-            // already downloaded itself.
+            // A series never has a row of its own — the pipeline expands it — so it always reaches the
+            // enqueuer, which skips the episodes already downloaded itself.
             coVerify(exactly = 0) { downloads.enqueue("m1") }
             coVerify(exactly = 0) { downloads.enqueue("m2") }
             coVerify(exactly = 1) { downloads.enqueue("m3") }
@@ -760,13 +718,9 @@ class LibraryViewModelTest {
                 userDataChanges.tryEmit(UserDataChange("m1", UserData(played = true)))
                 advanceUntilIdle()
 
-                // The Swiftfin pattern: a batch *Mark watched* is reflected on the cards
-                // from the local write, never from a refetch.
                 queries.shouldBeEmpty()
             }
         }
-
-    // ---- helpers ----------------------------------------------------------------------------
 
     private fun viewModel() =
         LibraryViewModel(
@@ -781,9 +735,8 @@ class LibraryViewModelTest {
         )
 
     /**
-     * Runs [block] while the paged flow is being collected — collection is what makes the `Pager`
-     * ask the repository at all. The collection is cancelled afterwards: a paged flow never
-     * completes, so leaving it running would hang `runTest`.
+     * Collection is what makes the `Pager` ask the repository at all, and is cancelled afterwards: a
+     * paged flow never completes, so leaving it running would hang `runTest`.
      */
     private fun TestScope.collectingItems(
         viewModel: LibraryViewModel,

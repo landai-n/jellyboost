@@ -17,7 +17,6 @@ import org.junit.jupiter.api.Test
 import java.util.UUID
 import org.jellyfin.sdk.model.api.SortOrder as SdkSortOrder
 
-/** Unit tests for the domain [ItemQuery] → SDK `getItems` translation. */
 class QueryMapperTest {
     private val libraryId = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa")
 
@@ -154,9 +153,8 @@ class QueryMapperTest {
 
     @Test
     fun `the library-tile item types project onto movie and series (DUP-11)`() {
-        // OnlineJellyfinRepository.LIBRARY_COUNT_TYPES is this same projection of
-        // ItemType.LIBRARY_TILE_TYPES; pinning it here means a tile's count query and the grid it
-        // opens can never drift onto different BaseItemKind pairs.
+        // `LIBRARY_COUNT_TYPES` is this same projection, so a tile's count query and the grid it
+        // opens cannot drift onto different `BaseItemKind` pairs.
         ItemType.LIBRARY_TILE_TYPES.mapNotNull { it.toBaseItemKind() } shouldContainExactly
             listOf(BaseItemKind.MOVIE, BaseItemKind.SERIES)
     }

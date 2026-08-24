@@ -32,20 +32,13 @@ import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.core.ui.theme.popShadow
 
-/**
- * Container of the snackbar pill — the surface colour, held just off opaque.
- *
- * A near-solid fill rather than glass: a snackbar is the one surface that appears over content the
- * user was already reading, and blurring what is behind a message makes the message harder to read
- * rather than the background prettier.
- */
+/** Near-solid rather than glass: blurring what is behind a message only makes it harder to read. */
 private val SnackbarContainer = Color(color = 0xFF202020).copy(alpha = 0.92f)
 
 private val SnackbarHorizontalPadding = 18.dp
 
 private val SnackbarVerticalPadding = 14.dp
 
-/** Keeps a long message from spanning a tablet's full width, where it would be unreadable. */
 private val SnackbarMaxWidth = 520.dp
 
 private val SnackbarLabel =
@@ -62,23 +55,13 @@ private val SnackbarActionLabel =
         lineHeight = 18.sp,
     )
 
-/** Breathing room the action keeps from the message, and the padding of its own touch area. */
 private val ActionStartGap = 6.dp
 
 private val ActionPadding = 8.dp
 
 /**
- * The refresh's snackbar: a floating pill with the message and, when the caller asked for one, its
- * action.
- *
- * The action is rendered only when [SnackbarData.visuals] carries an `actionLabel`, as an
- * accent-coloured word that calls [SnackbarData.performAction] — which is what resumes the host's
- * suspended `showSnackbar` with `ActionPerformed`. Most of the app's snackbars are plain *reports*
- * ("Marked 4 watched") and pass no label, so they draw exactly the message-only pill they always
- * did; the connection-status snackbar is the one that offers something ("Retry", "Leave offline
- * mode"), and it was silently losing its affordance when this component ignored the label.
- *
- * Pass it to a `SnackbarHost`: `SnackbarHost(hostState) { data -> PillSnackbar(data) }`.
+ * The action must keep calling [SnackbarData.performAction]: that is what resumes the host's
+ * suspended `showSnackbar` with `ActionPerformed`.
  */
 @Composable
 fun PillSnackbar(
@@ -106,10 +89,8 @@ fun PillSnackbar(
             textAlign = TextAlign.Center,
             maxLines = SNACKBAR_MAX_LINES,
             overflow = TextOverflow.Ellipsis,
-            // The pill's vertical padding lives on the message rather than on the row, so that the
-            // action beside it can claim a full 48dp of height without adding that padding on top
-            // of it: a message-only snackbar draws exactly as before, and one with an action is
-            // 48dp tall instead of 46.
+            // Vertical padding lives on the message, not the row, so the action can claim a full
+            // 48dp of height without stacking on top of it.
             modifier =
                 Modifier
                     .weight(weight = 1f, fill = false)
@@ -139,7 +120,7 @@ fun PillSnackbar(
 
 private const val SNACKBAR_MAX_LINES = 2
 
-/** The one piece of [SnackbarData] a preview needs: the visuals and two callbacks that do nothing. */
+/** The one piece of [SnackbarData] a preview needs. */
 private class PreviewSnackbarData(
     message: String,
     actionLabel: String? = null,

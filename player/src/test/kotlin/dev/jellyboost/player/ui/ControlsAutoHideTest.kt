@@ -8,9 +8,6 @@ import io.kotest.matchers.shouldNotBe
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for [controlsAutoHideArmed] and the [ControlsAutoHide] key it goes into — when the
- * player's control bar takes itself away, and what starts its four seconds over.
- *
  * The rule lives in an explicit [ControlsAutoHide] value rather than a `LaunchedEffect`'s key
  * list: a key of `(shouldHide, timeoutMs)` alone would mean nothing a user *did* with the controls
  * restarted the timer — the bar would hide four seconds after it first appeared whether it had
@@ -37,8 +34,7 @@ class ControlsAutoHideTest {
 
     @Test
     fun `an open panel suspends the timer`() {
-        // The belt to the braces of hosting the panels above the bar: a user with a
-        // picker open is using the player, and dismissing it must not reveal bare video.
+        // A user with a picker open is using the player; dismissing it must not reveal bare video.
         timer(panelOpen = true).armed shouldBe false
     }
 
@@ -51,9 +47,7 @@ class ControlsAutoHideTest {
 
     @Test
     fun `an interaction restarts the timer`() {
-        // Stated as the Compose runtime sees it: the key changes, so the running delay is
-        // cancelled and a fresh four seconds begin. Both timers are armed — the difference is
-        // *only* the interaction, which is the point.
+        // The key changes, so Compose cancels the running delay and a fresh four seconds begin.
         val before = timer(interactions = 3)
         val after = timer(interactions = 4)
 
@@ -63,8 +57,8 @@ class ControlsAutoHideTest {
 
     @Test
     fun `nothing happening does not restart the timer`() {
-        // The other half of the contract: a recomposition that changes none of the inputs must leave
-        // the running countdown alone, or the controls would never hide at all.
+        // A recomposition that changes none of the inputs must leave the countdown alone, or the
+        // controls would never hide at all.
         timer(interactions = 3) shouldBe timer(interactions = 3)
     }
 
@@ -80,8 +74,7 @@ class ControlsAutoHideTest {
 
     @Test
     fun `an interaction while the timer is suspended still does not arm it`() {
-        // Interaction restarts; it does not override. A screen reader user tapping play must not
-        // start a countdown while touch exploration is suspending it.
+        // Interaction restarts; it does not override the suspension.
         timer(touchExplorationEnabled = true, interactions = 9).armed shouldBe false
     }
 
@@ -108,13 +101,10 @@ class ControlsAutoHideTest {
 }
 
 /**
- * Unit tests for [PlayerActions.reportingInteraction] — the wrapper that makes "every interaction
- * restarts the auto-hide" true for the whole screen at once.
- *
  * The test that matters is the last one: it invokes *every* lambda in the bundle and insists each
  * one both reported and forwarded. An action added to [PlayerActions] and forgotten in the wrapper
- * fails it, which is the property the fix rests on — the alternative, a bump at each call site, is
- * exactly the kind of rule that holds until the next feature.
+ * fails it — the alternative, a bump at each call site, is exactly the kind of rule that holds
+ * until the next feature.
  */
 class PlayerActionsInteractionTest {
     private val forwarded = mutableListOf<String>()
@@ -169,9 +159,8 @@ class PlayerActionsInteractionTest {
                 "quality:AUTO" to { actions.onSelectQuality(PlaybackQuality.AUTO) },
                 "speed:NORMAL" to { actions.onSelectSpeed(PlaybackSpeed.NORMAL) },
                 "skipSegment" to { actions.onSkipSegment() },
-                // The up-next card's two, which are taps on the player exactly as much as the skip
-                // pill's is: a user reading the card is still here, and the controls must not hide
-                // out from under the decision they are making.
+                // The up-next card's two: a user reading it is still here, so the controls must not
+                // hide out from under the decision they are making.
                 "playNext" to { actions.onPlayNext() },
                 "dismissUpNext" to { actions.onDismissUpNext() },
                 "back" to { actions.onBack() },

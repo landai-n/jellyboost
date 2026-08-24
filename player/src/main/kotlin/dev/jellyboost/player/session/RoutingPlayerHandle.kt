@@ -18,27 +18,13 @@ import javax.inject.Provider
 import javax.inject.Singleton
 
 /**
- * The [PlayerHandle] everything above the seam actually holds: whichever player is playing.
+ * **With no cast session this must stay a branchless pass-through**; every method below is a single delegation.
  *
- * Casting does not change *what* `PlayerViewModel` does — resolve, prepare, report, switch tracks —
- * only where the bytes are decoded, so the cheapest correct design is the one that leaves the
- * ViewModel unaware: one binding, one seam, and a pointer underneath it that
- * [dev.jellyboost.player.cast.CastSessionCoordinator] moves when a cast session starts or ends.
- * Nothing else may call [setActive]; two parties deciding which player is live is the one way this
- * can strand a session on a television.
+ * The cast handle comes through a [Provider] because constructing it loads `com.google.android.gms`, which a
+ * device without Play services must never do — only a started session asks for it.
  *
- * **With no cast session this is a pass-through and must stay one.** Every method below is a single
- * delegation with no branch in it, which is what makes "casting changed nothing about playing
- * something on your own" a property of the code rather than of the tests.
- *
- * The cast handle arrives through a [Provider] rather than as an instance: constructing it is the
- * first thing in the app that loads a `com.google.android.gms` class, and a device without Play
- * services must never do that. Since only a started session calls `setActive(Cast)`, and a session
- * cannot start without the Cast stack, the provider is only ever asked on devices that have one.
- *
- * `PlaybackService` keeps injecting the concrete [ExoPlayerHandle] and is deliberately untouched: it
- * owns the *local* media session and notification, which is exactly what should disappear while a
- * television is playing.
+ * `PlaybackService` deliberately keeps injecting the concrete [ExoPlayerHandle]: it owns the *local* session and
+ * notification, which should disappear while a television is playing.
  */
 @Singleton
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -50,32 +36,22 @@ internal class RoutingPlayerHandle
     ) : PlayerHandle {
         private val _activeHandle = MutableStateFlow(local)
 
-        /** The player currently in charge; [local] until a cast session says otherwise. */
         val activeHandle: StateFlow<PlayerHandle> = _activeHandle.asStateFlow()
 
         private val active: PlayerHandle get() = _activeHandle.value
 
-        /**
-         * The cast handle, once something has actually asked for one.
-         *
-         * Remembered rather than re-fetched from the [Provider], so that [stopInactive] can silence
-         * a cast player that exists without *creating* one that does not — which on a device with no
-         * Play services would load the very classes this indirection exists to avoid.
-         */
+        /** Remembered, not re-fetched: [stopInactive] must silence a cast player without ever creating one. */
         private var castIfCreated: PlayerHandle? = null
 
         /**
-         * The active handle's events, and only the active one's.
-         *
-         * `flatMapLatest` rather than a merge: a collector that kept hearing from the player it just
-         * stopped would attribute its `Ended` — which is what stopping one produces — to the session
+         * `flatMapLatest`, not a merge: the stopped player's `Ended` would otherwise be attributed to the session
          * that replaced it, and `PlayerViewModel.onEnded` closes the screen on that event.
          */
         override val events: Flow<PlayerEvent> = _activeHandle.flatMapLatest { it.events }
 
         override val player: Player? get() = active.player
 
-        /** Points playback at [target]. Called by the cast coordinator and by nothing else. */
+        /** Called by the cast coordinator and by nothing else: two parties routing strands sessions on a TV. */
         fun setActive(target: PlaybackTarget) {
             val handle =
                 when (target) {
@@ -88,17 +64,8 @@ internal class RoutingPlayerHandle
         }
 
         /**
-         * Silences the player that is no longer in charge.
-         *
-         * Separate from [setActive], and called only after it, because the two are not the same
-         * decision: routing says where the *next* command goes, while this ends what the previous
-         * player was still doing. A phone that kept playing under a television is the everyday
-         * consequence of skipping it, and `ExoPlayerHandle.stop` takes the local media notification
-         * down with it — which is precisely what should happen when the film has moved elsewhere.
-         *
-         * Not folded into [setActive] on purpose: a switch is not always a handover — the cast side
-         * of one ends with a receiver that has already gone — and the caller that knows which it is
-         * is [dev.jellyboost.player.cast.CastSessionCoordinator].
+         * Silences the player that is no longer in charge; must be called after [setActive], never folded into it —
+         * a switch is not always a handover, and only the cast coordinator knows which it is.
          */
         fun stopInactive() {
             val inactive = if (active === local) castIfCreated else local
@@ -145,7 +112,6 @@ internal class RoutingPlayerHandle
         override fun release() = active.release()
     }
 
-/** Where playback is happening — the whole of what [RoutingPlayerHandle] routes between. */
 internal enum class PlaybackTarget {
     Local,
     Cast,

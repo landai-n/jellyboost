@@ -46,18 +46,14 @@ import java.time.Clock
 import java.time.ZoneOffset
 
 /**
- * Unit tests for the second lane [DownloadQueue] drains an item's audio sidecars on, concurrently
- * with the media file.
- *
- * Separate from [DownloadQueueTest], which owns the transfer itself and already owns what a sidecar
- * *is* — the un-resumable fetch, the strip, the row's bytes. What lives here is only what having
- * **two** lanes changed: that they overlap at all, that the audio one stays sequential inside
- * itself, and that neither of the two failures they can suffer costs the other lane anything it did
- * not cost before.
+ * The second lane [DownloadQueue] drains an item's audio sidecars on, concurrently with the media file.
+ * What lives here is only what having **two** lanes changed: that they overlap at all, that the audio
+ * one stays sequential inside itself, and that neither of the two failures they can suffer costs the
+ * other lane anything.
  *
  * The lane tests gate on a [CompletableDeferred] the other lane completes, with a virtual
- * [LANE_TIMEOUT_MILLIS] around the wait: a queue that went back to draining sidecars after the media
- * file fails these at once rather than hanging them until `runTest` gives up.
+ * [LANE_TIMEOUT_MILLIS] around the wait, so a queue that went back to draining sidecars after the media
+ * file fails at once rather than hanging until `runTest` gives up.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class DownloadQueueAudioLaneTest {
@@ -102,15 +98,14 @@ class DownloadQueueAudioLaneTest {
     @Test
     fun `a sidecar's fetch starts before the media file has finished`() =
         runTest {
-            // The whole point of the lane: a sidecar is an encode running at its own stream's
-            // bitrate, so draining it afterwards added its full duration to the item's — about
-            // eleven minutes of it, for two tracks, on the first device walk.
+            // A sidecar is an encode running at its own stream's bitrate, so draining it afterwards
+            // added its full duration to the item's — about eleven minutes for two tracks.
             val order = mutableListOf<String>()
             val sidecarStarted = CompletableDeferred<Unit>()
             coEvery { downloader.download(TRANSCODE_URL, any(), any(), any(), any(), any()) } coAnswers {
                 order += "media starts"
-                // One lane could never reach the next line: the sidecar's row would still be
-                // waiting for this very call to return.
+                // One lane could never reach the next line: the sidecar's row would still be waiting
+                // for this very call to return.
                 withTimeout(LANE_TIMEOUT_MILLIS) { sidecarStarted.await() }
                 order += "media ends"
                 100L
@@ -131,8 +126,8 @@ class DownloadQueueAudioLaneTest {
     fun `the sidecars of one item are fetched one after another, in stream order`() =
         runTest {
             // Two live encodes per item and no more: the lane's own rows are sequential, so the
-            // server's CPU stays on the media transcode the user is waiting for. The order is the
-            // plan's — ascending stream index, the same order the player merges them in.
+            // server's CPU stays on the media transcode. The order is the plan's — ascending stream
+            // index, the same order the player merges them in.
             givenLanguages(3)
             val fetched = mutableListOf<String>()
             var inFlight = 0
@@ -203,10 +198,10 @@ class DownloadQueueAudioLaneTest {
 
             // The item fails exactly as it did before there was a lane to cancel.
             coVerify { downloadDao.setStatus(uuid(1), DownloadStatus.ERROR, NOW, any()) }
-            // ERROR here would be a verdict on a row that was never allowed to finish, and the
-            // retry re-plans rows rather than clearing error messages off them.
+            // ERROR here would be a verdict on a row that was never allowed to finish, and the retry
+            // re-plans rows rather than clearing error messages off them.
             coVerify(exactly = 0) { downloadDao.setFileStatus(AUDIO_FILE_ID, DownloadStatus.ERROR) }
-            // Its fetch cannot be resumed, so leaving it would be a junk video sitting in the item's
+            // Its fetch cannot be resumed, so leaving it would be junk video sitting in the item's
             // directory until an attempt that truncates it anyway.
             partFile(2).exists() shouldBe false
             extractor.calls.shouldBeEmpty()
@@ -232,8 +227,8 @@ class DownloadQueueAudioLaneTest {
     @Test
     fun `a pause takes both lanes with it`() =
         runTest {
-            // Nothing may outlive the item: the lane is a child of the transfer's own scope, not a
-            // job on a scope of its own that a cancelled drain would leave running.
+            // Nothing may outlive the item: the lane is a child of the transfer's own scope, not a job
+            // on a scope of its own that a cancelled drain would leave running.
             val sidecarStarted = CompletableDeferred<Unit>()
             coEvery { downloader.download(AUDIO_URL, any(), any(), any(), any(), any()) } coAnswers {
                 secondArg<File>().writeBytes(ByteArray(FETCH_BYTES.toInt()))
@@ -249,8 +244,8 @@ class DownloadQueueAudioLaneTest {
             runCurrent()
             drain.cancelAndJoin()
 
-            // Both were genuinely in flight when the pause landed — otherwise the rest of this
-            // asserts nothing about a lane that never ran.
+            // Both were genuinely in flight when the pause landed — otherwise the rest of this asserts
+            // nothing about a lane that never ran.
             sidecarStarted.isCompleted shouldBe true
             coVerify { downloadDao.requeueIfDownloading(uuid(1), NOW) }
             coVerify(exactly = 0) { downloadDao.setFileStatus(AUDIO_FILE_ID, DownloadStatus.ERROR) }
@@ -260,9 +255,8 @@ class DownloadQueueAudioLaneTest {
     // ---- helpers ---------------------------------------------------------------------------------
 
     /**
-     * A transcoded film with [count] audio languages, the first of them baked into the media file —
-     * so the plan carries an `AUDIO` row for every stream index from 2 up, and the queue has a lane
-     * with something in it.
+     * A transcoded film with [count] audio languages, the first baked into the media file — so the plan
+     * carries an `AUDIO` row for every stream index from 2 up.
      */
     private fun givenLanguages(count: Int) {
         val streams = (1..count).map { audioStream(index = it) }
@@ -322,9 +316,8 @@ class DownloadQueueAudioLaneTest {
         const val SIDECAR_BYTES = 400L
 
         /**
-         * How long a lane waits for the other one before the test calls the overlap broken.
-         *
-         * Virtual milliseconds — `runTest` never spends them — so a regression fails immediately.
+         * How long a lane waits for the other before the test calls the overlap broken. Virtual
+         * milliseconds — `runTest` never spends them — so a regression fails immediately.
          */
         const val LANE_TIMEOUT_MILLIS = 1_000L
 

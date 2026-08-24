@@ -14,22 +14,13 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * [SecureCredentialStore] backed by Jetpack `security-crypto`'s `EncryptedSharedPreferences`
- * (AES256_GCM master key, AES256_SIV key encryption, AES256_GCM value encryption).
+ * [SecureCredentialStore] on `security-crypto`'s `EncryptedSharedPreferences` (AES256_GCM master key,
+ * AES256_SIV keys, AES256_GCM values). The artifact is deprecated upstream, so the usage is suppressed and
+ * confined to this file: a swap to hand-rolled Keystore AES-GCM must touch only this class.
  *
- * `EncryptedSharedPreferences`/`MasterKey` are deprecated upstream (the whole `security-crypto`
- * artifact is in maintenance mode) but remain the simplest correct implementation available;
- * usage is suppressed and confined entirely to this file so a future swap to a hand-rolled Android
- * Keystore AES-GCM implementation only touches this class.
- *
- * Opening (or first creating) the encrypted preferences does disk I/O and talks to the Android
- * Keystore, so every operation — including the lazy creation itself — runs on the injected
- * [IoDispatcher]: an injected dispatcher is a test seam as much as a policy.
- *
- * What happens when it will not open is [EncryptedPreferencesOpener]'s decision, and it is not one
- * decision but two: an undecryptable file is deleted and recreated (better than crashing on every
- * app start), a file that merely could not be read right now is left exactly where it is. Either
- * way the loss is *recorded* rather than silent — see [consumeLostSession].
+ * Opening the store does disk I/O and talks to the Keystore, so every operation — the lazy creation included
+ * — runs on the injected [IoDispatcher]. What happens when it will not open is [EncryptedPreferencesOpener]'s
+ * decision, and the loss is *recorded* rather than silent (see [consumeLostSession]).
  */
 @Suppress("DEPRECATION")
 @Singleton
@@ -79,8 +70,8 @@ class EncryptedSecureCredentialStore
                         accessToken = accessToken,
                     )
                 } catch (error: IllegalArgumentException) {
-                    // Decrypted, but not a session: two ids that are no longer UUIDs. The row is
-                    // unusable and is dropped — which costs the user their session, so it counts.
+                    // Decrypted, but not a session: ids that are no longer UUIDs. Dropping the row costs the
+                    // user their session, so it counts as a loss.
                     Timber.w(error, "Stored session was present but unparseable; clearing it")
                     clear(current)
                     lostStoredSession = true

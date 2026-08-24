@@ -45,26 +45,19 @@ import java.util.UUID
 
 /**
  * The cancel-then-redownload interleaving, played out through the real repository, deleter and
- * enqueuer.
+ * enqueuer:
  *
- * The sequence, in the order a user produces it:
- *
- * 1. an item is transferring and the user taps **Cancel**. `DownloadRepositoryImpl.deleteAll`
- *    claims the row (`demoteRunnable` → `CANCELLED`) and, because the live transfer was among the
- *    targets, calls `DownloadScheduler.stop()` — which waits for the worker, up to five seconds;
- * 2. the badge is already `NotDownloaded` (that mapping is asserted below, because it is what puts
- *    a **Download** button under the user's finger), so the user re-taps. `DownloadEnqueuer` writes
- *    a fresh `QUEUED` row;
+ * 1. the user taps **Cancel** on a transferring item; `deleteAll` claims the row (`demoteRunnable` →
+ *    `CANCELLED`) and, because the live transfer was among the targets, waits on `stop()`;
+ * 2. the badge is already `NotDownloaded`, so the user re-taps and a fresh `QUEUED` row is written;
  * 3. `stop()` returns and the delete cascade finally runs.
  *
  * Unguarded, step 3 reads the row it finds — the *new* one — and deletes it, its directory and its
- * metadata: no download, no error, nothing on screen. The re-enqueue is driven from inside the
- * `stop()` stub, which is exactly where it happens in life.
+ * metadata: no download, no error, nothing on screen.
  *
- * Room is a map rather than a stack of per-call stubs, for `SeasonSeedingScenarioTest`'s reason:
- * the subject is a *sequence*, and the two statements it turns on (`demoteRunnable`'s legs and
- * `deleteUnlessRunnable`'s `status NOT IN ('QUEUED','DOWNLOADING')`) are modelled clause for
- * clause, so it is the SQL being tested and not a mock's memory.
+ * Room is a map rather than per-call stubs because the subject is a *sequence*, and the two statements
+ * it turns on (`demoteRunnable`'s legs and `deleteUnlessRunnable`'s
+ * `status NOT IN ('QUEUED','DOWNLOADING')`) are modelled clause for clause.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class CancelThenRedownloadScenarioTest {
@@ -111,8 +104,8 @@ class CancelThenRedownloadScenarioTest {
 
             repository.delete(ITEM.toString()) shouldBe AppResult.Success(0L)
 
-            // The row the user asked for is still there, queued, and nothing freed any bytes: the
-            // cascade recognised that the item it had claimed is not the item it found.
+            // The row the user asked for is still there, queued: the cascade recognised that the item
+            // it had claimed is not the item it found.
             downloads.getValue(ITEM).status shouldBe DownloadStatus.QUEUED
             verify(exactly = 0) { storage.deleteItemDirectory(any()) }
             // …and the metadata the new row's drain will need is untouched, so it cannot fail with
@@ -124,8 +117,7 @@ class CancelThenRedownloadScenarioTest {
     @Test
     fun `a cancel nobody interrupts still deletes everything`() =
         runTest {
-            // The other half of the guard: with no re-enqueue in the window the cascade is
-            // unchanged — row, files and orphaned metadata all go.
+            // The other half of the guard: with no re-enqueue in the window the cascade is unchanged.
             givenTransferring()
 
             repository().delete(ITEM.toString()) shouldBe AppResult.Success(FILE_BYTES)
@@ -138,8 +130,8 @@ class CancelThenRedownloadScenarioTest {
     @Test
     fun `the re-enqueued row keeps the bytes already on disk`() =
         runTest {
-            // The end state the fix produces is a *resume*, not a restart: the partial file was
-            // never unlinked, and the fresh row carries the byte count that describes it.
+            // A *resume*, not a restart: the partial file was never unlinked, and the fresh row carries
+            // the byte count that describes it.
             givenTransferring(bytesDownloaded = 900_000_000L)
             val repository = repository()
             coEvery { scheduler.stop() } coAnswers { repository.enqueue(ITEM.toString()) }

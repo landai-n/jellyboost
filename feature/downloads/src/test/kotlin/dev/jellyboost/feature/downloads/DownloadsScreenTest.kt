@@ -8,24 +8,7 @@ import dev.jellyboost.core.ui.theme.ChromeAwarePadding
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
-/**
- * Unit tests for what `DownloadsScreen.kt` decides outside of composition.
- *
- * [queueRowCompact] is the breakpoint behind `QueueRow`'s two-tier phone layout: a 360dp queue row
- * crushes its title to ~4 characters, "Hous…", under four 48dp action buttons. It is extracted
- * from the screen's `BoxWithConstraints` specifically so the breakpoint
- * itself is checkable without a Compose test harness.
- *
- * [chromePinned] is the second decision taken from the same constraints: whether the header,
- * summary and tab row are pinned above an inner-scrolling list, or scroll with it as one page. It
- * needs height as well as width — fused into one, a landscape phone would pin chrome over a list
- * with no room left to scroll in.
- *
- * [ChromeAwarePadding] is the third: what the screen hands `Modifier.padding` and its lists'
- * `contentPadding` so that the app chrome's *animating* inset is resolved in the layout phase rather
- * than read in composition. Its arithmetic is checkable here for the
- * same reason the breakpoints are — no Compose harness needed to state what the numbers should be.
- */
+/** The three decisions `DownloadsScreen.kt` takes outside composition, checkable without a harness. */
 class DownloadsScreenTest {
     @Test
     fun `a 360dp phone width is compact`() {
@@ -50,7 +33,6 @@ class DownloadsScreenTest {
 
     @Test
     fun `a tablet in landscape pins its chrome`() {
-        // test tablet, landscape: wide, and far taller than the chrome needs.
         chromePinned(maxWidth = 1600.dp, maxHeight = 1000.dp) shouldBe true
     }
 
@@ -61,8 +43,7 @@ class DownloadsScreenTest {
 
     @Test
     fun `a phone in landscape does not pin its chrome`() {
-        // The reported defect: wide enough for the tablet summary, nowhere near tall enough to pin
-        // it — the whole window was chrome and the queue could not be scrolled to.
+        // Wide enough for the tablet summary, nowhere near tall enough to pin it.
         chromePinned(maxWidth = 800.dp, maxHeight = 360.dp) shouldBe false
     }
 
@@ -90,7 +71,6 @@ class DownloadsScreenTest {
         val padding = ChromeAwarePadding(chrome = chrome(top = 96.dp, bottom = 104.dp), takeChromeTop = true)
 
         padding.calculateTopPadding() shouldBe 96.dp
-        // The bottom half belongs to whichever list is drawn, so the box must not also reserve it.
         padding.calculateBottomPadding() shouldBe 0.dp
     }
 
@@ -104,16 +84,14 @@ class DownloadsScreenTest {
                 takeChromeBottom = true,
             )
 
-        // The list's own top is its own: the chrome's top is already on the outer box.
         padding.calculateTopPadding() shouldBe 8.dp
         padding.calculateBottomPadding() shouldBe 116.dp
     }
 
     @Test
     fun `the read follows the chrome rather than being captured`() {
-        // The whole point: `AppScaffold` publishes a padding whose values animate every frame of a
-        // navigation, and this class exists so that read happens in the layout phase. A captured
-        // value would freeze the padding at whatever the transition's first frame happened to be.
+        // `AppScaffold`'s padding animates every frame of a navigation, so a captured value would
+        // freeze at the transition's first frame.
         var top = 96.dp
         val animating =
             object : PaddingValues {

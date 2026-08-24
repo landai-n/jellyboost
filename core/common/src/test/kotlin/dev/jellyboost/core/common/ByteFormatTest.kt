@@ -7,11 +7,8 @@ import org.junit.jupiter.api.Test
 import java.util.Locale
 
 /**
- * Unit tests for [formatBytes].
- *
- * The function formats with `Locale.getDefault()` by design (it should read the way the user's own
- * device does), so the default locale is pinned for the run — otherwise these assertions would pass
- * or fail depending on the machine's region (e.g. a comma instead of a dot for the decimal point).
+ * The default locale is pinned for the run: [formatBytes] formats with `Locale.getDefault()` by design, so
+ * these assertions would otherwise pass or fail depending on the machine's region.
  */
 class ByteFormatTest {
     private val originalLocale: Locale = Locale.getDefault()

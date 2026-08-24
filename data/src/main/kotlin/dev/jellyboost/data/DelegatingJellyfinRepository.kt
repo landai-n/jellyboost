@@ -23,36 +23,26 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * The [JellyfinRepository] the whole app actually injects: it picks between the online and the
- * offline implementation **per call**.
+ * Picks between the online and offline implementation **per call** — there is no "offline mode" the
+ * app enters.
  *
- * There is no "offline mode" the app enters. Every call asks the same question — is
- * `ConnectionState` online right now? — and takes the corresponding path, which is what lets the
- * user walk out of Wi-Fi mid-scroll and simply keep browsing what they downloaded.
- *
- * ### Failure handling
  * | server answer | what happens |
  * |---|---|
  * | success | returned as is |
- * | transport failure (IO, timeout, TLS) | [ConnectionStateProvider.reportFailure] + this call is retried offline |
- * | 502 / 503 / 504 | same — a proxy in front of a stopped server looks exactly like a dead server |
+ * | transport failure (IO, timeout, TLS) | [ConnectionStateProvider.reportFailure] + retried offline |
+ * | 502 / 503 / 504 | same — a proxy in front of a stopped server looks like a dead server |
  * | 401 / 403 | **surfaced unchanged** so the session layer can re-authenticate |
  * | any other server error | surfaced unchanged |
  *
- * Swallowing a 401 into an offline fallback would be the worst possible outcome: the user would
- * silently see only downloaded media while their session quietly stayed expired.
+ * Swallowing a 401 into an offline fallback would silently show downloads-only while the session
+ * stayed expired.
  *
- * ### Not hanging
- * Every online call is bounded by [ONLINE_CALL_TIMEOUT_MS]. The plan's mechanism against "a 30s
- * socket timeout" is the 3-second reachability probe, but the probe can only demote a server it
- * has been given a chance to test; a call already in flight when the server dies would still sit
- * on the SDK's own timeout. The ceiling closes that window — and, like a transport failure, it
- * reports the failure so the probe runs.
+ * [ONLINE_CALL_TIMEOUT_MS] bounds every online call: the reachability probe can only demote a server
+ * it has been given a chance to test, so a call already in flight when the server dies would
+ * otherwise sit on the SDK's own 30-second timeout.
  */
 @Singleton
 @Suppress(
-    // One member per [JellyfinRepository] method, by construction — same rationale as
-    // `OnlineJellyfinRepository`'s and `OfflineJellyfinRepository`'s identical suppression.
     "TooManyFunctions",
 )
 internal class DelegatingJellyfinRepository
@@ -141,9 +131,8 @@ internal class DelegatingJellyfinRepository
             delegate({ getLyrics(itemId) }, { getLyrics(itemId) })
 
         /**
-         * The paged grid is a stream, so the choice is re-made whenever the connection changes
-         * rather than once at subscription: losing the network mid-scroll swaps the grid over to
-         * the downloaded items instead of freezing on a failed page.
+         * A stream, so the source is re-picked on every connection change rather than once at
+         * subscription: losing the network mid-scroll swaps to downloads instead of a failed page.
          */
         @OptIn(ExperimentalCoroutinesApi::class)
         override fun getItemsPaged(
@@ -161,11 +150,6 @@ internal class DelegatingJellyfinRepository
                     }
                 }
 
-        /**
-         * @param onlineCall the call to make against the server.
-         * @param offlineCall the same call against Room — used when offline, and as the fallback
-         *   when the server turned out to be unreachable after all.
-         */
         private suspend fun <T> delegate(
             onlineCall: suspend JellyfinRepository.() -> AppResult<T>,
             offlineCall: suspend JellyfinRepository.() -> AppResult<T>,
@@ -199,12 +183,9 @@ internal class DelegatingJellyfinRepository
     }
 
 /**
- * `true` for the failures that mean "the server is not there", as opposed to "the server said no".
- *
- * The 5xx set is deliberately narrow: 502/503/504 are what a reverse proxy returns for a backend
- * that is down or restarting, which is indistinguishable from an unreachable server from the app's
- * point of view. A 500 is the server answering — badly, but answering — and falling back to the
- * cache would hide a real bug behind a stale list.
+ * "The server is not there", as opposed to "the server said no". The 5xx set is deliberately narrow:
+ * 502/503/504 are what a proxy returns for a backend that is down, while a 500 is the server
+ * answering — badly — and falling back would hide a real bug behind a stale list.
  */
 private fun AppError.isTransportFailure(): Boolean =
     when (this) {

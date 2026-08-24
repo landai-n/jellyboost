@@ -24,19 +24,12 @@ import javax.inject.Singleton
 /**
  * The real [PlayerHandle]: one process-wide [ExoPlayer], shared with [PlaybackService].
  *
- * Two configuration choices do most of the work:
+ * - `EXTENSION_RENDERER_MODE_PREFER` must stay paired with the forced audio codecs in
+ *   `DeviceProfileBuilder`: it is what makes the advertised AC3/DTS/TrueHD actually decodable.
+ * - `setEnableDecoderFallback(true)` only covers a decoder that fails to *initialise*; the
+ *   mid-stream case is `DecoderFallbackHandler`'s.
  *
- * - `EXTENSION_RENDERER_MODE_PREFER` puts the bundled `org.jellyfin.media3:media3-ffmpeg-decoder`
- *   ahead of the platform decoders, which is what lets AC3/DTS/TrueHD audio direct-play instead of
- *   dragging the whole file through a transcode. It pairs with the forced audio codecs in
- *   `DeviceProfileBuilder`: advertising codecs we then fail to decode would be worse than not
- *   advertising them.
- * - `setEnableDecoderFallback(true)` lets ExoPlayer try the next decoder when one fails to
- *   *initialise*. It does nothing for a decoder that fails mid-stream, which is exactly the gap
- *   `DecoderFallbackHandler` fills.
- *
- * The player instance is deliberately singleton and shared rather than reached through a
- * `MediaController`: the player UI drives this ExoPlayer directly.
+ * The player UI drives this instance directly rather than through a `MediaController`.
  */
 @Singleton
 @UnstableApi
@@ -54,27 +47,18 @@ internal class ExoPlayerHandle
         private var exoPlayer: ExoPlayer? = null
 
         /**
-         * The factory the player is built with, kept so [prepare] can build sources by hand.
-         *
-         * Assembling a `MediaSource` outside the player has to go through the *same* factory the
-         * player uses, or the hand-built one would open its URIs through Media3's default data
-         * source instead of the app's — no auth headers, no cache, none of the timeouts
-         * `PlayerModule` configures.
+         * Hand-built sources must go through the *same* factory the player uses, or they open their
+         * URIs through Media3's default data source: no auth headers, no cache, no timeouts.
          */
         private val mediaSourceFactory = DefaultMediaSourceFactory(dataSourceFactory)
 
-        /** Non-null once playback has been prepared; the video surface binds to it. */
         override val player: Player? get() = exoPlayer
 
-        /** The shared Media3→[PlayerEvent] bridge; the local player forwards every event it has. */
         private val listener = playerEventListener(emit = { _events.tryEmit(it) })
 
         /**
-         * The shared player, created on first use.
-         *
-         * Created lazily rather than in the constructor because `ExoPlayer.Builder` binds itself
-         * to the calling thread's looper, and Hilt may well construct this object off the main
-         * thread. Every caller — the ViewModel and [PlaybackService] — is on the main thread.
+         * Built lazily and on the main thread: `ExoPlayer.Builder` binds itself to the calling
+         * thread's looper, and Hilt may construct this object off it.
          */
         fun requirePlayer(): ExoPlayer = exoPlayer ?: buildPlayer().also { exoPlayer = it }
 
@@ -100,38 +84,24 @@ internal class ExoPlayerHandle
                         // handleAudioFocus =
                         true,
                     )
-                    // Headphones pulled out, or a Bluetooth speaker walked away from: pause rather
-                    // than blare the film out of the device speaker.
                     setHandleAudioBecomingNoisy(true)
-                    // Playback continues once the screen is off or the app is backgrounded, and
-                    // both a partial wake lock and a Wi-Fi lock are needed for a *streamed* item to
-                    // survive that — without them the device sleeps mid-buffer.
+                    // NETWORK, not LOCAL: a streamed item needs the Wi-Fi lock too, or the device
+                    // sleeps mid-buffer once the screen goes off.
                     setWakeMode(C.WAKE_MODE_NETWORK)
                 }
         }
 
         /**
-         * Opens [spec] and starts buffering it.
-         *
-         * A spec with no audio sidecars — everything streamed, and every original download — is a
-         * plain `setMediaItem`, the item carrying its own side-loaded subtitles as
-         * `SubtitleConfiguration`s. `MediaItem` has no audio analogue of that, which is why a
-         * downloaded item whose extra languages live in their own files can only be assembled where
-         * a `MediaSourceFactory` is in reach: here, rather than in the pure
-         * `ExoMediaSourceFactory`. Nothing is *decided* here — the spec already fixes which files
-         * and in which order.
-         *
          * **The child order is a contract.** Child 0 is always the main source, subtitles included;
          * child `i + 1` is `spec.audioSidecars[i]`. `MergingMediaPeriod` re-ids every child's track
          * groups as `"<childIndex>:<originalId>"`, and that prefix is the only thing tying an
          * ExoPlayer audio group back to the Jellyfin stream behind it — see
-         * `TrackSelectionController.selectAudio`, which reads it, and
-         * `LocalPlaybackResolver`, which fixes the order.
+         * `TrackSelectionController.selectAudio`, which reads it, and `LocalPlaybackResolver`,
+         * which fixes the order.
          *
-         * `clipDurations` absorbs the drift between a re-encoded video and its separately
-         * transcoded audio; without it a sidecar a few milliseconds longer than the film is an
-         * `IllegalMergeException` instead of playback. `adjustPeriodTimeOffsets` is off because
-         * every child starts at zero — they are the same title, cut the same way.
+         * `clipDurations` is required: a sidecar a few milliseconds longer than the film is an
+         * `IllegalMergeException` otherwise. `adjustPeriodTimeOffsets` is off — every child starts
+         * at zero.
          */
         override fun prepare(
             spec: PlaybackMediaItemSpec,
@@ -140,8 +110,8 @@ internal class ExoPlayerHandle
         ) {
             startPlaybackService()
             with(requirePlayer()) {
-                // This player outlives the item: the previous one's overrides — including its
-                // "subtitles off" — would otherwise be this one's starting point.
+                // This player outlives the item: without the reset, the previous item's overrides
+                // — including its "subtitles off" — are this one's starting point.
                 TrackSelectionController(this).reset()
                 val position = startPositionMs.coerceAtLeast(0L)
                 if (spec.audioSidecars.isEmpty()) {
@@ -155,7 +125,7 @@ internal class ExoPlayerHandle
         }
 
         /** The main source and its audio sidecars, in the child order [prepare] documents. */
-        @Suppress("SpreadOperator") // MergingMediaSource only takes varargs; the copy is a handful of refs.
+        @Suppress("SpreadOperator")
         private fun PlaybackMediaItemSpec.toMergedSource(): MergingMediaSource {
             val children =
                 buildList {
@@ -218,32 +188,15 @@ internal class ExoPlayerHandle
         }
 
         /**
-         * Releases the shared player.
+         * Idempotent: the field is cleared first, so the second of `PlayerViewModel.releaseSession`
+         * and [PlaybackService.onDestroy] finds nothing to do. The listener must be removed
+         * explicitly — it is a strong reference from a `@Singleton` to a `MutableSharedFlow` that
+         * outlives every session. Deliberately does *not* stop the playback service; [stop] owns
+         * that.
          *
-         * Idempotent by construction: the field is cleared first, so the second caller — whichever
-         * of `PlayerViewModel.releaseSession` and [PlaybackService.onDestroy] arrives last — finds
-         * nothing to do. [requirePlayer] then builds a fresh instance for the next session, which is
-         * why releasing here costs nothing but the rebuild.
-         *
-         * The listener is removed explicitly rather than left to `release()`: it is a strong
-         * reference from a `@Singleton` to a `MutableSharedFlow` that outlives every session, and
-         * leaving it attached would turn one leaked player into one leaked player per process,
-         * still emitting.
-         *
-         * Deliberately does *not* stop the playback service. [stop] owns that, and the service's own
-         * teardown is one of the two callers here — asking it to stop itself from inside `onDestroy`
-         * would be a no-op at best.
-         *
-         * ### Deferred while [PlaybackService] is alive
-         * The service's `MediaSession` is built *around* this player, and Media3 requires the
-         * session to be released before it. The ViewModel's teardown reaches here synchronously
-         * while the `stopService` it just issued is still a pending main-looper message — so for
-         * that window the live session (its notification, a headset or Assistant controller) would
-         * be poking a released player, and a `startService` racing the pending stop (backing out
-         * and re-entering the player) would leave the session wrapping a dead instance for good.
-         * While the service reports itself running, the release is therefore left to its
-         * `onDestroy`, which clears the flag before calling back in; a session whose service never
-         * managed to start still releases here directly.
+         * Deferred while [PlaybackService] is alive: its `MediaSession` is built around this
+         * player and Media3 requires the session to be released first, so the service's `onDestroy`
+         * (which clears the running flag before calling back in) does the release instead.
          */
         override fun release() {
             if (serviceState.running.value) {
@@ -258,39 +211,20 @@ internal class ExoPlayerHandle
         }
 
         /**
-         * Brings up the media session service so playback survives the screen being left and gets
-         * a notification with transport controls.
+         * `startService`, not a bind: Media3 only promotes a *started* service to the foreground.
          *
-         * `startService` rather than a bind: Media3 only promotes a *started* service to the
-         * foreground, and that promotion is what keeps playback alive once the app is backgrounded
-         * ([PlaybackService]).
-         *
-         * It is **not** guaranteed to be called from a foreground activity. [prepare] runs when the
-         * resolve completes, and a resolve can take seconds on a slow server, so a user who presses
-         * Home while the spinner is up lands here with the app already in the background. Past the
-         * grace window API 26+ answers a background `startService` with an `IllegalStateException`,
-         * and an uncaught throw on `Main.immediate` is process death — a crash traded for a feature
-         * the user is not even using at that moment. `PlaybackService`'s
-         * `onForegroundServiceStartNotAllowedException` does not cover this: that hook is Media3
-         * declining to *promote* an already-started service, which never happens if the service
-         * could not be started at all.
-         *
-         * So the start is best effort. Losing it costs the background-continue bonus and the
-         * notification; playback itself runs off the shared [ExoPlayer] and is unaffected. The next
-         * [prepare] — a quality change, a track switch, a fallback retry, or simply the next item —
-         * tries again from wherever the app is by then.
-         *
-         * `internal` rather than private: the music queue prepares through its own
-         * `MusicPlayerPort` rather than through [prepare], and it needs the *same* service with the
-         * same best-effort start — a second `startService` call site elsewhere would be a copy of
-         * everything this method's documentation is about. Reachable only inside `:player`.
+         * Best effort, and the catch must stay: this can run with the app already backgrounded (a
+         * slow resolve finishing after Home), where API 26+ answers with an `IllegalStateException`
+         * that would be process death on `Main.immediate`. `PlaybackService`'s
+         * `onForegroundServiceStartNotAllowedException` does not cover it — that hook is about
+         * promoting an already-started service. Losing the start costs only the notification and
+         * background continuation; the next [prepare] tries again.
          */
         internal fun startPlaybackService() {
             runCatching { context.startService(Intent(context, PlaybackService::class.java)) }
                 .onFailure { Timber.w(it, "Could not start the playback service; continuing without it") }
         }
 
-        /** Stops the media session service; `internal` for the same reason [startPlaybackService] is. */
         internal fun stopPlaybackService() {
             context.stopService(Intent(context, PlaybackService::class.java))
         }

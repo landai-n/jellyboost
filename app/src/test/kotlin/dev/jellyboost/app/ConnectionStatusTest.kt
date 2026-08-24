@@ -5,12 +5,6 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 
-/**
- * Unit tests for what the app bar's offline status icon says about each connection state.
- *
- * Three reasons to be offline, three different things to tell the user, and only two of them with
- * anything to do about it.
- */
 class ConnectionStatusTest {
     @Test
     @DisplayName("an online app has no status to show")
@@ -37,7 +31,7 @@ class ConnectionStatusTest {
     @Test
     @DisplayName("only the two recoverable reasons offer an action")
     fun onlyRecoverableReasonsOfferAnAction() {
-        // Nothing to retry while there is no network at all; the other two are one tap from fixed.
+        // Nothing to retry while there is no network at all.
         ConnectionStatus.NO_NETWORK.actionLabelRes shouldBe null
         (ConnectionStatus.SERVER_UNREACHABLE.actionLabelRes != null) shouldBe true
         (ConnectionStatus.FORCED.actionLabelRes != null) shouldBe true

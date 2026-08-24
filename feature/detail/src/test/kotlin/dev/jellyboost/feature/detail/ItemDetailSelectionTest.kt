@@ -21,17 +21,9 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for batch selection over the season page's episode list
- * (docs/features/batch-selection.md).
- *
- * A file of its own rather than more of [ItemDetailViewModelTest]: that class already covers the
- * load shapes, the toggles and the Download button, and folding a whole interaction mode into it
- * puts it past detekt's `LargeClass` threshold. The fixture is the same season page — two episodes,
- * loaded from their series — every test here starts from ([ItemDetailViewModelFixture.givenSeasonWithEpisodes]).
- *
- * This class deliberately does not stub `getEpisodes` in its own `@BeforeEach`: every test calls
- * [givenSeasonWithEpisodes] before touching the view model, so the fixture's shared default would
- * only ever be overwritten.
+ * Batch selection over the season page's episode list (docs/features/batch-selection.md).
+ * Deliberately does not stub `getEpisodes` in a `@BeforeEach`: every test calls
+ * [givenSeasonWithEpisodes] first, so a shared default would only ever be overwritten.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class ItemDetailSelectionTest : ItemDetailViewModelFixture() {
@@ -60,7 +52,7 @@ internal class ItemDetailSelectionTest : ItemDetailViewModelFixture() {
             model.onSelection(SelectionIntent.Toggle(EPISODE_1))
             model.onSelection(SelectionIntent.Toggle(EPISODE_1))
 
-            // Mode is derived from emptiness, so there is no way to sit in it with nothing selected.
+            // Mode is derived from emptiness: it cannot be entered with nothing selected.
             model.selection.value.isActive shouldBe false
         }
 
@@ -101,7 +93,6 @@ internal class ItemDetailSelectionTest : ItemDetailViewModelFixture() {
             advanceUntilIdle()
             model.onSelection(SelectionIntent.SelectAll)
 
-            // The second episode is gone from the server's answer on the refresh.
             coEvery { repository.getEpisodes(SERIES_ID, ITEM_ID) } returns
                 AppResult.Success(
                     listOf(JellyfinItem(id = EPISODE_1, name = "The Original", type = ItemType.EPISODE)),
@@ -109,8 +100,7 @@ internal class ItemDetailSelectionTest : ItemDetailViewModelFixture() {
             model.refresh()
             advanceUntilIdle()
 
-            // A refresh here is a connectivity edge, not something the user asked for, so the
-            // selection survives it — but never as an id with no row on the screen.
+            // The selection survives a connectivity refresh, but never as an id with no row.
             model.selection.value.ids shouldContainExactly setOf(EPISODE_1)
         }
 
@@ -165,7 +155,6 @@ internal class ItemDetailSelectionTest : ItemDetailViewModelFixture() {
             model.onSelection(SelectionIntent.Run(SelectionAction.MARK_WATCHED))
             advanceUntilIdle()
 
-            // The second episode is written even though the first failed.
             coVerify(exactly = 1) { userDataRepository.setPlayed(EPISODE_2, true) }
             model.uiState.value.userMessage shouldBe
                 UserMessage.BatchFinished(
@@ -186,8 +175,8 @@ internal class ItemDetailSelectionTest : ItemDetailViewModelFixture() {
             model.onSelection(SelectionIntent.Run(SelectionAction.DOWNLOAD))
             advanceUntilIdle()
 
-            // Re-enqueueing a finished single item would reset its row to QUEUED and download it
-            // again — `DownloadEnqueuer` only skips on the container path.
+            // `DownloadEnqueuer` only skips on the container path, so a finished single item would
+            // reset to QUEUED and download again.
             coVerify(exactly = 0) { downloads.enqueue(EPISODE_1) }
             coVerify(exactly = 1) { downloads.enqueue(EPISODE_2) }
             model.uiState.value.userMessage shouldBe
@@ -210,7 +199,6 @@ internal class ItemDetailSelectionTest : ItemDetailViewModelFixture() {
             model.onSelection(SelectionIntent.Run(SelectionAction.DOWNLOAD))
             advanceUntilIdle()
 
-            // Retrying a failure is what a second Download tap means; a queued row is left alone.
             coVerify(exactly = 1) { downloads.enqueue(EPISODE_1) }
             coVerify(exactly = 0) { downloads.enqueue(EPISODE_2) }
         }
@@ -245,7 +233,7 @@ internal class ItemDetailSelectionTest : ItemDetailViewModelFixture() {
             model.onSelection(SelectionIntent.SelectAll)
             model.onSelection(SelectionIntent.Run(SelectionAction.MARK_WATCHED))
 
-            // Before `advanceUntilIdle`: the bar is already gone, the writes have not run yet.
+            // Before `advanceUntilIdle`: the bar is gone, the writes have not run.
             model.selection.value.isActive shouldBe false
             advanceUntilIdle()
             coVerify(exactly = 2) { userDataRepository.setPlayed(any(), true) }

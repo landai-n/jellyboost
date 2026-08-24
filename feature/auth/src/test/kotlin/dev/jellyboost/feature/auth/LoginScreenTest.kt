@@ -4,14 +4,6 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 
-/**
- * Unit tests for what `LoginScreen.kt` decides outside of composition.
- *
- * [spacedOutCode] is the Quick Connect code as a screen reader has to hear it: the six digit boxes
- * are one semantic node rather than six bare glyphs, and the one thing that node must not do is
- * hand TTS a number — "482913" spoken as four hundred and eighty-two thousand nine hundred and
- * thirteen is not a code anybody can type into another device.
- */
 class LoginScreenTest {
     @Test
     @DisplayName("a numeric code is spelled out one character at a time")
@@ -22,8 +14,6 @@ class LoginScreenTest {
     @Test
     @DisplayName("an alphanumeric code is spaced the same way")
     fun alphanumericCodeIsSpaced() {
-        // The server's code length and alphabet are its own business — the row sizes itself to
-        // whatever comes back, and so does this.
         spacedOutCode("A7B2") shouldBe "A 7 B 2"
     }
 

@@ -33,12 +33,9 @@ import java.io.File
 import java.nio.file.Path
 
 /**
- * Unit tests for [FileDownloader] — the HTTP Range resume engine behind "a 2 GB movie resumes from
- * byte offset after app kill".
- *
- * No server is involved: an OkHttp `Interceptor` answers every call with a canned response, which
- * makes the four cases that matter (`200`, `206`, `416`, everything else) directly expressible and
- * lets the whole thing run on the JVM.
+ * The HTTP `Range` resume engine behind "a 2 GB movie resumes from byte offset after app kill". No
+ * server is involved: an OkHttp `Interceptor` answers every call with a canned response, which makes
+ * the four cases that matter (`200`, `206`, `416`, everything else) directly expressible.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class FileDownloaderTest {
@@ -168,9 +165,9 @@ class FileDownloaderTest {
     fun `a transcode the server answers 206 for is still restarted from zero`() =
         runTest {
             val target = file("movie.mkv", content = "half of one encode")
-            // A server that honours `Range` on a live transcode hands back the *second* encode's
-            // bytes labelled as a continuation of the first. Appending them makes a file that still
-            // opens, still ends in Cues, and would earn a SeekHead pointing into the wrong encode.
+            // A server that honours `Range` on a live transcode hands back the *second* encode's bytes
+            // labelled as a continuation of the first. Appending them makes a file that still opens,
+            // still ends in Cues, and would earn a SeekHead pointing into the wrong encode.
             val downloader =
                 downloader(respondWith = partial("a whole other encode".toByteArray(), from = 18, total = 38))
 
@@ -202,8 +199,8 @@ class FileDownloaderTest {
                 transcoded = true,
             ) { _, _ -> }
 
-            // The scanner is only wired up for a body that starts at byte zero. Before the restart
-            // was made unconditional, a 206 here silently switched the size projection off.
+            // The scanner is only wired up for a body that starts at byte zero; a 206 here silently
+            // switched the size projection off.
             seen.toByteArray().contentEquals(body) shouldBe true
         }
 
@@ -220,8 +217,7 @@ class FileDownloaderTest {
                 transcoded = false,
             ) { _, _ -> }
 
-            // The restart is for transcodes only; an ORIGINAL download is the same bytes every time
-            // and resuming one is the whole point of the engine.
+            // The restart is for transcodes only; an ORIGINAL download is the same bytes every time.
             requests.single().header("Range") shouldBe "bytes=6-"
             target.readText() shouldBe "hello world"
         }
@@ -246,9 +242,8 @@ class FileDownloaderTest {
     fun `the copy loop fills its buffer before writing, so a chunk is a whole buffer or the tail`() =
         runTest {
             // okio hands back one 8 KB segment per read however large the array offered is, and
-            // `RandomAccessFile` is unbuffered — without the buffer each read becomes its own
-            // `pwrite`, eight per 64 KB. The tap sees exactly what was written, so the
-            // chunk lengths are the write sizes.
+            // `RandomAccessFile` is unbuffered — without the buffer each read becomes its own `pwrite`,
+            // eight per 64 KB. The tap sees exactly what was written, so chunk lengths are write sizes.
             val bytes = ByteArray(FileDownloader.BUFFER_BYTES * 2 + TAIL_BYTES) { (it % 251).toByte() }
             val downloader = downloader(respondWith = ok(bytes))
             val target = file("movie.mkv")
@@ -263,8 +258,7 @@ class FileDownloaderTest {
 
             chunkLengths shouldContainExactly
                 listOf(FileDownloader.BUFFER_BYTES, FileDownloader.BUFFER_BYTES, TAIL_BYTES)
-            // And the batching is byte-exact: a body that does not divide by the buffer must land
-            // whole, tail included.
+            // A body that does not divide by the buffer must land whole, tail included.
             target.readBytes().contentEquals(bytes) shouldBe true
         }
 
@@ -300,12 +294,10 @@ class FileDownloaderTest {
     @Test
     fun `cancelling while a body read is blocked cancels the OkHttp call itself`() =
         runTest {
-            // The wedge: once the headers have arrived, the `await()` continuation has
-            // resumed and its `invokeOnCancellation` can no longer reach the call. A half-open
-            // socket then blocks `input.read()` forever, coroutine cancellation cannot interrupt
-            // it, and the drain lease is held for the rest of the process. The fix holds the call
-            // for the whole body, so cancelling the coroutine fails the blocked read immediately.
-            // Without it this test times out rather than merely failing.
+            // The wedge: once the headers have arrived, the `await()` continuation has resumed and its
+            // `invokeOnCancellation` can no longer reach the call. A half-open socket then blocks
+            // `input.read()` forever, coroutine cancellation cannot interrupt it, and the drain lease is
+            // held for the rest of the process. Without the fix this test times out rather than fails.
             val calls = mutableListOf<Call>()
             val firstBytesServed = CompletableDeferred<Unit>()
             val body = BlockingBody(firstBytesServed) { calls.single().isCanceled() }
@@ -347,10 +339,9 @@ class FileDownloaderTest {
             val target = file("movie.mkv")
             val downloader = downloader(respondWith = ok(ByteArray(FileDownloader.BUFFER_BYTES * 4)))
 
-            // The callback parks the copy loop after the first 64 KB window, so the cancel below
-            // always lands mid-body. Cancelling through a `var job` from inside the callback was
-            // racy: the loop runs on OkHttp's dispatcher thread, which could stream the whole
-            // four-window body before the test thread had even assigned the var.
+            // The callback parks the copy loop after the first 64 KB window, so the cancel below always
+            // lands mid-body. Cancelling through a `var job` from inside the callback was racy: the loop
+            // runs on OkHttp's dispatcher thread.
             val firstWindowWritten = CompletableDeferred<Unit>()
             val job =
                 launch(Dispatchers.IO) {
@@ -463,9 +454,9 @@ private class UnknownLengthBody(
 }
 
 /**
- * A body that serves one chunk and then behaves like a half-open TCP connection: the next read
- * blocks indefinitely, unblocking (with the `IOException` a torn-down socket raises) only once the
- * call has been cancelled — which is exactly what OkHttp's `Call.cancel()` does to a blocked read.
+ * A body that serves one chunk and then behaves like a half-open TCP connection: the next read blocks
+ * indefinitely, unblocking (with the `IOException` a torn-down socket raises) only once the call has
+ * been cancelled.
  */
 private class BlockingBody(
     private val firstBytesServed: CompletableDeferred<Unit>,

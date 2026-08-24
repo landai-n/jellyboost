@@ -1,10 +1,8 @@
 package dev.jellyboost.core.common.model
 
 /**
- * A request for a page of items, expressed in domain terms.
- *
- * The online repository translates this into the SDK's `getItems` parameters and the offline
- * repository into a Room query, so paging behaves identically in both modes.
+ * The online repository translates this into the SDK's `getItems` parameters and the offline one into a Room
+ * query, so paging behaves identically in both modes.
  */
 data class ItemQuery(
     val parentId: String? = null,
@@ -17,12 +15,8 @@ data class ItemQuery(
     val startIndex: Int = 0,
     val limit: Int = DEFAULT_PAGE_SIZE,
     /**
-     * Whether the server should also report how many items match — the "N items" line in the
-     * library grid's header.
-     *
-     * Off by default, and set by the paging source on the **first** page of a grid only: the total
-     * costs the server a `COUNT` over the whole query, and nothing else in the app needs it (the
-     * end of a paged list is detected by a short page, not by a total).
+     * Set by the paging source on the **first** page only: the total costs the server a `COUNT` over the whole
+     * query, and the end of a paged list is detected by a short page, not by a total.
      */
     val includeTotalCount: Boolean = false,
 ) {
@@ -32,12 +26,10 @@ data class ItemQuery(
     }
 
     companion object {
-        /** Page size used by the library grid — one server request per screenful. */
         const val DEFAULT_PAGE_SIZE = 50
     }
 }
 
-/** Sort keys offered by the library grid. */
 enum class SortBy {
     SORT_NAME,
     DATE_CREATED,
@@ -47,7 +39,6 @@ enum class SortBy {
     RANDOM,
 }
 
-/** Sort direction. */
 enum class SortOrder {
     ASCENDING,
     DESCENDING,

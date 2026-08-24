@@ -10,13 +10,10 @@ import javax.inject.Singleton
  * A storage root that is not usable *right now* — no volume mounted, a directory that could not be
  * created, or the active root moving underneath a transfer.
  *
- * A distinct type because the condition is transient by nature: an ejected SD card, an MTP session
- * or the seconds after boot before the card mounts all empty `volumes()` for a while and then stop.
- * As a bare `IllegalStateException` it would fall through `toAppError()` to `AppError.Unknown`,
- * which the failure classifier calls PERMANENT — one unmounted volume would then mark every queued
- * row ERROR within seconds, the exact shape the transient/permanent split exists to prevent.
- * `DownloadFailureClassifier` recognises this type as TRANSIENT instead, so the drain stops, backs
- * off and retries.
+ * A distinct type because the condition is transient by nature. As a bare `IllegalStateException` it
+ * would fall through `toAppError()` to `AppError.Unknown`, which the failure classifier calls
+ * PERMANENT, and one unmounted volume would then mark every queued row ERROR within seconds;
+ * `DownloadFailureClassifier` recognises this type as TRANSIENT instead.
  */
 internal class StorageUnavailableException(
     message: String,
@@ -25,20 +22,14 @@ internal class StorageUnavailableException(
 /**
  * Where downloaded files live, and the only thing in the pipeline that knows it.
  *
- * The default is `getExternalFilesDir(null)/downloads` — app-private external storage, which needs
- * no runtime permission, is wiped on uninstall (so a removed app leaves no gigabytes behind) and is
- * excluded from the media scanner.
- *
- * The root is not fixed: `StorageLocationManager` resolves it from the volume the user picked in
- * Settings, which may be an SD card. It stays a plain `java.io.File` on every volume, so this
- * interface does not have to know which; a SAF-tree backend is the reason the interface exists at
- * all, and is deferred.
+ * The default is `getExternalFilesDir(null)/downloads` — app-private external storage, which needs no
+ * runtime permission, is wiped on uninstall and is excluded from the media scanner. The root is not
+ * fixed: `StorageLocationManager` resolves it from the volume the user picked in Settings.
  */
 internal interface DownloadStorage {
     /** Absolute path of the storage root, or `null` when no external volume is mounted. */
     val rootPath: String?
 
-    /** Creates (if needed) and returns the directory for one item. */
     fun prepareItemDirectory(directoryName: String): File
 
     /** The file handle for one planned file. Does not create anything. */
@@ -48,41 +39,26 @@ internal interface DownloadStorage {
     ): File
 
     /**
-     * The item directories that currently exist under the root.
-     *
-     * Only the orphan sweep needs this, and it needs it from here rather than from a `File` of its
-     * own: which volume the root is on, and whether one is mounted at all, is this interface's
-     * secret. An unmounted volume answers with an empty list, which makes the sweep a no-op rather
-     * than making everything look orphaned.
+     * The item directories that currently exist under the root. An unmounted volume answers with an
+     * empty list, which makes the orphan sweep a no-op rather than making everything look orphaned.
      */
     fun itemDirectoryNames(): List<String>
 
-    /**
-     * Removes an item's directory and everything in it.
-     *
-     * @return how many bytes were actually freed — what the Downloads screen reports after a
-     *   delete, and what the "delete frees bytes" check measures.
-     */
+    /** @return how many bytes were actually freed. */
     fun deleteItemDirectory(directoryName: String): Long
 
     /** Bytes currently occupied by the downloads root, walked from disk rather than from Room. */
     fun usedBytes(): Long
 
-    /** Bytes still writable on the volume the root lives on. */
     fun availableBytes(): Long
 }
 
 /**
  * [DownloadStorage] on plain `java.io.File`, rooted at `<chosen volume>/downloads`.
  *
- * Every method is defensive to the point of being boring: an unmounted volume, a directory that
- * cannot be created, a file that vanished between two calls. None of these may throw, because they
- * all run inside the download worker, where an exception is the difference between "this one item
- * failed" and "the whole queue stopped".
- *
- * Which volume that is comes from [StorageLocationManager] rather than from the `Context` directly,
- * which is the whole of what makes the location configurable — every path in the pipeline is built
- * from this class, so there is exactly one place the root has to change.
+ * Every method is defensive to the point of being boring — an unmounted volume, a directory that
+ * cannot be created, a file that vanished between two calls — because they all run inside the download
+ * worker, where an exception is the difference between one failed item and the whole queue stopping.
  */
 @Singleton
 internal class FileDownloadStorage
@@ -128,7 +104,6 @@ internal class FileDownloadStorage
         }
 
         @Suppress(
-            // Filesystem guards: each exit distinguishes "nothing there" from "refused to touch it".
             "ReturnCount",
         )
         override fun deleteItemDirectory(directoryName: String): Long {
@@ -160,11 +135,9 @@ internal class FileDownloadStorage
     }
 
 /**
- * Total size of a file, or of every file underneath a directory.
- *
- * `walkBottomUp` rather than `listFiles` recursion so a deep tree cannot blow the stack, and
- * `runCatching` because a file the queue is writing can disappear between the walk and the `length`
- * call.
+ * Total size of a file, or of every file underneath a directory. `walkBottomUp` rather than
+ * `listFiles` recursion so a deep tree cannot blow the stack, and `runCatching` because a file the
+ * queue is writing can disappear between the walk and the `length` call.
  */
 internal fun File.sizeRecursively(): Long =
     runCatching {

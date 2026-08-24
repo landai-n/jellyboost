@@ -78,9 +78,8 @@ internal class SyncPlayReconcilePlanTest {
 
     @Test
     fun `adoption is only offered before the first load — the same item on a new slot reloads`() {
-        // The same episode queued twice: the group jumps to the second slot while the first is
-        // open. The host's snapshot matches by *item*, but the slot is the identity, so it must
-        // start again rather than carry on where the first copy had got to.
+        // The host's snapshot matches by *item*, but the slot is the identity, so a second slot
+        // with the same item must reload rather than adopt.
         val secondSlot = SyncPlayQueueEntry(itemId, otherPlaylistItemId)
         val snapshot = SyncPlayHostSnapshot(itemId, positionTicks = 300L, isPlaying = true)
 

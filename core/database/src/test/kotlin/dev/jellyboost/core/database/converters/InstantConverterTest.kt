@@ -5,7 +5,6 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import java.time.Instant
 
-/** Unit tests for [InstantConverter]. */
 class InstantConverterTest {
     private val converter = InstantConverter()
 
@@ -29,9 +28,8 @@ class InstantConverterTest {
 
     @Test
     fun `stored values order the same way the instants do`() {
-        // This is the property the pending-sync guard relies on: `updatedAt <= :syncedAt` has to
-        // mean the same thing in SQL as it does in Kotlin. ISO-8601 text would fail this case,
-        // because '.' sorts before 'Z'.
+        // The property the pending-sync guard relies on: `updatedAt <= :syncedAt` has to mean the same thing
+        // in SQL as in Kotlin. ISO-8601 text would fail this case, because '.' sorts before 'Z'.
         val earlier = Instant.parse("2026-07-28T10:15:30.500Z")
         val later = Instant.parse("2026-07-28T10:15:31Z")
 

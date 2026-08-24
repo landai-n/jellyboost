@@ -6,10 +6,8 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 
 /**
- * Pins [QuickConnectSession]'s redacting `toString()`, caught by `scripts/check_redaction.py`: the
- * class's own KDoc promises the secret is never logged, and a regenerated data-class `toString()`
- * is the easiest way to break that silently. The code is deliberately kept — it is the value the
- * UI shows the user.
+ * Pins the redacting `toString()` (`scripts/check_redaction.py` catches the shape): a regenerated data-class
+ * `toString()` is the easiest way to leak the secret silently. The code is kept — the UI shows it.
  */
 class QuickConnectSessionTest {
     private val session = QuickConnectSession(secret = "opaque-poll-secret", code = "482913")

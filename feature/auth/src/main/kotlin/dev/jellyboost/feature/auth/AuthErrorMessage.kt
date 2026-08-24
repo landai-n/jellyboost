@@ -6,40 +6,27 @@ import androidx.compose.ui.res.stringResource
 import dev.jellyboost.core.common.AppError
 
 /**
- * The user-facing failures the auth screens can render.
- *
- * ViewModels map [AppError] onto this instead of onto a `String`, so that state stays free of
- * Android `Context` (and therefore unit-testable) while the actual copy lives in
- * `res/values/strings.xml`. [authErrorText] does the rendering.
+ * ViewModels map [AppError] onto this rather than onto a `String`, so state stays free of a
+ * `Context` and unit-testable; [authErrorText] does the rendering.
  */
 internal sealed interface AuthErrorMessage {
-    /**
-     * No candidate address for the typed input turned out to be a usable Jellyfin server.
-     *
-     * The two lists mirror jellyfin-android's `setup/ConnectionHelper.kt` error copy:
-     * [unreachable] never answered, [incompatible] answered but is not a supported server.
-     */
+    /** [unreachable] never answered; [incompatible] answered but is not a supported server. */
     data class ServerResolution(
         val unreachable: List<String>,
         val incompatible: List<String>,
     ) : AuthErrorMessage
 
-    /** The input produced no address candidates at all, or nothing could be reached. */
     data object CannotConnect : AuthErrorMessage
 
-    /** The server rejected the credentials. */
     data object InvalidCredentials : AuthErrorMessage
 
-    /** The Quick Connect request went away before anybody approved it. */
     data object QuickConnectExpired : AuthErrorMessage
 
-    /** The server answered, but with something we cannot act on. */
     data class ServerFailure(
         val statusCode: Int?,
     ) : AuthErrorMessage
 
     companion object {
-        /** Maps a repository [error] onto the copy the auth screens show. */
         fun from(error: AppError): AuthErrorMessage =
             when (error) {
                 is AppError.ServerResolution ->
@@ -62,12 +49,6 @@ internal sealed interface AuthErrorMessage {
     }
 }
 
-/**
- * Renders [message] as the multi-line block the setup/login screens show below their inputs.
- *
- * The server-resolution variant is built exactly like jellyfin-android's: a "tried N candidates"
- * prefix, then a bulleted list per failure kind.
- */
 @Composable
 internal fun authErrorText(message: AuthErrorMessage): String =
     when (message) {

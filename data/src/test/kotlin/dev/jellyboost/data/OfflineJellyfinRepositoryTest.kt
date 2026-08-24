@@ -53,14 +53,9 @@ import org.junit.jupiter.api.Test
 import java.util.UUID
 
 /**
- * Unit tests for [OfflineJellyfinRepository] — the shape of every screen with no server.
- *
- * These tests seed `source = DOWNLOAD` rows directly, which is what lets them pin the offline
- * behaviour independently of anything a real device has actually downloaded.
- *
- * One class rather than one per member (`@Suppress("LargeClass")` below): the `HomeViewModelTest`/
- * `SyncPlayControllerTest` precedent — splitting it would scatter the shared mock setup across
- * files for one repository's own members, not distinct collaborators.
+ * Seeds `source = DOWNLOAD` rows directly, so the offline behaviour is pinned independently of what
+ * a device has actually downloaded. One class rather than one per member (`@Suppress("LargeClass")`
+ * below): splitting would scatter shared mock setup across one repository's own members.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 @Suppress("LargeClass")
@@ -129,15 +124,9 @@ class OfflineJellyfinRepositoryTest {
         }
 
     /**
-     * The home hero's online/offline parity, from the offline side.
-     *
-     * A download's cached blob is the **whole** item — the enqueue fetch asks for
-     * `OVERVIEW, GENRES, PEOPLE, …` so the detail page works with no server — while the online
-     * home rows are fetched with `CARD_FIELDS`, which asks for no overview at all (pinned by
-     * `OnlineJellyfinRepositoryTest`: *getResumeItems asks the
-     * server for the requested number of lean cards*). Read back raw, the same wide *Continue
-     * watching* hero therefore drew a synopsis offline that an online user never sees, and the
-     * extra paragraph pushed the resume button down over the row below the banner.
+     * A download's cached blob is the **whole** item while online cards are fetched without
+     * `OVERVIEW`, so read back raw the wide *Continue watching* hero drew a synopsis offline that an
+     * online user never sees — pushing its resume button over the row below.
      */
     @Test
     fun `continue watching carries no overview offline either, matching the lean online card fields`() =
@@ -180,8 +169,8 @@ class OfflineJellyfinRepositoryTest {
     @Test
     fun `the offline detail page still reads the overview the download cached`() =
         runTest {
-            // The other half of the rule above: the blob's synopsis is dropped from the *rows*, not
-            // from the item — the offline detail screen has nowhere else to read it from.
+            // Dropped from the *rows*, not the item: the offline detail screen has nowhere else to
+            // read the synopsis from.
             coEvery { itemDao.getItem(uuid(1)) } returns
                 entity(movieDto(uuid(1), "Arrival").copy(overview = SYNOPSIS))
 
@@ -264,14 +253,12 @@ class OfflineJellyfinRepositoryTest {
     @Test
     fun `latest shows a downloaded film that has no parent linkage at all`() =
         runTest {
-            // Regression guard: a downloaded film may be stored with `parentId NULL`; scoping a
-            // library's row by a `parentId = <library>` predicate instead of by kind would leave
-            // the offline home with no Latest row for it at all.
+            // A downloaded film may be stored with `parentId NULL`, so scoping by `parentId` rather
+            // than by kind would leave the offline home with no Latest row at all.
             val types = seedLatest(listOf(entity(movieDto(uuid(1), "The Body", parentId = null))))
 
             repository.getLatestMedia(MOVIES_LIBRARY.toString(), limit = 16).getOrNull()!! shouldHaveNames
                 listOf("The Body")
-            // A film library's Latest row is scoped by kind instead.
             types.single() shouldContainExactly listOf(ItemType.MOVIE)
         }
 
@@ -290,8 +277,7 @@ class OfflineJellyfinRepositoryTest {
     @Test
     fun `every downloaded episode of a series collapses into one card for the series`() =
         runTest {
-            // The reported bug: a downloaded season filled the offline Latest shelf with its own
-            // episodes, where the online row shows one poster for the show.
+            // A downloaded season used to fill the shelf with its own episodes.
             val series = entity(seriesDto(THRONES, "Thrones"))
             seedLatest(
                 listOf(
@@ -380,8 +366,8 @@ class OfflineJellyfinRepositoryTest {
     @Test
     fun `a series whose own row was never cached still gets a series card built from the episode`() =
         runTest {
-            // `DownloadEnqueuer` caches an episode's parents best effort; when that fetch failed
-            // there is no series row to show, and the shelf must not fall back to bare episodes.
+            // The parent fetch is best effort; with no series row the shelf must still not fall
+            // back to bare episodes.
             val episodes =
                 listOf(
                     thronesEpisode(uuid(12), "Winter Is Coming", 1, seriesImageTag = "series-tag"),
@@ -430,7 +416,6 @@ class OfflineJellyfinRepositoryTest {
                     ),
                 )
 
-            // Offset and page size are applied to the ordered set the statement answered with.
             result.getOrNull()!! shouldHaveNames listOf("Film 101")
             // The direction is still the statement's job — SQLite owns the NOCASE collation.
             grid.descending.single() shouldBe true
@@ -452,7 +437,6 @@ class OfflineJellyfinRepositoryTest {
                 )
 
             result.getOrNull()!! shouldHaveNames listOf("The Body")
-            // The grid asks for both kinds whatever the library; a film library shows films.
             grid.types.single() shouldContainExactly listOf(ItemType.MOVIE)
         }
 
@@ -517,8 +501,8 @@ class OfflineJellyfinRepositoryTest {
     @Test
     fun `filter facets are computed from what is actually downloaded`() =
         runTest {
-            // A three-column projection, not whole rows: a facet list has no LIMIT, so reading it
-            // as entities would deserialise every downloaded item's `dto` blob.
+            // A projection, not whole rows: a facet list has no LIMIT, so entities would
+            // deserialise every downloaded item's blob.
             coEvery { itemDao.facetKeysBySource(ItemSource.DOWNLOAD, any()) } returns
                 listOf(
                     FacetKey(genres = listOf("Drama"), productionYear = 2016, officialRating = null),
@@ -690,9 +674,7 @@ class OfflineJellyfinRepositoryTest {
 
             val tracks = repository.getArtistTopTracks(artistId.toString(), limit = 10).getOrNull()!!
 
-            // The track with the higher recorded play count leads, whichever album it came from.
-            // No local `user_data` row exists for either (the default stub answers empty), so each
-            // track's cached blob is what carries the count read here.
+            // No local `user_data` row exists for either, so the cached blobs carry the counts.
             tracks.map { it.name } shouldContainExactly listOf("Loud Track", "Quiet Track")
         }
 
@@ -780,12 +762,9 @@ class OfflineJellyfinRepositoryTest {
     }
 
     /**
-     * Stands `latestDownloadedKeys` + `getItems` up over a list of rows.
-     *
-     * [newestFirst] is what the ordering query would answer — the rows in `cachedAt DESC` order —
-     * and the grouping key is derived here exactly the way the SQL `CASE` does, so a test states
-     * only what is in the table. [cached] is what `getItems` can find, which defaults to the same
-     * rows and is narrowed by the one test where a series' own row is missing.
+     * [newestFirst] is what the ordering query would answer, and the grouping key is derived here
+     * exactly the way the SQL `CASE` does. [cached] is what `getItems` can find — narrowed only by
+     * the test where a series' own row is missing.
      *
      * @return the captured item-type lists the offline library scoping asked for.
      */

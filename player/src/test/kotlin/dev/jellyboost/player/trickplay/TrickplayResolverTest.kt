@@ -116,9 +116,8 @@ class TrickplayResolverTest {
                         ),
                 )
 
-            // 480 is 160 away from 320; 160 is 160 away too, but 480 is not the first — the closest
-            // by distance is what matters, and a tie is decided by iteration order, so this asserts
-            // the case with a clear winner.
+            // 480 is unambiguously closest to preferredWidth=500 — avoids a tie between equidistant
+            // candidates, whose outcome would depend on iteration order.
             val tiles = resolver.resolve(PlayerFixtures.remoteSource(), preferredWidth = 500).shouldNotBeNull()
 
             tiles.thumbnailWidth shouldBe 480

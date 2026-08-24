@@ -12,17 +12,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
 /**
- * Everything the 500 ms player tick produces, kept away from [PlayerUiState].
- *
- * Deliberately not part of `PlayerUiState`, which is one `StateFlow` read at screen scope: a value
- * that changes twice a second inside an object the whole control surface reads would recompose the
- * top bar, the transport row, the picker buttons and the sheet host twice a second for a number
- * only the scrubber and the clock display. Splitting the flow is what makes the rest of the state
- * conflate to nothing between ticks.
- *
- * The segment check rides the same tick rather than adding a second one — it needs exactly the same
- * information, twice a second is far more often than a segment boundary moves, and a skip button
- * that appears half a second late is a skip button nobody notices is late.
+ * Deliberately a separate flow from [PlayerUiState]: folding a value that changes twice a second into
+ * the state the whole control surface reads would recompose all of it on every tick.
  *
  * One instance per playback session, like the [SegmentSkipController] it owns.
  */
@@ -31,15 +22,9 @@ internal class PlaybackPositionTracker(
 ) {
     private val _position = MutableStateFlow(PlaybackPosition())
 
-    /** The fast half of the player's state; read only by the scrubber and the clock. */
     val position: StateFlow<PlaybackPosition> = _position.asStateFlow()
 
-    /**
-     * One reading of the player.
-     *
-     * @return what the segment rules make of [snapshot], for the caller to act on — seeking is the
-     *   player's business, not this class's.
-     */
+    /** @return the segment decision for the caller to act on; this class never seeks. */
     fun onTick(
         snapshot: PlaybackSnapshot,
         segments: List<MediaSegment>,
@@ -49,17 +34,12 @@ internal class PlaybackPositionTracker(
         return segmentSkip.decide(snapshot.positionMs, segments, skipModes)
     }
 
-    /**
-     * Moves the seek bar to where a seek has just put playback.
-     *
-     * Published without waiting for the next tick so the thumb does not spring back to the old
-     * position for up to half a second after the user lets go of it.
-     */
+    /** Published without waiting for the next tick, or the thumb springs back for up to 500 ms. */
     fun onSeekTo(positionMs: Long) {
         _position.update { it.copy(positionMs = positionMs) }
     }
 
-    /** Starts a new playback session at [positionMs] — a new item, or the same one re-negotiated. */
+    /** Call for a new item *and* for the same one re-negotiated. */
     fun onSessionOpened(positionMs: Long) {
         segmentSkip.reset()
         _position.value = PlaybackPosition(positionMs = positionMs)

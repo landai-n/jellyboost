@@ -5,14 +5,8 @@ import android.media.MediaFormat
 import androidx.media3.common.MimeTypes
 
 /**
- * Translation tables between Android's `MediaCodec` vocabulary and Jellyfin's.
- *
- * Reimplemented from jellyfin-android's `player/deviceprofile/CodecHelpers.kt`, but written as
- * lookup maps rather than long `when` chains: the data is the point, and a map is both cheaper to
- * read and exempt from detekt's complexity rules.
- *
- * The `MediaFormat` / `CodecProfileLevel` constants referenced here are compile-time constants, so
- * this object works unchanged in local unit tests despite living on top of the Android SDK.
+ * Every `MediaFormat` / `CodecProfileLevel` constant referenced here is a compile-time constant, so
+ * this object works unchanged in local unit tests despite sitting on the Android SDK.
  */
 internal object CodecHelpers {
     /** Android video MIME type → the codec name Jellyfin uses in a device profile. */
@@ -45,10 +39,8 @@ internal object CodecHelpers {
         )
 
     /**
-     * Codec profile constants → the profile names the server matches on.
-     *
-     * The strings are the ones ffprobe reports, which is what the server compares a file's
-     * `VideoProfile` against — spelling matters more than it looks.
+     * The strings are exactly what ffprobe reports, which is what the server compares a file's
+     * `VideoProfile` against — spelling and case are load-bearing.
      */
     private val VIDEO_PROFILE_NAMES: Map<String, Map<Int, String>> =
         mapOf(
@@ -117,7 +109,6 @@ internal object CodecHelpers {
                 ),
         )
 
-    /** Jellyfin subtitle codec → the MIME type ExoPlayer parses it with. */
     private val SUBTITLE_MIME_TYPES: Map<String, String> =
         mapOf(
             "srt" to MimeTypes.APPLICATION_SUBRIP,
@@ -142,6 +133,6 @@ internal object CodecHelpers {
         profile: Int,
     ): String? = VIDEO_PROFILE_NAMES[codec]?.get(profile)
 
-    /** `null` for a codec ExoPlayer cannot render as text — such a stream is not side-loadable. */
+    /** `null` for a codec ExoPlayer cannot render — such a stream is not side-loadable. */
     fun subtitleMimeType(codec: String?): String? = codec?.lowercase()?.let(SUBTITLE_MIME_TYPES::get)
 }

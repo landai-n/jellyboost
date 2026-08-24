@@ -15,10 +15,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/**
- * Behavioural tests for [EpisodeOriginChips] — the series/season shortcuts under an episode page's
- * title lockup. See [EpisodeOriginChipsA11yTest] for the accessibility-specific coverage.
- */
+/** [EpisodeOriginChipsA11yTest] holds the accessibility half. */
 @RunWith(AndroidJUnit4::class)
 class EpisodeOriginChipsTest {
     @get:Rule

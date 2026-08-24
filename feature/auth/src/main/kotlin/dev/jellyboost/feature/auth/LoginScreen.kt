@@ -81,28 +81,18 @@ import dev.jellyboost.core.ui.R as CoreUiR
 
 private val AvatarSize = 88.dp
 
-/** [AvatarSize] on a compact (phone) window — still a clear tap target, just not the hero size. */
 private val AvatarSizeCompact = 64.dp
 
-/**
- * Ring around every public-user avatar: a solid primary ring on the selected profile, a faint
- * neutral one on the rest.
- */
 private val AvatarRingWidth = 2.dp
 
-/** Breathing room between the ring and the picture it frames, so the ring doesn't crop it. */
 private val AvatarRingGap = 3.dp
 
-/** Horizontal gap between avatars in the picker row. */
 private val AvatarRowSpacing = 32.dp
 
-/** [AvatarRowSpacing] on a compact (phone) window — the smaller avatars need less air between them. */
 private val AvatarRowSpacingCompact = 20.dp
 
-/** Alpha of the unselected avatar ring — a faint neutral edge rather than [GlassDefaults.Hairline]. */
 private const val AVATAR_RING_UNSELECTED_ALPHA = 0.10f
 
-/** "WHO'S WATCHING?" — a centred eyebrow, one size up from the shared `JellyfinTypeExtras.Eyebrow`. */
 private val WhosWatchingStyle =
     TextStyle(
         fontSize = 13.sp,
@@ -110,7 +100,6 @@ private val WhosWatchingStyle =
         letterSpacing = 0.12.em,
     )
 
-/** Server name atop the identity block — bold and tracked in tight, the app's hero type. */
 private val ServerNameStyle =
     TextStyle(
         fontSize = 32.sp,
@@ -118,13 +107,10 @@ private val ServerNameStyle =
         letterSpacing = (-0.02).em,
     )
 
-/** [ServerNameStyle] on a compact (phone) window — same weight and tracking, smaller. */
 private val ServerNameStyleCompact = ServerNameStyle.copy(fontSize = 26.sp)
 
-/** Name under a public-user avatar. */
 private val AvatarNameStyle = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.W500)
 
-/** "OR" between the sign-in form and Quick Connect. */
 private val OrDividerTextStyle =
     TextStyle(
         fontSize = 11.sp,
@@ -132,16 +118,12 @@ private val OrDividerTextStyle =
         letterSpacing = 0.1.em,
     )
 
-/** "Use another server" — a text link rather than a full button, styled in the accent colour. */
 private val ChangeServerLinkStyle = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.W500)
 
-/** Quick Connect dialog title. */
 private val QuickConnectTitleStyle = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.W600)
 
-/** Quick Connect instructions — smaller and tighter than the dialog's default `bodyMedium`. */
 private val QuickConnectInstructionStyle = TextStyle(fontSize = 13.sp, lineHeight = 19.sp)
 
-/** One code digit box, per the mocks' "six boxes, not gradient text" treatment. */
 private val QuickConnectDigitWidth = 46.dp
 private val QuickConnectDigitHeight = 58.dp
 private val QuickConnectDigitGap = 8.dp
@@ -149,24 +131,11 @@ private val QuickConnectDigitStyle =
     TextStyle(
         fontSize = 26.sp,
         fontWeight = FontWeight.W600,
-        // Tabular figures: six digits of varying width would otherwise make the boxes' centring
-        // wobble character to character.
+        // Tabular figures: varying digit widths would make the boxes wobble character to character.
         fontFeatureSettings = "tnum",
     )
 private val QuickConnectDigitFill = Color.White.copy(alpha = 0.05f)
 
-/**
- * Second screen of the auth flow: sign in to the server ServerSetup resolved, by password or by
- * Quick Connect.
- *
- * It carries the same branding as ServerSetup — accent halo, the Jellyboost mark above the server
- * name — so the two screens read as one flow, and it shows the server's real profile pictures for
- * the users it advertises.
- *
- * @param onLoggedIn invoked once a session exists; the NavHost swaps to the signed-in graph.
- * @param onBackToServerSetup invoked when the user picks a different server, or when this screen
- *   was reached without a pending server (e.g. after process death mid-flow).
- */
 @Composable
 fun LoginScreen(
     onLoggedIn: () -> Unit,
@@ -221,9 +190,6 @@ private fun LoginContent(
         },
         modifier = modifier,
     ) {
-        // The whole sign-in form lives on one m-panel — the same [AuthPanel] ServerSetup's
-        // manual-address form sits on, so the two screens keep reading as one flow and share
-        // the exact same inner gap.
         AuthPanel {
             LoginFormFields(
                 state = state,
@@ -241,13 +207,6 @@ private fun LoginContent(
     }
 }
 
-/**
- * Everything above the sign-in card: which server this is, whether its context is still loading,
- * its administrator's disclaimer, and the profiles it publishes.
- *
- * @param compact the width class [AuthScreenScaffold] resolves; the server name and the profile row
- *   are the two pieces that change size with it.
- */
 @Composable
 private fun ColumnScope.LoginHeader(
     state: LoginUiState,
@@ -301,8 +260,7 @@ private fun ColumnScope.LoginHeader(
         PublicUsersRow(
             users = state.publicUsers,
             avatarUrlFor = state::avatarUrlFor,
-            // Selection is derived, not stored: picking a user pre-fills the username,
-            // so the highlighted profile is simply the one the field currently names.
+            // Selection is derived, not stored: the highlighted profile is the one the field names.
             selectedName = state.username,
             onUserSelected = onPublicUserSelected,
             compact = compact,
@@ -310,14 +268,7 @@ private fun ColumnScope.LoginHeader(
     }
 }
 
-/**
- * "Loading…" while the server's context is fetched.
- *
- * Bar and caption are one polite live region: the screen arrives already loading, and without
- * grouping them, only the moving bar would signal that, with nothing spoken. The inner spacing
- * repeats the enclosing pane's own gap, so grouping the two into one node leaves the layout exactly
- * where it was.
- */
+/** Bar and caption are one polite live region: the screen arrives already loading. */
 @Composable
 private fun LoginContextLoading() {
     Column(
@@ -336,7 +287,6 @@ private fun LoginContextLoading() {
     }
 }
 
-/** The contents of the sign-in card: title, credential fields, actions. */
 @Composable
 private fun LoginFormFields(
     state: LoginUiState,
@@ -355,18 +305,10 @@ private fun LoginFormFields(
         color = MaterialTheme.colorScheme.onSurface,
     )
 
-    // Both credential fields carry the failure, because a rejected sign-in does not say which of
-    // the two was wrong — and a field marked invalid with nothing to say about it is worse than
-    // one that repeats the screen's sentence.
-    //
-    // Both also stay *enabled* while the exchange runs: disabling the field a TalkBack
-    // user is standing on destroys its node, dropping accessibility focus to the top of the screen
-    // at the exact moment the user wants to hear what happened. `LoginViewModel` ignores edits
-    // while `isSigningIn`, so "enabled" does not mean "mutable" — what is in flight is what was in
-    // the fields when it started, and `FieldState.InFlight` says exactly that to the platform.
-    //
-    // The error wins over the in-flight state, and the two never meet: `LoginViewModel` clears the
-    // error when it starts an exchange and clears `isSigningIn` when it records one.
+    // Both fields carry the failure: a rejected sign-in does not say which of the two was wrong.
+    // Both stay *enabled* while the exchange runs — disabling the field a TalkBack user stands on
+    // destroys its node and drops focus to the top. `LoginViewModel` ignores edits while `isSigningIn`,
+    // and clears the error when an exchange starts, so error and in-flight never meet.
     val fieldState =
         when {
             state.error != null -> FieldState.Error(authErrorText(state.error))
@@ -382,8 +324,7 @@ private fun LoginFormFields(
         label = FieldLabel.eyebrow(stringResource(R.string.login_username_label)),
         state = fieldState,
         content = FieldContent.Plain(autofill = ContentType.Username),
-        // Autocorrect off for the same reason as the server address field: an IME "fixing" an
-        // account name produces a sign-in failure the user cannot see the cause of.
+        // Autocorrect off: an IME fixing an account name produces a failure with no visible cause.
         keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, imeAction = ImeAction.Next),
     )
 
@@ -420,7 +361,6 @@ private fun LoginFormFields(
     )
 }
 
-/** Below the sign-in button: Quick Connect where the server offers it, and the way back out. */
 @Composable
 private fun LoginSecondaryActions(
     quickConnectEnabled: Boolean,
@@ -447,12 +387,7 @@ private fun LoginSecondaryActions(
     }
 }
 
-/**
- * The password field and the eye button that reveals it.
- *
- * @param revealed whether the characters are drawn; the node is marked as holding a secret either
- *   way — showing the password on screen is not a reason for a screen reader to read it out loud.
- */
+/** [revealed] draws the characters; the node is marked as holding a secret either way. */
 @Composable
 private fun LoginPasswordField(
     value: String,
@@ -487,7 +422,6 @@ private fun LoginPasswordField(
     )
 }
 
-/** `——— OR ———`: a centred label with a hairline fading out to each side. */
 @Composable
 private fun OrDivider() {
     val outline = MaterialTheme.colorScheme.outline
@@ -525,13 +459,9 @@ private fun PublicUsersRow(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
-        // The Box centres the row while it fits; once there are enough users to overflow, the
-        // row takes the full width and scrolls instead.
         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
             Row(
-                // `selectableGroup()` is what turns N independent circles into one set of radio
-                // buttons, so TalkBack can say "2 of 3" and a user knows how many profiles there
-                // are without swiping to the end.
+                // `selectableGroup()` is what makes N circles one radio set, so TalkBack can say "2 of 3".
                 modifier = Modifier.horizontalScroll(rememberScrollState()).selectableGroup(),
                 horizontalArrangement =
                     Arrangement.spacedBy(if (compact) AvatarRowSpacingCompact else AvatarRowSpacing),
@@ -551,22 +481,9 @@ private fun PublicUsersRow(
 }
 
 /**
- * One of the server's public users, in a ringed circle above their name.
- *
- * [selected] lights the ring up solid primary and shows the name in full white; unselected users
- * get a faint neutral ring and a muted name.
- *
- * [avatarUrl] carries the profile picture the server advertises; it is `null` for users who have
- * none (`primaryImageTag == null`), and those keep the initial-letter circle instead of showing an
- * empty hole.
- *
- * The **whole column** is the selectable, not the circle inside it. Restricting the click target to
- * the circle would leave two problems: selection conveyed by ring colour alone, with nothing in the
- * semantics saying which profile is in force; and the name — the only place the user's actual name
- * is written — sitting outside the clickable's merged node, so a user without a profile picture
- * would be announced as the one letter drawn in their fallback circle. "C", not "claude".
- * `Role.RadioButton` inside the row's `selectableGroup()` gives the name, the state and the position
- * in the set, all on one stop.
+ * The whole column is the selectable, not the circle: otherwise selection is conveyed by ring
+ * colour alone and the name sits outside the merged node, so a user with no picture is announced
+ * as the single letter in their fallback circle.
  */
 @Composable
 private fun PublicUserAvatar(
@@ -618,13 +535,7 @@ private fun PublicUserAvatar(
     }
 }
 
-/**
- * What fills the avatar ring: the user's profile picture, or their initial on a solid disc.
- *
- * Both are decorative. The name is written below, inside the same merged node, so describing the
- * picture would say the name twice — and the *initial*, spoken on its own by a screen reader, would
- * say only "C", not "claude".
- */
+/** Both are decorative: the name is written below inside the same merged node. */
 @Composable
 private fun AvatarFace(
     name: String,
@@ -681,9 +592,7 @@ private fun QuickConnectDialog(
                 QuickConnectCodeRow(code = state.code)
                 if (state.isWaiting) {
                     Row(
-                        // Polite live region: the dialog opens on the code, and this line appears
-                        // (and later disappears, when the code is approved and the token exchange
-                        // starts) with nothing else on screen changing.
+                        // Polite live region: this line appears and disappears with nothing else on screen changing.
                         modifier =
                             Modifier.semantics(mergeDescendants = true) {
                                 liveRegion = LiveRegionMode.Polite
@@ -709,19 +618,9 @@ private fun QuickConnectDialog(
 }
 
 /**
- * The Quick Connect code, one digit box per character — [code] is a plain string rather than a
- * fixed-length type, so this sizes itself to whatever length the server hands back instead of
- * assuming six.
- *
- * The boxes narrow below [QuickConnectDigitWidth] when the dialog can't fit them all — a phone-width
- * `AlertDialog` is narrower than six full boxes — because a code the user has to scroll to read
- * defeats the point of showing it.
- *
- * To a screen reader it is **one** node, not one per box: six separate stops each holding a bare
- * glyph is a code you have to assemble yourself from six swipes, with nothing saying what the digits
- * are for. The single description names it and spells the code
- * out character by character — [spacedOutCode] — because a TTS engine reads "482913" as "four
- * hundred and eighty-two thousand nine hundred and thirteen", which is not a code anybody can type.
+ * Sized to whatever code length the server hands back, narrowing the boxes when a phone-width
+ * dialog cannot fit them. One node, not one per box, and spelled out — a TTS engine reads "482913"
+ * as "four hundred and eighty-two thousand nine hundred and thirteen".
  */
 @Composable
 private fun QuickConnectCodeRow(code: String) {
@@ -740,12 +639,8 @@ private fun QuickConnectCodeRow(code: String) {
 }
 
 /**
- * `"482913"` → `"4 8 2 9 1 3"`: the code as characters to be read one at a time.
- *
- * Spaces rather than any other separator because that is what every TTS engine already treats as a
- * pause; a comma or hyphen would be spoken as itself in some locales. Whitespace inside the code is
- * dropped rather than doubled — the server hands back a bare alphanumeric code, but a code with a
- * stray space in it would otherwise be announced with a hole in the middle of it.
+ * Spaces because every TTS engine treats them as a pause; a comma or hyphen is spoken as itself in
+ * some locales. Whitespace in the code is dropped rather than doubled.
  */
 internal fun spacedOutCode(code: String): String = code.filterNot { it.isWhitespace() }.toList().joinToString(" ")
 
@@ -758,11 +653,7 @@ private fun QuickConnectDigitBox(
     Box(
         modifier =
             Modifier
-                // Width is fixed — the row measures it so N boxes fit the viewport — but the height
-                // is a *floor*: the digit inside is the largest type on the screen, and at
-                // accessibility font scales a fixed box clipped the very code the user is meant to
-                // read out. The boxes are laid out in a `Row`, so one growing takes the rest with
-                // it and they stay a set (`GlassBottomNav` records the same min-not-fixed rule).
+                // Height is a *floor*, never fixed: at large font scales a fixed box clipped the code itself.
                 .width(width)
                 .heightIn(min = QuickConnectDigitHeight)
                 .background(color = QuickConnectDigitFill, shape = shape)
@@ -823,7 +714,6 @@ private fun LoginTwoPanePreview() {
     }
 }
 
-// A typical compact-width phone window (~360x800dp, minus system bars).
 @Preview(name = "Login — phone", showBackground = true, backgroundColor = 0xFF101010, widthDp = 360, heightDp = 740)
 @Composable
 private fun LoginPhonePreview() {

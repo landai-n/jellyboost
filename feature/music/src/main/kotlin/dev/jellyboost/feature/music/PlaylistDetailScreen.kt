@@ -36,12 +36,7 @@ import dev.jellyboost.core.ui.component.LoadingState
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
 
-/**
- * A playlist's tracks, **view-only** — playlist editing is not supported.
- *
- * @param onTrackClick `(tracks, startIndex)` — a track row was tapped; wired to the queue exactly
- *   as [AlbumDetailScreen]'s `onPlay` — see that screen's KDoc.
- */
+/** **View-only** — playlist editing is not supported. */
 @Composable
 fun PlaylistDetailScreen(
     viewModel: PlaylistDetailViewModel,
@@ -54,7 +49,6 @@ fun PlaylistDetailScreen(
     val errorMessage = state.errorMessage?.toMessage()
 
     Box(modifier = modifier.fillMaxSize()) {
-        // Behind everything, anchored to the top of the window — see [MusicScreenGlow].
         MusicScreenGlow()
 
         when {
@@ -128,8 +122,7 @@ private fun PlaylistDetailContent(
         } else {
             state.tracks.forEachIndexed { index, track ->
                 // Position-qualified: a playlist may hold the same track twice, and a bare
-                // `track.id` would be a duplicate lazy key — an IllegalArgumentException at
-                // composition time. Same convention as the queue sheet's rows.
+                // `track.id` is a duplicate lazy key — an exception at composition time.
                 item(key = "$index:${track.id}") {
                     TrackRow(
                         track = track,

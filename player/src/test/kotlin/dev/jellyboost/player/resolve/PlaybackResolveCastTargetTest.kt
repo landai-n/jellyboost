@@ -104,9 +104,8 @@ class PlaybackResolveCastTargetTest {
 
             infoResolver.resolve(request)
 
-            // The class the coordinator resolved at session start is what the negotiation claims —
-            // the request itself carries nothing, so a mid-session renegotiation always describes
-            // the receiver that is actually connected.
+            // The request itself carries no receiver class — the negotiation reflects whatever the
+            // coordinator resolved at session start.
             sent.captured.deviceProfile!!
                 .directPlayProfiles
                 .single { it.container == "mp4" && it.type == DlnaProfileType.VIDEO }

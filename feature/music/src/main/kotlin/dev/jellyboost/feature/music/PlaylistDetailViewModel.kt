@@ -24,14 +24,11 @@ import timber.log.Timber
 import javax.inject.Inject
 
 /**
- * State holder for [PlaylistDetailScreen] — a **view-only** track list; playlist editing is not
- * supported.
+ * **View-only**; playlist editing is not supported.
  *
- * Offline, [JellyfinRepository.getPlaylistItems] always answers empty — Room has no
- * playlist-membership relation, and offline playlist membership is deliberately not modelled — so
- * an offline visit to this screen simply shows the empty state; nothing here has to special-case
- * connectivity to be honest about
- * that. Downloading *from* a playlist works regardless: the tracks land under their own albums.
+ * Offline, [JellyfinRepository.getPlaylistItems] always answers empty — Room models no
+ * playlist-membership relation — so this screen shows its empty state with no connectivity
+ * special-casing. Downloading *from* a playlist still works: the tracks land under their albums.
  */
 @HiltViewModel
 class PlaylistDetailViewModel
@@ -76,7 +73,6 @@ class PlaylistDetailViewModel
             }
         }
 
-        /** The app-wide badge feed — a playlist's tracks carry the same badge as anywhere else. */
         private fun observeDownloadStates() {
             viewModelScope.launch {
                 downloads
@@ -134,7 +130,7 @@ class PlaylistDetailViewModel
         }
 
         companion object {
-            /** Key the navigation library stores `Routes.PlaylistDetail.playlistId` under. */
+            /** Must match `Routes.PlaylistDetail`'s property name. */
             const val ARG_PLAYLIST_ID = "playlistId"
         }
     }

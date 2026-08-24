@@ -3,24 +3,16 @@ package dev.jellyboost.data.downloads.engine
 import dev.jellyboost.core.database.entities.DownloadEntity
 import java.io.File
 
-// The test doubles the DownloadQueue drain tests are built on — the SyncPlayTestDoubles shape
-// (player/src/test/.../syncplay/SyncPlayTestDoubles.kt).
-//
 // One FakeExtractor and one RecordingListener for every DownloadQueue*Test in this package, rather
-// than a per-test double carrying its own subset of the same two behaviors: call recording (for the
-// tests that check *what* was stripped or reported) and failure injection (for the tests that check
-// what a strip failure costs). A test that never reads `calls`/`progress`/`idleCount` or sets
-// `failure` behaves exactly as a bare no-op double would.
+// than a per-test double carrying its own subset of the same two behaviors. A test that never reads
+// `calls`/`progress`/`idleCount` or sets `failure` behaves exactly as a bare no-op double would.
 
 /**
  * The strip stage, without a `Looper`, a muxer or a device.
  *
  * A failing extractor still writes something first, because that is what a real one does: the
- * `Transformer` opens its output before it discovers it cannot finish, and the half-file it
- * leaves is precisely what the queue has to clean up.
- *
- * [sidecarBytes] is the caller's own `SIDECAR_BYTES` constant — every test in this package sizes
- * its fixture sidecar differently, so it is passed in rather than assumed.
+ * `Transformer` opens its output before it discovers it cannot finish, and the half-file it leaves is
+ * precisely what the queue has to clean up.
  */
 internal class FakeExtractor(
     private val sidecarBytes: Long = 400L,

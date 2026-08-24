@@ -8,11 +8,8 @@ import java.time.Instant
 import java.util.UUID
 
 /**
- * Maps a stored row onto the domain model the UI sees.
- *
- * `playedPercentage` and `playCount` are deliberately not persisted, so they come back at their
- * defaults: progress then falls back to `playbackPositionTicks / runTimeTicks`, which is the same
- * number the server's percentage would have produced.
+ * `playedPercentage` and `playCount` are deliberately not persisted and come back at their defaults;
+ * progress then falls back to `playbackPositionTicks / runTimeTicks`, the same number.
  */
 internal fun UserDataEntity.toDomain(): UserData =
     UserData(
@@ -23,22 +20,14 @@ internal fun UserDataEntity.toDomain(): UserData =
     )
 
 /**
- * Maps the `userData` block of a server read onto a row the local mirror can adopt.
+ * Only for a row that is **not** pending sync, hence `toBeSynced = false`: a copy of server state,
+ * not a change the server owes us.
  *
- * Only ever used for a row that is **not** pending sync (see `BrowseCacheWriter`), hence
- * `toBeSynced = false`: this row is a copy of server state, not a change the server owes us.
- *
- * The two timestamps mean different things and are deliberately sourced differently:
- *
- * - [UserDataEntity.lastPlayedDate] is the server's own value, copied verbatim (`null` included).
- *   It is the *server* half of the most-recent-wins comparison, so inventing one here — say, the
- *   time of the read — would make an unplayed item look freshly watched.
- * - [UserDataEntity.updatedAt] is [adoptedAt], the moment this device learned the server's state.
- *   It is the *local* half of that comparison, and it only ever decides anything for a
- *   `toBeSynced = true` row, which this function never produces: the sync worker's work list is
- *   `toBeSynced = 1`, and any later local write re-stamps `updatedAt` from the clock anyway. So it
- *   records when the mirror was refreshed without ever claiming the local row is newer than the
- *   server's.
+ * The two timestamps are sourced differently on purpose. [UserDataEntity.lastPlayedDate] is the
+ * server's value copied verbatim, `null` included — it is the *server* half of most-recent-wins, and
+ * inventing one here would make an unplayed item look freshly watched.
+ * [UserDataEntity.updatedAt] is [adoptedAt], the *local* half, which only decides anything for a
+ * `toBeSynced = true` row this function never produces.
  */
 internal fun UserItemDataDto.toEntity(
     itemId: UUID,

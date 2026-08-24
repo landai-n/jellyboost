@@ -9,12 +9,9 @@ import io.mockk.mockk
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for [TranscodeSizeProjector] — the arithmetic between [MkvClusterScanner]'s media clock
- * and the figure the Downloads screen shows.
- *
- * The scanner is mocked here on purpose: its own parsing is pinned by [MkvClusterScannerTest], and
- * what these tests are about is what the projector does with a media time once it has one — which is
- * a ratio, two clamps, and the decision to say nothing at all.
+ * The arithmetic between [MkvClusterScanner]'s media clock and the figure the Downloads screen shows.
+ * The scanner is mocked on purpose — its parsing is pinned by [MkvClusterScannerTest], and what is
+ * left is a ratio, two clamps, and the decision to say nothing at all.
  */
 class TranscodeSizeProjectorTest {
     private var mediaMillis: Long? = null
@@ -57,8 +54,8 @@ class TranscodeSizeProjectorTest {
 
     @Test
     fun `the projection converges on the true size as more of the file arrives`() {
-        // A file that really weighs 500 MB over an hour, measured after a burst of container
-        // headers has already skewed the opening seconds.
+        // A file that really weighs 500 MB over an hour, measured after a burst of container headers
+        // has already skewed the opening seconds.
         val trueBytes = 500_000_000L
         val ceiling = 2_000_000_000L
 
@@ -95,8 +92,8 @@ class TranscodeSizeProjectorTest {
 
     @Test
     fun `bytes past a ceiling that was too small still project to the bytes themselves`() {
-        // The lower clamp wins over the upper one: the file cannot be smaller than what has landed,
-        // whatever the estimate claimed. `ItemProgress.bytesTotal` grows the same way.
+        // The lower clamp wins over the upper one: the file cannot be smaller than what has landed.
+        // `ItemProgress.bytesTotal` grows the same way.
         mediaMillis = HOUR_MILLIS
         val received = 700_000_000L
 

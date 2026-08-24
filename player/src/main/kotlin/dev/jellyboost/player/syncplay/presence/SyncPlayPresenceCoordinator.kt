@@ -20,20 +20,11 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Keeps a group alive across the app being backgrounded, in two halves.
+ * Keeps a SyncPlay group alive while the app is backgrounded: holds [SyncPlayPresenceService] so the
+ * process keeps its network, and re-checks membership on foreground.
  *
- * 1. **The service.** While the controller is in a group and nothing is playing, it holds
- *    [SyncPlayPresenceService] so the process keeps its network. [syncPlayPresenceDemanded] is the
- *    whole rule and is unit-tested on its own.
- * 2. **The foreground re-check.** Returning to the app is the one moment a membership lost to an
- *    OEM network cut can actually be taken back, so `ON_START` hands over to
- *    [SyncPlayController.onAppForegrounded] — which pings immediately if the group is still held,
- *    and quietly re-joins a recently, involuntarily lost one if it is not.
- *
- * Started from `JellyboostApplication.onCreate`, the seam the app already uses for work that
- * must run whether or not a screen is showing (`UserDataSyncTrigger`, `DownloadedMetadataRefresher`).
- * `ProcessLifecycleOwner` rather than a Compose lifecycle hook because the state being recovered
- * exists while no screen is composed at all.
+ * `ProcessLifecycleOwner`, not a Compose lifecycle hook: the state being recovered exists while no
+ * screen is composed at all.
  */
 @Singleton
 class SyncPlayPresenceCoordinator
@@ -57,10 +48,8 @@ class SyncPlayPresenceCoordinator
                     playbackServiceState.running,
                     ::syncPlayPresenceDemanded,
                 ).distinctUntilChanged()
-                    // Settled demand only. A rejoin that fails in a quarter of a second, or a player
-                    // that hands over to another, would otherwise post an ongoing notification the
-                    // user sees flash and vanish — and the platform charges real money for a
-                    // foreground service withdrawn that fast (see SyncPlayPresenceService.onCreate).
+                    // Settled demand only: the platform penalises a foreground service withdrawn
+                    // moments after it starts (see SyncPlayPresenceService.onCreate).
                     .debounce(DEMAND_SETTLE_MS)
                     .distinctUntilChanged()
                     .collect { demanded -> if (demanded) startPresenceService() else stopPresenceService() }
@@ -69,21 +58,16 @@ class SyncPlayPresenceCoordinator
 
         override fun onStart(owner: LifecycleOwner) {
             controller.onAppForegrounded()
-            // A demand raised while the app was in the background may never have been met: Android
-            // refuses a foreground start from there, and the OEM may have killed the service anyway.
-            // The app is on screen now, so this start is allowed and costs nothing if it is a repeat.
+            // A demand raised in the background may never have been met (Android refuses a foreground
+            // start from there); on screen the start is allowed, and a repeat costs nothing.
             if (syncPlayPresenceDemanded(controller.state.value, playbackServiceState.running.value)) {
                 startPresenceService()
             }
         }
 
         /**
-         * Best effort, exactly like `ExoPlayerHandle.startPlaybackService`.
-         *
-         * A foreground start from the background throws from API 31 onwards, and the demand can rise
-         * there — playback ending while the app is off screen is the ordinary case. Losing this start
-         * costs the network-holding bonus and nothing else; [onStart] tries again the moment the user
-         * comes back, which is the only moment the group can be recovered anyway.
+         * Best effort: a foreground start from the background throws from API 31 onwards and the
+         * demand can rise there. Losing it costs only the network hold; [onStart] tries again.
          */
         private fun startPresenceService() {
             runCatching { ContextCompat.startForegroundService(context, intent()) }
@@ -99,9 +83,8 @@ class SyncPlayPresenceCoordinator
 
         private companion object {
             /**
-             * How long a demand has to hold before the service is started or stopped, in
-             * milliseconds. Long enough to swallow a failed rejoin and a player handover, short
-             * enough that pressing Home a moment after joining still finds the service up.
+             * Long enough to swallow a failed rejoin or a player handover, short enough that
+             * pressing Home just after joining still finds the service up.
              */
             const val DEMAND_SETTLE_MS = 400L
         }

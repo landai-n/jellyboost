@@ -10,16 +10,7 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 
-/**
- * Unit tests for [useBottomNav] — which of the app's two navigation layouts a window of a given
- * width gets.
- *
- * The breakpoint is 560dp, the width below which four labelled tabs would crowd the app actions
- * out, and it is the one number the whole frame hangs off: it picks the bar, and through it the
- * shape of `LocalAppChromePadding`. Pinning it here keeps it a plain function of the measured
- * width — testable without a device, the same way `homeThumbCardWidth` and `librariesMinCellWidth`
- * are.
- */
+/** The 560dp breakpoint picks the bar, and through it the shape of `LocalAppChromePadding`. */
 class AppChromeTest {
     @Test
     @DisplayName("a phone-width window gets the floating bottom pill")
@@ -49,27 +40,17 @@ class AppChromeTest {
     @Test
     @DisplayName("the action cluster reserves its gap plus a full touch target, not a magic 44dp")
     fun theActionClusterHeightIsDerivedFromWhatItDraws() {
-        // The cluster is one row of app actions under `ActionClusterTopGap`, and every action lays
-        // out `Dimens.MinTouchTarget` around the smaller circle it draws (`JellyfinButtons.kt`).
-        // Pinned because this is the number `AppScaffold` keeps clear of a compact screen's first,
-        // non-scrolling row: a literal 44dp would be neither the circle nor the row — and the
-        // shortfall would let the search field slide under the Cast and overflow buttons.
+        // A literal 44dp would be neither the circle nor the row, and the shortfall would let a
+        // screen's first non-scrolling row slide under the Cast and overflow buttons.
         ActionClusterHeight shouldBe 56.dp
         ActionClusterHeight shouldBe ActionClusterTopGap + Dimens.MinTouchTarget
     }
 }
 
 /**
- * Unit tests for [showsMiniPlayer], [miniPlayerBottomOffset] and [chromeBottomTarget] — the three
- * plain functions behind the mini-player's visibility, its docking position and the clearance a
- * screen underneath it has to reserve, split out from `NavDestination` and from
- * composition so they are testable without either (the same reasoning [AppChromeTest] documents for
- * [useBottomNav]).
- *
- * The three have to agree, and that is most of what is pinned here: the bar docks
- * [miniPlayerBottomOffset] above whatever is at the bottom edge, so the padding published for the
- * screen under it must be that same offset's worth plus the bar's height — no more (a visible gap
- * under the last row) and no less (the last row disappears under the glass).
+ * The three functions have to agree: the bar docks [miniPlayerBottomOffset] above whatever is at the
+ * bottom edge, so the padding published for the screen under it must be that same offset plus the
+ * bar's height — no more (a visible gap) and no less (the last row vanishes under the glass).
  */
 class MiniPlayerVisibilityTest {
     @Test
@@ -81,13 +62,8 @@ class MiniPlayerVisibilityTest {
     @Test
     @DisplayName("the destination is not part of the rule beyond those two: a pushed screen shows the bar")
     fun theRuleIsTheTwoDestinationsRatherThanTopLevelness() {
-        // `&&`ing this with `isTopLevel` would hide the bar on exactly the four screens playback
-        // starts from — the music library, an album, an artist, a playlist, all pushed — so a tap
-        // on Play would show nothing until the user navigated back to a tab. This function is the
-        // whole rule; the clearance argument is [chromeBottomTarget]'s job, pinned below.
-        //
-        // Nothing here says "pushed" because this function never took a destination: what it pins
-        // is that its only two exclusions are the two named ones, whatever else is on screen.
+        // `&&`ing this with `isTopLevel` would hide the bar on the four pushed screens playback
+        // starts from. The two named exclusions are the whole rule.
         showsMiniPlayer(activeState(), onPlayer = false, onNowPlaying = false) shouldBe true
         showsMiniPlayer(activeState(), onPlayer = true, onNowPlaying = false) shouldBe false
         showsMiniPlayer(activeState(), onPlayer = false, onNowPlaying = true) shouldBe false
@@ -135,10 +111,8 @@ class MiniPlayerVisibilityTest {
     @Test
     @DisplayName("a pushed screen reserves the bar's own extent above the inset it applies itself")
     fun aPushedScreenReservesTheBarsExtent() {
-        // The half `:feature:music`'s four browse screens add to their list's `contentPadding` on
-        // top of the navigation-bar inset they apply by hand. It has to be exactly the bar's height
-        // plus the gap it docks above that inset (`miniPlayerBottomOffset(isTopLevel = false)`), or
-        // the last track ends under the bar.
+        // Exactly the bar's height plus the gap it docks above the inset the screen applies itself
+        // (`miniPlayerBottomOffset(isTopLevel = false)`), or the last track ends under the bar.
         chromeBottomTarget(
             isTopLevel = false,
             bottomNav = true,
@@ -203,7 +177,6 @@ class MiniPlayerVisibilityTest {
         )
 
     private companion object {
-        /** A stand-in for whatever the window's navigation bar takes — a gesture pill's height. */
         val NAV_INSET = 24.dp
     }
 }

@@ -9,22 +9,13 @@ import dev.jellyboost.core.common.model.SortBy
 import dev.jellyboost.core.common.model.SortOrder
 import dev.jellyboost.core.common.selection.BatchReport
 
-/**
- * Everything the library grid draws around its paged items.
- *
- * The items themselves are *not* here: they arrive as a `PagingData` flow, whose loading and error
- * states Paging owns (see [LibraryViewModel.items]). This state holds only what the user can turn:
- * sort, filters, and the sheet that edits them.
- */
+/** The items themselves are not here: they arrive as a `PagingData` flow that owns its own states. */
 data class LibraryUiState(
     val libraryName: String = "",
     val sortBy: SortBy = SortBy.SORT_NAME,
     val sortOrder: SortOrder = SortOrder.ASCENDING,
-    /** Filters currently applied to the grid. */
     val filters: FilterOptions = FilterOptions(),
-    /** Filters being edited in the sheet; committed onto [filters] when the user applies them. */
     val draftFilters: FilterOptions = FilterOptions(),
-    /** What this library can be filtered by, fetched the first time the sheet opens. */
     val facets: FilterFacets = FilterFacets(),
     /** `true` once the facets came back — including when they came back empty. */
     val areFacetsLoaded: Boolean = false,
@@ -32,44 +23,25 @@ data class LibraryUiState(
     val areFacetsLoading: Boolean = false,
     val facetsError: AppError? = null,
     /**
-     * A finished batch action, waiting for the snackbar; cleared by
-     * [LibraryViewModel.consumeMessage].
-     *
-     * The *selection* itself is deliberately **not** here — it lives in
-     * [LibraryViewModel.selection], its own `StateFlow`. A grid cell that had to read this state
-     * class to know whether it is selected would also be subscribed to the sort key, the filters,
-     * the facets and this message, and would recompose whenever any of them changed.
+     * The *selection* is deliberately not here but in [LibraryViewModel.selection]: a cell reading
+     * this class would also be subscribed to sort, filters, facets and this message.
      */
     val userMessage: BatchReport? = null,
     /**
-     * How many items match the current query, as the server reported it on the grid's first page —
-     * the header's "N items" line.
-     *
-     * `null` means "not known", which is the state before the first page lands, offline (Room holds
-     * the downloaded items, not the library) and whenever the query changes: the number belongs to
-     * one set of filters and re-labelling the previous count as this query's would be a lie for as
-     * long as the new first page takes to arrive.
+     * `null` means "not known": before the first page lands, offline, and whenever the query
+     * changes — the count belongs to one set of filters and must not be re-labelled as another's.
      */
     val totalCount: Int? = null,
 ) {
-    /** Number of active filter facets, for the "2" badge on the filter action. */
     val activeFilterCount: Int
         get() = filters.activeCount
 
     /**
-     * The chips the grid's inline filter row offers, in the order it draws them.
+     * Facets the user has **not** applied are deliberately absent: they arrive only once the sheet
+     * has been opened, and a row that silently grew a dozen genres reads as a bug.
      *
-     * Two kinds, and no new filter semantics: the *watched* toggles are always available, because
-     * they need nothing from the server, and every genre or year currently applied appears as a
-     * selected chip so it can be dropped with one tap. Facets the user has **not** applied are
-     * deliberately absent — they arrive only once the filter sheet has been opened
-     * ([LibraryViewModel.openFilterSheet] fetches them), and a row that silently grew a dozen
-     * genres after an unrelated interaction reads as a bug. The sheet remains the full editor.
-     *
-     * Built once, in the constructor body, rather than on each read: a `get()` handed the `LazyRow`
-     * that draws these a *fresh* list on every read, and a list that is never equal to the last one
-     * is a list whose row can never skip — for a value that changes only when the user applies a
-     * filter.
+     * Built in the constructor body, not a `get()`: a fresh list on every read is a list the
+     * `LazyRow` can never skip.
      */
     val filterChips: List<LibraryFilterChip> =
         buildList {
@@ -79,7 +51,6 @@ data class LibraryUiState(
             filters.years.forEach { add(LibraryFilterChip.Year(it)) }
         }
 
-    /** The server query the grid is currently paging over. */
     fun toQuery(libraryId: String): ItemQuery =
         ItemQuery(
             parentId = libraryId,
@@ -92,44 +63,29 @@ data class LibraryUiState(
 
     companion object {
         /**
-         * The grid lists top-level titles, whatever kind of library it is: a movie library answers
-         * with movies and a TV library with series, so one type list serves both and the route does
-         * not have to carry the collection kind.
-         *
-         * [ItemType.LIBRARY_TILE_TYPES] is shared with `:data`'s tile-count query, which
-         * projects the same list onto `BaseItemKind` (`OnlineJellyfinRepository.LIBRARY_COUNT_TYPES`)
-         * since `:data` cannot depend on this feature module.
+         * One type list serves both movie and TV libraries, so the route need not carry the
+         * collection kind. [ItemType.LIBRARY_TILE_TYPES] is shared with `:data`'s tile-count query,
+         * which cannot depend on this module.
          */
         val GRID_ITEM_TYPES = ItemType.LIBRARY_TILE_TYPES
     }
 }
 
-/**
- * One chip in the grid's inline filter row, and the [FilterOptions] edit it stands for.
- *
- * A chip is a *shortcut into the existing filter model*, never a new kind of filter: each case maps
- * onto a field the filter sheet already edits, so a chip and the sheet cannot disagree about what
- * is applied ([toggled], [isApplied]).
- */
+/** A chip is a shortcut into the existing [FilterOptions], never a new kind of filter. */
 sealed interface LibraryFilterChip {
-    /** `isPlayed = false` — only what has not been watched. */
     data object Unwatched : LibraryFilterChip
 
-    /** `isPlayed = true` — only what has. */
     data object Watched : LibraryFilterChip
 
-    /** One applied genre, so it can be dropped without opening the sheet. */
     data class Genre(
         val name: String,
     ) : LibraryFilterChip
 
-    /** One applied year, likewise. */
     data class Year(
         val value: Int,
     ) : LibraryFilterChip
 }
 
-/** Whether [chip]'s filter is part of these options — the chip's selected state. */
 fun FilterOptions.isApplied(chip: LibraryFilterChip): Boolean =
     when (chip) {
         LibraryFilterChip.Unwatched -> isPlayed == false
@@ -138,12 +94,7 @@ fun FilterOptions.isApplied(chip: LibraryFilterChip): Boolean =
         is LibraryFilterChip.Year -> chip.value in years
     }
 
-/**
- * These options with [chip] turned on if it was off, and off if it was on.
- *
- * The two watched chips share one tri-state field, so turning either on turns the other off — the
- * same exclusivity the sheet's *Any / Watched / Unwatched* row expresses with three buttons.
- */
+/** The two watched chips share one tri-state field, so turning either on turns the other off. */
 fun FilterOptions.toggled(chip: LibraryFilterChip): FilterOptions =
     when (chip) {
         LibraryFilterChip.Unwatched -> copy(isPlayed = if (isPlayed == false) null else false)
@@ -152,7 +103,6 @@ fun FilterOptions.toggled(chip: LibraryFilterChip): FilterOptions =
         is LibraryFilterChip.Year -> copy(years = years.toggle(chip.value))
     }
 
-/** The sort keys the grid's menu offers, in the order it lists them. */
 val LIBRARY_SORT_OPTIONS: List<SortBy> =
     listOf(
         SortBy.SORT_NAME,

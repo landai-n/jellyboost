@@ -44,18 +44,12 @@ import java.util.TimeZone
 import java.util.UUID
 
 /**
- * The most-recent-wins decision matrix: compare `lastPlayedDate` before pushing, keep the newer
- * position.
+ * The most-recent-wins decision matrix — what happens on reconnect to the row an airplane-mode
+ * session left pending. Every branch has its own test.
  *
- * This is the densest logic in this class and the one most worth getting right: an airplane-mode
- * session leaves a pending row, and what happens to it on reconnect is decided here. Every
- * branch — local newer, server newer, a tie, no server date, no server user data at all,
- * transport failure, a deleted item, and a batch where only some rows fail — has its own test.
- *
- * The test zone is deliberately non-UTC, exactly as in [UserDataRepositoryImplTest]: the SDK's
- * `LocalDateTime` fields are serialised through `ZoneId.systemDefault()`, so a comparison that
- * treated them as UTC would silently be wrong by the device's offset — which is the bug
- * `SdkDateTime.kt` exists to prevent.
+ * The test zone is deliberately non-UTC: the SDK's `LocalDateTime` fields serialise through
+ * `ZoneId.systemDefault()`, so a comparison treating them as UTC is silently wrong by the device's
+ * offset.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class UserDataSyncerTest {
@@ -70,7 +64,6 @@ class UserDataSyncerTest {
     private val itemUuid = UUID.fromString("22222222-2222-2222-2222-222222222222")
     private val otherItemUuid = UUID.fromString("33333333-3333-3333-3333-333333333333")
 
-    /** "Now" on the device. Local rows are stamped relative to it. */
     private val now: Instant = Instant.parse("2026-07-29T10:00:00Z")
     private val clock: Clock = Clock.fixed(now, ZoneOffset.UTC)
 
@@ -166,8 +159,8 @@ class UserDataSyncerTest {
 
             syncer.sync()
 
-            // markPlayedItem clears the server's resume position, so updateItemUserData has to be
-            // the last word — otherwise every watched item would come back with position 0.
+            // `markPlayedItem` clears the server's resume position, so `updateItemUserData` must be
+            // the last word.
             coVerifyOrder {
                 playStateApi.markPlayedItem(any(), any(), any())
                 userLibraryApi.markFavoriteItem(any(), any())
@@ -191,8 +184,7 @@ class UserDataSyncerTest {
     @Test
     fun `the pushed played date resolves back to the instant that was stored`() =
         runTest {
-            // Regression guard for the timezone bug: the SDK stamps the device's offset onto
-            // whatever wall-clock time it is given.
+            // The SDK stamps the device's offset onto whatever wall-clock time it is given.
             pending(row(played = true, lastPlayedDate = now))
             serverUserData(lastPlayedDate = null)
             val sent = slot<LocalDateTime>()
@@ -286,7 +278,7 @@ class UserDataSyncerTest {
     fun `a favourite toggled offline beats a film watched last week`() =
         runTest {
             // `updatedAt`, not the local `lastPlayedDate`: a favourite toggle never touches the
-            // latter, so comparing those two would lose the change.
+            // latter, so comparing those two loses the change.
             pending(row(isFavorite = true, lastPlayedDate = now.minusSeconds(604_800), updatedAt = now))
             serverUserData(lastPlayedDate = now.minusSeconds(604_800))
 

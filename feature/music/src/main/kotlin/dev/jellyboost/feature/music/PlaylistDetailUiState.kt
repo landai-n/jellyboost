@@ -4,11 +4,7 @@ import dev.jellyboost.core.common.AppError
 import dev.jellyboost.core.common.model.DownloadState
 import dev.jellyboost.core.common.model.JellyfinItem
 
-/**
- * Everything [PlaylistDetailScreen] draws.
- *
- * [errorMessage] carries the raw [AppError] — see [AlbumDetailUiState]'s KDoc for why.
- */
+/** [errorMessage] carries the raw [AppError] — see [AlbumDetailUiState]. */
 data class PlaylistDetailUiState(
     val isLoading: Boolean = true,
     val playlist: JellyfinItem? = null,
@@ -17,11 +13,8 @@ data class PlaylistDetailUiState(
 )
 
 /**
- * Stamps the app-wide download-state map onto the playlist's tracks.
- *
- * The badges are honest here even though the playlist itself has no offline model: a track's badge
- * describes *that track's* file on this device, which is exactly what a playlist download produces
- * — the tracks land under their own albums, and this list is only ever drawn online.
+ * Honest even though a playlist has no offline model: a track's badge describes *that track's* file
+ * on this device, and a playlist download lands its tracks under their own albums.
  */
 internal fun PlaylistDetailUiState.withDownloadStates(states: Map<String, DownloadState>): PlaylistDetailUiState =
     copy(tracks = tracks.map { it.withDownloadState(states) })

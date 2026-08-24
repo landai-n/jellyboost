@@ -6,14 +6,8 @@ import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.data.downloads.model.DownloadItem
 
 /**
- * A [DownloadItem] with every field defaulted.
- *
- * [DownloadProgressRatchetTest], [DownloadSpeedTrackerTest], [DownloadGroupCacheTest],
- * [DownloadsUiStateTest], [DownloadRowsTest] and [DownloadsViewModelTest] would otherwise each
- * hand-roll their own `DownloadItem(...)` literal, hardcoding a different subset of its dozen
- * fields. This is their union — every field any of the six needs, defaulted to the plainest value
- * that type-checks — so each test's own helper can name only the two or three fields it actually
- * varies and delegate the rest here, the way `data/downloads`' `DownloadFixtures` builders do.
+ * The union of every field the six test classes in this package need, each defaulted to the plainest
+ * value that type-checks, so a test's own helper names only what it varies.
  */
 @Suppress("LongParameterList")
 internal fun downloadItem(

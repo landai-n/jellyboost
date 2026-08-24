@@ -32,13 +32,6 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import dev.jellyboost.core.ui.R as CoreUiR
 
-/**
- * Unit tests for [PlayerViewModel].
- *
- * The player's hard parts are not "does it play" but the sequencing around it: which request goes
- * out when, what happens to the previous transcode, and whether the stop report survives the
- * screen closing. All of that lives here and none of it needs a device.
- */
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class PlayerViewModelTest : PlayerViewModelFixture() {
     // ---- opening ------------------------------------------------------------------------------
@@ -133,9 +126,8 @@ internal class PlayerViewModelTest : PlayerViewModelFixture() {
             advanceUntilIdle()
 
             model.uiState.value.hasEnded shouldBe true
-            // The detached scope, not viewModelScope: publishing `hasEnded` makes the screen pop
-            // the route on the next frame, which cancels viewModelScope before a report launched
-            // there could reach the server.
+            // Detached scope: `hasEnded` pops the route next frame, cancelling viewModelScope
+            // before a report launched there could reach the server.
             coVerify(exactly = 1) { reporter.reportStopDetached(source, match { it.hasEnded }) }
         }
 
@@ -203,8 +195,7 @@ internal class PlayerViewModelTest : PlayerViewModelFixture() {
             model.selectQuality(PlaybackQuality.LOW)
             advanceUntilIdle()
 
-            // Count is not enough: launched as independent coroutines these two race, and the losing
-            // order leaves the old encoder running against a session nobody will stop.
+            // Order matters, not just count: these launch as independent coroutines and can race.
             coVerifyOrder {
                 reporter.stopTranscoding(transcoding)
                 resolver.resolve(match { it.maxStreamingBitrate == PlaybackQuality.LOW.maxStreamingBitrate })
@@ -278,7 +269,7 @@ internal class PlayerViewModelTest : PlayerViewModelFixture() {
     @Test
     fun `an audio switch the stream cannot satisfy is re-requested from the server`() =
         runTest(dispatcher) {
-            // The transcoding case: the server only ever sent the one audio track it was asked for.
+            // Transcoding: the server only ever sent the one audio track it was asked for.
             playerHandle.trackSelectionSucceeds = false
             val model = viewModel()
             advanceUntilIdle()
@@ -349,8 +340,7 @@ internal class PlayerViewModelTest : PlayerViewModelFixture() {
     @Test
     fun `retries the open's selection until the player has the track it names`() =
         runTest(dispatcher) {
-            // Tracks arrive in stages — a side-loaded subtitle's group lands after the container's —
-            // so the first event need not hold the group the selection needs.
+            // Tracks arrive in stages: a side-loaded subtitle's group lands after the container's.
             playerHandle.trackSelectionSucceeds = false
             coEvery { resolver.resolve(any()) } returns AppResult.Success(source.copy(selectedSubtitleIndex = 3))
             viewModel()
@@ -370,9 +360,8 @@ internal class PlayerViewModelTest : PlayerViewModelFixture() {
     @Test
     fun `an open's selection the player refuses never re-resolves the stream`() =
         runTest(dispatcher) {
-            // The burned-in case: the server rendered the subtitle into the video, so there is no
-            // text group to select and it is already on screen. Re-requesting it would restart
-            // playback in a loop for something the user can already see.
+            // Burned-in: server rendered it into the video, so re-requesting would loop playback
+            // for something already on screen.
             playerHandle.trackSelectionSucceeds = false
             coEvery { resolver.resolve(any()) } returns AppResult.Success(source.copy(selectedSubtitleIndex = 3))
             val model = viewModel()
@@ -390,8 +379,8 @@ internal class PlayerViewModelTest : PlayerViewModelFixture() {
     @Test
     fun `subtitles off at the start is applied rather than left to the player`() =
         runTest(dispatcher) {
-            // `prepare` re-enables the text renderer for the new item, and ExoPlayer's selector would
-            // otherwise pick up a default-flagged text track on its own.
+            // `prepare` re-enables the text renderer; ExoPlayer's selector would otherwise pick up
+            // a default-flagged text track on its own.
             viewModel()
             advanceUntilIdle()
 
@@ -433,8 +422,6 @@ internal class PlayerViewModelTest : PlayerViewModelFixture() {
             playerHandle.emit(PlayerEvent.TracksChanged)
             advanceUntilIdle()
 
-            // The refused local switch, then the re-resolved stream's own selection reaching the
-            // player.
             playerHandle.selectedSubtitleIndices shouldContainExactly listOf(7, 7)
         }
 
@@ -462,8 +449,7 @@ internal class PlayerViewModelTest : PlayerViewModelFixture() {
 
             model.releaseSession()
 
-            // `stop()` frees the codecs and the audio focus but keeps the playback thread, the
-            // loaders, the allocator's buffers and the ffmpeg renderer for the life of the process.
+            // `stop()` frees codecs and audio focus but keeps the playback thread and renderer alive.
             playerHandle.releaseCount shouldBe 1
         }
 
@@ -513,8 +499,7 @@ internal class PlayerViewModelTest : PlayerViewModelFixture() {
     @Test
     fun `leaving a downloaded item still hands the stop report to the detached scope`() =
         runTest(dispatcher) {
-            // Offline that report writes nothing but the local position — which is the only record
-            // of where the user got to.
+            // Offline, that report writes only the local position — the sole record of progress.
             val local = PlayerFixtures.localSource()
             coEvery { resolver.resolve(any()) } returns AppResult.Success(local)
             playerHandle.snapshot = PlaybackSnapshot(positionMs = 45_000L)
@@ -635,8 +620,7 @@ internal class PlayerViewModelTest : PlayerViewModelFixture() {
     @Test
     fun `a downloaded item is never offered a skip`() =
         runTest(dispatcher) {
-            // The loader is server-only and answers empty for a local source; the ViewModel must
-            // then draw nothing rather than reusing the previous item's segments.
+            // The loader is server-only; the ViewModel must draw nothing, not reuse a stale segment.
             coEvery { resolver.resolve(any()) } returns AppResult.Success(PlayerFixtures.localSource())
             coEvery { segmentLoader.load(any()) } returns emptyList()
 
@@ -671,8 +655,8 @@ internal class PlayerViewModelTest : PlayerViewModelFixture() {
 
             model.onTick(PlaybackSnapshot(positionMs = 60_500L, isPlaying = true))
 
-            // The whole point of splitting the flow: at 2 Hz, an unchanged `PlayerUiState` is what
-            // lets the top bar, the transport row and the pickers skip recomposition entirely.
+            // Why the flow is split: an unchanged `PlayerUiState` at 2 Hz lets those consumers
+            // skip recomposition entirely.
             model.uiState.value shouldBeSameInstanceAs before
             model.position.value.positionMs shouldBe 60_500L
         }
@@ -742,8 +726,7 @@ internal class PlayerViewModelTest : PlayerViewModelFixture() {
     fun `a restore comes back where playback got to, not where the user tapped Play`() =
         runTest(dispatcher) {
             val request = slot<PlaybackResolveRequest>()
-            // The real resolver echoes the requested position back on the source it returns, and
-            // that is the number the player is prepared at.
+            // Mirrors the real resolver, which echoes the requested position on the returned source.
             coEvery { resolver.resolve(capture(request)) } coAnswers {
                 AppResult.Success(source.copy(startPositionTicks = request.captured.startPositionTicks))
             }
@@ -756,9 +739,8 @@ internal class PlayerViewModelTest : PlayerViewModelFixture() {
             )
             advanceUntilIdle()
 
-            // The navigation argument is an hour behind: replaying from it would let the next
-            // progress tick stamp a stale position with a fresh timestamp, and most-recent-wins
-            // sync would then push it to the server and every other device.
+            // The nav argument is stale here: replaying it would let the next tick stamp a stale
+            // position with a fresh timestamp, and most-recent-wins sync would push it everywhere.
             request.captured.startPositionTicks shouldBe LIVE_TICKS
             playerHandle.prepared.single().startPositionMs shouldBe LIVE_TICKS / 10_000L
             playerHandle.prepared.single().playWhenReady shouldBe true
@@ -789,8 +771,7 @@ internal class PlayerViewModelTest : PlayerViewModelFixture() {
             viewModel(handle)
             advanceUntilIdle()
             playerHandle.snapshot = PlaybackSnapshot(positionMs = LIVE_TICKS / 10_000L, isPlaying = true)
-            // One 5-second reporter tick — the ticker that keeps running behind a backgrounded
-            // screen, which is exactly the state a process death happens in.
+            // Simulates the 5-second reporter tick that keeps running behind a backgrounded screen.
             snapshot.captured()
 
             val request = slot<PlaybackResolveRequest>()

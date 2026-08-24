@@ -8,13 +8,8 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for the card description builder.
- *
- * Every card in the app is now a single semantics node whose whole content is the string
- * [describe] returns — the artwork, the title, the badges and the progress bar are all silent. That
- * makes this function the only thing standing between a screen-reader user and a wall of unlabelled
- * boxes, and a regression in it is invisible on screen: the app looks perfect and says nothing.
- * Hence a pin per rule.
+ * A regression here is invisible on screen — everything inside a card is silent, so the app looks
+ * perfect and says nothing. Hence a pin per rule.
  */
 class MediaCardFactsTest {
     @Test
@@ -136,8 +131,6 @@ class MediaCardFactsTest {
         itemTypeLabelRes(ItemType.UNKNOWN).shouldBeNull()
     }
 
-    // ---- the shared join -----------------------------------------------------------------------
-
     @Test
     fun `parts are joined by a pause, not by the punctuation a row draws`() {
         describeParts("Rating 8.6", "2016", "rated TV-MA") shouldBe "Rating 8.6, 2016, rated TV-MA"
@@ -145,8 +138,7 @@ class MediaCardFactsTest {
 
     @Test
     fun `a blank part is dropped rather than punctuated around`() {
-        // The home hero's defect: a certificate the server answered "" for was announced as
-        // "Rated , 22 minutes left", because that one assembler skipped the trim.
+        // A certificate the server answered "" for was announced as "Rated , 22 minutes left".
         describeParts("S1 · E4", "", "22 minutes left") shouldBe "S1 · E4, 22 minutes left"
         describeParts("S1 · E4", "   ", "22 minutes left") shouldBe "S1 · E4, 22 minutes left"
     }

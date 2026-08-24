@@ -17,18 +17,12 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 
-/**
- * Unit tests for [ConnectivityRefresher] — the `:data`-side handle feature ViewModels inject.
- *
- * The edge semantics themselves belong to `ConnectivityEdgesTest`; what is tested here is that this
- * class passes the provider's state through unchanged, in both directions, and adds nothing of its
- * own.
- */
+/** Edge semantics belong to `ConnectivityEdgesTest`; this pins the pass-through, both directions. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class ConnectivityRefresherTest {
     private val state = MutableStateFlow(ConnectionState.ONLINE)
 
-    /** The provider's "reachable all along, but somebody fell back to Room" tick. */
+    /** The "reachable all along, but somebody fell back to Room" tick. */
     private val reconfirmations =
         MutableSharedFlow<Unit>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 
@@ -81,10 +75,7 @@ class ConnectivityRefresherTest {
             }
         }
 
-    /**
-     * The state never moved here — it read online the whole time — so the edges have nothing to
-     * say, and the screen that fell back to downloads-only data would sit on it forever.
-     */
+    /** The state never moved, so no edge is coming; the fallen-back screen would sit there forever. */
     @Test
     fun `fires when the server is reconfirmed after a request fell back`() =
         runTest {
@@ -117,8 +108,7 @@ class ConnectivityRefresherTest {
         ).forEach { offline ->
             state.value = offline
 
-            // Read live, not captured at construction: the same instance answers for the app's
-            // whole lifetime, and a stale `true` would let a screen fire doomed requests.
+            // Read live, not captured at construction: one instance answers for the app's lifetime.
             refresher.isOnline shouldBe false
         }
     }
@@ -137,15 +127,11 @@ class ConnectivityRefresherTest {
             }
         }
 
-    /**
-     * What [ConnectivityRefresher.reloadOnChange] guarantees is pinned here: a reload per change
-     * in either direction, the predicate the two variants pass, and the collection dying with the
-     * scope — a ViewModel's `viewModelScope` in production.
-     */
+    /** A reload per change either way, the predicate, and the collection dying with the scope. */
     @Nested
     inner class ReloadOnChange {
-        // `by lazy`, not a plain field: JUnit constructs a @Nested instance before the outer
-        // @BeforeEach runs, and `ConnectivityRefresher` reads `provider.state` in its constructor.
+        // `by lazy`: JUnit constructs a @Nested instance before the outer @BeforeEach runs, and the
+        // constructor reads `provider.state`.
         private val refresher by lazy { ConnectivityRefresher(provider) }
         private var reloads = 0
 
@@ -188,8 +174,8 @@ class ConnectivityRefresherTest {
                 runCurrent()
                 reloads shouldBe 0
 
-                // The screen has since asked for the data the change would invalidate — the
-                // `LibraryViewModel`/`SearchViewModel` case. The next change must still arrive.
+                // The screen has since asked for the data the change would invalidate; the next
+                // change must still arrive.
                 allowed = true
                 state.value = ConnectionState.ONLINE
                 runCurrent()

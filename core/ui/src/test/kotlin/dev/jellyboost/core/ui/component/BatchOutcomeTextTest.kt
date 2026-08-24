@@ -7,15 +7,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import org.junit.jupiter.api.Test
 
-/**
- * Unit tests for [resolveBatchMessage].
- *
- * The ladder is pulled out of the `@Composable` `batchOutcomeText` precisely so the six outcomes it
- * has to tell apart can be pinned here, with no Android dependency in the way.
- */
 class BatchOutcomeTextTest {
-    // ---- the message ladder ------------------------------------------------------------------------
-
     @Test
     fun `nothing succeeding is reported plainly, not as a zero`() {
         val message = resolveBatchMessage(SelectionAction.MARK_WATCHED, BatchOutcome(done = 0, failed = 3))
@@ -64,14 +56,12 @@ class BatchOutcomeTextTest {
 
     @Test
     fun `skipped items are ignored for an action that has none, unlike Download`() {
-        // Only Download can skip an item; a non-Download outcome that somehow carried a skipped
-        // count must not be read as "some done, some skipped" — there is no such sentence for it.
+        // Only Download can skip an item; there is no "some done, some skipped" sentence for the
+        // other actions.
         val message = resolveBatchMessage(SelectionAction.MARK_WATCHED, BatchOutcome(done = 2, skipped = 3))
 
         message.shouldBeInstanceOf<BatchMessage.Done>().done shouldBe 2
     }
-
-    // ---- the three plural/partial mappings ---------------------------------------------------------
 
     @Test
     fun `each action's done plural is its own resource`() {

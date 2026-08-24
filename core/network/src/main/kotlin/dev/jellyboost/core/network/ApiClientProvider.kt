@@ -14,25 +14,15 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Owns the process-wide Jellyfin SDK objects: the [Jellyfin] entry point (used for server
- * discovery) and the single mutable [ApiClient] every repository issues calls through.
+ * Owns the process-wide Jellyfin SDK objects. There is exactly one [ApiClient] for the whole app rather than
+ * one per server — it is designed to be re-pointed via [ApiClient.update], and one instance keeps the OkHttp
+ * pool, base URL and token in one place. Repositories must never construct their own client.
  *
- * There is exactly one [ApiClient] for the whole app rather than one per server: the SDK client
- * is designed to be re-pointed via [ApiClient.update], and a single instance keeps the OkHttp
- * connection pool, the configured base URL and the access token in one place. Repositories must
- * never construct their own client.
- *
- * The Android `Context` gives the SDK the device *name* it derives from `Build`/`device_name`.
  * The device *id* is deliberately NOT the SDK's default — see [deviceId].
  *
- * ### Nothing happens in the constructor
- * Both SDK objects are built on first *use*, not on construction. Building them is the most
- * expensive thing in the app's singleton graph — a blocking `SharedPreferences` XML read plus, on
- * the very first run, a synchronous `commit()` fsync (`SharedPreferencesDeviceIdStore`), a
- * `Settings.Global` binder read for the device name, and Ktor/OkHttp/serialization setup — and
- * anything that injects *anything* reaching this class would otherwise pay all of it. Whoever
- * first touches [jellyfin] or [apiClient] pays it instead, off the cold-start path; `by lazy`'s
- * default synchronized mode makes that safe from any thread.
+ * Both SDK objects are built on first *use*: construction costs a blocking `SharedPreferences` read (plus a
+ * `commit()` fsync on first run), a `Settings.Global` binder read and Ktor/OkHttp setup, which anything
+ * injecting this class would otherwise pay on the cold-start path. `by lazy`'s default mode makes it thread-safe.
  */
 @Singleton
 class ApiClientProvider
@@ -41,7 +31,7 @@ class ApiClientProvider
         @ApplicationContext private val applicationContext: Context,
         private val deviceIdProvider: DeviceIdProvider,
     ) {
-        /** SDK entry point. Exposed for `jellyfin.discovery`; not for issuing API calls. */
+        /** Exposed for `jellyfin.discovery`; not for issuing API calls. */
         val jellyfin: Jellyfin by lazy {
             createJellyfin {
                 context = applicationContext
@@ -54,40 +44,25 @@ class ApiClientProvider
             }
         }
 
-        /** The one API client. Its base URL and access token change over the app's lifetime. */
         val apiClient: ApiClient by lazy { jellyfin.createApi() }
 
         /**
-         * Stable per-installation device identifier, from [DeviceIdProvider] (a random UUID
-         * persisted on first run) rather than the SDK's `ANDROID_ID` default.
+         * A random UUID persisted on first run, not the SDK's `ANDROID_ID` default: the SSAID is scoped per
+         * signing key rather than per package, and a Jellyfin server keeps one token per (user, device id), so
+         * debug and locally-signed release installs kept revoking each other's session.
          *
-         * The default would be shared by every app signed with the same key — Android scopes the
-         * SSAID per signing key, not per package — and since a Jellyfin server keeps one token per
-         * (user, device id), our debug and locally-signed release installs kept revoking each
-         * other's session. See `DeviceIdProvider`.
-         *
-         * This is the id the server shows under Dashboard → Devices, and the one playback
-         * reporting and Quick Connect sessions are attributed to. `null` only if the SDK could
-         * not build a `DeviceInfo`, which cannot happen now that one is supplied explicitly.
+         * This is the id the server shows under Dashboard → Devices, and what playback reporting and Quick
+         * Connect sessions are attributed to.
          */
         val deviceId: String? get() = jellyfin.deviceInfo?.id
 
-        /**
-         * Points the client at [baseUrl] with no credentials.
-         *
-         * Used for pre-authentication calls (public users, branding, Quick Connect availability)
-         * and whenever the user switches to a different server.
-         */
+        /** Drops any credentials — for pre-authentication calls, and when switching to a different server. */
         fun useServer(baseUrl: String) {
             Timber.d("Pointing API client at %s (no credentials)", hostForLog(baseUrl))
             apiClient.update(baseUrl = baseUrl, accessToken = null)
         }
 
-        /**
-         * Points the client at [baseUrl] and authenticates it with [accessToken].
-         *
-         * The token is never logged here or anywhere else.
-         */
+        /** The token is never logged here or anywhere else. */
         fun useSession(
             baseUrl: String,
             accessToken: String,
@@ -97,30 +72,23 @@ class ApiClientProvider
         }
 
         /**
-         * Re-points the client at [baseUrl] **keeping the current credentials**.
-         *
-         * Used by `ServerReachabilityProbe` when the server answered on a different one of its
-         * known addresses (LAN ↔ remote). Distinct from [useServer], which drops the token because
-         * it is used when switching to a different *server*.
+         * Keeps the current credentials — used when the server answered on another of its known addresses
+         * (LAN ↔ remote). Distinct from [useServer], which drops the token because it changes *server*.
          */
         fun useAddress(baseUrl: String) {
             Timber.d("Re-pointing API client at %s, keeping the session", hostForLog(baseUrl))
             apiClient.update(baseUrl = baseUrl)
         }
 
-        /** Drops the access token, keeping the current base URL. Used on sign-out. */
         fun clearSession() {
             apiClient.update(accessToken = null)
         }
 
         private companion object {
-            /** Reported to the server as the client name; shown in Dashboard → Devices. */
+            /** Reported to the server; shown in Dashboard → Devices. */
             const val CLIENT_NAME = "Jellyboost"
 
-            /**
-             * Client version reported to the server. Hard-coded for now; wire it to the app's
-             * `versionName` once `:app` publishes one.
-             */
+            /** TODO: wire to the app's `versionName` once `:app` publishes one. */
             const val CLIENT_VERSION = "0.1.0"
         }
     }

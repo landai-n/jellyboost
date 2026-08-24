@@ -22,41 +22,30 @@ import dev.jellyboost.core.datastore.SecureCredentialStore
 import dev.jellyboost.core.datastore.SharedPreferencesDeviceIdStore
 import javax.inject.Singleton
 
-/**
- * Hilt bindings for `:core:datastore`.
- */
 @Module
 @InstallIn(SingletonComponent::class)
 interface DatastoreModule {
-    /**
-     * Binds [SecureCredentialStore] to its `EncryptedSharedPreferences`-backed implementation.
-     */
     @Binds
     @Singleton
     fun bindSecureCredentialStore(impl: EncryptedSecureCredentialStore): SecureCredentialStore
 
-    /** Binds [AppPreferences] to its DataStore-backed implementation. */
     @Binds
     @Singleton
     fun bindAppPreferences(impl: DataStoreAppPreferences): AppPreferences
 
-    /** Binds [DeviceIdStore] to its plain-`SharedPreferences` implementation. */
     @Binds
     @Singleton
     fun bindDeviceIdStore(impl: SharedPreferencesDeviceIdStore): DeviceIdStore
 }
 
 /**
- * Provides the single preferences [DataStore] the app writes its settings to.
- *
- * There must be exactly one instance per file for the whole process — DataStore enforces that
- * with an exception — which is what `@Singleton` here guarantees. A corrupted file is replaced
- * with empty preferences rather than crashing the app on first read.
+ * There must be exactly one [DataStore] instance per file for the whole process — DataStore enforces that
+ * with an exception — which is what `@Singleton` guarantees. A corrupted file is replaced with empty
+ * preferences rather than crashing the app on first read.
  */
 @Module
 @InstallIn(SingletonComponent::class)
 object PreferencesDataStoreModule {
-    /** The `app_preferences` DataStore. */
     @Provides
     @Singleton
     fun providePreferencesDataStore(

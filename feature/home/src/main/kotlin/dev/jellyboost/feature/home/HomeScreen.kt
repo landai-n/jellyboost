@@ -1,7 +1,5 @@
-// One `LazyListScope` extension per home section (`resumeRow`, `nextUpRow`, `latestRows`,
-// `resumeAudioRow`, …) is this screen's whole structure; they are not `@Composable`, so the rule's
-// Composable exemption cannot reach them. Suppressed here rather than raising the global
-// `thresholdInFiles`.
+// The per-section `LazyListScope` extensions are not `@Composable`, so the rule's Composable
+// exemption cannot reach them. Suppressed here rather than raising the global `thresholdInFiles`.
 @file:Suppress("TooManyFunctions")
 
 package dev.jellyboost.feature.home
@@ -74,19 +72,6 @@ import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.core.ui.theme.LocalAppChromePadding
 import dev.jellyboost.core.ui.R as CoreUiR
 
-/**
- * The home screen: the app's landing destination, mirroring jellyfin-web's row order so a
- * side-by-side comparison shows the same sections, items and ordering.
- *
- * The first *Continue watching* item is promoted out of its row into the full-bleed [HomeHero] at
- * the top of the list, and — on a compact layout — the *My Media* row becomes a row of
- * quick-access chips. Both are presentations of rows the screen already had: no item and no
- * destination is added or lost.
- *
- * The [HomeViewModel] is passed in rather than resolved here so that `:app` owns the
- * `hiltViewModel()` call together with the rest of the navigation graph wiring — see
- * `HomeRoute` in `:app`.
- */
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel,
@@ -103,19 +88,8 @@ fun HomeScreen(
 }
 
 /**
- * Everywhere the home screen can send the user, bundled so that the row builders below take one
- * parameter instead of four.
- *
- * @param onItemClick open an item's detail page — what tapping any card has always done, and what
- *   the hero's *Details* button does.
- * @param onPlay start playback of [JellyfinItem.id] at the given position in Jellyfin ticks. Same
- *   contract as the detail and downloads screens': `:app` turns it into a `Routes.Player`
- *   navigation. The hero's Resume pill is its only caller.
- * @param onLibraryClick open a library's grid — the *See all* action and the quick-access chips.
- * @param onOpenDownloads switch to the Downloads tab, behind the quick-access row's *Offline* chip.
- * @param onPlayTrack resume a *Continue Listening* track from its saved position —
- *   unlike [onPlay], this starts the music queue rather than navigating to `Routes.Player`, so it
- *   is a distinct callback rather than an overload of it.
+ * @param onPlay start position is in Jellyfin ticks; `:app` turns this into a `Routes.Player` nav.
+ * @param onPlayTrack starts the music queue in place rather than navigating — not an [onPlay] overload.
  */
 data class HomeActions(
     val onItemClick: (JellyfinItem) -> Unit,
@@ -125,10 +99,6 @@ data class HomeActions(
     val onPlayTrack: (JellyfinItem) -> Unit,
 )
 
-/**
- * Stateless home rendering — everything the screen draws is a pure function of [state], which
- * keeps it previewable and testable without a ViewModel.
- */
 @Composable
 fun HomeContent(
     state: HomeUiState,
@@ -139,9 +109,7 @@ fun HomeContent(
     when {
         state.isLoading -> LoadingState(modifier = modifier)
 
-        // Both states announce themselves: they arrive by *replacing* the rows a user was reading,
-        // or the spinner they were waiting behind, and without an announcement that swap would be
-        // silent — the node under the reader's finger would simply vanish.
+        // Both states replace what the reader was on, so they must announce or the swap is silent.
         state.errorMessage != null ->
             ErrorState(
                 message = state.errorMessage.resolve(),
@@ -164,19 +132,9 @@ fun HomeContent(
 }
 
 /**
- * The scrolling column: the hero, then the user's rows in the order the server gives them.
- *
- * ### How the hero and the app's chrome share the top of the window
- * `AppScaffold` reserves no space and publishes how much of the window its floating chrome covers as
- * `LocalAppChromePadding`; a top-level screen adds that to its `contentPadding` so its first and last
- * rows come to rest in the clear. **Home is the designated exception at the top**: the hero is meant
- * to run full-bleed under the status bar and under the compact action cluster, which is exactly what
- * the mocks show, so when there is a hero this list consumes only the chrome's *bottom* padding and
- * starts the hero at y=0. With no resume items — no hero — the top padding is consumed as usual, so
- * the first row still clears the top nav (wide) or the action cluster (compact).
- *
- * The hero's own copy is bottom-left (compact) or left (wide) precisely because the top-right of
- * that band belongs to `AppActionCluster`'s Cast/SyncPlay/overflow buttons, which are drawn over it.
+ * Home is the designated exception to `LocalAppChromePadding`: with a hero it consumes only the
+ * chrome's *bottom* padding, so the banner runs full-bleed under the status bar and action cluster.
+ * With no hero the top padding is consumed as usual.
  */
 @Composable
 private fun HomeRows(
@@ -184,21 +142,15 @@ private fun HomeRows(
     actions: HomeActions,
     modifier: Modifier = Modifier,
 ) {
-    // One `BoxWithConstraints` for the whole screen — not per row or per card — matching the
-    // pattern `LibrariesGrid` uses for the same problem (see its comment): a single subcomposition
-    // buys the phone-vs-tablet branch in `homeThumbCardWidth` instead of one per thumb/library card.
+    // One `BoxWithConstraints` for the whole screen, not per card: one subcomposition, not hundreds.
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val cardWidth = homeThumbCardWidth(maxWidth)
         val wide = isWideHome(maxWidth = maxWidth, maxHeight = maxHeight)
         val hero = state.resume.firstOrNull()
-        // The rest of *Continue watching* once the hero has taken the first card. Dropped once per
-        // resume-list change rather than inline in the lazy builder, which re-runs on every
-        // recomposition and handed `MediaRow` a fresh, never-equal list each time — defeating its
-        // skipping on exactly the row `UserDataEventBus` patches most often.
+        // Must stay remembered: dropping inline in the lazy builder hands `MediaRow` a fresh,
+        // never-equal list every recomposition, defeating skipping on the most-patched row.
         val resumeAfterHero = remember(state.resume) { state.resume.drop(1) }
         val chrome = LocalAppChromePadding.current
-        // The banner is measured here and its copy is laid out inside it, so both have to be
-        // answering the same question — see [heroHeight].
         val fontScale = LocalDensity.current.fontScale
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -216,21 +168,13 @@ private fun HomeRows(
                 actions = actions,
             )
 
-            // The order and the presence of every row is the user's, read from the server (see
-            // `HomeLayoutRepository`); each row itself is unchanged. Sections this app has no row for
-            // — audio/book resume, live TV — are skipped here rather than dropped upstream, so that
-            // hiding one in jellyfin-web still moves the rows around it correctly.
-            //
-            // Empty sections are skipped entirely rather than emitted as zero-height items, which
-            // would still consume the column's `spacedBy` gap and leave a visible hole.
-            //
-            // Every row declares its `contentType` — both here (a screenful of rows is itself a lazy
-            // list) and inside `MediaRow` — so scrolling reuses nodes instead of composing new ones.
+            // Row order is the user's, from the server. Unsupported sections are skipped here rather
+            // than dropped upstream so hiding one in jellyfin-web still reorders its neighbours.
             var librariesDrawn = false
             state.sections.forEach { section ->
                 when (section) {
-                    // Both spellings of *My Media* are the same row for us, so a layout containing
-                    // both draws it once — two items under one key would crash the lazy list.
+                    // Both spellings of *My Media* are one row here — two items under one key would
+                    // crash the lazy list.
                     HomeSectionType.SMALL_LIBRARY_TILES, HomeSectionType.LIBRARY_BUTTONS ->
                         if (!librariesDrawn) {
                             librariesDrawn = true
@@ -241,9 +185,6 @@ private fun HomeRows(
                             }
                         }
 
-                    // The hero *is* the first resume card; the row picks up where it leaves off.
-                    // (`resumeAfterHero` of an empty list is empty, so the no-hero case is the
-                    // same empty row it always was.)
                     HomeSectionType.RESUME ->
                         resumeRow(
                             items = resumeAfterHero,
@@ -267,12 +208,8 @@ private fun HomeRows(
 }
 
 /**
- * Makes a composable *lay out* [amount] shorter than it draws, so that whatever follows it in a
- * lazy list overlaps its bottom edge.
- *
- * Only ever applied to something whose bottom edge has already faded to the app background — the
- * wide [HomeHero]'s rail fade — so the overlapped band is background either way, and the row that
- * lands on it is drawn after (and therefore over) the banner.
+ * Lays out [amount] shorter than it draws, so the next lazy item overlaps its bottom edge. Only safe
+ * on content whose bottom band has already faded to the app background.
  */
 private fun Modifier.reportShorterBy(amount: Dp): Modifier =
     layout { measurable, constraints ->
@@ -281,12 +218,6 @@ private fun Modifier.reportShorterBy(amount: Dp): Modifier =
         layout(placeable.width, height) { placeable.place(0, 0) }
     }
 
-/**
- * The banner at the top of the column: the first *Continue watching* card, drawn full-bleed.
- *
- * @param hero `null` when there is nothing to resume, in which case the column simply starts with
- *   its own top padding and no item is emitted.
- */
 private fun LazyListScope.heroRow(
     hero: JellyfinItem?,
     wide: Boolean,
@@ -301,10 +232,7 @@ private fun LazyListScope.heroRow(
             height = height,
             onResume = { actions.onPlay(hero.id, hero.userData.playbackPositionTicks) },
             onDetails = { actions.onItemClick(hero) },
-            // The rows below a wide banner come to rest inside its faded bottom edge — the mocks'
-            // -48dp rail. The item reports itself that much shorter (plus the column's own gap,
-            // which still applies) rather than offsetting what follows it, which a lazy list has no
-            // way to express: an item can only be placed after the one before it ends.
+            // A lazy list cannot offset the following item, only shorten this one.
             modifier =
                 if (wide) {
                     Modifier.reportShorterBy(HeroRailOverlap + Dimens.SpaceExtraLarge)
@@ -315,7 +243,6 @@ private fun LazyListScope.heroRow(
     }
 }
 
-/** *My Media* as tiles — the wide layout's shape for the libraries row. */
 private fun LazyListScope.librariesRow(
     state: HomeUiState,
     actions: HomeActions,
@@ -333,9 +260,7 @@ private fun LazyListScope.librariesRow(
                 library = library,
                 onClick = { actions.onLibraryClick(library) },
                 width = cardWidth,
-                // Absent for a library rebuilt from the offline cache, which stores no count, or one
-                // whose count request failed; the tile then draws its name alone
-                // (`LibraryView.itemCount`).
+                // Null for a library rebuilt from the offline cache, which stores no count.
                 subtitle =
                     library.itemCount?.let { count ->
                         pluralStringResource(CoreUiR.plurals.library_item_count, count, count)
@@ -345,13 +270,6 @@ private fun LazyListScope.librariesRow(
     }
 }
 
-/**
- * *My Media* as quick-access chips — the compact layout's shape for the same row.
- *
- * A phone has no room for a shelf of 232dp tiles above the artwork the screen is actually about, so
- * this row turns the libraries into a single line of glass pills, with the Downloads tab on the
- * end: everything the tile row reaches, one tap away, in a sixth of the height.
- */
 private fun LazyListScope.quickAccessRow(
     state: HomeUiState,
     actions: HomeActions,
@@ -385,13 +303,8 @@ private fun LazyListScope.quickAccessRow(
 }
 
 /**
- * One quick-access pill: a glyph and a name on a translucent capsule.
- *
- * The fill is `GlassDefaults.Fill` painted flat rather than `Modifier.glassSurface`, and
- * deliberately so: a real blur samples `AppScaffold`'s haze source, which is the very content this
- * chip scrolls *inside*, so an in-content glass surface would be blurring itself. The chrome floating
- * over the page is what the blur is for; in-content glass is the flat fill, which is also what
- * `PillChip` does.
+ * Flat `GlassDefaults.Fill`, never `Modifier.glassSurface`: a real blur samples `AppScaffold`'s haze
+ * source, which is the content this chip scrolls inside — it would be blurring itself.
  */
 @Composable
 private fun QuickAccessChip(
@@ -403,15 +316,10 @@ private fun QuickAccessChip(
     Row(
         modifier =
             modifier
-                // A *minimum*, not a fixed height (`GlassBottomNav` records the same reasoning):
-                // 38dp around a 13sp label has under 4dp of slack, so at accessibility font scales
-                // a hard `height` clipped the chip's word. The row scrolls, so growing is free.
+                // Minimum, never a fixed height: 38dp around a 13sp label clips at large font scales.
                 .heightIn(min = QuickAccessChipHeight)
                 .background(color = GlassDefaults.Fill, shape = CircleShape)
                 .border(GlassDefaults.HairlineWidth, GlassDefaults.Hairline, CircleShape)
-                // A chip is a navigation target, and said so to the eye alone: without the role a
-                // screen reader would announce the library's name with nothing to say it was
-                // tappable.
                 .clickable(role = Role.Button, onClick = onClick)
                 .padding(horizontal = QuickAccessChipPadding),
         verticalAlignment = Alignment.CenterVertically,
@@ -470,7 +378,7 @@ private fun LazyListScope.nextUpRow(
             key = JellyfinItem::id,
             contentType = THUMB_CARD_CONTENT_TYPE,
         ) { item ->
-            // No time chip: nothing in *Next up* has been started, so there is no time left to show.
+            // No time chip: nothing in *Next up* has been started.
             ThumbCard(
                 item = item,
                 onClick = { actions.onItemClick(item) },
@@ -481,15 +389,7 @@ private fun LazyListScope.nextUpRow(
     }
 }
 
-/**
- * *Continue Listening*: partially-played tracks, square album-shaped cards like the
- * browse screens' [AlbumCard] rather than [ThumbCard] — the 16:9 shape has no meaning for a track,
- * which carries square artwork exactly like an album does.
- *
- * A tap resumes the track from where it left off ([HomeActions.onPlayTrack]) rather than opening a
- * detail page — there is no `ItemDetail` for a track yet, and "continue listening" already says
- * what the tap should do, the same contract the hero's Resume pill has for video.
- */
+/** A tap resumes the track rather than opening a detail page — there is no `ItemDetail` for tracks. */
 private fun LazyListScope.resumeAudioRow(
     state: HomeUiState,
     actions: HomeActions,
@@ -523,97 +423,35 @@ private fun LazyListScope.latestRows(
             contentType = POSTER_CARD_CONTENT_TYPE,
             onSeeAll = { actions.onLibraryClick(section.library) },
         ) { item ->
-            // Posters keep the overlays they already had (progress, watched); the star rating badge
-            // belongs to the library grid, where a wall of posters is all a user has to choose from.
             PosterCard(item = item, onClick = { actions.onItemClick(item) })
         }
     }
 }
 
-/**
- * Viewport width below which [homeThumbCardWidth] switches to [COMPACT_THUMB_WIDTH], and the width
- * half of [isWideHome].
- *
- * 600dp is the standard compact/medium width-class boundary — the same cutoff
- * `librariesMinCellWidth` in `LibrariesScreen.kt` uses — and comfortably below every width this
- * screen actually renders at on a tablet: the test tablet is 711dp in portrait and 1138dp in
- * landscape, so both stay on the [Dimens.ThumbWidth] (232dp) branch and the tablet render this
- * file was calibrated against is unchanged.
- *
- * It is deliberately *not* the chrome's own 560dp boundary (`TopNavMinWidth`): that number decides
- * which navigation bar the window gets, this one decides how much room a card has, and the home
- * screen already had this one. Between the two — a 560–600dp window — the wide nav bar floats over
- * the compact home layout, which is exactly the arrangement the hero is built for anyway: it ignores
- * the chrome's top padding at every width.
- */
+/** The standard compact/medium width-class boundary — deliberately not the chrome's own 560dp. */
 private val COMPACT_MAX_WIDTH = 600.dp
 
-/**
- * Viewport height below which the home screen stays on its compact shape however wide it is.
- *
- * The wide hero is a fixed-height banner with a copy block inset 104dp from the top; on a short
- * window there is no room for that above the first row, and the same reasoning (and the same guard)
- * as `ItemDetailScreen.isWideLayout` applies. A phone in landscape — ~360dp tall and well over
- * 600dp wide — is the shape this rules out; every tablet orientation clears it.
- */
+/** Rules out landscape phones: the wide hero's 104dp copy inset leaves no room above the first row. */
 private val WIDE_MIN_HEIGHT = 560.dp
 
 /**
- * Fixed *Continue Watching* / *Next Up* / *My Media* card width once the viewport drops below
- * [COMPACT_MAX_WIDTH].
- *
- * At 360dp — the narrowest phone this app targets — [Dimens.ThumbWidth] (232dp) only fits 1.4
- * cards per row, which reads as zoomed-in next to jellyfin-web. 160dp is chosen so exactly two
- * full cards plus a peek of a third fit: `ScreenPadding` (16dp) + 160 + `SpaceMedium` gutter
- * (12dp) + 160 = 348dp, inside the 360dp viewport, leaving a 12dp sliver of the next card as the
- * scroll affordance a fixed-width `LazyRow` needs (unlike `LibrariesGrid`'s adaptive grid, these
- * rows don't reflow to fill leftover width).
+ * Sized so two full cards plus a peek fit the narrowest 360dp phone: 16 + 160 + 12 + 160 = 348dp.
+ * These rows don't reflow, so the 12dp sliver is the only scroll affordance.
  */
 private val COMPACT_THUMB_WIDTH = 160.dp
 
-/**
- * Fixed width for Home's thumb-shaped cards (*My Media*, *Continue Watching*, *Next Up*) at a
- * viewport of [maxWidth].
- *
- * Pulled out of the composable so it's a plain, unit-testable function of the measured width —
- * see [COMPACT_THUMB_WIDTH] for why the compact value was chosen and [COMPACT_MAX_WIDTH] for why
- * the cutoff sits where it does. `Latest ...` poster rows are untouched by this: they use
- * `PosterCard`'s own fixed [Dimens.PosterWidth] (128dp) at every width.
- *
- * Width only, deliberately: this is how much room a card has, and that does not change because a
- * window is short. The *shape* of the screen — hero layout, tiles vs chips — is [isWideHome]'s
- * decision, and that one does look at the height.
- */
 internal fun homeThumbCardWidth(maxWidth: Dp): Dp =
     if (maxWidth < COMPACT_MAX_WIDTH) COMPACT_THUMB_WIDTH else Dimens.ThumbWidth
 
-/**
- * Whether the screen draws its wide shape: the landscape hero with the copy beside the artwork, and
- * *My Media* as library tiles rather than quick-access chips.
- *
- * Both halves matter — see [COMPACT_MAX_WIDTH] and [WIDE_MIN_HEIGHT].
- */
 internal fun isWideHome(
     maxWidth: Dp,
     maxHeight: Dp,
 ): Boolean = maxWidth >= COMPACT_MAX_WIDTH && maxHeight >= WIDE_MIN_HEIGHT
 
 /**
- * How tall the hero banner is in a [viewportHeight]-tall window, at the user's [fontScale].
- *
- * The mocks' 460dp (portrait) and 400dp (landscape) are what a phone and a tablet get. The ceiling
- * is the guard: at [heroMaxViewportFraction] of the window, a hero can never take most of the
- * screen, so a small or split-screen window still shows what the screen is for — the rows under it
- * — instead of one enormous picture. A 640dp-tall phone lands at 384dp; the test tablet and every
- * ordinary phone are above the ceiling and get the mocks' figure exactly.
- *
- * Both numbers move with the font scale, and only upwards. The banner grows by exactly what its
- * lockup's *text* grew by ([CompactLockupText] / [WideLockupText]), because the copy inside a
- * fixed-height box is the one thing the mocks' dp figures cannot describe — a 2.0× device asking a
- * 460dp banner to hold 615dp of lockup would otherwise clip the hero's own buttons. The ceiling
- * relaxes with it, or the growth would be capped away on exactly the devices that need it; the
- * copy still sheds (`compactHeroShowsSecondary`,
- * `wideHeroShowsSecondary`) when even the taller banner is not enough.
+ * The base heights are the mocks' figures; the viewport-fraction ceiling keeps a small or
+ * split-screen window from being one enormous picture. Both grow with the font scale — a 2.0×
+ * device asking a 460dp banner to hold 615dp of lockup would clip the hero's own buttons.
  */
 internal fun heroHeight(
     wide: Boolean,
@@ -623,11 +461,8 @@ internal fun heroHeight(
     val base = if (wide) WIDE_HERO_HEIGHT else COMPACT_HERO_HEIGHT
     val lockupText = if (wide) WideLockupText else CompactLockupText
     val growth = textGrowth(fontScale)
-    // The ceiling is three fifths at font scale 1.0, exactly as it was, rising to
-    // HERO_MAX_VIEWPORT_FRACTION_LARGE by 2.0×. The guard is about leaving room for the rows below,
-    // and at 2.0× those rows are twice as tall too — holding the hero to the same fraction there
-    // buys a glimpse of one row at the price of a play button drawn outside its banner, which is
-    // not a trade the guard was written to make.
+    // The ceiling relaxes with the scale: at 2.0× the rows below are twice as tall too, so holding
+    // the same fraction would buy a glimpse of one row at the price of a clipped play button.
     val fraction =
         HERO_MAX_VIEWPORT_FRACTION +
             (HERO_MAX_VIEWPORT_FRACTION_LARGE - HERO_MAX_VIEWPORT_FRACTION) * growth.coerceAtMost(1f)
@@ -638,13 +473,10 @@ private val COMPACT_HERO_HEIGHT = 460.dp
 
 private val WIDE_HERO_HEIGHT = 400.dp
 
-/** Share of the window the hero may occupy at most at font scale 1.0 — see [heroHeight]. */
 private const val HERO_MAX_VIEWPORT_FRACTION = 0.6f
 
-/** …and at 2.0×, where the copy inside the banner is what the window is short of. */
 private const val HERO_MAX_VIEWPORT_FRACTION_LARGE = 0.75f
 
-/** Height of a quick-access chip: taller than a filter chip, since it is a navigation target. */
 private val QuickAccessChipHeight = 38.dp
 
 private val QuickAccessChipPadding = 14.dp
@@ -665,10 +497,6 @@ private const val SECTION_RESUME = "section-resume"
 private const val SECTION_NEXT_UP = "section-next-up"
 private const val SECTION_RESUME_AUDIO = "section-resume-audio"
 
-// Content types: rows of the same shape are interchangeable nodes, whatever section they belong to.
-// The card types themselves (poster/thumb/library) come from `:core:ui`, beside the cards they
-// describe — these row- and chip-level types don't name a core/ui component, so they stay
-// local.
 private const val ROW_HERO = "row-hero"
 private const val ROW_LIBRARIES = "row-libraries"
 private const val ROW_QUICK_ACCESS = "row-quick-access"
@@ -685,7 +513,6 @@ private val PreviewMovies =
 private val PreviewShows =
     LibraryView(id = "lib-shows", name = "Shows", collectionType = CollectionKind.TVSHOWS)
 
-/** The *Continue watching* items: the first is the hero, the second is what the row is left with. */
 private val PreviewResume =
     listOf(
         JellyfinItem(
@@ -738,7 +565,6 @@ private val PreviewLatest =
         ),
     )
 
-/** The rows every preview below draws, with or without the *Continue watching* items. */
 private fun previewState(withResume: Boolean): HomeUiState =
     HomeUiState(
         isLoading = false,

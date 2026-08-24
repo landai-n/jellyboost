@@ -8,13 +8,6 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 
-/**
- * Unit tests for the batch dispatch both contextual bars share.
- *
- * The arithmetic is the point: a summary that says "4 downloaded, 2 skipped" is the only feedback
- * a bulk action gives, and getting the skip rule — and the container carve-out under it — right is
- * the whole value of sharing this one implementation.
- */
 class RunSelectionBatchTest {
     private val enqueued = mutableListOf<String>()
     private val played = mutableListOf<Pair<String, Boolean>>()
@@ -134,9 +127,8 @@ class RunSelectionBatchTest {
     @DisplayName("a container the map does not mention is always enqueued — the series carve-out")
     fun containersAreAlwaysEnqueued() =
         runTest {
-            // A series or season has no download row of its own; the pipeline expands it into
-            // episodes and does the per-episode skipping there. The absent id therefore has to read
-            // as downloadable, however much of it is on the device.
+            // A series or season has no download row of its own; the pipeline expands it into episodes and
+            // skips there, so the absent id has to read as downloadable however much is on the device.
             val outcome =
                 runSelectionBatch(
                     action = SelectionAction.DOWNLOAD,

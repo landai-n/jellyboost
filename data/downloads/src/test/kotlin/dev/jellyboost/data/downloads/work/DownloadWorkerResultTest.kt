@@ -6,13 +6,9 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for [toWorkerResult] — which drain outcomes come back for another run.
- *
- * The mapping is the second half of the retry policy: `DownloadQueue` decides *whether* an item
- * deserves another attempt, and this decides whether WorkManager is asked to provide one. Getting
- * it wrong in either direction is invisible in the UI — a missed `retry()` silently strands a queue
- * that was one blip away from finishing, an extra one re-runs a job over a permanently broken item
- * forever.
+ * The second half of the retry policy: `DownloadQueue` decides *whether* an item deserves another
+ * attempt, and this decides whether WorkManager is asked to provide one. Getting it wrong either way
+ * is invisible in the UI — a missed `retry()` strands a queue, an extra one loops forever.
  */
 class DownloadWorkerResultTest {
     @Test
@@ -22,16 +18,15 @@ class DownloadWorkerResultTest {
 
     @Test
     fun `a permanent failure is reported, not retried`() {
-        // The row is already ERROR in Room and rendered as such; re-running the job would loop on
-        // an item that cannot succeed (deleted on the server, a folder queued as a file).
+        // The row is already ERROR in Room and rendered as such; re-running the job would loop on an
+        // item that cannot succeed.
         DrainOutcome.INCOMPLETE.toWorkerResult().shouldBeInstanceOf<ListenableWorker.Result.Success>()
     }
 
     @Test
     fun `a transient failure asks WorkManager for another run`() {
-        // The whole retry policy depends on this line: the queue left the row QUEUED and
-        // counted the attempt, and the only thing that can start the next one is WorkManager's own
-        // EXPONENTIAL/30 s backoff.
+        // The queue left the row QUEUED and counted the attempt; the only thing that can start the
+        // next one is WorkManager's own EXPONENTIAL/30 s backoff.
         DrainOutcome.RETRY.toWorkerResult().shouldBeInstanceOf<ListenableWorker.Result.Retry>()
     }
 

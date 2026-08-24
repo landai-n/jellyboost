@@ -28,17 +28,12 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for [SyncPlayPresenceCoordinator]'s own wiring — the debounce cadence, the
- * idempotent [SyncPlayPresenceCoordinator.start], and the `ON_START` re-check.
+ * The pure demand rule is pinned separately in [SyncPlayGroupPresenceTest]; these tests hold
+ * still *when* the service is asked to start or stop — both failure shapes (notification churn,
+ * a missed settled demand) are silent on a device.
  *
- * The pure demand rule is pinned separately in [SyncPlayGroupPresenceTest]; what these tests hold
- * still is *when* the service is asked to start or stop. The two failure shapes are both silent on
- * a device: churn (a notification that flashes and vanishes, which the platform penalises) and a
- * missed settled demand (a group quietly dropped when the process loses its network).
- *
- * The service calls themselves are stubbed at the coordinator's own private seam — the real
- * bodies end in `ContextCompat`/`Context` framework calls that a JVM test cannot make, and the
- * cadence, not the `Intent`, is what needs pinning.
+ * Service calls are stubbed at the coordinator's own private seam: the real bodies end in
+ * `ContextCompat`/`Context` framework calls a JVM test cannot make.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class SyncPlayPresenceCoordinatorTest {
@@ -91,8 +86,7 @@ class SyncPlayPresenceCoordinatorTest {
             runCurrent()
             verify(exactly = 1) { coordinator["stopPresenceService"]() }
 
-            // A join that fails (or hands over) in half the settle window: the service must
-            // neither start nor be stopped a second time — this is the flash-then-vanish
+            // A join that fails in half the settle window: this is the flash-then-vanish
             // notification the debounce exists to prevent.
             stateFlow.value = inGroup()
             advanceTimeBy(SETTLE_MS / 2)

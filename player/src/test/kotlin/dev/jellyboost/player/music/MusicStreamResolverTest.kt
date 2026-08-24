@@ -12,15 +12,8 @@ import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
-/**
- * Unit tests for [MusicStreamResolver].
- *
- * Three things here are only visible on a server dashboard or in airplane mode, so they are pinned
- * hard: a downloaded track never reaches the network, the play method the reports carry is derived
- * from the container we actually asked the server about, and every queue entry gets its **own**
- * play session id — two tracks sharing one would make the second's start report close the first's
- * session.
- */
+// Every queue entry gets its own play session id: two tracks sharing one would make the second's
+// start report close the first's session.
 class MusicStreamResolverTest {
     private val downloads = mockk<DownloadedMediaProvider>()
     private val urls = MusicFixtures.FakeAudioStreamUrlFactory()
@@ -94,9 +87,8 @@ class MusicStreamResolverTest {
 
             val stream = resolver.resolve(MusicFixtures.track(0)).shouldNotBeNull()
 
-            // maxStreamingBitrate is the *direct-play* ceiling (the video path's 120 Mbps number)
-            // and audioBitRate the transcode's 384 kbps quality. Sending 384 kbps as the ceiling
-            // would force even direct-capable flac through the encoder.
+            // maxStreamingBitrate is the direct-play ceiling (120 Mbps); audioBitRate is the
+            // transcode's 384 kbps. Swapping them would force direct-capable flac through the encoder.
             urls.requests.single() shouldBe
                 "${MusicFixtures.TRACK_IDS[0]}|opus+mp3+aac+m4a+flac+webma+webm+wav+ogg|aac|ts|120000000|384000"
             stream.uri shouldContain "PlaySessionId=${stream.playSessionId}"

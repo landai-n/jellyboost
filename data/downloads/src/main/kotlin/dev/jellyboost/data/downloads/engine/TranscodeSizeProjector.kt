@@ -3,30 +3,22 @@ package dev.jellyboost.data.downloads.engine
 /**
  * Turns the bytes of an in-flight transcode into a projection of how big the finished file will be.
  *
- * The server cannot tell us: it has not encoded the file yet, and a chunked response carries no
- * `Content-Length` (docs/features/download-quality.md, "No exact size"). What it *does* send is
- * Matroska, and Matroska says how much media time each byte bought — so
+ * The server cannot tell us — it has not encoded the file yet, and a chunked response carries no
+ * `Content-Length` — but what it does send is Matroska, and Matroska says how much media time each
+ * byte bought, so
  *
  * ```
  * projectedBytes = bytesReceived × runtimeMillis / mediaMillisReceived
  * ```
  *
- * which is the encoder's average output bitrate so far, extended over the whole runtime. It is the
- * same quantity ffmpeg reports about itself, computed on this side from the bytes we already have
- * to copy anyway: no extra request, no session bookkeeping, no server-version assumption.
+ * is the encoder's average output bitrate so far, extended over the whole runtime.
  *
- * ### It can only ever be an improvement
- * The result is clamped into `[bytesReceived, ceiling]`. The lower bound is arithmetic honesty —
- * the file cannot end up smaller than what has already landed. The upper bound is the enqueue-time
- * estimate, the deterministic ceiling `DownloadEnqueuer` computed from runtime × min(cap, source
- * bitrate); the projection is allowed to *lower* the figure the user sees as evidence arrives, and
- * never to raise it above what was promised. Early on — a few hundred milliseconds of media, most
- * of it container headers — the ratio is wildly generous and the clamp simply pins it at the
- * ceiling, which is exactly today's behaviour. It leaves the ceiling only once it has something
- * better to say.
+ * The result is clamped into `[bytesReceived, ceiling]`: the file cannot end up smaller than what has
+ * already landed, and the projection may only ever *lower* the enqueue-time ceiling, never raise it
+ * above what was promised. Early on the ratio is wildly generous and the clamp pins it at the ceiling.
  *
- * @param runtimeMillis the item's runtime from `BaseItemDto.runTimeTicks`. Must be positive; the
- *   queue does not build a projector without it, because there is nothing to extrapolate to.
+ * @param runtimeMillis must be positive; the queue does not build a projector without it, because
+ *   there is nothing to extrapolate to.
  * @param ceilingBytes the enqueue-time estimate, i.e. `DownloadEntity.bytesTotal`.
  */
 internal class TranscodeSizeProjector(
@@ -42,11 +34,9 @@ internal class TranscodeSizeProjector(
     ) = scanner.consume(chunk, offset, length)
 
     /**
-     * The projected finished size of this file, or `null` while there is nothing to go on — before
-     * the first cluster timestamp has been read, or before any bytes have landed.
-     *
-     * `null` is meaningful: it is what keeps a row saying *"up to X"* rather than *"~X"* until the
-     * projection is real.
+     * The projected finished size of this file, or `null` while there is nothing to go on. `null` is
+     * meaningful: it is what keeps a row saying *"up to X"* rather than *"~X"* until the projection is
+     * real.
      */
     fun project(bytesReceived: Long): Long? {
         if (bytesReceived <= 0L) return null

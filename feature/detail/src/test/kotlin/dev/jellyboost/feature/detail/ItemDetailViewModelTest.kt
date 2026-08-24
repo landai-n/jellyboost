@@ -21,7 +21,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import dev.jellyboost.core.ui.R as CoreUiR
 
-/** Unit tests for [ItemDetailViewModel] — load shapes, toggles and the event-bus patch. */
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class ItemDetailViewModelTest : ItemDetailViewModelFixture() {
     @BeforeEach
@@ -78,8 +77,6 @@ internal class ItemDetailViewModelTest : ItemDetailViewModelFixture() {
             state.seasons shouldContainExactly listOf(seasonItem)
             state.nextUp shouldBe next
             state.episodes.shouldBeEmpty()
-            // A series page has no single episode to resolve a successor from — that is an episode
-            // page's row, not this one's.
             state.nextEpisode.shouldBeNull()
             state.seasonEpisodes.shouldBeEmpty()
             coVerify(exactly = 0) { repository.getSeriesEpisodes(any()) }
@@ -97,9 +94,7 @@ internal class ItemDetailViewModelTest : ItemDetailViewModelFixture() {
 
             model.uiState.value.episodes shouldContainExactly listOf(episode)
             coVerify(exactly = 1) { repository.getEpisodes(SERIES_ID, ITEM_ID) }
-            // A season is browsed through its series, so "more like this" would be noise.
             coVerify(exactly = 0) { repository.getSimilarItems(any(), any()) }
-            // The next-episode / season-siblings rows belong to an episode page, not this one.
             val state = model.uiState.value
             state.nextEpisode.shouldBeNull()
             state.seasonEpisodes.shouldBeEmpty()
@@ -138,7 +133,7 @@ internal class ItemDetailViewModelTest : ItemDetailViewModelFixture() {
             val model = viewModel()
             advanceUntilIdle()
 
-            // Comes free of getSeriesEpisodes spanning seasons — no season-boundary special case.
+            // Free of `getSeriesEpisodes` spanning seasons: no season-boundary special case.
             model.uiState.value.nextEpisode shouldBe next
         }
 
@@ -154,8 +149,8 @@ internal class ItemDetailViewModelTest : ItemDetailViewModelFixture() {
             val model = viewModel()
             advanceUntilIdle()
 
-            // Positional, deliberately not `getNextUpForSeries` (next-unwatched) — a rewatch of a
-            // watched episode still points at what comes after it in series order.
+            // Positional, deliberately not `getNextUpForSeries` (next-*unwatched*): a rewatch still
+            // points at what comes after it in series order.
             model.uiState.value.nextEpisode shouldBe next
             coVerify(exactly = 0) { repository.getNextUpForSeries(any()) }
         }
@@ -311,7 +306,6 @@ internal class ItemDetailViewModelTest : ItemDetailViewModelFixture() {
             model.toggleWatched()
             advanceUntilIdle()
 
-            // The local write publishes on the bus; that is what flips the button.
             changes.emit(UserDataChange(ITEM_ID, UserData(played = true)))
             advanceUntilIdle()
 
@@ -426,9 +420,9 @@ internal class ItemDetailViewModelTest : ItemDetailViewModelFixture() {
     @Test
     fun `a position written while offline turns the button into Resume, with no refetch`() =
         runTest(dispatcher) {
-            // The offline half of the resume chain: the player writes the position locally on
-            // every tick and publishes it, and this screen is where the user sees it — a downloaded film
-            // watched in airplane mode offers Resume at the right place with no server involved.
+            // The offline half of the resume chain: the player writes the position locally and
+            // publishes it, so a downloaded film watched offline still offers Resume in the right
+            // place.
             coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(movie)
             val model = viewModel()
             advanceUntilIdle()
@@ -491,7 +485,6 @@ internal class ItemDetailViewModelTest : ItemDetailViewModelFixture() {
     @Test
     fun `re-fetches the item it is showing when the server becomes reachable again`() =
         runTest(dispatcher) {
-            // Offline this page is a cached row, or a placeholder for something not downloaded.
             coEvery { repository.getItem(ITEM_ID) } returns
                 AppResult.Success(movie.copy(name = "Arrival", available = false))
             val model = viewModel()

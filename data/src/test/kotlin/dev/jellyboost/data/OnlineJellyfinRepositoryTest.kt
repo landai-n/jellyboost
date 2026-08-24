@@ -68,8 +68,6 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 /**
- * Unit tests for [OnlineJellyfinRepository].
- *
  * The SDK exposes its operation groups as extension properties on `ApiClient`, so the extension
  * file's static holder is mocked to hand back stubbed operation objects.
  */
@@ -123,7 +121,7 @@ class OnlineJellyfinRepositoryTest {
                         libraryDto(moviesLibraryId, "Movies", CollectionType.MOVIES),
                         libraryDto(UUID.randomUUID(), "Shows", CollectionType.TVSHOWS),
                         libraryDto(UUID.randomUUID(), "Music", CollectionType.MUSIC),
-                        // Still outside app scope — unlike music, never joined SUPPORTED.
+                        // Photos never joined SUPPORTED; music did.
                         libraryDto(UUID.randomUUID(), "Photos", CollectionType.PHOTOS),
                     ),
                 )
@@ -145,8 +143,8 @@ class OnlineJellyfinRepositoryTest {
             coEvery { userViewsApi.getUserViews(any(), any(), any(), any()) } returns
                 queryResponse(
                     listOf(
-                        // What the dev server actually reports: 3 media folders for 177 movies,
-                        // 6 for 20 series. `ChildCount` counts folders, never titles.
+                        // Measured: 3 media folders for 177 movies, 6 for 20 series. `ChildCount`
+                        // counts folders, never titles.
                         libraryDto(moviesLibraryId, "Movies", CollectionType.MOVIES, childCount = 3),
                         libraryDto(showsLibraryId, "Shows", CollectionType.TVSHOWS, childCount = 6),
                     ),
@@ -189,7 +187,6 @@ class OnlineJellyfinRepositoryTest {
     @Test
     fun `getUserViews asks for no counts when there are no supported libraries`() =
         runTest {
-            // Music is part of SUPPORTED — photos is what stays outside it.
             coEvery { userViewsApi.getUserViews(any(), any(), any(), any()) } returns
                 queryResponse(listOf(libraryDto(UUID.randomUUID(), "Photos", CollectionType.PHOTOS)))
 
@@ -356,9 +353,8 @@ class OnlineJellyfinRepositoryTest {
 
             repository.getItem(moviesLibraryId.toString())
 
-            // `/Users/{userId}/Items/{itemId}` is the one endpoint that serialises the complete
-            // field set, so it is the one write allowed to overwrite the rich blob a download
-            // stored — and therefore the only thing that can repair a row an older build gutted.
+            // The one endpoint serialising the complete field set, so the one write allowed to
+            // overwrite a download's blob — and the only thing that can repair a gutted row.
             verify(exactly = 1) { browseCache.cacheItems(any(), full = true) }
         }
 
@@ -370,8 +366,8 @@ class OnlineJellyfinRepositoryTest {
 
             repository.getItems(ItemQuery(parentId = moviesLibraryId.toString()))
 
-            // A list request only asks for the fields the list draws; writing that through would
-            // gut the overview and genres of anything downloaded.
+            // A list request draws only list fields; writing it through would gut a download's
+            // overview and genres.
             verify(exactly = 1) { browseCache.cacheItems(any(), full = false) }
         }
 
@@ -483,8 +479,7 @@ class OnlineJellyfinRepositoryTest {
             val libraries = (repository.getUserViews() as AppResult.Success).value
 
             libraries.map { it.collectionType } shouldContainExactly listOf(CollectionKind.MOVIES, CollectionKind.MUSIC)
-            // The movie library still asks for exactly [MOVIE, SERIES] — pinned above and
-            // unaffected by a music library sharing the same count path.
+            // Unaffected by a music library sharing the same count path.
             requests.first().includeItemTypes shouldContainExactly listOf(BaseItemKind.MOVIE, BaseItemKind.SERIES)
             requests.last().includeItemTypes shouldContainExactly listOf(BaseItemKind.MUSIC_ALBUM)
         }
@@ -563,10 +558,8 @@ class OnlineJellyfinRepositoryTest {
     @Test
     fun `getPlaylistItems drops a mixed playlist's non-audio members`() =
         runTest {
-            // A Jellyfin playlist may legally mix episodes and films in with tracks; every
-            // consumer of this member is the audio-only pipeline, whose resolver would build
-            // /Audio universal URLs for the video members. View-only music app: they are dropped,
-            // exactly as SdkDownloadApi.getPlaylistTrackIds drops them on the download path.
+            // A playlist may legally mix in episodes and films, and the audio-only resolver would
+            // build /Audio universal URLs for them.
             coEvery { playlistsApi.getPlaylistItems(any<GetPlaylistItemsRequest>()) } returns
                 queryResponse(
                     listOf(
@@ -686,7 +679,6 @@ class OnlineJellyfinRepositoryTest {
             headers = emptyMap(),
         )
 
-    /** What a `limit = 0` count request answers with: a total and no items at all. */
     private fun countResponse(total: Int) =
         Response(
             content =

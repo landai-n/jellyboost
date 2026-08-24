@@ -8,13 +8,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
-/**
- * Unit tests for [FileDownloadStorage.itemDirectoryNames] — the input to the orphan sweep.
- *
- * The sweep deletes what this does *not* list against, so the two answers that matter are the empty
- * one (an unmounted volume must make the sweep a no-op, never a wipe) and the one that ignores
- * anything that is not an item directory.
- */
 class FileDownloadStorageTest {
     @TempDir
     lateinit var root: File
@@ -35,8 +28,8 @@ class FileDownloadStorageTest {
 
     @Test
     fun `an unmounted volume lists nothing rather than failing`() {
-        // The sweep compares this against the download rows, so "I cannot read the root" has to
-        // read as "found nothing", never as "everything on disk is an orphan".
+        // The sweep compares this against the download rows, so "I cannot read the root" has to read
+        // as "found nothing", never as "everything on disk is an orphan".
         every { locations.activeRoot() } returns null
 
         storage().itemDirectoryNames().shouldBeEmpty()
@@ -44,8 +37,7 @@ class FileDownloadStorageTest {
 
     @Test
     fun `a root that has to be created first lists nothing`() {
-        // A fresh install, or the first drain after a volume switch: the root is made on demand and
-        // is empty, so there is nothing to sweep.
+        // A fresh install, or the first drain after a volume switch: the root is made on demand and is empty.
         every { locations.activeRoot() } returns File(root, "downloads")
 
         storage().itemDirectoryNames().shouldBeEmpty()

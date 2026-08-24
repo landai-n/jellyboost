@@ -26,13 +26,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * The merged card node, held still on a device.
- *
- * This test's whole value is what a screen reader *does not* say: the artwork's
- * description, the title's own node, the subtitle's, and every badge's, all collapsed into one
- * authored sentence. A JVM test can pin the sentence — `MediaCardFactsTest` does — but only a
- * composed tree can show that the card is one stop rather than six, which
- * a careless `Modifier` change would silently undo.
+ * Only a composed tree can show that a card is one traversal stop rather than six, which a careless
+ * `Modifier` change undoes silently; `MediaCardFactsTest` pins the sentence itself.
  */
 @RunWith(AndroidJUnit4::class)
 class MediaCardA11yTest {
@@ -57,8 +52,7 @@ class MediaCardA11yTest {
         val movie = rule.activity.getString(R.string.media_card_type_movie)
         assertEquals("$movie, $MOVIE_TITLE, 2016", rule.onlyCardDescription())
         rule.onAllNodes(hasClickAction()).assertCountEquals(1)
-        // The visible title is `clearAndSetSemantics`-ed, so it contributes no second stop of its
-        // own. If this starts failing, the card announces its title twice.
+        // If this starts failing, the card announces its title twice.
         rule.onAllNodesWithText(MOVIE_TITLE).assertCountEquals(0)
         checks.assertClean()
     }
@@ -71,8 +65,7 @@ class MediaCardA11yTest {
             }
         }
 
-        // `maxLines = 1` cuts the drawn title after a few words; the sentence must not be cut with
-        // it, because the artwork description is the only place the full name is preserved.
+        // `maxLines = 1` cuts the drawn title; the sentence is the only place the full name lives.
         assertEquals(true, rule.onlyCardDescription().contains(LONG_TITLE))
     }
 
@@ -86,9 +79,7 @@ class MediaCardA11yTest {
 
         val episode = rule.activity.getString(R.string.media_card_type_episode)
         val progress = rule.activity.getString(R.string.media_card_progress, HALF_PERCENT)
-        // Read from the resource, not spelled here: the card *speaks* the same localized
-        // "S1 · E4" it *draws*. Spelling it in the test would re-create exactly the kind of drift
-        // this guards against.
+        // Read from the resource, not spelled here: spelling it re-creates the drift this guards.
         val number = rule.activity.getString(R.string.media_episode_label, SEASON_NUMBER, EPISODE_NUMBER)
         assertEquals(
             "$episode, $SERIES_TITLE, $number${Separators.DOT}$EPISODE_TITLE, $progress",
@@ -133,10 +124,8 @@ class MediaCardA11yTest {
 
     @Test
     fun aPosterAndAThumbAnnounceTheSameItemIdentically() {
-        // The two cards were ~90% the same composable, and the 10% that differed included two
-        // spellings of the same click-and-semantics block. They are one
-        // `MediaCard` now; this is the property that made merging them worth doing, and the one a
-        // future "just for the thumb" tweak would break silently.
+        // Poster and thumb share one `MediaCard`; a future "just for the thumb" tweak would break
+        // this silently.
         rule.setContent {
             JellyfinTheme {
                 Column {
@@ -177,10 +166,7 @@ class MediaCardA11yTest {
         )
     }
 
-    /**
-     * The description of the one node the tree is supposed to contain — and a failure with a
-     * readable message when it is not one node.
-     */
+    /** Fails with a readable message when the tree holds anything other than one described node. */
     private fun SemanticsNodeInteractionsProvider.onlyCardDescription(): String {
         val nodes = onAllNodes(hasCardDescription()).fetchSemanticsNodes()
         assertEquals("expected exactly one described card node", 1, nodes.size)
@@ -198,7 +184,6 @@ class MediaCardA11yTest {
         const val EPISODE_TITLE = "Dissonance Theory"
         const val LONG_TITLE = "The Assassination of Jesse James by the Coward Robert Ford"
 
-        /** The three overlay facts, so the comparison is between two *loaded* cards. */
         const val BADGE = "S1 · E4"
         const val TIME_LEFT = "27m left"
         const val RATING = 8.4f

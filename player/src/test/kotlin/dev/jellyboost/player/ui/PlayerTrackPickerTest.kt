@@ -23,15 +23,8 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 /**
- * What the audio and subtitle pickers offer for a **downloaded** item, and what a tap on one does.
- *
- * Its own class rather than more of [PlayerViewModelTest] because it is its own subject: every test
- * here is about the gap between what the item has and what the file on disk holds, and about the one
- * thing that decides whether that gap can be closed — the connection. The sequencing that class pins
- * is unchanged by all of it.
- *
- * The rule in one line: **online the picker offers the source's full track list and reaches anything
- * the file lacks by streaming the item; offline it offers only what the file can play.**
+ * Rule: online, the picker offers the source's full track list and reaches anything the file
+ * lacks by streaming the item; offline, it offers only what the file can play.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class PlayerTrackPickerTest : PlayerViewModelFixture() {
@@ -70,8 +63,6 @@ internal class PlayerTrackPickerTest : PlayerViewModelFixture() {
     @Test
     fun `offline, an audio track the local file cannot satisfy is refused instead of reloading it`() =
         runTest(dispatcher) {
-            // Offline is the precondition: with a server to ask, the same tap streams the item
-            // instead (see the connectivity-aware picker tests below).
             connection.value = ConnectionState.OFFLINE_NO_NETWORK
             playerHandle.trackSelectionSucceeds = false
             coEvery { resolver.resolve(any()) } returns AppResult.Success(PlayerFixtures.localSource())
@@ -81,8 +72,7 @@ internal class PlayerTrackPickerTest : PlayerViewModelFixture() {
             model.selectAudioTrack(2)
             advanceUntilIdle()
 
-            // Re-resolving a file:// URI runs the local resolver over the same file and returns the
-            // same tracks: the switch still cannot be applied and playback has restarted for it.
+            // Re-resolving a file:// URI returns the same tracks, so the switch still can't apply.
             coVerify(exactly = 1) { resolver.resolve(any()) }
             playerHandle.prepared shouldHaveSize 1
             model.uiState.value.selectedAudioIndex
@@ -112,11 +102,7 @@ internal class PlayerTrackPickerTest : PlayerViewModelFixture() {
     @Test
     fun `a streamed item still re-requests a track the current stream cannot satisfy`() =
         runTest(dispatcher) {
-            // The offline guard must not reach the online path, where a re-resolve is the whole
-            // mechanism for getting a different audio track out of a transcode.
             playerHandle.trackSelectionSucceeds = false
-            // The session starts as an Auto one — that is what opening from the route produces, and
-            // the resolver echoes the flag back onto the source it answers with.
             coEvery { resolver.resolve(any()) } returns AppResult.Success(source.copy(autoBitrate = true))
             val model = viewModel()
             advanceUntilIdle()
@@ -128,11 +114,8 @@ internal class PlayerTrackPickerTest : PlayerViewModelFixture() {
             advanceUntilIdle()
 
             requests.last().audioStreamIndex shouldBe 2
-            // The VM still sends no cap of its own — Auto's number is measured and filled in by the
-            // resolver, which is mocked here — and the flag is what says so.
             requests.last().maxStreamingBitrate.shouldBeNull()
             requests.last().autoBitrate shouldBe true
-            // Nothing to bypass: there is no download of this item to be forced past.
             requests.last().forceRemote shouldBe false
         }
 
@@ -146,8 +129,6 @@ internal class PlayerTrackPickerTest : PlayerViewModelFixture() {
             val model = viewModel()
             advanceUntilIdle()
 
-            // The transcode baked in one audio track and two sidecars; with a server to ask, the
-            // picker is still the item's own list.
             model.uiState.value.audioTracks
                 .map { it.index } shouldContainExactly listOf(3, 4, 5)
             model.uiState.value.subtitleTracks
@@ -181,8 +162,7 @@ internal class PlayerTrackPickerTest : PlayerViewModelFixture() {
             connection.value = ConnectionState.OFFLINE_NO_NETWORK
             advanceUntilIdle()
 
-            // The sheet is a `PlayerUiState` read, so it redraws with the shorter list rather than
-            // leaving a row that would now be refused.
+            // The sheet is a `PlayerUiState` read, so it redraws rather than leaving a stale row.
             model.uiState.value.audioTracks
                 .map { it.index } shouldContainExactly listOf(3)
             model.uiState.value.subtitleTracks
@@ -209,8 +189,7 @@ internal class PlayerTrackPickerTest : PlayerViewModelFixture() {
             model.selectAudioTrack(PlayerFixtures.STREAMED_AUDIO_INDEX)
             advanceUntilIdle()
 
-            // Without the flag the re-resolve returns the same file and the same one audio track —
-            // the original bug. With it the server is asked, and the film picks up where it was.
+            // Without the flag the re-resolve returns the same file and track (the original bug).
             requests.last().forceRemote shouldBe true
             requests.last().audioStreamIndex shouldBe PlayerFixtures.STREAMED_AUDIO_INDEX
             requests.last().startPositionTicks shouldBe 300_000_000L
@@ -264,8 +243,7 @@ internal class PlayerTrackPickerTest : PlayerViewModelFixture() {
             model.selectAudioTrack(PlayerFixtures.BAKED_AUDIO_INDEX)
             advanceUntilIdle()
 
-            // The file can serve this one, so there is no reason to keep spending bandwidth on it —
-            // and playing off the disk is what survives the network dropping.
+            // The file can serve this one, so there's no reason to keep spending bandwidth on it.
             requests.last().forceRemote shouldBe false
             model.uiState.value.isLocalPlayback shouldBe true
         }
@@ -273,9 +251,8 @@ internal class PlayerTrackPickerTest : PlayerViewModelFixture() {
     @Test
     fun `a direct-played stream of a download still goes home for a track the file holds`() =
         runTest(dispatcher) {
-            // When the server is direct-playing the original file, the stream carries every track
-            // and the in-stream switch *succeeds* — which is exactly why it must not be offered
-            // one. Only the transcoded case reaches the re-resolve.
+            // Direct-play carries every track and the in-stream switch succeeds — only the
+            // transcoded case reaches the re-resolve.
             playerHandle.trackSelectionSucceeds = true
             playerHandle.snapshot = PlaybackSnapshot(positionMs = 30_000L, isPlaying = true)
             val model = streamingDownloadedItem()
@@ -292,8 +269,7 @@ internal class PlayerTrackPickerTest : PlayerViewModelFixture() {
             // The film picks up where it was, exactly as the outbound trip did.
             requests.last().startPositionTicks shouldBe 300_000_000L
             model.uiState.value.isLocalPlayback shouldBe true
-            // The player was never offered the switch: taking it would have stranded the session on
-            // the network with the bytes already on the disk.
+            // Never offered the switch: taking it would have stranded the session on the network.
             playerHandle.selectedAudioIndices shouldContainExactly listOf(PlayerFixtures.STREAMED_AUDIO_INDEX)
         }
 
@@ -324,8 +300,7 @@ internal class PlayerTrackPickerTest : PlayerViewModelFixture() {
             playerHandle.trackSelectionSucceeds = true
             val model = streamingDownloadedItem()
 
-            // Index 4 is the second server-only audio track: the file cannot serve it either, so
-            // there is nowhere to go home to and a reopen would buy nothing but a black frame.
+            // The file cannot serve this track either, so there's nowhere to go home to.
             model.selectAudioTrack(SECOND_STREAMED_AUDIO_INDEX)
             advanceUntilIdle()
 
@@ -371,8 +346,7 @@ internal class PlayerTrackPickerTest : PlayerViewModelFixture() {
     @Test
     fun `turning subtitles off does not drag a stream home away from the audio it went for`() =
         runTest(dispatcher) {
-            // The file trivially "holds" no subtitles, but it cannot hold the audio this session
-            // left for — so going home would silently undo the switch the user asked for.
+            // Going home would silently undo the audio switch this session left for.
             playerHandle.trackSelectionSucceeds = true
             val model = streamingDownloadedItem()
 
@@ -396,8 +370,7 @@ internal class PlayerTrackPickerTest : PlayerViewModelFixture() {
             model.selectQuality(PlaybackQuality.LOW)
             advanceUntilIdle()
 
-            // Forgetting the flag here would silently return the item to the local file and lose
-            // the very track the user went to the server for.
+            // Forgetting the flag would silently return the item to the local file, losing the track.
             requests.last().forceRemote shouldBe true
             requests.last().maxStreamingBitrate shouldBe 3_000_000
         }
@@ -411,8 +384,7 @@ internal class PlayerTrackPickerTest : PlayerViewModelFixture() {
             val model = viewModel()
             advanceUntilIdle()
 
-            // The network died between the picker being drawn and the request going out — or it was
-            // the server, which the connection state cannot know until a probe says so.
+            // Connection state can't know the server is unreachable until a probe says so.
             val requests = mutableListOf<PlaybackResolveRequest>()
             coEvery { resolver.resolve(capture(requests)) } coAnswers {
                 if (requests.last().forceRemote) AppResult.Failure(AppError.Network()) else AppResult.Success(local)
@@ -429,14 +401,9 @@ internal class PlayerTrackPickerTest : PlayerViewModelFixture() {
         }
 
     /**
-     * A session that started on the downloaded file and is now streaming it for a track the file
-     * does not hold — the state every "while streaming a download" test starts from.
-     *
-     * @param streamed what the server hands back, carrying the selection it was asked for exactly as
-     *   a real `PlaybackInfo` answer echoes it. That echo is not decoration: a later track change
-     *   weighs *both* selections when it decides whether the file could take the whole session back,
-     *   so a stream that has forgotten what it was opened for would answer the wrong question.
-     * @param pick the tap that left the file.
+     * A session streaming a downloaded file for a track it lacks. [streamed]'s echoed selection
+     * matters: a later track change weighs both selections to decide if the file can take the
+     * session back.
      */
     private fun TestScope.streamingDownloadedItem(
         streamed: RemotePlaybackMediaSource = source.copy(selectedAudioIndex = PlayerFixtures.STREAMED_AUDIO_INDEX),

@@ -4,12 +4,7 @@ import dev.jellyboost.core.common.model.DownloadState
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
-/**
- * Unit tests for [aggregateDownloadState] — one Download button for a folder full of episodes.
- *
- * A season has no download row of its own, so this function *is* the season's download state. Each
- * case below is a tap the button has to get right.
- */
+/** A season has no download row of its own, so this function *is* its download state. */
 class AggregateDownloadStateTest {
     @Test
     fun `a season with no episodes has nothing to say`() {
@@ -23,8 +18,8 @@ class AggregateDownloadStateTest {
 
     @Test
     fun `a season is only partly downloaded until the last episode lands`() {
-        // The next tap must enqueue the missing episodes, so this is *not* Downloaded — a button
-        // reading "Remove" over an incomplete season is the worse of the two mistakes.
+        // Not Downloaded: the next tap must enqueue the missing episodes, and a "Remove" over an
+        // incomplete season is the worse mistake.
         aggregateDownloadState(
             listOf(DownloadState.Downloaded, DownloadState.Downloaded, DownloadState.NotDownloaded),
         ) shouldBe DownloadState.NotDownloaded
@@ -59,8 +54,8 @@ class AggregateDownloadStateTest {
 
     @Test
     fun `a failure shows only once nothing is still running`() {
-        // While something is still transferring the useful button is Cancel, not Retry; the failed
-        // episode is picked up by the retry the user gives the season when the queue drains.
+        // While anything transfers the useful button is Cancel; the failed episode is picked up by
+        // the retry given once the queue drains.
         aggregateDownloadState(listOf(DownloadState.Failed, DownloadState.Downloading(progress = 0.2f))) shouldBe
             DownloadState.Downloading(progress = 0.1f)
         aggregateDownloadState(listOf(DownloadState.Failed, DownloadState.Downloaded)) shouldBe

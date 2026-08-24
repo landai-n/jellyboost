@@ -35,7 +35,6 @@ import timber.log.Timber
 import javax.inject.Qualifier
 import javax.inject.Singleton
 
-/** Wires the `:player` implementations to the interfaces the rest of the module depends on. */
 @Module
 @InstallIn(SingletonComponent::class)
 internal interface PlayerBindingsModule {
@@ -52,13 +51,8 @@ internal interface PlayerBindingsModule {
     fun bindStreamUrlFactory(impl: SdkStreamUrlFactory): StreamUrlFactory
 
     /**
-     * The player everything above the seam holds, and the one place casting is wired in.
-     *
-     * `RoutingPlayerHandle` delegates to whichever player is live and is a pure pass-through with no
-     * cast session, so nothing above it changed. `ExoPlayerHandle` stays a `@Singleton` and stays
-     * injectable concretely: `PlaybackService` takes it directly, because the local media session
-     * and its notification belong to the *local* player and should disappear while a television has
-     * the film.
+     * `ExoPlayerHandle` stays concretely injectable as well: `PlaybackService` takes it directly, so
+     * the local media session and notification disappear while a receiver has the film.
      */
     @Binds
     @Singleton
@@ -79,30 +73,21 @@ internal interface PlayerBindingsModule {
     fun bindCastSessionMonitor(impl: GmsCastSessionMonitor): CastSessionMonitor
 
     /**
-     * Where the player screen hands its cast session over.
-     *
-     * The interface, not the coordinator, because `PlayerViewModel` has to be constructible without
-     * one — `NoCastPlaybackCoordinator` is its default, and the graph's job here is only to make
-     * sure the real app never gets it.
+     * The interface, not the coordinator: `PlayerViewModel` must stay constructible without one
+     * (`NoCastPlaybackCoordinator` is its default).
      */
     @Binds
     @Singleton
     fun bindCastPlaybackCoordinator(impl: CastSessionCoordinator): CastPlaybackCoordinator
 }
 
-/** Objects the player needs that are not constructor-injectable. */
 @Module
 @InstallIn(SingletonComponent::class)
 internal object PlayerProvidersModule {
     /**
-     * The scope playback's final report runs on.
-     *
-     * `SupervisorJob` so one failed report cannot cancel the next session's, and it is never
-     * cancelled — the whole point is that it outlives whatever screen started the playback.
-     *
-     * The [CoroutineExceptionHandler] catches what the supervisor does not: a supervisor isolates
-     * siblings from a failure, but an *unhandled* one still reaches the default handler and kills
-     * the process. A stop-report that throws must cost the report, not the app.
+     * The scope playback's final report runs on. Never cancelled: it has to outlive the screen that
+     * started playback. The [CoroutineExceptionHandler] is required as well as the `SupervisorJob` —
+     * a supervisor isolates siblings but an unhandled throw still kills the process.
      */
     @Provides
     @Singleton
@@ -117,15 +102,8 @@ internal object PlayerProvidersModule {
         )
 
     /**
-     * OkHttp client for media requests only.
-     *
-     * Separate from anything the SDK uses: media transfers are long-lived, so their timeouts and
-     * connection pool have nothing in common with a JSON API call's.
-     *
-     * Qualified: `:data:downloads` already qualifies its own no-timeout download
-     * client, and leaving this one the graph's only unqualified `OkHttpClient` would make it the
-     * silent default for any future unqualified `@Inject` — explicit is safer than "whichever
-     * client happened to stay nameless".
+     * Media requests only: long-lived transfers share no timeouts or connection pool with a JSON API
+     * call. Qualified so no future unqualified `@Inject` picks it up by default.
      */
     @Provides
     @Singleton
@@ -133,17 +111,12 @@ internal object PlayerProvidersModule {
     fun provideMediaOkHttpClient(authInterceptor: JellyfinAuthInterceptor): OkHttpClient =
         OkHttpClient
             .Builder()
-            // Network interceptor, not application: the auth header's same-origin
-            // check must run per hop, so a redirect off-server is inspected — and refused — too.
+            // Network interceptor, not application: the same-origin check must run per hop, so a
+            // redirect off-server is inspected — and refused — too.
             .addNetworkInterceptor(authInterceptor)
             .build()
 
-    /**
-     * Where ExoPlayer gets its bytes.
-     *
-     * `DefaultDataSource` wraps the HTTP source so `file://` and `content://` URIs resolve too —
-     * that is what downloaded-file playback needs, with no change here.
-     */
+    /** `DefaultDataSource` wraps the HTTP source so `file://` and `content://` resolve too. */
     @Provides
     @Singleton
     @UnstableApi
@@ -159,22 +132,16 @@ internal object PlayerProvidersModule {
 internal annotation class MediaHttpClient
 
 /**
- * Marks the `PlayerHandle` that plays on this device.
- *
- * Qualified rather than injected as the concrete `ExoPlayerHandle`, so `RoutingPlayerHandle` — which
- * is nothing but delegation — can be unit tested against two fakes instead of an ExoPlayer that
- * cannot be built off a device.
+ * The `PlayerHandle` that plays on this device. Qualified rather than concrete so
+ * `RoutingPlayerHandle` can be unit tested against fakes, ExoPlayer being unbuildable off a device.
  */
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
 internal annotation class LocalPlayback
 
 /**
- * Marks the `PlayerHandle` that plays on a Cast receiver.
- *
- * Always injected as a `Provider`: constructing it loads the first `com.google.android.gms` class in
- * the app, and only a started cast session — which cannot exist without Play services — ever asks
- * for one.
+ * The `PlayerHandle` that plays on a Cast receiver. **Always inject as a `Provider`**: constructing
+ * it loads the app's first `com.google.android.gms` class.
  */
 @Qualifier
 @Retention(AnnotationRetention.BINARY)

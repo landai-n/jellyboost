@@ -27,7 +27,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 import java.util.UUID
 
-/** Unit tests for the ServerSetup state holder. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class ServerSetupViewModelTest {
     @JvmField
@@ -55,8 +54,6 @@ class ServerSetupViewModelTest {
     @DisplayName("a session lost to an unreadable credential store is said out loud, not implied")
     fun involuntarySignOutIsSurfaced() =
         runTest {
-            // Without this state, the store wiping itself and the user landing here would be
-            // indistinguishable from a first run.
             val viewModel = viewModel(sessionWasLost = true)
             advanceUntilIdle()
 
@@ -209,9 +206,7 @@ class ServerSetupViewModelTest {
     @DisplayName("the address field is inert while a probe is in flight")
     fun addressCannotChangeMidProbe() =
         runTest {
-            // The screen keeps the field *enabled* through the probe so a TalkBack user does not
-            // lose accessibility focus the instant they press Connect; this is what makes
-            // "enabled" safe — the state cannot drift away from the address being resolved.
+            // The field stays enabled through the probe for accessibility; this is what makes that safe.
             coEvery { discoveryRepository.resolveServerAddress(ADDRESS) } coAnswers {
                 delay(PROBE_MILLIS)
                 AppResult.Success(RESOLVED)
@@ -240,7 +235,6 @@ class ServerSetupViewModelTest {
             viewModel.onAddressChange("something.else")
 
             viewModel.uiState.value.address shouldBe "something.else"
-            // Editing after a failure also clears the failure.
             viewModel.uiState.value.error shouldBe null
         }
 
@@ -262,8 +256,6 @@ class ServerSetupViewModelTest {
     @DisplayName("a public server that answered over plain http warns instead of moving on")
     fun cleartextPublicServerWarnsBeforeNavigating() =
         runTest {
-            // The address the app is about to send the token to is the *resolved* one, and here
-            // it came back cleartext on a host that is not on this network.
             coEvery { discoveryRepository.resolveServerAddress(ADDRESS) } returns
                 AppResult.Success(CLEARTEXT_PUBLIC)
             val viewModel = viewModel()
@@ -280,7 +272,6 @@ class ServerSetupViewModelTest {
             state.cleartextWarningHost shouldBe "media.example.com"
             state.isConnecting shouldBe false
             state.error shouldBe null
-            // Nothing is handed to Login until the user has seen the warning.
             pendingServerStore.server shouldBe null
         }
 
@@ -305,7 +296,6 @@ class ServerSetupViewModelTest {
 
             pendingServerStore.server shouldBe CLEARTEXT_PUBLIC
             viewModel.uiState.value.cleartextWarningHost shouldBe null
-            // The server had already answered; acknowledging must not ask it again.
             coVerify(exactly = 1) { discoveryRepository.resolveServerAddress(ADDRESS) }
         }
 
@@ -326,7 +316,6 @@ class ServerSetupViewModelTest {
             viewModel.onAddressChange(OTHER_ADDRESS)
             viewModel.uiState.value.cleartextWarningHost shouldBe null
 
-            // And the next Connect probes the new address rather than proceeding to the old server.
             viewModel.connect()
             advanceUntilIdle()
             pendingServerStore.server shouldBe RESOLVED
@@ -379,10 +368,8 @@ class ServerSetupViewModelTest {
                 address = "https://media.example.com",
             )
 
-        /** The cleartext-warning case: a port-forwarded server, reached in the clear. */
         val CLEARTEXT_PUBLIC = RESOLVED.copy(address = "http://media.example.com:8096")
 
-        /** The overwhelmingly common case, which must stay silent. */
         val CLEARTEXT_PRIVATE = RESOLVED.copy(address = "http://192.168.1.10:8096")
     }
 }

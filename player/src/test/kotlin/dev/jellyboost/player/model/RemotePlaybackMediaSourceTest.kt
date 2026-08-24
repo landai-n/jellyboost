@@ -6,12 +6,9 @@ import io.kotest.matchers.string.shouldNotContain
 import org.junit.jupiter.api.Test
 
 /**
- * `RemotePlaybackMediaSource.toString()` prints no URL.
- *
- * The token in a transcoding URL is a live credential, and the generated data-class `toString()`
- * would put it in a log line or an exception message the first time anyone printed a whole source.
- * The assertions are on the *token*, not on the wording, so the redaction cannot be defeated by a
- * later rewrite of the format string.
+ * `RemotePlaybackMediaSource.toString()` prints no URL — the token in a transcoding URL is a live
+ * credential. Assertions check the *token*, not the wording, so a format-string rewrite can't defeat
+ * the redaction.
  */
 class RemotePlaybackMediaSourceTest {
     @Test

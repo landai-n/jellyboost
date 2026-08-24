@@ -29,31 +29,15 @@ import javax.inject.Inject
 /**
  * Application entry point.
  *
- * Owns Hilt's object graph, provides the WorkManager configuration used by the download and
- * user-data sync workers, and configures the one Coil image loader every `JellyfinAsyncImage` in
- * the app draws through.
+ * The five process-lifetime collaborators below are [Lazy] and started from a coroutine, **not**
+ * `lateinit` fields: held eagerly, member injection built the whole singleton graph on the main
+ * thread before the first frame (a blocking `SharedPreferences` read, a first-run `commit()` fsync,
+ * a `Settings.Global` binder call, Ktor/OkHttp construction).
  *
- * ### The startup contract
- * The five process-lifetime collaborators below are injected as [Lazy] and started from a coroutine
- * on the application scope, **not** as `lateinit` fields resolved inside `super.onCreate()`. Held
- * eagerly, the member injection built the entire singleton graph on the main thread before the
- * first frame: `ApiClientProvider` → a blocking `SharedPreferences` XML read and, on first run, a
- * synchronous `commit()` fsync, plus a `Settings.Global` binder call and Ktor/OkHttp construction.
- *
- * What the deferral does and does not promise:
- * - **Ordering between the five is not one.** None of them observes another; each is an idempotent
- *   `start()` over a flow or a lifecycle, and each is written to be correct whenever it happens to
- *   run. Three of them wait on a connectivity edge that has not been published yet at this point in
- *   any case.
- * - **Nothing is lost by starting late.** `ProcessLifecycleOwner` replays the current state to an
- *   observer registered after `ON_START`, and the three connectivity watchers collect a `StateFlow`,
- *   which replays its current value. A missed *edge* is not possible because there is no edge until
- *   the monitor these all hang off is itself running.
- * - **[SyncPlayPresenceCoordinator.start] is main-thread-only** (`ProcessLifecycleOwner` requires
- *   it), so it alone hops back. Its construction, like the other four, stays off the main thread.
- * - **[workerFactory] stays eager**, because it is not ours to defer: `Configuration.Provider` is a
- *   platform contract WorkManager may read on its own initialization, and the factory is a map of
- *   `Provider`s — it builds no worker until one is actually run.
+ * Nothing depends on the order they start in, and nothing is lost by starting late — every one of
+ * them replays from a `StateFlow` or `ProcessLifecycleOwner`, and there is no edge to miss until the
+ * monitor they hang off is itself running. [workerFactory] stays eager because `Configuration
+ * .Provider` is a platform contract WorkManager may read during its own initialization.
  */
 @HiltAndroidApp
 class JellyboostApplication :
@@ -63,66 +47,35 @@ class JellyboostApplication :
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
 
-    /** The process-lifetime scope the five collaborators below are started from. */
     @Inject
     @ApplicationScope
     lateinit var applicationScope: CoroutineScope
 
-    /** For the one `start()` that must run on the main thread; see the class KDoc. */
     @Inject
     @MainDispatcher
     lateinit var mainDispatcher: CoroutineDispatcher
 
-    /**
-     * Watches the connection so user-data changes made offline reach the server.
-     *
-     * Injected here rather than from a ViewModel because it has to run whether or not any screen is
-     * showing — a device that comes back online with the app in the background is the case that
-     * matters, and it is also what makes a pending row survive an app kill.
-     */
+    // The four below are injected here rather than from a ViewModel because each has to run whether
+    // or not a screen is showing.
     @Inject
     lateinit var userDataSyncTrigger: Lazy<UserDataSyncTrigger>
 
-    /**
-     * Keeps every downloaded item's cached metadata in step with the server's, whenever online.
-     *
-     * A standing sync, not a migration: a download's metadata is written once at enqueue time and
-     * would otherwise never pick up a retitle, an artwork change or a corrected overview again.
-     * Injected alongside the sync trigger and for the same reason — it is worth nothing if it only
-     * runs while a particular screen happens to be showing.
-     */
+    /** A standing sync: a download's metadata is written once at enqueue time and never revisited. */
     @Inject
     lateinit var downloadedMetadataRefresher: Lazy<DownloadedMetadataRefresher>
 
-    /**
-     * Expires the browse cache, so the `items` table stops growing for the life of the install.
-     *
-     * The counterpart of the refresher above — that one keeps downloaded metadata current, this one
-     * throws the *browsed* metadata away once it is old enough to be worthless. Here rather than on
-     * a screen for the plainest of the reasons: a sweep that only ran while some particular screen
-     * was showing would be a sweep tied to the very activity that fills the table.
-     */
+    /** Expires the browse cache, so the `items` table stops growing for the life of the install. */
     @Inject
     lateinit var browseCacheMaintenance: Lazy<BrowseCacheMaintenance>
 
-    /**
-     * Keeps a SyncPlay group alive while the app is off screen, and takes one back on return.
-     *
-     * Here for the same reason as the two above, and more sharply: the whole failure it fixes
-     * happens while no screen exists — the platform cuts a backgrounded app's network, the group is
-     * lost, and the user is looking at jellyfin-web on the other half of the same tablet.
-     */
+    /** Keeps a SyncPlay group alive while the app is off screen — the platform cuts a background app's network. */
     @Inject
     lateinit var syncPlayPresenceCoordinator: Lazy<SyncPlayPresenceCoordinator>
 
     /**
-     * Watches for a Cast session, and keeps reporting one after the player screen is gone.
-     *
-     * Here for the same reason as the three above, and it is the sharper case: a cast session is
-     * started from the top bar, outlives whichever screen was open, and has to end with a stop
-     * report and an encoder kill whether or not anything is on screen when the receiver disconnects.
-     * The Cast *stack* is still brought up by `MainActivity` behind its Play-services guard — this
-     * only subscribes, and on a device with no Cast stack it waits for a signal that never comes.
+     * A cast session outlives the screen that started it and must still end with a stop report and an
+     * encoder kill. Only subscribes — `MainActivity` brings the Cast stack up behind its
+     * Play-services guard, and with no stack this waits for a signal that never comes.
      */
     @Inject
     lateinit var castSessionCoordinator: Lazy<CastSessionCoordinator>
@@ -135,16 +88,9 @@ class JellyboostApplication :
                 .build()
 
     /**
-     * The app-wide Coil image loader.
-     *
-     * Coil 3 gives a hand-built loader **no** disk cache and no transition unless it is told to:
-     * without them, every poster that scrolls out of the memory cache is re-fetched over the
-     * network, and each one pops in. Both are felt on the home screen and in the library grid,
-     * which are nothing but images.
-     *
-     * Sizes are deliberately modest: artwork is requested at fixed widths by
-     * `SdkImageUrlFactory`, so the entries are small, and 25 % of the app's heap holds a screenful
-     * of a grid several times over on the test tablet.
+     * Coil 3 gives a hand-built loader **no** disk cache and no transition unless told to, so without
+     * these every poster that scrolls out of the memory cache is re-fetched and pops in. The sizes
+     * are modest because `SdkImageUrlFactory` requests artwork at fixed widths.
      */
     override fun newImageLoader(context: PlatformContext): ImageLoader =
         ImageLoader
@@ -171,13 +117,7 @@ class JellyboostApplication :
         startBackgroundCollaborators()
     }
 
-    /**
-     * Builds and starts the five process-lifetime collaborators, off the cold-start path.
-     *
-     * The application scope is dispatched on IO, so `get()` — where the singleton graph is actually
-     * built — happens on a background thread. See the class KDoc for what this ordering does and
-     * does not guarantee.
-     */
+    /** The application scope is dispatched on IO, so `get()` builds the singleton graph off the main thread. */
     private fun startBackgroundCollaborators() {
         applicationScope.launch {
             userDataSyncTrigger.get().start()
@@ -185,8 +125,7 @@ class JellyboostApplication :
             browseCacheMaintenance.get().start()
             castSessionCoordinator.get().start()
 
-            // Built here, started there: `ProcessLifecycleOwner.addObserver` asserts the main
-            // thread, and only that one call needs it.
+            // `ProcessLifecycleOwner.addObserver` asserts the main thread; only that call needs it.
             val presence = syncPlayPresenceCoordinator.get()
             withContext(mainDispatcher) { presence.start() }
         }

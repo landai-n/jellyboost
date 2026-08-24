@@ -41,7 +41,6 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import java.io.IOException
 
-/** Unit tests for offline session restore and sign-out. */
 class SessionRepositoryTest {
     private val apiFacade = mockk<JellyfinApiFacade>(relaxed = true)
     private val apiClientProvider = mockk<ApiClientProvider>(relaxed = true)
@@ -58,15 +57,9 @@ class SessionRepositoryTest {
         StoredSession(serverId = SERVER_ID, userId = USER_ID, accessToken = ACCESS_TOKEN)
 
     /**
-     * The repository under test, built per test rather than in a `@BeforeEach` because it now needs
-     * a scope, and the only scope on the test's clock is the one `runTest` is holding.
-     *
-     * That scope stands in for `@ApplicationScope`: a plain [SupervisorJob] on the test scheduler,
-     * belonging to no coroutine, which is what the real one is — nothing cancels it short of the
-     * process ending (`NetworkModule.provideApplicationScope`). Deliberately *not* `runTest`'s
-     * `backgroundScope`: work launched there is invisible to [advanceUntilIdle], which drains
-     * foreground tasks only, and a sign-out that outlives its caller is precisely what these tests
-     * have to be able to step through.
+     * A plain [SupervisorJob] on the test scheduler stands in for `@ApplicationScope`. Deliberately *not*
+     * `runTest`'s `backgroundScope`: work launched there is invisible to [advanceUntilIdle], and a sign-out
+     * that outlives its caller is precisely what these tests step through.
      */
     private fun TestScope.repository() =
         SessionRepository(
@@ -177,8 +170,6 @@ class SessionRepositoryTest {
             repository.sessionState.value shouldBe SessionState.LoggedOut
         }
 
-    // ---- involuntary session loss -----------------------------------------------------------------
-
     @Test
     @DisplayName("a first run is not reported as a session the user lost")
     fun firstRunIsNotALoss() =
@@ -196,8 +187,8 @@ class SessionRepositoryTest {
     fun wipedStoreIsAnInvoluntarySignOut() =
         runTest {
             val repository = repository()
-            // The store answers `null` after recreating an undecryptable file, which is exactly
-            // what a first run answers — so it says separately that it destroyed something.
+            // The store answers `null` after recreating an undecryptable file, exactly as a first run does —
+            // so it says separately that it destroyed something.
             coEvery { secureCredentialStore.read() } returns null
             every { secureCredentialStore.consumeLostSession() } returns true
 
@@ -296,8 +287,6 @@ class SessionRepositoryTest {
             repository.sessionState.value shouldBe SessionState.LoggedOut
         }
 
-    // ---- sign-out clears this account's local data ------------------------------------------------
-
     /** Signs in for real first, because the cleanup is keyed on the session that is still current. */
     private suspend fun SessionRepository.signInThenOut() {
         coEvery { secureCredentialStore.read() } returns storedSession
@@ -321,10 +310,8 @@ class SessionRepositoryTest {
         runTest {
             repository().signInThenOut()
 
-            // `deleteSynced` is the whole guarantee: a `toBeSynced` row is the only copy of a change
-            // made offline, and this app's local-first story promises it is not lost. Signing
-            // out on a train and back in at home must still push it. Nothing may delete the table
-            // wholesale.
+            // `deleteSynced` is the whole guarantee: a `toBeSynced` row is the only copy of a change made
+            // offline. Nothing may delete the table wholesale.
             coVerify(exactly = 0) { userDataDao.getPendingSync() }
             coVerify(exactly = 1) { userDataDao.deleteSynced(any()) }
         }
@@ -335,8 +322,8 @@ class SessionRepositoryTest {
         runTest {
             repository().signInThenOut()
 
-            // The `items` table is keyed by item, not by user: on a shared tablet the previous
-            // account's cached browsing would otherwise serve the next one's offline read path.
+            // The `items` table is keyed by item, not by user: on a shared tablet the previous account's
+            // cached browsing would otherwise serve the next one's offline read path.
             coVerify(exactly = 1) { itemDao.deleteAllBrowseCache(ItemSource.BROWSE_CACHE) }
         }
 
@@ -346,8 +333,7 @@ class SessionRepositoryTest {
         runTest {
             repository().signInThenOut()
 
-            // Deleting one would orphan the files on disk. Removing downloads is a separate,
-            // explicit choice on the sign-out screen.
+            // Deleting one would orphan the files on disk; removing downloads is a separate explicit choice.
             coVerify(exactly = 0) { itemDao.deleteDownloadsNotIn(any(), any()) }
             coVerify(exactly = 0) { itemDao.deleteAllBrowseCache(ItemSource.DOWNLOAD) }
         }
@@ -365,8 +351,8 @@ class SessionRepositoryTest {
 
             repository.signInThenOut()
 
-            // Still LoggedIn while it runs — which is also what supplies the user id, and what stops
-            // an observer of the transition from reading a half-cleared database.
+            // Still LoggedIn while it runs — which supplies the user id, and stops an observer of the
+            // transition from reading a half-cleared database.
             (stateDuringCleanup is SessionState.LoggedIn) shouldBe true
             repository.sessionState.value shouldBe SessionState.LoggedOut
         }
@@ -388,15 +374,12 @@ class SessionRepositoryTest {
     @DisplayName("signing out with no session still wipes the shared browse cache")
     fun signOutWithoutSessionStillWipesTheCache() =
         runTest {
-            // Nothing restored: there is no user id to scope `user_data` by, but the item cache is
-            // not user-scoped in the first place and must still go.
+            // No user id to scope `user_data` by, but the item cache is not user-scoped and must still go.
             repository().signOut()
 
             coVerify(exactly = 1) { itemDao.deleteAllBrowseCache(ItemSource.BROWSE_CACHE) }
             coVerify(exactly = 0) { userDataDao.deleteSynced(any()) }
         }
-
-    // ---- pre-revocation hooks -----------------------------------------------------------------
 
     @Test
     @DisplayName("sign-out hooks run before the server revokes the token, so their requests can still authenticate")
@@ -430,8 +413,6 @@ class SessionRepositoryTest {
             repository.sessionState.value shouldBe SessionState.LoggedOut
         }
 
-    // ---- a sign-out the caller cannot lose ------------------------------------------------------
-
     @Test
     @DisplayName("a caller that goes away mid-goodbye does not take the sign-out with it")
     fun signOutSurvivesCallerCancellation() =
@@ -444,15 +425,14 @@ class SessionRepositoryTest {
                 serverAnswers.await()
             }
 
-            // The Settings screen asking, and being popped while the request is still in flight.
             val caller = launch { repository.signOut() }
             goodbyeStarted.await()
             caller.cancel()
             serverAnswers.complete(Unit)
             advanceUntilIdle()
 
-            // Cancelling the *caller* must not cancel the teardown between revoking the token and
-            // clearing the credentials — that would leave the user signed in against a dead session.
+            // Cancelling the *caller* must not cancel the teardown between revoking the token and clearing
+            // the credentials — that would leave the user signed in against a dead session.
             coVerify(exactly = 1) { secureCredentialStore.clear() }
             coVerify(exactly = 1) { apiClientProvider.clearSession() }
             repository.sessionState.value shouldBe SessionState.LoggedOut
@@ -480,7 +460,6 @@ class SessionRepositoryTest {
     fun signOutGivesUpOnAHangingHook() =
         runTest {
             val repository = repository()
-            // The SyncPlay group leave against the same unreachable server.
             signOutHooks += SignOutHook { awaitCancellation() }
 
             repository.signOut()

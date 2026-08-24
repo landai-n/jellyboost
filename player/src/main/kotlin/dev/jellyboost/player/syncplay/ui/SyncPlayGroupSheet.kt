@@ -43,17 +43,8 @@ import dev.jellyboost.player.syncplay.model.SyncPlayRepeatMode
 import dev.jellyboost.player.ui.PlayerSyncPlayState
 
 /**
- * Who you are watching with, and the three things a member can change about the group.
- *
- * A bottom sheet where the player's own pickers are dialogs, because it is not a picker: it is a
- * panel — participants, shuffle, repeat, leave — read while playback is paused or waiting, rather
- * than a one-tap list that must not cover the seek bar. It follows `LibraryFilterSheet`, which is
- * the same shape.
- *
- * Every toggle is a *request*: shuffle and repeat belong to the group, so the switch reflects what
- * the server last said, not what was tapped, and it settles when the `PlayQueueUpdate` comes back.
- * Leaving is behind a confirmation because it is not undoable in one tap — rejoining means going to
- * the groups screen — and because in landscape this sheet sits under the user's thumbs.
+ * Every toggle is a *request*: shuffle and repeat belong to the group, so a switch shows what the
+ * server last said, not what was tapped, and settles when the `PlayQueueUpdate` comes back.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -90,8 +81,8 @@ private fun GroupSheetContent(
     Column(
         modifier =
             Modifier
-                // Capped and centred for the same reason the control bar is: full-bleed rows on a
-                // 2560 px tablet put the label and its switch a hand-span apart.
+                // Capped: full-bleed rows on a 2560 px tablet put a label and its switch a
+                // hand-span apart.
                 .widthIn(max = SHEET_MAX_WIDTH)
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
@@ -131,7 +122,6 @@ private fun GroupSheetContent(
     }
 }
 
-/** Who is in the group: the name, the count, then one row per participant. */
 @Composable
 private fun ColumnScope.GroupParticipants(
     groupName: String,
@@ -165,7 +155,6 @@ private fun ColumnScope.GroupParticipants(
     }
 }
 
-/** The two group-wide playback settings: shuffle, and the repeat mode. */
 @Composable
 private fun ColumnScope.GroupPlaybackToggles(
     isShuffled: Boolean,
@@ -173,9 +162,8 @@ private fun ColumnScope.GroupPlaybackToggles(
     onSetShuffle: (Boolean) -> Unit,
     onSetRepeat: (SyncPlayRepeatMode) -> Unit,
 ) {
-    // The settings rows' pattern: the whole row is the switch — one node, "Shuffle queue, on", the
-    // full width as its target — and the control inside it is inert so it contributes nothing of
-    // its own. An unlabelled Switch beside a Text is two stops, the second of them nameless.
+    // The row is the toggleable node and the Switch stays inert (`onCheckedChange = null`): giving
+    // the Switch its own handler makes two a11y stops, the second nameless.
     Row(
         modifier =
             Modifier
@@ -218,7 +206,6 @@ private fun SyncPlayRepeatMode.labelRes(): Int =
         SyncPlayRepeatMode.All -> R.string.player_syncplay_repeat_all
     }
 
-/** Wide enough for a participant list, narrow enough to stay one glance on a tablet. */
 private val SHEET_MAX_WIDTH = 640.dp
 
 @Preview(name = "Group sheet", showBackground = true, widthDp = 700)

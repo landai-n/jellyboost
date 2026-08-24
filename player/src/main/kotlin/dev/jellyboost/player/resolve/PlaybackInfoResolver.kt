@@ -27,12 +27,9 @@ import javax.inject.Singleton
 import kotlin.coroutines.cancellation.CancellationException
 
 /**
- * Negotiates with the server how a given item should be played.
- *
- * `POST /Items/{id}/PlaybackInfo` takes the device profile built by [DeviceProfileBuilder] and
- * answers with a media source that is either directly playable, remuxable, or accompanied by a
- * transcoding URL. Everything downstream — URL construction, reporting, track switching — is
- * driven by that answer, which is why this is the one place the decision is made.
+ * `POST /Items/{id}/PlaybackInfo` takes [DeviceProfileBuilder]'s profile and answers with a source
+ * that is directly playable, remuxable, or accompanied by a transcoding URL. Everything downstream —
+ * URL construction, reporting, track switching — is driven by that answer.
  */
 @Singleton
 internal class PlaybackInfoResolver
@@ -44,19 +41,9 @@ internal class PlaybackInfoResolver
         private val castStatus: CastStatusHolder,
     ) {
         /**
-         * Resolves [request] into something the player can open.
-         *
-         * Transport failures fold through `:core:network`'s [runCatchingApi] — the app's one
-         * exception→[AppError] mapper — rather than through a local copy of its taxonomy: a 403
-         * has to reach the session layer as an authentication failure, not as a server fault, or a
-         * token revoked between browsing and playing is never noticed.
-         *
-         * The whole negotiation, not just the call, sits inside it: building the device profile and
-         * reading the response are both places the SDK can throw, and both belong in the same
-         * taxonomy as the call itself — as is the throughput measurement an Auto request triggers,
-         * which is answered from `AutoBitrateDetector` before the negotiation begins.
-         *
-         * @return a [RemotePlaybackMediaSource], or an [AppError] describing why not.
+         * The *whole* negotiation sits inside [runCatchingApi], not just the call: building the
+         * profile and reading the response can both throw, and a 403 has to reach the session layer
+         * as an authentication failure rather than as a server fault.
          */
         suspend fun resolve(request: PlaybackResolveRequest): AppResult<RemotePlaybackMediaSource> =
             when (val outcome = runCatchingApi { negotiateUnderTranscodeCeiling(request.withMeasuredCap()) }) {
@@ -65,25 +52,15 @@ internal class PlaybackInfoResolver
             }
 
         /**
-         * Negotiates [request], and re-negotiates once if Auto's measured cap became a transcode's
-         * *target*.
+         * `maxStreamingBitrate` does double duty: a ceiling for a direct play, but the bitrate a
+         * transcode is asked to *produce* — which no measurement of the link can vouch for. MEASURED
+         * against a real server: a 4K HEVC source at a 64.7 Mbps Auto cap ran 0.76× realtime (a
+         * permanent stall) where the same file at [PlaybackQuality.HIGH]'s 20 Mbps rung ran 2.50×.
+         * So an Auto *transcode* above that rung is re-negotiated at it; direct play and direct
+         * stream keep the full measured cap, and a hand-picked cap is never touched.
          *
-         * `maxStreamingBitrate` does double duty: to a direct play it is a ceiling the file either
-         * fits under or does not, and a high one is exactly the point — the original bytes, no
-         * re-encode. To a transcode it is the bitrate the server is asked to *produce*, and no
-         * measurement of the **link** can say whether the encoder-plus-link chain can produce it in
-         * realtime. Measured against a real server: at a 64.7 Mbps Auto cap a 4K HEVC source was
-         * delivered at 0.76× realtime — a permanent stall — where the same file at
-         * [PlaybackQuality.HIGH]'s 20 Mbps rung ran 2.50× realtime, and 20 Mbps is already
-         * transparent for a 1080p transcode. So an Auto transcode above that rung is re-negotiated
-         * at it; direct play and direct stream keep the full measured cap, and a hand-picked cap is
-         * never touched.
-         *
-         * The abandoned first negotiation costs nothing but its round trip: ffmpeg is spawned by the
-         * first *segment* fetch, not by `PlaybackInfo`, and nothing here fetches one.
-         *
-         * The re-negotiated request keeps [PlaybackResolveRequest.autoBitrate], so the resolved
-         * source still reads as Auto and the picker's chip does not silently become "High".
+         * The abandoned negotiation costs one round trip and no encoder: ffmpeg is spawned by the
+         * first *segment* fetch. The retry keeps `autoBitrate`, so the chip does not become "High".
          */
         private suspend fun negotiateUnderTranscodeCeiling(
             request: PlaybackResolveRequest,
@@ -108,15 +85,8 @@ internal class PlaybackInfoResolver
         }
 
         /**
-         * The request as it should actually go out, with Auto's cap filled in.
-         *
-         * A `copy` of the caller's request rather than a separate cap value, so that
-         * [PlaybackResolveRequest.autoBitrate] rides along onto the resolved source: everything
-         * downstream reads the *effective* cap and the *original* flag off the same object.
-         *
-         * Cast Auto stays uncapped on purpose. The link that decides whether a receiver copes is
-         * the receiver's, not this device's, and the cast profile is already conservative —
-         * measuring here would cap a television by a tablet's Wi-Fi.
+         * Cast Auto stays uncapped on purpose: the link that decides whether a receiver copes is the
+         * receiver's, so measuring here would cap a television by this device's Wi-Fi.
          */
         private suspend fun PlaybackResolveRequest.withMeasuredCap(): PlaybackResolveRequest =
             when {
@@ -126,31 +96,15 @@ internal class PlaybackInfoResolver
             }
 
         /**
-         * Negotiates [request], and re-negotiates once when a transcode would side-load its
-         * subtitles.
+         * Re-negotiates once when a transcode would side-load its subtitles: side-loaded cues are
+         * their own `SubtitleConfiguration` and never pass through the `TimestampAdjuster` the
+         * transcode's A/V do, so they drift progressively and unfixably. In-manifest renditions
+         * share that adjuster (`X-TIMESTAMP-MAP`, `CopyTimestamps=true`) and cannot drift.
          *
-         * Side-loaded cues are their own `MediaItem.SubtitleConfiguration`, so they never pass
-         * through the `TimestampAdjuster` that the transcode's audio and video do — and that
-         * timeline is not the file's. It re-anchors to Jellyfin's nominal `EXTINF` grid on every
-         * seek and track toggle (≈1 ms per segment on a fractional frame rate) and silently absorbs
-         * the sub-200 ms audio gaps an unsignaled ffmpeg restart leaves. Cues fixed to the file's
-         * clock drift away from a picture that is not on it, progressively and unfixably. Delivered
-         * *in* the manifest they share the adjuster with A/V — the server emits `X-TIMESTAMP-MAP`
-         * and `CopyTimestamps=true` — and the drift stops being possible rather than being corrected.
-         *
-         * Two passes rather than one profile because the server will not offer both: given an
-         * `External` and an `Hls` profile for the same format it always picks External, so the HLS
-         * shape has to advertise no text External profile at all — and that shape sent for a
-         * direct-played file with a sidecar `.srt` would negotiate `Encode` and burn a transcode out
-         * of nothing (see `DeviceProfileBuilder.subtitleProfiles`). So pass 1 asks the honest
-         * question, and only an answer that is *already* a transcode with side-loaded text is asked
-         * again.
-         *
-         * Like the ceiling re-negotiation above, the abandoned pass costs one round trip and no
-         * encoder: ffmpeg is spawned by the first *segment* fetch, and nothing here fetches one.
-         *
-         * Cast is never re-asked — `CastDeviceProfile` describes a receiver whose subtitle handling
-         * is its own, and `CastSpecMapper` builds its tracks from the side-loaded list.
+         * Two passes rather than one profile: given both an `External` and an `Hls` profile for a
+         * format the server always picks External, so the HLS shape must advertise no text External
+         * profile at all — and that shape sent for a direct-played file with a sidecar `.srt` would
+         * negotiate `Encode` and burn a transcode out of nothing. Cast is never re-asked.
          */
         private suspend fun negotiate(request: PlaybackResolveRequest): AppResult<RemotePlaybackMediaSource> {
             val first = negotiateWith(request, hlsTextSubtitles = false)
@@ -161,14 +115,10 @@ internal class PlaybackInfoResolver
         }
 
         /**
-         * The second pass, or `null` when it did not produce something better than pass 1.
-         *
-         * Every way it can disappoint is the same non-event: a transport failure, a server that
-         * answered with a direct play after all, a transcode with no URL to fetch. Pass 1's answer is
-         * still a perfectly playable stream — with cues that drift — so none of them is worth
-         * failing the open for, and none of them is worth an error the user sees.
+         * `null` for every way the second pass can disappoint: pass 1's answer is still a playable
+         * stream, so none of them is worth failing the open for.
          */
-        @Suppress("TooGenericExceptionCaught") // Any failure of an optimisation pass keeps pass 1's answer.
+        @Suppress("TooGenericExceptionCaught")
         private suspend fun inManifestSubtitles(
             request: PlaybackResolveRequest,
         ): AppResult<RemotePlaybackMediaSource>? =
@@ -189,20 +139,15 @@ internal class PlaybackInfoResolver
             }
 
         /**
-         * Whether this outcome is the one worth re-asking: a transcode whose text subtitles reach
-         * ExoPlayer as separate sources.
-         *
-         * Read off [RemotePlaybackMediaSource.externalSubtitles] rather than off the raw delivery
-         * methods, because that list is exactly the set that would drift — a text stream the server
-         * offers as External but that has no delivery URL, or a codec ExoPlayer cannot render, is
-         * never side-loaded and has nothing to gain from a second round trip.
+         * Read off [RemotePlaybackMediaSource.externalSubtitles], not the raw delivery methods: that
+         * list is exactly the set that would drift.
          */
         private fun AppResult<RemotePlaybackMediaSource>.sideLoadsTranscodedSubtitles(): Boolean =
             this is AppResult.Success &&
                 value.playMethod == PlayMethod.TRANSCODE &&
                 value.externalSubtitles.isNotEmpty()
 
-        /** One negotiation round trip; every throw it makes is [resolve]'s to translate. */
+        /** Every throw it makes is [resolve]'s to translate. */
         private suspend fun negotiateWith(
             request: PlaybackResolveRequest,
             hlsTextSubtitles: Boolean,
@@ -238,27 +183,13 @@ internal class PlaybackInfoResolver
         }
 
         /**
-         * Opens a play session for an item that will be played **off disk**, and nothing else.
+         * Mints a play session id for an item played **off disk**, so a group's dashboard is not
+         * silent about it. Deliberately sends **no device profile** (the server then has nothing to
+         * build a transcode plan from) and **no live stream** (`autoOpenLiveStream = false`), so no
+         * encoder or tuner is allocated for bytes that will not be used.
          *
-         * A `LocalPlaybackMediaSource` has no play session by construction, which is exactly why
-         * local playback tells the server nothing. In a SyncPlay group that silence is wrong: the
-         * other members are watching together with this device, and the dashboard should say so.
-         * One `PlaybackInfo` POST is enough to get the id every report is keyed on.
-         *
-         * Two things it deliberately does *not* do, because both would put load on a server whose
-         * bytes we are not going to use:
-         *
-         * - **no device profile.** With none the server has nothing to build a transcode plan from,
-         *   so the response is a bare description of the item. The id is the only field read.
-         * - **no live stream.** `autoOpenLiveStream` stays `false`; opening one would allocate a
-         *   tuner or a stream the file on disk makes pointless.
-         *
-         * An encoder can only start when the transcoding URL is *fetched*, and nothing here fetches
-         * anything — so the worst case is a session row the stop report closes.
-         *
-         * @return the server's play session id, or `null` if the mint failed. `null` is a normal
-         *   outcome and not an error: reporting degrades to sending no session id (the server keys
-         *   the session on the authenticated device anyway), which is still better than silence.
+         * @return `null` is a normal outcome, not an error: reporting degrades to sending no session
+         *   id, which the server keys on the authenticated device anyway.
          */
         @Suppress("TooGenericExceptionCaught")
         suspend fun mintPlaySessionId(
@@ -287,22 +218,18 @@ internal class PlaybackInfoResolver
 
         private fun PlaybackResolveRequest.toPlaybackInfoDto(hlsTextSubtitles: Boolean): PlaybackInfoDto =
             PlaybackInfoDto(
-                // THE DASH-LESS QUIRK. The server looks media sources up by a *dash-less* id, and
-                // when it cannot find the one we asked for it silently ignores our stream indices
-                // instead of failing — so a wrong id here shows up much later as "subtitle
-                // selection does nothing". Verified against jellyfin-android's
-                // MediaSourceResolver.kt:58 and Jellyfin's MediaInfoHelper.cs:196-201.
+                // THE DASH-LESS QUIRK: the server looks media sources up by a *dash-less* id, and
+                // when it cannot find the one asked for it silently ignores the stream indices
+                // instead of failing — which surfaces much later as "subtitle selection does
+                // nothing".
                 mediaSourceId = mediaSourceId ?: itemId.toString().replace("-", ""),
-                // The profile is a claim about the decoders on the far end of the stream, and while
-                // casting those are the television's, not this tablet's. Sending the probed local
-                // profile for a receiver is how a file that plays in the hand becomes a black
-                // screen on the television.
+                // The profile claims what the decoders at the far end can do, and while casting
+                // those are the receiver's: sending the probed local profile is how a file that
+                // plays in the hand becomes a black screen on the television.
                 deviceProfile =
                     if (castTarget) {
-                        // The receiver's class is read at negotiation time rather than carried on
-                        // the request: the request describes what to play, the holder knows who is
-                        // playing it, and a renegotiation mid-session should always describe the
-                        // receiver that is actually connected.
+                        // Read at negotiation time, not carried on the request: a re-negotiation
+                        // mid-session must describe the receiver that is actually connected.
                         CastDeviceProfile.build(
                             maxStreamingBitrate = maxStreamingBitrate,
                             receiver = castStatus.receiver,
@@ -323,10 +250,8 @@ internal class PlaybackInfoResolver
             )
 
         /**
-         * Picks the media source the request asked for.
-         *
-         * The server answers with every source of the item, and their ids come back *with* dashes
-         * even though the request used the dash-less form — so both spellings have to match.
+         * Ids come back *with* dashes even though the request used the dash-less form, so both
+         * spellings are normalised before matching.
          */
         private fun List<MediaSourceInfo>.pickFor(request: PlaybackResolveRequest): MediaSourceInfo? {
             val wanted = (request.mediaSourceId ?: request.itemId.toString()).replace("-", "")
@@ -334,13 +259,9 @@ internal class PlaybackInfoResolver
         }
 
         /**
-         * The delivery method the server settled on.
-         *
-         * Ordered exactly as jellyfin-android and jellyfin-web decide it: a source that can be
-         * direct-played is direct-played even when a transcoding URL is also offered, because the
-         * server only reports `supportsDirectPlay` after checking the file against our profile.
-         * A transcoding URL is therefore only reached once both cheaper options are ruled out —
-         * which is what makes a low `maxStreamingBitrate` a reliable way to force a transcode.
+         * Ordered as jellyfin-web decides it: a source that can be direct-played is, even when a
+         * transcoding URL is also offered — the server only reports `supportsDirectPlay` after
+         * checking the file against the profile, which is what makes a low cap force a transcode.
          */
         private fun MediaSourceInfo.playMethod(): PlayMethod? =
             when {
@@ -386,33 +307,22 @@ internal class PlaybackInfoResolver
 
         private companion object {
             /**
-             * The highest bitrate an Auto negotiation will ask a *transcode* to hit.
-             *
-             * Deliberately the picker's own [PlaybackQuality.HIGH] rung rather than a second copy of
-             * 20 Mbps: it is the same number the user gets by tapping "High", so the two paths cannot
-             * drift apart, and the fallback ladder already knows how to step down from it.
+             * The picker's own [PlaybackQuality.HIGH] rung rather than a second copy of 20 Mbps, so
+             * the two paths cannot drift apart.
              */
             val AUTO_TRANSCODE_CEILING: Int = requireNotNull(PlaybackQuality.HIGH.maxStreamingBitrate)
         }
     }
 
 /**
- * One stream as the pickers see it.
- *
- * `internal` rather than file-private: [LocalPlaybackResolver] builds its track lists from
- * the very same `MediaStream` shape (read out of the cached item blob instead of off a
- * `PlaybackInfo` response), and the two must agree label for label — that identity is what makes
- * the player UI the same online and offline.
+ * `internal` because [LocalPlaybackResolver] builds its lists from the same `MediaStream` shape and
+ * the two must agree label for label — that identity is what keeps the UI the same offline.
  *
  * @param sideLoaded whether the track reaches ExoPlayer as its own source rather than out of the
- *   container — which is what [PlaybackTrack.isExternal] actually drives, since
- *   `TrackSelectionController` matches side-loaded groups by their `external:<index>` id and counts
- *   everything else by position among the *embedded* groups. It defaults to
- *   [MediaStream.isExternal] because that is the offline caller's own rule of thumb; neither online
- *   caller takes the default. Offline, a transcoded download side-loads a sidecar for an **embedded**
- *   subtitle the server extracted for it, and calling that track embedded would have it looked for
- *   among container groups the encode dropped. Online it is the delivery method that decides — see
- *   `sideLoadedSubtitle`, where an HLS rendition of a sidecar file is emphatically *not* side-loaded.
+ *   container: `TrackSelectionController` matches side-loaded groups by their `external:<index>` id
+ *   and everything else by position among the *embedded* groups. The [MediaStream.isExternal]
+ *   default is the offline caller's rule of thumb; online it is the delivery method that decides
+ *   (`sideLoadedSubtitle`).
  */
 internal fun MediaStream.toTrack(
     defaultIndex: Int?,
@@ -428,22 +338,14 @@ internal fun MediaStream.toTrack(
     )
 
 /**
- * Whether this subtitle reaches ExoPlayer as a **source of its own** rather than out of the stream
- * it was handed — which is the question [MediaStream.toTrack]'s `sideLoaded` really asks, and it is
- * the server's chosen delivery that answers it, not whether the stream happens to be a file:
+ * The server's chosen delivery answers this, not whether the stream happens to be a file:
  *
- * - `EMBED` and `HLS` both arrive *inside* what the player opens — in the container, or as an
- *   `#EXT-X-MEDIA` rendition of the transcode's own master playlist. Both are matched by position,
- *   and an HLS-delivered **sidecar** is one of them, `MediaStream.isExternal` notwithstanding: a
- *   rendition carries no `external:<index>` id to match on.
+ * - `EMBED` and `HLS` arrive *inside* what the player opens and are matched by position — an
+ *   HLS-delivered **sidecar** included, `isExternal` notwithstanding: a rendition carries no
+ *   `external:<index>` id to match on.
  * - `EXTERNAL` is the side-loaded case proper, matched by that id.
- * - `ENCODE` is burned into the picture. Nothing selects it, and calling it side-loaded is what
- *   keeps it out of the positional count — a graphical subtitle the server had to burn in gets no
- *   rendition (Jellyfin only builds them for `IsTextSubtitleStream`), so counting it would push
- *   every text track after it onto the wrong rendition. Both lookups miss it, `selectSubtitle`
- *   answers `false`, and the ViewModel re-resolves — which is the only way to see it anyway.
- *
- * Anything else — `DROP`, or a server that sent no method at all — keeps the old default.
+ * - `ENCODE` is burned in and gets no rendition (Jellyfin only builds them for
+ *   `IsTextSubtitleStream`), so counting it would push every later text track onto the wrong one.
  */
 private fun MediaStream.sideLoadedSubtitle(): Boolean =
     when (deliveryMethod) {
@@ -453,13 +355,11 @@ private fun MediaStream.sideLoadedSubtitle(): Boolean =
     }
 
 /**
- * A subtitle stream ExoPlayer has to fetch separately, or `null` when it travels in the container.
- *
- * `SubtitleDeliveryMethod.EXTERNAL` covers both genuinely external files and subtitles the server
- * extracts on the fly while transcoding; either way the delivery URL and a MIME type ExoPlayer
- * understands are both required, so a PGS or DVB stream never becomes one of these.
+ * `EXTERNAL` covers both genuinely external files and subtitles the server extracts while
+ * transcoding; both a delivery URL and a MIME type ExoPlayer understands are required, so a PGS or
+ * DVB stream never becomes one of these.
  */
-@Suppress("ReturnCount") // A sideloaded subtitle needs four fields from the SDK; any missing one drops the track.
+@Suppress("ReturnCount")
 private fun MediaStream.toExternalSubtitle(): ExternalSubtitle? {
     if (deliveryMethod != SubtitleDeliveryMethod.EXTERNAL) return null
     val url = deliveryUrl ?: return null
@@ -473,12 +373,7 @@ private fun MediaStream.toExternalSubtitle(): ExternalSubtitle? {
     )
 }
 
-/**
- * Small helper so callers can build a request from the route's string item id.
- *
- * `autoBitrate = true`: opening an item is the one moment nobody has picked a quality, which is
- * exactly what Auto means. The cap stays `null` here and is filled by [PlaybackInfoResolver].
- */
+/** `autoBitrate = true`: nobody has picked a quality yet, and [PlaybackInfoResolver] fills the cap. */
 internal fun playbackResolveRequest(
     itemId: String,
     mediaSourceId: String? = null,

@@ -17,39 +17,26 @@ import dev.jellyboost.data.music.SdkMusicApi
 import javax.inject.Singleton
 
 /**
- * Hilt bindings for `:data`.
- *
- * [JellyfinRepository] is bound to `DelegatingJellyfinRepository`, which picks between the online
- * (SDK) and offline (Room) implementations per call based on `ConnectionState`. Both implementations
- * are constructor-injectable and are reached only through it — nothing outside `:data` should inject
- * either one directly.
- *
- * The `org.jellyfin.sdk.api.client.ApiClient` these implementations depend on is provided by
- * `:core:network` (the session layer owns its lifecycle and access token).
+ * [JellyfinRepository] must be reached only through `DelegatingJellyfinRepository` — nothing outside
+ * `:data` may inject the online or offline implementation directly.
  */
 @Module
 @InstallIn(SingletonComponent::class)
 internal interface DataModule {
-    /** Binds the media-browsing repository. */
     @Binds
     @Singleton
     fun bindJellyfinRepository(impl: DelegatingJellyfinRepository): JellyfinRepository
 
-    /** Binds image URL construction to the SDK's `imageApi` URL builders. */
     @Binds
     @Singleton
     fun bindImageUrlFactory(impl: SdkImageUrlFactory): ImageUrlFactory
 
-    /** Binds Instant Mix and lyrics to the SDK's `instantMixApi`/`lyricsApi`. */
     @Binds
     @Singleton
     fun bindMusicApi(impl: SdkMusicApi): MusicApi
 
     companion object {
-        /**
-         * Resolves the artwork request widths once, from the display the app is actually running
-         * on, so the server sends thumbnails at the size they are drawn at.
-         */
+        /** Resolved once, from the display the app actually runs on. */
         @Provides
         @Singleton
         fun provideArtworkRequestWidths(

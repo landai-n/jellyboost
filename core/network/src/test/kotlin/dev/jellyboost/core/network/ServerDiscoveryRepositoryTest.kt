@@ -26,7 +26,6 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import java.io.IOException
 
-/** Unit tests for local-network discovery and manual address resolution. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class ServerDiscoveryRepositoryTest {
     private val apiFacade = mockk<JellyfinApiFacade>()

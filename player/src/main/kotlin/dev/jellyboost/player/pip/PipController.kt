@@ -8,17 +8,9 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * The one place that knows whether leaving the app right now should float the video.
- *
- * Picture-in-picture is an *activity* capability, but the conditions for it are entirely the
- * player's: the player route has to be on screen, something has to actually be playing, and the user
- * has to have left `pipOnLeave` on. `MainActivity` hosts the whole app, so without this seam it
- * would either have to reach into the player's ViewModel or guess — and guessing means an item
- * detail page that shrinks into a floating window when the user presses Home.
- *
- * The traffic runs both ways. The player screen publishes readiness through [setPlayerState]; the
- * activity publishes the mode changes the system hands it through [setInPictureInPicture], which is
- * how the controls know to get out of the way and come back.
+ * Picture-in-picture is an activity capability whose conditions are the player's, so the two publish
+ * to each other here: the player screen through [setPlayerState], `MainActivity` through
+ * [setInPictureInPicture].
  */
 @Singleton
 class PipController
@@ -26,16 +18,13 @@ class PipController
     constructor() {
         private val _state = MutableStateFlow(PipState())
 
-        /** Observed by `MainActivity` (to arm PiP) and by the player screen (to hide its controls). */
         val state: StateFlow<PipState> = _state.asStateFlow()
 
         /**
-         * Publishes what the player screen is doing.
-         *
-         * @param active `true` while the player route is composed **and** playing **and** the
-         *   preference allows it — everything the activity needs, already decided.
-         * @param videoWidth / @param videoHeight the decoded video size, for the window's aspect
-         *   ratio; zero until the first frame is decoded, which the activity treats as "no hint".
+         * @param active must already fold in every condition (route composed, playing, preference on);
+         *   the activity does not re-check.
+         * @param videoWidth / @param videoHeight zero until the first frame is decoded, which the
+         *   activity treats as "no hint".
          */
         internal fun setPlayerState(
             active: Boolean,
@@ -47,21 +36,15 @@ class PipController
             }
         }
 
-        /** Records the system's picture-in-picture mode change. */
         fun setInPictureInPicture(inPictureInPicture: Boolean) {
             _state.update { it.copy(isInPictureInPicture = inPictureInPicture) }
         }
 
-        /** Forgets everything — the player screen is gone. */
         internal fun clear() {
             _state.value = PipState()
         }
     }
 
-/**
- * @property canEnter `true` while entering picture-in-picture on user-leave is wanted.
- * @property isInPictureInPicture `true` while the app is already in the floating window.
- */
 data class PipState(
     val canEnter: Boolean = false,
     val videoWidth: Int = 0,
@@ -69,12 +52,8 @@ data class PipState(
     val isInPictureInPicture: Boolean = false,
 ) {
     /**
-     * The video's aspect ratio as a numerator/denominator pair, clamped to what Android accepts.
-     *
-     * `PictureInPictureParams.setAspectRatio` throws outside 1:2.39 … 2.39:1, and a 2.76:1 Ultra
-     * Panavision film is not a hypothetical — an uncaught `IllegalArgumentException` there takes the
-     * whole activity down as the user presses Home. `null` when the size is not known yet, which
-     * leaves the system to pick its default window.
+     * Clamped because `PictureInPictureParams.setAspectRatio` throws outside 1:2.39 … 2.39:1, and a
+     * 2.76:1 film would take the activity down as the user presses Home. `null` = size unknown.
      */
     val aspectRatio: Pair<Int, Int>?
         get() {

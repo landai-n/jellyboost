@@ -32,13 +32,6 @@ import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
 
-/**
- * Unit tests for [DownloadsViewModel].
- *
- * The screen holds no state of its own — it is a projection of three Flows — so what is worth
- * pinning is the split into the two tabs, the grouping the *Downloaded* tab shows, and the fact
- * that every action reports its failure instead of silently doing nothing.
- */
 @OptIn(ExperimentalCoroutinesApi::class)
 class DownloadsViewModelTest {
     private val dispatcher = StandardTestDispatcher()
@@ -90,8 +83,6 @@ class DownloadsViewModelTest {
     @Test
     fun `downloaded episodes are grouped under their series, series groups sorted alphabetically`() =
         runTest(dispatcher) {
-            // Only series on the tab — nothing for a film row to be confused with, so no Movies
-            // section is expected here either.
             items.value =
                 listOf(
                     item("1", "Chestnut", series = "Westworld", status = DownloadStatus.DOWNLOADED),
@@ -112,8 +103,7 @@ class DownloadsViewModelTest {
     fun `downloaded tracks group under their album, alongside series groups`() =
         runTest(dispatcher) {
             // `DownloadEnqueuer` writes a track's album into the same column an episode's series
-            // goes in, so albums group with no second grouping rule. Albums are the top level —
-            // artists do not nest above them.
+            // goes in, so albums group with no second rule; artists do not nest above them.
             items.value =
                 listOf(
                     item("1", "Go Your Own Way", series = "Rumours", status = DownloadStatus.DOWNLOADED),
@@ -133,9 +123,6 @@ class DownloadsViewModelTest {
     @Test
     fun `a lone film gets no heading of its own name`() =
         runTest(dispatcher) {
-            // Without this, every film is drawn under a group header reading its own title, so the
-            // name appears twice, one line apart. Only films on the tab here — see the next test
-            // for what happens once a series is also present.
             items.value =
                 listOf(
                     item("1", "Dune", status = DownloadStatus.DOWNLOADED),
@@ -153,8 +140,6 @@ class DownloadsViewModelTest {
     @Test
     fun `a film alongside a series is gathered under the shared Movies heading, after every series group`() =
         runTest(dispatcher) {
-            // The bug this fixes: a bare film row right after a series' last episode, at the same
-            // indentation and with nothing marking the boundary, read as part of that series.
             items.value =
                 listOf(
                     item("1", "Dune", status = DownloadStatus.DOWNLOADED),
@@ -168,11 +153,9 @@ class DownloadsViewModelTest {
 
             val groups = model.uiState.value.downloaded
 
-            // Series groups first, alphabetically, each with its own heading …
             groups.dropLast(1).map { it.title } shouldContainExactly listOf("Fargo", "Westworld")
             groups.dropLast(1).all { it.isSeries } shouldBe true
 
-            // … then one shared Movies group, last, holding every film in alphabetical order.
             val moviesSection = groups.last()
             moviesSection.isMoviesSection shouldBe true
             moviesSection.isSeries shouldBe false
@@ -182,8 +165,7 @@ class DownloadsViewModelTest {
     @Test
     fun `two films sharing a title stay two rows`() =
         runTest(dispatcher) {
-            // Grouping by title would have merged the 1984 and the 2021 Dune into one heading with
-            // two identical rows under it.
+            // Mutation check: grouping by title merges the 1984 and 2021 Dune into one heading.
             items.value =
                 listOf(
                     item("1", "Dune", status = DownloadStatus.DOWNLOADED),
@@ -264,8 +246,8 @@ class DownloadsViewModelTest {
             advanceUntilIdle()
 
             model.selectTab(DownloadsTab.QUEUE)
-            // The tab is not written straight into the state: it rides the same combine as the
-            // projection, so it lands on the next dispatch rather than in the tap itself.
+            // The tab rides the same combine as the projection, so it lands on the next dispatch
+            // rather than in the tap itself.
             advanceUntilIdle()
 
             model.uiState.value.selectedTab shouldBe DownloadsTab.QUEUE
@@ -342,10 +324,8 @@ class DownloadsViewModelTest {
                 listOf(
                     item("1", "Arrival", status = DownloadStatus.DOWNLOADING),
                     item("2", "Dune", status = DownloadStatus.QUEUED, position = 1),
-                    // A transcode cannot be paused without discarding it (DownloadItem.isPausable),
-                    // so *Pause all* must leave it alone rather than destroy its progress.
+                    // A transcode cannot be paused without discarding it.
                     transcode("3", "Chestnut", status = DownloadStatus.DOWNLOADING, position = 2),
-                    // Already paused, and a failure: neither is a pause target.
                     item("4", "Sicario", status = DownloadStatus.PAUSED, position = 3),
                     item("5", "Blade Runner", status = DownloadStatus.ERROR, position = 4),
                 )
@@ -374,7 +354,6 @@ class DownloadsViewModelTest {
             model.pauseAll()
             advanceUntilIdle()
 
-            // Without this the queue visibly keeps moving after "Pause all" and reads as a bug.
             model.uiState.value.userMessage shouldBe
                 DownloadsMessage.PausedKeepingTranscodes(pausedCount = 1, transcodingCount = 2)
         }
@@ -393,7 +372,6 @@ class DownloadsViewModelTest {
             model.pauseAll()
             advanceUntilIdle()
 
-            // The rows themselves changed to "Paused"; a snackbar over them would say nothing more.
             model.uiState.value.userMessage shouldBe null
         }
 
@@ -522,8 +500,6 @@ class DownloadsViewModelTest {
     @Test
     fun `confirming cancel all empties the queue and never touches a finished download`() =
         runTest(dispatcher) {
-            // The season-cancel rule applied to the whole queue: what is already on the device
-            // survives, whatever state the queue rows are in.
             items.value =
                 listOf(
                     item("1", "Arrival", status = DownloadStatus.DOWNLOADED),
@@ -633,12 +609,7 @@ class DownloadsViewModelTest {
 
     // ---- a collapsed projection ------------------------------------------------------------------
 
-    /**
-     * The worst failure this screen can have: `isLoading` starts `true` and only a first emission
-     * clears it, so a throw upstream — `SQLiteBlobTooBigException` on a corrupt dto blob is the
-     * real one — would leave a spinner turning forever with nothing to tell the user and no way to
-     * retry.
-     */
+    /** `isLoading` starts `true` and only a first emission clears it, so a throw would hang it. */
     @Test
     fun `an upstream failure leaves an error state, never a spinner`() =
         runTest(dispatcher) {
@@ -651,7 +622,6 @@ class DownloadsViewModelTest {
             model.uiState.value.loadFailed shouldBe true
         }
 
-    /** A failure part-way through must not leave the last good rows on screen unmarked. */
     @Test
     fun `a failure after a good emission still raises the error state`() =
         runTest(dispatcher) {
@@ -668,7 +638,6 @@ class DownloadsViewModelTest {
             model.uiState.value.loadFailed shouldBe true
         }
 
-    /** A healthy projection must not be marked as failed — the flag is not just "not loading". */
     @Test
     fun `a healthy projection never sets the error state`() =
         runTest(dispatcher) {
@@ -683,11 +652,6 @@ class DownloadsViewModelTest {
 
     // ---- what the projection costs while nobody is looking ---------------------------------------
 
-    /**
-     * Launched in `init` and never unsubscribed, the projection would keep pulling the download
-     * list (a full metadata join) and the storage figures from the first visit until process death
-     * — with the screen off, and with a tab switch *saving* this screen rather than popping it.
-     */
     @Test
     fun `the download queries only run while something is collecting the state`() =
         runTest(dispatcher) {
@@ -713,12 +677,10 @@ class DownloadsViewModelTest {
             subscriptions shouldBe 1
 
             screen.cancel()
-            // Inside the grace window a rotation re-uses the running projection …
             advanceTimeBy(DownloadsViewModel.STOP_TIMEOUT_MS / 2)
             runCurrent()
             completions shouldBe 0
 
-            // … and past it the queries stop.
             advanceUntilIdle()
             completions shouldBe 1
         }
@@ -736,7 +698,6 @@ class DownloadsViewModelTest {
             screen.cancel()
             advanceUntilIdle()
 
-            // An action fired from a row the user can still see must not read an empty list back.
             model.uiState.value.downloaded
                 .flatMap { it.items }
                 .map { it.itemId } shouldContainExactly listOf("1")
@@ -760,12 +721,8 @@ class DownloadsViewModelTest {
     // ---- helpers --------------------------------------------------------------------------------
 
     /**
-     * A ViewModel with a live subscriber on its state.
-     *
-     * The subscriber is the point: the projection is shared with `WhileSubscribed`, so with nothing
-     * collecting `uiState` there is deliberately no Room query and no state to assert on.
-     * `backgroundScope` is what the screen's collection stands in for — it is cancelled
-     * when the test ends, so the never-completing projection cannot hang `runTest`.
+     * The subscriber is load-bearing: with nothing collecting `uiState` the `WhileSubscribed`
+     * projection never runs. `backgroundScope` is cancelled with the test, so it cannot hang it.
      */
     private fun TestScope.viewModel(): DownloadsViewModel =
         DownloadsViewModel(
@@ -799,7 +756,6 @@ class DownloadsViewModelTest {
             items.value = listOf(downloading(bytes = 300L, total = 1_000L))
             advanceUntilIdle()
 
-            // The raw fraction is now 30 %, and not one byte was lost — see DownloadProgressRatchet.
             model.uiState.value.progress["1"] shouldBe 0.6f
         }
 
@@ -808,7 +764,7 @@ class DownloadsViewModelTest {
         total: Long,
     ) = item("1", "Chestnut", status = DownloadStatus.DOWNLOADING, downloaded = bytes, total = total)
 
-    /** A queue row that is being re-encoded, which is what makes it unpausable. */
+    /** Re-encoded, which is what makes it unpausable. */
     private fun transcode(
         id: String,
         title: String,

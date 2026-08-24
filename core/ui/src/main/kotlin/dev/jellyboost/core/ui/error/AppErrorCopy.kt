@@ -6,19 +6,11 @@ import dev.jellyboost.core.ui.R
 import dev.jellyboost.core.ui.text.UiText
 
 /**
- * The copy a screen supplies for the branches of [AppError] where its wording genuinely differs.
+ * Only the branches whose wording genuinely differs per screen are slots; network, unauthorized and
+ * storage are one sentence translated once.
  *
- * Every other branch — network, unauthorized, storage — says the same thing whichever screen asked,
- * so it is not a slot: "can't reach your server" is one sentence, translated once, in `:core:ui`.
- * Hand-spelling it per screen would mean five sentences in five files, three of them Kotlin
- * literals, with nothing to keep them from drifting apart.
- *
- * @param unknown always overridden. An unclassified failure can only be described by naming what
- *   was being done — "loading this library", "starting playback" — and only the screen knows that.
- * @param notFound defaults to the item wording; a screen that asked about a *library* overrides it.
- * @param server the server answered and refused. The player overrides both this and
- *   [serverWithCode] because "could not start playback" is a different failure from "returned an
- *   error" and the remedy differs.
+ * @param unknown always overridden: an unclassified failure can only be described by naming what
+ *   was being done, which only the screen knows.
  */
 data class AppErrorCopy(
     @StringRes val unknown: Int,
@@ -28,14 +20,8 @@ data class AppErrorCopy(
 )
 
 /**
- * Turns the domain failure taxonomy into copy a user can act on.
- *
- * Returns a [UiText] rather than a `String` so the ViewModel that decides *which* failure this is
- * does not also have to decide what language to say it in — see [UiText].
- *
- * [AppError.ServerResolution] shares the network copy on purpose: to the user, "the address you
- * typed answers nothing usable" and "your server is unreachable" are the same dead end with the
- * same first thing to try. The server-setup screen, which can say more, does not come through here.
+ * [AppError.ServerResolution] shares the network copy on purpose: both are the same dead end with
+ * the same first thing to try. The server-setup screen, which can say more, does not come here.
  */
 fun AppError.toUiText(copy: AppErrorCopy): UiText =
     when (this) {

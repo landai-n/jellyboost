@@ -5,13 +5,6 @@ import dev.jellyboost.data.downloads.model.StorageUsage
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
-/**
- * Unit tests for [DownloadsUiState.queueStats] — the wide-layout "QUEUE" stat panel's numbers.
- * Pure data over [DownloadsUiState.queue] and
- * [DownloadsUiState.speeds], so — like [DownloadRowsTest]'s pure-function block — every assertion
- * here is a plain `DownloadsUiState` construction and a read of the computed [QueueStats], no
- * Compose harness or MockK/Turbine required.
- */
 class DownloadsUiStateTest {
     @Test
     fun `an empty queue has nothing to sum and reads as idle`() {
@@ -39,9 +32,8 @@ class DownloadsUiStateTest {
 
     @Test
     fun `a row already past its own total contributes nothing negative`() {
-        // displayTotalBytes clamps a projection into [bytesDownloaded, ceiling] (DownloadItem's own
-        // doc), so bytesDownloaded can equal but never exceed it — this pins that a queue summing
-        // the difference never goes negative even at that boundary.
+        // `displayTotalBytes` clamps into [bytesDownloaded, ceiling], so the sum of differences
+        // must not go negative even at that boundary.
         val atItsOwnTotal = queued("1", bytesDownloaded = 300L, bytesTotal = 300L)
         val state = DownloadsUiState(queue = listOf(atItsOwnTotal))
 
@@ -54,7 +46,7 @@ class DownloadsUiStateTest {
             DownloadsUiState(
                 queue = listOf(queued("1"), queued("2"), queued("3")),
                 speeds = mapOf("1" to 1_000_000L, "2" to 2_500_000L),
-                // "3" has no entry — nothing sampled for it yet, contributes zero rather than crashing.
+                // "3" has no entry yet: contributes zero rather than crashing.
             )
 
         state.queueStats.bytesPerSecond shouldBe 3_500_000L
@@ -62,9 +54,8 @@ class DownloadsUiStateTest {
 
     @Test
     fun `a speed entry for a row not on the queue is never summed`() {
-        // speeds is keyed by item id across the whole app session (DownloadSpeedTracker), not
-        // scoped to the current queue — a stale entry for a row that already finished must not
-        // inflate the aggregate.
+        // `speeds` is keyed across the whole session, not scoped to the queue, so a stale entry for
+        // a finished row must not inflate the aggregate.
         val state =
             DownloadsUiState(
                 queue = listOf(queued("1")),
@@ -168,15 +159,14 @@ class DownloadsUiStateTest {
 
     @Test
     fun `the storage figure is floored at what the downloaded tab accounts for`() {
-        // The filesystem walk is the source, but it runs on a tick: a download that has just landed
-        // must not make the screen claim less space used than its own rows add up to.
+        // The walk runs on a tick, so a just-landed download must not make the screen claim less
+        // used space than its own rows add up to.
         val summary =
             storageSummary(storage = StorageUsage(usedBytes = 400L, availableBytes = 600L), downloadedBytes = 900L)
 
         summary.usedBytes shouldBe 900L
         summary.availableBytes shouldBe 600L
-        // The denominator stays the volume — used *as walked* plus free — rather than growing with
-        // the floored figure, which would move the bar's end under it.
+        // The denominator stays used-*as-walked* plus free, or the bar's end moves under it.
         summary.totalBytes shouldBe 1_000L
     }
 
@@ -210,7 +200,6 @@ class DownloadsUiStateTest {
                     ),
             )
 
-        // 500 downloaded against 500 + 1_500 remaining.
         state.chrome.queueProgress shouldBe 0.25f
         state.chrome.hasQueue shouldBe true
         state.chrome.queueStats shouldBe state.queueStats

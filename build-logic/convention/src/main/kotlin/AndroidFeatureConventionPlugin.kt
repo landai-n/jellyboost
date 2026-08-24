@@ -4,11 +4,7 @@ import org.gradle.api.Project
 import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.project
 
-/**
- * Convention plugin for `:feature:*` modules — a Compose Android library with Hilt plus the
- * dependency set every feature needs. Features never depend on each other; cross-feature
- * navigation goes through the routes declared in `:core:common`.
- */
+/** Features never depend on each other; cross-feature navigation goes through `:core:common`'s routes. */
 class AndroidFeatureConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {

@@ -15,46 +15,21 @@ import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/**
- * Every URL the download pipeline can fetch, behind one seam.
- *
- * The file plan is the piece of the pipeline most likely to be wrong in a way that only shows up
- * as a 404 halfway through a 2 GB transfer, so it is unit-tested — and it can only be unit-tested
- * if the URL builders are injectable. The SDK's builders are ordinary functions on a real
- * `ApiClient` with a real base URL, which a JVM test does not have.
- */
+/** Every URL the download pipeline can fetch, behind a seam a JVM test can build without a base URL. */
 internal interface DownloadUrlFactory {
-    /**
-     * The dedicated download endpoint (`/Items/{id}/Download`).
-     *
-     * Preferred over a stream URL because it serves the original file untouched — no remuxing, no
-     * server-side work — which is the only way the downloaded bytes match the source exactly.
-     */
+    /** `/Items/{id}/Download` — the original file untouched, the only route whose bytes match the source. */
     fun mediaUrl(itemId: UUID): String
 
-    /**
-     * Fallback for a user whose policy has `enableContentDownloading` off: the static video stream,
-     * which is the same bytes over a different route. The fallback exists so the pipeline does not
-     * simply stop working for an account whose policy is configured that way.
-     */
+    /** Fallback when the user's `enableContentDownloading` policy is off: the same bytes, another route. */
     fun videoStreamUrl(
         itemId: UUID,
         mediaSourceId: String?,
     ): String
 
     /**
-     * [videoStreamUrl]'s audio counterpart: `/Audio/{id}/stream?static=true`.
-     *
-     * Same role and same trigger — a user whose policy has `enableContentDownloading` off — and the
-     * queue reaches it the same way, by re-planning the one media file after a `403` from
-     * [mediaUrl]. `static=true` is what makes it the original bytes rather than a transcode, so the
-     * file that lands is the file on the server, which is what a music download is: originals
-     * only.
-     *
-     * Routing through `/Audio` rather than `/Videos` here is safe: the "/Videos not /Audio" rule is
-     * about `audioStreamIndex` on multi-stream video sidecars, and this request names no stream
-     * index at all — a music track has one audio stream and `static=true` copies the whole file
-     * regardless.
+     * [videoStreamUrl]'s audio counterpart. `static=true` is what makes it the original bytes, which is
+     * what a music download is. Routing through `/Audio` rather than `/Videos` is safe here: the
+     * "/Videos not /Audio" rule is about `audioStreamIndex`, and this names no stream index at all.
      */
     fun staticAudioUrl(
         itemId: UUID,
@@ -64,25 +39,17 @@ internal interface DownloadUrlFactory {
     /**
      * A server-side transcode of the item, muxed into one progressive `.mkv`.
      *
-     * Every encoding parameter is spelled out rather than left to the server's own negotiation:
-     * a download has no `PlaybackInfo` session behind it and no device profile to reason from, so
-     * the only way the bytes are predictable is to ask for exactly one shape — H.264 video under
-     * [DownloadQuality.videoBitRate] and [DownloadQuality.maxHeight], stereo AAC audio, and
-     * [DownloadQuality.CONTAINER] (Matroska, for the reason spelled out on that constant: an mp4
-     * muxed on the fly is a file Media3 refuses to open).
+     * Every encoding parameter is spelled out rather than negotiated: a download has no `PlaybackInfo`
+     * session behind it and no device profile to reason from, so asking for exactly one shape is the
+     * only way the bytes are predictable.
      *
-     * `context = STATIC` is the one non-obvious parameter and it matters: the server throttles a
-     * `STREAMING` transcode to roughly real time, which would make a two-hour film take two hours
-     * to download. `STATIC` is the "produce this as fast as you can" context.
+     * `context = STATIC` is the non-obvious one and it matters: the server throttles a `STREAMING`
+     * transcode to roughly real time, which would make a two-hour film take two hours to download.
      *
-     * @param quality must be a transcoded step; [DownloadQuality.ORIGINAL] has no stream URL and is
-     *   served by [mediaUrl] instead.
-     * @param audioStreamIndex the absolute `MediaStream.index` of the single audio track to encode.
-     *   The endpoint takes exactly one and the transcoder drops every other track, so naming it is
-     *   the difference between "the track the user wanted" and "whatever the server chose"
-     *   (see [downloadAudioStreamIndex]). `null` omits the parameter, which is what an item with no
-     *   audio streams needs — sending an index that names nothing is a request the server has no
-     *   sensible answer for.
+     * @param quality must be a transcoded step; [DownloadQuality.ORIGINAL] is served by [mediaUrl].
+     * @param audioStreamIndex the absolute `MediaStream.index` of the single audio track to encode —
+     *   the endpoint takes exactly one and the transcoder drops every other. `null` omits the
+     *   parameter, which is what an item with no audio streams needs.
      */
     fun transcodedVideoUrl(
         itemId: UUID,
@@ -120,15 +87,11 @@ internal interface DownloadUrlFactory {
      * [DownloadQuality.AUDIO_SIDECAR_CONTAINER].
      *
      * The video track is not wanted, but the request cannot leave it out: server 10.11 hard-codes
-     * `audioStreamIndex` to `null` on the audio-only endpoint (`EncodingHelper.AttachMediaSourceInfo`),
-     * so asking for a *specific* extra track only works through `/Videos`, which does honor it. The
-     * video that comes back is deliberately as cheap as the server will make it
-     * ([DownloadQuality.AUDIO_FETCH_VIDEO_BITRATE] and friends) and is thrown away by a local
-     * Transformer strip once the fetch lands — see [DownloadQuality.AUDIO_SIDECAR_CONTAINER]'s KDoc
-     * for why that strip is what finally gives the sidecar a complete `moov`.
+     * `audioStreamIndex` to `null` on the audio-only endpoint
+     * (`EncodingHelper.AttachMediaSourceInfo`), so a *specific* extra track can only be asked for
+     * through `/Videos`, which does honor it.
      *
-     * @param streamIndex the absolute `MediaStream.index` of the audio track to fetch — never the
-     *   track a sibling [transcodedVideoUrl] call already baked into the media file.
+     * @param streamIndex never the track a sibling [transcodedVideoUrl] call already baked in.
      */
     fun audioStreamUrl(
         itemId: UUID,
@@ -182,16 +145,13 @@ internal class SdkDownloadUrlFactory
                 static = false,
                 mediaSourceId = mediaSourceId,
                 deviceId = apiClient.deviceInfo.id,
-                // A fresh id per URL. Nothing stores it yet — it costs one query parameter and it
-                // is what a later `stopEncodingProcess` (or any correlation with the server's own
-                // transcode reporting) would need to name this encode. Without it the server
-                // invents one we never learn.
+                // A fresh id per URL: it is what a later `stopEncodingProcess`, or any correlation
+                // with the server's own transcode reporting, would need to name this encode.
                 playSessionId = UUID.randomUUID().toString(),
                 videoCodec = DownloadQuality.VIDEO_CODEC,
                 audioCodec = DownloadQuality.AUDIO_CODEC,
-                // The one track the muxed file will hold. Omitted (`null`) the server picks the
-                // source's default, which is the same track — but nothing would have *recorded*
-                // which one that was, and offline there is no server left to ask.
+                // Omitted, the server picks the source's default — the same track, but nothing would
+                // have *recorded* which one, and offline there is no server left to ask.
                 audioStreamIndex = audioStreamIndex,
                 videoBitRate = quality.videoBitRate,
                 maxHeight = quality.maxHeight,
@@ -214,8 +174,7 @@ internal class SdkDownloadUrlFactory
                 itemId = itemId,
                 imageType = imageType,
                 tag = tag,
-                // WEBP at a capped width: a poster the offline UI draws at ~150 dp does not need
-                // the 2000-pixel original, and artwork is downloaded before the media file.
+                // WEBP at a capped width: a poster the offline UI draws at ~150 dp does not need the original.
                 format = ImageFormat.WEBP,
                 fillWidth = fillWidth,
             )
@@ -270,9 +229,8 @@ internal class SdkDownloadUrlFactory
                 maxFramerate = DownloadQuality.AUDIO_FETCH_MAX_FRAMERATE,
                 maxHeight = DownloadQuality.AUDIO_FETCH_MAX_HEIGHT,
                 maxWidth = DownloadQuality.AUDIO_FETCH_MAX_WIDTH,
-                // Neither track may be copied: a copy could carry every other audio track along with
-                // it, and the video must actually shrink to the junk shape above rather than pass the
-                // source through.
+                // Neither track may be copied: a copy could carry every other audio track with it, and
+                // the video must actually shrink to the junk shape above.
                 allowVideoStreamCopy = false,
                 allowAudioStreamCopy = false,
                 context = EncodingContext.STATIC,

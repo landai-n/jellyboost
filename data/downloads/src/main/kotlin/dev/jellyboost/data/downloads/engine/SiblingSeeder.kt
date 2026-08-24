@@ -12,30 +12,22 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * What episodes of a show that already finished say the next one will weigh (schema v6).
+ * What episodes of a show that already finished say the next one will weigh.
  *
  * The ceiling a transcoded row is enqueued with — `runtime × min(cap, source bitrate)` — is
  * deterministic and generous, and on easy content the encoder undershoots it by a wide margin.
- * Finished siblings are *measured*: a completed row's `bytesDownloaded` is the real file, the item
- * cache still holds its runtime, so `bytes / runtime` is the bitrate this server's encoder actually
- * produced for this show at this quality. The **median** of those rates, not the mean: one episode
- * that happened to be a clip show should move the estimate, not define it.
+ * Finished siblings are *measured*: a completed row's `bytesDownloaded` over its cached runtime is the
+ * bitrate this server's encoder actually produced for this show at this quality. The **median** of
+ * those rates, not the mean — one episode that happened to be a clip show should move the estimate,
+ * not define it.
  *
- * This lives in its own class because the answer is wanted at three different moments, and the
- * feature only works when all three ask (docs/features/download-quality.md, "Sibling seeding"):
+ * The answer is wanted at three moments and the feature only works when all three ask: at enqueue,
+ * when a sibling lands ([seedPendingSiblingsOf] — a season queued before anything of it finished), and
+ * when the queue picks a row up.
  *
- * 1. **At enqueue** (`DownloadEnqueuer`) — the episode tapped after its siblings finished.
- * 2. **When a sibling lands** ([seedPendingSiblingsOf]) — the rest of a season queued *before*
- *    anything of it had finished. Without this a season enqueued in one go stays on "up to X" for
- *    every one of its rows however many episodes complete, which is the shape the user reported.
- * 3. **When the queue picks a row up** (`DownloadQueue`) — the belt to (2)'s braces, for a row
- *    enqueued while its siblings were still downloading on another device, or seeded before the
- *    cache knew its runtime.
- *
- * Two rules hold everywhere: a seed may only ever move the figure *down* from the ceiling the row
- * was enqueued with, and it never overwrites a projection that already exists — a live
- * `TranscodeSizeProjector` measurement outranks a guess made from other episodes, and re-seeding is
- * additive or it is nothing.
+ * Two rules hold everywhere: a seed may only ever move the figure *down* from the ceiling the row was
+ * enqueued with, and it never overwrites a projection that already exists — a live
+ * `TranscodeSizeProjector` measurement outranks a guess made from other episodes.
  */
 @Singleton
 internal class SiblingSeeder
@@ -46,18 +38,12 @@ internal class SiblingSeeder
         private val clock: Clock,
     ) {
         /**
-         * The size finished siblings suggest for one item, or `null` when there is nothing to judge
-         * from.
-         *
-         * @param itemId the item being seeded — excluded from its own evidence, since a re-enqueued
-         *   row may still carry the bytes of an earlier attempt.
-         * @param seriesName the show, as the download row denormalises it; `null` (a film) is never
-         *   seeded, because a director's other work is not evidence.
+         * @param itemId excluded from its own evidence: a re-enqueued row may still carry the bytes of
+         *   an earlier attempt.
+         * @param seriesName `null` (a film) is never seeded — a director's other work is not evidence.
          * @param ceilingBytes the enqueue-time upper bound the answer is clamped to.
-         * @return the projection, in bytes, or `null`.
          */
         @Suppress(
-            // Guard chain over a partly-written download set; each exit means a different already-handled state.
             "ReturnCount",
         )
         suspend fun seedFor(
@@ -74,22 +60,16 @@ internal class SiblingSeeder
         }
 
         /**
-         * Seeds every row still waiting on the same show at the same quality, now that [completed]
-         * has landed.
+         * Seeds every row still waiting on the same show at the same quality, now that [completed] has
+         * landed: a season queued in one batch has no finished sibling to learn from at enqueue, and
+         * nothing else would come back to those rows once one arrived.
          *
-         * Seeding inside the enqueue transaction alone is not enough: a season queued in one batch
-         * has no finished sibling to learn from, and nothing would come back to those rows once one
-         * arrived. Every episode after the first would keep its "up to X" wording for the whole of
-         * the download, which is precisely the case the seed exists for.
-         *
-         * Only `QUEUED` and `PAUSED` rows that still carry no projection and whose size is not
-         * already exact are touched, and the write itself re-checks that the projection is still
-         * absent ([DownloadDao.setProjectedBytesIfAbsent]) — so a row the queue started, and whose
-         * scanner has begun measuring, cannot be dragged back to a guess. `bytesTotal` is never
-         * touched: the ceiling is a promise the enqueue step made.
+         * Only `QUEUED`/`PAUSED` rows with no projection and no exact size are touched, and the write
+         * re-checks that ([DownloadDao.setProjectedBytesIfAbsent]), so a row whose scanner has begun
+         * measuring cannot be dragged back to a guess. `bytesTotal` is never touched: the ceiling is a
+         * promise the enqueue step made.
          */
         @Suppress(
-            // As `seedFor`: the exits are the states in which seeding a sibling would be wrong, not branches.
             "ReturnCount",
         )
         suspend fun seedPendingSiblingsOf(completed: DownloadEntity) {
@@ -114,11 +94,9 @@ internal class SiblingSeeder
         }
 
         /**
-         * The median bytes-per-millisecond this show's finished downloads at this quality actually
-         * landed at, or `null` when none of them can be turned into a rate.
-         *
-         * A sibling whose item row is gone (a wiped cache) is skipped rather than guessed at: without
-         * its runtime its size says nothing about how long it took to say it.
+         * The median bytes-per-millisecond this show's finished downloads at this quality landed at, or
+         * `null` when none of them can be turned into a rate. A sibling whose item row is gone is
+         * skipped rather than guessed at: without its runtime its size says nothing.
          */
         private suspend fun observedRate(
             seriesName: String,
@@ -155,12 +133,7 @@ internal class SiblingSeeder
         ): Long = (this * runtimeMillis).toLong().coerceIn(0L, ceilingBytes)
 
         private companion object {
-            /**
-             * How many finished siblings the seed is taken from.
-             *
-             * Newest first, so a show re-encoded at a new quality converges on its recent
-             * behaviour; small enough that the extra `getItems` stays one cheap query.
-             */
+            /** Newest first, so a show re-encoded at a new quality converges on its recent behaviour. */
             const val SIBLING_SAMPLE = 8
         }
     }

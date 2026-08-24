@@ -28,8 +28,7 @@ rootProject.name = "jellyboost"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 include(":app")
-// Instrumented macrobenchmark that records the release baseline profile. Produces no
-// shipped code; its generation task is device-only — see baselineprofile/build.gradle.kts.
+// Produces no shipped code; its generation task is device-only.
 include(":baselineprofile")
 include(":core:common")
 include(":core:ui")

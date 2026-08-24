@@ -23,10 +23,8 @@ allprojects {
     apply(plugin = "io.gitlab.arturbosch.detekt")
     apply(plugin = "org.jlleitschuh.gradle.ktlint")
 
-    // `uk.uuid.slf4j:slf4j-android` binds SLF4J (used by jellyfin-sdk, see :core:network) to
-    // android.util.Log. That class is a stub in local unit tests, so the binding fails to
-    // initialise and takes MockK's own SLF4J logger down with it. Unit tests need no SLF4J
-    // binding at all — SLF4J falls back to a no-op provider.
+    // `uk.uuid.slf4j:slf4j-android` binds SLF4J to `android.util.Log`, a stub in local unit tests:
+    // the binding fails to initialise and takes MockK's own SLF4J logger down with it.
     configurations.matching { it.name.contains("UnitTestRuntimeClasspath") }.configureEach {
         exclude(group = "uk.uuid.slf4j", module = "slf4j-android")
     }

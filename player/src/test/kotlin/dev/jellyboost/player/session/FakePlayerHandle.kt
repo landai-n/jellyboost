@@ -9,11 +9,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 
 /**
- * A [PlayerHandle] that records what it was asked to do.
- *
- * Lets `PlayerViewModelTest` exercise the parts of playback that are actually ours — resolving,
- * reporting, falling back, sequencing a re-resolve — without an ExoPlayer, which cannot exist off
- * a device.
+ * A [PlayerHandle] that records what it was asked to do — lets tests exercise resolving,
+ * reporting, falling back, and re-resolve sequencing without an ExoPlayer, which cannot exist
+ * off a device.
  */
 internal class FakePlayerHandle : PlayerHandle {
     private val _events =
@@ -35,13 +33,7 @@ internal class FakePlayerHandle : PlayerHandle {
 
     var snapshot = PlaybackSnapshot()
 
-    /**
-     * Transport calls, counted.
-     *
-     * SyncPlay's rule is that an in-group intent must produce *no* local playback call at all,
-     * which is a claim about calls that were never made — so the flags above are not enough to
-     * state it.
-     */
+    /** SyncPlay's in-group rule claims *no* local playback call was ever made — a count, not a flag. */
     var playCount = 0
         private set
 
@@ -122,13 +114,7 @@ internal class FakePlayerHandle : PlayerHandle {
         playbackSpeeds += speed
     }
 
-    /**
-     * Whether this player admits to having a playback rate, writable so a test can be a receiver
-     * that has none.
-     *
-     * `true` by default, which is every local player's answer, so a test that never sets this
-     * exercises that default unchanged.
-     */
+    /** Writable so a test can be a receiver with no playback rate; `true` matches every local player. */
     override var supportsPlaybackSpeed: Boolean = true
 
     override fun stop() {

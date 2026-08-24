@@ -25,13 +25,11 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 
-/** Unit tests for [LibrariesViewModel]'s load, failure and refresh behaviour. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class LibrariesViewModelTest {
     private val dispatcher = StandardTestDispatcher()
     private val repository = mockk<JellyfinRepository>()
 
-    /** The connectivity-change signal; fires only when a test says the server came back. */
     private val connectivityChanges = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
     private val connectivityRefresher =
         mockk<ConnectivityRefresher> {
@@ -131,8 +129,6 @@ class LibrariesViewModelTest {
             coVerify(exactly = 2) { repository.getUserViews() }
         }
 
-    // ---- refresh when connectivity changes ---------------------------------------------------------------
-
     @Test
     fun `re-fetches the libraries when the server becomes reachable again`() =
         runTest(dispatcher) {
@@ -140,7 +136,6 @@ class LibrariesViewModelTest {
 
             val viewModel = LibrariesViewModel(repository, connectivityRefresher)
             advanceUntilIdle()
-            // The initial load, and nothing else: an app that starts online must not fetch twice.
             coVerify(exactly = 1) { repository.getUserViews() }
 
             coEvery { repository.getUserViews() } returns AppResult.Success(listOf(movies, shows))

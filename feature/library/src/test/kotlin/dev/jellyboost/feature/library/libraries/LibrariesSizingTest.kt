@@ -6,14 +6,8 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for [librariesMinCellWidth] — the `GridCells.Adaptive` floor `LibrariesGrid` picks
- * for a given viewport width.
- *
- * A phone-width viewport (360dp, 328dp available after [Dimens.ScreenPadding]) would collapse to
- * a single full-width column without a compact floor, because the grid floor is the
- * tablet-calibrated [Dimens.ThumbWidth] (210dp) at every width. These tests pin the compact
- * branch (150dp, below 600dp) and the tablet branch (unchanged at [Dimens.ThumbWidth], at and
- * above 600dp) so that regression can't sneak back in.
+ * Without a compact floor a 360dp phone collapses to one full-width column, because the floor is
+ * the tablet-calibrated [Dimens.ThumbWidth] at every width.
  */
 class LibrariesSizingTest {
     @Test

@@ -14,19 +14,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.jupiter.api.Test
 
 /**
- * What the media session is allowed to do to the player while this member is in a SyncPlay group.
+ * Without [SyncPlayAwareForwardingPlayer], the notification/headset/Bluetooth dispatch path would
+ * hit the shared `ExoPlayer` directly, so a pause from the notification would pause this member
+ * alone — the silent drift the rule exists to prevent ("in-group transport never acts locally —
+ * API calls only").
  *
- * The notification, a headset button and a Bluetooth remote all dispatch through the session.
- * Without [SyncPlayAwareForwardingPlayer] guarding it, they would dispatch onto the shared
- * `ExoPlayer` itself — so a pause from the notification would pause this member and nobody else,
- * which is exactly the silent drift the rule exists to prevent ("in-group transport never acts
- * locally — API calls only").
- *
- * Every in-group test therefore asserts both halves, as `PlayerSyncPlayTest` does for the in-app
- * controls: the request that reached the coordinator, *and* the delegate having been left alone.
- * Asserting only the first would pass just as happily for a wrapper that seeks locally **and** tells
- * the group, which is the failure mode being fixed — two clients drifting apart while both believe
- * they are in step.
+ * Every in-group test therefore asserts both halves: the request that reached the coordinator,
+ * *and* the delegate left alone. Asserting only the first would still pass for a wrapper that
+ * seeks locally **and** tells the group — the exact drift being guarded against.
  */
 internal class SyncPlayAwareForwardingPlayerTest {
     private val controllerState = MutableStateFlow<SyncPlayState>(SyncPlayState.Idle)
@@ -198,10 +193,9 @@ internal class SyncPlayAwareForwardingPlayerTest {
 
     @Test
     fun `a stop in a group becomes a pause request, never a local stop`() {
-        // A MEDIA_STOP from a headset or car control reaching the delegate directly would cost
-        // this member its prepared player while the phase still said Playing, and the drift
-        // monitor would then measure against a stopped player — the exact drift this wrapper
-        // exists to prevent.
+        // A MEDIA_STOP reaching the delegate directly would cost this member its prepared player
+        // while the phase still said Playing, so the drift monitor would measure against a
+        // stopped player.
         joinGroup()
 
         player.stop()
@@ -262,11 +256,9 @@ internal class SyncPlayAwareForwardingPlayerTest {
     }
 
     /**
-     * A membership that ends between two notification taps.
-     *
-     * The state flow is read per call rather than collected once, and this is why: a group can be
-     * left while the app is nowhere near the foreground, and the next tap on the notification has to
-     * move the player again.
+     * The state flow is read per call rather than collected once: a group can be left while the
+     * app is nowhere near the foreground, and the next notification tap still has to move the
+     * player.
      */
     @Test
     fun `leaving the group hands the notification its player back`() {

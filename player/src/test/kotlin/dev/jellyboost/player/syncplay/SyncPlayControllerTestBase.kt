@@ -35,18 +35,13 @@ import java.time.Instant
 import java.util.UUID
 
 /**
- * The shared harness for the SyncPlay coordinator suites.
- *
- * One fixture, three suites: [SyncPlayControllerTest] (join handshake, intents, queue
- * reconciliation, host attachment, teardown paths), [SyncPlayRejoinPolicyTest] (connection loss,
- * auto-rejoin, the foreground re-check) and [SyncPlayRecoveryNetsTest] (the B3 self-sync and
- * pause safety nets). All three drive the real controller with its real collaborators wired to
- * fakes — the extractions (`SyncPlayRejoinPolicy`, `SyncPlayRecoveryNets`) are deliberately
- * covered through the controller's public surface, so the tests pin protocol behaviour rather
- * than the seams' shapes.
+ * Shared harness for [SyncPlayControllerTest], [SyncPlayRejoinPolicyTest] and
+ * [SyncPlayRecoveryNetsTest]. All three drive the real controller with fakes wired in — the
+ * extractions (`SyncPlayRejoinPolicy`, `SyncPlayRecoveryNets`) are deliberately covered only
+ * through the controller's public surface, so tests pin protocol behaviour, not the seams' shapes.
  *
  * `runCurrent()` rather than `advanceUntilIdle()` throughout: an in-group controller runs a ping
- * loop and a drift monitor for ever, so "advance until nothing is scheduled" never returns.
+ * loop and a drift monitor forever, so "advance until nothing is scheduled" never returns.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 internal abstract class SyncPlayControllerTestBase {
@@ -58,13 +53,8 @@ internal abstract class SyncPlayControllerTestBase {
 
     // Fixture ---------------------------------------------------------------------------------------
 
-    /**
-     * The device failure in full: the app is backgrounded, the platform quietly cuts its network,
-     * and the group is gone by the time anything can be done about it.
-     *
-     * @return the messages emitted by the loss, so a test can assert that the foreground re-check
-     *   added nothing to them.
-     */
+    // Returns the messages emitted by the loss, so a test can assert the foreground re-check
+    // added nothing to them.
     protected suspend fun TestScope.backgroundedUntilLost(fixture: Fixture): List<SyncPlayMessage> {
         joinPlaying(fixture)
         fixture.connection.value = ConnectionState.OFFLINE_NO_NETWORK
@@ -78,7 +68,6 @@ internal abstract class SyncPlayControllerTestBase {
         return fixture.messages.toList()
     }
 
-    /** A Wi-Fi blip the grace window rides out — and the trouble that explains a later removal. */
     protected fun TestScope.blip(fixture: Fixture) {
         fixture.connection.value = ConnectionState.OFFLINE_NO_NETWORK
         runCurrent()
@@ -87,12 +76,9 @@ internal abstract class SyncPlayControllerTestBase {
         runCurrent()
     }
 
-    /**
-     * The device case in full: a blip the client survives and the *server* does not.
-     *
-     * The dropped websocket ends the session, `OnSessionEnded` leaves the group on this client's
-     * behalf, and the next request comes back `NotInGroup`.
-     */
+    // A blip the client survives but the *server* does not: the dropped websocket ends the
+    // session, `OnSessionEnded` leaves the group server-side, and the next request comes back
+    // `NotInGroup`.
     protected suspend fun TestScope.blipThenDropped(fixture: Fixture) {
         blip(fixture)
         fixture.socket.emit(SyncPlayGroupEvent.NotInGroup)
@@ -114,7 +100,6 @@ internal abstract class SyncPlayControllerTestBase {
         fixture.player.hadNoTransportCalls shouldBe true
     }
 
-    /** Joins, and lets the server publish a queue — one entry unless a test supplies another. */
     protected suspend fun TestScope.joinWithQueue(
         fixture: Fixture,
         startTicks: Long = 0L,
@@ -126,7 +111,7 @@ internal abstract class SyncPlayControllerTestBase {
         runCurrent()
     }
 
-    /** Joins, readies up, and lets the group start playing — the state most failures matter in. */
+    // The state most failures matter in.
     protected suspend fun TestScope.joinPlaying(fixture: Fixture) {
         joinWithQueue(fixture)
         fixture.player.emit(PlayerEvent.Ready)
@@ -163,12 +148,8 @@ internal abstract class SyncPlayControllerTestBase {
             lastUpdate = origin,
         )
 
-    /**
-     * Two slots holding two different items, with the group on [playingIndex].
-     *
-     * Two is the smallest queue that can tell "the group moved on" apart from "the queue was
-     * re-sent", which is the whole of Phase 4's reconciliation.
-     */
+    // Two is the smallest queue that can tell "the group moved on" apart from "the queue was
+    // re-sent".
     protected fun twoItemQueue(
         playingIndex: Int,
         startTicks: Long = 0L,
@@ -183,7 +164,6 @@ internal abstract class SyncPlayControllerTestBase {
         reason = reason,
     )
 
-    /** Everything a test needs to drive the controller and to see what it did. */
     @Suppress("LongParameterList") // A test-only bag of collaborators; grouping them would only hide them.
     protected class Fixture(
         val controller: SyncPlayController,
@@ -196,15 +176,10 @@ internal abstract class SyncPlayControllerTestBase {
         val session: MutableStateFlow<SessionState>,
         val messages: List<SyncPlayMessage>,
         val launchRequests: List<SyncPlayLaunchRequest>,
-        /**
-         * Every change of "is this session in a group", oldest first.
-         *
-         * Exactly the flow `PlayerSyncPlayBridge.membership` is built from, and collected here
-         * because a rejoin has to make it go `false` and back — that edge is what re-mints the
-         * server-visible session of a downloaded file (`SyncPlayLocalSession`). A `StateFlow`
-         * conflates, so "the rejoin was too quick for the collector" is a real failure mode and this
-         * is where it would show.
-         */
+        // Every change of "is this session in a group", oldest first — the flow
+        // `PlayerSyncPlayBridge.membership` is built from. A rejoin must make it go `false` and
+        // back (that edge re-mints `SyncPlayLocalSession`); `StateFlow` conflates, so "the rejoin
+        // was too quick for the collector" is a real failure mode this would catch.
         val membershipEdges: List<Boolean>,
     )
 
@@ -264,7 +239,6 @@ internal abstract class SyncPlayControllerTestBase {
         )
     }
 
-    /** Everything the controller publishes, collected into lists the assertions can read. */
     protected fun TestScope.record(controller: SyncPlayController): Recorded {
         val recorded = Recorded()
         backgroundScope.launch { controller.messages.collect { recorded.messages += it } }
@@ -289,13 +263,8 @@ internal abstract class SyncPlayControllerTestBase {
         /** A blip well inside [SyncPlayController.CONNECTIVITY_GRACE_MS] — the device's own two seconds. */
         const val BLIP_MS = 2_000L
 
-        /**
-         * How long ago a group published the position it is measured from.
-         *
-         * Deliberately far larger than [SyncPlayDriftMonitor.MAX_DRIFT_MS]: the whole point of the
-         * honest anchor is that this interval belongs in the arithmetic, and a value the drift
-         * monitor would have absorbed anyway would prove nothing.
-         */
+        // Deliberately far larger than [SyncPlayDriftMonitor.MAX_DRIFT_MS] — a value the drift
+        // monitor would absorb anyway would prove nothing about the anchor arithmetic.
         const val GROUP_HEAD_START_MS = 20_000L
     }
 

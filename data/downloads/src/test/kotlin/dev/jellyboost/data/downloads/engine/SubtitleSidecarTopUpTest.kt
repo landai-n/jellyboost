@@ -37,13 +37,10 @@ import java.io.IOException
 import java.util.UUID
 
 /**
- * Unit tests for [SubtitleSidecarTopUp] — the repair path for downloads whose file plan has moved on
- * without them.
- *
  * Two properties carry the whole class, and both are about what it *refuses* to do: it never touches
  * the media file (re-queueing the row would re-download a transcode from zero, since the server
- * ignores `Range` on one) and it never re-fetches a sidecar that is already whole, which is what
- * makes running it on every connectivity edge free.
+ * ignores `Range` on one) and it never re-fetches a sidecar that is already whole, which is what makes
+ * running it on every connectivity edge free.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class SubtitleSidecarTopUpTest {
@@ -108,9 +105,8 @@ class SubtitleSidecarTopUpTest {
     @Test
     fun `a Wi-Fi-only user gets no top-up over a metered connection`() =
         runTest {
-            // This class runs on the application scope, not inside the constrained worker — the
-            // UNMETERED constraint that normally *is* the Wi-Fi-only preference does not apply
-            // here, so it must enforce the rule itself.
+            // This runs on the application scope, not inside the constrained worker — the UNMETERED
+            // constraint that normally *is* the Wi-Fi-only preference does not apply here.
             every { preferences.downloadOverWifiOnly } returns flowOf(true)
             meteredNow = true
             given(files = listOf(mediaFile()))
@@ -161,8 +157,8 @@ class SubtitleSidecarTopUpTest {
 
             topUp().topUp(listOf(elementaire()))
 
-            // The whole reason this is not "put the row back in the queue": a transcode cannot be
-            // resumed, so re-planning a finished row would re-download the film for a 40 KB file.
+            // A transcode cannot be resumed, so re-planning a finished row would re-download the film
+            // for a 40 KB file.
             requested.none { it.startsWith("transcode://") || it.startsWith("download://") } shouldBe true
             inserted.map { it.type }.distinct() shouldContainExactly listOf(DownloadFileType.SUBTITLE)
         }
@@ -191,8 +187,8 @@ class SubtitleSidecarTopUpTest {
 
             topUp().topUp(listOf(movie(streams = listOf(subtitleStream(index = 6, external = false)))))
 
-            // Its row, its name — `DownloadQueue.reconcile`'s rule: the stored name is what is on
-            // disk, and the plan cannot be trusted to reproduce it.
+            // `DownloadQueue.reconcile`'s rule: the stored name is what is on disk, and the plan
+            // cannot be trusted to reproduce it.
             inserted.shouldBeEmpty()
             updated.single().fileName shouldBe "kept-name.srt"
             updated.single().status shouldBe DownloadStatus.DOWNLOADING
@@ -230,19 +226,17 @@ class SubtitleSidecarTopUpTest {
         runTest {
             given(files = listOf(mediaFile()), quality = DownloadQuality.ORIGINAL)
 
-            // The planner decides this, and the top-up asks it with the row's own quality — so the
-            // repair gives a download the files today's planner would have given *it*, no more.
+            // The top-up asks the planner with the row's own quality, so a repair gives a download the
+            // files today's planner would have given *it*, no more.
             topUp().topUp(listOf(elementaire())) shouldBe 0
         }
 
     @Test
     fun `a finished download is never given the audio sidecars today's plan would add`() =
         runTest {
-            // Audio sidecars are for new downloads only: an extra language is ~165 MB fetched
-            // through a junk-video transcode, which is not a repair to perform silently behind a
-            // user who already has the film. The `type == SUBTITLE` filter is the whole guard, and
-            // this is what holds it there — widening it later has to be a decision, not a diff
-            // nobody noticed.
+            // Audio sidecars are for new downloads only: an extra language is ~165 MB through a
+            // junk-video transcode, not a repair to perform silently behind a user who has the film.
+            // The `type == SUBTITLE` filter is the whole guard, and widening it has to be a decision.
             given(files = listOf(mediaFile()))
             val dubbed =
                 movie(

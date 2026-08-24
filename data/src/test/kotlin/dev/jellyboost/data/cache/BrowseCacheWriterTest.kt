@@ -49,25 +49,15 @@ import java.time.ZoneOffset
 import java.util.UUID
 
 /**
- * Unit tests for [BrowseCacheWriter] and its two non-obvious rules, which are the reason it exists
- * at all.
+ * Pins [BrowseCacheWriter]'s three rules, each of which has cost data before:
  *
- * **A browse write must never downgrade a download.** Getting that wrong would be quietly
- * catastrophic — a user scrolling past a film they downloaded would make its row evictable, and the
- * next eviction pass would orphan gigabytes of files on disk with no database row pointing at them.
- * The stored `dto` blob is protected the same way, but only from a **lean** write: the `full` flag
- * is what separates a list response (which must preserve it) from `getItem`'s complete one (which
- * must replace it, so a row an older build gutted can be repaired). Both directions are pinned
- * below, because getting either one wrong leaves a downloaded film with a blank detail page.
- *
- * **A server read refreshes `user_data`, unless the row is pending.** Getting *that* wrong causes
- * real corruption: a local row that never learns about a change made from another client would be
- * pushed straight back to the server by the next `setPosition`.
- *
- * **And the merge decides on a snapshot it holds.** The rule above is only as good as the read it
- * decides from: `DownloadEnqueuer` upserts `DOWNLOAD` rows straight to the same DAO, so a merge that
- * reads, thinks and writes as three separate statements can be overtaken between the first and the
- * last and downgrade the row it just protected. The transaction is pinned below.
+ * - **A browse write never downgrades a download** — a scroll past a downloaded film would make its
+ *   row evictable and orphan gigabytes on disk. Its blob is protected from a *lean* write only; a
+ *   `full` one must replace it, or a row an older build gutted stays bare forever.
+ * - **A server read refreshes `user_data` unless the row is pending** — otherwise the next
+ *   `setPosition` pushes a stale local row straight back over another client's change.
+ * - **The merge decides on a snapshot it holds** — `DownloadEnqueuer` upserts `DOWNLOAD` rows to the
+ *   same DAO and can overtake a read-think-write split across three statements.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class BrowseCacheWriterTest {
@@ -138,8 +128,8 @@ class BrowseCacheWriterTest {
 
             writer().writeItems(listOf(movieDto(uuid(1), "Arrival")))
 
-            // The offline "Latest" rows order by cachedAt; bumping it here would silently reorder
-            // them every time the user opened the home screen online.
+            // The offline "Latest" rows order by cachedAt: bumping it reorders them on every online
+            // home-screen load.
             upserted.captured.single().cachedAt shouldBe downloadedAt
         }
 
@@ -169,8 +159,6 @@ class BrowseCacheWriterTest {
     @Test
     fun `browsing past a downloaded item keeps its rich blob, not the lean list DTO`() =
         runTest {
-            // The blob DownloadEnqueuer stored at download time — the full response, overview and
-            // genres included.
             val richDto =
                 movieDto(uuid(1), "Arrival", genres = listOf("Science Fiction", "Drama"))
                     .copy(overview = "A linguist deciphers an alien language.")
@@ -180,8 +168,7 @@ class BrowseCacheWriterTest {
                 listOf(ItemCacheKey(uuid(1), ItemSource.DOWNLOAD, storedEntity.cachedAt))
             coEvery { itemDao.getItems(listOf(uuid(1))) } returns listOf(storedEntity)
 
-            // What a browse list read actually sends: no overview, no genres — just the fields the
-            // list needs (OnlineJellyfinRepository's list calls request only PRIMARY_IMAGE_ASPECT_RATIO).
+            // What a list read sends: only PRIMARY_IMAGE_ASPECT_RATIO, so no overview or genres.
             val leanDto = BaseItemDto(id = uuid(1), type = BaseItemKind.MOVIE, name = "Arrival")
 
             writer().writeItems(listOf(leanDto), full = false)
@@ -207,8 +194,6 @@ class BrowseCacheWriterTest {
                 listOf(ItemCacheKey(uuid(1), ItemSource.DOWNLOAD, stored.cachedAt))
             coEvery { itemDao.getItems(listOf(uuid(1))) } returns listOf(stored)
 
-            // What `getItem` returns: the complete field set, and therefore strictly better than
-            // whatever is on the row.
             val fullDto =
                 movieDto(uuid(1), "Arrival", genres = listOf("Science Fiction"))
                     .copy(overview = "A linguist deciphers an alien language.")
@@ -219,8 +204,8 @@ class BrowseCacheWriterTest {
             val rebuilt = mapper.toDtoOrNull(row)
             rebuilt?.overview shouldBe "A linguist deciphers an alien language."
             rebuilt?.genres shouldContainExactly listOf("Science Fiction")
-            // The two properties a download keeps whatever the write: it stays a download, and it
-            // does not jump to the top of the offline "recently downloaded" rows.
+            // A download keeps both whatever the write: its source, and its place in the offline
+            // "recently downloaded" order.
             row.source shouldBe ItemSource.DOWNLOAD
             row.cachedAt shouldBe stored.cachedAt
         }
@@ -228,9 +213,8 @@ class BrowseCacheWriterTest {
     @Test
     fun `a full detail read repairs a downloaded item whose blob an older build gutted`() =
         runTest {
-            // The failure mode this repairs: a lean list write over the rich blob would leave every
-            // later browse write preserving *that*, so the offline detail page would stay bare
-            // forever. Opening the item online has to be able to undo it.
+            // Once a lean write has gutted the blob, every later browse write preserves *that*, so
+            // opening the item online has to be able to undo it.
             val gutted =
                 entity(
                     BaseItemDto(id = uuid(1), type = BaseItemKind.MOVIE, name = "Arrival"),
@@ -260,8 +244,7 @@ class BrowseCacheWriterTest {
 
             writer().writeItems(listOf(movieDto(uuid(1), "Arrival")), full = true)
 
-            // It is about to overwrite every one of them; fetching multi-kilobyte blobs first would
-            // be pure waste.
+            // About to overwrite every one of them, so fetching the blobs first is pure waste.
             coVerify(exactly = 0) { itemDao.getItems(any()) }
         }
 
@@ -281,11 +264,7 @@ class BrowseCacheWriterTest {
 
     // ---- the merge is atomic ------------------------------------------------------------------
 
-    /**
-     * The regression test for the downgrade race: without one transaction, these three statements
-     * would be three separate ones, and `DownloadEnqueuer.write` — which upserts `DOWNLOAD` rows
-     * straight to this same DAO — could commit between the first and the last.
-     */
+    /** The downgrade race: `DownloadEnqueuer.write` could commit between the read and the write. */
     @Test
     fun `the source snapshot, the blob read and the upsert all happen in one transaction`() =
         runTest {
@@ -312,9 +291,7 @@ class BrowseCacheWriterTest {
     @Test
     fun `a download enqueued while the merge is deciding cannot be downgraded by it`() =
         runTest {
-            // What the enqueuer would do mid-merge, and what the transaction is what stops: the row
-            // was BROWSE_CACHE when the snapshot was taken, and is a DOWNLOAD by the time the write
-            // lands. The merge must decide from the state it actually holds the transaction over.
+            // BROWSE_CACHE when the snapshot was taken, DOWNLOAD by the time the write lands.
             val stored = ItemCacheKey(uuid(1), ItemSource.DOWNLOAD, NOW.minusSeconds(3_600))
 
             val rows =
@@ -336,8 +313,8 @@ class BrowseCacheWriterTest {
 
             writer().writeItems(listOf(movieDto(uuid(1), "Arrival")))
 
-            // The failure is still swallowed — a broken cache never fails a read — but it reaches
-            // the runner, which is what makes Room roll the transaction back.
+            // Swallowed — a broken cache never fails a read — but it must still reach the runner,
+            // which is what makes Room roll back.
             transactionRunner.rolledBack shouldBe 1
         }
 
@@ -346,7 +323,6 @@ class BrowseCacheWriterTest {
     @Test
     fun `a stale synced row is refreshed from what the server just said`() =
         runTest {
-            // The row says watched, the server says it is not.
             coEvery { userDataDao.getPendingSyncIds(any(), any()) } returns emptyList()
 
             writer().writeItems(
@@ -369,9 +345,8 @@ class BrowseCacheWriterTest {
                 listOf(movieDto(uuid(1), "Citizen Vigilante").withUserData(played = false)),
             )
 
-            // The pending row is the only copy of a change the server has not accepted; adopting the
-            // server's older value here would silently discard it. Reconciling the two is the sync
-            // worker's job.
+            // A pending row is the only copy of an unaccepted change; reconciling is the sync
+            // worker's job, not a cache write's.
             coVerify(exactly = 0) { userDataDao.upsertAll(any()) }
         }
 
@@ -402,11 +377,9 @@ class BrowseCacheWriterTest {
             writer().writeItems(listOf(movieDto(uuid(1), "Arrival").withUserData()))
 
             val row = userDataRows.captured.single()
-            // `updatedAt` is the moment this device learned the server's state...
             row.updatedAt shouldBe NOW
-            // ...and `lastPlayedDate` stays the server's own value — never invented from the read.
+            // `lastPlayedDate` stays the server's own value — never invented from the read.
             row.lastPlayedDate.shouldBeNull()
-            // With the flag clear, the row is never fed to most-recent-wins in the first place.
             row.toBeSynced shouldBe false
         }
 
@@ -434,7 +407,6 @@ class BrowseCacheWriterTest {
                 ),
             )
 
-            // Only the two rows that have server user data and are not pending.
             userDataRows.captured.map { it.itemId } shouldContainExactly listOf(uuid(1), uuid(4))
             // The pending row's id is still asked about — that is how it gets excluded.
             coVerify(exactly = 1) {
@@ -445,10 +417,8 @@ class BrowseCacheWriterTest {
     @Test
     fun `the pending filter and the user-data write happen in one transaction`() =
         runTest {
-            // Without one transaction: a local write landing between them sets `toBeSynced = true`
-            // and is then overwritten flag and all by `upsertAll`, so the sync worker never sees
-            // it — and if that write's own push failed, which is the case the flag exists for, the
-            // user's change is gone.
+            // Without one transaction a local write landing between them is overwritten flag and
+            // all, so `UserDataSyncWorker` never sees it and the change is gone for good.
             val depths = mutableListOf<Int>()
             coEvery { userDataDao.getPendingSyncIds(any(), any()) } answers {
                 depths += transactionRunner.depth
@@ -460,7 +430,6 @@ class BrowseCacheWriterTest {
 
             writer().writeItems(listOf(movieDto(uuid(1), "Arrival").withUserData(played = true)))
 
-            // One for the item merge, one for this — and both statements saw an open transaction.
             transactionRunner.opened shouldBe 2
             depths shouldContainExactly listOf(1, 1)
         }
@@ -472,9 +441,8 @@ class BrowseCacheWriterTest {
 
             writer().writeItems(listOf(movieDto(uuid(1), "Arrival").withUserData(played = true)))
 
-            // Still swallowed — a broken mirror never fails a read — but it reaches the runner,
-            // which is what makes Room roll that transaction back. The item merge's own
-            // transaction committed before it.
+            // Swallowed, but it must reach the runner; the item merge's transaction already
+            // committed.
             transactionRunner.opened shouldBe 2
             transactionRunner.rolledBack shouldBe 1
         }
@@ -532,9 +500,8 @@ class BrowseCacheWriterTest {
         }
 
     /**
-     * A cancellation is not a failed write: these guards run on the never-cancelled application
-     * scope today, but swallowing one turns any future structured cancellation of this writer into
-     * a silent no-op that logs a warning and reports success.
+     * The guards run on the never-cancelled application scope today, but swallowing a cancellation
+     * would turn any future structured cancellation into a silent success.
      */
     @Test
     fun `a cancelled item write propagates instead of being logged as a failure`() =
@@ -578,16 +545,14 @@ class BrowseCacheWriterTest {
             writer().writeViews(
                 listOf(
                     library(MOVIES_LIBRARY, "Films", CollectionType.MOVIES),
-                    // Still outside app scope — unlike music, photos are not part of
-                    // `CollectionKind.SUPPORTED`.
+                    // Photos are not in `CollectionKind.SUPPORTED`; music is.
                     library(uuid(50), "Photos", CollectionType.PHOTOS),
                     library(uuid(51), "Séries", CollectionType.TVSHOWS),
                 ),
             )
 
             rows.captured.map { it.name } shouldContainExactly listOf("Films", "Séries")
-            // The index is the *response* position, so the offline list matches the online one even
-            // though the photos library in between was dropped.
+            // The *response* position, so the offline list matches the online one despite the drop.
             rows.captured.map { it.sortIndex } shouldContainExactly listOf(0, 2)
         }
 
@@ -614,7 +579,6 @@ class BrowseCacheWriterTest {
     @Test
     fun `never wipes the cached libraries when nothing supported came back`() =
         runTest {
-            // Photos — not part of `CollectionKind.SUPPORTED` (unlike music).
             writer().writeViews(listOf(library(uuid(50), "Photos", CollectionType.PHOTOS)))
 
             coVerify(exactly = 0) { libraryViewDao.deleteExcept(any()) }
@@ -633,7 +597,6 @@ class BrowseCacheWriterTest {
             collectionType = collectionType,
         )
 
-    /** Attaches the `userData` block a real `enableUserData = true` response would carry. */
     private fun BaseItemDto.withUserData(
         played: Boolean = false,
         isFavorite: Boolean = false,

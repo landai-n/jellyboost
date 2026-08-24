@@ -15,12 +15,6 @@ import org.jellyfin.sdk.model.api.PlayQueueUpdateReason
 import org.jellyfin.sdk.model.api.PlaybackRequestType
 import org.jellyfin.sdk.model.api.SendCommandType
 
-// The SyncPlay enum vocabulary, translated both ways.
-//
-// Split out of `SyncPlayDtoMapping` because none of it touches a timestamp: keeping the file that
-// owns the `LocalDateTime` boundary small is the point of that file, and a wall of one-to-one
-// `when` tables buries it.
-//
 // Every table is exhaustive with no `else`, so an SDK bump that adds a value fails the build here
 // instead of silently mapping to a wrong-but-plausible neighbour.
 

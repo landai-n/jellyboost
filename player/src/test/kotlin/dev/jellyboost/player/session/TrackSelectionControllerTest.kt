@@ -24,31 +24,19 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for [TrackSelectionController] — the bridge between Jellyfin's absolute stream indices
- * and ExoPlayer's per-type track groups.
- *
- * The groups here are built the way Media3 builds them for a side-loaded subtitle: `MediaItems`
- * hands `MediaItem.SubtitleConfiguration.setId("external:<index>")` to the player, and
- * `DefaultMediaSourceFactory` copies that id onto the `Format` it synthesises for the subtitle
- * source (`Format.Builder.setId(subtitleConfiguration.id)`, in both the parse-during-extraction
- * branch and the `SingleSampleMediaSource` one).
- *
- * That is not the end of the id's journey, and assuming it was is what made a downloaded sidecar
- * unselectable offline. Side-loading a subtitle wraps everything in a `MergingMediaSource`, and
- * `MergingMediaPeriod.onPrepared` rebuilds every format of every child as
- * `setId(childIndex + ":" + format.id)` before publishing the merged groups — so what the player
- * reports is `1:external:1`, never `external:1`. Both shapes are exercised here: the merged one
- * because it is what a device produces, the bare one because nothing should depend on the wrapping.
+ * Media3 gives a side-loaded subtitle's `Format` the id `MediaItem.SubtitleConfiguration` set it
+ * ("external:<index>"), but side-loading wraps it in a `MergingMediaSource`, and
+ * `MergingMediaPeriod.onPrepared` re-ids every format as `childIndex + ":" + format.id` before
+ * publishing — so the player actually reports `1:external:1`, never `external:1`. Both shapes are
+ * exercised here: merged because it's what a device produces, bare because nothing should depend
+ * on the wrapping.
  */
 class TrackSelectionControllerTest {
     private val player = mockk<Player>(relaxed = true)
     private val applied = slot<TrackSelectionParameters>()
 
-    /**
-     * `TrackGroup`'s constructor normalises its id through `android.text.TextUtils`, which is a
-     * throwing stub in a local unit test. Stubbing the one method is what keeps these assertions on
-     * *real* Media3 track groups — a hand-rolled fake would prove nothing about the id matching.
-     */
+    // `TrackGroup` normalises its id through `android.text.TextUtils`, a throwing stub in a local
+    // unit test — stub it so these stay real Media3 track groups, not hand-rolled fakes.
     @BeforeEach
     fun stubAndroidTextUtils() {
         mockkStatic(TextUtils::class)
@@ -96,8 +84,6 @@ class TrackSelectionControllerTest {
 
     @Test
     fun `refuses a subtitle no side-loaded and no embedded track can supply`() {
-        // A transcoded download: the two sidecars are all the text there is, and stream 7 was an
-        // embedded subtitle the server dropped while encoding.
         val controller = controller(textGroup(externalSubtitleTrackId(0)))
 
         val source =
@@ -114,10 +100,6 @@ class TrackSelectionControllerTest {
 
     @Test
     fun `selects an embedded subtitle the download side-loaded as a sidecar`() {
-        // Phase 0: a transcoded download fetches an extracted `.srt` for each *embedded* text
-        // subtitle, because the encode drops them from the container. Stream 7 is one of those —
-        // `MediaStream.isExternal` is false and the file has no text track at all, yet the picker
-        // offers it and selecting it has to work.
         val controller = controller(textGroup(externalSubtitleTrackId(7)))
 
         val source =
@@ -147,9 +129,7 @@ class TrackSelectionControllerTest {
 
     @Test
     fun `a sidecar-backed track is never counted among the embedded ones`() {
-        // The failure this guards: if the resolver called such a track embedded, it would shift the
-        // positional count for every genuinely embedded track after it — and here it would push
-        // stream 6 onto the wrong group entirely.
+        // Counting it as embedded would shift the positional count for stream 6 onto the wrong group.
         val controller =
             controller(
                 textGroup(externalSubtitleTrackId(7)),
@@ -213,10 +193,6 @@ class TrackSelectionControllerTest {
 
     @Test
     fun `selects a sidecar subtitle through the id a merged source reports`() {
-        // "Les Minions 2", transcoded MEDIUM: the encode dropped both French text subtitles from the
-        // container, so `subtitle.1.fra.srt` and `subtitle.2.fra.srt` are the only text there is —
-        // and side-loading them is what makes the player a `MergingMediaSource`. Its period re-ids
-        // *every* format as "<childIndex>:<originalId>", so `external:2` is never what comes back.
         val forced = textGroup(mergedTrackId(1, externalSubtitleTrackId(1)))
         val full = textGroup(mergedTrackId(2, externalSubtitleTrackId(2)))
         val controller = controller(forced, full)
@@ -241,8 +217,7 @@ class TrackSelectionControllerTest {
 
     @Test
     fun `a merged sidecar group is still excluded from the embedded count`() {
-        // Same re-id, on the mixed case: counting the side-loaded group as embedded puts stream 6 on
-        // the sidecar's group and plays the wrong language.
+        // Counting the side-loaded group as embedded would put stream 6 on the sidecar's group — wrong language.
         val controller =
             controller(
                 textGroup(mergedTrackId(1, externalSubtitleTrackId(7))),
@@ -295,10 +270,8 @@ class TrackSelectionControllerTest {
 
     @Test
     fun `selects an HLS rendition by its position in the master playlist`() {
-        // A transcode to `ts` carries no text at all, so every text group here is an `#EXT-X-MEDIA`
-        // rendition — and the server writes one per text stream, in Jellyfin stream order, which is
-        // the order `subtitleTracks` is in. Media3 ids them "<groupId>:<NAME>"; nothing about that
-        // is a Jellyfin index, so position is all there is.
+        // Media3 ids a rendition "<groupId>:<NAME>" — nothing about that is a Jellyfin index, so
+        // position (server writes one rendition per text stream, in Jellyfin stream order) is all there is.
         val controller =
             controller(
                 textGroup(id = "subs:English"),
@@ -343,10 +316,8 @@ class TrackSelectionControllerTest {
 
     @Test
     fun `a burned-in subtitle takes no place in the rendition count`() {
-        // Jellyfin only builds renditions for text streams, so the graphical one it had to burn in
-        // has none — and counting it would push German onto French's rendition. The resolver marks
-        // such a track side-loaded precisely so that both lookups miss it and the ViewModel
-        // re-resolves, which is the only way to see a burned-in subtitle anyway.
+        // Jellyfin builds no rendition for a burned-in stream; counting it would push German onto
+        // French's rendition instead.
         val controller =
             controller(
                 textGroup(id = "subs:English"),
@@ -385,8 +356,7 @@ class TrackSelectionControllerTest {
 
     @Test
     fun `reset clears audio and text overrides and re-enables text`() {
-        // What the previous item left behind: a chosen audio track, a chosen subtitle, and then
-        // subtitles turned off. The player is process-wide, so all three would still be in force
+        // The player is process-wide, so the previous item's overrides would still be in force
         // when the next item is prepared.
         val audio = audioGroup("audio-fra")
         val text = textGroup(externalSubtitleTrackId(1))
@@ -433,7 +403,6 @@ class TrackSelectionControllerTest {
 
     @Test
     fun `refuses an audio track the file does not contain`() {
-        // The transcoded case: three tracks in the cached blob, one in the file on disk.
         val controller = controller(audioGroup("audio-fra"))
 
         val source =
@@ -452,10 +421,8 @@ class TrackSelectionControllerTest {
 
     @Test
     fun `selects a sidecar audio track by the merge child it was built as`() {
-        // A transcoded download of Élémentaire with every language kept: the file holds the baked
-        // French VFF, and `audio.4.fra.m4a` / `audio.5.eng.m4a` are merged in as children 1 and 2.
-        // There is no id to match on — `MediaItem` cannot name an audio source's tracks — so the
-        // child prefix `MergingMediaPeriod` puts on the group id is the whole of the mapping.
+        // `MediaItem` cannot name an audio source's tracks, so the child prefix `MergingMediaPeriod`
+        // puts on the group id is the whole of the mapping.
         val controller =
             controller(
                 mergedAudioGroup("0:1"),
@@ -511,8 +478,7 @@ class TrackSelectionControllerTest {
 
     @Test
     fun `a doubly merged primary group still counts as the container's own`() {
-        // The film also has subtitle sidecars, so `DefaultMediaSourceFactory` merged the main item
-        // once for those before `ExoPlayerHandle` merged the audio files in around it: the
+        // Subtitle sidecars merge the container once, then audio sidecars merge it again: the
         // container's audio group arrives prefixed twice. Only the outer prefix is the child index.
         val controller =
             controller(
@@ -538,11 +504,7 @@ class TrackSelectionControllerTest {
         controller.selectAudio(sidecarFilm(), jellyfinIndex = 5) shouldBe false
     }
 
-    /**
-     * A transcoded download with its extra languages back: the baked French VFF in the file, and
-     * streams 4 and 5 as audio sidecars — flagged side-loaded by `LocalPlaybackResolver`, in the
-     * ascending-index order that *is* the merge-child order.
-     */
+    /** Streams 4 and 5 are audio sidecars, in the ascending-index order that *is* the merge-child order. */
     private fun sidecarFilm() =
         PlayerFixtures.localSource(
             audioTracks =
@@ -554,12 +516,9 @@ class TrackSelectionControllerTest {
         )
 
     /**
-     * An audio track group as a *merged* player reports it.
-     *
      * The child prefix lands on the `TrackGroup`'s own id, not only on its formats:
-     * `MergingMediaPeriod.onPrepared` publishes `new TrackGroup(childIndex + ":" + trackGroup.id,
-     * …)` (read off the Media3 1.9.0 bytecode). That id is what selection navigates by, so it is
-     * what these groups have to carry.
+     * `MergingMediaPeriod.onPrepared` publishes `new TrackGroup(childIndex + ":" + trackGroup.id, …)`
+     * (read off the Media3 1.9.0 bytecode). That id is what selection navigates by.
      */
     private fun mergedAudioGroup(groupId: String): Tracks.Group =
         Tracks.Group(
@@ -578,8 +537,6 @@ class TrackSelectionControllerTest {
         )
 
     /**
-     * A text track group as the player reports it.
-     *
      * No `language` is set on the [Format]: `Format`'s constructor normalises one through
      * `Util.normalizeLanguageCode`, which reaches `android.text.TextUtils` and is a throwing stub in
      * a local unit test. Nothing here needs it — the id is precisely what is under test.
@@ -602,11 +559,7 @@ class TrackSelectionControllerTest {
                 .build(),
         )
 
-    /**
-     * A subtitle track as `PlaybackInfoResolver` builds one for an HLS-delivered stream: not
-     * side-loaded, whatever the stream itself was, because a rendition carries no
-     * `external:<index>` id to match on.
-     */
+    /** Not side-loaded, whatever the stream itself was — a rendition carries no `external:<index>` id. */
     private fun renditionTrack(
         index: Int,
         label: String,
@@ -620,11 +573,9 @@ class TrackSelectionControllerTest {
     ): PlaybackTrack = PlaybackTrack(index = index, label = label, language = "fra", codec = "srt", isExternal = true)
 
     /**
-     * The id `MergingMediaPeriod` exposes for a format of the [childIndex]-th merged source.
-     *
-     * Not a guess: `MergingMediaPeriod.onPrepared` rebuilds every `Format` with
-     * `setId(childIndex + ":" + format.id)` before publishing the merged `TrackGroupArray`, and the
-     * player has one merged source per side-loaded subtitle plus the container at 0.
+     * `MergingMediaPeriod.onPrepared` rebuilds every `Format` with `setId(childIndex + ":" + format.id)`
+     * before publishing the merged `TrackGroupArray`; the player has one merged source per
+     * side-loaded subtitle plus the container at 0.
      */
     private fun mergedTrackId(
         childIndex: Int,

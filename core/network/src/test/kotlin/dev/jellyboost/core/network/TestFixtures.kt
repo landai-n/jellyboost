@@ -13,7 +13,6 @@ import org.jellyfin.sdk.model.api.UserPolicy
 import java.time.LocalDateTime
 import java.util.UUID
 
-/** Fixtures shared by the `:core:network` unit tests. */
 internal object TestFixtures {
     val SERVER_ID: UUID = UUID.fromString("11111111-1111-1111-1111-111111111111")
     val USER_ID: UUID = UUID.fromString("22222222-2222-2222-2222-222222222222")
@@ -31,7 +30,7 @@ internal object TestFixtures {
             address = SERVER_ADDRESS,
         )
 
-    /** Builds a scored candidate; [systemInfo] failing marks the address as unreachable. */
+    /** [systemInfo] failing marks the address as unreachable. */
     fun recommendedServer(
         address: String,
         score: RecommendedServerInfoScore,
@@ -99,10 +98,7 @@ internal object TestFixtures {
             dateAdded = LocalDateTime.of(2026, 7, 28, 12, 0),
         )
 
-    /**
-     * [UserPolicy] has ~44 constructor parameters, of which exactly one matters here, so it is
-     * stubbed rather than built.
-     */
+    /** [UserPolicy] has ~44 constructor parameters, of which exactly one matters here, so it is stubbed. */
     private fun userPolicy(downloadPolicyAllowed: Boolean): UserPolicy =
         mockk<UserPolicy> {
             every { enableContentDownloading } returns downloadPolicyAllowed

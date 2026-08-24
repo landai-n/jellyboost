@@ -13,61 +13,23 @@ import kotlin.math.abs
 import kotlin.math.pow
 
 /**
- * This app's colour contrast guarantees, frozen in a table.
+ * Nothing else in the gate can see these tokens: Lint's contrast check reads static `@color`
+ * resources and ATF reads a rendered screen on a device, so neither has an opinion about
+ * `Color.Black.copy(alpha = 0.62f)` composited over a white film frame.
  *
- * Every alpha-derived token the app draws has a WCAG 2.x ratio computed for it, with the
- * arithmetic written into the token's own KDoc ("black@62% composites a white frame to rgb(97),
- * where full-white text is 6.20:1"). The missing guardrail is this: *a test over the token table
- * that computes the ratios*. Without one, every one of those numbers is a comment, and a comment
- * does not fail when someone nudges an alpha back down to taste. Every one of these tokens is one
- * float (bar a single hex value), and nothing else in the gate can see them: Android Lint's
- * contrast check reads static `@color` resources, and ATF reads a *rendered* screen at run time on
- * a device this gate does not have. Neither has an opinion about `Color.Black.copy(alpha = 0.62f)`
- * composited over a hypothetical white film frame.
- *
- * Three things are pinned here, and it is worth being precise about which is which:
- *
- *  1. **Floors** — the pairs this table commits to: 4.5:1 for normal text (WCAG 1.4.3),
- *     3:1 for large text, UI-component boundaries and the focus indicator (1.4.11, 2.4.7).
- *  2. **Documented exceptions** — the hairlines deliberately left below 3:1, argued through in
- *     `GlassDefaults.GhostBorder`'s KDoc: they draw a seam on a surface that
- *     already has a fill, and are never the only thing saying where a control is. Asserting 3:1 of
- *     those would be asserting a promise the codebase never made, so instead their ratio is frozen
- *     to two decimal places: raising *or* lowering one fails, and the fix is to change this table on
- *     purpose rather than to discover the change on a device.
- *  3. **Known violations** — two pairs that measure below the floor their own siblings hold,
- *     deliberately *not* fixed here, because a guardrail
- *     commit that also changes what the app looks like is two commits. Each carries a `TODO` and the
- *     measured number; the gate stays green and the debt has an address.
- *
- * ## Method
- *
- * WCAG 2.x relative luminance (`c/12.92` below 0.03928, `((c+0.055)/1.055)^2.4` above) and
- * `(L1+0.05)/(L2+0.05)`. The part that actually matters is **alpha compositing**: every token
- * pinned here is translucent, and a translucent token has no ratio of its own — white@70%
- * is 21:1 against nothing and 2.29:1 against a top-nav capsule over a bright poster. So a case here
- * names the opaque stack it is drawn on, worst case first, and [over] flattens it before any
- * luminance is taken. "Worst case" is a deliberate assumption, reused throughout: a **white**
- * video frame or poster, which is what a scrim over arbitrary artwork has to survive.
- *
- * Tokens private to another module (the player's `SCRIM`, downloads' `QUEUE_TRACK_ALPHA`) cannot be
- * referenced from `:core:ui`, so they are mirrored as literals here — and the mirror test below
- * reads those files and fails if a literal drifts from its declaration. A mirror nobody checks is
- * how a frozen table quietly stops describing the app.
- *
- * Adding a pair is one line in [CASES].
+ * A translucent token has no ratio of its own — white@70% is 21:1 against nothing and 2.29:1 over a
+ * nav capsule on a bright poster — so every case names the opaque stack it is drawn on, worst case
+ * being a fully white frame. Tokens private to other modules are mirrored as literals and pinned by
+ * the mirror test below. Adding a pair is one line in [CASES].
  */
 class ContrastRatioTest {
     @Test
     fun `the formula reproduces WCAG's own reference values`() {
-        // Definitional: the extremes of the sRGB range.
         contrastRatio(Color.Black.flat, Color.White.flat).round() shouldEqual 21.0
         contrastRatio(Color.White.flat, Color.White.flat).round() shouldEqual 1.0
-        // The two greys every published contrast checker agrees on: #767676 is the darkest grey
-        // that still clears 4.5:1 on white, #949494 the darkest that clears 3:1.
+        // #767676 is the darkest grey clearing 4.5:1 on white, #949494 the darkest clearing 3:1.
         contrastRatio(Color(0xFF767676).flat, Color.White.flat).round() shouldEqual 4.54
         contrastRatio(Color(0xFF949494).flat, Color.White.flat).round() shouldEqual 3.03
-        // Order is irrelevant — the formula sorts the two luminances itself.
         contrastRatio(Color.White.flat, Color(0xFF595959).flat).round() shouldEqual
             contrastRatio(Color(0xFF595959).flat, Color.White.flat).round()
     }
@@ -121,16 +83,10 @@ class ContrastRatioTest {
     private infix fun Double.shouldEqual(expected: Double) = check(this == expected) { "expected $expected, was $this" }
 }
 
-// --- WCAG 2.x arithmetic -------------------------------------------------------------------------
-
 /**
- * A colour with nothing left to composite — the result of flattening a stack of translucent tokens
- * onto something solid, and the only kind of colour a luminance may be taken of.
- *
- * Channels are `Double` in the 0…1 range rather than a Compose [Color] because [Color] stores sRGB
- * at 8 bits per channel: round-tripping each intermediate composite through it quantises twice on a
- * two-layer stack and moves the third decimal of the ratio, which is exactly the digit the KDocs
- * quote. Tokens stay [Color] (they are the real declarations); only the arithmetic leaves.
+ * `Double` channels rather than a Compose [Color]: [Color] is 8 bits per channel, and round-tripping
+ * each intermediate composite through it quantises twice on a two-layer stack, moving the third
+ * decimal the KDocs quote.
  */
 private data class Opaque(
     val red: Double,
@@ -138,21 +94,13 @@ private data class Opaque(
     val blue: Double,
 )
 
-/** A token that is already opaque, ready to be the bottom of a stack. */
 private val Color.flat: Opaque
     get() {
         check(alpha == 1f) { "$this is translucent — composite it over something with `over`" }
         return Opaque(red.toDouble(), green.toDouble(), blue.toDouble())
     }
 
-/**
- * Composites this colour onto [background] — plain source-over, the same thing the renderer does
- * when a `Modifier.background(Black.copy(alpha = 0.62f))` lands on a video frame.
- *
- * Chainable, so a stack reads bottom-up in one expression: the SyncPlay participant list is
- * `White.copy(alpha = 0.85f) over (VideoGlassFill over BrightArtwork)`. An opaque colour composites
- * to itself, which is why every case in [CASES] can spell its foreground the same way.
- */
+/** Plain source-over, chainable so a stack reads bottom-up in one expression. */
 private infix fun Color.over(background: Opaque): Opaque {
     val a = alpha.toDouble()
     return Opaque(
@@ -194,10 +142,8 @@ private const val BLUE_WEIGHT = 0.0722
 private const val AMBIENT = 0.05
 private const val ROUNDING = 100.0
 
-/** Two decimal places is how the KDocs quote these ratios; the table quotes them the same way. */
+/** Two decimal places is how the KDocs quote these ratios. */
 private const val TOLERANCE = 0.01
-
-// --- What a pair owes ----------------------------------------------------------------------------
 
 /** WCAG 1.4.3: body and label text below 18pt (or 14pt bold). */
 private const val NORMAL_TEXT = 4.5
@@ -206,19 +152,19 @@ private const val NORMAL_TEXT = 4.5
 private const val COMPONENT = 3.0
 
 private sealed interface Demand {
-    /** The floor this pair must clear. Failing means the *colour* is wrong. */
+    /** Failing means the *colour* is wrong. */
     data class Floor(
         val minimum: Double,
         val rule: String,
     ) : Demand
 
-    /** Accepted below the floor, on the record, for [reason]. Frozen so the acceptance stays a choice. */
+    /** Accepted below the floor for [reason], frozen so the acceptance stays a choice. */
     data class Exempt(
         val recorded: Double,
         val reason: String,
     ) : Demand
 
-    /** Below its floor and not yet argued for. Frozen so the debt cannot grow quietly. */
+    /** Below its floor and not yet argued for; frozen so the debt cannot grow quietly. */
     data class KnownViolation(
         val recorded: Double,
         val owed: Double,
@@ -230,22 +176,12 @@ private class ContrastCase(
     val foreground: Opaque,
     val background: Opaque,
     val demand: Demand,
-    /** Where the two colours live, so a failure is one grep from the file that has to change. */
     val source: String,
 )
 
-// --- The stacks the app actually draws on --------------------------------------------------------
-
-/**
- * The worst case for anything over artwork or video: a fully white frame.
- *
- * Not pessimism for its own sake — a poster grid, a hero backdrop and a film are all things the app
- * has no control over, and every scrim in the app is sized against exactly this proxy. Reusing it
- * is what makes the numbers here comparable to the ones in the KDocs.
- */
+/** Every scrim in the app is sized against this proxy, which is what makes the KDoc numbers match. */
 private val BrightArtwork = Color.White.flat
 
-/** The other end of the same argument: a white-on-artwork *track* is worst off over a black frame. */
 private val DarkestArtwork = Color.Black.flat
 
 private val Background = Color(0xFF101010).flat
@@ -254,48 +190,35 @@ private val SurfaceVariant = Color(0xFF292929).flat
 private val PrimaryFill = Color(0xFF00A4DC).flat
 private val SolidWhite = Color.White.flat
 
-/** `PlayerControls.SCRIM` — black@62%, the wash the whole control layer sits on. */
 private val ControlsScrim = Color.Black.copy(alpha = 0.62f) over BrightArtwork
 
-/** `PlayerControls.VIDEO_GLASS_FILL` / `PlayerScreen.OVERLAY_SCRIM` — black@60%. */
 private val VideoGlassFill = Color.Black.copy(alpha = 0.6f) over BrightArtwork
 
-/** `PlayerScreen.BACKDROP_SCRIM` — black@62% over the casting artwork. */
 private val CastBackdrop = Color.Black.copy(alpha = 0.62f) over BrightArtwork
 
-/** The top nav's capsule and the floating bottom pill, over the brightest thing they can float on. */
 private val ChromeOverArtwork = GlassDefaults.ChromeFill over BrightArtwork
 private val BottomNavOverArtwork = GlassDefaults.BottomNavFill over BrightArtwork
 
-/** A text field's well, and a chip's — both nearly transparent, both drawn on the page. */
 private val FieldWell = Color.White.copy(alpha = 0.04f) over Background
 private val ChipWell = Color.White.copy(alpha = 0.05f) over Background
 
-/** The error banner's wash: `colorScheme.error` at 10%, over whatever page it interrupts. */
 private val BannerWash = JellyfinColors.Error.copy(alpha = 0.10f) over Background
 
-/** The four black scrims a card paints under an overlay badge, over the worst artwork they can meet. */
 private val TopBadgeOverArtwork = Color.Black.copy(alpha = 0.60f) over BrightArtwork
 private val TimeChipOverArtwork = Color.Black.copy(alpha = 0.70f) over BrightArtwork
 private val RatingOverArtwork = Color.Black.copy(alpha = 0.65f) over BrightArtwork
 private val IndicatorOverArtwork = Color.Black.copy(alpha = 0.60f) over BrightArtwork
 
-/** The seek bar's unplayed band — itself the backdrop the buffered band is judged against. */
 private val SeekTrackBand = Color.White.copy(alpha = 0.55f) over ControlsScrim
 
-/** The transcoding tag's fill: `primary` at 18%, on the controls scrim. */
 private val TagFill = JellyfinColors.Primary.copy(alpha = 0.18f) over ControlsScrim
 
 /**
- * Every token pair the app draws, with the floor this table commits to.
- *
- * Ordered by the surface it belongs to rather than by severity, so a person changing one component
- * finds its neighbours next to it. The `source` string names the file the *tokens* live in; where
- * that file is outside `:core:ui`, the literal is also mirrored in [MIRRORED_DECLARATIONS].
+ * The `source` string names the file the tokens live in; where that file is outside `:core:ui`, the
+ * literal is also mirrored in [MIRRORED_DECLARATIONS].
  */
 private val CASES =
     listOf(
-        // --- Base palette on opaque surfaces (passing, no action needed — pinned so it stays so)
         ContrastCase(
             name = "onSurface body text on surface",
             foreground = JellyfinColors.OnSurface over Surface,
@@ -366,7 +289,6 @@ private val CASES =
             demand = Demand.Floor(COMPONENT, "WCAG 1.4.11"),
             source = "JellyfinColors.Outline #6E6E6E, KDoc says 3.20:1 (was 1.48:1)",
         ),
-        // --- Buttons, fields and chips
         ContrastCase(
             name = "primary pill label on its white fill",
             foreground = Color(0xFF101010) over SolidWhite,
@@ -458,7 +380,6 @@ private val CASES =
             demand = Demand.Floor(NORMAL_TEXT, "WCAG 1.4.3"),
             source = "ErrorBanner.ErrorBannerContent #F0A3AE over error@10% — 8.63:1",
         ),
-        // --- Progress tracks: the unfilled half is what gives the filled half a scale
         ContrastCase(
             name = "card's inset progress track over the darkest artwork",
             foreground = Color.White.copy(alpha = 0.40f) over DarkestArtwork,
@@ -488,17 +409,14 @@ private val CASES =
             source = "DownloadsScreen.UsageBar fill (colorScheme.primary) on the panel — 5.70:1",
         ),
         ContrastCase(
-            // TODO(a11y): the fourth progress track, and the one the remediation missed. Its three
-            //  siblings above were all raised 0.22 -> 0.40 for the same reason; this one kept
-            //  white@12% and nothing documents the difference. The fix is the same one
-            //  literal, plus the KDoc sentence its siblings carry.
+            // TODO(a11y): the fourth progress track; its three siblings were raised 0.22 -> 0.40
+            //  and this one kept white@12%. Same one-literal fix, plus the siblings' KDoc line.
             name = "storage usage bar's unfilled track on its stat panel [KNOWN VIOLATION]",
             foreground = Color.White.copy(alpha = 0.12f) over Surface,
             background = Surface,
             demand = Demand.KnownViolation(recorded = 1.45, owed = COMPONENT),
             source = "DownloadsScreen.UsageBarTrackColor — white@12%, undocumented",
         ),
-        // --- Card overlay badges, over the artwork they sit on
         ContrastCase(
             name = "card's top badge label over bright artwork",
             foreground = Color.White over TopBadgeOverArtwork,
@@ -534,7 +452,6 @@ private val CASES =
             demand = Demand.Floor(COMPONENT, "WCAG 1.4.11"),
             source = "MediaCardArtwork.UNSELECTED_INDICATOR_ALPHA over IndicatorScrim — 4.69:1",
         ),
-        // --- Floating chrome, over the brightest thing it can float on
         ContrastCase(
             name = "selected top-nav tab label over bright artwork",
             foreground = Color.White over ChromeOverArtwork,
@@ -563,7 +480,6 @@ private val CASES =
             demand = Demand.Floor(COMPONENT, "WCAG 1.4.11"),
             source = "JellyfinButtons.GlassIconTint (white@80%) over ChromeFill — 5.65:1",
         ),
-        // --- The player, over a white film frame
         ContrastCase(
             name = "player title over the controls scrim",
             foreground = Color.White over ControlsScrim,
@@ -621,19 +537,15 @@ private val CASES =
             source = "PlayerScreen.BACKDROP_SCRIM, KDoc says 6.20:1 (was 0.45 at 3.35:1)",
         ),
         ContrastCase(
-            // TODO(a11y): the transcoding tag ("TRANSCODING 1080P") is 10sp text, so 1.4.3 asks
-            //  4.5:1 of it, and over a white frame it lands at 3.44:1. Its KDoc reasons about the
-            //  colour — `primary` itself would be 1.94:1 on the same fill — but stops at "the mocks
-            //  specify this exact value" and records no ratio, so this is not a documented
-            //  exception, it is an unmeasured token. Lightening TAG_TEXT to roughly #A8E4F7 clears
-            //  4.5:1 over the same fill without touching the fill or the mocks' shape.
+            // TODO(a11y): the transcoding tag is 10sp text, so 1.4.3 asks 4.5:1; over a white frame
+            //  it lands at 3.44:1. Lightening TAG_TEXT to roughly #A8E4F7 clears it without
+            //  touching the fill.
             name = "player's transcoding tag label over a bright frame [KNOWN VIOLATION]",
             foreground = Color(0xFF7FD8F5) over TagFill,
             background = TagFill,
             demand = Demand.KnownViolation(recorded = 3.44, owed = NORMAL_TEXT),
             source = "PlayerControls.TAG_TEXT on primary@TAG_FILL_ALPHA over SCRIM",
         ),
-        // --- Deliberate exceptions: seams, not boundaries (GlassDefaults.GhostBorder's KDoc)
         ContrastCase(
             name = "glass surface hairline on the page background",
             foreground = GlassDefaults.Hairline over Background,
@@ -708,14 +620,9 @@ private val CASES =
         ),
     )
 
-// --- Mirrors of tokens this module cannot import -------------------------------------------------
-
 /**
- * Every literal in [CASES] that stands in for a `private` token elsewhere, with the exact line it
- * was copied from.
- *
- * Trimmed-line equality rather than a regex: the declarations are one-liners that ktlint keeps
- * stable, and an exact match is the one comparison that cannot quietly accept a changed alpha.
+ * Every literal in [CASES] standing in for a `private` token elsewhere, matched by exact trimmed
+ * line — the one comparison that cannot quietly accept a changed alpha.
  */
 private val MIRRORED_DECLARATIONS =
     listOf(
@@ -786,10 +693,8 @@ private val MIRRORED_DECLARATIONS =
     )
 
 /**
- * Walks up from the test's working directory (Gradle sets it to the module) to the checkout root.
- *
- * Fails loudly rather than skipping if it cannot find one: a mirror check that silently passes when
- * it cannot read the sources is worse than no mirror check, because it looks like coverage.
+ * Fails loudly rather than skipping: a mirror check that passes without reading the sources looks
+ * like coverage and is not.
  */
 private fun repoRoot(): Path {
     var dir: Path? = Paths.get("").toAbsolutePath()

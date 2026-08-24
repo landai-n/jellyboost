@@ -47,26 +47,20 @@ import dev.jellyboost.data.downloads.model.SizeCertainty
 import kotlin.math.roundToInt
 import dev.jellyboost.core.ui.R as CoreUiR
 
-/** Artwork corner radius for every row on this screen — the "m-surface card" language's own radius. */
 private val ROW_ART_RADIUS = 8.dp
 
-/** [QueueRow]'s compact-layout artwork size. */
 private val ROW_ART_WIDTH_COMPACT = 64.dp
 private val ROW_ART_HEIGHT_COMPACT = 38.dp
 
-/** [QueueRow]'s wide-layout artwork size, also used uniformly by [DownloadedRow]. */
 private val ROW_ART_WIDTH_WIDE = 76.dp
 private val ROW_ART_HEIGHT_WIDE = 44.dp
 
-/** Half the "m-surface card" list's 10dp inter-card gap — applied top and bottom of every row. */
+/** Half the list's 10dp inter-card gap — applied top *and* bottom of every row. */
 private val ROW_GAP_HALF = 5.dp
 
 /**
- * Track alpha behind a queue row's 3dp progress bar — the app's standing "inset progress" alpha.
- *
- * 0.40 rather than something fainter: the track is what makes the filled part of the bar *mean* a
- * fraction, so under WCAG 1.4.11 it owes 3:1 against the row behind it. White@22% is 1.97:1 on
- * `#101010`; white@40% is 3.82:1 there and 3.75:1 on a card's `#202020`.
+ * WCAG 1.4.11 asks 3:1 of the unfilled track: white@22% is 1.97:1 on `#101010`, white@40% is 3.82:1
+ * there and 3.75:1 on a card's `#202020`.
  */
 private const val QUEUE_TRACK_ALPHA = 0.40f
 
@@ -75,24 +69,14 @@ private val QueueTitleWide = TextStyle(fontSize = 14.sp, fontWeight = FontWeight
 private val QueueStatusCompact = TextStyle(fontSize = 11.sp)
 private val QueueStatusWide = TextStyle(fontSize = 12.sp)
 
-/** Shared "card text" title/subtitle styles. */
 private val CardTitle = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.W500, lineHeight = 18.sp)
 private val CardSubtitle = TextStyle(fontSize = 12.sp)
 
 /**
- * One finished download: artwork, title, size on disk, delete — an "m-surface card".
- *
- * @param onPlay the row itself is the play target — tapping anywhere on it starts playback of
- *   [item] from its resume position, the same as the detail page's Play button (see
- *   [DownloadItem.playbackStartTicks]). The *Downloaded* tab has no batch-selection mode to
- *   conflict with (unlike `:feature:detail`'s episode rows), so the row's own click can mean Play
- *   unconditionally.
- * @param onDelete the trailing icon button; nested inside the row's clickable area but its own
- *   independent target — Compose resolves the tap to whichever target is hit first, so pressing
- *   the icon never also fires [onPlay].
- * @param compact mirrors [QueueRow]'s own parameter of the same name: the same width class that
- *   picks [QueueRow]'s artwork size picks this row's, so switching tabs never shifts the text
- *   columns or row height out from under the user.
+ * @param onPlay the whole row is the target, unconditionally — the *Downloaded* tab has no
+ *   batch-selection mode for the click to conflict with, unlike `:feature:detail`'s episode rows.
+ * @param compact must stay [QueueRow]'s own width class, or switching tabs shifts the text columns
+ *   and row height out from under the user.
  */
 @Composable
 internal fun DownloadedRow(
@@ -109,9 +93,7 @@ internal fun DownloadedRow(
                 .fillMaxWidth()
                 .padding(horizontal = Dimens.PanelPadding, vertical = ROW_GAP_HALF)
                 .mSurface(MaterialTheme.colorScheme.surface)
-                // Named and typed: a role-less `clickable` would leave the one thing tapping a
-                // downloaded film does — play it, from where it was left — announced as nothing
-                // at all.
+                // The label and role are load-bearing: a bare `clickable` announces nothing at all.
                 .clickable(
                     onClickLabel = stringResource(CoreUiR.string.action_play),
                     role = Role.Button,
@@ -153,18 +135,10 @@ internal fun DownloadedRow(
 }
 
 /**
- * One pending download: progress, speed, and the four queue actions — an "m-surface card".
- *
- * @param progress the fraction to draw, which is **not** `item.progress`: it comes through
- *   [DownloadProgressRatchet] so the bar can never run backwards while the projection behind its
- *   denominator settles.
- * @param compact below the `COMPACT_MAX_WIDTH` breakpoint (`DownloadsScreen.kt`), a single row of
- *   artwork, weighted text column and up to four action buttons leaves the title under ~90dp,
- *   which crushes titles to ~4 characters ("Hous…") on a 360dp phone. Compact
- *   switches to two tiers: artwork+text get the full row width, and the actions move to their own
- *   end-aligned row below rather than shrinking to fit; wide keeps them trailing on one row, with
- *   title and status sharing a baseline instead of stacking. Decided once at
- *   the screen level (`DownloadsScreen.kt`'s `BoxWithConstraints`), not per row.
+ * @param progress **not** `item.progress`: it comes through [DownloadProgressRatchet] so the bar
+ *   cannot run backwards while the projection behind its denominator settles.
+ * @param compact two tiers, because on one row artwork + weighted text + four action buttons leave
+ *   the title under ~90dp — ~4 characters on a 360dp phone. Decided once at the screen level.
  */
 @Composable
 internal fun QueueRow(
@@ -201,10 +175,6 @@ internal fun QueueRow(
     }
 }
 
-/**
- * [QueueRow]'s compact form: artwork and text on the first tier, the action circles end-aligned on
- * their own tier below — see [QueueRow]'s `compact` for the crushed-title defect that splits them.
- */
 @Composable
 private fun TwoTierQueueRow(
     item: DownloadItem,
@@ -242,7 +212,6 @@ private fun TwoTierQueueRow(
     }
 }
 
-/** [QueueRow]'s wide form: artwork, text and the action circles all on one line. */
 @Composable
 private fun OneTierQueueRow(
     item: DownloadItem,
@@ -279,23 +248,12 @@ private fun OneTierQueueRow(
 }
 
 /**
- * The title, progress bar and status line shared by both [QueueRow] layouts.
+ * `clearAndSetSemantics`, not a merge: the visible title is `maxLines = 1` and the description has
+ * to carry the whole one, and it takes the progress bar's bare "45 percent" node out in the same
+ * stroke — untied to a row, that number means nothing in a queue of five.
  *
- * To a screen reader this whole column is **one** node carrying one authored sentence: the item,
- * how far along it is, and what it is doing. Left alone it would be three unrelated stops — a
- * truncated title, a bare "45 percent" from the raw `LinearProgressIndicator`, and a status line —
- * with nothing tying the percentage to the download it belongs to, which in a queue of five rows is
- * a percentage that means nothing at all. `clearAndSetSemantics` rather than a merge because the
- * visible title is `maxLines = 1` and the description has to carry the *whole* one, and because it
- * takes the progress bar's own node out in the same stroke — the number is in the sentence.
- *
- * The row's four action buttons are siblings of this column, not descendants, so each keeps its own
- * stop and its own label.
- *
- * @param compact stacks title, track and status on three lines. Wide
- *   instead shares one baseline row between title and status, with the track on its own line below —
- *   there is room for both on a tablet width, which the phone width the compact layout answers does
- *   not have.
+ * The four action buttons must stay **siblings** of this column, not descendants, so each keeps its
+ * own stop and label.
  */
 @Composable
 private fun QueueRowText(
@@ -364,10 +322,8 @@ private fun QueueRowText(
 }
 
 /**
- * A queue row's 3dp progress track, in the app's shared inset-progress geometry.
- *
  * @param fillColor [MaterialTheme.colorScheme.error] for a failed row, so the bar reads as stopped
- *   partway rather than as still making progress — [MaterialTheme.colorScheme.primary] otherwise.
+ *   partway rather than as still making progress.
  */
 @Composable
 private fun QueueTrack(
@@ -385,20 +341,12 @@ private fun QueueTrack(
 }
 
 /**
- * A queue row's up/down, pause-or-resume and cancel circles.
+ * Takes the id and two predicates, never the row: a `DownloadItem` is unstable and rebuilt two to
+ * six times a second, which would recompose four icon buttons on every progress write.
  *
- * Takes the id and the two predicates rather than the row: those three values are its entire
- * input, and a `DownloadItem` — unstable to the Compose compiler, and freshly built by the
- * projection two to six times a second — would recompose four icon buttons on every progress write
- * for a row whose buttons have not changed since it was enqueued.
- *
- * @param isResumeTarget paused and failed rows both offer *Resume*: retrying a failure is the same
- *   operation, and for an original download the partial file means it costs only the bytes that are
- *   missing. The predicates are `DownloadsUiState`'s, shared with the queue's *Resume all* /
- *   *Pause all*, so a row and the bulk button can never disagree about them.
- * @param isPauseTarget a transcode is never one: the server ignores `Range` on a file it is still
- *   producing, so pausing one would silently discard everything downloaded so far (see
- *   [DownloadItem.isPausable]). *Cancel* remains, and says what it actually does.
+ * Both predicates are `DownloadsUiState`'s, shared with *Resume all* / *Pause all*, so a row and the
+ * bulk button can never disagree. A transcode is never a pause target: the server ignores `Range` on
+ * a file it is still producing, so pausing one discards everything downloaded so far.
  */
 @Composable
 private fun QueueRowActions(
@@ -423,7 +371,6 @@ private fun QueueRowActions(
             size = size,
         )
 
-        // Tinted primary — the one action circle on the row worth reaching for.
         if (isResumeTarget) {
             GlassIconButton(
                 icon = Icons.Filled.PlayArrow,
@@ -450,12 +397,7 @@ private fun QueueRowActions(
     }
 }
 
-/**
- * A row's thumbnail.
- *
- * Takes the URL, not the row: the image is the only thing on a queue row that never changes while
- * it downloads, and taking a `DownloadItem` would re-compose it on every progress write anyway.
- */
+/** Takes the URL, not the row: a `DownloadItem` would recompose it on every progress write. */
 @Composable
 private fun RowArtwork(
     imageUrl: String?,
@@ -475,26 +417,17 @@ private fun RowArtwork(
 }
 
 /**
- * A `0f..1f` fraction as the whole percentage a screen reader says out loud.
- *
- * Rounded rather than truncated, and clamped, because the fraction reaching a row is the *ratcheted*
- * one ([DownloadProgressRatchet]) computed against a projected total that can briefly exceed 1 —
- * announcing "101 percent" would read as a bug in the number rather than in the projection.
- *
- * `internal` so the rounding is checkable without a Compose harness.
+ * Clamped, because the fraction reaching a row is the *ratcheted* one, computed against a projected
+ * total that can briefly exceed 1 — "101 percent" reads as a bug in the number. `internal` so the
+ * rounding is checkable without a Compose harness.
  */
 internal fun percentOf(fraction: Float): Int = (fraction.coerceIn(0f, 1f) * PERCENT_SCALE).roundToInt()
 
 private const val PERCENT_SCALE = 100
 
 /**
- * `Westworld · Chestnut` for an episode, the plain title otherwise.
- *
- * @param inSeriesGroup `true` when the row is drawn under its series' own group header (the
- *   *Downloaded* tab's series groups) — the header already names the series, so repeating it on
- *   every row underneath ("Pyjamasques" header over "Pyjamasques · Bibou et le ballon-lune" rows)
- *   duplicates it. Standalone rows — the
- *   queue tab, and films, which are never grouped — keep the full form.
+ * @param inSeriesGroup the group header already names the series, so the row drops it. Standalone
+ *   rows — the queue tab, and films, which are never grouped — keep the full `Series · Title` form.
  */
 internal fun DownloadItem.rowTitle(inSeriesGroup: Boolean = false): String =
     if (inSeriesGroup) {
@@ -503,7 +436,6 @@ internal fun DownloadItem.rowTitle(inSeriesGroup: Boolean = false): String =
         listOfNotNull(seriesName?.takeIf { it.isNotBlank() }, title).joinToString(Separators.DOT)
     }
 
-/** The second line under a queue row's progress bar. */
 @Composable
 private fun DownloadItem.statusLine(speedBytesPerSecond: Long?): String =
     when (status) {
@@ -528,10 +460,8 @@ private fun DownloadItem.statusLine(speedBytesPerSecond: Long?): String =
         DownloadStatus.QUEUED ->
             listOfNotNull(
                 stringResource(R.string.downloads_status_queued),
-                // The expected size is already known at enqueue time (`DownloadEnqueuer.sizeEstimate`),
-                // and an episode of a show already on the device may already carry a seeded
-                // projection, so a row waiting its turn can show whichever of the two it has —
-                // same rule the in-progress line above follows.
+                // A size is known at enqueue time (`DownloadEnqueuer.sizeEstimate`), so even a row
+                // waiting its turn has one to show.
                 displayTotalBytes.takeIf { it > 0L }?.let { expectedSizeText(it) },
                 transcodedMarker(),
             ).joinToString(Separators.DOT)
@@ -546,14 +476,9 @@ private fun DownloadItem.statusLine(speedBytesPerSecond: Long?): String =
     }
 
 /**
- * Whole seconds left at [speedBytesPerSecond], or `null` when there is nothing trustworthy to show.
- *
- * `null` covers: no speed yet (the tracker has not seen enough samples), a stalled transfer (speed
- * `<= 0`), a row already at or past its own total (`remaining <= 0` — the progress write and the
- * projection write can interleave, per [DownloadItem.displayTotalBytes]'s own doc), and an estimate
- * beyond [ETA_GUARD_SECONDS]: a very low instantaneous speed against a large remainder produces a
- * number in the days, which reads as broken rather than as an honest estimate and is better left
- * blank than shown.
+ * `null` covers: no speed yet, a stalled transfer, a row at or past its own total (the progress and
+ * projection writes can interleave — see [DownloadItem.displayTotalBytes]), and anything beyond
+ * [ETA_GUARD_SECONDS], where a low instantaneous speed yields a number in the days.
  */
 @Suppress("ReturnCount") // Four `?: return null` elvis guards; the KDoc above enumerates exactly what each one covers.
 internal fun DownloadItem.etaSeconds(speedBytesPerSecond: Long?): Long? {
@@ -567,19 +492,14 @@ internal fun DownloadItem.etaSeconds(speedBytesPerSecond: Long?): Long? {
 }
 
 /**
- * Above this, an ETA is guesswork rather than an estimate — see [DownloadItem.etaSeconds].
- *
- * `internal`, not `private`: [DownloadsUiState.queueStats] (`DownloadsUiState.kt`) applies the exact
- * same ceiling-division-plus-guard shape to an *aggregate* remainder, and reusing this constant is
- * what keeps a per-row ETA and the wide summary's aggregate one from ever disagreeing about where
- * "guesswork" starts.
+ * `internal`, not `private`: [DownloadsUiState.queueStats] applies the same guard to an *aggregate*
+ * remainder, and sharing the constant is what keeps the two from disagreeing.
  */
 internal const val ETA_GUARD_SECONDS = 86_400L
 
 /**
- * [etaSecondsValue] worded to match how well the total behind it is known — the same hedge
- * [expectedSizeText] applies to the size itself, since an ETA derived from a [SizeCertainty.CEILING]
- * total is exactly as approximate as that total is.
+ * Hedged to match [expectedSizeText]: an ETA off a [SizeCertainty.CEILING] total is exactly as
+ * approximate as that total is.
  */
 @Composable
 private fun DownloadItem.etaText(etaSecondsValue: Long): String =
@@ -588,22 +508,14 @@ private fun DownloadItem.etaText(etaSecondsValue: Long): String =
         formatDurationSeconds(etaSecondsValue),
     )
 
-/**
- * `"Transcoded"` for a row that was re-encoded rather than downloaded as the original file, `null`
- * for one that was not — see `DownloadQuality.isTranscoded`. Appended as the last segment of every
- * status line that has one, so it never displaces the size, speed or ETA text ahead of it.
- */
+/** Always the **last** segment of a status line, so it never displaces the size, speed or ETA. */
 @Composable
 private fun DownloadItem.transcodedMarker(): String? =
     if (quality.isTranscoded) stringResource(R.string.downloads_transcoded_marker) else null
 
 /**
- * [bytes] worded to match how well it is actually known — see [DownloadItem.sizeCertainty].
- *
- * *"552,4 MB"* when the number is the file's size, *"~301,2 MB"* when it is the app's projection,
- * *"up to 552,4 MB"* when it is only a bound. Stating a ceiling as exact is what read as wrong once
- * the real file landed at less than half of it; stating a projection as
- * exact would be the same mistake with a better number behind it.
+ * The hedge is load-bearing: *"552,4 MB"* exact, *"~301,2 MB"* projected, *"up to 552,4 MB"* a mere
+ * bound. Stating a ceiling as exact read as wrong once the real file landed at half of it.
  */
 @Composable
 private fun DownloadItem.expectedSizeText(bytes: Long): String =

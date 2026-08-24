@@ -9,40 +9,33 @@ import java.time.Instant
 import java.util.UUID
 
 /**
- * Every SyncPlay REST call the app makes, behind one seam — the same reason `PlayerApi` exists:
- * the SDK's `ApiClient` is an abstract class whose operation objects come from extension
- * properties, which makes the controller untestable if it talks to it directly.
+ * Speaks **domain models and [Instant] only**: the SDK's DTOs and its local wall-clock
+ * `LocalDateTime` stop at `SdkSyncPlayApi` / `SyncPlayDtoMapping`.
  *
- * This interface speaks **domain models and [Instant] only**. The SDK's DTOs and its local
- * wall-clock `LocalDateTime` stop at `SdkSyncPlayApi` /
- * `dev.jellyboost.player.syncplay.SyncPlayDtoMapping`.
- *
- * Naming follows the protocol's own split: `request*` calls *ask the server* to do something and
- * take effect only when the server broadcasts the matching command back, `report*` calls tell the
- * server about this client, and the rest is group/queue administration.
+ * `request*` calls only ask — they take effect when the server broadcasts the command back.
  */
 @Suppress("TooManyFunctions") // The SyncPlay protocol has 22 operations; a partial facade is worse.
 internal interface SyncPlayApi {
     // Group membership --------------------------------------------------------------------------
 
-    /** `GET /SyncPlay/List` — groups on this server the user may join. */
+    /** `GET /SyncPlay/List`. */
     suspend fun getGroups(): List<SyncPlayGroupSummary>
 
-    /** `POST /SyncPlay/New` — creates a group and joins it; returns the group as created. */
+    /** `POST /SyncPlay/New` — creates a group and joins it. */
     suspend fun createGroup(name: String): SyncPlayGroupSummary
 
-    /** `POST /SyncPlay/Join` — joins an existing group. Confirmation arrives on the websocket. */
+    /** `POST /SyncPlay/Join`. Confirmation arrives on the websocket. */
     suspend fun joinGroup(groupId: UUID)
 
-    /** `POST /SyncPlay/Leave` — leaves whatever group this session is in. */
+    /** `POST /SyncPlay/Leave`. */
     suspend fun leaveGroup()
 
     // Membership handshake ----------------------------------------------------------------------
 
     /**
-     * `POST /SyncPlay/Buffering` — "I am not ready yet"; moves the group to `Waiting`.
+     * `POST /SyncPlay/Buffering` — moves the group to `Waiting`.
      *
-     * @param at the moment this client observed the state, on the *server* clock.
+     * @param at when this client observed the state, on the *server* clock.
      */
     suspend fun reportBuffering(
         at: Instant,
@@ -51,7 +44,7 @@ internal interface SyncPlayApi {
         playlistItemId: UUID,
     )
 
-    /** `POST /SyncPlay/Ready` — "I am prepared at [positionTicks]"; the counterpart to buffering. */
+    /** `POST /SyncPlay/Ready` — the counterpart to buffering. */
     suspend fun reportReady(
         at: Instant,
         positionTicks: Long,
@@ -63,10 +56,8 @@ internal interface SyncPlayApi {
     suspend fun reportPing(pingMillis: Long)
 
     /**
-     * `POST /SyncPlay/SetIgnoreWait` — asks the group to stop waiting on this client.
-     *
-     * Sent when the player detaches while membership survives, so a backgrounded member never
-     * gates everyone else.
+     * `POST /SyncPlay/SetIgnoreWait` — sent when the player detaches while membership survives, so a
+     * backgrounded member never gates the group.
      */
     suspend fun setIgnoreWait(ignoreWait: Boolean)
 
@@ -82,25 +73,24 @@ internal interface SyncPlayApi {
     suspend fun requestSeek(positionTicks: Long)
 
     /**
-     * `POST /SyncPlay/NextItem` — advance the group's queue.
+     * `POST /SyncPlay/NextItem`.
      *
-     * @param playlistItemId the slot the *client* believes is playing; the server ignores the
-     *   request if the group has already moved on, which is what keeps races harmless.
+     * @param playlistItemId the slot the *client* believes is playing; the server drops the request
+     *   if the group has already moved on, which is what keeps races harmless.
      */
     suspend fun requestNextItem(playlistItemId: UUID)
 
-    /** `POST /SyncPlay/PreviousItem`; [playlistItemId] guards against races as in [requestNextItem]. */
+    /** `POST /SyncPlay/PreviousItem`; [playlistItemId] guards races as in [requestNextItem]. */
     suspend fun requestPreviousItem(playlistItemId: UUID)
 
-    /** `POST /SyncPlay/SetPlaylistItem` — jump the group to a specific slot. */
+    /** `POST /SyncPlay/SetPlaylistItem`. */
     suspend fun setPlaylistItem(playlistItemId: UUID)
 
     // Queue administration ----------------------------------------------------------------------
 
     /**
-     * `POST /SyncPlay/SetNewQueue` — replaces the group's queue.
-     *
-     * Takes *library item ids* and an index (not playlist-item ids): the server mints the slots.
+     * `POST /SyncPlay/SetNewQueue` — takes *library item ids* and an index, not playlist-item ids:
+     * the server mints the slots.
      */
     suspend fun setNewQueue(
         itemIds: List<UUID>,
@@ -136,11 +126,8 @@ internal interface SyncPlayApi {
     // Clock -------------------------------------------------------------------------------------
 
     /**
-     * `GET /GetUtcTime`, timestamped on both sides — one NTP exchange.
-     *
-     * The device-side timestamps are taken as tightly around the call as possible, because
-     * everything the estimator can do about network delay depends on them bracketing exactly the
-     * request.
+     * `GET /GetUtcTime`, one NTP exchange. The device-side timestamps must bracket the call as
+     * tightly as possible — the delay estimate depends on it.
      */
     suspend fun sampleServerTime(): TimeSyncSample
 }

@@ -30,7 +30,6 @@ import java.util.TimeZone
 import java.util.UUID
 import org.jellyfin.sdk.model.api.PersonKind as SdkPersonKind
 
-/** Unit tests for [ItemMapper] — the `BaseItemDto` → domain boundary. */
 class ItemMapperTest {
     private val mapper = ItemMapper(FakeImageUrlFactory())
 
@@ -41,9 +40,8 @@ class ItemMapperTest {
     private val originalTimeZone: TimeZone = TimeZone.getDefault()
 
     /**
-     * The SDK's date serializer reads and writes `LocalDateTime` in the *device's* zone, so every
-     * date assertion here is only meaningful under a zone that is not UTC — pinning one is what
-     * makes the timezone regression (dates off by the local offset) visible to these tests.
+     * The SDK's date serializer works in the *device's* zone, so date assertions are only meaningful
+     * under a non-UTC one.
      */
     @BeforeEach
     fun pinTimeZone() {
@@ -103,7 +101,6 @@ class ItemMapperTest {
         typeOf(BaseItemKind.COLLECTION_FOLDER) shouldBe ItemType.COLLECTION_FOLDER
         typeOf(BaseItemKind.USER_VIEW) shouldBe ItemType.COLLECTION_FOLDER
         typeOf(BaseItemKind.FOLDER) shouldBe ItemType.FOLDER
-        // The four music kinds get real mappings instead of collapsing into UNKNOWN.
         typeOf(BaseItemKind.AUDIO) shouldBe ItemType.AUDIO
         typeOf(BaseItemKind.MUSIC_ALBUM) shouldBe ItemType.MUSIC_ALBUM
         typeOf(BaseItemKind.MUSIC_ARTIST) shouldBe ItemType.MUSIC_ARTIST
@@ -191,7 +188,6 @@ class ItemMapperTest {
     @Test
     fun `maps CollectionType MUSIC onto CollectionKind MUSIC, now inside what a library query keeps`() {
         CollectionType.MUSIC.toCollectionKind() shouldBe CollectionKind.MUSIC
-        // Part of SUPPORTED, alongside :feature:music.
         (CollectionKind.MUSIC in CollectionKind.SUPPORTED) shouldBe true
     }
 
@@ -366,9 +362,8 @@ class ItemMapperTest {
     fun `never reads a library's item count from the collection folder's ChildCount`() {
         val views =
             listOf(
-                // `ChildCount` on a collection folder counts its *media folders*, not its titles —
-                // the dev server reports 3 here for a 177-movie library. The repository fills the
-                // real number in from a recursive count query; the mapper must not guess.
+                // `ChildCount` counts *media folders*, not titles — measured: 3 for a 177-movie
+                // library. The repository counts recursively; the mapper must not guess.
                 library(UUID.randomUUID(), "Movies", CollectionType.MOVIES, childCount = 3),
                 library(UUID.randomUUID(), "Shows", CollectionType.TVSHOWS),
             )
@@ -526,9 +521,8 @@ class ItemMapperTest {
     // ---- timezone regression --------------------------------------------------------------------
 
     /**
-     * Regression test: SDK date fields are *local* wall-clock time (its serializer applies
-     * `ZoneId.systemDefault()`), so reading one as UTC would shift every timestamp by the device's
-     * offset — two hours on the test device.
+     * SDK date fields are *local* wall-clock time, so reading one as UTC shifts every timestamp by
+     * the device's offset.
      */
     @Test
     fun `reads an SDK date field as local wall-clock time, not as UTC`() {

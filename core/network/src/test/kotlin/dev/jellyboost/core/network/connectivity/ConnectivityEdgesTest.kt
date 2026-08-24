@@ -17,15 +17,8 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for [onlineStateChanges] — the signal every screen refreshes itself on.
- *
- * Three properties: it reports a change in *either* direction, it says nothing about the value the
- * flow already holds when a screen subscribes (that screen has just loaded), and it says nothing
- * extra for a connection flapping between two states that are equally offline.
- *
- * Each state change is followed by `runCurrent()`: a `StateFlow` conflates, so two assignments in a
- * row without letting the collector run would be one transition, and the test would be asserting
- * something other than what it says.
+ * Each state change is followed by `runCurrent()`: a `StateFlow` conflates, so two assignments in a row
+ * without letting the collector run would be one transition, and the test would assert something else.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class ConnectivityEdgesTest {
@@ -127,8 +120,7 @@ class ConnectivityEdgesTest {
 
             state.onlineStateChanges().test {
                 runCurrent()
-                // Walking out of Wi-Fi range and back, twice: one emission per crossing, not one
-                // per state the connection passed through on the way.
+                // Walking out of Wi-Fi range and back, twice: one emission per crossing, not one per state.
                 state.value = ConnectionState.OFFLINE_NO_NETWORK
                 runCurrent()
                 state.value = ConnectionState.ONLINE
@@ -167,11 +159,8 @@ class ConnectivityEdgesTest {
         }
 
     /**
-     * [onEachOnlineStretch] is the background-collaborator half of the same file, and its contract
-     * is the *opposite* of [onlineStateChanges] on exactly one point: it acts on the value the flow
-     * already holds. That is the app-start check `UserDataSyncTrigger` and
-     * `DownloadedMetadataRefresher` both depend on, so it is pinned here rather than left to the
-     * two callers' own tests.
+     * [onEachOnlineStretch]'s contract is the *opposite* of [onlineStateChanges] on exactly one point: it acts
+     * on the value the flow already holds. That is the app-start check its two callers depend on.
      */
     @Nested
     inner class OnEachOnlineStretch {

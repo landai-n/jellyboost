@@ -6,12 +6,9 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for [UpNextController].
- *
- * Two rules carry the whole feature and neither is discoverable by clicking around: a card that
- * cannot be dismissed for good is a card sitting over the last minute of every episode, and a
- * fallback window applied to a three-minute extra would cover a third of it. Both are pinned here,
- * away from a player.
+ * A card that cannot be dismissed for good is a card sitting over the last minute of every
+ * episode, and a fallback window applied to a three-minute extra would cover a third of it —
+ * neither rule is discoverable by clicking around, so both are pinned here.
  */
 class UpNextControllerTest {
     private val controller = UpNextController()

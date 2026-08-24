@@ -8,13 +8,8 @@ import io.kotest.matchers.shouldNotBe
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for [toUiText] — the one mapping that replaced five.
- *
- * The point of these is not that a branch produces *some* copy; it is that the branches a screen
- * may override are exactly the three [AppErrorCopy] exposes, and that the rest are pinned to
- * `:core:ui`'s resources so no screen can drift them back apart. Assertions are on resource ids
- * rather than sentences on purpose: an English literal in a test is how the old mappers passed
- * while showing untranslated copy on 68 locales.
+ * Assertions are on resource ids, never sentences: an English literal in a test is how the previous
+ * mappers passed while showing untranslated copy on 68 locales.
  */
 class AppErrorCopyTest {
     private val screen =
@@ -26,8 +21,6 @@ class AppErrorCopyTest {
         )
 
     private val default = AppErrorCopy(unknown = SCREEN_UNKNOWN)
-
-    // ---- the shared branches ----------------------------------------------------------------------
 
     @Test
     fun `a network failure is the shared sentence, whatever the screen says elsewhere`() {
@@ -50,8 +43,6 @@ class AppErrorCopyTest {
         AppError.Storage().toUiText(screen) shouldBe UiText.res(R.string.error_storage)
     }
 
-    // ---- the overridable branches -----------------------------------------------------------------
-
     @Test
     fun `unknown is always the screen's own — it has to name what failed`() {
         AppError.Unknown().toUiText(screen) shouldBe UiText.res(SCREEN_UNKNOWN)
@@ -72,8 +63,6 @@ class AppErrorCopyTest {
         R.string.error_not_found_library shouldNotBe R.string.error_not_found_item
     }
 
-    // ---- the status code -------------------------------------------------------------------------
-
     @Test
     fun `a status code picks the formatted resource and is carried as an argument`() {
         AppError.Server(statusCode = 502).toUiText(screen) shouldBe
@@ -93,8 +82,7 @@ class AppErrorCopyTest {
     }
 
     private companion object {
-        // Stand-ins for a feature module's own resources: any four distinct ids will do, and
-        // `:core:ui` cannot see a feature's R.
+        // Stand-ins for a feature's own resources — `:core:ui` cannot see a feature's R.
         const val SCREEN_UNKNOWN = 1
         const val SCREEN_NOT_FOUND = 2
         const val SCREEN_SERVER = 3

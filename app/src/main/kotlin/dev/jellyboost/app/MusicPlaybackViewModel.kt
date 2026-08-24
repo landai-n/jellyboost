@@ -19,17 +19,9 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * The music-queue verbs the navigation graph hands to the browse screens.
- *
- * The `SyncPlayLaunchViewModel` arrangement: `:feature:music` publishes plain
- * `(tracks, startIndex) -> Unit` callbacks and knows nothing about who plays them, `:app` resolves
- * the singleton behind them here, and no feature module ever names the player. The alternative —
- * injecting [MusicController] into each music ViewModel — would work (the interface lives in
- * `:core:common`) but would repeat the same two lines in four ViewModels and put a queue verb on
- * objects whose subject is a *list*.
- *
- * Nothing is held here: [MusicController] is a `@Singleton` whose state outlives every screen, so
- * this class is a lifecycle-scoped way of *calling* it and nothing else.
+ * The music-queue verbs the navigation graph hands to the browse screens, so that no feature module
+ * ever names the player. Nothing is held here — [MusicController] is a `@Singleton` whose state
+ * outlives every screen.
  */
 @HiltViewModel
 class MusicPlaybackViewModel
@@ -39,25 +31,17 @@ class MusicPlaybackViewModel
         private val repository: JellyfinRepository,
     ) : ViewModel() {
         /**
-         * [startRadio]'s own failures — an Instant Mix fetch is a repository call this class makes
-         * *before* there is anything to hand the controller, so it cannot ride [MusicController
-         * .messages] the way a refusal or an unplayable track does.
+         * [startRadio]'s own failures: an Instant Mix fetch happens *before* there is anything to
+         * hand the controller, so it cannot ride `MusicController.messages`.
          */
         private val radioMessages =
             MutableSharedFlow<MusicMessage>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 
-        /** Refusals, unplayable tracks and failed "Start radio" attempts, for the app chrome's snackbar. */
         val messages: Flow<MusicMessage> = merge(controller.messages, radioMessages)
 
-        /** The queue and its transport state, for [MiniPlayer] and its visibility rule. */
         val state: StateFlow<MusicPlaybackState> = controller.state
 
-        /**
-         * Plays [tracks] starting at [startIndex] — a track tap, or a "Play" button at index 0.
-         *
-         * Fire and forget: resolving a queue takes a moment and the caller is a click handler. The
-         * outcome reaches the user through [messages] and through the queue simply starting.
-         */
+        /** Fire and forget: the caller is a click handler, and the outcome reaches the user through [messages]. */
         fun play(
             tracks: List<JellyfinItem>,
             startIndex: Int,
@@ -66,62 +50,32 @@ class MusicPlaybackViewModel
         }
 
         /**
-         * Plays [tracks] shuffled — the Shuffle button.
-         *
-         * One call rather than `play` followed by `setShuffle(true)`: the two-step version starts
-         * the first track in queue order and only then reshuffles, so the album's opening track
-         * plays first every single time, which is the one thing a shuffle button must not do.
+         * One call rather than `play` then `setShuffle(true)`: the two-step version starts the first
+         * track in queue order and only then reshuffles, so the album's opener plays first every time.
          */
         fun shuffle(tracks: List<JellyfinItem>) {
             viewModelScope.launch { controller.play(tracks, startIndex = 0, shuffled = true) }
         }
 
-        /**
-         * Resumes [item] from its saved position — Home's *Continue Listening* row.
-         *
-         * A single-item queue, exactly like tapping any other track, except started at
-         * [dev.jellyboost.core.common.model.UserData.playbackPositionTicks] rather than from zero.
-         * The ticks-to-millis conversion is `:player`'s own (`PlaybackSnapshot.kt`) — `:app` already
-         * depends on `:player` for the video screen, so reusing it here needs no new dependency.
-         */
+        /** Resumes [item] from its saved position — Home's *Continue Listening* row. */
         fun playResumed(item: JellyfinItem) {
             val startPositionMs = Ticks.ticksToMillis(item.userData.playbackPositionTicks)
             viewModelScope.launch { controller.play(listOf(item), startIndex = 0, startPositionMs = startPositionMs) }
         }
 
-        /** The mini-player's play/pause button. */
         fun togglePlayPause() = controller.togglePlayPause()
 
-        /** The mini-player's next button. */
         fun next() = controller.next()
 
-        /**
-         * The mini-player's previous button.
-         *
-         * Straight through to [MusicController.previous], which is the one that carries the
-         * restart-then-step-back rule — the bar has no business restating it.
-         */
         fun previous() = controller.previous()
 
-        /**
-         * The mini-player's dismiss gesture — ends the session rather than merely pausing it.
-         *
-         * [MusicController.stop] takes the state to [MusicPlaybackState.Idle], which is what makes
-         * the bar go away: `AppScaffold` shows it off the same state, so nothing here has to hide
-         * anything itself.
-         */
+        /** Ends the session rather than pausing it: the [MusicPlaybackState.Idle] state is what hides the bar. */
         fun stop() = controller.stop()
 
         /**
-         * A downloaded track tapped on the Downloads screen.
-         *
-         * Audio must not ride the Downloads tab's video path — `Routes.Player` is the immersive
-         * video screen, which would fail on an audio file and bypass the music queue entirely.
-         * Instead the tap plays the track's downloaded *album context*: the album's tracks are
-         * fetched through the delegating repository (offline answers from the `albumId` column, so
-         * this works in airplane mode) and the queue starts at the tapped track, resumed at
-         * [startPositionTicks]. A track with no album, or a fetch that fails, degrades to a
-         * single-item queue of the track itself — the tap still plays.
+         * Plays the track's downloaded *album context* — the album tracks come from the delegating
+         * repository, which answers from the `albumId` column offline. A track with no album, or a
+         * failed fetch, degrades to a single-item queue so the tap still plays.
          */
         fun playDownloadedAudio(
             item: JellyfinItem,
@@ -146,15 +100,8 @@ class MusicPlaybackViewModel
         }
 
         /**
-         * "Start radio" — `AlbumDetailScreen`'s header action, `ArtistDetailScreen`'s, and
-         * `NowPlayingScreen`'s.
-         *
-         * Fetches the server's Instant Mix seeded from [item] and hands it straight to the queue,
-         * exactly like [play] but resolved from one seed item rather than a caller-supplied list. A
-         * failed fetch — offline, a server error, or a mix that came back empty — surfaces through
-         * [messages] as [MusicMessage.RadioFailed] instead of a full-screen error: this is a
-         * secondary action on an already-loaded screen, and its failure should not read as the
-         * screen itself being broken.
+         * A failed fetch — offline, a server error, an empty mix — surfaces through [messages] rather
+         * than as a full-screen error: this is a secondary action on an already-loaded screen.
          */
         fun startRadio(item: JellyfinItem) {
             viewModelScope.launch {

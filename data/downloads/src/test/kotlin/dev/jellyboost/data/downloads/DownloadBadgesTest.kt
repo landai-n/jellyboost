@@ -14,13 +14,6 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 
-/**
- * Unit tests for the shared download-badge helpers every list screen sources.
- *
- * Two properties are worth pinning: a collapsing flow degrades to "nothing is downloaded" instead
- * of freezing the badges, and a patch that changes nothing returns the *same* list instance so an
- * unaffected row can skip recomposition entirely.
- */
 @OptIn(ExperimentalCoroutinesApi::class)
 class DownloadBadgesTest {
     @Test
@@ -54,8 +47,7 @@ class DownloadBadgesTest {
 
             repository.observeBadgeStates(screen = "test").test {
                 awaitItem() shouldBe mapOf("a" to DownloadState.Downloaded)
-                // Not the last good value again, and not an exception reaching the collector: the
-                // marks the user can no longer trust are cleared, and the screen keeps working.
+                // The marks the user can no longer trust are cleared, and the screen keeps working.
                 awaitItem() shouldBe emptyMap()
                 awaitComplete()
             }

@@ -3,13 +3,6 @@ package dev.jellyboost.data.downloads.engine
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
-/**
- * Unit tests for [ProgressThrottle] — throttled Room writes, at 500 ms or 1 %.
- *
- * Both halves of that `or` earn their place, and each has a failure mode worth a test: without the
- * time bound a slow transfer looks frozen, and without the percentage bound a fast one skips from
- * 0 % to 40 % between samples.
- */
 class ProgressThrottleTest {
     private val throttle = ProgressThrottle()
 

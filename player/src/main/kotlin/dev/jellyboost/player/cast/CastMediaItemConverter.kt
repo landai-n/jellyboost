@@ -13,24 +13,12 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Assembles the Cast framework's `MediaQueueItem` from a [CastMediaSpec].
+ * Media3's `DefaultMediaItemConverter` cannot be used here: it ignores `subtitleConfigurations`
+ * entirely, dropping every side-loaded subtitle on the way to the receiver.
  *
- * Media3's `DefaultMediaItemConverter` cannot be used: it copies a `MediaItem`'s URI, MIME type and
- * a little metadata and **ignores `subtitleConfigurations` entirely**, so every side-loaded subtitle
- * would be dropped on the way to the receiver — which is most of what casting a Jellyfin item
- * involves.
- *
- * Deliberately free of decisions. Everything worth getting wrong — the URL, its credentials, the
- * content type, the track ids — was settled by `CastSpecMapper` in plain data; `MediaInfo` and
- * `MediaTrack` cannot be built off a device, so what is left here is the part no test could cover
- * anyway.
- *
- * ### How the spec gets here
- * Media3 hands a converter a `MediaItem` and nothing else, so the spec travels *inside* the item as
- * `localConfiguration.tag` — see [toMediaItem], which is the only place such an item is built. A
- * `MediaItem` that arrives without one (nothing in this app produces one, but the framework may
- * round-trip its own) still yields a playable item from the URI alone rather than throwing inside a
- * Cast callback.
+ * Media3 hands a converter a `MediaItem` and nothing else, so the spec travels inside it as
+ * `localConfiguration.tag` (see [toMediaItem]). An item without one must still yield something
+ * playable rather than throw inside a Cast callback.
  */
 @Singleton
 @UnstableApi
@@ -47,12 +35,6 @@ internal class CastMediaItemConverter
                 .build()
         }
 
-        /**
-         * The reverse direction, used when the framework describes a queue back to the player.
-         *
-         * There is nothing to recover here — the spec was consumed on the way out — so this rebuilds
-         * only what `RemoteCastPlayer` reads off the item: its id and its URI.
-         */
         override fun toMediaItem(mediaQueueItem: MediaQueueItem): MediaItem {
             val info = mediaQueueItem.media
             val contentId = info?.contentUrl ?: info?.contentId.orEmpty()
@@ -79,11 +61,8 @@ internal class CastMediaItemConverter
                 .setMetadata(metadata(spec.metadata))
                 .build()
 
-        /**
-         * The track id is the Jellyfin stream index, unchanged — that identity is what lets
-         * `CastPlayerHandle.selectSubtitleTrack` pass the picker's index straight to
-         * `RemoteMediaClient.setActiveMediaTracks`.
-         */
+        // Track id stays the Jellyfin stream index: `CastPlayerHandle.selectSubtitleTrack` passes the
+        // picker's index straight to `RemoteMediaClient.setActiveMediaTracks`.
         private fun mediaTrack(track: CastTrackSpec): MediaTrack =
             MediaTrack
                 .Builder(track.id.toLong(), MediaTrack.TYPE_TEXT)
@@ -118,14 +97,7 @@ internal class CastMediaItemConverter
         }
     }
 
-/**
- * The [CastMediaSpec] as a `MediaItem`, which is the only shape `CastPlayer` accepts.
- *
- * The spec rides along as the item's tag because `MediaItemConverter` is handed nothing else, and
- * because the alternative — re-deriving `MediaInfo` from the `MediaItem`'s own fields — would put
- * the subtitle URLs, the track ids and the metadata back into a form Media3 does not carry. Read
- * back by [CastMediaItemConverter.toMediaQueueItem]; nothing else reads it.
- */
+/** The tag is load-bearing: [CastMediaItemConverter.toMediaQueueItem] reads the spec back off it. */
 @UnstableApi
 internal fun CastMediaSpec.toMediaItem(): MediaItem =
     MediaItem

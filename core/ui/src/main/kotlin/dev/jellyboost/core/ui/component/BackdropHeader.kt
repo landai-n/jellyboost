@@ -26,21 +26,10 @@ import dev.jellyboost.core.ui.theme.JellyfinGradients
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 
 /**
- * Full-bleed backdrop with a scrim — the top of every detail screen, and the hero slot on the home
- * screen.
+ * Centre-cropped whatever the source ratio: callers' URLs fall back to a 2:3 poster, a realistic
+ * source for a wide header.
  *
- * The scrim fades into the app background so the header blends into the scrolling content instead
- * of ending on a hard edge.
- *
- * The artwork is always centre-cropped to fill the box regardless of its source aspect ratio: the
- * URL callers pass falls back through backdrop → thumb → primary image, and a 2:3 poster is a
- * realistic fallback for a wide header.
- *
- * @param title drawn over the backdrop when non-null. Optional because the item detail screen
- *   already renders the headline in its content below the backdrop (`DetailFacts`) — drawing it
- *   here too duplicated the title. Left in for callers (e.g. the home screen hero) that have no
- *   other place to put it.
- * @param actions optional trailing content (Play / Download / Favourite) drawn under the title.
+ * @param title `null` for the detail screen, which draws its own headline below the backdrop.
  */
 @Composable
 fun BackdropHeader(
@@ -82,9 +71,6 @@ fun BackdropHeader(
             ) {
                 Text(
                     text = title,
-                    // Tightened rather than rebuilt: the screens that own a hero lockup draw their
-                    // own (eyebrow, meta row, actions), and this one only has to stop looking like
-                    // stock Material where it is still used.
                     style =
                         MaterialTheme.typography.headlineSmall.copy(
                             fontWeight = FontWeight.W700,

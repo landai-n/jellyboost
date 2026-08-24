@@ -11,18 +11,6 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import javax.inject.Provider
 
-/**
- * Unit tests for [RoutingPlayerHandle].
- *
- * Two claims, and the first is the foundational one: **with no cast session this handle is a
- * pass-through**. Every call has to land on the local player, in the same shape, and every answer
- * has to come back untouched — that is what makes "casting changed nothing about playing on your
- * own" a fact rather than a hope.
- *
- * The second is that switching is complete: the transport, the answers *and* the event stream all
- * move together, because a collector still hearing from the player that was just stopped would
- * attribute its `Ended` to the session that replaced it.
- */
 class RoutingPlayerHandleTest {
     private val local = FakePlayerHandle()
     private val cast = FakePlayerHandle()
@@ -123,14 +111,9 @@ class RoutingPlayerHandleTest {
         handle.snapshot().positionMs shouldBe 10L
     }
 
-    /**
-     * `runCurrent` before every emission, deliberately.
-     *
-     * The handles publish through a replay-less `MutableSharedFlow`, so anything emitted before the
-     * inner collector of `flatMapLatest` has actually subscribed is dropped rather than buffered —
-     * and re-subscribing is exactly what a switch does. Letting the scheduler settle first is what
-     * makes the assertions about routing rather than about timing.
-     */
+    // `runCurrent` before every emission, deliberately: the handles publish through a replay-less
+    // `MutableSharedFlow`, so anything emitted before `flatMapLatest`'s inner collector has
+    // actually (re-)subscribed is dropped rather than buffered.
     @Test
     fun `events come from the active handle, and stop coming from the one it replaced`() =
         runTest {
@@ -191,8 +174,8 @@ class RoutingPlayerHandleTest {
 
         untouched.stopInactive()
 
-        // Asking the provider here would load the app's first `com.google.android.gms` class on a
-        // device that has no Play services — for a player nothing has ever routed to.
+        // Asking the provider would load the app's first `com.google.android.gms` class even on a
+        // device with no Play services, for a player nothing has ever routed to.
         built shouldBe 0
         cast.stopped shouldBe false
         local.stopped shouldBe false

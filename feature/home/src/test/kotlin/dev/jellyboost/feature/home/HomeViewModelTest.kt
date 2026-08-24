@@ -39,44 +39,28 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 import dev.jellyboost.core.ui.R as CoreUiR
 
-/**
- * Unit tests for [HomeViewModel]'s load, failure and refresh behaviour.
- *
- * One class rather than one per row (`@Suppress("LargeClass")` below): splitting it would scatter
- * the shared mock setup (`stubEverythingEmpty`, the `sections`/`homeLayout` fixtures every test
- * needs) across files for no real gain — the `SyncPlayControllerTest` precedent, not
- * `ItemDetailViewModelTest`'s split, which separates genuinely distinct *collaborators* (selection,
- * downloads) rather than one ViewModel's own rows. The Continue Listening tests pushed this class
- * past the threshold.
- */
+// One class rather than one per row (hence `@Suppress("LargeClass")`): splitting it would scatter
+// the shared mock setup for no gain — the `SyncPlayControllerTest` precedent.
 @OptIn(ExperimentalCoroutinesApi::class)
 @Suppress("LargeClass")
 class HomeViewModelTest {
     private val dispatcher = StandardTestDispatcher()
 
-    /**
-     * `getResumeAudioItems` defaults to empty for every test in this class — `DEFAULT_HOME_SECTIONS`
-     * (the default [sections] below) includes `RESUME_AUDIO`, so every test that loads the screen
-     * reaches this call whether or not it cares about *Continue Listening*. The tests that do care
-     * override it with their own `coEvery`, set after this one in the test body, which wins.
-     */
+    /** Every test loads `RESUME_AUDIO`, so this default must exist; tests that care override it later. */
     private val repository =
         mockk<JellyfinRepository> {
             coEvery { getResumeAudioItems(any()) } returns AppResult.Success(emptyList())
         }
     private val eventBus = UserDataEventBus()
 
-    /** The badge source. Most tests do not care, so it emits an empty map and stays quiet. */
     private val downloadStates = MutableStateFlow<Map<String, DownloadState>>(emptyMap())
     private val downloads =
         mockk<DownloadRepository> {
             every { observeStates() } returns downloadStates
         }
 
-    /** The connectivity-change signal; fires only when a test says the server came back. */
     private val connectivityChanges = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
-    /** Online unless a test says otherwise; read by the membership refresh before it fetches. */
     private var online = true
     private val connectivityRefresher =
         mockk<ConnectivityRefresher> {
@@ -84,11 +68,6 @@ class HomeViewModelTest {
             every { isOnline } answers { online }
         }
 
-    /**
-     * The user's server-configured row layout. Defaults to what an unconfigured account gets —
-     * every row this app draws, in jellyfin-web's order — so tests about anything else are
-     * unaffected by it.
-     */
     private var sections: List<HomeSectionType> = DEFAULT_HOME_SECTIONS
     private val homeLayout =
         mockk<HomeLayoutRepository> {
@@ -130,12 +109,9 @@ class HomeViewModelTest {
             val state = viewModel.uiState.value
             state.isLoading shouldBe false
             state.errorMessage.shouldBeNull()
-            // `shows` came back with nothing in it, so it gets neither a *Latest* row nor a card:
-            // the cards and the shelves are filtered by the same rule.
             state.libraries shouldContainExactly listOf(movies)
             state.resume shouldContainExactly listOf(resumeItem)
             state.nextUp shouldContainExactly listOf(nextUpItem)
-            // Empty "Latest" sections are dropped, exactly as jellyfin-web omits empty shelves.
             state.latest.map { it.library } shouldContainExactly listOf(movies)
             state.latest.single().items shouldContainExactly listOf(movie)
         }
@@ -155,8 +131,6 @@ class HomeViewModelTest {
             advanceUntilIdle()
 
             val state = viewModel.uiState.value
-            // One flaky request must not make a library disappear from the home screen — only a
-            // library that *answered* with nothing loses its card.
             state.libraries shouldContainExactly listOf(movies, shows)
             state.latest.map { it.library } shouldContainExactly listOf(movies)
         }
@@ -173,8 +147,6 @@ class HomeViewModelTest {
             coVerify(exactly = 1) { repository.getLatestMedia("lib-movies", any()) }
             coVerify(exactly = 1) { repository.getLatestMedia("lib-shows", any()) }
         }
-
-    // ---- Continue Listening -----------------------------------------------------------------
 
     @Test
     fun `fetches Continue Listening when RESUME_AUDIO is in the layout`() =
@@ -207,8 +179,7 @@ class HomeViewModelTest {
             stubEverythingEmpty()
             val track = track("t1", "Fake Plastic Trees")
             coEvery { repository.getResumeAudioItems(any()) } returns AppResult.Success(listOf(track))
-            // The debounced membership refresh re-asks the same (now-empty) row; keeping it non-empty
-            // here would hide a bug where the instant patch below is the only thing removing the row.
+            // Keeping this stub non-empty would hide a bug where the instant patch is the only remover.
             val viewModel = HomeViewModel(repository, homeLayout, eventBus, downloads, connectivityRefresher)
             advanceUntilIdle()
 
@@ -314,15 +285,12 @@ class HomeViewModelTest {
             coVerify(exactly = 2) { repository.getUserViews() }
         }
 
-    // ---- refresh when connectivity changes --------------------------------------------------
-
     @Test
     fun `re-fetches the rows when the server becomes reachable again`() =
         runTest(dispatcher) {
             stubEverythingEmpty()
             val viewModel = HomeViewModel(repository, homeLayout, eventBus, downloads, connectivityRefresher)
             advanceUntilIdle()
-            // The initial load, and nothing else: an app that starts online must not fetch twice.
             coVerify(exactly = 1) { repository.getUserViews() }
 
             stubLibrariesWithContent(movies)
@@ -348,8 +316,6 @@ class HomeViewModelTest {
             advanceUntilIdle()
             viewModel.uiState.value.resume shouldContainExactly listOf(streamed)
 
-            // Offline mode: the repository now answers from Room, with downloads only. Without a
-            // reload the screen would keep offering media it can no longer play.
             coEvery { repository.getResumeItems(any()) } returns AppResult.Success(listOf(downloaded))
             coEvery { repository.getLatestMedia("lib-movies", any()) } returns
                 AppResult.Success(listOf(downloaded))
@@ -371,16 +337,12 @@ class HomeViewModelTest {
             advanceUntilIdle()
             viewModel.uiState.value.libraries shouldContainExactly listOf(movies, shows)
 
-            // Offline `getUserViews` still returns every cached library view; only the one with
-            // downloads behind it has anything to open.
             coEvery { repository.getLatestMedia("lib-shows", any()) } returns AppResult.Success(emptyList())
             connectivityChanges.emit(Unit)
             advanceUntilIdle()
 
             viewModel.uiState.value.libraries shouldContainExactly listOf(movies)
         }
-
-    // ---- user-data event bus --------------------------------------------------------------
 
     @Test
     fun `patches a loaded row when user data changes elsewhere, without refetching`() =
@@ -402,8 +364,6 @@ class HomeViewModelTest {
             viewModel.uiState.value.resume
                 .single()
                 .userData.isFavorite shouldBe true
-            // The whole point: a change that cannot move an item between rows costs no round-trip
-            // at all — not even after the membership-refresh window has long passed.
             coVerify(exactly = 1) { repository.getUserViews() }
             coVerify(exactly = 1) { repository.getResumeItems(any()) }
             coVerify(exactly = 1) { repository.getNextUp(any()) }
@@ -420,8 +380,6 @@ class HomeViewModelTest {
             val viewModel = HomeViewModel(repository, homeLayout, eventBus, downloads, connectivityRefresher)
             advanceUntilIdle()
 
-            // `PlaybackReporter` writes one of these every five seconds; a refetch per tick would
-            // be a poll for the length of the film.
             repeat(3) { tick ->
                 eventBus.emit(UserDataChange("e1", UserData(playbackPositionTicks = (tick + 1) * 100L)))
                 advanceUntilIdle()
@@ -457,7 +415,6 @@ class HomeViewModelTest {
             state.nextUp
                 .single()
                 .userData.isFavorite shouldBe true
-            // An untouched row keeps its identity so Compose can skip it entirely.
             state.latest
                 .single()
                 .items
@@ -483,8 +440,6 @@ class HomeViewModelTest {
             viewModel.uiState.value shouldBe before
         }
 
-    // ---- Watched state moves items between rows ------------------------------------------------
-
     @Test
     fun `marking a resume item watched drops it from continue watching in the same frame`() =
         runTest(dispatcher) {
@@ -499,8 +454,6 @@ class HomeViewModelTest {
             eventBus.emit(UserDataChange("m1", UserData(played = true)))
             runCurrent()
 
-            // Instant and request-free: *Continue watching* holds unfinished items, so a played
-            // item does not belong in it — no server round-trip is needed to know that.
             viewModel.uiState.value.resume
                 .shouldBeEmpty()
             coVerify(exactly = 1) { repository.getResumeItems(any()) }
@@ -516,7 +469,6 @@ class HomeViewModelTest {
             val viewModel = HomeViewModel(repository, homeLayout, eventBus, downloads, connectivityRefresher)
             advanceUntilIdle()
 
-            // Which episode is "next" is the server's answer, not something a patch can synthesise.
             coEvery { repository.getNextUp(any()) } returns AppResult.Success(listOf(episode("e2", "Chestnut")))
             eventBus.emit(UserDataChange("e1", UserData(played = true)))
             advanceUntilIdle()
@@ -526,8 +478,6 @@ class HomeViewModelTest {
                 .shouldContainExactly(listOf("e2"))
             coVerify(exactly = 2) { repository.getNextUp(any()) }
             coVerify(exactly = 2) { repository.getResumeItems(any()) }
-            // The rest of the screen is left alone: what is *recently added* does not depend on
-            // what has been watched, and the libraries call is not repeated either.
             coVerify(exactly = 1) { repository.getUserViews() }
             coVerify(exactly = 1) { repository.getLatestMedia(any(), any()) }
         }
@@ -542,8 +492,6 @@ class HomeViewModelTest {
             val viewModel = HomeViewModel(repository, homeLayout, eventBus, downloads, connectivityRefresher)
             advanceUntilIdle()
 
-            // *Mark watched* on a series or season page publishes the container's id, which no
-            // episode card matches — the patch alone can never fix these rows.
             coEvery { repository.getNextUp(any()) } returns AppResult.Success(emptyList())
             eventBus.emit(UserDataChange("series-1", UserData(played = true)))
             advanceUntilIdle()
@@ -562,7 +510,6 @@ class HomeViewModelTest {
             HomeViewModel(repository, homeLayout, eventBus, downloads, connectivityRefresher)
             advanceUntilIdle()
 
-            // Marking a season watched is one write per episode.
             repeat(TOGGLE_BURST) { index ->
                 eventBus.emit(UserDataChange("e$index", UserData(played = true)))
                 advanceTimeBy(WITHIN_DEBOUNCE_MS)
@@ -588,8 +535,6 @@ class HomeViewModelTest {
             eventBus.emit(UserDataChange("m1", UserData(played = true)))
             advanceUntilIdle()
 
-            // The rows are the downloads Room already answered with, and the write has nowhere to
-            // have been adopted — but the item still leaves the row.
             viewModel.uiState.value.resume
                 .shouldBeEmpty()
             coVerify(exactly = 1) { repository.getResumeItems(any()) }
@@ -607,8 +552,6 @@ class HomeViewModelTest {
             val viewModel = HomeViewModel(repository, homeLayout, eventBus, downloads, connectivityRefresher)
             advanceUntilIdle()
 
-            // The server still answers with the pre-toggle row: the push is slow, or it failed and
-            // is queued for `UserDataSyncWorker`. A local write that is still pending outranks it.
             eventBus.emit(UserDataChange("m1", UserData(played = true)))
             advanceUntilIdle()
 
@@ -633,8 +576,6 @@ class HomeViewModelTest {
             viewModel.refresh()
             advanceUntilIdle()
 
-            // Asking for a reload means asking the server; the local overrides stop applying, and
-            // anything genuinely unsynced comes back on the bus once `UserDataSyncer` resolves it.
             viewModel.uiState.value.resume
                 .map { it.id }
                 .shouldContainExactly(listOf("m1"))
@@ -658,16 +599,12 @@ class HomeViewModelTest {
             eventBus.emit(UserDataChange("series-1", UserData(played = true)))
             advanceUntilIdle()
 
-            // Silent means silent: the user toggled something on another screen, so a failure here
-            // must not empty a shelf or raise an error the user did not ask for.
             val state = viewModel.uiState.value
             state.resume shouldContainExactly listOf(resumeItem)
             state.nextUp shouldContainExactly listOf(nextUpItem)
             state.errorMessage.shouldBeNull()
             state.isRefreshing shouldBe false
         }
-
-    // ---- download badges -------------------------------------------------------------------
 
     @Test
     fun `download state reaches every card that shows the item`() =
@@ -696,8 +633,7 @@ class HomeViewModelTest {
     @Test
     fun `a download state that arrives before the rows survives the load`() =
         runTest(dispatcher) {
-            // `observeStates()` is distinct-until-changed, so it does not re-emit just because the
-            // screen refetched; the badge would vanish on every refresh if the state were not held.
+            // `observeStates()` is distinct-until-changed: it does not re-emit just because the screen refetched.
             downloadStates.value = mapOf("m1" to DownloadState.Downloaded)
             stubEverythingEmpty()
             coEvery { repository.getUserViews() } returns AppResult.Success(listOf(movies))
@@ -733,8 +669,6 @@ class HomeViewModelTest {
                 .downloadState shouldBe DownloadState.NotDownloaded
         }
 
-    // ---- Server-configured section layout -------------------------------------------------------
-
     @Test
     fun `the resolved layout reaches the state in the order the server gave it`() =
         runTest(dispatcher) {
@@ -751,7 +685,6 @@ class HomeViewModelTest {
             val viewModel = HomeViewModel(repository, homeLayout, eventBus, downloads, connectivityRefresher)
             advanceUntilIdle()
 
-            // The screen renders `sections`, so this list *is* the row order.
             viewModel.uiState.value.sections shouldContainExactly sections
         }
 
@@ -769,7 +702,6 @@ class HomeViewModelTest {
             val viewModel = HomeViewModel(repository, homeLayout, eventBus, downloads, connectivityRefresher)
             advanceUntilIdle()
 
-            // Hiding *Next up* in jellyfin-web costs the request as well as the row.
             coVerify(exactly = 0) { repository.getNextUp(any()) }
             val state = viewModel.uiState.value
             state.nextUp.shouldBeEmpty()
@@ -787,7 +719,6 @@ class HomeViewModelTest {
             val viewModel = HomeViewModel(repository, homeLayout, eventBus, downloads, connectivityRefresher)
             advanceUntilIdle()
 
-            // Nothing asks what is behind each library, so nothing filters the cards either.
             coVerify(exactly = 0) { repository.getLatestMedia(any(), any()) }
             viewModel.uiState.value.libraries shouldContainExactly listOf(movies, shows)
         }
@@ -819,8 +750,6 @@ class HomeViewModelTest {
             val viewModel = HomeViewModel(repository, homeLayout, eventBus, downloads, connectivityRefresher)
             advanceUntilIdle()
 
-            // Changing Settings → Home in jellyfin-web and pulling to refresh is the whole
-            // freshness story — there is no polling.
             sections = listOf(HomeSectionType.RESUME)
             viewModel.refresh()
             advanceUntilIdle()
@@ -843,8 +772,6 @@ class HomeViewModelTest {
             eventBus.emit(UserDataChange("series-1", UserData(played = true)))
             advanceUntilIdle()
 
-            // *Continue watching* is on screen and is re-fetched; *Next up* is not on screen at
-            // all, so its membership is nobody's question.
             coVerify(exactly = 2) { repository.getResumeItems(any()) }
             coVerify(exactly = 0) { repository.getNextUp(any()) }
             viewModel.uiState.value.resume shouldContainExactly listOf(movie("m1", "Dune"))
@@ -867,10 +794,7 @@ class HomeViewModelTest {
             coVerify(exactly = 0) { repository.getNextUp(any()) }
         }
 
-    /**
-     * Makes [libraries] the only libraries the server knows about, each with one item in it — enough
-     * for every one of them to keep its *My Media* card, which an empty library no longer gets.
-     */
+    /** Each library gets one item: an empty library no longer keeps its *My Media* card. */
     private fun stubLibrariesWithContent(vararg libraries: LibraryView) {
         coEvery { repository.getUserViews() } returns AppResult.Success(libraries.toList())
         libraries.forEach { library ->
@@ -903,7 +827,6 @@ class HomeViewModelTest {
     ) = JellyfinItem(id = id, name = name, type = ItemType.AUDIO)
 
     private companion object {
-        /** Episodes toggled in one go — "mark season watched" is one write per episode. */
         const val TOGGLE_BURST = 5
 
         /** Spacing between those toggles: short enough that the debounce window never elapses. */

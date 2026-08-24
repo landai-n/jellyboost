@@ -14,13 +14,11 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 /**
- * What the server is told about a downloaded item that is being watched with a group.
- *
- * [SyncPlayLocalSession] is a reconciliation, not a sequence of events, and that is what these tests
- * are shaped around: the same call answers "a group joined ten minutes into a film" and "a film
- * opened while already in a group", and the same call closes the session whether the group ended or
- * the item did. The costly half — one `PlaybackInfo` POST — must happen exactly once per item, and
- * the cheap half — a stop report on the way out — exactly once per group.
+ * [SyncPlayLocalSession] is a reconciliation, not a sequence of events: the same call answers "a
+ * group joined mid-film" and "a film opened while already in a group", and closes the session
+ * whether the group ended or the item did. The costly half — one `PlaybackInfo` POST — must
+ * happen exactly once per item; the cheap half — a stop report on the way out — exactly once per
+ * group.
  */
 class SyncPlayLocalSessionTest {
     private val resolver = mockk<PlaybackInfoResolver>()

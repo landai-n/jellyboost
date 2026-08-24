@@ -52,9 +52,8 @@ class CastDeviceProfileTest {
     fun `claims nothing a receiver's baseline decoder cannot handle`() {
         val videoCodecs = profile.directPlayProfiles.filter { it.type == DlnaProfileType.VIDEO }.map { it.videoCodec }
 
-        // The default build is the LEGACY_1080P floor — the profile an *unclassified* receiver
-        // gets, where claiming HEVC or AV1 the hardware may lack costs the user the film. The
-        // HEVC-capable classes are pinned separately below.
+        // The default build is the LEGACY_1080P floor, sent to unclassified receivers — claiming
+        // HEVC/AV1 the hardware may lack costs the user the film. HEVC classes pinned below.
         videoCodecs.joinToString() shouldNotContain "hevc"
         videoCodecs.joinToString() shouldNotContain "av1"
         // mkv is not on the list even though most receivers demux it; the ones that do not fail

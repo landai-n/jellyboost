@@ -1,16 +1,10 @@
 package dev.jellyboost.core.common
 
 /**
- * Human-readable time remaining — `"45 s"`, `"3 min"`, `"1 h 20 min"` — for an ETA the user is
- * meant to glance at, not a stopwatch.
+ * Human-readable time remaining — `"45 s"`, `"3 min"`, `"1 h 20 min"`.
  *
- * Rounds up rather than to the nearest unit: an ETA is a promise about how much longer something
- * takes, and a download that still needs 61 more seconds reading "1 min" would land short of that
- * promise the moment it is shown. Ceiling division keeps the number always at least as large as the
- * real remaining time, the same asymmetry a user expects from any "time remaining" figure.
- *
- * Lives in `:core:common` next to [formatBytes] for the same reason: Android-free so every feature
- * module can call it and unit-test it without a `Context`.
+ * Rounds **up** rather than to the nearest unit: an ETA is a promise about how much longer something takes,
+ * and 61 seconds shown as "1 min" would land short of it. Android-free, so every feature module can call it.
  */
 fun formatDurationSeconds(seconds: Long): String {
     val clamped = seconds.coerceAtLeast(0L)
@@ -24,8 +18,7 @@ fun formatDurationSeconds(seconds: Long): String {
             val remainderSeconds = clamped % SECONDS_PER_HOUR
             val minutes = ceilDiv(remainderSeconds, SECONDS_PER_MINUTE)
 
-            // A remainder of, say, 59.02 min ceils to 60 — a sixtieth minute does not exist, it is
-            // the next hour instead.
+            // A remainder of 59.02 min ceils to 60 — a sixtieth minute does not exist, it is the next hour.
             if (minutes == MINUTES_PER_HOUR) {
                 "${hours + 1} h"
             } else if (minutes == 0L) {
@@ -37,7 +30,6 @@ fun formatDurationSeconds(seconds: Long): String {
     }
 }
 
-/** Integer ceiling division: the whole units [numerator] takes up when any remainder rounds up. */
 private fun ceilDiv(
     numerator: Long,
     denominator: Long,

@@ -4,7 +4,6 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
-/** Unit tests for the display and progress logic [JellyfinItem] exposes to the cards. */
 class JellyfinItemTest {
     @Test
     fun `an episode leads with its series name and labels the episode`() {
@@ -126,8 +125,6 @@ class JellyfinItemTest {
         DownloadState.Downloading(0.5f).isActive shouldBe true
     }
 
-    // ---- detail metadata ------------------------------------------------------------------------
-
     @Test
     fun `converts a tick runtime into whole minutes`() {
         // 116 minutes: Jellyfin counts in 100-nanosecond ticks.
@@ -156,7 +153,6 @@ class JellyfinItemTest {
 
         halfway.remainingMinutes shouldBe 50
 
-        // Watched and never-started items have nothing left to report.
         halfway.copy(userData = UserData(played = true)).remainingMinutes.shouldBeNull()
         halfway.copy(userData = UserData()).remainingMinutes.shouldBeNull()
     }

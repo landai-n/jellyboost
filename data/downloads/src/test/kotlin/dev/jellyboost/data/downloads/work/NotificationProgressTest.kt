@@ -6,13 +6,9 @@ import org.junit.jupiter.api.Test
 import java.util.UUID
 
 /**
- * Unit tests for [notificationProgressOf] — the whole of [DownloadNotifier.foregroundInfoIfChanged]'s
- * change guard.
- *
- * `DownloadNotifier` itself needs a `Context` to build a real `Notification`, but the decision the
- * guard makes — has anything the user would see actually changed? — depends only on these four
- * values, which is why it is pulled out as its own function: this is what lets it be pinned without
- * any of the Android framework in the way.
+ * The decision [DownloadNotifier.foregroundInfoIfChanged] makes — has anything the user would see
+ * changed? — depends only on these four values, which is why it is pulled out as its own function:
+ * that is what lets it be pinned without any of the Android framework in the way.
  */
 class NotificationProgressTest {
     @Test
@@ -49,8 +45,8 @@ class NotificationProgressTest {
         val first = notificationProgressOf(UUID.randomUUID(), "Arrival", bytesDownloaded = 500L, bytesTotal = 1_000L)
         val second = notificationProgressOf(UUID.randomUUID(), "Chestnut", bytesDownloaded = 500L, bytesTotal = 1_000L)
 
-        // The queue runs one item at a time; switching items must always force a rebuild, even at
-        // the same percent, or the notification would keep the previous item's title.
+        // The queue runs one item at a time; switching items must force a rebuild even at the same
+        // percent, or the notification keeps the previous item's title.
         second shouldNotBe first
     }
 

@@ -2,12 +2,7 @@ package dev.jellyboost.data.mapper
 
 import java.util.UUID
 
-/**
- * Deterministic [ImageUrlFactory] for mapper tests.
- *
- * Encodes every input into the URL so assertions can prove *which* item and tag the mapper picked
- * — that is the whole point of the artwork fallback chain.
- */
+/** Encodes every input into the URL so assertions can prove *which* item and tag was picked. */
 internal class FakeImageUrlFactory : ImageUrlFactory {
     override fun imageUrl(
         itemId: UUID,

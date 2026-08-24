@@ -14,12 +14,9 @@ import java.time.Duration
 import java.time.Instant
 
 /**
- * Unit tests for [SyncPlayPinger].
- *
- * The cadence is the point: the burst right after joining is what makes the *first* scheduled
- * command land accurately, and the slow cadence afterwards is what keeps the loop off the battery.
- * Both are asserted against virtual time so a changed constant fails here rather than in a room
- * full of people watching a film.
+ * The cadence is the point: the burst right after joining makes the *first* scheduled command
+ * land accurately, and the slow cadence afterwards keeps the loop off the battery — both asserted
+ * against virtual time so a changed constant fails here, not in a room full of people watching a film.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class SyncPlayPingerTest {
@@ -125,8 +122,7 @@ class SyncPlayPingerTest {
             runCurrent()
             api.callsOf<SyncPlayCall.ReportPing>().size shouldBe 0
 
-            // The loop is still running a second later, which is the whole point: one timed-out
-            // request must not leave the client scheduling for ever against a stale clock.
+            // One timed-out request must not leave the client scheduling forever against a stale clock.
             advanceTimeBy(1_000)
             runCurrent()
             api.callsOf<SyncPlayCall.ReportPing>().size shouldBe 1

@@ -13,21 +13,7 @@ import javax.inject.Singleton
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.math.abs
 
-/**
- * Finds the scrubbing thumbnails for whatever is playing.
- *
- * Both halves of the sealed [PlaybackMediaSource] end at the same [TrickplayTiles], so the scrubber
- * neither knows nor cares whether it is drawing sheets off the SD card or off the server:
- *
- * - a **downloaded** item already carries its sheets — the download pipeline fetched them, and
- *   there is nothing to ask anyone;
- * - a **streamed** item has geometry but no URLs, so the item is re-read for its `trickplay` map and
- *   the sheet URLs are derived from it.
- *
- * Absence is a first-class answer. A server that generated no thumbnails, an unreachable one, and an
- * item whose geometry is nonsense all return `null`, and the seek bar simply has no preview above
- * it — graceful absence, with no placeholder flicker.
- */
+/** Absence is a first-class answer: no thumbnails, an unreachable server and nonsense geometry all give `null`. */
 @Singleton
 internal class TrickplayResolver
     @Inject
@@ -36,9 +22,8 @@ internal class TrickplayResolver
         private val urls: StreamUrlFactory,
     ) {
         /**
-         * @param preferredWidth the thumbnail width the UI would like. The server holds one set of
-         *   sheets per width and rarely the one asked for, so the closest available is used.
-         * @return the sheets to scrub with, or `null` when this item has none.
+         * @param preferredWidth a preference only: the server holds one set of sheets per width, rarely the one
+         *   asked for, so the closest available wins.
          */
         @Suppress("TooGenericExceptionCaught")
         suspend fun resolve(
@@ -69,8 +54,7 @@ internal class TrickplayResolver
             val perSheet = info.tileWidth * info.tileHeight
             if (perSheet <= 0 || info.thumbnailCount <= 0 || info.interval <= 0) return null
 
-            // Derived, never served: the server reports how many thumbnails exist and how many fit
-            // on a sheet, and the sheet count follows — the same arithmetic the download planner does.
+            // The server never reports a sheet count; it is ceil(thumbnails / per sheet).
             val sheetCount = (info.thumbnailCount + perSheet - 1) / perSheet
             return TrickplayTiles(
                 thumbnailWidth = info.width,
@@ -92,15 +76,9 @@ internal class TrickplayResolver
         }
 
         /**
-         * The geometry for this media source at the closest available width.
-         *
-         * The map is keyed by media source id and then by width. An item with several files holds
-         * one entry per file, and the sheets of *another* file would be the wrong film — so the
-         * requested source is preferred, with the dash-less spelling of an id accepted too because
-         * that is what the server answers `PlaybackInfo` with. When the source is not in the map at
-         * all (an older server, or a single-source item keyed by something else), every entry is
-         * considered rather than giving up: a wrong-file preview is impossible when there is only
-         * one file, and that is the case this fallback covers.
+         * Keyed by media source id, then by width. The dash-less spelling of an id is accepted because that is
+         * what the server answers `PlaybackInfo` with; an unlisted source falls back to every entry, which can
+         * only be the wrong file on a multi-file item an older server keyed differently.
          */
         private fun Map<String, Map<String, TrickplayInfoDto>>.pickFor(
             mediaSourceId: String,
@@ -113,18 +91,10 @@ internal class TrickplayResolver
         }
 
         private companion object {
-            /**
-             * The thumbnail width the scrubber asks for.
-             *
-             * Jellyfin's own default sheet is 320 px wide and the preview is drawn at roughly a
-             * sixth of a tablet's width, so anything larger is bytes the user waits for and never
-             * sees. The closest available width wins, so this is a preference and not a
-             * requirement.
-             */
+            /** Jellyfin's own default sheet width; the preview is drawn at roughly a sixth of a tablet's width. */
             const val DEFAULT_PREFERRED_WIDTH = 320
         }
     }
 
-/** `true` when the geometry can actually address a thumbnail. */
 private val TrickplayTiles.isUsable: Boolean
     get() = tileUris.isNotEmpty() && intervalMs > 0 && columns * rows > 0 && thumbnailCount > 0

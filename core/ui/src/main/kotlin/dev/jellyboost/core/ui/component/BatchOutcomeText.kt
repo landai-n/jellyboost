@@ -7,17 +7,7 @@ import dev.jellyboost.core.common.selection.BatchOutcome
 import dev.jellyboost.core.common.selection.SelectionAction
 import dev.jellyboost.core.ui.R
 
-/**
- * The one snackbar line a finished batch produces.
- *
- * Resolved in Compose, from a resource-free [BatchOutcome], for the reason every message type in
- * this app is: a `ViewModel` that formatted its own copy could not be translated and could not be
- * unit-tested without Android. Both surfaces call this, so "Marked 4 watched, 1 failed" reads the
- * same in the library grid and on a season page.
- *
- * *Which* shape applies is [resolveBatchMessage] — a plain function with no Android dependency, so
- * it is unit-testable directly. This composable's only job is turning that decision into a string.
- */
+/** Turns [resolveBatchMessage]'s decision into a string; the decision itself stays Android-free. */
 @Composable
 fun batchOutcomeText(
     action: SelectionAction,
@@ -44,19 +34,7 @@ fun batchOutcomeText(
             pluralStringResource(action.donePlural(), message.done, message.done)
     }
 
-/**
- * Which shape of batch-outcome sentence applies, decided from the three raw counts alone.
- *
- * In the order they are decided:
- * 1. **nothing succeeded** ([BatchMessage.AllFailed]) — say so plainly rather than reporting a zero
- *    ("Marked 0 watched, 3 failed" is a sentence no one should have to parse);
- * 2. **mixed** ([BatchMessage.Partial]) — both numbers, because the difference is the whole point
- *    of a bulk action;
- * 3. **nothing to do** ([BatchMessage.AllSkipped]) — *Download* only: every selected item was
- *    already on the device;
- * 4. **some done, some skipped** ([BatchMessage.DoneWithSkipped]) — *Download* only;
- * 5. **clean** ([BatchMessage.Done]) — the count, nothing failed or skipped.
- */
+/** Ladder order matters: all-failed before mixed, and the skipped shapes are *Download*-only. */
 @Suppress(
     // One resource per outcome shape; a `when` over two independent counts would nest, not flatten.
     "ReturnCount",
@@ -81,7 +59,6 @@ internal fun resolveBatchMessage(
     return BatchMessage.Done(outcome.done)
 }
 
-/** The resource-free shapes [resolveBatchMessage] can decide on — see its KDoc for the ladder. */
 internal sealed interface BatchMessage {
     data class AllFailed(
         val failed: Int,

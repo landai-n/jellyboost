@@ -29,7 +29,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 import java.util.UUID
 
-/** Unit tests for the Login state holder — password sign-in and Quick Connect. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class LoginViewModelTest {
     @JvmField
@@ -204,9 +203,8 @@ class LoginViewModelTest {
     @DisplayName("the credential fields are inert while a sign-in is in flight")
     fun credentialsCannotChangeMidSignIn() =
         runTest {
-            // The screen keeps both fields *enabled* through the exchange so a TalkBack user does
-            // not lose accessibility focus the instant they press Sign in.
-            // The guard that makes that safe lives here: what is in flight stays what is on screen.
+            // The fields stay enabled through the exchange for accessibility; this guard is what makes
+            // that safe — what is in flight stays what is on screen.
             coEvery { authRepository.loginWithPassword(SERVER, USER_NAME, PASSWORD) } coAnswers {
                 delay(POLL_INTERVAL_MILLIS)
                 AppResult.Failure(AppError.Unauthorized())
@@ -227,7 +225,6 @@ class LoginViewModelTest {
             viewModel.uiState.value.password shouldBe PASSWORD
             advanceUntilIdle()
 
-            // And they take edits again the moment the exchange has answered.
             viewModel.onUsernameChange("someone-else")
             viewModel.uiState.value.username shouldBe "someone-else"
         }
@@ -350,10 +347,7 @@ class LoginViewModelTest {
             viewModel.uiState.value.error shouldBe AuthErrorMessage.ServerFailure(statusCode = 500)
         }
 
-    /**
-     * Mimics `AuthRepository.observeQuickConnectState`: one waiting emission per poll interval,
-     * then exactly one [terminal] state. `delay` runs on the test scheduler's virtual clock.
-     */
+    /** One waiting emission per poll interval, then exactly one [terminal] state. */
     private fun pollingFlow(terminal: QuickConnectState): Flow<QuickConnectState> =
         flow {
             emit(QuickConnectState.WaitingForApproval)

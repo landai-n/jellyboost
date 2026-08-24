@@ -52,17 +52,12 @@ import java.time.ZoneOffset
 import java.util.UUID
 
 /**
- * The user's own scenario, end to end: a season of transcoded episodes queued in **one tap**.
+ * A season of transcoded episodes queued in **one tap**, end to end. At enqueue there is nothing
+ * finished to learn from, so every row starts on its ceiling; what matters is what happens next — the
+ * first episode lands, and the rows still waiting behind it have to pick up a size from it.
  *
- * At enqueue there is nothing finished to learn from, so every row starts on its ceiling ("up to
- * X") — that part is by design and this test states it. What was missing is what happens next: the
- * first episode lands, and the rows still waiting behind it have to pick up a size from it. Before
- * `SiblingSeeder`, no code path ever revisited an enqueued row, so episodes 2..N kept the ceiling
- * wording for the whole of the season however many siblings finished.
- *
- * Room is stood in for by a map rather than mocked call by call: the point of the test is the
- * *sequence* — enqueue, finish one, re-read the others — and a per-call stub could not express it.
- * The fake implements exactly what the two new statements say (`unseededSiblings`'s filters, and
+ * Room is stood in for by a map rather than mocked call by call: the subject is the *sequence*, and
+ * the fake implements exactly what the two statements say (`unseededSiblings`'s filters and
  * `setProjectedBytesIfAbsent`'s refusal to overwrite), so the SQL is what is being modelled.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -104,13 +99,13 @@ class SeasonSeedingScenarioTest {
         runTest {
             enqueuer().enqueue(SEASON, USER)
 
-            // Not a bug, and not fixable at enqueue: the evidence a seed is made of is a *finished*
-            // download, and at this instant the season has none. Every row shows "up to X".
+            // Not fixable at enqueue: the evidence a seed is made of is a *finished* download, and at
+            // this instant the season has none.
             downloads.keys.toList() shouldContainExactly listOf(EPISODE_1, EPISODE_2, EPISODE_3)
             downloads.values.map { it.projectedBytes } shouldContainExactly listOf<Long?>(null, null, null)
             downloads.values.forEach { it.quality shouldBe DownloadQuality.LOW }
-            // The column the whole feature keys on: an episode enqueued through season expansion
-            // has to carry its series name, or no sibling query can ever match it.
+            // The column the whole feature keys on: an episode enqueued through season expansion has
+            // to carry its series name, or no sibling query can ever match it.
             downloads.values.forEach { it.seriesName shouldBe "Westworld" }
         }
 
@@ -122,22 +117,19 @@ class SeasonSeedingScenarioTest {
 
             queue().drain(RecordingListener())
 
-            // The bug the user reported: before the fix nothing ever came back to these rows, so
-            // they stayed on "up to 1,4 GB" while episode 1 sat finished at 200 MB next to them.
             val second = downloads.getValue(EPISODE_2)
             val third = downloads.getValue(EPISODE_3)
             second.projectedBytes.shouldNotBeNull()
             third.projectedBytes.shouldNotBeNull()
-            // Episode 1 landed at 200 MB of media plus its two images, over an hour; episodes 2 and
-            // 3 are the same length, so that is what they are expected to weigh. (Within a byte:
-            // the rate is a `Double`, and the round trip through it is not exact.)
+            // Episode 1 landed at 200 MB over an hour; episodes 2 and 3 are the same length. Within a
+            // byte: the rate is a `Double`, and the round trip through it is not exact.
             second.projectedBytes!! shouldBeGreaterThanOrEqual LANDED_BYTES - 1
             second.projectedBytes!! shouldBeLessThanOrEqual LANDED_BYTES
             third.projectedBytes shouldBe second.projectedBytes
-            // And the ceiling is still a promise: a seed may only ever move the figure down.
+            // A seed may only ever move the figure down.
             second.projectedBytes!! shouldBeLessThanOrEqual second.bytesTotal
-            // `bytesTotal` itself is untouched — the ceiling and the projection are two columns
-            // precisely so a guess cannot overwrite a deterministic bound.
+            // `bytesTotal` is untouched: the ceiling and the projection are two columns precisely so
+            // a guess cannot overwrite a deterministic bound.
             second.bytesTotal shouldBe third.bytesTotal
         }
 
@@ -240,8 +232,8 @@ class SeasonSeedingScenarioTest {
 
         coEvery { downloadDao.upsert(any()) } answers { downloads[firstArg<DownloadEntity>().itemId] = firstArg() }
         coEvery { downloadDao.get(any()) } answers { downloads[firstArg()] }
-        // The season path reads its whole batch in one statement; routing it
-        // through the per-id stub keeps every test below expressing its rows one at a time.
+        // The season path reads its whole batch in one statement; routing it through the per-id stub
+        // keeps every test below expressing its rows one at a time.
         coEvery { downloadDao.getAll(any()) } coAnswers {
             firstArg<List<UUID>>().mapNotNull { downloadDao.get(it) }
         }
@@ -297,8 +289,8 @@ class SeasonSeedingScenarioTest {
             files += firstArg<DownloadFileEntity>().copy(id = nextFileId)
             nextFileId++
         }
-        // The queue hands out one item per call, and only as many as the test asked for: the
-        // scenario is "episode 1 finished", not "the whole season did".
+        // The queue hands out one item per call, and only as many as the test asked for: the scenario
+        // is "episode 1 finished", not "the whole season did".
         coEvery { downloadDao.nextRunnable() } answers {
             downloads.values
                 .firstOrNull { it.status == DownloadStatus.QUEUED }
@@ -325,8 +317,8 @@ class SeasonSeedingScenarioTest {
             runTimeTicks = HOUR_TICKS,
             // Far above `LOW`'s cap, so the row gets a genuine ceiling rather than a remux figure.
             sourceBitRate = 40_000_000,
-            // The file that bitrate implies over an hour — 18 GB against a 1,4 GB transcode, so the
-            // row stays `LOW` instead of falling back to the original (`DownloadEnqueuer.planQuality`).
+            // 18 GB against a 1,4 GB transcode, so the row stays `LOW` instead of falling back to
+            // the original (`DownloadEnqueuer.planQuality`).
             sizeBytes = 3_600L * 40_000_000 / 8,
         )
 

@@ -35,10 +35,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for [PlaylistDetailViewModel].
- *
- * The "always empty offline" behaviour itself is [OfflineJellyfinRepository]'s to pin — this class
- * only has to show that whatever the repository answers with reaches the screen unchanged.
+ * The "always empty offline" behaviour is [OfflineJellyfinRepository]'s to pin; this only shows that
+ * whatever the repository answers reaches the screen unchanged.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class PlaylistDetailViewModelTest {
@@ -145,8 +143,7 @@ class PlaylistDetailViewModelTest {
             val viewModel = viewModel()
             advanceUntilIdle()
 
-            // Honest even though the playlist itself has no offline model: the badge describes the
-            // *track's* file on this device, which is exactly what a playlist download produces.
+            // Honest even with no offline playlist model: the badge describes the *track's* file.
             viewModel.uiState.value.tracks
                 .single()
                 .downloadState shouldBe DownloadState.Downloaded

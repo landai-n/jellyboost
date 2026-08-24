@@ -29,7 +29,6 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-/** Unit tests for [MusicLibraryViewModel]'s three paged queries. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class MusicLibraryViewModelTest {
     private val dispatcher = StandardTestDispatcher()
@@ -74,10 +73,8 @@ class MusicLibraryViewModelTest {
             viewModel.uiState.value.selectedTab shouldBe MusicLibraryTab.ARTISTS
         }
 
-    // Each of the three `val`s (`albums`/`artists`/`playlists`) builds its query in a property
-    // initializer, so `viewModel()` alone captures all three into `queries` — one call each, up
-    // front — regardless of which flow a test goes on to collect. Tests below look the right query
-    // up by the type it asked for rather than assuming there is only one in the list.
+    // All three queries are built in property initializers, so `viewModel()` alone captures them
+    // whatever a test goes on to collect. Look one up by the type it asked for.
 
     @Test
     fun `albums are scoped to the library and only ask for MUSIC_ALBUM`() =
@@ -102,10 +99,7 @@ class MusicLibraryViewModelTest {
             }
         }
 
-    /**
-     * Playlists live outside their music library's own folder on a Jellyfin server, so the query
-     * deliberately carries no `parentId` — see [MusicLibraryViewModel]'s KDoc.
-     */
+    /** Playlists live outside their library's folder, so the query carries no `parentId`. */
     @Test
     fun `playlists carry no parentId, unlike albums and artists`() =
         runTest(dispatcher) {
@@ -127,8 +121,7 @@ class MusicLibraryViewModelTest {
             collecting(viewModel.albums) {
                 collecting(viewModel.artists) {
                     collecting(viewModel.playlists) {
-                        // Three collectors, three requests — one per tab's own `Pager`, all alive
-                        // regardless of which tab `uiState.selectedTab` currently names.
+                        // One per tab's own `Pager`, all alive whatever `selectedTab` names.
                         queries.map { it.itemTypes.single() } shouldContainExactly
                             listOf(ItemType.MUSIC_ALBUM, ItemType.MUSIC_ARTIST, ItemType.PLAYLIST)
                     }

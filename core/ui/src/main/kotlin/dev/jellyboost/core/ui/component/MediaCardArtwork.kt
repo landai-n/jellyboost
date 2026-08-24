@@ -62,26 +62,14 @@ import dev.jellyboost.core.ui.theme.cardShadow
 import java.util.Locale
 
 /**
- * How every card in the design system reads its `width` parameter.
- *
- * A concrete [Dp] pins the card, which is what a horizontally scrolling row needs. [Dp.Unspecified]
- * fills whatever the parent offers, which is what a `GridCells.Adaptive` cell needs — and it does
- * so by measurement rather than by wrapping each cell in a `BoxWithConstraints`, i.e. without one
- * subcomposition per visible card while the grid scrolls.
+ * [Dp.Unspecified] fills the parent (adaptive grid cell); a concrete [Dp] pins it (scrolling row).
+ * Done by measurement, not `BoxWithConstraints`, to avoid a subcomposition per visible card.
  */
 internal fun Modifier.cardWidth(width: Dp): Modifier = if (width.isSpecified) this.width(width) else this.fillMaxWidth()
 
 /**
- * How every selectable row or card reacts to touch: tap does whatever the caller says, and a long
- * press — when the caller offers one — buzzes and enters batch-selection mode.
- *
- * The haptic is here rather than in the two screens because it is a property of the gesture, not of
- * the list: a long press that selects something with no tactile confirmation reads as a press that
- * did nothing until the eye finds the bar that appeared at the other end of the screen.
- *
- * The long press is *labelled* — "Select" — which is what puts it in TalkBack's actions menu. An
- * unlabelled long press is a gesture only a sighted user can discover, and batch selection is the
- * one mode of this app that has no other way in.
+ * The long press must stay labelled: the label is what puts batch selection in TalkBack's actions
+ * menu, and there is no other way into that mode.
  */
 @Composable
 fun Modifier.selectableCardClick(
@@ -105,7 +93,6 @@ fun Modifier.selectableCardClick(
     )
 }
 
-/** Title under a card's artwork. */
 internal val CardTitleStyle =
     TextStyle(
         fontSize = 14.sp,
@@ -113,38 +100,24 @@ internal val CardTitleStyle =
         lineHeight = 18.sp,
     )
 
-/** Its second line — a year, a series name, an episode label. */
 internal val CardSubtitleStyle =
     TextStyle(
         fontSize = 12.sp,
         lineHeight = 16.sp,
     )
 
-/** Gap between the artwork and the title under it. */
 internal val CardTitleGap = 10.dp
 
-/** Gap between that title and its subtitle — tight, so the two read as one block. */
 internal val CardSubtitleGap = 2.dp
 
-/**
- * Font scale past which a card title is allowed a second line.
- *
- * 1.3 is where a 14sp title in a 130–232dp card stops fitting a useful number of characters on one:
- * below it the design's single line holds a real title, above it "The Bicameral…" becomes "The
- * Bic…" and the card stops distinguishing itself from its neighbour.
- */
+/** Above 1.3, a 14sp title in a 130–232dp card no longer fits a distinguishing number of glyphs. */
 private const val TITLE_RELAX_SCALE = 1.3f
 
-/** How many lines a card title gets at [fontScale] — one, or two once text is large. */
 internal fun cardTitleMaxLines(fontScale: Float): Int = if (fontScale > TITLE_RELAX_SCALE) 2 else 1
 
 /**
- * The title and subtitle every card draws under its artwork.
- *
- * Shared by [PosterCard] and [ThumbCard] because the two blocks were identical, and because both
- * halves of it — the scale-aware line count and the silence — are rules that must not drift apart:
- * the card's merged node speaks the untruncated title itself (see [mediaCardSemantics]), so these
- * two texts are pictures of words rather than words, and are cleared for the screen reader.
+ * Both texts stay semantics-cleared: the card's merged node already speaks the untruncated title
+ * (see [mediaCardSemantics]), so leaving them audible says it twice, truncated.
  */
 @Composable
 internal fun CardTitleBlock(
@@ -174,7 +147,6 @@ internal fun CardTitleBlock(
     }
 }
 
-/** Text inside every overlay badge drawn on artwork — small, heavy and slightly tracked out. */
 private val OverlayBadgeLabel =
     TextStyle(
         fontSize = 10.sp,
@@ -182,14 +154,12 @@ private val OverlayBadgeLabel =
         letterSpacing = 0.06.em,
     )
 
-/** Inset of the corner *circles* (watched, download, selection), tighter than [Dimens.OverlayInset]. */
 private val CornerIndicatorInset = 8.dp
 
 private val IndicatorSize = 22.dp
 
 private val IndicatorGlyphSize = 13.dp
 
-/** Ring thickness of the hollow "selectable but not selected" indicator. */
 private val IndicatorRingWidth = 2.dp
 
 private val BadgeRadius = Dimens.MPillRadius
@@ -204,70 +174,43 @@ private val RatingStarSize = 10.dp
 
 private val RatingStarGap = 3.dp
 
-/** How far the time chip lifts when it would otherwise sit on the inset progress bar. */
 private val TimeChipProgressOffset = 14.dp
 
 private val SelectedOutlineWidth = 2.dp
 
-/** Backdrops of the three overlay badges, from the mocks: top badge, time chip, rating badge. */
 private val TopBadgeScrim = Color.Black.copy(alpha = 0.60f)
 
 private val TimeChipScrim = Color.Black.copy(alpha = 0.70f)
 
 private val RatingScrim = Color.Black.copy(alpha = 0.65f)
 
-/** Backdrop of the hollow selection indicator, which has to stay visible over bright artwork. */
 private val IndicatorScrim = Color.Black.copy(alpha = 0.60f)
 
 private const val UNSELECTED_INDICATOR_ALPHA = 0.85f
 
-/** Tint over selected artwork — enough to read as "picked", not so much that the image is gone. */
 private const val SELECTED_TINT_ALPHA = 0.22f
 
 /**
- * Track of the inset progress bar.
- *
- * 0.40, raised from 0.22. This bar is the whole point of the
- * Continue Watching row — "how far in am I" is unreadable if the unfilled half is not there — so
- * under WCAG 1.4.11 it owes 3:1 against what it sits on. White@22% was 1.79:1 over the darkest
- * artwork it can land on; white@40% is 3.66:1 there, 3.82:1 on the `#101010` background.
+ * WCAG 1.4.11 wants 3:1 for this track. White@22% measured 1.79:1 over the darkest artwork it can
+ * land on; white@40% is 3.66:1 there and 3.82:1 on the `#101010` background. Do not lower it.
  */
 private const val PROGRESS_TRACK_ALPHA = 0.40f
 
 /**
- * Formats a community rating for the corner badge: one decimal place, always.
- *
- * The trailing digit is not decoration. Ratings arrive as a float that is very often a whole number
- * (`8.0`), and rendering that as "8" beside a neighbouring card's "7.4" makes two values on the
- * same scale look like values on different ones. Locale-aware, because a decimal separator is not
- * universally a point.
- *
- * Public rather than `internal`: the detail header had its own copy that
- * hardcoded `Locale.US`, so on a German device the header's starred rating read `8.6` beside the
- * cards' `8,6` on the very same screen, and `metaRowDescription` spoke the wrong separator to
- * TalkBack. One function, one answer, and it is the one `RatingBadgeFormatTest` already pins.
+ * Always one decimal — "8" beside a neighbouring "7.4" reads as a different scale — and always
+ * locale-aware. Public so no caller re-rolls it with a hardcoded `Locale.US`; a second copy once
+ * put `8.6` beside `8,6` on the same screen.
  */
 fun formatRatingBadge(
     rating: Float,
     locale: Locale = Locale.getDefault(),
 ): String = String.format(locale, "%.1f", rating)
 
-/**
- * What makes a poster a poster and a thumb a thumb.
- *
- * The two cards were ~90% the same composable, and they had drifted: the click-and-semantics block
- * was spelled two different ways for what is meant to be identical behaviour. This is the *whole*
- * remainder once they are one — three values, plus a default width that stays on each public
- * signature because it is what a caller most often overrides.
- */
 internal sealed interface CardShape {
-    /** 2:3 for a poster, 16:9 for a thumb — the shapes jellyfin-web uses for the same rows. */
     val aspectRatio: Float
 
-    /** Drawn in place of artwork the server does not have. */
     val placeholderIcon: ImageVector
 
-    /** Which of the item's images this shape asks for, in the order it will accept them. */
     fun imageUrl(item: JellyfinItem): String?
 
     data object Poster : CardShape {
@@ -281,31 +224,16 @@ internal sealed interface CardShape {
         override val aspectRatio = THUMB_ASPECT_RATIO
         override val placeholderIcon = Icons.Outlined.Tv
 
-        /**
-         * Thumb → backdrop → primary, so a row never degrades into placeholders just because a
-         * server has no dedicated thumb image.
-         */
         override fun imageUrl(item: JellyfinItem) = item.thumbImageUrl ?: item.backdropImageUrl ?: item.primaryImageUrl
     }
 }
 
 /**
- * The card both [PosterCard] and [ThumbCard] are: artwork with its overlays, an optional title
- * block, and — as *one* node — everything a screen reader is told about the item.
+ * [mediaCardSemantics] must stay *before* the click in the modifier chain: that ordering is what
+ * makes the card one traversal stop with an authored sentence rather than six.
  *
- * ### The one click-and-semantics shape
- * Three arms, and each card meets the ones it can:
- * - **no [onClick]** — `clearAndSetSemantics {}` and nothing else. This is `EpisodeRow`'s case: a
- *   card inside something already clickable was a second traversal stop offering the row's own
- *   action, the first of the two announcing nothing but a title. [PosterCard] never reaches this
- *   arm — its `onClick` is not nullable.
- * - **no [onLongClick]** — a plain `clickable`, no combined-gesture detector at all.
- * - **both** — [selectableCardClick], whose long press is labelled so batch selection is reachable
- *   from TalkBack's actions menu.
- *
- * The named, merged node comes *before* the click in the chain in all three, which is what makes
- * the card one stop with an authored sentence rather than six — see [mediaCardSemantics], and
- * `mediaCardDescription` for the sentence itself.
+ * A null [onClick] means the card sits inside something already clickable (`EpisodeRow`), so it is
+ * cleared entirely rather than becoming a second stop offering the row's own action.
  */
 @Composable
 internal fun MediaCard(
@@ -360,24 +288,10 @@ internal fun MediaCard(
 }
 
 /**
- * The four values a caller decides about a card's overlays, as one thing to pass.
+ * All four end up in the card's spoken sentence via `mediaCardDescription`.
  *
- * They belong together because they are decided together and drawn together — the selection state
- * *claims the corner* the badge would otherwise take (see [TopStartOverlay]), and all four end up
- * in the card's spoken sentence via `mediaCardDescription`. Forwarded verbatim through four
- * signature levels they were four chances to drop one on the way down; as one value there is
- * nothing to mistype and nothing to forget.
- *
- * @param selected `null` when the list is **not** in selection mode, which is the ordinary case and
- *   draws nothing extra; `false`/`true` put the card in the mode's unselected/selected state. One
- *   nullable flag rather than a pair of booleans because "selected while not selectable" is not a
- *   state that exists, and a pair would let a caller express it.
- * @param topStartBadge short, already-formatted label for the top-left glass badge — "S1 · E10",
- *   "4K". Suppressed in selection mode, where that corner belongs to the selection indicator.
- * @param timeChipText already-formatted remaining time for the bottom-right chip ("22m left"). The
- *   *number* comes from `JellyfinItem.remainingMinutes`; the wording is a caller's string resource,
- *   which is why this is a `String` and not an `Int`.
- * @param ratingBadge community rating for the bottom-left badge — see [formatRatingBadge].
+ * @param selected `null` means the list is not in selection mode at all; `false`/`true` are the
+ *   mode's two states. Not a pair of booleans, which could express "selected while not selectable".
  */
 @Immutable
 internal data class CardOverlayFacts(
@@ -388,16 +302,9 @@ internal data class CardOverlayFacts(
 )
 
 /**
- * Shared artwork block behind [PosterCard] and [ThumbCard]: the image itself plus the overlays
- * every card carries — the resume progress bar, the watched tick, the download badge, the optional
- * metadata badges, and (while a list is in batch-selection mode) the selection tint and indicator.
- *
- * @param overlays what the caller wants drawn over the image — see [CardOverlayFacts].
- * @param contentDescription label for the artwork itself. Both cards pass `null`: the card they sit
- *   in is one merged semantics node carrying an authored description of the whole item (see
- *   [mediaCardSemantics]), and an image description would be concatenated onto it rather than
- *   replace it. Every overlay this draws is silenced for the same reason — the badges are drawn
- *   facts, and the card's sentence is where those facts are spoken.
+ * Every overlay drawn here is semantics-cleared, and both cards pass a `null` [contentDescription]:
+ * the card's merged node (see [mediaCardSemantics]) already speaks these facts, and anything
+ * audible here is concatenated onto that sentence rather than replacing it.
  */
 @Composable
 internal fun MediaCardArtwork(
@@ -444,8 +351,8 @@ private fun BoxScope.CardOverlays(
     overlays: CardOverlayFacts,
 ) {
     val selected = overlays.selected
-    // Drawn over the image rather than under it: on a background this close to black, artwork with
-    // dark edges has no visible boundary at all unless the hairline sits on top of it.
+    // Over the image, not under it: dark-edged artwork has no visible boundary on a near-black
+    // background unless the hairline sits on top.
     Box(
         modifier =
             Modifier
@@ -465,17 +372,14 @@ private fun BoxScope.CardOverlays(
 
     TopStartOverlay(selected = selected, topStartBadge = overlays.topStartBadge)
 
-    // The download badge and the watched tick share the top-right corner, stacked rather than
-    // overlaid: both are facts about the same item and neither replaces the other, and the common
-    // case (one of the two, or neither) looks identical either way.
     Column(
         modifier = Modifier.align(Alignment.TopEnd).padding(CornerIndicatorInset),
         horizontalAlignment = Alignment.End,
         verticalArrangement = Arrangement.spacedBy(Dimens.SpaceExtraSmall),
     ) {
         DownloadBadge(state = downloadState, decorative = true)
-        // Hidden mid-episode (the progress bar already says "not finished"), and hidden in
-        // selection mode, where a second primary circle with a check in it would be a puzzle.
+        // Hidden mid-episode (the progress bar says it) and in selection mode (a second primary
+        // circle with a check in it reads as the selection indicator).
         if (played && progress == null && selected == null) {
             WatchedIndicator()
         }
@@ -509,13 +413,7 @@ private fun BoxScope.CardOverlays(
     }
 }
 
-/**
- * The top-left corner, which one of two things can claim.
- *
- * In selection mode it is the indicator, always — a grid where only some cards said they were
- * selectable would read as a grid where only some cards can be picked. Otherwise it is the metadata
- * badge, when the caller passed one.
- */
+/** In selection mode the indicator claims this corner unconditionally, badge or no badge. */
 @Composable
 private fun BoxScope.TopStartOverlay(
     selected: Boolean?,
@@ -533,8 +431,6 @@ private fun BoxScope.TopStartOverlay(
             style = OverlayBadgeLabel,
             color = Color.White,
             maxLines = 1,
-            // Clipped inside artwork with no room to spare: without this the last glyph is cut in
-            // half at ≥1.5× font scale rather than trailing off.
             overflow = TextOverflow.Ellipsis,
             modifier =
                 Modifier
@@ -547,7 +443,6 @@ private fun BoxScope.TopStartOverlay(
     }
 }
 
-/** The bottom-right "22m left" chip. */
 @Composable
 private fun TimeChip(
     text: String,
@@ -567,12 +462,6 @@ private fun TimeChip(
     )
 }
 
-/**
- * The bottom-left star + score badge, shown on library grids.
- *
- * Silent: the card's own description says "Rating 8.0 out of 10", which is the number *and* the
- * scale it is on — a bare "8.0" announced from a badge is a number out of nowhere.
- */
 @Composable
 private fun RatingBadge(
     rating: Float,
@@ -604,16 +493,11 @@ private fun RatingBadge(
 }
 
 /**
- * The resume bar, inset from the artwork's edges rather than spanning them.
+ * Boxes rather than `LinearProgressIndicator`: at 3dp with a 2dp radius and neither stop indicator
+ * nor gap, nothing that component provides survives being configured away.
  *
- * A hand-rolled pair of boxes rather than a `LinearProgressIndicator`: at 3dp with a 2dp radius and
- * neither stop indicator nor gap, nothing that component provides survives being configured away.
- *
- * It carries no `progressBarRangeInfo` of its own: inside a card the bar is not a control, it is
- * one fact among six, and a separate progress node
- * would be a second stop announcing "45 percent" with nothing to say what is 45% done. The card's
- * merged description says "45% watched" instead, and the bar is explicitly silenced so the two
- * cannot both speak.
+ * Deliberately carries no `progressBarRangeInfo` — a separate progress node would announce "45
+ * percent" with nothing to say what is 45% done; the card's merged description says "45% watched".
  */
 @Composable
 private fun InsetProgressBar(
@@ -642,12 +526,6 @@ private fun InsetProgressBar(
     }
 }
 
-/**
- * The solid primary disc with a dark tick that marks an item as watched.
- *
- * Silent, like every overlay on a card: "Watched" is part of the card's own sentence, and a tick
- * that also announced itself would put the word in twice.
- */
 @Composable
 private fun WatchedIndicator(modifier: Modifier = Modifier) {
     Box(
@@ -667,15 +545,9 @@ private fun WatchedIndicator(modifier: Modifier = Modifier) {
 }
 
 /**
- * The filled / hollow circle a card shows in selection mode.
- *
- * Both states are drawn, not just the selected one: an unselected card in a selection-mode grid has
- * to say that it *could* be selected, otherwise the mode looks like it applies to one card only.
- *
- * @param decorative `true` inside a card, whose own node now carries real `selected` semantics and
- *   a spoken state (see [mediaCardSemantics]) — a state a screen reader can *announce as a toggle*
- *   rather than a description that ends in the word "Selected". `false` leaves the indicator
- *   labelling itself, for a caller that draws one outside a selectable node.
+ * @param decorative `true` inside a card, whose own node already carries `selected` semantics (see
+ *   [mediaCardSemantics]); `false` leaves the indicator labelling itself, for a caller that draws
+ *   one outside a selectable node.
  */
 @Composable
 internal fun SelectionIndicator(

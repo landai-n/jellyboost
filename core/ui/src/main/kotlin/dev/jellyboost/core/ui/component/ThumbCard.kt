@@ -11,38 +11,16 @@ import dev.jellyboost.core.common.model.UserData
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 
-/**
- * Lazy-list `contentType` for every [ThumbCard] — lets a `LazyRow`/`LazyColumn` reuse a
- * scrolled-off thumb node instead of composing a fresh one when the next item is also a thumb.
- */
+/** Lazy-list `contentType`: without one a lazy layout reuses no scrolled-off node. */
 const val THUMB_CARD_CONTENT_TYPE = "card-thumb"
 
 /**
- * A 16:9 thumbnail card — used wherever jellyfin-web shows landscape artwork: *Continue watching*,
- * *Next up* and episode lists.
- *
- * Falls back through thumb → backdrop → primary artwork so a row never degrades into placeholders
- * just because a server has no dedicated thumb image.
- *
- * Like [PosterCard], a clickable card is **one** merged semantics node with an authored description
- * of the item — see [mediaCardSemantics].
- *
- * @param onClick what a tap does — or `null` when the card is *inside* something already clickable,
- *   which is how `EpisodeRow` uses it. A nested clickable card was a second traversal stop offering
- *   the row's own action, the first of the two announcing nothing but a title; `null` draws exactly
- *   the same artwork with no click target and no semantics at all, leaving the row to be the single
- *   node it should always have been.
- * @param width fixed card width, as a row of cards needs; [Dp.Unspecified] fills the available
- *   width instead, which is what an adaptive grid cell wants.
- * @param onLongClick offered by lists that support batch selection; `null` everywhere else. Ignored
- *   when [onClick] is `null` — a card that does not answer a tap cannot claim a long press.
- * @param selected `null` when the list is not in selection mode — see [MediaCardArtwork].
- * @param topStartBadge optional overlay metadata — see [MediaCardArtwork]. Formatted by the caller,
- *   which is the screen that owns the string resources ("S1 · E10", "22m left").
- *
- * The drawing itself is [MediaCard], shared with [PosterCard]: this signature exists for its four
- * thumb-shaped answers — 16:9 artwork, a TV glyph for a missing image, the thumb → backdrop →
- * primary fallback, and [Dimens.ThumbWidth] — for its nullable [onClick], and for the KDoc above.
+ * @param onClick `null` when the card is inside something already clickable (`EpisodeRow`): it then
+ *   draws the same artwork with no click target and no semantics, leaving the row one node.
+ * @param width [Dp.Unspecified] fills the parent, which is what an adaptive grid cell wants.
+ * @param onLongClick ignored when [onClick] is `null` — a card that ignores a tap cannot claim a
+ *   long press.
+ * @param topStartBadge already formatted by the caller, which owns the string resources.
  */
 @Composable
 fun ThumbCard(

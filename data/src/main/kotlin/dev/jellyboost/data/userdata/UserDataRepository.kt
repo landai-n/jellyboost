@@ -5,53 +5,34 @@ import dev.jellyboost.core.common.model.UserData
 import kotlinx.coroutines.flow.SharedFlow
 
 /**
- * Watched / favourite / resume-position writes.
- *
- * **Local-first, always**: every operation writes Room with
- * `toBeSynced = true` and publishes on [changes] *before* the server is contacted. The push that
- * follows is best effort — when it fails the flag stays set and `UserDataSyncWorker` is enqueued,
- * and the UI is none the wiser. That is what makes marking something watched feel instant, and
- * what makes it work at all with no network.
- *
- * Consequently the returned [AppResult] describes the **local** write, not the network one:
- * a [AppResult.Success] means the change is durably recorded and visible, whether or not the
- * server has heard about it yet.
+ * **Local-first, always**: every operation writes Room with `toBeSynced = true` and publishes on
+ * [changes] *before* the server is contacted, so the returned [AppResult] describes the **local**
+ * write. A [AppResult.Success] means the change is durable and visible, not that the server has
+ * heard about it.
  */
 interface UserDataRepository {
     /**
-     * Local user-data changes, for list ViewModels to patch their items in place.
-     *
-     * The **only** observation surface this repository offers. A per-item `observe(itemId)` backed
-     * by a Room `Flow` is deliberately not offered beside it: a screen that has already rendered an
-     * item wants the *delta* rather than a second subscription re-reading the table on every write
-     * in it.
+     * The **only** observation surface offered. A per-item `observe(itemId)` Room `Flow` is
+     * deliberately absent: a rendered screen wants the *delta*, not a subscription re-reading the
+     * table on every write.
      */
     val changes: SharedFlow<UserDataChange>
 
     /**
-     * Marks an item watched or unwatched.
-     *
-     * Marking watched also clears the resume position and stamps `lastPlayedDate`, matching what
-     * the server does for the same action — otherwise the item would come back with a stale
-     * progress bar after the next sync.
+     * Marking watched also clears the resume position and stamps `lastPlayedDate`, matching the
+     * server — otherwise the item returns with a stale progress bar after the next sync.
      */
     suspend fun setPlayed(
         itemId: String,
         played: Boolean,
     ): AppResult<UserData>
 
-    /** Adds or removes an item from the user's favourites. */
     suspend fun setFavorite(
         itemId: String,
         favorite: Boolean,
     ): AppResult<UserData>
 
-    /**
-     * Records a resume position, in Jellyfin ticks.
-     *
-     * Called by the player on every progress tick; writing it locally as well as reporting it is
-     * what makes resume behave identically online and offline.
-     */
+    /** In Jellyfin ticks. Called by the player on every progress tick. */
     suspend fun setPosition(
         itemId: String,
         positionTicks: Long,

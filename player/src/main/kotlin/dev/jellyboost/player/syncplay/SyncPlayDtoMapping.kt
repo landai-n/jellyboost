@@ -26,26 +26,15 @@ import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 
-// **The one and only place SyncPlay converts between SDK DTOs and the domain models.**
+// **The one place a `java.time.LocalDateTime` may exist in SyncPlay.** SDK 1.8.12's `DateTimeSerializer` reads
+// and writes them as local wall-clock time in [ZoneId.systemDefault], not UTC, so a `SendCommand.when` treated
+// as UTC is wrong by the device's offset and every scheduled play/pause/seek fires hours off the group.
 //
-// In particular it is the one place a `java.time.LocalDateTime` is allowed to exist. SDK 1.8.12's
-// `DateTimeSerializer` reads and writes those as **local wall-clock** time in
-// [ZoneId.systemDefault] — not UTC — so `SendCommand.when` parsed as if it were UTC is wrong by the
-// device's offset, which for SyncPlay means every scheduled play/pause/seek fires hours away from
-// the rest of the group. (Same bug class as the two-hour progress-report shift; see
-// `dev.jellyboost.core.network.toSdkInstant`, whose helpers do the conversion.)
-//
-// Every function here takes an explicit [zone] so the round-trip can be tested against a fixed
-// non-UTC zone: a test that pins `Europe/Paris` fails the moment someone "simplifies" this to
-// `toInstant(ZoneOffset.UTC)`.
-//
-// Functions are top-level and pure — no client, no coroutines — so the socket mapping is testable
-// without a live socket. The enum tables live next door in `SyncPlayEnumMapping.kt`; nothing there
-// touches a timestamp, and keeping this file small is what makes the rule above enforceable.
+// The explicit [zone] parameters exist so the round trip can be pinned against a non-UTC zone; "simplifying"
+// them to `toInstant(ZoneOffset.UTC)` is the failure this guards.
 
 // SDK -> domain ---------------------------------------------------------------------------------
 
-/** `GroupInfoDto` as the group list and the join flow see it. */
 internal fun GroupInfoDto.toSummary(zone: ZoneId = ZoneId.systemDefault()): SyncPlayGroupSummary =
     SyncPlayGroupSummary(
         id = groupId,
@@ -55,7 +44,7 @@ internal fun GroupInfoDto.toSummary(zone: ZoneId = ZoneId.systemDefault()): Sync
         lastUpdatedAt = lastUpdatedAt.toSdkInstant(zone),
     )
 
-/** `SendCommand` — the broadcast transport command. [SendCommand.when] crosses the time boundary here. */
+/** [SendCommand.when] crosses the time boundary here. */
 internal fun SendCommand.toDomain(zone: ZoneId = ZoneId.systemDefault()): SyncPlayCommand =
     SyncPlayCommand(
         type = command.toDomain(),
@@ -65,7 +54,6 @@ internal fun SendCommand.toDomain(zone: ZoneId = ZoneId.systemDefault()): SyncPl
         emittedAt = emittedAt.toSdkInstant(zone),
     )
 
-/** `PlayQueueUpdate` — the group's queue, playing slot and shuffle/repeat modes. */
 internal fun PlayQueueUpdate.toDomain(zone: ZoneId = ZoneId.systemDefault()): SyncPlayGroupQueue =
     SyncPlayGroupQueue(
         entries = playlist.map { SyncPlayQueueEntry(itemId = it.itemId, playlistItemId = it.playlistItemId) },
@@ -78,13 +66,7 @@ internal fun PlayQueueUpdate.toDomain(zone: ZoneId = ZoneId.systemDefault()): Sy
         lastUpdate = lastUpdate.toSdkInstant(zone),
     )
 
-/**
- * `GroupUpdate` -> the domain event.
- *
- * `GroupUpdate` is a **sealed** interface in the SDK, so this `when` is exhaustive by construction:
- * a server-side addition cannot reach us without an SDK bump, and that bump breaks this file at
- * compile time rather than silently dropping an update at runtime.
- */
+/** `GroupUpdate` is sealed in the SDK, so an SDK bump breaks this `when` rather than silently dropping updates. */
 internal fun GroupUpdate.toEvent(zone: ZoneId = ZoneId.systemDefault()): SyncPlayGroupEvent =
     when (this) {
         is SyncPlayGroupJoinedUpdate -> SyncPlayGroupEvent.Joined(data.toSummary(zone))
@@ -104,11 +86,8 @@ internal fun GroupUpdate.toEvent(zone: ZoneId = ZoneId.systemDefault()): SyncPla
     }
 
 /**
- * `UtcTimeResponse` plus the two device-side timestamps into one NTP sample.
- *
- * The server's two readings are wall-clock in the *device's* zone once the SDK has deserialized
- * them, so they go through [toSdkInstant] like every other SDK date — skipping that is what would
- * make the estimated offset come out as the UTC offset instead of the true clock skew.
+ * The server's two readings deserialize as wall-clock in the *device's* zone, so they must go through
+ * [toSdkInstant]: skipping it yields the UTC offset instead of the true clock skew.
  */
 internal fun UtcTimeResponse.toSample(
     requestSent: Instant,
@@ -124,10 +103,5 @@ internal fun UtcTimeResponse.toSample(
 
 // Domain -> SDK ---------------------------------------------------------------------------------
 
-/**
- * The domain instant as the wall-clock reading the SDK will serialize.
- *
- * Only `BufferRequestDto`/`ReadyRequestDto` need it today; it exists so that outbound conversion is
- * as single-sourced as the inbound one.
- */
+/** The domain instant as the wall-clock reading the SDK will serialize. */
 internal fun Instant.toSdkWallClock(zone: ZoneId = ZoneId.systemDefault()): LocalDateTime = toSdkDateTime(zone)

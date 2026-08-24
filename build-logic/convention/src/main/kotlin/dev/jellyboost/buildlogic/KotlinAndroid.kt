@@ -13,21 +13,16 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 /**
- * Applies the compile SDK / min SDK / Java + Kotlin target settings shared by every Android
- * module in the project.
- *
- * Note: AGP 9's [CommonExtension] exposes plain getters rather than the `defaultConfig { }`
- * style blocks (those only exist on the concrete application/library extensions), hence the
- * property access below.
+ * AGP 9's [CommonExtension] exposes plain getters rather than the `defaultConfig { }` style blocks
+ * (those exist only on the concrete application/library extensions), hence the property access below.
  */
 internal fun Project.configureKotlinAndroid(commonExtension: CommonExtension) {
     with(commonExtension) {
         compileSdk = libs.intVersion("androidCompileSdk")
         compileSdkMinor = libs.intVersion("androidCompileSdkMinor")
         defaultConfig.minSdk = libs.intVersion("androidMinSdk")
-        // Every module, not only `:app`: the instrumented accessibility suite lives in the module
-        // that owns the component it holds still, and a library with no runner declared has no
-        // `connectedDebugAndroidTest` to run.
+        // Every module, not only `:app`: a library with no runner declared has no
+        // `connectedDebugAndroidTest` to run, and the a11y suite lives beside its components.
         defaultConfig.testInstrumentationRunner = ANDROID_JUNIT_RUNNER
 
         with(compileOptions) {
@@ -37,18 +32,13 @@ internal fun Project.configureKotlinAndroid(commonExtension: CommonExtension) {
         }
 
         with(lint) {
-            // Lint is a build gate, not a report: an issue at `error` severity stops the build.
-            // Which issues those are is decided in one place — `config/lint/lint.xml` — where the
-            // accessibility checks are errors and the families this project has never enforced are
-            // demoted to warnings, so turning the switch on cannot fail anything that is
-            // otherwise passing.
+            // Lint is a gate, not a report: severities live in `config/lint/lint.xml` alone.
             abortOnError = true
-            // One config for every module. Without this each module would pick up its own
-            // `lint.xml` (or none), which is how a per-module exemption gets added by accident.
+            // One config for every module; without it a module picks up its own `lint.xml`, which is
+            // how a per-module exemption gets added by accident.
             lintConfig = rootProject.file(LINT_CONFIG_PATH)
-            // The gate runs as `:app:lintDebug` alone rather than as `lintDebug` across all 17
-            // modules: with this on, the app's run analyses every library it depends on and reports
-            // their findings too, for one analysis pass instead of seventeen.
+            // Why the gate can run as `:app:lintDebug` alone: the app's run analyses every library it
+            // depends on, one pass instead of seventeen.
             checkDependencies = true
         }
     }
@@ -72,13 +62,12 @@ internal fun Project.configureKotlinAndroid(commonExtension: CommonExtension) {
     }
 }
 
-/** The one lint severity config, shared by every Android module. Relative to the root project. */
+/** Relative to the root project. */
 private const val LINT_CONFIG_PATH = "config/lint/lint.xml"
 
 /** JUnit 4, because the on-device instrumentation runner has no JUnit Platform to launch. */
 private const val ANDROID_JUNIT_RUNNER = "androidx.test.runner.AndroidJUnitRunner"
 
-/** Pins the Kotlin bytecode target for every Kotlin compilation in this project. */
 internal fun Project.configureKotlinJvmTarget() {
     val target = JvmTarget.fromTarget(libs.version("jvmTarget"))
     tasks.withType<KotlinCompile>().configureEach {

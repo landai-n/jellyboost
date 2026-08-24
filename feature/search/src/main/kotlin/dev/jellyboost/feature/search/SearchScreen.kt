@@ -60,21 +60,8 @@ import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
 import dev.jellyboost.core.ui.theme.LocalAppChromePadding
 
 /**
- * The search screen: a debounced text field over one server query, rendered as one section per
- * item type.
- *
- * Like the other top-level tabs it draws no bar of its own: `:app`'s chrome floats over it and
- * publishes how much of the window it covers through `LocalAppChromePadding`, which this screen
- * consumes so that neither the field nor the last result comes to rest under the glass (and so that
- * the field still clears the status bar, which an edge-to-edge window does not do on its own).
- *
- * The [SearchViewModel] is passed in rather than resolved here so `:app` owns the
- * `hiltViewModel()` call together with the rest of the navigation graph wiring, as it does for
- * home.
- *
- * The field autofocuses (and raises the keyboard) whenever the field is empty at entry — see the
- * `LaunchedEffect` in [SearchField] for why that fires on the right entries and not on every
- * keystroke.
+ * A top-level tab: `:app`'s chrome floats over it, so this screen consumes `LocalAppChromePadding`
+ * — the top half on the field, which never scrolls, the bottom half on the results list.
  */
 @Composable
 fun SearchScreen(
@@ -93,7 +80,6 @@ fun SearchScreen(
     )
 }
 
-/** Stateless search rendering — a pure function of [state], so it previews without a ViewModel. */
 @Composable
 fun SearchContent(
     state: SearchUiState,
@@ -103,13 +89,9 @@ fun SearchContent(
     onItemClick: (JellyfinItem) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // The chrome's TOP padding goes on the outer column, not on the results list: the field is the
-    // one thing on this screen that never scrolls, so it is also the one thing that would sit
-    // permanently under the top nav (or under the compact layout's floating action cluster) if it
-    // were left to the list's `contentPadding`. The BOTTOM half stays with the list — see
-    // [SearchResults] — so results still scroll under the floating nav pill.
-    //
-    // Handed to `Modifier.padding` as an object rather than read here — see [ChromeAwarePadding].
+    // The chrome's TOP padding goes here rather than on the results list: the field never scrolls,
+    // so it is the one thing that would sit permanently under the top nav. The BOTTOM half stays
+    // with the list. Handed to `Modifier.padding` as an object — see [ChromeAwarePadding].
     Column(modifier = modifier.fillMaxSize().padding(chromeTopPadding())) {
         SearchField(
             query = state.query,
@@ -148,18 +130,9 @@ fun SearchContent(
 }
 
 /**
- * How many things the search found, under the field.
- *
- * A polite live region, and the reason this composable exists: results appear *below* a field the
- * user is still typing in, so the one thing a search actually produces would otherwise happen in
- * complete silence — no count, no "found something", nothing. It
- * is a real line of visible text rather than an invisible announcer because a zero-sized node is a
- * node TalkBack can never come back to, and because the count is worth showing anyway: the sections
- * below are capped at [SearchViewModel.SEARCH_LIMIT] between them and each one only says its own
- * type.
- *
  * Polite, not assertive: it arrives while the user is typing, and interrupting each keystroke's
- * echo with a running total is worse than saying nothing.
+ * echo with a running total is worse than saying nothing. A real line of text rather than an
+ * invisible announcer, because a zero-sized node is one TalkBack can never come back to.
  */
 @Composable
 private fun ResultCountLine(count: Int) {
@@ -175,17 +148,11 @@ private fun ResultCountLine(count: Int) {
 }
 
 /**
- * Wraps a state view in a polite live region, so replacing the results with it is announced.
+ * Swapping one full-screen body for another says nothing at all, and the user is still in the field
+ * above with no reason to go looking.
  *
- * `:core:ui`'s `EmptyState`/`ErrorState` draw a screenful of content with no idea why they are on
- * screen; the announcement belongs to the caller that knows (here: a search that came back empty,
- * or a request that failed). Whether the message is *reached* by a screen reader was never the
- * problem — it is that swapping one full-screen body for another says nothing at all, and the user
- * is still in the field above with no reason to go looking.
- *
- * @param merge folds the whole state view into one node, which is right when it is only an icon and
- *   a sentence. Pass `false` for a view carrying an action: merging would take the button's own
- *   stop with it, and the description set here carries the words instead.
+ * @param merge folds the view into one node. Pass `false` for a view carrying an action: merging
+ *   would take the button's own stop with it.
  */
 @Composable
 private fun Announced(
@@ -215,17 +182,10 @@ private fun SearchField(
     val focusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    // Land on the field with the keyboard already up, so the user can type immediately instead of
-    // tapping first. Keyed on `Unit`, this fires once per *composition* of the screen rather than
-    // once per keystroke: `:app`'s NavHost disposes `SearchScreen` when another top-level tab is on
-    // top and composes it fresh on return (only the ViewModel/state survive that via
-    // `restoreState` — see `topLevelNavOptions()` in AppScaffold.kt), so this effect re-runs on a
-    // fresh entry and on every tab re-entry, but never on a plain recomposition (e.g. a keystroke
-    // or results streaming in) since those don't remount the composable. Guarding on a blank query
-    // means it only grabs focus when there is nothing to disturb: a first visit, or a tab
-    // re-entry/return-from-detail with the field still empty. Re-entering (or returning from a
-    // result's detail page) with results already showing leaves focus alone, so it doesn't yank the
-    // keyboard back up over someone scrolling the list.
+    // Keyed on `Unit`, so it fires once per *composition*: the NavHost disposes this screen when
+    // another tab is on top and composes it fresh on return, but a keystroke does not remount it.
+    // The blank-query guard means focus is only grabbed when there is nothing to disturb — returning
+    // with results showing must not yank the keyboard up over someone scrolling.
     LaunchedEffect(Unit) {
         if (query.isBlank()) {
             focusRequester.requestFocus()
@@ -243,9 +203,8 @@ private fun SearchField(
                 .padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.SpaceSmall),
         singleLine = true,
         placeholder = { Text(text = stringResource(R.string.search_field_label)) },
-        // The placeholder is the only thing naming this field on screen, and a placeholder vanishes
-        // the moment there is a query — so the node carries the same words itself.
-        // No caption: the name is spoken, never drawn — the placeholder already draws it.
+        // The placeholder is the only thing naming this field on screen and vanishes once there is a
+        // query, so the node carries the same words itself. No caption: the name is spoken, not drawn.
         label = FieldLabel(text = stringResource(R.string.search_field_label)),
         leadingIcon = { Icon(imageVector = Icons.Filled.Search, contentDescription = null) },
         trailingIcon = {
@@ -269,26 +228,18 @@ private fun SearchResults(
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        // Only the bottom half of the chrome padding: the top half is already on the outer column,
-        // and taking it twice would push the first section a whole nav bar below the field. Read in
-        // the layout phase rather than here — see [ChromeAwarePadding].
+        // Only the bottom half of the chrome padding: the top half is on the outer column, and taking
+        // it twice would push the first section a whole nav bar below the field.
         contentPadding = listContentPadding(),
         verticalArrangement = Arrangement.spacedBy(Dimens.SpaceExtraLarge),
     ) {
-        // Sections in jellyfin-web's order; MediaRow renders nothing for an empty list, and an
-        // empty `item` would still consume the column's `spacedBy` gap, so they are skipped here.
-        //
-        // The `contentType`s let the two poster sections reuse each other's nodes as results come
-        // and go while the user types, instead of composing a row from scratch each time.
-        //
-        // `LazyListScope` extensions rather than composables, the `HomeScreen`/`DownloadsScreen`
-        // convention: each one emits several `item`s, which only a lazy scope can do.
+        // MediaRow renders nothing for an empty list, but an empty `item` would still consume the
+        // column's `spacedBy` gap, so empty sections are skipped here.
         videoSections(state = state, onItemClick = onItemClick)
         musicSections(state = state, onItemClick = onItemClick)
     }
 }
 
-/** Movies, series, episodes — the video-item sections, as distinct from music. */
 private fun LazyListScope.videoSections(
     state: SearchUiState,
     onItemClick: (JellyfinItem) -> Unit,
@@ -327,7 +278,6 @@ private fun LazyListScope.videoSections(
     }
 }
 
-/** Music sections, in a fixed order. */
 private fun LazyListScope.musicSections(
     state: SearchUiState,
     onItemClick: (JellyfinItem) -> Unit,
@@ -372,10 +322,7 @@ private fun LazyListScope.musicSections(
     }
 }
 
-/**
- * The songs section: a titled column of [SongRow]s rather than a `MediaRow`, since a song has no
- * artwork of its own worth a card.
- */
+/** A titled column rather than a `MediaRow`: a song has no artwork of its own worth a card. */
 @Composable
 private fun SongSection(
     songs: List<JellyfinItem>,
@@ -392,14 +339,12 @@ private fun SongSection(
     }
 }
 
-/** Just the chrome's top edge, resolved in the layout phase — see [ChromeAwarePadding]. */
 @Composable
 private fun chromeTopPadding(): PaddingValues {
     val chrome = LocalAppChromePadding.current
     return remember(chrome) { ChromeAwarePadding(chrome = chrome, takeChromeTop = true) }
 }
 
-/** The results list's padding: its own spacing, plus the chrome's bottom edge (deferred). */
 @Composable
 private fun listContentPadding(): PaddingValues {
     val chrome = LocalAppChromePadding.current
@@ -414,9 +359,8 @@ private fun listContentPadding(): PaddingValues {
 }
 
 /**
- * A song search result: a compact list row rather than a card. `:feature:search` cannot reuse
- * `:feature:music`'s `TrackRow` — features never depend on each other — so this is a small local
- * equivalent, without the download badge / favourite affordances a track's own screen offers.
+ * `:feature:search` cannot reuse `:feature:music`'s `TrackRow` — features never depend on each
+ * other — so this is a small local equivalent.
  */
 @Composable
 private fun SongRow(
@@ -460,8 +404,6 @@ private const val SECTION_ALBUMS = "section-albums"
 private const val SECTION_SONGS = "section-songs"
 private const val SECTION_PLAYLISTS = "section-playlists"
 
-// Content types: rows of the same shape are interchangeable nodes, whatever section they belong to.
-// The card types (poster/thumb) come from `:core:ui`, beside the cards they describe.
 private const val ROW_POSTERS = "row-posters"
 private const val ROW_THUMBS = "row-thumbs"
 private const val ROW_ARTISTS = "row-artists"

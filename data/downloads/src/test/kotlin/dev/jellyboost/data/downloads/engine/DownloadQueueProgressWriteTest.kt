@@ -32,17 +32,10 @@ import java.time.Clock
 import java.time.ZoneOffset
 
 /**
- * Unit tests for **how many database transactions one progress sample costs**.
- *
- * Separate from [DownloadQueueTest], which owns what the numbers *are*: what is pinned here is the
- * shape of the write rather than its content, and the two ask different questions of the same call.
- *
- * The property: the Downloads screen reads `DownloadDao.observeAll()`, a `@Transaction` join across
- * `downloads` and `download_files`, and Room's invalidation tracker fires once per **committed
- * transaction**. Writing the file's counters and the item's as two auto-commit statements would
- * therefore re-run that whole join twice per sample — two to eight times a second for the length of
- * a multi-gigabyte transfer, each re-run probing `items` behind it for the metadata join. One
- * transaction, one invalidation.
+ * How many database transactions one progress sample costs. The Downloads screen reads
+ * `DownloadDao.observeAll()`, a `@Transaction` join, and Room's invalidation tracker fires once per
+ * **committed transaction** — so two auto-commit statements per sample would re-run that whole join
+ * twice, two to eight times a second for the length of a multi-gigabyte transfer.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class DownloadQueueProgressWriteTest {
@@ -105,8 +98,8 @@ class DownloadQueueProgressWriteTest {
     @Test
     fun `the write that closes a finished file is inside a transaction too`() =
         runTest {
-            // `completed()` reports the file's final counters, and pays the same invalidation the
-            // throttled samples do — once per file rather than twice a second, but for free.
+            // `completed()` reports the file's final counters and pays the same invalidation the
+            // throttled samples do.
             queueWith(download(bytesTotal = 10_000L))
             coEvery { downloader.download(any(), any(), any(), any(), any(), any()) } returns 100L
 

@@ -20,24 +20,9 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
-/**
- * Width requested for a public user's profile picture, in pixels.
- *
- * The avatar slot is 56dp, so this is ~3x — enough for the xxhdpi tablet the project targets
- * without asking the server to re-encode a full-size portrait for a 56dp circle.
- */
+/** ~3x the 56dp avatar slot: enough for xxhdpi without asking the server to re-encode a portrait. */
 private const val AVATAR_MAX_WIDTH_PX = 168
 
-/**
- * Builds the URL of [user]'s profile picture on the server at [serverAddress], or `null` when
- * there is nothing to load — the server advertises no avatar for them (`primaryImageTag == null`,
- * the common case) or no server is known yet.
- *
- * Kept a pure top-level function rather than a member so the URL shape — which the
- * `PublicUserInfo` KDoc only describes in prose — is directly unit-testable.
- *
- * @param serverAddress base URL of the server; a trailing slash is tolerated.
- */
 internal fun publicUserAvatarUrl(
     serverAddress: String?,
     user: PublicUserInfo,
@@ -48,28 +33,22 @@ internal fun publicUserAvatarUrl(
     return "$base/Users/${user.id}/Images/Primary?tag=$tag&maxWidth=$maxWidth"
 }
 
-/** The Quick Connect sheet, present only while a request is open. */
 internal data class QuickConnectUiState(
-    /** The short code the user types into an already-authenticated client. */
     val code: String,
     /** False once the code was approved and the token exchange is running. */
     val isWaiting: Boolean = true,
 )
 
-/** Everything the login screen renders. */
 internal data class LoginUiState(
     val serverName: String = "",
     val serverVersion: String? = null,
-    /** Base URL of the server being signed in to; only used to build [avatarUrlFor]. */
     val serverAddress: String? = null,
-    /** True until the public users / branding / Quick Connect probe has answered. */
     val isLoadingContext: Boolean = true,
     val publicUsers: List<PublicUserInfo> = emptyList(),
     val loginDisclaimer: String? = null,
     val quickConnectEnabled: Boolean = false,
     val username: String = "",
     val password: String = "",
-    /** True while credentials (or an approved Quick Connect secret) are being exchanged. */
     val isSigningIn: Boolean = false,
     val quickConnect: QuickConnectUiState? = null,
     val error: AuthErrorMessage? = null,
@@ -77,13 +56,11 @@ internal data class LoginUiState(
     /** Jellyfin allows blank passwords, so only a username is required. */
     val canSignIn: Boolean get() = username.isNotBlank() && !isSigningIn
 
-    /** Profile picture for [user], or `null` when the initial-letter fallback should be drawn. */
     fun avatarUrlFor(user: PublicUserInfo): String? = publicUserAvatarUrl(serverAddress, user)
 
     /**
-     * Redacts [password]: the generated data-class `toString()` would otherwise
-     * print it in full the moment this state ever reaches a log line — state-restoration crash
-     * reports and `Timber` calls that dump a whole UI state are exactly the paths that do.
+     * Redacts [password]: the generated `toString()` would print it in full the moment this state
+     * reaches a log line, which crash reports and whole-state `Timber` calls do.
      */
     override fun toString(): String =
         "LoginUiState(serverName='$serverName', serverVersion=$serverVersion, " +
@@ -94,26 +71,17 @@ internal data class LoginUiState(
             "quickConnect=$quickConnect, error=$error)"
 }
 
-/** One-shot navigation instructions from the login screen. */
 internal sealed interface LoginNavigationEvent {
-    /** A session was established; leave the auth flow. */
     data object LoggedIn : LoginNavigationEvent
 
-    /** No pending server (process death mid-flow, or a direct deep link); go back and pick one. */
+    /** Process death mid-flow, or a direct deep link: go back and pick a server. */
     data object ServerMissing : LoginNavigationEvent
 }
 
 /**
- * Backs the Login screen: login context, password sign-in and Quick Connect.
- *
- * The server to authenticate against comes from [PendingServerStore], written by
- * `ServerSetupViewModel`.
- *
- * A successful sign-in is announced twice on purpose: `SessionRepository.sessionState` flips to
- * `LoggedIn` inside `AuthRepository` (which is what drives app-wide reactions such as a future
- * 401-triggered logout), and [navigationEvents] emits [LoginNavigationEvent.LoggedIn] so the
- * NavHost's forward transition stays an explicit, local consequence of this screen's action
- * rather than an implicit side effect of global state.
+ * A successful sign-in is announced twice on purpose: `SessionRepository.sessionState` flips inside
+ * `AuthRepository` (driving app-wide reactions such as a 401 logout), and [navigationEvents] emits
+ * so the NavHost transition stays a local consequence rather than a global side effect.
  */
 @HiltViewModel
 internal class LoginViewModel
@@ -134,12 +102,10 @@ internal class LoginViewModel
                 ),
             )
 
-        /** State of the login screen. */
         val uiState: StateFlow<LoginUiState> = mutableUiState.asStateFlow()
 
         private val navigationChannel = Channel<LoginNavigationEvent>(Channel.BUFFERED)
 
-        /** One-shot navigation events; collect them from the screen composable. */
         val navigationEvents: Flow<LoginNavigationEvent> = navigationChannel.receiveAsFlow()
 
         private var quickConnectJob: Job? = null
@@ -156,32 +122,27 @@ internal class LoginViewModel
         }
 
         /**
-         * Records what the user typed into the username field.
-         *
-         * Ignored while a sign-in is in flight, which is what lets the screen keep both credential
-         * fields *enabled* through the exchange: a disabled field destroys its accessibility node
-         * and throws focus back to the top of the screen.
-         * [signIn] captured the credentials it is sending, so an edit landing mid-request could only
-         * ever produce a screen whose fields disagree with the failure it is about to show.
+         * Ignored while a sign-in is in flight, which is what lets both credential fields stay
+         * *enabled* through the exchange: a disabled field destroys its accessibility node and
+         * throws focus to the top of the screen.
          */
         fun onUsernameChange(value: String) {
             if (mutableUiState.value.isSigningIn) return
             mutableUiState.update { it.copy(username = value, error = null) }
         }
 
-        /** Records what the user typed into the password field; inert mid-request, see above. */
+        /** Inert mid-request, see [onUsernameChange]. */
         fun onPasswordChange(value: String) {
             if (mutableUiState.value.isSigningIn) return
             mutableUiState.update { it.copy(password = value, error = null) }
         }
 
-        /** Pre-fills the username from the public-user row; inert mid-request, see above. */
+        /** Inert mid-request, see [onUsernameChange]. */
         fun onPublicUserSelected(user: PublicUserInfo) {
             if (mutableUiState.value.isSigningIn) return
             mutableUiState.update { it.copy(username = user.name, error = null) }
         }
 
-        /** Signs in with the username/password currently in state. */
         fun signIn() {
             val resolved = server ?: return
             val state = mutableUiState.value
@@ -200,12 +161,7 @@ internal class LoginViewModel
                 }
         }
 
-        /**
-         * Opens a Quick Connect request and follows it to its terminal state.
-         *
-         * The polling flow is finite, so this job ends on its own; cancelling it (via
-         * [cancelQuickConnect] or `onCleared`) is what stops the 5s polling early.
-         */
+        /** The polling flow is finite; cancelling the job is what stops the 5s polling early. */
         fun startQuickConnect() {
             val resolved = server ?: return
             if (quickConnectJob?.isActive == true) return
@@ -214,9 +170,8 @@ internal class LoginViewModel
                 viewModelScope.launch {
                     mutableUiState.update { it.copy(error = null) }
 
-                    // Exhaustive rather than a failure guard plus an unchecked cast: a cast would
-                    // only be sound because `AppResult` has exactly two variants today, and a
-                    // third would turn a compile error into a sign-in-path crash.
+                    // Exhaustive rather than an unchecked cast: a third `AppResult` variant would otherwise turn a
+                    // compile error into a sign-in-path crash.
                     val session =
                         when (val initiated = authRepository.initiateQuickConnect()) {
                             is AppResult.Failure -> {
@@ -265,7 +220,6 @@ internal class LoginViewModel
                 }
         }
 
-        /** Closes the Quick Connect UI and stops polling. */
         fun cancelQuickConnect() {
             quickConnectJob?.cancel()
             quickConnectJob = null

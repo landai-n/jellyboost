@@ -22,15 +22,9 @@ import org.junit.runner.RunWith
 import dev.jellyboost.core.ui.R as CoreUiR
 
 /**
- * An episode row is one stop plus its Play button.
- *
- * Two stops would make the first of them useless: a nested clickable `ThumbCard` announcing a title
- * and offering the row's own action. A `null` `onClick` threaded into the artwork is what keeps the
- * row a single node — which is a one-character change in the other direction, and nothing visible
- * would move if it were made.
- *
- * The Play button is deliberately *not* folded in: it does something different from the row, and a
- * screen reader user has to be able to choose between "open this episode" and "play it".
+ * One stop plus its Play button. The `null` `onClick` threaded into the artwork is what keeps the
+ * row a single node — a one-character change in the other direction moves nothing visible. Play is
+ * deliberately not folded in: a user has to be able to choose "open" over "play".
  */
 @RunWith(AndroidJUnit4::class)
 class EpisodeRowA11yTest {
@@ -70,11 +64,8 @@ class EpisodeRowA11yTest {
         val spoken = "$number, $EPISODE_TITLE, $runtime, $progress"
         rule.onNodeWithContentDescription(spoken).assertExists()
 
-        // The synopsis is drawn, and it does merge into the row's node as *text* — but the row
-        // carries a `contentDescription`, and a description is what a screen reader speaks when a
-        // node has both. So the claim to pin is about the sentence, not about the node's existence:
-        // two lines of prose read out before the user can reach the next episode is a list nobody
-        // can scan.
+        // The synopsis merges in as *text*, but a `contentDescription` is what is spoken when a
+        // node has both — so the claim pinned here is about the sentence, not the node.
         val description =
             rule
                 .onNodeWithContentDescription(spoken)
@@ -92,8 +83,6 @@ class EpisodeRowA11yTest {
             }
         }
 
-        // `ThumbCard(onClick = null)` is `clearAndSetSemantics {}`: no name of its own to merge
-        // into the row's authored sentence, and no click node beside the row's.
         val play = rule.activity.getString(R.string.detail_play_episode)
         val playNode = rule.onNodeWithContentDescription(play).fetchSemanticsNode()
         assertNull(playNode.config.getOrNull(SemanticsProperties.Selected))
@@ -107,7 +96,7 @@ class EpisodeRowA11yTest {
         const val RUNTIME_MINUTES = 90
         const val HALF_PERCENT = 50
 
-        /** 90 minutes in Jellyfin's 100-nanosecond ticks, and half of it. */
+        /** Jellyfin's 100-nanosecond ticks. */
         const val RUNTIME_TICKS = 54_000_000_000L
         const val HALF_POSITION_TICKS = 27_000_000_000L
 

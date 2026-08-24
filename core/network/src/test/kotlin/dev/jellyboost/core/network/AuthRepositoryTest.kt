@@ -36,7 +36,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 
-/** Unit tests for password sign-in and the persistence path every sign-in funnels through. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class AuthRepositoryTest {
     private val apiFacade = mockk<JellyfinApiFacade>()

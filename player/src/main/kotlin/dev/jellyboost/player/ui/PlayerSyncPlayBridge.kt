@@ -18,24 +18,13 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.map
 
 /**
- * The player's half of SyncPlay: one object between [PlayerViewModel] and [SyncPlayController].
+ * The player's half of SyncPlay, between [PlayerViewModel] and [SyncPlayController].
  *
- * It exists so that group membership costs the ViewModel a *question* rather than a branch —
- * [isInGroup] plus a handful of one-line requests — and so that the mapping from the protocol's
- * vocabulary to the screen's ([PlayerSyncPlayState], [PlayerMessage]) lives somewhere it can be read
- * in one go. The ViewModel is already the longest class in the module; this is the
- * same decomposition the position tracker and the session store have.
+ * In a group, **no user action moves this player**: play, pause, seek and skip are requests, and the
+ * player moves only when the server rebroadcasts the command. Never call `PlayerHandle` from here.
  *
- * ### The rule it enforces at this end
- * In a group, **no user action moves this player**: play, pause, seek and skip all become requests,
- * and the player moves only when the server rebroadcasts the command to everyone. The controller
- * enforces the same rule at its
- * end — there is no path from an intent to `PlayerHandle` — so this class never needs to know what
- * the player is doing, only whether there is a group to ask.
- *
- * Attachment is idempotent because both ends can trigger it: the ViewModel attaches when its session
- * opens, and the controller's own `loadItem` opens a session. Without the guard, a group-driven load
- * would re-enter `attachHost` in the middle of the reconciliation that caused it.
+ * Attachment must stay idempotent — both ends trigger it, and without the guard a group-driven load
+ * re-enters `attachHost` inside the reconciliation that caused it.
  */
 internal class PlayerSyncPlayBridge(
     private val controller: SyncPlayController,
@@ -44,34 +33,22 @@ internal class PlayerSyncPlayBridge(
 ) {
     private var attached = false
 
-    /** `true` while this session is part of a group, and therefore not its own master. */
     val isInGroup: Boolean get() = controller.state.value is SyncPlayState.InGroup
 
     /**
-     * `true` when the group's queue has somewhere to go after the item playing now.
-     *
-     * Read at exactly one moment — the item ending. The controller answers an ended
-     * item by asking the server for the next one, whose `PlayQueueUpdate` reloads *this* session
-     * through `SyncPlayPlaybackHost.loadItem`; a screen that popped itself in the meantime would
-     * close the player the group is about to fill, and force the launch-request path to open a new
-     * one a second later.
+     * Read when the item ends, to keep the screen open: the controller asks the server for the next
+     * item, whose `PlayQueueUpdate` reloads *this* session.
      */
     val hasNextInQueue: Boolean
         get() = (controller.state.value as? SyncPlayState.InGroup)?.queue?.hasFollowingEntry == true
 
-    /** The group, as the player screen draws it; conflated, so a re-anchor changes nothing. */
     val states: Flow<PlayerSyncPlayState> = controller.state.map { it.toPlayerState() }.distinctUntilChanged()
 
-    /** What the group needs to tell the user, in the player's own message vocabulary. */
     val messages: Flow<PlayerMessage> = controller.messages.map { it.toPlayerMessage() }
 
     /**
-     * Group membership *changing*, as the one bit that changes what gets reported.
-     *
-     * Distinct from [states] on purpose: that flow changes on every participant, phase and queue
-     * edit, and the server-visible session only cares about joining and leaving. The
-     * current value is dropped because it is not news — whatever group the player opened into is
-     * accounted for by the session open itself, which reconciles before it reports the start.
+     * Join/leave only, unlike [states]. The current value is dropped because the session open itself
+     * already reconciles before reporting the start.
      */
     val membership: Flow<Boolean> =
         controller.state
@@ -79,24 +56,14 @@ internal class PlayerSyncPlayBridge(
             .distinctUntilChanged()
             .drop(1)
 
-    /**
-     * Offers this player to the group.
-     *
-     * A no-op outside a group beyond recording the offer — the controller keeps the host either way,
-     * which is what lets a group joined later find a player already open.
-     */
+    /** The controller keeps the host even outside a group, so a later join finds this player open. */
     fun attach() {
         if (attached) return
         attached = true
         controller.attachHost(host)
     }
 
-    /**
-     * Takes the player back.
-     *
-     * The controller sends `ignoreWait` from here so a member with no player never
-     * gates the group; this end must not send it as well.
-     */
+    /** The controller sends `ignoreWait` for this; do not send it here as well. */
     fun detach() {
         if (!attached) return
         attached = false
@@ -104,11 +71,8 @@ internal class PlayerSyncPlayBridge(
     }
 
     /**
-     * Reconciles what the server has been told about a **downloaded** item with the group.
-     *
-     * Called from the two moments that can change the answer — a session opening, and the group
-     * being joined or left — and a no-op for anything streamed, which reports on its own session
-     * either way. See [SyncPlayLocalSession].
+     * Only meaningful for a **downloaded** item; must be called at both moments that change the
+     * answer — a session opening, and the group being joined or left. See [SyncPlayLocalSession].
      */
     suspend fun syncServerSession(
         source: PlaybackMediaSource?,
@@ -122,19 +86,13 @@ internal class PlayerSyncPlayBridge(
         localSession.onSessionClosed()
     }
 
-    /** Tells the group this member is re-negotiating, so it waits rather than plays on without us. */
     fun onBuffering() {
         if (isInGroup) controller.onHostBuffering()
     }
 
     /**
-     * A play/pause tap, reversing what the **group** is doing — never what this player is doing.
-     *
-     * The local player only moves when the server echoes a command back, so after a missed echo its
-     * `isPlaying` can disagree with the group; a decision built on it just re-sends whatever the last
-     * successful echo already asked for, and the user has to tap twice to get anywhere. Reading
-     * `controller.state.value` instead — the group's own state — is what a tap is actually asking to
-     * reverse, whether or not this player has caught up to it yet.
+     * Reverses what the **group** is doing, never what this player is doing: after a missed echo the
+     * local `isPlaying` disagrees with the group, and deciding on it re-sends the last command.
      */
     fun requestPlayPause() {
         val groupState = (controller.state.value as? SyncPlayState.InGroup)?.groupState
@@ -160,10 +118,8 @@ internal class PlayerSyncPlayBridge(
 
 private fun SyncPlayState.toPlayerState(): PlayerSyncPlayState =
     when (this) {
-        // Joining is deliberately not "in a group": it lasts a round trip, and a control surface
-        // that rearranges itself for it would flicker on every join. Rejoining is not either, and
-        // for a stronger reason — the server really does not have this session in the group, so a
-        // surface that still said "in a group" would offer transport requests nothing would answer.
+        // Neither Joining nor Rejoining counts as "in a group": while rejoining the server does not
+        // have this session in the group, so transport requests would go unanswered.
         SyncPlayState.Idle, SyncPlayState.Joining -> PlayerSyncPlayState()
 
         is SyncPlayState.Rejoining -> PlayerSyncPlayState()
@@ -183,11 +139,8 @@ private fun SyncPlayState.toPlayerState(): PlayerSyncPlayState =
     }
 
 /**
- * Drops the drift anchor on the way to the screen.
- *
- * `SyncPlayPhase.Playing` carries the anchor the drift monitor measures against, and it is replaced
- * on every group unpause. Keeping it in [PlayerUiState] would make the whole control surface
- * unequal to its predecessor for a value nothing on screen draws.
+ * Drops the drift anchor: it is replaced on every group unpause, and keeping it in [PlayerUiState]
+ * would make the whole control surface unequal to its predecessor for a value nothing draws.
  */
 private fun SyncPlayPhase.toPlayerPhase(): PlayerSyncPlayPhase =
     when (this) {

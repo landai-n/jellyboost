@@ -15,12 +15,9 @@ import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 
 /**
- * Unit tests for [DownloadFailureClassifier].
- *
- * This is the table that decides whether a queue survives a server restart. It is asserted as a
- * table rather than one case per test because the property worth protecting is the *shape* of the
- * split — a new transport exception quietly landing on the permanent side is exactly the regression
- * that made one `502` empty a forty-episode queue.
+ * The table that decides whether a queue survives a server restart, asserted as a table because the
+ * property worth protecting is the *shape* of the split — a new transport exception quietly landing on
+ * the permanent side is what made one `502` empty a forty-episode queue.
  */
 class DownloadFailureClassifierTest {
     @Test
@@ -33,7 +30,7 @@ class DownloadFailureClassifierTest {
                 UnknownHostException("jellyfin.local"),
                 TimeoutException("the server took too long"),
                 // A TLS handshake that failed once can succeed on the next attempt (a proxy coming
-                // up, a clock settling); five bounded tries is a cheap price for the ones that can.
+                // up, a clock settling).
                 SecureConnectionException("handshake failed", IOException("bad record")),
             )
 
@@ -60,8 +57,7 @@ class DownloadFailureClassifierTest {
 
     @Test
     fun `the server statuses that need the user or the server to change are permanent`() {
-        // Retrying any of these on a 30-second backoff would spend an afternoon on an answer that
-        // is not going to move.
+        // Retrying any of these on a 30-second backoff would spend an afternoon on an answer that will not move.
         val permanent = listOf(400, 401, 403, 404, 410, 422)
 
         permanent.forEach { code ->
@@ -88,20 +84,17 @@ class DownloadFailureClassifierTest {
 
     @Test
     fun `an unavailable storage volume is transient — it is an eject, an MTP session, or a boot`() {
-        // `Environment.getExternalStorageState` != MEDIA_MOUNTED empties the volume list for
-        // exactly as long as the condition lasts. As a bare IllegalStateException it would fall to
-        // AppError.Unknown → PERMANENT, and one unmounted card would mark a forty-episode queue
-        // ERROR within seconds — the whole-queue cascade, for a condition that is transient by
-        // nature.
+        // `Environment.getExternalStorageState` != MEDIA_MOUNTED empties the volume list for exactly
+        // as long as the condition lasts. As a bare IllegalStateException it would fall to
+        // AppError.Unknown → PERMANENT, and one unmounted card would mark a whole queue ERROR.
         DownloadFailureClassifier.classify(StorageUnavailableException("no volume mounted")) shouldBe
             FailureKind.TRANSIENT
     }
 
     @Test
     fun `an exception outside the taxonomy is permanent`() {
-        // Not caution for its own sake: `toAppError` already logs an unrecognised throwable so the
-        // mapper can learn about it, and retrying something with no evidence of being recoverable
-        // only spends battery. The remedy for a misclassified one is to teach the mapper.
+        // `toAppError` already logs an unrecognised throwable so the mapper can learn about it; the
+        // remedy for a misclassified one is to teach the mapper, not to retry blindly.
         DownloadFailureClassifier.classify(IllegalArgumentException("nonsense")) shouldBe FailureKind.PERMANENT
         DownloadFailureClassifier.classify(IllegalStateException("Could not create the download directory")) shouldBe
             FailureKind.PERMANENT

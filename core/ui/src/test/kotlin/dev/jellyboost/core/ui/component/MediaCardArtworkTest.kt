@@ -8,15 +8,6 @@ import androidx.compose.ui.unit.dp
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
-/**
- * Unit tests for [cardWidth].
- *
- * Every card (`LibraryCard`, `PosterCard`, `ThumbCard`) starts its modifier chain with this, so
- * getting the fixed-vs-adaptive branch backwards would be visible on every grid and every row in the
- * app. Both branches delegate to a plain layout modifier, so the fixed-width and fill-width forms are
- * asserted against the exact modifier they should be indistinguishable from — no composition needed,
- * since building a `Modifier` chain is plain object construction.
- */
 class MediaCardArtworkTest {
     @Test
     fun `a specified width is a fixed width, same as calling width directly`() {

@@ -69,19 +69,13 @@ class PlayerControlsTest {
 }
 
 /**
- * Unit tests for [sheetChipSpecs] — the bottom bar's seven visibility rules, and the width invariant
- * they decide.
- *
- * The rules live in [sheetChipSpecs] rather than as `if`s inline in `BottomBar`, so answering "how
- * many pickers can be up at once" — the question [LABELLED_BUTTONS_MIN_WIDTH] is measured against —
- * does not require enumerating the states in your head. These tests enumerate them for real: every
- * rule pinned one at a time, then a sweep of all 128 combinations of the seven inputs that drives
- * [MAX_SHEET_CHIPS] out of the spec function rather than out of a comment.
+ * The rules live in [sheetChipSpecs] rather than as `if`s inline in `BottomBar`, so
+ * [MAX_SHEET_CHIPS] is derived here from a sweep of all 128 combinations of the seven inputs,
+ * rather than remembered from a comment.
  */
 class SheetChipSpecTest {
     @Test
     fun `one audio track is not a picker`() {
-        // A picker with one row picks nothing.
         SheetChipId.AUDIO.isVisibleIn(state(audioTracks = 1)) shouldBe false
         SheetChipId.AUDIO.isVisibleIn(state(audioTracks = 2)) shouldBe true
     }
@@ -112,7 +106,7 @@ class SheetChipSpecTest {
         // Before the first PlayQueueUpdate the sheet would have nothing in it.
         SheetChipId.QUEUE.isVisibleIn(state(inGroup = true, hasQueue = false)) shouldBe false
         SheetChipId.QUEUE.isVisibleIn(state(inGroup = true, hasQueue = true)) shouldBe true
-        // And it is never offered outside a group, whatever a stale hasQueue says.
+        // Never offered outside a group, whatever a stale hasQueue says.
         SheetChipId.QUEUE.isVisibleIn(state(inGroup = false, hasQueue = true)) shouldBe false
     }
 
@@ -130,10 +124,8 @@ class SheetChipSpecTest {
 
     @Test
     fun `every chip opens a panel of its own, and every panel is one a chip opens`() {
-        // The four pickers are panels hosted by the screen above the auto-hide, like the other
-        // three. A chip whose panel is shared with another would open the wrong picker; a panel no
-        // chip names would be dead code in an exhaustive `when`. Both are one assertion each, and
-        // neither can drift silently.
+        // A chip whose panel is shared with another would open the wrong picker; a panel no chip
+        // names would be dead code in an exhaustive `when`.
         val panels = SheetChipId.entries.map { it.panel }
 
         panels.distinct().size shouldBe SheetChipId.entries.size
@@ -148,9 +140,8 @@ class SheetChipSpecTest {
 
     @Test
     fun `the fullest bar is what the width threshold assumes`() {
-        // This is the assertion that keeps LABELLED_BUTTONS_MIN_WIDTH derived from the rules rather
-        // than remembered from a sweep. Adding an eighth picker — or loosening a rule so two that
-        // currently exclude each other can both appear — fails here.
+        // Adding an eighth picker — or loosening a rule so two that currently exclude each other
+        // can both appear — fails here.
         everyState().maxOf { visibleSheetChips(it).size } shouldBe MAX_SHEET_CHIPS
     }
 
@@ -202,7 +193,6 @@ class SheetChipSpecTest {
 
     @Test
     fun `the emptiest bar is the clock alone`() {
-        // A downloaded single-track film with no subtitles, cast to a television: nothing to pick.
         visibleSheetChips(
             state(
                 audioTracks = 1,

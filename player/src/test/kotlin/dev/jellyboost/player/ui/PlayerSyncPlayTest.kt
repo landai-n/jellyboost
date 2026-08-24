@@ -41,18 +41,10 @@ import java.time.Instant
 import java.util.UUID
 
 /**
- * What the player does while it is part of a SyncPlay group.
- *
- * One rule carries the whole class and it is a claim about calls that are *never made*: in a group,
- * no user action moves this player. Every intent test therefore asserts both halves — the request
- * that went to the coordinator, and the fact that `PlayerHandle` was left completely alone.
- * Asserting only the first would pass just as happily for a player that seeks locally *and* tells
- * the group, which is the failure mode: two clients drifting apart while both believe they are in
- * sync.
- *
- * The solo behaviour these branches must not disturb is pinned by [PlayerViewModelTest] and
- * [PlayerTrackPickerTest], which run against the same fixture with no group in it — they are the
- * other half of this phase's acceptance, and they are unchanged.
+ * In a group, no user action moves this player directly, so every intent test asserts both halves:
+ * the request sent to the coordinator, and that `PlayerHandle` was left untouched. Asserting only
+ * the first would still pass for a player that seeks locally *and* tells the group — two clients
+ * drifting apart while both believe they're in sync.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class PlayerSyncPlayTest : PlayerViewModelFixture() {
@@ -93,8 +85,6 @@ internal class PlayerSyncPlayTest : PlayerViewModelFixture() {
     @Test
     fun `a missed echo leaves the local player still playing in a paused group, but a tap still asks to unpause`() =
         runTest(dispatcher) {
-            // The group's own state is Paused, but this device never saw the SendCommand that
-            // should have paused it too — the exact drift a missed websocket message leaves behind.
             syncPlayState.value = inGroup(groupState = SyncPlayGroupState.Paused)
             playerHandle.snapshot = PlaybackSnapshot(positionMs = 30_000L, isPlaying = true)
             val model = viewModel()
@@ -103,8 +93,8 @@ internal class PlayerSyncPlayTest : PlayerViewModelFixture() {
 
             model.togglePlayPause()
 
-            // Deciding from the local `isPlaying` here would re-send `requestPause` — the command
-            // that was already missed — and leave the group waiting on a second tap.
+            // Deciding from local `isPlaying` here would re-send `requestPause` — already missed —
+            // and leave the group waiting on a second tap.
             verify(exactly = 1) { syncPlayController.requestUnpause() }
             verify(exactly = 0) { syncPlayController.requestPause() }
             playerHandle.hadNoTransportCalls shouldBe true
@@ -113,8 +103,6 @@ internal class PlayerSyncPlayTest : PlayerViewModelFixture() {
     @Test
     fun `a stalled local player in a playing group still gets a pause request from a tap`() =
         runTest(dispatcher) {
-            // The mirror image: the group is Playing, but this device is still catching up and its
-            // own player has not started yet.
             syncPlayState.value = inGroup(groupState = SyncPlayGroupState.Playing)
             playerHandle.snapshot = PlaybackSnapshot(positionMs = 30_000L, isPlaying = false)
             val model = viewModel()
@@ -140,8 +128,7 @@ internal class PlayerSyncPlayTest : PlayerViewModelFixture() {
 
             verify(exactly = 1) { syncPlayController.requestSeek(90_000L.millisToTicks()) }
             playerHandle.hadNoTransportCalls shouldBe true
-            // Publishing optimistically would show a position this player is not at until the
-            // server's command arrives — and never correct it if the group refuses the seek.
+            // Publishing optimistically would show a position never corrected if the group refuses the seek.
             model.position.value.positionMs shouldBe RESUME_TICKS.ticksToMillis()
         }
 
@@ -233,9 +220,7 @@ internal class PlayerSyncPlayTest : PlayerViewModelFixture() {
     @Test
     fun `a session opened while in a group starts paused, whoever opened it`() =
         runTest(dispatcher) {
-            // The route a group play takes since the detail page sends the group a queue rather
-            // than navigating: the server's `PlayQueueUpdate` becomes a launch request and the
-            // NavHost opens this screen with the ordinary player arguments, which say "play". The
+            // The NavHost opens this screen with ordinary player arguments that say "play" — the
             // group decides when playback starts, so this must not.
             syncPlayState.value = inGroup()
 
@@ -407,9 +392,8 @@ internal class PlayerSyncPlayTest : PlayerViewModelFixture() {
             val model = viewModel()
             advanceUntilIdle()
 
-            // The local player is still paused — it has not caught up to the group's Playing
-            // command yet — but the icon must not show "paused": that is exactly the state that
-            // invites the second, wrong tap the bug report describes.
+            // The local player has not caught up to the group's Playing command, but the icon must
+            // not show "paused" — that invites the second, wrong tap the bug report describes.
             playerHandle.emit(PlayerEvent.IsPlayingChanged(isPlaying = false))
             advanceUntilIdle()
 

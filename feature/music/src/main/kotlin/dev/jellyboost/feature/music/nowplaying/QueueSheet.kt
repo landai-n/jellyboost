@@ -67,26 +67,11 @@ import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.feature.music.R
 
 /**
- * The music queue, as a bottom sheet: current track highlighted, tap to jump, up/down to reorder,
- * a remove button per row.
+ * Takes no ViewModel of its own, unlike `SyncPlayQueueSheet`: `NowPlayingScreen` already collects
+ * everything here, and a second collector of the same `@Singleton` controller state is redundant.
  *
- * Modelled on `SyncPlayQueueSheet` (`:player`), the codebase's one prior queue-sheet — same header
- * shape, same row shape, same up/down reorder buttons rather than a drag. That sheet chose buttons
- * because its reordering is a request to the server that only takes effect when the group's next
- * `PlayQueueUpdate` answers, and a dragged row snapping back until that round trip returns reads as
- * a broken gesture. The music queue's [dev.jellyboost.core.common.music.MusicController.moveItem]
- * is a local, synchronous list move with no such round trip — but no drag-to-reorder pattern exists
- * anywhere in this codebase to mirror (searched: no `detectDragGestures`/reorderable usage), and
- * inventing one for this one sheet is out of scope for what Phase 4 asks for. The up/down buttons
- * are shipped instead, satisfying "reorder" without a new interaction pattern; a real drag is a
- * fair follow-up once a second call site wants it.
- *
- * Unlike `SyncPlayQueueSheet`, this one does **not** resolve its own ViewModel: it is drawn from
- * inside [dev.jellyboost.feature.music.nowplaying.NowPlayingScreen], which already collects
- * everything this sheet needs from [dev.jellyboost.feature.music.nowplaying.NowPlayingViewModel] —
- * a second collector of the same `@Singleton` controller state would be redundant. `SyncPlayQueueSheet`
- * resolves its own because it is opened from `:player`'s solo `PlayerScreen`, which has no other
- * access to the group's queue.
+ * TODO: reorder is up/down buttons rather than a drag, because no drag-to-reorder pattern exists
+ *  anywhere in this codebase to mirror. Worth revisiting once a second call site wants one.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -162,11 +147,8 @@ private fun QueueSheetContent(
 internal fun queueListMaxHeight(maxHeight: Dp): Dp = minOf(LIST_MAX_HEIGHT, maxHeight * LIST_MAX_HEIGHT_FRACTION)
 
 /**
- * The sheet's title, its track count, and the two verbs that act on the queue as a whole.
- *
- * Stop comes *before* Close, in the order the two are destructive: ending the session is the one
- * that throws the queue away, and putting it last would put a queue-destroying button where the
- * muscle memory for "close this sheet" already is.
+ * Stop must stay *before* Close: it throws the queue away, and putting it last would put a
+ * queue-destroying button where the muscle memory for "close this sheet" already is.
  */
 @Composable
 private fun QueueHeader(
@@ -205,12 +187,8 @@ private fun QueueHeader(
 }
 
 /**
- * The queue's rows, with no header or dismissal of their own — the part [QueueSheetContent] and
- * [dev.jellyboost.feature.music.nowplaying.NowPlayingScreen]'s wide two-pane layout both need.
- *
- * The wide layout (≥560dp) shows the queue inline — artwork left, controls and queue list right —
- * rather than behind [QueueSheet], so factoring the list out is what lets both call sites draw the
- * exact same rows instead of drifting apart.
+ * Shared by [QueueSheetContent] and `NowPlayingScreen`'s wide inline pane, so the two cannot drift
+ * apart on how a row looks.
  */
 @Composable
 internal fun QueueList(
@@ -300,7 +278,6 @@ private fun QueueTrackRow(
     }
 }
 
-/** The row's leading artwork — the same hairline-bordered square the rest of the sheet's art uses. */
 @Composable
 private fun QueueTrackThumb(url: String?) {
     val thumbShape = RoundedCornerShape(Dimens.CardCornerRadius)
@@ -317,7 +294,6 @@ private fun QueueTrackThumb(url: String?) {
     )
 }
 
-/** Title over subtitle — the row's one flexible column, so the caller passes its `weight`. */
 @Composable
 private fun QueueTrackLabels(
     track: JellyfinItem,
@@ -344,21 +320,12 @@ private fun QueueTrackLabels(
 }
 
 /**
- * Reorder up/down and remove, behind **one** overflow button.
+ * One overflow, not three inline buttons: three 48dp `IconButton`s over the row's 56dp artwork
+ * would leave the flexible title column ellipsising after a couple of words on a phone-width sheet.
  *
- * Three always-visible 48dp `IconButton`s would be 144dp of width, on top of the row's 56dp
- * artwork and the current track's equalizer glyph. The title column is the row's only flexible
- * child, so it absorbs all of that: on a phone-width sheet every single title would ellipsise
- * after a couple of words. One overflow leaves that 96dp to the titles, which are what the sheet
- * exists to show; the three verbs keep their exact strings and their edge-disabled states, one tap
- * further in.
- *
- * The icon is tinted explicitly rather than inheriting `LocalContentColor`. [QueueList] is drawn in
- * two places — inside this sheet, where a `ModalBottomSheet`'s own `Surface` provides `onSurface`,
- * and inline in `NowPlayingScreen`'s wide right-hand pane, which has no `Surface` ancestor at all
- * and therefore inherits Material's *bare* default for that local, `Color.Black`. On the app's
- * `#101010` background that renders these controls invisible.
- * [GlassIconTint] is the token every other icon button in this module already names.
+ * The icon must be tinted **explicitly**: [QueueList] is also drawn inline in `NowPlayingScreen`'s
+ * wide pane, which has no `Surface` ancestor, so `LocalContentColor` falls back to Material's bare
+ * `Color.Black` — invisible on the app's `#101010`.
  */
 @Composable
 private fun QueueRowActions(
@@ -370,24 +337,19 @@ private fun QueueRowActions(
 ) {
     var expanded by remember { mutableStateOf(false) }
 
-    // The menu has to be a sibling of the button *inside its own Box*: a DropdownMenu anchors to its
-    // layout parent, and without the wrapper that parent is the whole row — which would drop the
-    // menu from the artwork's edge instead of from this button (`AppActions.AppOverflowMenu`).
+    // The menu must be a sibling of the button *inside its own Box*: a DropdownMenu anchors to its
+    // layout parent, and without the wrapper that parent is the whole row.
     Box {
         IconButton(onClick = { expanded = true }) {
             Icon(
                 imageVector = Icons.Filled.MoreVert,
-                // No "more options" string exists in this module and none may be added here, so the
-                // sheet's own title stands in: "Queue" is at least the subject of every verb behind
-                // the button.
+                // No "more options" string exists in this module; the sheet's own title stands in.
                 contentDescription = stringResource(R.string.music_now_playing_queue),
                 tint = GlassIconTint,
             )
         }
 
-        // `LibrarySortMenu`'s dressing — the app's one prior menu on a dark surface: the theme's
-        // `surface` rather than M3's `surfaceContainer`, and the panel hairline that gives every
-        // floating surface in the app its edge.
+        // `LibrarySortMenu`'s dressing: the theme's `surface`, not M3's `surfaceContainer`.
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
@@ -426,11 +388,8 @@ private fun QueueRowActions(
 }
 
 /**
- * One entry in [QueueRowActions]' menu.
- *
- * `Role.Button` is declared on the item itself rather than on its icon: `DropdownMenuItem`'s own
- * `clickable` merges its descendants and sets no role of its own, so a role on the leading icon
- * would sit under the node TalkBack focuses.
+ * `Role.Button` must be on the item, not its icon: `DropdownMenuItem`'s `clickable` merges its
+ * descendants and sets no role, so a role on the leading icon sits under the node TalkBack focuses.
  */
 @Composable
 private fun QueueRowMenuItem(

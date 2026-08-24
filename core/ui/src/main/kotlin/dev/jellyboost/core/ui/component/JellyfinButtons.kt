@@ -45,79 +45,44 @@ import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.core.ui.theme.glassSurface
 
-// The two pill buttons and the glass icon button the 2026 refresh uses for every action in the app.
-//
-// The primary pill is white with `#101010` content rather than `colorScheme.primary`: the palette's
-// `#00A4DC` stays the *accent* — progress, selection, links — and a white fill is what makes the one
-// action a screen wants the user to take unmistakable against the near-black background. That is a
-// deliberate departure from stock Material, which is why these are wrappers over `ButtonDefaults`
-// rather than a re-tuned colour scheme: every call site names the component it wants, and the choice
-// stays greppable and reversible.
-//
-// ### Why none of the three is an M3 `Button`
-// They were, until the drawn surfaces turned out not to be the size they asked for. `Button`
-// delegates to `Surface`, which applies `Modifier.minimumInteractiveComponentSize()` *inside* the
-// caller's modifier chain:
-//
-//     modifier /* the caller's */ → minimumInteractiveComponentSize() → surface() → clickable()
-//
-// The min-size node reports 48dp whatever it wraps, so a caller's `.size(36.dp).glassSurface(…)`
-// clipped, blurred and outlined the node *below* it — 48dp — and every glass circle in the app came
-// out the same size regardless of the diameter it declared (36, 44 and 34dp call sites all drew at
-// 48). Building the three from `Box`/`Row` puts the order back the right way round: the caller's
-// modifier stays outermost (so `fillMaxWidth`/`weight` still work), then the 48dp frame, then the
-// visual at its declared size, then the click target and its ripple *inside* the visual's clip.
-//
-// Nothing is given up on accessibility: the frame reserves [Dimens.MinTouchTarget] on both axes, so
-// the automatic 48dp touch slop Compose gives every pointer-input node has room to live in and
-// neighbouring controls cannot eat into it. What changes is that a row of these buttons is now
-// 48dp tall with a 36dp circle drawn in the middle of it, rather than a 48dp circle — which is why
-// call sites that space them apart may want *less* arrangement spacing than before.
+// None of the three is an M3 `Button` on purpose: `Button` delegates to `Surface`, which applies
+// `minimumInteractiveComponentSize()` *inside* the caller's chain, so a `.size(36.dp).glassSurface()`
+// clipped and blurred the 48dp node below it and every glass circle drew at 48dp whatever diameter it
+// declared. `Box`/`Row` restores the order: caller's modifier, 48dp frame, visual at its declared
+// size, then the click target inside the visual's clip. The frame still reserves
+// Dimens.MinTouchTarget on both axes, so a row of these is 48dp tall around a 36dp circle.
 
-/** Container of a primary pill. Not `colorScheme.primary` — see the file KDoc. */
 private val PrimaryPillContainer = Color.White
 
-/** Content on that white fill: the app background colour, for maximum contrast. */
 private val PrimaryPillContent = Color(0xFF101010)
 
-/** Disabled primary fill — present enough to hold the button's shape, too faint to invite a tap. */
 private val PrimaryPillDisabledContainer = Color.White.copy(alpha = 0.07f)
 
 /**
- * Disabled content, on both pills.
- *
- * A disabled control still has to say *what* it is — a busy primary pill is the only thing on an
- * auth screen telling the user what is happening — so its label is text with a 4.5:1 obligation,
- * not decoration. At 0.35 it was 3.20:1 on `#101010`; 0.48 is 5.00:1 there and 4.78:1 on `#202020`.
- * Still visibly a disabled label: [PrimaryPillDisabledContainer]
- * is what says "you cannot press this", and it is untouched.
+ * A disabled label is still text and owes 4.5:1 — a busy pill is all an auth screen is saying. 0.35
+ * measured 3.20:1 on `#101010`; 0.48 is 5.00:1 there and 4.78:1 on `#202020`. The faint *container*
+ * is what reads as un-pressable, not the label.
  */
 private val PrimaryPillDisabledContent = Color.White.copy(alpha = 0.48f)
 
-/** Content colour of a ghost pill and its disabled counterpart. */
 private val GhostPillContent = Color.White
 
 private val GhostPillDisabledContent = Color.White.copy(alpha = 0.48f)
 
-/** Default tint of a [GlassIconButton]'s glyph — white, held just off full strength. */
 val GlassIconTint: Color = Color.White.copy(alpha = 0.8f)
 
-/** Horizontal padding inside a full-size pill, and inside a small one. */
 private val PillHorizontalPadding = 22.dp
 
 private val PillHorizontalPaddingSmall = 16.dp
 
-/** Gap between a pill's leading icon and its label. */
 private val PillIconGap = 8.dp
 
 private val PillIconSize = 18.dp
 
 private val PillIconSizeSmall = 16.dp
 
-/** Glyph size inside a [GlassIconButton], independent of the button's own diameter. */
 private val GlassIconSize = 18.dp
 
-/** Track width of the inline busy spinner a `loading` pill draws in place of its leading icon. */
 private val PillSpinnerStroke = 2.dp
 
 private val PillLabel =
@@ -132,17 +97,7 @@ private val PillLabelSmall =
         fontWeight = FontWeight.W500,
     )
 
-/**
- * The white pill that carries a screen's primary action: Play, Resume, Sign in, Connect, Retry.
- *
- * @param small the 36dp variant, for actions that sit inside dense chrome (a state view's retry, a
- *   row of bulk actions) rather than at the head of a screen.
- * @param leadingIcon drawn before the label at 18dp (16dp when [small]); `null` leaves a label-only
- *   pill, which is the common case.
- * @param loading replaces the leading icon with an inline spinner in the disabled content color —
- *   for the moment between tapping the action and its result (signing in, connecting). The caller
- *   still disables the button; [loading] only adds the busy glyph.
- */
+/** @param loading only swaps the leading glyph for a spinner — the caller still disables the pill. */
 @Composable
 fun PrimaryPillButton(
     text: String,
@@ -172,25 +127,9 @@ fun PrimaryPillButton(
 }
 
 /**
- * The glass pill that carries a screen's *secondary* action, beside a [PrimaryPillButton].
- *
- * Same geometry as the primary so the two sit level in a row; a glass fill and a white@12% edge
- * instead of the white one, which is what keeps a pair of buttons from reading as two equal choices.
- *
- * @param tint the glass fill, as on [GlassIconButton]'s `surfaceTint`: [GlassDefaults.Fill] for a
- *   pill inside a screen's own content; a pill floating over raw video (the player's skip-segment
- *   offer) passes a dark fill instead, since there is no backdrop there to pull down.
- * @param loading as on [PrimaryPillButton]: swaps the leading icon for an inline spinner while the
- *   action is in flight (Settings' sign-out, waiting on the server). The caller still disables the
- *   button.
- * @param progress the determinate sibling of [loading]: `0f..1f` draws a progress *ring* in the
- *   leading slot instead of a spinner, `null` leaves the slot to [leadingIcon]. It exists so the
- *   detail screen's wide Download pill can show the same live ring the phone's circular button
- *   shows for the identical transfer — the two must stay in sync. [loading] wins if both are set:
- *   an indeterminate wait is a stronger statement than a stale fraction.
- * @param leadingIconTint colours the leading glyph alone, leaving the label at the pill's own
- *   content colour — the `tint` [GlassIconButton] has, for the same reason: a finished download's
- *   glyph goes accent while the word beside it stays plain.
+ * @param tint a pill floating over raw video (the player's skip offer) must pass a dark fill —
+ *   there is no backdrop there for the blur to pull down.
+ * @param loading only swaps the leading glyph for a spinner — the caller still disables the pill.
  */
 @Composable
 fun GhostPillButton(
@@ -209,9 +148,6 @@ fun GhostPillButton(
         onClick = onClick,
         enabled = enabled,
         height = if (small) Dimens.PillHeightSmall else Dimens.PillHeight,
-        // The glass is a *surface* rather than a container colour: the fill is a blurred backdrop
-        // sample, not a colour, so it has to be a modifier on the drawn pill and let whatever is
-        // underneath show through.
         surface = Modifier.glassSurface(shape = CircleShape, borderColor = GlassDefaults.GhostBorder, tint = tint),
         contentPadding = pillContentPadding(small),
         contentColor = if (enabled) GhostPillContent else GhostPillDisabledContent,
@@ -230,15 +166,8 @@ fun GhostPillButton(
 }
 
 /**
- * A circular glass button holding a single glyph — the refresh's only icon-button shape, used for
- * back, close, search, cast, sort and the rest of the app's chrome.
- *
- * @param size diameter of the *drawn* circle: 36dp in dense chrome, 44dp where the button stands
- *   alone as a primary-sized affordance. The glyph stays 18dp either way, so the two sizes differ in
- *   weight rather than in reach — the button always reserves [Dimens.MinTouchTarget] around whatever
- *   it draws (see this file's header).
- * @param surfaceTint the glass fill. [GlassDefaults.Fill] for a button inside a screen's own
- *   content; chrome floating over arbitrary artwork passes [GlassDefaults.ChromeFill].
+ * @param size diameter of the *drawn* circle only; the button always reserves
+ *   [Dimens.MinTouchTarget] around it (see this file's header).
  */
 @Composable
 fun GlassIconButton(
@@ -256,13 +185,9 @@ fun GlassIconButton(
         contentAlignment = Alignment.Center,
     ) {
         Box(
-            // The click target sits *inside* the glass so the ripple is clipped to the circle the
-            // user can see, rather than to the invisible frame around it.
-            //
-            // `mergeDescendants` is not about this button's own glyph (there is only one): a
-            // semantics node that merges its descendants is not itself swallowed by an ancestor
-            // that merges, so the Play button inside an episode row — a row that is now one merged
-            // node — survives as its own stop with its own action.
+            // Click target inside the glass so the ripple clips to the visible circle, not the frame.
+            // `mergeDescendants` keeps this button its own traversal stop: a merging node is not
+            // swallowed by a merging ancestor, which is what saves Play inside a merged episode row.
             modifier =
                 Modifier
                     .size(size)
@@ -281,32 +206,16 @@ fun GlassIconButton(
     }
 }
 
-/** How much of its alpha a glass glyph keeps once the button is disabled. */
 private const val DISABLED_GLYPH_FACTOR = 0.45f
 
 /**
- * The frame both pills are drawn in: the visual at [height] or taller, centred inside an invisible
- * interactive area at least [Dimens.MinTouchTarget] tall.
+ * `propagateMinConstraints` passes a caller's `fillMaxWidth()`/`weight(1f)` minimum down to the drawn
+ * pill; without it the pill hugs its label inside an empty frame.
  *
- * `propagateMinConstraints` is what keeps the two honest about width. A caller's `fillMaxWidth()`
- * or `weight(1f)` arrives as a *minimum* width on this box, and propagating it means the drawn pill
- * fills the same width the caller asked for instead of hugging its label in the middle of an empty
- * frame; a caller that constrains nothing propagates a zero minimum, and the pill hugs its content
- * as it always did.
- *
- * [height] is a **floor, not a cap**. Using `requiredHeight` instead would pin both ends of the
- * range, and at accessibility font scales ≥1.5 that vertically clips the label inside every
- * primary and ghost button in the app — a button you cannot read defeats the design the fixed
- * height was protecting (WCAG 1.4.4). At
- * fontScale 1.0 nothing moves: the content is shorter than [height], so the pill still draws at
- * exactly the size the design specifies.
- *
- * It is `requiredHeightIn(min = …)` rather than the more obvious `defaultMinSize(minHeight = …)`
- * because of the `propagateMinConstraints` above: the box's own 48dp minimum reaches this row as a
- * non-zero `minHeight`, and `defaultMinSize` applies only when the incoming minimum is zero — it
- * would silently do nothing here and every pill would draw at the 48dp touch frame's height
- * instead of its own 44dp/36dp. `requiredHeightIn` replaces the incoming height range with
- * `[height, ∞)`, which is precisely "the design height, or taller if the text needs it".
+ * [height] is a floor, not a cap: `requiredHeight` would pin both ends and clip every pill's label at
+ * font scales ≥1.5 (WCAG 1.4.4). It must stay `requiredHeightIn`, not `defaultMinSize` — the box's
+ * 48dp minimum arrives non-zero, so `defaultMinSize` would do nothing and every pill would draw at
+ * the touch frame's 48dp instead of its own 44/36dp.
  */
 @Composable
 private fun PillFrame(
@@ -343,24 +252,13 @@ private fun PillFrame(
     }
 }
 
-/**
- * What a pill says about itself while its action is in flight.
- *
- * The busy pill is disabled — that is what stops a second tap — and a disabled control with a
- * spinner in it announced only "disabled", which is the one thing that does not explain the wait.
- * "Busy" is a *state*, not a name, so it goes in
- * `stateDescription` and leaves the label ("Sign in") intact.
- */
+/** A disabled busy pill otherwise announces only "disabled"; "Busy" is a state, so the label survives. */
 @Composable
 private fun busyStateDescription(loading: Boolean): String? = stringResource(R.string.state_busy).takeIf { loading }
 
 private fun pillContentPadding(small: Boolean): PaddingValues =
     PaddingValues(horizontal = if (small) PillHorizontalPaddingSmall else PillHorizontalPadding)
 
-/**
- * A pill's glyph and label, emitted straight into [PillFrame]'s row — the gap between them is that
- * row's arrangement rather than a nested one, so a pill that fills its width centres the pair.
- */
 @Composable
 private fun PillContent(
     text: String,

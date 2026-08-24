@@ -86,27 +86,13 @@ import dev.jellyboost.core.ui.theme.screenGlow
 import dev.jellyboost.core.ui.R as CoreUiR
 
 /**
- * The library grid: every title in one library, paged, sortable and filterable.
- *
- * The screen wears no `TopAppBar`: it opens on its own large-title header of glass buttons over a
- * faint accent glow, with the applied filters spelled out as chips underneath rather than hidden
- * behind a badge. It is a **pushed** destination, so `:app`'s chrome is hidden and
- * `LocalAppChromePadding` is zero — this screen handles its own system-bar insets.
- *
- * The `Scaffold` that remains is here for the snackbar alone, hence `contentWindowInsets =
- * WindowInsets(0)`: the header pads itself against the status bar and the grid scrolls under it.
- *
- * @param viewModel passed in rather than resolved here so `:app` owns the `hiltViewModel()` call,
- *   as it does for home.
- * @param onBack pops one entry — the plain back affordance.
- * @param onHome leaves the whole pushed chain at once and lands on the Home tab; see
- *   `AppScaffold.navigateHome`.
+ * A *pushed* destination: `:app`'s chrome is hidden and `LocalAppChromePadding` is zero, so this
+ * screen handles its own system-bar insets. The `Scaffold` is here for the snackbar alone.
  */
 @Suppress(
-    // Screen-level wiring: every visible piece is already a named composable (`LibraryHeader`, `LibraryFilterRow`,
-    // `LibraryGridContent`, `SelectionOverlay`) and what is left is the plumbing that binds them — including two
-    // `sortAction` slots whose whole point is that the same control appears in one place or the other. A wrapper around
-    // it would need ten parameters to say less.
+    // Screen-level wiring: every visible piece is already a named composable and what is left binds
+    // them, including two `sortAction` slots whose point is that one control appears in one place or
+    // the other.
     "LongMethod",
 )
 @Composable
@@ -119,11 +105,8 @@ fun LibraryGridScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val selectionState = viewModel.selection.collectAsStateWithLifecycle()
-    // Only *whether* the mode is on is read in this scope — a derived flag that flips twice per
-    // selection, at the start and at the end. Reading the set itself here would recompose the whole
-    // screen (and re-create the grid's content lambda) on every single toggle; the count is read
-    // inside the selection bar's own slot, which is its own recomposition scope, and each cell
-    // derives its own flag from `selectionState`.
+    // Only *whether* the mode is on is read in this scope. Reading the set itself here would
+    // recompose the whole screen on every toggle; each cell derives its own flag instead.
     val isSelecting by remember(selectionState) { derivedStateOf { selectionState.value.isActive } }
     val items = viewModel.items.collectAsLazyPagingItems()
     var sortMenuExpanded by remember { mutableStateOf(false) }
@@ -133,38 +116,25 @@ fun LibraryGridScreen(
             onShown = viewModel::consumeMessage,
         ) { batchOutcomeText(it.action, it.outcome) }
 
-    // Only intercepts while the mode is on, so the plain Back affordance and the system gesture
-    // keep popping the destination exactly as before at every other moment.
+    // Only intercepts while the mode is on, so Back and the system gesture pop as usual otherwise.
     BackHandler(enabled = isSelecting) { viewModel.onSelection(SelectionIntent.Clear) }
 
     Scaffold(
         modifier = modifier,
-        // The screen draws under the system bars: the header carries the status-bar inset and the
-        // grid's own contentPadding clears the navigation bar.
         contentWindowInsets = WindowInsets(0),
-        // A pushed destination, so `LocalAppChromePadding` is zero and the shared host's policy
-        // resolves to the navigation-bar inset this screen applies by hand.
         snackbarHost = { JellyboostSnackbarHost(hostState = snackbarHostState) },
     ) { innerPadding ->
-        // One `BoxWithConstraints` for the whole screen — not per cell (see [ItemGrid]). It buys
-        // the two places the layout differs on a wide window: the title's size, and whether sort is
-        // an icon in the header or a labelled control at the end of the chip row.
+        // One `BoxWithConstraints` for the whole screen, not per cell (see [ItemGrid]).
         BoxWithConstraints(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
             val isWide = maxWidth >= WIDE_WIDTH
 
-            // Behind everything, anchored to the top of the window: the screen has no artwork of
-            // its own, and this is what keeps the header from reading as text on a black rectangle.
-            // Height follows width because the brush's radius does (fade-out ≈ 61% of width) — a
-            // fixed height that fits a phone chops the gradient mid-fade on a tablet and draws a
-            // hard seam across the page.
+            // Height follows width because the brush radius does: a fixed height that fits a phone chops
+            // the gradient mid-fade on a tablet and draws a hard seam.
             Box(modifier = Modifier.fillMaxWidth().aspectRatio(GLOW_ASPECT).screenGlow())
 
             Column(modifier = Modifier.fillMaxSize()) {
-                // The contextual bar *replaces* the header and the chip row rather than stacking
-                // over them: sort and filters re-query the grid, which is precisely what must not
-                // happen with a selection open (LibraryViewModel.dropSelection), and the close
-                // affordance lands where Back was, so the top-left corner keeps meaning "get out of
-                // here".
+                // The contextual bar *replaces* the header and chip row rather than stacking over them: sort
+                // and filters re-query the grid, which must not happen with a selection open.
                 if (isSelecting) {
                     SelectionOverlay(selection = selectionState, onIntent = viewModel::onSelection)
                 } else {
@@ -175,8 +145,7 @@ fun LibraryGridScreen(
                         onBack = onBack,
                         onHome = onHome,
                         sortAction = {
-                            // Compact only: on a wide layout sort is the labelled control at the
-                            // end of the chip row, and one screen shows one sort affordance.
+                            // Compact only: one screen shows one sort affordance.
                             if (!isWide) {
                                 SortIconAction(
                                     sortBy = state.sortBy,
@@ -236,17 +205,7 @@ fun LibraryGridScreen(
 }
 
 /**
- * The screen's header: navigation at the start, the library's name and size in the middle, sort at
- * the end.
- *
- * Both navigation affordances are here rather than one of them hiding in an overflow: a pushed
- * destination shows no tab bar to escape through, so Home is as much a way out as Back is — the
- * convention every pushed screen in the app follows (`ItemDetailScreen.OverlayNav`).
- *
- * @param totalCount how many items the grid holds, when known — see [LibraryUiState.totalCount].
- *   The line is absent rather than empty while it is not, so the title does not jump when it lands.
- * @param sortAction the sort affordance, passed in because *where* it belongs depends on the
- *   window width; empty on a wide layout, where the chip row hosts it instead.
+ * @param totalCount absent rather than empty while unknown, so the title does not jump when it lands.
  */
 @Composable
 private fun LibraryHeader(
@@ -265,12 +224,8 @@ private fun LibraryHeader(
                 start = Dimens.HeaderPadding,
                 end = Dimens.HeaderPadding,
                 top = Dimens.HeaderPadding,
-                // The chip row sits one small gap under the title block, not a full 20dp: the
-                // two read as one header, and the grid's own padding follows below them.
                 bottom = Dimens.SpaceSmall,
             ),
-        // `sortAction` is a plain composable slot, not a `RowScope` one — it is empty on the wide
-        // layout, where the chip row hosts the control instead.
         trailing = { sortAction() },
     ) {
         ScreenHeaderTitle(
@@ -288,17 +243,6 @@ private fun LibraryHeader(
     }
 }
 
-/**
- * The inline filter row: what is applied, as chips, and the two ways to change it.
- *
- * *All* clears, each facet chip toggles the filter it names, and *Filters* opens the sheet that
- * still owns the full editor. The chips are shortcuts into the same
- * [dev.jellyboost.core.common.model.FilterOptions] the sheet edits — no chip means anything the
- * sheet cannot express — so the badge counting active filters is gone: they are legible instead.
- *
- * @param sortAction empty on a compact layout, where sort is an icon up in the header; on a wide
- *   one it hugs the end of this row as a labelled control, which is where the extra width is.
- */
 @Composable
 private fun LibraryFilterRow(
     state: LibraryUiState,
@@ -318,10 +262,8 @@ private fun LibraryFilterRow(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             item(key = CHIP_ALL_KEY) {
-                // Stays a `PillChip` while its neighbour became an `ActionPillChip`: "All" *has* a
-                // state — it is drawn solid while no filter is applied — and it behaves exactly
-                // like the radio button in a group that its facets make it. "Filters" below has no
-                // state to have; it opens a sheet.
+                // Stays a `PillChip` because "All" *has* a state — drawn solid while no filter is applied.
+                // "Filters" below has none; it opens a sheet.
                 PillChip(
                     text = stringResource(R.string.library_filter_all),
                     selected = state.filters.isEmpty,
@@ -358,7 +300,6 @@ private fun LibraryFilterChip.chipKey(): String =
         is LibraryFilterChip.Year -> "chip-year-$value"
     }
 
-/** The chip's copy — the sheet's own words for the same filters, never a second wording. */
 @Composable
 private fun LibraryFilterChip.label(): String =
     when (this) {
@@ -368,7 +309,6 @@ private fun LibraryFilterChip.label(): String =
         is LibraryFilterChip.Year -> value.toString()
     }
 
-/** Sort on a compact layout: a glass circle in the header, with the menu hanging off it. */
 @Composable
 private fun SortIconAction(
     sortBy: SortBy,
@@ -384,7 +324,6 @@ private fun SortIconAction(
             contentDescription = stringResource(R.string.library_sort),
             onClick = { onExpandedChange(true) },
         )
-        // The one sort menu, wherever its anchor happens to be at this width.
         LibrarySortMenu(
             expanded = expanded,
             sortBy = sortBy,
@@ -396,12 +335,6 @@ private fun SortIconAction(
     }
 }
 
-/**
- * Sort on a wide layout: the current key spelled out at the end of the chip row.
- *
- * The same menu, opened from a label rather than a glyph — at this width the row has room to say
- * what the grid is sorted by instead of making the user open a menu to find out.
- */
 @Composable
 private fun SortLabelAction(
     sortBy: SortBy,
@@ -415,9 +348,8 @@ private fun SortLabelAction(
         Row(
             modifier =
                 Modifier
-                    // A glyph and a word that open a menu: the compact layout's version of this is
-                    // a `GlassIconButton`, which says so — without the role, this one would say
-                    // nothing.
+                    // Without the role this glyph-and-word would announce nothing; the compact version is a
+                    // `GlassIconButton`, which says so on its own.
                     .clickable(role = Role.Button) { onExpandedChange(true) }
                     .padding(horizontal = Dimens.HeaderPadding, vertical = Dimens.SpaceSmall),
             verticalAlignment = Alignment.CenterVertically,
@@ -447,10 +379,7 @@ private fun SortLabelAction(
     }
 }
 
-/**
- * The contextual bar, in a composable of its own so that reading the *count* recomposes this and
- * nothing else — `LibraryGridScreen` only ever reads whether the mode is on.
- */
+/** Its own composable so reading the *count* recomposes this and nothing else. */
 @Composable
 private fun SelectionOverlay(
     selection: State<ItemSelection>,
@@ -460,11 +389,8 @@ private fun SelectionOverlay(
 }
 
 /**
- * The grid itself, with the three states Paging distinguishes: first-page loading, first-page
- * failure, and loaded (possibly empty).
- *
- * Appending a page has its own, non-blocking states at the bottom of the grid — a failed *second*
- * page must never replace the pages the user is already looking at with a full-screen error.
+ * A failed *second* page must never replace the pages the user is already looking at with a
+ * full-screen error, so appends have their own non-blocking states at the bottom of the grid.
  */
 @Composable
 internal fun LibraryGridContent(
@@ -501,8 +427,7 @@ internal fun LibraryGridContent(
                 actionLabel =
                     stringResource(R.string.library_empty_clear_filters).takeIf { hasActiveFilters },
                 onAction = onClearFilters.takeIf { hasActiveFilters },
-                // The filtered case is the one that earns it: the user changed a chip and the grid
-                // emptied, which is a result and has to be reported like one.
+                // The filtered case earns it: the user changed a chip and the grid emptied.
                 announce = LiveRegionMode.Polite,
             )
 
@@ -518,14 +443,9 @@ internal fun LibraryGridContent(
 }
 
 /**
- * @param selection the selection **as a `State`**, not as a value.
- *
- * That is the whole of this screen's selection-performance story. A cell that read the set directly
- * would subscribe its recomposition scope to it, so toggling one card would recompose every visible
- * card. Reading it inside a per-cell [derivedStateOf] instead means each cell subscribes to *its
- * own* `Boolean`: flipping one card invalidates one cell, and Paging appending a page or a download
- * badge changing invalidates none of them (the grid recently got `contentType` and lost its
- * per-cell `BoxWithConstraints` for the same reason — this keeps that work intact).
+ * @param selection the selection **as a `State`**, not as a value. A cell that read the set directly
+ *   would subscribe its scope to it, so toggling one card would recompose every visible card;
+ *   reading it inside a per-cell [derivedStateOf] means each cell subscribes to its own `Boolean`.
  */
 @Composable
 private fun ItemGrid(
@@ -536,12 +456,8 @@ private fun ItemGrid(
     modifier: Modifier = Modifier,
 ) {
     LazyVerticalGrid(
-        // As many columns as the window fits, so a phone shows two or three and the tablet in
-        // landscape shows seven or more without a separate layout. The minimum is pinned to the
-        // home rows' poster width (Dimens.PosterWidth) rather than a smaller plan constant:
-        // GridCells.Adaptive always grows cells to at least fill the row evenly at >= minSize, so
-        // anchoring the floor to the same token home uses guarantees a library cell is never
-        // narrower than a home poster card in either orientation (see MIN_CELL_WIDTH kdoc).
+        // The minimum is pinned to [Dimens.PosterWidth] so a library cell is never narrower than a home
+        // poster card: `GridCells.Adaptive` only ever grows cells above `minSize`.
         columns = GridCells.Adaptive(MIN_CELL_WIDTH),
         modifier = modifier.fillMaxSize(),
         contentPadding =
@@ -549,8 +465,7 @@ private fun ItemGrid(
                 start = Dimens.HeaderPadding,
                 end = Dimens.HeaderPadding,
                 top = Dimens.SpaceExtraSmall,
-                // Nothing below the grid clears the navigation bar for it — this screen consumes no
-                // `Scaffold` insets, so the last row buys its own clearance here, where it scrolls.
+                // This screen consumes no `Scaffold` insets, so the last row buys its own navigation-bar clearance.
                 bottom = Dimens.HeaderPadding + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding(),
             ),
         horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceLarge),
@@ -559,16 +474,12 @@ private fun ItemGrid(
         items(
             count = items.itemCount,
             key = items.itemKey { it.id },
-            // Every cell is the same kind of node, so the grid can reuse one that scrolled off
-            // instead of composing a new one — the single cheapest thing a lazy layout can be told.
             contentType = items.itemContentType { POSTER_CARD_CONTENT_TYPE },
         ) { index ->
             val item = items[index]
             if (item != null) {
                 val id = item.id
-                // One derived flag per cell, keyed on the item's id so it survives the cell being
-                // reused for a different index. `derivedStateOf` re-evaluates when the set changes
-                // but only invalidates this cell when *this* item's membership actually flipped.
+                // Keyed on the item id so it survives the cell being reused for a different index.
                 val selected by
                     remember(selection, id) {
                         derivedStateOf {
@@ -577,14 +488,10 @@ private fun ItemGrid(
                         }
                     }
 
-                // `Dp.Unspecified` makes the card fill its column instead of taking a fixed width,
-                // which is what a `GridCells.Adaptive` cell needs. It replaces a per-cell
-                // `BoxWithConstraints`, i.e. one subcomposition per poster on every scroll.
+                // `Dp.Unspecified` makes the card fill its adaptive column instead of taking a fixed width.
                 PosterCard(
                     item = item,
                     onClick = {
-                        // A tap opens the item normally, and toggles it while the mode is on —
-                        // the one rule that makes a selection survive a mis-tap.
                         if (selection.value.isActive) {
                             onSelection(SelectionIntent.Toggle(id))
                         } else {
@@ -594,8 +501,6 @@ private fun ItemGrid(
                     width = Dp.Unspecified,
                     onLongClick = { onSelection(SelectionIntent.Toggle(id)) },
                     selected = selected,
-                    // The grid is where a rating is worth the pixels: it is the one screen whose
-                    // whole job is choosing between titles you have not opened yet.
                     ratingBadge = item.communityRating,
                 )
             }
@@ -605,7 +510,6 @@ private fun ItemGrid(
     }
 }
 
-/** The append (next-page) indicator pinned across the full width under the last row. */
 private fun LazyGridScope.appendState(items: LazyPagingItems<JellyfinItem>) {
     when (val append = items.loadState.append) {
         is LoadState.Loading ->
@@ -647,37 +551,23 @@ private fun AppendError(
 }
 
 /**
- * Minimum grid column width.
- *
- * An adaptive grid at 110.dp lets a tablet settle at cells narrower than the [Dimens.PosterWidth]
- * the home rows draw the same 2:3 poster at — an inconsistency between the two screens. Anchoring
- * the floor to [Dimens.PosterWidth] itself keeps
- * the test tablet (1600x2560 @ 2.25x) at 4 portrait columns of ~156dp and 7 landscape columns of
- * ~143dp with this screen's 20dp side padding and 16dp gutters, and a 360dp phone at 2 columns of
- * ~152dp — all comfortably at or above the home card width, and none of them narrower than the
- * artwork request (`ArtworkRequestWidths.POSTER_DP`, 128dp) actually fetches.
+ * Anchored to [Dimens.PosterWidth] rather than a smaller literal, which let a tablet settle at cells
+ * narrower than the same poster on home. Never below the artwork request width (128dp).
  */
 private val MIN_CELL_WIDTH = Dimens.PosterWidth
 
-/** Vertical gutter between grid rows — wider than the horizontal one, which the titles fill. */
 private val GridRowGap = 20.dp
 
-/**
- * The preview frames' height for the glow-backed header. Previews only: the live screen sizes the
- * glow by [GLOW_ASPECT], because 320dp cleared the width-derived fade on every *phone* but chopped
- * it mid-fade on a tablet.
- */
+/** Previews only: the live screen sizes the glow by [GLOW_ASPECT]. */
 private val GlowHeight = 320.dp
 
 /** Width : height of the glow box; height ≈ 70% of width, past the brush's ~61%-of-width fade-out. */
 private const val GLOW_ASPECT = 10f / 7f
 
-/** Width at which the header grows its title and sort moves into the chip row as a label. */
 private val WIDE_WIDTH = 600.dp
 
 private val SortLabelIconSize = 16.dp
 
-/** Gap between the sort glyph and its label. */
 private val SortLabelGap = 6.dp
 
 private val SortLabelStyle =
@@ -686,7 +576,6 @@ private val SortLabelStyle =
         fontWeight = FontWeight.W500,
     )
 
-/** The count under the library's name — quiet, and a step smaller than a card title. */
 private val HeaderCountStyle =
     TextStyle(
         fontSize = 13.sp,

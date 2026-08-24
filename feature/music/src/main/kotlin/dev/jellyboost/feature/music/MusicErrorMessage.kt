@@ -5,7 +5,6 @@ import androidx.compose.ui.res.stringResource
 import dev.jellyboost.core.common.AppError
 import dev.jellyboost.core.common.appErrorOrNull
 
-/** Turns the domain failure taxonomy into copy a user can act on (precedent: `:feature:library`). */
 @Composable
 internal fun AppError.toMessage(): String =
     when (this) {
@@ -23,10 +22,8 @@ internal fun AppError.toMessage(): String =
     }
 
 /**
- * Copy for a Paging failure.
- *
- * `LoadState.Error` is typed on `Throwable`, so the repository wraps the domain error on its way
- * out (see `AppErrorException`); anything that is not ours falls back to the generic message.
+ * `LoadState.Error` is typed on `Throwable`, so the repository wraps the domain error on the way out
+ * (`AppErrorException`); anything not ours falls back to the generic message.
  */
 @Composable
 internal fun Throwable.toPagingMessage(): String =

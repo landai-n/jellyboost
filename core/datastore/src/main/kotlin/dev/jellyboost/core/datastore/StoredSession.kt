@@ -3,14 +3,11 @@ package dev.jellyboost.core.datastore
 import java.util.UUID
 
 /**
- * A signed-in Jellyfin session, as persisted by [SecureCredentialStore].
+ * [serverId] and [userId] are stored alongside [accessToken] so restoring is one atomic read and signing out
+ * one atomic wipe — there is no window where the token and the identifiers can disagree.
  *
- * [serverId] and [userId] are stored alongside [accessToken] so that restoring a session on
- * app start is a single atomic read, and signing out is a single atomic wipe — there is no
- * window where the token and the identifiers it belongs to can disagree.
- *
- * The [accessToken] must NEVER be persisted anywhere other than [SecureCredentialStore]
- * (not Room, not `DataStore`, not logs).
+ * The [accessToken] must NEVER be persisted anywhere other than [SecureCredentialStore] — not Room, not
+ * `DataStore`, not logs.
  */
 data class StoredSession(
     val serverId: UUID,
@@ -18,9 +15,8 @@ data class StoredSession(
     val accessToken: String,
 ) {
     /**
-     * Redacts [accessToken]: the generated data-class `toString()` would print the live token the
-     * moment an instance reaches a log line — a `Timber` call that dumps a whole value, or a
-     * wrapped exception message, is all it would take.
+     * Redacts [accessToken]: the generated `toString()` would print the live token the moment an instance
+     * reaches a log line or a wrapped exception message.
      */
     override fun toString(): String = "StoredSession(serverId=$serverId, userId=$userId, accessToken=<redacted>)"
 }

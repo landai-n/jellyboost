@@ -37,15 +37,8 @@ import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 
 /**
- * The cast rail: circular headshots under a section title, below the detail screen's overview.
- *
- * The people were already fetched — `JellyfinItem.people` is populated by the detail screen's full
- * `getItem` re-fetch, and `creditLine` in the header has been naming four of them all along — so
- * this row costs no request. It draws nothing at all when the server credited nobody, rather than
- * leaving an empty shelf (the rule `MediaRow` follows).
- *
- * Not clickable: there is no person page to open, and a card that ripples but goes nowhere
- * promises one.
+ * Costs no request: `JellyfinItem.people` is already populated by the detail screen's full `getItem`
+ * re-fetch. Not clickable — there is no person page to open, and a card that ripples promises one.
  */
 @Composable
 internal fun CastRail(
@@ -70,13 +63,8 @@ internal fun CastRail(
 }
 
 /**
- * One face in the rail — and **one** node for a screen reader.
- *
- * Unmerged it would be two stops per person, a name and then a role floating free of whoever plays
- * it ("Dolores Abernathy" is not a fact on its own), so a twelve-strong rail would be twenty-four
- * swipes to get past. Merged, each person is one stop that says both, in the words the credit would
- * be written in. The column is not clickable and gains no role: there is no person page to open,
- * and the rail is a list of facts.
+ * **One** merged node per person: unmerged, a twelve-strong rail is twenty-four swipes, and the role
+ * floats free of whoever plays it. No click and no role — the rail is a list of facts.
  */
 @Composable
 private fun CastMember(
@@ -123,13 +111,8 @@ private fun CastMember(
 }
 
 /**
- * Who the rail shows, in what order: the people the user came to see first, then everyone else in
- * the order the server billed them.
- *
- * A stable sort by credit kind rather than a filter, so a film whose server record happens to list
- * its director before its cast still leads with the cast — and a documentary credited entirely to
- * crew still has a rail instead of nothing. Duplicates are dropped because Jellyfin credits one
- * person once per role, and the same face twice reads as a bug.
+ * A stable **sort** by credit kind, never a filter: a documentary credited entirely to crew still
+ * gets a rail. Duplicates are dropped — Jellyfin credits one person once per role.
  */
 internal fun castMembers(
     people: List<Person>,
@@ -140,7 +123,7 @@ internal fun castMembers(
         .sortedBy { it.kind.billing }
         .take(limit)
 
-/** Lower bills first. Actors and guest stars share the top, because a rail is a row of faces. */
+/** Lower bills first; actors and guest stars share the top. */
 private val PersonKind.billing: Int
     get() =
         when (this) {
@@ -151,14 +134,13 @@ private val PersonKind.billing: Int
             PersonKind.OTHER -> 4
         }
 
-/** How many faces the rail shows before it stops — a full cast list is a screen of its own. */
 internal const val CAST_LIMIT = 12
 
 private const val CAST_CONTENT_TYPE = "cast-member"
 
 private const val CAST_TEXT_LINES = 2
 
-/** Width of one headshot column: wider than the 72dp photo, so two-word names get two lines. */
+/** Wider than the 72dp photo, so two-word names get two lines. */
 private val CastColumnWidth: Dp = 96.dp
 
 private val CastNameStyle =

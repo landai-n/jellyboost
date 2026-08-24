@@ -19,9 +19,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * The series and season chips are two individually-focusable buttons, each with its own spoken
- * label: cards and rows merge their descendants into one spoken sentence, and every interactive one
- * carries the Button role rather than announcing as plain text. Modelled on [EpisodeRowA11yTest].
+ * Two individually-focusable buttons, each with its own spoken label and the Button role rather than
+ * announcing as plain text.
  */
 @RunWith(AndroidJUnit4::class)
 class EpisodeOriginChipsA11yTest {
@@ -60,7 +59,6 @@ class EpisodeOriginChipsA11yTest {
             }
         }
 
-        // The eye reads the bare series name; a screen reader is told what tapping it does.
         rule.onNodeWithText(SERIES_NAME).assertExists()
         val description = rule.activity.getString(R.string.detail_go_to_series, SERIES_NAME)
         rule.onNodeWithContentDescription(description).assertExists()

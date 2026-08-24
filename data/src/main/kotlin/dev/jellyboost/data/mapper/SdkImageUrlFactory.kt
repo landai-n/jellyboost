@@ -8,11 +8,8 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * [ImageUrlFactory] backed by the SDK's `imageApi` URL builders, so the server base URL, path
- * template and query encoding all stay the SDK's responsibility.
- *
  * The `tag` query parameter is what makes these URLs safely cacheable: it changes whenever the
- * artwork changes, so Coil's disk cache never serves a stale poster.
+ * artwork does, so Coil's disk cache never serves a stale poster.
  */
 @Singleton
 internal class SdkImageUrlFactory

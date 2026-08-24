@@ -26,17 +26,10 @@ import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.core.ui.theme.cardShadow
 
 /**
- * A 1:1, circularly-clipped artist card.
+ * Draws no overlays on purpose: an artist has no resume progress, no watched state, and its
+ * download rows are upserted as *parents* that never drive a badge here.
  *
- * Deliberately lighter than [AlbumCard]/[PosterCard]: an artist has no resume progress, no watched
- * state and today no [dev.jellyboost.core.common.model.DownloadState] of its own (artist rows are
- * upserted as download *parents*, but that never drives a badge here — see the
- * download-badge KDoc on [MediaCardArtwork]), so there is nothing for [MediaCardArtwork]'s overlay
- * stack to draw. The name sits centred underneath rather than left-aligned, matching a circular
- * portrait rather than a rectangular poster.
- *
- * @param width fixed card width, as a row of cards needs; [Dp.Unspecified] fills the available
- *   width instead, which is what an adaptive grid cell wants.
+ * @param width [Dp.Unspecified] fills the parent, which is what an adaptive grid cell wants.
  */
 @Composable
 fun ArtistCard(

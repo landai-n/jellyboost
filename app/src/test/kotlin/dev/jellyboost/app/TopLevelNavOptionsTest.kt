@@ -6,16 +6,9 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for the navigation options behind the app bar's four tabs.
- *
- * The pushed screens' Home affordance navigates with its own, separate options — the reason is
- * pinned by [HomeNavOptionsTest].
- *
- * Driving a real `NavController` needs a device, but the options it is handed are a plain value, and
- * they are the whole of the tab-switching contract. The pop target is the part worth pinning: with
- * anything that is not on the back stack — `graph.findStartDestination()` on a launch that began
- * logged out, for instance — `popUpTo` is silently ignored, and every tab tap then stacks a *second*
- * copy of the destination with a second ViewModel behind it.
+ * The pop target is the part worth pinning: with anything not on the back stack —
+ * `graph.findStartDestination()` on a launch that began logged out — `popUpTo` is silently ignored
+ * and every tab tap stacks a second copy of the destination with a second ViewModel behind it.
  */
 class TopLevelNavOptionsTest {
     @Test

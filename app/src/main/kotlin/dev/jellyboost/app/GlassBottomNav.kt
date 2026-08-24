@@ -37,24 +37,12 @@ import dev.jellyboost.core.ui.theme.popShadow
 /**
  * The compact layout's navigation: a floating glass pill carrying the four top-level destinations.
  *
- * It is a *floating* bar rather than a docked one — [BottomNavMargin] of clear background on all
- * three sides, a [popShadow] under it, and the page's own content blurred through it — which is
- * what the refresh's mocks show and why the pill does not sit in a `Scaffold` slot: nothing shrinks
- * the screen above it, content scrolls under it, and screens keep their last row clear of it with
- * `LocalAppChromePadding` instead.
+ * The glass is applied *here*, inside the bar, rather than around the `AnimatedVisibility` that shows
+ * it: the effect must be attached to the node that draws the glass, or the enter/exit alpha fades a
+ * snapshot of the backdrop instead of the bar.
  *
- * The blur comes from [glassSurface] reading `LocalHazeState`, which `AppScaffold` provides around
- * the whole frame. It is applied *here*, inside the bar, rather than around the `AnimatedVisibility`
- * that shows it: the effect has to be attached to the node that actually draws the glass, or the
- * enter/exit alpha would fade a snapshot of the backdrop instead of the bar.
- *
- * Selection is a `Role.Tab` `selectable`, exactly as the combined app bar's tabs were, so the row
- * still announces as "Home, tab, selected" rather than as four unrelated buttons; both states show
- * their label, so no icon needs a separate content description.
- *
- * @param currentDestination selects the tab; `null` while the graph is still settling.
- * @param onSelectTab a tab was tapped — the caller navigates with `topLevelNavOptions()`, which is
- *   what makes a re-selection return to that tab's root instead of stacking a second copy.
+ * Selection is a `Role.Tab` `selectable`, so the row announces as "Home, tab, selected" rather than
+ * as four unrelated buttons; both states show their label, so no icon needs a content description.
  */
 @Composable
 internal fun GlassBottomNav(
@@ -62,9 +50,8 @@ internal fun GlassBottomNav(
     onSelectTab: (Any) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // The pill's own darker tint, not ChromeFill: this bar's labels are the smallest text in the
-    // chrome and it sits over full-bleed artwork — see [GlassDefaults.BottomNavFill] for the
-    // arithmetic. (The half-resolution blur is `glassSurface`'s default for all glass now.)
+    // A darker tint than ChromeFill: this bar's labels are the smallest text in the chrome and it
+    // sits over full-bleed artwork — see [GlassDefaults.BottomNavFill].
     val glass = Modifier.glassSurface(shape = CircleShape, tint = GlassDefaults.BottomNavFill)
 
     Row(
@@ -72,9 +59,8 @@ internal fun GlassBottomNav(
             modifier
                 .fillMaxWidth()
                 .padding(horizontal = BottomNavMargin)
-                // A *minimum*, not a fixed height: at accessibility font scales the stacked
-                // icon-over-label item outgrows 60dp, and a hard `height` clipped the labels the
-                // bar exists to show. The pill floats, so growing costs nothing but overlap slack.
+                // Minimum, not fixed: at accessibility font scales the stacked icon-over-label item
+                // outgrows the design height, and a hard `height` clipped the labels.
                 .heightIn(min = BottomNavHeight)
                 .popShadow(CircleShape)
                 .then(glass)
@@ -93,25 +79,13 @@ internal fun GlassBottomNav(
 }
 
 /**
- * How the three unselected items share whatever the selected pill leaves them.
- *
- * They are weighted rather than laid out by [Arrangement.SpaceAround] alone so that a locale with
- * long destination names degrades evenly instead of starving the last item: at 360dp the French
- * labels ("Bibliothèques", "Téléchargements") overflow the pill, and without a weight the row
- * simply ran out of room and ellipsised the fourth label down to a single letter. With one, every
- * unselected item gets the same width and every label ellipsises by the same amount. The selected
- * pill is deliberately *not* weighted — it hugs its content, as the mocks draw it.
+ * Weighted rather than left to [Arrangement.SpaceAround] so a long-label locale degrades evenly: at
+ * 360dp the French labels overflow the pill, and without a weight the row ellipsised the *fourth*
+ * label down to a single letter. The selected pill is deliberately not weighted — it hugs its content.
  */
 private const val UNSELECTED_ITEM_WEIGHT = 1f
 
-/**
- * One destination in the pill.
- *
- * The two states are different *shapes*, not just different colours: unselected is a stacked
- * icon-over-label column in the muted content colour, selected is a solid white capsule with the
- * icon and a larger label side by side. On a bar this small that difference is what makes the
- * current tab readable at a glance without a separate indicator.
- */
+/** The two states are different *shapes*, not just colours — that is the selection indicator. */
 @Composable
 private fun RowScope.BottomNavItem(
     tab: TopLevelTab,
@@ -125,8 +99,6 @@ private fun RowScope.BottomNavItem(
             .selectable(selected = selected, onClick = onClick, role = Role.Tab)
 
     if (selected) {
-        // Content on the selected item's white capsule: the app background colour, for full
-        // contrast — the same token `GlassTopNav`'s selected tab uses.
         val selectedContent = MaterialTheme.colorScheme.background
         Row(
             modifier =
@@ -157,11 +129,8 @@ private fun RowScope.BottomNavItem(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(UnselectedIconGap),
         ) {
-            // Full white, not `onSurfaceVariant`'s white@70%: a 10sp label loses too much of its
-            // contrast to a translucent ink over blurred artwork — even on the darkened
-            // [GlassDefaults.BottomNavFill], the muted white composited under 3:1 on a bright
-            // frame. Unselected still reads as unselected by *shape* (stacked column vs the white
-            // capsule), which is the distinction this bar was designed around.
+            // Full white, not `onSurfaceVariant`'s white@70%: over a bright frame the muted white
+            // composited under 3:1 even on the darkened fill. Shape is what marks the selection.
             Icon(
                 imageVector = tab.icon,
                 contentDescription = null,
@@ -179,10 +148,9 @@ private fun RowScope.BottomNavItem(
     }
 }
 
-/** Breathing room between the pill's edge and the first and last item. */
 private val BarHorizontalPadding: Dp = 8.dp
 
-/** Glyph size, the same in both states so the row does not shift as the selection moves. */
+/** The same in both states, so the row does not shift as the selection moves. */
 private val ItemIconSize: Dp = 20.dp
 
 private val SelectedHorizontalPadding: Dp = 16.dp
@@ -213,8 +181,7 @@ private val UnselectedLabel =
 @Composable
 private fun GlassBottomNavPreview() {
     JellyfinTheme {
-        // No destination is "selected" without a NavController, so the preview shows the resting
-        // shape of the bar; the selected capsule is exercised on device.
+        // No destination is selected without a NavController: the selected capsule is device-only.
         GlassBottomNav(currentDestination = null, onSelectTab = {}, modifier = Modifier.padding(vertical = 20.dp))
     }
 }

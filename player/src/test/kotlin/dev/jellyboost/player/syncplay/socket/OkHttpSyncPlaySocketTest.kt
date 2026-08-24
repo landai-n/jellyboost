@@ -33,8 +33,6 @@ import java.time.Instant
 import java.util.UUID
 
 /**
- * Unit tests for [OkHttpSyncPlaySocket].
- *
  * **This class exists because of one bug, and the first two tests are it.** The SDK's socket routes
  * received messages through a conflated `StateFlow`: of two frames arriving closer together than
  * one decode the first is lost, and two identical consecutive frames are dropped by `StateFlow`'s

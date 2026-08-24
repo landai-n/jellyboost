@@ -9,18 +9,12 @@ import java.io.File
 /**
  * The package layering of `:data:downloads`, enforced by reading the source.
  *
- * This module had two import cycles — root↔`plan`, and root→`work`→`engine`→root — and nothing in
- * the build could see them: Gradle only knows about *module* dependencies, detekt has no
- * package-cycle rule, and a cycle is invisible in the one diff that closes it. `isFolderItem`
- * lives in `.plan`, `SiblingSeeder`/`OrphanSweeper`/`SubtitleSidecarTopUp` in `.engine`, the
- * `DownloadHttpClient` qualifier in `.engine` rather than `.di`, and the repository/enqueue/delete
- * implementations in `.impl`. This test is what keeps the layering closed: the next cycle fails a
- * test instead of surviving a review.
+ * This module had two import cycles — root↔`plan`, and root→`work`→`engine`→root — and nothing in the
+ * build could see them: Gradle only knows about *module* dependencies, detekt has no package-cycle
+ * rule, and a cycle is invisible in the one diff that closes it.
  *
- * It scans the module's own `src/main/kotlin` rather than the classpath on purpose. An import is
- * exactly the thing being ruled on, it is present in the source and erased from the bytecode
- * (Kotlin resolves imports at compile time), and a source scan needs no reflection library and
- * cannot be fooled by a fully-qualified reference the compiler inlined.
+ * It scans `src/main/kotlin` rather than the classpath because an import is exactly the thing being
+ * ruled on, and it is erased from the bytecode (Kotlin resolves imports at compile time).
  *
  * ### The layering
  * Lowest first; a package may only import packages **strictly** below it.
@@ -31,14 +25,14 @@ import java.io.File
  * | 0 | `plan` | pure functions from a DTO to file names and URLs |
  * | 0 | `storage` | where bytes live on disk |
  * | 1 | `engine` | the transfer machinery: queue, downloader, MKV repair, seeding, sweeping |
- * | 2 | *(root)* | the module's surface — `DownloadRepository` and the refresher (public), `DownloadApi` (internal) |
+ * | 2 | *(root)* | the module's surface — `DownloadRepository`, the refresher, `DownloadApi` |
  * | 2 | `offline` | what the player asks about a completed download |
  * | 3 | `work` | WorkManager scheduling, the worker, the notification |
  * | 4 | `impl` | the implementations behind the root interfaces |
  * | 5 | `di` | the Hilt bindings, which by definition see everything |
  *
- * Adding a package is a deliberate act: [LAYERS] is asserted to name exactly the packages that
- * exist, so a new one fails here until someone has decided where it sits.
+ * Adding a package is a deliberate act: [LAYERS] is asserted to name exactly the packages that exist,
+ * so a new one fails here until someone has decided where it sits.
  */
 class PackageDependencyTest {
     private val graph = PackageGraph.scan(sourceRoot())
@@ -80,8 +74,8 @@ class PackageDependencyTest {
         val path = mutableListOf<String>()
 
         @Suppress(
-            // A depth-first walk: "already on the path" (a cycle), "already settled", the bubbled-up cycle from a
-            // child, and "clean" are four genuinely different outcomes.
+            // A depth-first walk: "already on the path" (a cycle), "already settled", the bubbled-up
+            // cycle from a child, and "clean" are four genuinely different outcomes.
             "ReturnCount",
         )
         fun walk(node: String): String? {
@@ -120,11 +114,8 @@ class PackageDependencyTest {
             )
 
         /**
-         * The module's main source directory, found by walking up from the working directory.
-         *
          * Gradle runs unit tests with the module directory as the working directory, but the
-         * two-candidate walk means this also works from the repository root (an IDE run
-         * configuration, a future `--tests` invocation from the root project).
+         * two-candidate walk means this also works from the repository root.
          */
         fun sourceRoot(): File {
             val suffix = "src/main/kotlin/dev/jellyboost/data/downloads"
@@ -175,10 +166,8 @@ class PackageDependencyTest {
             }
 
             /**
-             * The sub-package an import names, or [ROOT].
-             *
-             * The first segment is a package when it starts lower-case and a top-level declaration
-             * when it does not — Kotlin's own convention, and the only signal an import carries.
+             * The first segment is a package when it starts lower-case and a top-level declaration when
+             * it does not — Kotlin's own convention, and the only signal an import carries.
              */
             private fun String.packageOf(): String {
                 val head = substringBefore('.')

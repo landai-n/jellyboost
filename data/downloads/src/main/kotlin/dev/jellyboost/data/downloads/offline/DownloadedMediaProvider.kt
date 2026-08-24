@@ -21,24 +21,18 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Answers one question for the player: *is this item playable from this device right now, and out
- * of which files?*
+ * Answers one question for the player: *is this item playable from this device right now, and out of
+ * which files?*
  *
- * A `null` answer is the normal case for anything that was never downloaded, and it is also the
- * answer for a download that is not finished, or one whose media file has gone missing from disk —
- * both of which must fall back to streaming rather than fail. The check is deliberately made
- * against the filesystem and not only against Room: a user who clears the app's external storage
- * leaves the rows behind, and a `file://` URI pointing at nothing produces an ExoPlayer source
- * error several seconds into an otherwise silent screen.
+ * `null` is the normal answer for anything never downloaded, for a download that is not finished, and
+ * for one whose media file has gone missing — all of which must fall back to streaming rather than
+ * fail. The check is made against the filesystem and not only against Room: clearing the app's
+ * external storage leaves the rows behind, and a `file://` URI pointing at nothing produces an
+ * ExoPlayer source error seconds into an otherwise silent screen. Optional files are filtered the
+ * same way, one by one.
  *
- * Optional files are filtered the same way, one by one: a subtitle track whose sidecar failed to
- * download simply is not offered, which is what the plan means by "optional-file failure → item
- * still playable".
- *
- * It is also where a transcoded download is made **seekable**. Being the one gate every offline
- * playback passes through makes it the only place a repair reaches downloads that were already on
- * the device when it shipped — see [MatroskaSeekIndexRepair] for what is wrong with those files and
- * why fixing them here rather than in the download pipeline was the point.
+ * It is also the one gate every offline playback passes through, which is what lets
+ * [MatroskaSeekIndexRepair] reach downloads that were already on the device when it shipped.
  */
 @Singleton
 class DownloadedMediaProvider
@@ -50,9 +44,7 @@ class DownloadedMediaProvider
         private val seekIndex: MatroskaSeekIndexRepair,
         @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     ) {
-        /**
-         * @return what is on disk for [itemId], or `null` when the item cannot be played locally.
-         */
+        /** @return what is on disk for [itemId], or `null` when the item cannot be played locally. */
         suspend fun get(itemId: UUID): DownloadedMedia? =
             withContext(ioDispatcher) {
                 val stored = downloadDao.getWithFiles(itemId)
@@ -86,28 +78,23 @@ class DownloadedMediaProvider
                     mediaUri = localFileUri(mediaFile.path),
                     runTimeTicks = runTimeTicks,
                     // Carried through because the cached blob describes the *source* file: at any
-                    // transcoded step the bytes on disk hold one audio track and no embedded
-                    // subtitles, and only this row remembers that.
+                    // transcoded step the bytes on disk hold one audio track and no embedded subtitles.
                     quality = stored.download.quality,
-                    // …and which audio track that was. `null` on a row written before schema v8,
-                    // which is what makes the resolver's legacy fallback a real code path rather
-                    // than dead defensiveness.
+                    // …and which audio track that was. `null` on a row written before the column
+                    // existed, which is what makes the resolver's legacy fallback a real code path.
                     bakedAudioStreamIndex = stored.download.bakedAudioStreamIndex,
                     subtitles = stored.files.toSubtitles(),
-                    // No seek-repair call here (unlike [mediaFile] above): these are locally muxed
-                    // by the post-fetch strip and land with a complete `moov`, not a server-fetched
-                    // transcode that arrives without one.
+                    // No seek-repair call here (unlike the media file above): these are locally muxed
+                    // by the post-fetch strip and land with a complete `moov`.
                     audio = stored.files.toAudio(),
                     trickplay = stored.files.toTrickplay(dto),
                 )
             }
 
         /**
-         * The media source the file on disk actually came from.
-         *
-         * Matched dash-insensitively for the same reason `PlaybackInfoResolver` does it: the id the
-         * download row stored came off a `PlaybackInfo`-shaped response and may be dash-less, while
-         * the cached item's own sources carry dashes.
+         * The media source the file on disk actually came from, matched dash-insensitively for the same
+         * reason `PlaybackInfoResolver` does it: the id the download row stored came off a
+         * `PlaybackInfo`-shaped response and may be dash-less, while the cached sources carry dashes.
          */
         private fun BaseItemDto.pickMediaSource(mediaSourceId: String?): MediaSourceInfo? {
             val sources = mediaSources.orEmpty()
@@ -123,10 +110,7 @@ class DownloadedMediaProvider
                     DownloadedSubtitle(streamIndex = index, uri = localFileUri(onDisk.path))
                 }
 
-        /**
-         * The downloaded extra audio tracks of a transcoded download, sorted ascending by stream
-         * index — the order [DownloadedMedia.audio] promises the player.
-         */
+        /** Sorted ascending by stream index — the order [DownloadedMedia.audio] promises the player. */
         private fun List<DownloadFileEntity>.toAudio(): List<DownloadedAudio> =
             filter { it.type == DownloadFileType.AUDIO }
                 .mapNotNull { file ->
@@ -136,15 +120,12 @@ class DownloadedMediaProvider
                 }.sortedBy { it.streamIndex }
 
         /**
-         * The downloaded tile sheets, paired with the geometry that makes them addressable.
-         *
-         * The planner only ever fetches one resolution — the largest the server generated — so the
-         * sheets on disk agree on their `tileWidth`; `maxOfOrNull` is there for the case where an
-         * older build left tiles of a second resolution behind, which would otherwise interleave
-         * two grids into one nonsensical strip.
+         * The downloaded tile sheets, paired with the geometry that makes them addressable. The planner
+         * only ever fetches one resolution, so the sheets on disk agree on their `tileWidth`; taking the
+         * maximum guards the case where an older build left a second resolution behind, which would
+         * interleave two grids into one nonsensical strip.
          */
         @Suppress(
-            // Trickplay needs four facts on disk; a missing one means no trickplay, not a partial result.
             "ReturnCount",
         )
         private fun List<DownloadFileEntity>.toTrickplay(dto: BaseItemDto?): DownloadedTrickplay? {

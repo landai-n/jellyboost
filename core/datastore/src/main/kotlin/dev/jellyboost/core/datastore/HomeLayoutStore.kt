@@ -3,30 +3,21 @@ package dev.jellyboost.core.datastore
 import dev.jellyboost.core.common.model.HomeSectionType
 
 /**
- * Persistence seam for the last home-section layout the server told us about.
+ * A **cache of a server value**, not a user preference: the layout is configured in jellyfin-web and read
+ * back from DisplayPreferences, so nothing in the app ever writes it on the user's behalf. Its only job is to
+ * keep the home screen in the configured shape while offline, and on the load right after a failed fetch.
  *
- * This is a **cache of a server value**, not a user preference: the layout is configured in
- * jellyfin-web (Settings → Home) and read back from DisplayPreferences. It lives here rather than
- * in [AppPreferences] for that reason — nothing in the app ever writes it on the user's behalf,
- * and it is worthless without the server it came from. Its only job is to keep the home screen in
- * the shape the user configured while offline, and on the load right after a failed fetch.
- *
- * Reads and writes are synchronous, like [DeviceIdStore]: it is one short string, the caller
- * already runs on an IO dispatcher, and a suspending seam would buy nothing.
+ * Reads and writes are synchronous, like [DeviceIdStore]: one short string, on a caller already on IO.
  */
 interface HomeLayoutStore {
-    /** The last resolved layout, or `null` if the server has never been asked on this device. */
+    /** `null` if the server has never been asked on this device. */
     fun read(): List<HomeSectionType>?
 
-    /** Replaces the persisted layout. Losing this write costs one re-fetch, nothing more. */
     fun write(sections: List<HomeSectionType>)
 
     /**
-     * Drops the persisted layout.
-     *
-     * Called on sign-out: without this, a fetch failure in the window right after a different user
-     * signs in would fall back to whatever the *previous* user's server told this device — [read]
-     * cannot tell whose layout it is holding.
+     * Called on sign-out: without it, a fetch failure just after a different user signs in falls back to the
+     * *previous* user's layout — [read] cannot tell whose it is holding.
      */
     fun clear()
 }

@@ -6,10 +6,6 @@ import io.kotest.matchers.floats.plusOrMinus
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
-/**
- * Unit tests for [queueListMaxHeight] — the queue list's cap, which has to follow the sheet's own
- * height on a phone in landscape and leave the fixed tablet cap alone everywhere else.
- */
 class SyncPlayQueueSheetTest {
     @Test
     fun `a phone-landscape sheet caps the list at three fifths of itself`() {

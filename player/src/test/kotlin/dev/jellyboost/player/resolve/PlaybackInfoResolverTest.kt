@@ -30,9 +30,8 @@ import org.junit.jupiter.api.Test
 /**
  * Unit tests for [PlaybackInfoResolver].
  *
- * The two things worth guarding here are the dash-less media-source-id quirk — which fails
- * silently and much later, as ignored stream indices — and the play-method decision, which is what
- * every URL and every report downstream keys off.
+ * Guards two things: the dash-less media-source-id quirk (fails silently, later, as ignored
+ * stream indices) and the play-method decision, which every downstream URL and report keys off.
  */
 class PlaybackInfoResolverTest {
     private val api = mockk<PlayerApi>()
@@ -59,8 +58,7 @@ class PlaybackInfoResolverTest {
 
             resolver.resolve(PlaybackResolveRequest(itemId = PlayerFixtures.ITEM_ID))
 
-            // The server looks sources up by the dash-less form; with dashes it silently ignores
-            // the stream indices instead of failing.
+            // Dashes would silently drop the stream indices instead of failing outright.
             request.captured.mediaSourceId shouldBe PlayerFixtures.DASHLESS_ITEM_ID
         }
 
@@ -114,8 +112,8 @@ class PlaybackInfoResolverTest {
                     ),
                 )
 
-            // The server only reports supportsDirectPlay after checking the file against our
-            // profile, so it outranks an also-offered transcoding URL.
+            // supportsDirectPlay is checked server-side against our profile, so it outranks a
+            // transcoding URL offered alongside it.
             result.playMethod shouldBe PlayMethod.DIRECT_PLAY
         }
 
@@ -208,12 +206,10 @@ class PlaybackInfoResolverTest {
                     PlaybackResolveRequest(itemId = PlayerFixtures.ITEM_ID, autoBitrate = true),
                 )
 
-            // The caller sent no cap at all; this number exists only because the detector measured it.
             request.captured.maxStreamingBitrate shouldBe MEASURED_CAP
             request.captured.deviceProfile
                 ?.maxStreamingBitrate shouldBe MEASURED_CAP
             result.shouldBeInstanceOf<AppResult.Success<dev.jellyboost.player.model.RemotePlaybackMediaSource>>()
-            // And the source says the number was measured, so the picker can still call it "Auto".
             result.value.maxStreamingBitrate shouldBe MEASURED_CAP
             result.value.autoBitrate shouldBe true
         }
@@ -235,7 +231,7 @@ class PlaybackInfoResolverTest {
                 ),
             )
 
-            // The link that decides whether a receiver copes is the receiver's, not this device's.
+            // The receiver decides what it can handle, not this device — no cap is sent.
             request.captured.maxStreamingBitrate.shouldBeNull()
             coVerify(exactly = 0) { autoBitrateDetector.currentCap() }
         }
@@ -272,16 +268,14 @@ class PlaybackInfoResolverTest {
                     PlaybackResolveRequest(itemId = PlayerFixtures.ITEM_ID, autoBitrate = true),
                 )
 
-            // The cap doubles as the transcode's *target*, and a target at the link's own ceiling
-            // cannot be encoded and delivered in realtime (0.76× measured) — so the first answer is
-            // abandoned and the same item is negotiated again at High's rung. Nothing was encoded in
-            // the meantime: ffmpeg spawns on the first segment fetch, not on PlaybackInfo.
+            // The cap also targets the transcode; at the link's own ceiling it can't encode in
+            // realtime (0.76x measured), so pass 1 is abandoned and renegotiated at High's rung.
             coVerify(exactly = 2) { api.getPlaybackInfo(any(), any()) }
             requests.map { it.maxStreamingBitrate } shouldBe listOf(ABOVE_CEILING_CAP, CEILING)
             requests.last().deviceProfile?.maxStreamingBitrate shouldBe CEILING
             result.shouldBeInstanceOf<AppResult.Success<dev.jellyboost.player.model.RemotePlaybackMediaSource>>()
             result.value.maxStreamingBitrate shouldBe CEILING
-            // Still Auto: the user did not tap "High", the measurement was merely overruled.
+            // Still Auto — the measurement was overruled, not the user's choice.
             result.value.autoBitrate shouldBe true
         }
 
@@ -300,8 +294,8 @@ class PlaybackInfoResolverTest {
                     PlaybackResolveRequest(itemId = PlayerFixtures.ITEM_ID, autoBitrate = true),
                 )
 
-            // Direct play is the one case a high cap pays for itself: the original bytes, no
-            // re-encode to keep up with.
+            // Direct play is the one case a high cap pays for: original bytes, no re-encode to
+            // keep up with.
             coVerify(exactly = 1) { api.getPlaybackInfo(any(), any()) }
             result.shouldBeInstanceOf<AppResult.Success<dev.jellyboost.player.model.RemotePlaybackMediaSource>>()
             result.value.maxStreamingBitrate shouldBe ABOVE_CEILING_CAP
@@ -420,8 +414,7 @@ class PlaybackInfoResolverTest {
     @Test
     fun `does not side-load a subtitle format ExoPlayer has no decoder for`() =
         runTest {
-            // DVB subtitles have no MIME type ExoPlayer accepts as a side-loaded source, so the
-            // server has to burn them in or we do without them.
+            // DVB subtitles have no ExoPlayer-accepted side-load MIME type — burn-in or nothing.
             val result =
                 resolveWith(
                     PlayerFixtures.mediaSourceInfo(
@@ -431,7 +424,7 @@ class PlaybackInfoResolverTest {
                 )
 
             result.externalSubtitles.shouldBeEmpty()
-            // It is still offered in the picker — selecting it re-resolves and burns it in.
+            // Still offered in the picker — selecting it re-resolves and burns it in.
             result.subtitleTracks.map { it.index } shouldBe listOf(3)
         }
 
@@ -460,9 +453,8 @@ class PlaybackInfoResolverTest {
     @Test
     fun `marks an external delivery as side-loaded even for a stream inside the container`() =
         runTest {
-            // What a transcode does to an embedded subrip today: the server extracts it and hands
-            // back a delivery URL, so `MediaStream.isExternal` is false and the track is still one
-            // ExoPlayer opens as its own source.
+            // The server extracts an embedded subrip and hands back a delivery URL, so
+            // `MediaStream.isExternal` is false even though ExoPlayer still opens it as its own source.
             val result =
                 resolveWith(
                     PlayerFixtures.mediaSourceInfo(
@@ -480,9 +472,8 @@ class PlaybackInfoResolverTest {
     @Test
     fun `a burned-in subtitle is never counted among the tracks the stream carries`() =
         runTest {
-            // A graphical subtitle on a transcode: the server burns it into the picture and builds
-            // it no HLS rendition, so it must not take a place in the positional count that
-            // `TrackSelectionController` runs over the renditions that *are* there.
+            // A burned-in subtitle gets no HLS rendition, so it must not occupy a slot in the
+            // positional count `TrackSelectionController` runs over the renditions that do exist.
             val result =
                 resolveWith(
                     PlayerFixtures.mediaSourceInfo(
@@ -509,9 +500,8 @@ class PlaybackInfoResolverTest {
     @Test
     fun `an HLS rendition is a track the stream carries, never a side-load`() =
         runTest {
-            // The whole point of the second pass: the cues ride in the transcode's own master
-            // playlist, share its `TimestampAdjuster`, and are matched by position — so a sidecar
-            // file delivered this way is emphatically not external, whatever the stream says.
+            // Cues ride in the transcode's own master playlist and share its `TimestampAdjuster`,
+            // matched by position — never external, whatever the stream says.
             val result =
                 resolveWith(
                     PlayerFixtures.mediaSourceInfo(
@@ -567,8 +557,7 @@ class PlaybackInfoResolverTest {
 
             result.shouldBeInstanceOf<AppResult.Success<*>>()
             requests.size shouldBe 2
-            // Pass 1 asks the honest question — the answer decides whether pass 2 is worth a round
-            // trip at all — and only pass 2 drops external delivery.
+            // Pass 1's answer decides whether pass 2's round trip is worth taking.
             requests[0].subtitleProfiles().any { it.method == SubtitleDeliveryMethod.EXTERNAL } shouldBe true
             requests[1].subtitleProfiles().none { it.method == SubtitleDeliveryMethod.EXTERNAL } shouldBe true
             requests[1].subtitleProfiles().any {
@@ -576,7 +565,6 @@ class PlaybackInfoResolverTest {
             } shouldBe true
 
             val source = result.value as dev.jellyboost.player.model.RemotePlaybackMediaSource
-            // Pass 2's answer, and nothing side-loaded is left to drift.
             source.externalSubtitles.shouldBeEmpty()
             source.subtitleTracks.map { it.isExternal } shouldBe listOf(false)
         }
@@ -597,8 +585,8 @@ class PlaybackInfoResolverTest {
 
             resolver.resolve(PlaybackResolveRequest(itemId = PlayerFixtures.ITEM_ID))
 
-            // Sent the rendition profile, a direct-played file with a sidecar `.srt` negotiates
-            // `Encode` instead — a burn-in transcode of something that needed none.
+            // A direct-played file sent the rendition profile would negotiate `Encode` instead —
+            // a burn-in transcode of something that needed none.
             requests.size shouldBe 1
         }
 
@@ -625,8 +613,8 @@ class PlaybackInfoResolverTest {
                 PlaybackResolveRequest(itemId = PlayerFixtures.ITEM_ID, castTarget = true),
             )
 
-            // The receiver's subtitle handling is its own, and `CastSpecMapper` builds its tracks
-            // from the side-loaded list.
+            // The receiver's subtitle handling is its own; `CastSpecMapper` builds tracks from
+            // the side-loaded list.
             requests.size shouldBe 1
         }
 
@@ -717,8 +705,8 @@ class PlaybackInfoResolverTest {
 
             minted shouldBe PlayerFixtures.PLAY_SESSION_ID
             request.captured.mediaSourceId shouldBe PlayerFixtures.DASHLESS_ITEM_ID
-            // No profile to build a transcode plan from, and no live stream to allocate: the bytes
-            // are already on the device and nothing here will ever fetch a URL.
+            // No profile to build a transcode plan from, no live stream to allocate — the bytes
+            // are already on the device.
             request.captured.deviceProfile.shouldBeNull()
             request.captured.autoOpenLiveStream shouldBe false
         }
@@ -740,8 +728,8 @@ class PlaybackInfoResolverTest {
         runTest {
             coEvery { api.getPlaybackInfo(any(), any()) } throws TimeoutException("slow", null)
 
-            // The caller reports without a session id rather than not reporting at all; a group
-            // member missing from the dashboard is the worse failure.
+            // Reports without a session id rather than not reporting — a missing group member is
+            // the worse failure.
             resolver.mintPlaySessionId(PlayerFixtures.ITEM_ID, mediaSourceId = null).shouldBeNull()
         }
 

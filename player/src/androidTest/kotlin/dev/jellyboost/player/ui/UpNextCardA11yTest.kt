@@ -21,21 +21,14 @@ import org.junit.runner.RunWith
 import dev.jellyboost.core.ui.R as CoreUiR
 
 /**
- * The up-next card as a screen reader meets it.
+ * Three claims, each one modifier away from being silently untrue:
+ * - the card is **not** one merged node (a `semantics(mergeDescendants = true)` or a `clickable`
+ *   on the container would collapse "play next" and "dismiss" into one stop offering only one);
+ * - its static block *is* one stop, an authored sentence rather than fragments read in layout order;
+ * - that block is a polite live region, since the time-boxed offer must announce itself to a user
+ *   who isn't watching the screen.
  *
- * Three claims, each of which is one modifier away from being silently untrue:
- * - the card is **not** one merged node. It offers two different things — play the next episode, or
- *   stay for the credits — and a `semantics(mergeDescendants = true)` on the container (or a
- *   `clickable` on it, which merges as surely) would collapse both into one stop offering one of
- *   them;
- * - its static block *is* one stop, with an authored sentence rather than three fragments read in
- *   layout order;
- * - that block is a polite live region, so the card announces itself when it appears. The offer is
- *   time-boxed — a seek away from the ending takes it back — so a user who is not watching the
- *   screen has to be told it is there rather than left to find it by traversal.
- *
- * Device-only, like every ATF case in this repo: Compose semantics are invisible to static lint,
- * and the instrumented tree is the only thing that can see them.
+ * Device-only: Compose semantics are invisible to static lint.
  */
 @RunWith(AndroidJUnit4::class)
 class UpNextCardA11yTest {
@@ -56,9 +49,7 @@ class UpNextCardA11yTest {
         // clickable, which is the merge this layout exists to avoid.
         rule.onAllNodes(hasClickAction()).assertCountEquals(2)
 
-        // The pill is named by its visible label, the close button by a description — which is the
-        // difference between a control that says what it does in words on screen and one that
-        // cannot (WCAG 2.5.3 either way).
+        // Name-in-label vs. name-in-description: WCAG 2.5.3 is satisfied either way.
         rule.onNodeWithText(rule.activity.getString(R.string.player_up_next_play)).performClick()
         rule.waitForIdle()
         assertEquals(1, played)
@@ -90,8 +81,7 @@ class UpNextCardA11yTest {
         }
 
         val node = rule.onNodeWithContentDescription(spokenSentence()).fetchSemanticsNode()
-        // Polite, not assertive: it is an offer over a film that is still playing, not an
-        // interruption — the same level the skip pill announces at.
+        // Polite, not assertive: an offer over a film still playing, not an interruption.
         assertEquals(LiveRegionMode.Polite, node.config.getOrNull(SemanticsProperties.LiveRegion))
     }
 
@@ -104,8 +94,7 @@ class UpNextCardA11yTest {
             }
         }
 
-        // No "S null · E null", and no empty fragment left where the number was: the sentence is
-        // the eyebrow and the title, joined the same way.
+        // No "S null · E null", and no empty fragment left where the number was.
         val eyebrow = rule.activity.getString(R.string.player_up_next_title)
         rule.onNodeWithContentDescription("$eyebrow, $TITLE").assertExists()
     }

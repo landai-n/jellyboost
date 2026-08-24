@@ -6,7 +6,6 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
-/** Unit tests for [UserDataEventBus]. */
 class UserDataEventBusTest {
     private val bus = UserDataEventBus()
 
@@ -39,8 +38,8 @@ class UserDataEventBusTest {
     @Test
     fun `does not replay changes to a collector that arrives later`() =
         runTest {
-            // A screen loading after a toggle reads the current value from its own request; a
-            // replayed stale change would fight with it.
+            // A screen loading after a toggle reads the value from its own request; a replayed
+            // stale change would fight it.
             bus.emit(UserDataChange("a", UserData(played = true)))
 
             bus.changes.test {

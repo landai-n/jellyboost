@@ -32,12 +32,9 @@ import java.io.File
 import java.util.UUID
 
 /**
- * Unit tests for [DownloadedMediaProvider] — the gate every offline playback goes through.
- *
- * Two properties matter more than the mapping and are pinned hardest: a `null` answer for anything
- * that is not *completely* on disk (which is what makes the player fall back to streaming instead
- * of showing a source error), and the `file://` URI spelling, which is the one thing that cannot be
- * checked without a real path.
+ * The gate every offline playback goes through. Two properties are pinned hardest: a `null` answer for
+ * anything not *completely* on disk (which is what makes the player fall back to streaming instead of
+ * showing a source error), and the `file://` URI spelling, which cannot be checked without a real path.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class DownloadedMediaProviderTest {
@@ -151,8 +148,8 @@ class DownloadedMediaProviderTest {
     @Test
     fun `carries the quality the row was downloaded at`() =
         runTest {
-            // The cached blob describes the *source*; only this tells the player that the bytes on
-            // disk are a re-encode holding one audio track and no embedded subtitles.
+            // The cached blob describes the *source*; only this tells the player that the bytes on disk
+            // are a re-encode holding one audio track and no embedded subtitles.
             stored(quality = DownloadQuality.MEDIUM, files = listOf(mediaFile(path = write("a.mkv").absolutePath)))
 
             val resolved = provider.get(itemId).shouldNotBeNull()
@@ -175,8 +172,8 @@ class DownloadedMediaProviderTest {
     @Test
     fun `carries the audio track the transcode baked in`() =
         runTest {
-            // The cached blob lists every audio stream of the source; this column is the only
-            // record of which one the file on disk actually holds (schema v8).
+            // The cached blob lists every audio stream of the source; this column is the only record of
+            // which one the file on disk actually holds.
             stored(
                 quality = DownloadQuality.MEDIUM,
                 bakedAudioStreamIndex = 5,
@@ -207,9 +204,8 @@ class DownloadedMediaProviderTest {
     @Test
     fun `the media file is made seekable before it is handed to the player`() =
         runTest {
-            // A transcoded download lands without a SeekHead, and every seek into one restarts it
-            // from zero (see MatroskaSeekIndexRepair). This is the only gate that reaches downloads
-            // already on the device, so it is the one that has to ask.
+            // A transcoded download lands without a SeekHead, and every seek into one restarts it from
+            // zero. This is the only gate that reaches downloads already on the device.
             every { itemMapper.toDtoOrNull(any()) } returns
                 movieWith(mediaSourceId = "source-1", runTimeTicks = 72_000_000_000L)
             val media = write("a.mkv")
@@ -317,7 +313,7 @@ class DownloadedMediaProviderTest {
                     listOf(
                         mediaFile(path = write("a.mkv").absolutePath),
                         // Deliberately out of order: the player's `MergingMediaSource` order is the
-                        // contract, not whatever order Room happened to return the rows in.
+                        // contract, not whatever order Room returned the rows in.
                         audioFile(id = 2L, streamIndex = 5, path = german.absolutePath),
                         audioFile(id = 3L, streamIndex = 2, path = french.absolutePath),
                     ),
@@ -402,7 +398,7 @@ class DownloadedMediaProviderTest {
                     listOf(
                         mediaFile(path = write("a.mkv").absolutePath),
                         // Deliberately out of order: the scrubber indexes by tile number, not by
-                        // whatever order Room happened to return the rows in.
+                        // whatever order Room returned the rows in.
                         tileFile(id = 3L, tileIndex = 1, path = second.absolutePath),
                         tileFile(id = 2L, tileIndex = 0, path = first.absolutePath),
                     ),
@@ -466,9 +462,9 @@ class DownloadedMediaProviderTest {
     @Test
     fun `a downloaded track is offered exactly like a downloaded video`() =
         runTest {
-            // Nothing in this class is kind-aware, and this is the test that says so on purpose:
-            // `MusicStreamResolver` asks this provider first for every track it plays, so an
-            // assumption that a download is a video would silently send offline music to the server.
+            // Nothing in this class is kind-aware: `MusicStreamResolver` asks this provider first for
+            // every track it plays, so an assumption that a download is a video would silently send
+            // offline music to the server.
             val track = File(storage, "04 - Go Your Own Way.flac").also { it.writeText("flac") }
             every { itemMapper.toDtoOrNull(any()) } returns
                 DownloadFixtures.track(id = itemId, runTimeTicks = 21_000_000_000L)
@@ -476,14 +472,11 @@ class DownloadedMediaProviderTest {
 
             val media = provider.get(itemId).shouldNotBeNull()
 
-            // Percent-encoded, which matters far more for music than for video: a track's file name
-            // is the server's own ("04 - Go Your Own Way.flac") and is full of spaces, where a video
-            // download's is usually a dotted release name.
+            // Percent-encoded, which matters more for music: a track's file name is the server's own
+            // ("04 - Go Your Own Way.flac") and is full of spaces.
             media.mediaUri shouldBe "file://${storage.path}/04%20-%20Go%20Your%20Own%20Way.flac"
             media.runTimeTicks shouldBe 21_000_000_000L
             media.quality shouldBe DownloadQuality.ORIGINAL
-            // A track has none of the extras a video download carries, and asking for them is not
-            // an error — it is simply an empty list.
             media.subtitles.shouldBeEmpty()
             media.audio.shouldBeEmpty()
             media.trickplay.shouldBeNull()
@@ -498,8 +491,8 @@ class DownloadedMediaProviderTest {
 
             provider.get(itemId).shouldNotBeNull()
 
-            // Called unconditionally, which is fine: the repair's first veto is "not Matroska", so
-            // a flac or an mp3 costs two reads of twelve bytes and is left byte-for-byte alone.
+            // Called unconditionally, which is fine: the repair's first veto is "not Matroska", so a
+            // flac costs two reads of twelve bytes and is left byte-for-byte alone.
             verify(exactly = 1) { seekIndex.ensureSeekable(File(track.path), any()) }
         }
 

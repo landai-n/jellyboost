@@ -6,14 +6,6 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.type
 
-/**
- * The player's keyboard layer.
- *
- * The app is tablet-first: with a case keyboard, an external mouse-and-keyboard setup or a switch
- * device that emits key codes, the only transport the platform offers on its own is the media keys
- * the `MediaSession` already answers. The mapping lives here, apart from
- * `PlayerScreen`, because *which key does what* is a table worth testing without a device.
- */
 internal enum class PlayerKeyCommand {
     PlayPause,
     SeekBack,
@@ -22,32 +14,18 @@ internal enum class PlayerKeyCommand {
 }
 
 /**
- * When a key's command may run, which is the whole subtlety of putting shortcuts on a screen that
- * also has focusable controls.
- *
- * Compose dispatches a key event down the tree (preview) and then back up from whatever holds focus
- * (bubble). Handling everything in the preview pass would be simplest and wrong: Space would fire
- * play/pause instead of pressing the focused button, and an arrow would seek instead of nudging the
- * focused seek bar. So each key is placed in the pass where it cannot take something away.
+ * Each key belongs in the pass where it cannot steal from a focused control: handling everything in the preview
+ * pass would make Space seek instead of pressing the focused button.
  */
 internal enum class PlayerKeyScope {
-    /** Media keys. No focusable control claims them, so they win wherever focus happens to be. */
+    /** Preview pass: nothing focusable claims media keys. */
     Always,
 
-    /**
-     * Keys a focused control may want first — Space presses a button, Escape closes a sheet. Handled
-     * on the way back up, so the player only sees what nothing else consumed.
-     */
+    /** Bubble pass: the player only sees what no focused control consumed. */
     Unhandled,
 
-    /**
-     * Arrows, which additionally require the player root itself to hold focus.
-     *
-     * Compose moves focus with the arrow keys *after* the bubble pass, so consuming them
-     * unconditionally would strand a keyboard user on whichever control they tabbed to. While the
-     * root has focus — which is where the player starts, and where it stays until something is
-     * tabbed to — there is nothing to traverse and they seek instead.
-     */
+    /** Bubble pass and root focus: Compose traverses focus with the arrows *after* bubbling, so consuming them
+     * unconditionally would strand a keyboard user on the control they tabbed to. */
     RootFocused,
 }
 
@@ -56,11 +34,7 @@ internal data class PlayerKeyBinding(
     val scope: PlayerKeyScope,
 )
 
-/**
- * What a hardware key does in the player, or `null` for the keys it leaves alone — which is most of
- * them, deliberately: Tab, the d-pad centre and Enter must keep reaching the focus system, or the
- * shortcuts would have cost more than they gave.
- */
+/** Tab, the d-pad centre and Enter deliberately stay unmapped: they must keep reaching the focus system. */
 internal fun playerKeyBinding(key: Key): PlayerKeyBinding? =
     when (key) {
         Key.MediaPlayPause, Key.MediaPlay, Key.MediaPause ->
@@ -78,15 +52,7 @@ internal fun playerKeyBinding(key: Key): PlayerKeyBinding? =
         else -> null
     }
 
-/**
- * Binds the key table to the things the player can actually do.
- *
- * Built outside the screen composable so that the table's `when` is not one more branch in a
- * function that is already a screen, and so that the one thing every shortcut shares — bringing the
- * controls back, the keyboard's counterpart of the tap surface's own action — is stated once.
- *
- * @param onShowControls run before every command, whatever the command is.
- */
+/** @param onShowControls run before every command, whatever the command is. */
 internal fun playerKeyRunner(
     actions: PlayerActions,
     onShowControls: () -> Unit,
@@ -103,12 +69,8 @@ internal fun playerKeyRunner(
     }
 
 /**
- * Dispatches one key event, in one of the two passes.
+ * Key *down* only: acting on the release as well would seek twice.
  *
- * Key *down* only: a key that acted on its release as well would seek twice, and returning `false`
- * for the up event is what keeps the rest of the system's key handling intact.
- *
- * @param rootFocused whether the player root — rather than one of the controls on it — holds focus.
  * @param preview `true` for the downward pass, `false` for the bubble.
  * @return `true` only when the event was consumed, so everything unmapped still traverses.
  */

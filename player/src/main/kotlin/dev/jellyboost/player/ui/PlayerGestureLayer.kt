@@ -52,27 +52,18 @@ import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 
 /**
- * The invisible touch surface over the video.
+ * The invisible touch surface over the video. Must stay a sibling *below* the transport controls,
+ * never a wrapper: a tap on a button is consumed by the button and everything else falls through.
  *
- * It is a sibling *below* the transport controls rather than a wrapper around them: a tap that
- * lands on a button is consumed by the button, and everything else falls through to here. That is
- * what lets a single tap toggle the controls without every icon needing to know about gestures.
+ * All gesture judgement belongs to [PlayerGestureController], where it is unit tested; only platform
+ * plumbing lives here.
  *
- * The judgement — which half of the screen, which third, how far a swipe has to travel, which edges
- * belong to the system — is [PlayerGestureController]'s and is unit tested. What is left here is
- * the platform plumbing that cannot be: `AudioManager` for volume, the window's `screenBrightness`
- * attribute for brightness (a per-window override restored by `PlayerScreen`'s immersive effect on
- * the way out, so it never touches the device setting), and a transient indicator.
- *
- * @param swipesEnabled whether the vertical swipes are offered at all. `false` while casting: both
- *   of them act on *this* device — its media volume, its backlight — and neither means anything
- *   while the film is being decoded in a television, whose volume rides the hardware keys through
- *   the Cast framework. The taps are unconditional, because they are how the controls come back.
+ * @param swipesEnabled `false` while casting: both swipes act on this device's volume and backlight.
+ *   The taps stay unconditional — they are how the controls come back.
  */
 @Suppress(
-    // One gesture arena. The tap, double-tap and vertical-drag detectors must share a single `pointerInput` scope to
-    // resolve against each other — split across composables they would each consume the same events independently,
-    // which is the bug this layer was written to avoid.
+    // The tap, double-tap and vertical-drag detectors must share one `pointerInput` scope to resolve
+    // against each other; split across composables they each consume the same events.
     "LongMethod",
 )
 @Composable
@@ -98,8 +89,7 @@ internal fun PlayerGestureLayer(
         }
 
     var indicator by remember { mutableStateOf<GestureIndicator?>(null) }
-    // Reset by every new indicator, so a continuing swipe keeps it on screen and a finished one
-    // lets it fade out on its own.
+    // Keyed on the indicator so a continuing swipe restarts the linger rather than timing out mid-drag.
     LaunchedEffect(indicator) {
         if (indicator != null) {
             delay(INDICATOR_LINGER_MS)
@@ -107,9 +97,8 @@ internal fun PlayerGestureLayer(
         }
     }
 
-    // Built as its own modifier rather than branched inside the drag handler: a swipe that is not
-    // offered should not be *detected* either, so that the pointer never leaves the parent — which
-    // is what lets the system's own edge gestures work normally while casting.
+    // Its own modifier rather than a branch inside the drag handler: an unoffered swipe must not be
+    // *detected* either, or the pointer never reaches the system's own edge gestures.
     val swipes =
         if (!swipesEnabled) {
             Modifier
@@ -154,11 +143,8 @@ internal fun PlayerGestureLayer(
             }
         }
 
-    // The tap surface has to be a real accessibility node, not only a `pointerInput`: touch
-    // exploration consumes taps, so without an `onClick` action a
-    // TalkBack user whose controls had auto-hidden could never bring them back — the film would
-    // play on with no reachable transport at all. The raw gesture detector stays for touch; this
-    // adds the node TalkBack, Switch Access and every other action-driven service need.
+    // The tap surface must stay a real accessibility node, not only a `pointerInput`: touch
+    // exploration consumes taps, so without an `onClick` action auto-hidden controls are unreachable.
     val revealLabel = stringResource(R.string.player_show_controls)
 
     Box(
@@ -172,8 +158,7 @@ internal fun PlayerGestureLayer(
                         true
                     }
                 }
-                // Asks the system not to steal touches that start near the edges; the controller
-                // additionally ignores them, because this is only a request below API 29.
+                // Only a request below API 29, so the controller ignores edge touches as well.
                 .systemGestureExclusion()
                 .pointerInput(controller) {
                     detectTapGestures(
@@ -188,20 +173,14 @@ internal fun PlayerGestureLayer(
     }
 }
 
-/** What the transient overlay is showing. */
 private data class GestureIndicator(
     val target: SwipeTarget,
     val value: Float,
 )
 
 /**
- * The transient "volume 60%" / "brightness 40%" panel a swipe raises.
- *
- * Labelled rather than semantics-cleared: the panel *is*
- * the feedback for a gesture that otherwise changes nothing on screen, so as a polite live region it
- * doubles as the announcement of what the swipe just did. The bar and the glyph inside it stay
- * unlabelled and are merged into this one node — three announcements for one gesture would be worse
- * than none.
+ * Labelled rather than semantics-cleared: this panel is the only feedback a swipe gives, so as a
+ * polite live region it doubles as the announcement. Keep the bar and glyph merged into this node.
  */
 @Composable
 private fun GestureIndicatorOverlay(
@@ -251,12 +230,8 @@ private fun GestureIndicatorOverlay(
 }
 
 /**
- * Current media volume as `0f..1f`, or `0f` when there is no audio service to ask.
- *
- * `internal` rather than private: the Display sheet (`PlayerSheets`) is the non-gesture way
- * to the same two levels, and it has to move *the same* volume and *the same* window
- * brightness the swipes do — a second implementation would be a second set of rounding rules and a
- * second place for the brightness override to leak out of.
+ * `0f..1f`, or `0f` with no audio service. `internal` because the Display sheet must move the very
+ * same volume and window brightness — a second implementation means a second set of rounding rules.
  */
 internal fun AudioManager?.volumeFraction(): Float {
     val manager = this ?: return 0f
@@ -271,11 +246,8 @@ internal fun AudioManager?.setVolumeFraction(fraction: Float) {
 }
 
 /**
- * The window's brightness override, or the device's own brightness the first time.
- *
- * `BRIGHTNESS_OVERRIDE_NONE` (-1) is the "follow the system" value a window starts with, and it is
- * not a brightness — starting a swipe from it would jump the screen to full dark. The system
- * setting is read once to seed the gesture instead.
+ * `BRIGHTNESS_OVERRIDE_NONE` (-1) is a window's "follow the system" value, not a brightness: a swipe
+ * starting from it would jump the screen to full dark, so the system setting seeds it instead.
  */
 internal fun Activity?.brightnessFraction(): Float {
     val activity = this ?: return DEFAULT_BRIGHTNESS
@@ -292,12 +264,8 @@ internal fun Activity?.brightnessFraction(): Float {
 }
 
 /**
- * Sets brightness for this window only.
- *
- * A window attribute rather than `Settings.System`: it needs no permission and never touches the
- * device setting. The app is single-activity, so the window itself *outlives* the player —
- * `ImmersiveLandscapeEffect` in `PlayerScreen` captures the previous override and restores it when
- * the player leaves; a film watched dimmed must not leave the whole app dark.
+ * A window attribute, never `Settings.System`: no permission, and the device setting is untouched.
+ * The single-activity window outlives the player, so `ImmersiveLandscapeEffect` must restore it.
  */
 internal fun Activity?.setBrightnessFraction(fraction: Float) {
     val window = this?.window ?: return
@@ -319,7 +287,7 @@ private const val INDICATOR_LINGER_MS = 900L
 private const val OVERLAY_ALPHA = 0.6f
 private const val TRACK_ALPHA = 0.3f
 
-/** Shared with the Display sheet, so a swipe and a slider report the same level the same way. */
+/** Shared with the Display sheet so a swipe and a slider round identically. */
 internal const val PERCENT = 100f
 
 private const val DEFAULT_BRIGHTNESS = 0.5f

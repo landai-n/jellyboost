@@ -14,8 +14,6 @@ import org.junit.jupiter.api.Test
 import java.util.UUID
 
 /**
- * Unit tests for [CastSpecMapper].
- *
  * Everything a cast session can get wrong *quietly* is decided here. A media URL without its token
  * is a receiver that shows nothing and reports nothing back; a subtitle URL without one is a
  * subtitle that never appears; a track id that is not the Jellyfin stream index is a picker entry
@@ -23,12 +21,7 @@ import java.util.UUID
  * are pinned in plain data rather than left to the on-device assembly.
  */
 class CastSpecMapperTest {
-    /**
-     * A URL factory that appends the token exactly as the SDK-backed one does, idempotence included.
-     *
-     * Only [StreamUrlFactory.withApiKey] matters here; the rest of the interface is inherited from
-     * the real one's shape and never called.
-     */
+    // Only [StreamUrlFactory.withApiKey] matters here; the rest is never called.
     private val urls =
         object : StreamUrlFactory {
             override fun directPlayUrl(
@@ -213,9 +206,8 @@ class CastSpecMapperTest {
 
     @Test
     fun `the poster is not signed — the token goes only where the fetch needs it`() {
-        // Image endpoints answer without credentials, and everything handed to the receiver is
-        // republished in its MediaStatus for any sender on the network to read. The words beside
-        // it are strings and are not touched.
+        // Everything handed to the receiver is republished in its MediaStatus for any sender on
+        // the network to read — image endpoints answer without credentials, so no token belongs here.
         val metadata = CastMetadata(title = "Arrival", subtitle = "2016", posterUrl = "https://server/p.jpg")
 
         val spec = mapper.map(itemSpec(), directPlay(), metadata)
@@ -227,15 +219,13 @@ class CastSpecMapperTest {
     fun `an item without a poster stays without one`() {
         val none = mapper.map(itemSpec(), directPlay(), CastMetadata(title = "Arrival"))
 
-        // Not the empty string, and not a URL with a token and no path: an item with no artwork
-        // leaves the receiver on its own idle backdrop, which is what it is for.
+        // Not the empty string, and not a signed URL with no path.
         none.metadata.posterUrl shouldBe null
     }
 
     @Test
     fun `nothing is announced when the screen never got round to naming the film`() {
-        // The default: a cast open waits for the item fetch, but a receiver reached any other way
-        // must still play rather than fail over a caption.
+        // A receiver reached before the item fetch settles must still play rather than fail over a caption.
         val spec = mapper.map(itemSpec(), directPlay())
 
         spec.metadata shouldBe CastMetadata()

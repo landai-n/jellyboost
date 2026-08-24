@@ -35,14 +35,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 import java.util.UUID
 
-/**
- * Unit tests for [SettingsViewModel].
- *
- * The screen is a projection, so what is worth pinning is that each control writes the key it
- * claims to and reads the same key back, that the Account section degrades rather than crashes when
- * there is no session, and — the one piece of real behaviour here — that sign-out deletes the
- * downloads *before* it clears the credentials.
- */
 @OptIn(ExperimentalCoroutinesApi::class)
 class SettingsViewModelTest {
     private val dispatcher = StandardTestDispatcher()
@@ -81,8 +73,6 @@ class SettingsViewModelTest {
         coEvery { downloads.setStorageLocation(any(), any()) } returns AppResult.Success(Unit)
     }
 
-    // ---- preferences read back --------------------------------------------------------------------
-
     @Test
     fun `every preference reaches the state`() =
         runTest(dispatcher) {
@@ -95,7 +85,6 @@ class SettingsViewModelTest {
             storage.value = StorageUsage(usedBytes = 100L, availableBytes = 900L, rootPath = "/sdcard")
 
             viewModel().uiState.test {
-                // The first item is `stateIn`'s placeholder; the second is the store's answer.
                 skipItems(1)
                 val state = awaitItem()
 
@@ -123,8 +112,6 @@ class SettingsViewModelTest {
                 cancelAndIgnoreRemainingEvents()
             }
         }
-
-    // ---- preferences write through ----------------------------------------------------------------
 
     @Test
     fun `the intro skip picker writes through to the preference store`() =
@@ -205,8 +192,6 @@ class SettingsViewModelTest {
             coVerify(exactly = 1) { appPreferences.setForceOffline(true) }
         }
 
-    // ---- storage location -------------------------------------------------------------------------
-
     @Test
     fun `the volumes downloads can live on reach the state`() =
         runTest(dispatcher) {
@@ -267,7 +252,6 @@ class SettingsViewModelTest {
     @Test
     fun `a refused switch is survived rather than crashed on`() =
         runTest(dispatcher) {
-            // The repository refuses when downloads appeared between the dialog and the confirm.
             coEvery { downloads.setStorageLocation(any(), any()) } returns AppResult.Failure(AppError.Storage())
             val model = viewModel()
 
@@ -276,8 +260,6 @@ class SettingsViewModelTest {
 
             model.uiState.value.storageLocations shouldBe StorageLocations()
         }
-
-    // ---- account ----------------------------------------------------------------------------------
 
     @Test
     fun `a live session becomes the account section's user and server`() =
@@ -304,8 +286,6 @@ class SettingsViewModelTest {
                 cancelAndIgnoreRemainingEvents()
             }
         }
-
-    // ---- sign out ---------------------------------------------------------------------------------
 
     @Test
     fun `signing out with delete removes every download before clearing the session`() =
@@ -354,14 +334,9 @@ class SettingsViewModelTest {
         }
 
     /**
-     * The bug this is here to keep fixed: sign-out running in `viewModelScope` would leave the
-     * network goodbye inside it exposed to cancellation — it takes seconds against an unreachable
-     * server, and leaving Settings during that wait would clear the ViewModel, cancel the
-     * coroutine somewhere between the deletes and the credential wipe, and leave the user signed
-     * in with nothing on screen to say so.
-     *
-     * Cancelling `viewModelScope` is what "the screen was popped" looks like from here, and the
-     * dispatcher is `Standard`, so nothing has run yet when it happens.
+     * Sign-out in `viewModelScope` would expose the network goodbye to cancellation: leaving Settings
+     * during that wait would cancel between the deletes and the credential wipe and leave the user
+     * signed in. Cancelling `viewModelScope` is what "the screen was popped" looks like from here.
      */
     @Test
     fun `a screen popped mid sign-out does not take the sign-out with it`() =
@@ -390,25 +365,18 @@ class SettingsViewModelTest {
                 model.signOut(deleteDownloads = false)
 
                 awaitItem().signingOut shouldBe true
-                // Never lowered again: the session flipping to LoggedOut navigates off this screen,
-                // so putting the button back would only ever flash an enabled control on the way out.
                 advanceUntilIdle()
                 expectNoEvents()
                 cancelAndIgnoreRemainingEvents()
             }
         }
 
-    // ---- a collapsed projection --------------------------------------------------
-
     /**
-     * The crash, pinned where it happens. `stateIn` runs the projection in `viewModelScope`, whose
-     * `SupervisorJob` isolates siblings but *handles* nothing — so an upstream throw escapes the
-     * scope entirely, and on a device that is the process dying. It escapes here too: without the
-     * guard this test does not read a wrong value, it fails with `storage gone`.
+     * `stateIn` runs the projection in `viewModelScope`, whose `SupervisorJob` isolates siblings but
+     * *handles* nothing, so an upstream throw escapes the scope — on a device, the process dies.
      *
-     * The clock is advanced **inside** the Turbine block on purpose. `WhileSubscribed` only starts
-     * the projection while someone is collecting, so advancing after the collector has gone means
-     * the upstream never runs at all and the test passes for the wrong reason.
+     * The clock is advanced **inside** the Turbine block: `WhileSubscribed` only runs the projection
+     * while someone collects, so advancing afterwards passes for the wrong reason.
      */
     @Test
     fun `an upstream failure never escapes the ViewModel scope`() =
@@ -422,11 +390,9 @@ class SettingsViewModelTest {
                 cancelAndIgnoreRemainingEvents()
             }
 
-            // The defaults are what a screen with no readable sources honestly shows.
             model.uiState.value shouldBe SettingsUiState()
         }
 
-    /** And the screen stays usable: every write path is independent of the failed projection. */
     @Test
     fun `a screen whose projection failed can still write preferences`() =
         runTest(dispatcher) {
@@ -445,14 +411,10 @@ class SettingsViewModelTest {
             coVerify(exactly = 1) { appPreferences.setPipOnLeave(false) }
         }
 
-    // ---- helpers ----------------------------------------------------------------------------------
-
     /**
-     * The ViewModel under test.
-     *
-     * Its `@ApplicationScope` stand-in is a [SupervisorJob] on the suite's scheduler that belongs to
-     * no coroutine — nothing cancels it, which is the entire point of sign-out running outside
-     * `viewModelScope`. Not `runTest`'s `backgroundScope`, whose work `advanceUntilIdle` skips.
+     * The `@ApplicationScope` stand-in belongs to no coroutine, so nothing cancels it — the entire
+     * point of sign-out running outside `viewModelScope`. Not `backgroundScope`, whose work
+     * `advanceUntilIdle` skips.
      */
     private fun TestScope.viewModel() =
         SettingsViewModel(

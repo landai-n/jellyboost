@@ -8,7 +8,6 @@ import org.jellyfin.sdk.model.api.LyricLine
 import org.jellyfin.sdk.model.api.LyricMetadata
 import org.junit.jupiter.api.Test
 
-/** Unit tests for [LyricDto.toDomain]. */
 class LyricsMapperTest {
     @Test
     fun `lines carry their text and start ticks straight through`() {
@@ -34,8 +33,7 @@ class LyricsMapperTest {
         val dto =
             LyricDto(
                 metadata = LyricMetadata(isSynced = false),
-                // Every line carries timing, but the source explicitly said this is not synced —
-                // that call is respected rather than second-guessed from the lines.
+                // Timed lines, but the source said unsynced; its call is respected.
                 lyrics = listOf(LyricLine(text = "La la la", start = 0L)),
             )
 

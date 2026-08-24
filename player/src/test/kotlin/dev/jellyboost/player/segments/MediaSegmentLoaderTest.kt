@@ -18,8 +18,6 @@ import java.io.IOException
 import java.util.UUID
 
 /**
- * Unit tests for [MediaSegmentLoader].
- *
  * Everything here is about *not* being loud. The Media Segments API needs a Jellyfin 10.10+ server
  * with a detection plugin, so the common answer is a 404 or an empty list, and the plan makes the
  * feature server-only — none of which is a failure the user should ever see.

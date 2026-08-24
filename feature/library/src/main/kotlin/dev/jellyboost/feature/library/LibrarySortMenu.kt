@@ -24,15 +24,9 @@ import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.GlassDefaults
 
 /**
- * The sort menu behind the top bar's sort action.
- *
- * Picking the key that is already active flips the direction, which is how jellyfin-web's sort
- * control behaves; the explicit direction row underneath makes that discoverable.
- *
- * Which key is active is drawn as a leading tick, but the icon alone carries no description —
- * without `selected` semantics, the menu would announce six identically-shaped options with no way
- * to tell which one the grid is already sorted by. Each option carries real `selected` semantics,
- * which is the same fact the tick draws, said in the voice a screen reader already has for it.
+ * Picking the key that is already active flips the direction, as jellyfin-web does. Each option
+ * carries real `selected` semantics: the tick alone would leave six identically-shaped options with
+ * nothing saying which is in force.
  */
 @Composable
 internal fun LibrarySortMenu(
@@ -64,10 +58,8 @@ internal fun LibrarySortMenu(
             val isActive = option == sortBy
             DropdownMenuItem(
                 text = { Text(text = stringResource(option.labelRes())) },
-                // On the item's own modifier rather than on the tick: the row's `clickable` merges
-                // its descendants, so a state declared on the icon would sit under the node
-                // TalkBack focuses instead of on it (the same reasoning `AppActions`' offline
-                // switch records, from the other direction).
+                // On the item's own modifier rather than the tick: the row's `clickable` merges descendants,
+                // so a state declared on the icon would sit under the node TalkBack focuses instead of on it.
                 modifier = Modifier.semantics { selected = isActive },
                 onClick = {
                     onSelectSort(option)
@@ -103,7 +95,6 @@ internal fun LibrarySortMenu(
     }
 }
 
-/** Menu label for a sort key. */
 @StringRes
 internal fun SortBy.labelRes(): Int =
     when (this) {
@@ -115,7 +106,6 @@ internal fun SortBy.labelRes(): Int =
         SortBy.RANDOM -> R.string.library_sort_random
     }
 
-/** Menu label for a sort direction. */
 @StringRes
 internal fun SortOrder.labelRes(): Int =
     when (this) {

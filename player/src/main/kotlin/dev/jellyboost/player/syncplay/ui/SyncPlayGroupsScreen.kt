@@ -63,23 +63,11 @@ import java.util.UUID
 import dev.jellyboost.core.ui.R as CoreUiR
 
 /**
- * The dedicated SyncPlay section: every group this account may join, the one it is already in
- * pinned above them, and the three membership actions.
+ * The ViewModel is resolved here, not by the caller: [SyncPlayGroupsViewModel] is `internal`, so
+ * `:app` can name the destination and nothing else.
  *
- * A pushed destination like `SettingsScreen` and `LibraryGridScreen` — reached from the home top
- * bar's Groups action, not one of the four tabs — so it owns the same back-plus-home glass header
- * `LibraryGridScreen` uses rather than the app's own chrome.
- *
- * Join, create and leave are never handled here: they go straight to [SyncPlayGroupsViewModel],
- * which forwards them to `SyncPlayController` — the only thing that owns the socket and the join
- * handshake. This screen only ever *asks*.
- *
- * The ViewModel is resolved here rather than by the caller: [SyncPlayGroupsViewModel] is
- * `internal`, so `:app` names the destination and nothing else.
- *
- * @param onOpenPlayer opens the full-screen player for the pinned group's current item — the same
- *   `(itemId, startPositionTicks)` shape the app NavHost's own launch-request collector uses, so a
- *   tap here and a `PlayQueueUpdate` arriving with nobody watching land on the exact same route.
+ * @param onOpenPlayer takes the same `(itemId, startPositionTicks)` shape the app NavHost's
+ *   launch-request collector uses, so a tap here and a `PlayQueueUpdate` land on the same route.
  */
 @Composable
 fun SyncPlayGroupsScreen(
@@ -97,7 +85,7 @@ fun SyncPlayGroupsScreen(
     )
 }
 
-/** The screen proper — see the public overload above. Separate so tests can supply a ViewModel. */
+/** Separate from the public overload so tests can supply a ViewModel. */
 @Composable
 internal fun SyncPlayGroupsScreen(
     viewModel: SyncPlayGroupsViewModel,
@@ -122,7 +110,6 @@ internal fun SyncPlayGroupsScreen(
     )
 }
 
-/** Stateless rendering — a pure function of [state], previewable without a ViewModel. */
 @Composable
 internal fun SyncPlayGroupsContent(
     state: SyncPlayGroupsUiState,
@@ -138,9 +125,7 @@ internal fun SyncPlayGroupsContent(
 ) {
     var showCreateDialog by remember { mutableStateOf(false) }
     var confirmingLeave by remember { mutableStateOf(false) }
-    // The shared one-shot idiom, keyed on the message rather than on its copy: two
-    // `SyncPlayMessage`s that happen to resolve to the same sentence are still two messages, and a
-    // copy-keyed version would show neither the second one nor consume it.
+    // Keyed on the message, not its resolved copy: two messages with the same sentence are still two.
     val snackbarHostState =
         rememberOneShotSnackbar(
             message = state.userMessage,
@@ -149,12 +134,10 @@ internal fun SyncPlayGroupsContent(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        // The header below carries its own status-bar padding, the same way `LibraryGridScreen`'s
-        // does — nothing here reserves space for a `TopAppBar` any more.
+        // The header carries its own status-bar padding.
         contentWindowInsets = WindowInsets(0),
-        // The shared host, which also carries this screen's inset: taking no window insets at all
-        // (above) leaves the `Scaffold`'s own snackbar slot with none either, and the pill would
-        // sit under the gesture bar.
+        // This host carries the inset itself: with `WindowInsets(0)` above, the Scaffold's snackbar
+        // slot has none and the pill would sit under the gesture bar.
         snackbarHost = { JellyboostSnackbarHost(hostState = snackbarHostState) },
     ) { innerPadding ->
         Column(
@@ -165,14 +148,12 @@ internal fun SyncPlayGroupsContent(
                 onBack = onBack,
                 onHome = onHome,
                 onCreate = { showCreateDialog = true },
-                // Disabled together with the disabled state: a create call against a server that
-                // just answered 403 to the list would only fail the same way.
+                // A create against a server that just answered 403 to the list fails the same way.
                 createEnabled = !state.disabled,
             )
 
             Box(
-                // Capped and centred like every other pushed screen's content: a full-bleed list on
-                // the test tablet puts a row's name and its state hint a hand-span apart.
+                // Capped: full-bleed on a tablet puts a row's name and its state hint a hand-span apart.
                 modifier = Modifier.widthIn(max = ContentMaxWidth).fillMaxSize(),
             ) {
                 GroupsBody(
@@ -207,11 +188,6 @@ internal fun SyncPlayGroupsContent(
     }
 }
 
-/**
- * Which of the five bodies this screen is showing — the single `when` that decides, kept as one
- * function so the precedence between its arms is readable in one place (the `DownloadsScreen`
- * body-selection pattern).
- */
 @Composable
 private fun GroupsBody(
     state: SyncPlayGroupsUiState,
@@ -223,11 +199,8 @@ private fun GroupsBody(
     when {
         state.isLoading -> LoadingState()
         state.disabled -> EmptyState(message = stringResource(R.string.player_syncplay_groups_disabled))
-        // Full-screen only when there is nothing else worth keeping on screen: with a membership
-        // standing, the pinned card — this screen's only Leave affordance — must survive a single
-        // failed 10 s poll, which lands precisely in the flaky network the user wants to leave
-        // from. The membership comes from the controller, not the poll, so it was never in
-        // doubt; the error shows inline in [GroupsList] instead.
+        // Never full-screen while a membership stands: the pinned card is the only Leave affordance
+        // and must survive a failed poll. Membership comes from the controller, not the poll.
         state.transientError && state.membership == SyncPlayGroupsMembership.None ->
             ErrorState(message = stringResource(R.string.player_syncplay_groups_error), onRetry = onRetry)
 
@@ -244,10 +217,6 @@ private fun GroupsBody(
     }
 }
 
-/**
- * The screen's header: the pushed-screen glass idiom `LibraryGridScreen` uses — back-then-home
- * glass circles, the screen title, and a trailing glass *Create* circle.
- */
 @Composable
 private fun SyncPlayGroupsHeader(
     onBack: () -> Unit,
@@ -305,8 +274,7 @@ private fun GroupsList(
         items(items = state.groups, key = { it.id }) { group ->
             GroupRow(
                 group = group,
-                // Joining or already in a group: this list is not interactive until that settles —
-                // the protocol only tracks one membership per session (`SyncPlayController.state`).
+                // The protocol tracks one membership per session, so no joining while one is settling.
                 enabled = membership == SyncPlayGroupsMembership.None,
                 onClick = { onJoin(group) },
             )
@@ -315,13 +283,8 @@ private fun GroupsList(
 }
 
 /**
- * The group this device is in, pinned above the browsable list.
- *
- * *Open player* only appears once the group actually has something playing
- * ([SyncPlayGroupsMembership.InGroup.openPlayer] non-null) — a group that has only just been
- * created or joined has nothing to open yet, and there is no resume logic to invent here: the
- * button's target is exactly the launch request the app NavHost's own collector would otherwise
- * have acted on.
+ * *Open player* appears only once the group has something playing: its target is exactly the launch
+ * request the app NavHost's collector would otherwise have acted on — invent no resume logic here.
  */
 @Composable
 private fun ActiveGroupCard(
@@ -329,8 +292,6 @@ private fun ActiveGroupCard(
     onLeave: () -> Unit,
     onOpenPlayer: (SyncPlayLaunchRequest) -> Unit,
 ) {
-    // An "m-surface" panel — the container language `:feature:downloads`
-    // established for cards that sit inside another screen rather than over a backdrop image.
     Column(
         modifier =
             Modifier
@@ -376,13 +337,6 @@ private fun ActiveGroupCard(
     }
 }
 
-/**
- * A transient poll failure shown inline, above whatever the screen still knows for certain.
- *
- * Only rendered while a membership (or a join in flight) keeps [GroupsList] on screen — with
- * nothing else to show, the full-screen [ErrorState] still takes over. The list of *joinable*
- * groups is genuinely unknown during the failure, and the empty list under this row says so.
- */
 @Composable
 private fun PollErrorRow(onRetry: () -> Unit) {
     Row(
@@ -436,8 +390,7 @@ private fun GroupRow(
             Modifier
                 .fillMaxWidth()
                 .mSurface(MaterialTheme.colorScheme.surface)
-                // Role, so the row announces as something that can be pressed rather than as three
-                // fragments of text that happen to react to a tap.
+                // Role, so the row announces as pressable rather than as three fragments of text.
                 .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
                 .padding(Dimens.PanelPadding),
         verticalAlignment = Alignment.CenterVertically,
@@ -450,8 +403,7 @@ private fun GroupRow(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        // The list DTO carries no playing-item title (`GroupInfoDto` has none) — its own
-        // Idle/Waiting/Paused/Playing state is the closest hint this row can give for free.
+        // `GroupInfoDto` carries no playing-item title, so the group state is the only hint available.
         Text(
             text = stringResource(group.state.labelRes()),
             style = MaterialTheme.typography.labelMedium,
@@ -460,19 +412,9 @@ private fun GroupRow(
     }
 }
 
-/** [CircularProgressIndicator] geometry for the shared "inline hint" spinner. */
 private val SPINNER_STROKE = 2.dp
 private const val SPINNER_TRACK_ALPHA = 0.14f
 
-/**
- * Turns [participants] into the row's secondary text.
- *
- * Follows `SyncPlayGroupSheet`, which already lists everyone in the group this device is in — the
- * browsable list has no room for one row per name, so it joins them instead and falls back to
- * "+N more" past [MAX_PARTICIPANT_NAMES], the same shape jellyfin-web's group picker uses. An empty
- * list falls back to the plural count rather than an empty line — the server has never actually sent
- * one, but a blank row would look broken if it ever did.
- */
 @Composable
 private fun participantsSummary(participants: List<String>): String {
     if (participants.isEmpty()) return pluralStringResource(R.plurals.player_syncplay_participants, 0, 0)
@@ -486,7 +428,7 @@ private fun participantsSummary(participants: List<String>): String {
     }
 }
 
-/** Names shown before the row switches to "+N more" — fits [GroupRow]'s width on the test tablet. */
+/** Names shown before the row switches to "+N more" — fits [GroupRow]'s width. */
 private const val MAX_PARTICIPANT_NAMES = 3
 
 @Composable
@@ -513,12 +455,8 @@ private fun CreateGroupDialog(
                 onValueChange = { name = it },
                 singleLine = true,
                 placeholder = { Text(text = stringResource(R.string.player_syncplay_groups_create_hint)) },
-                // The field's name, not just its hint: a placeholder is gone the moment the user
-                // types, and this field then announced as a bare edit box holding whatever it
-                // holds. The dialog's own title is a separate node and does not name it.
-                // No error state exists here — the confirm
-                // button is simply disabled until the name is non-blank — so no `errorMessage`.
-                // No caption: the name is spoken, never drawn — the placeholder already draws it.
+                // A label, not just the placeholder: the placeholder vanishes on the first keystroke
+                // and the dialog title is a separate node, leaving the field unnamed to a screen reader.
                 label = FieldLabel(text = stringResource(R.string.player_syncplay_groups_create_hint)),
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -545,7 +483,7 @@ private fun SyncPlayMessage.textRes(): Int =
         SyncPlayMessage.ItemUnavailable -> R.string.player_message_syncplay_item_unavailable
     }
 
-/** Same cap `SettingsContent`/the SyncPlay sheets use — readable, reachable one-handed on a tablet. */
+/** Same cap `SettingsContent` and the SyncPlay sheets use. */
 private val ContentMaxWidth: Dp = 640.dp
 
 @Preview(name = "Groups — browsable", showBackground = true, heightDp = 900)

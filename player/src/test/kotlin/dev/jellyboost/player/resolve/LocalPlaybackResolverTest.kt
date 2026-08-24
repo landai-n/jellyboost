@@ -20,12 +20,7 @@ import org.jellyfin.sdk.model.api.MediaSourceInfo
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for [LocalPlaybackResolver].
- *
- * The milestone's promise is that the player looks the same offline, and this class is where that
- * is either true or not: the tracks it builds are what the pickers render. So the assertions are
- * about *which* tracks are offered — in particular that an external subtitle with no sidecar on disk
- * is silently withheld rather than offered as a dead entry.
+ * An external subtitle with no downloaded sidecar is silently withheld, never offered as a dead entry.
  */
 class LocalPlaybackResolverTest {
     private val downloads = mockk<DownloadedMediaProvider>()
@@ -100,7 +95,7 @@ class LocalPlaybackResolverTest {
                     ),
             )
 
-            // ExoPlayer reads them straight out of the container, so they cost nothing to offer.
+            // Embedded subtitles are read straight out of the container, so they cost nothing to offer.
             val source = resolver.resolve(request).shouldNotBeNull()
 
             source.subtitleTracks.single().index shouldBe 3
@@ -164,8 +159,8 @@ class LocalPlaybackResolverTest {
     @Test
     fun `falls back to the sidecar's own extension when the cached blob is gone`() =
         runTest {
-            // The file name the pipeline wrote is `subtitle.<index>.<language>.<format>`, so the
-            // extension *is* the format the server converted to.
+            // Sidecar file names are `subtitle.<index>.<language>.<format>`, so the extension is the
+            // format the server converted to.
             downloaded(mediaSource = null, subtitles = listOf(DownloadedSubtitle(3, "file:///d/s.3.eng.srt")))
 
             val subtitle =
@@ -217,7 +212,6 @@ class LocalPlaybackResolverTest {
                     ),
             )
 
-            // The default is an external track whose sidecar is not on disk.
             resolver
                 .resolve(request)
                 .shouldNotBeNull()
@@ -227,12 +221,7 @@ class LocalPlaybackResolverTest {
 
     // ---- a transcoded download is not the file the cached blob describes -------------------------
 
-    /**
-     * The streams of the repro item (Élémentaire, a MEDIUM download): two external SRT sidecars, the
-     * video, three AC3 tracks with the French VFF one default, and two embedded French SRTs. The
-     * file on disk holds one AAC track and no subtitles at all — verified by reading its Matroska
-     * `Tracks` element off the device.
-     */
+    /** A MEDIUM download's real file holds one AAC track and no subtitles — measured off a device. */
     private fun transcodedFilmStreams() =
         listOf(
             PlayerFixtures.subtitleStream(index = 0, language = "eng", displayTitle = "English"),
@@ -266,9 +255,7 @@ class LocalPlaybackResolverTest {
     @Test
     fun `a transcoded download offers only the one audio track the file holds`() =
         runTest {
-            // No pin on the row — a download written before schema v8. That request named no
-            // audioStreamIndex either, so the server encoded the source's default and dropped the
-            // other two, and assuming that default is exactly right for these rows.
+            // Pre-schema-v8 rows have no pinned audio index; the source's default is assumed exact.
             transcodedFilm()
 
             val source = resolver.resolve(request).shouldNotBeNull()
@@ -282,8 +269,8 @@ class LocalPlaybackResolverTest {
     @Test
     fun `a transcoded download offers the audio track its row recorded, not the source's default`() =
         runTest {
-            // The download asked for stream 5, so stream 5 is what is in the file — whatever the
-            // source calls default.
+            // The download's row names stream 5, so stream 5 is what is in the file — regardless of
+            // what the source calls default.
             transcodedFilm(defaultAudioStreamIndex = 3, bakedAudioStreamIndex = 5)
 
             val source = resolver.resolve(request).shouldNotBeNull()
@@ -325,7 +312,6 @@ class LocalPlaybackResolverTest {
 
             val source = resolver.resolve(request).shouldNotBeNull()
 
-            // Only the two sidecars, which are their own files on disk and unaffected by the encode.
             source.subtitleTracks.map { it.index } shouldContainExactly listOf(0, 1)
             source.externalSubtitles.map { it.index } shouldContainExactly listOf(0, 1)
         }
@@ -347,8 +333,6 @@ class LocalPlaybackResolverTest {
     @Test
     fun `a transcoded download offers an embedded subtitle whose sidecar is on disk`() =
         runTest {
-            // Élémentaire's streams 6 and 7 are embedded French SRTs. The transcode dropped them
-            // from the file, and the download fetched each as its own `.srt` — so they are back.
             transcodedFilm(sidecars = listOf(0, 1, 6, 7))
 
             val source = resolver.resolve(request).shouldNotBeNull()
@@ -370,9 +354,9 @@ class LocalPlaybackResolverTest {
                     .subtitleTracks
                     .single { it.index == 6 }
 
-            // The stream itself says `isExternal = false`. What the flag has to describe here is how
-            // the track reaches ExoPlayer, because `TrackSelectionController` counts anything not
-            // flagged among the *container's* text groups — of which a transcode has none.
+            // `isExternal` here means how the track reaches ExoPlayer, not what the source stream
+            // says: `TrackSelectionController` counts anything unflagged among the container's own
+            // text groups, of which a transcode has none.
             track.isExternal shouldBe true
         }
 
@@ -381,8 +365,8 @@ class LocalPlaybackResolverTest {
         runTest {
             transcodedFilm(sidecars = listOf(6))
 
-            // Stream 7 was never fetched — an older row, or an optional file that failed. Offering
-            // it would be a picker entry that cannot be satisfied and no server to re-ask.
+            // An unfetched stream (older row, or a failed optional file) would be a picker entry
+            // that cannot be satisfied and no server to re-ask.
             resolver
                 .resolve(request)
                 .shouldNotBeNull()
@@ -408,7 +392,6 @@ class LocalPlaybackResolverTest {
                 quality = DownloadQuality.ORIGINAL,
             )
 
-            // It plays out of the container, and the planner deliberately fetches no sidecar for it.
             resolver
                 .resolve(request)
                 .shouldNotBeNull()
@@ -433,7 +416,7 @@ class LocalPlaybackResolverTest {
             val source = resolver.resolve(request).shouldNotBeNull()
 
             source.audioTracks.map { it.index } shouldContainExactly listOf(3, 4, 5)
-            // Index 1's sidecar is missing, so it is withheld; the embedded pair is untouched.
+            // Index 1 has no sidecar, so it is withheld while the embedded pair is untouched.
             source.subtitleTracks.map { it.index } shouldContainExactly listOf(0, 6, 7)
         }
 
@@ -442,13 +425,11 @@ class LocalPlaybackResolverTest {
     @Test
     fun `a transcoded download offers every audio language its sidecars restored`() =
         runTest {
-            // Élémentaire again: the encode baked in the French VFF and the download fetched the
-            // other two as their own `.m4a` files.
             transcodedFilm(bakedAudioStreamIndex = 3, audioSidecars = listOf(4, 5))
 
             val source = resolver.resolve(request).shouldNotBeNull()
 
-            // The baked track is first, and stays the default — it is merge child 0.
+            // The baked track is merge child 0, first and still the default.
             source.audioTracks.map { it.index } shouldContainExactly listOf(3, 4, 5)
             source.audioTracks.map { it.label } shouldContainExactly
                 listOf("French VFF", "French VFQ", "English VO")
@@ -463,7 +444,7 @@ class LocalPlaybackResolverTest {
 
             val source = resolver.resolve(request).shouldNotBeNull()
 
-            // What routes selection through the merge-child order rather than a position among the
+            // `isExternal` routes selection through merge-child order, not a position among the
             // container's own audio groups, of which a transcode has exactly one.
             source.audioTracks.single { it.index == 3 }.isExternal shouldBe false
             source.audioTracks.filter { it.isExternal }.map { it.index } shouldContainExactly listOf(4, 5)
@@ -485,8 +466,8 @@ class LocalPlaybackResolverTest {
     @Test
     fun `skips an audio sidecar that duplicates the baked track`() =
         runTest {
-            // The pin says 3 and a row claims a sidecar for 3 too. Offering it would list French VFF
-            // twice and push every later child one position out of step with its track.
+            // A duplicate sidecar for the baked stream would list it twice and shift every later
+            // child one position out of step with its track.
             transcodedFilm(bakedAudioStreamIndex = 3, audioSidecars = listOf(3, 5))
 
             val source = resolver.resolve(request).shouldNotBeNull()
@@ -512,8 +493,6 @@ class LocalPlaybackResolverTest {
         runTest {
             transcodedFilm(bakedAudioStreamIndex = 3, audioSidecars = listOf(4, 5))
 
-            // A previous session left the English VO selected; it is now a track this file plays,
-            // so it must survive rather than fall back to the baked default.
             val source = resolver.resolve(request.copy(audioStreamIndex = 5)).shouldNotBeNull()
 
             source.selectedAudioIndex shouldBe 5
@@ -531,7 +510,7 @@ class LocalPlaybackResolverTest {
 
             val source = resolver.resolve(request).shouldNotBeNull()
 
-            // Every track is already in the file; merging a sidecar in would offer one of them twice.
+            // Every track is already in the file; merging a sidecar in would offer one twice.
             source.audioTracks.map { it.index } shouldContainExactly listOf(3, 4, 5)
             source.audioTracks.none { it.isExternal } shouldBe true
             source.externalAudio.shouldBeEmpty()
@@ -540,9 +519,9 @@ class LocalPlaybackResolverTest {
     @Test
     fun `an original download withholds an external audio stream — its file is not on this device`() =
         runTest {
-            // An `.mka` beside the video is listed in the source's streams with isExternal = true,
-            // but the download fetched only the container — offering the track routes selection to
-            // a server that offline playback exists to do without.
+            // The source lists an external audio stream, but the download fetched only the
+            // container — offering it would route selection to a server offline playback must do
+            // without.
             downloaded(
                 mediaSource =
                     PlayerFixtures.mediaSourceInfo(
@@ -565,17 +544,15 @@ class LocalPlaybackResolverTest {
 
             source.audioTracks.map { it.index } shouldContainExactly listOf(1)
             source.audioTracks.none { it.isExternal } shouldBe true
-            // The full source list still names it, for the picker to draw while online.
             source.allAudioTracks.map { it.index } shouldContainExactly listOf(1, 2)
         }
 
     @Test
     fun `a baked track that happens to be external is not counted as a merge child`() =
         runTest {
-            // The encode baked in a track whose *source* stream was external. Flagging it
-            // side-loaded would make `TrackSelectionController` count it among the merge
-            // children — every ordinal would shift by one, so the baked language would play the
-            // first sidecar's file and the last sidecar would point at a child that does not exist.
+            // The baked track's source stream was itself external. Flagging it side-loaded would
+            // shift every merge-child ordinal by one: the baked language would play the first
+            // sidecar's file, and the last sidecar would point at a child that doesn't exist.
             downloaded(
                 mediaSource =
                     PlayerFixtures.mediaSourceInfo(
@@ -624,10 +601,8 @@ class LocalPlaybackResolverTest {
 
             val source = resolver.resolve(request).shouldNotBeNull()
 
-            // What the picker draws online: everything the item has, whatever the encode dropped.
             source.allAudioTracks.map { it.index } shouldContainExactly listOf(3, 4, 5)
             source.allSubtitleTracks.map { it.index } shouldContainExactly listOf(0, 1, 6, 7)
-            // What it draws offline, unchanged: only what the file and its sidecars hold.
             source.audioTracks.map { it.index } shouldContainExactly listOf(3)
             source.subtitleTracks.map { it.index } shouldContainExactly listOf(0, 1)
         }
@@ -639,7 +614,7 @@ class LocalPlaybackResolverTest {
 
             val source = resolver.resolve(request).shouldNotBeNull()
 
-            // The extra list describes the *item*; the file's own idea of default is the other one.
+            // `allAudioTracks` describes the item's default; the file's own default is a separate track.
             source.allAudioTracks.single { it.isDefault }.index shouldBe 3
             source.allAudioTracks.map { it.label } shouldContainExactly
                 listOf("French VFF", "French VFQ", "English VO")
@@ -658,8 +633,6 @@ class LocalPlaybackResolverTest {
 
             val source = resolver.resolve(request).shouldNotBeNull()
 
-            // Nothing was dropped except the one sidecar that is missing, so being online adds
-            // exactly that one entry and the picker is otherwise identical either way.
             source.allAudioTracks.map { it.index } shouldContainExactly source.audioTracks.map { it.index }
             source.allSubtitleTracks.map { it.index } shouldContainExactly listOf(0, 1, 6, 7)
             source.subtitleTracks.map { it.index } shouldContainExactly listOf(0, 6, 7)
@@ -672,7 +645,6 @@ class LocalPlaybackResolverTest {
 
             val source = resolver.resolve(request).shouldNotBeNull()
 
-            // There is no stream list to draw an online picker from; it plays anyway.
             source.allAudioTracks.shouldBeEmpty()
             source.allSubtitleTracks.shouldBeEmpty()
         }
@@ -682,7 +654,6 @@ class LocalPlaybackResolverTest {
         runTest {
             transcodedFilm()
 
-            // A stale selection carried in from a previous session or a re-resolve.
             val source =
                 resolver
                     .resolve(request.copy(audioStreamIndex = 5, subtitleStreamIndex = 7))

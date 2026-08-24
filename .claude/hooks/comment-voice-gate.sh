@@ -1,10 +1,10 @@
 #!/bin/bash
-# Agent gate: does the staged diff add code comments that describe where the code came
-# from instead of what it does? Flagged: authoring-process voice, audit/decision-record
-# citations, milestone/date provenance, and historical narration. This distinction needs
-# judgment, not a regex — "session", "the user", and quoted first person are all legitimate
-# app-domain vocabulary — so a headless model reviews only the ADDED comment lines and
-# returns a verdict.
+# Agent gate: does the staged diff add comments that don't earn their place? A comment
+# survives only by stating a constraint, invariant, trap, or external fact the code cannot
+# show. Flagged: authoring-process voice, provenance (audit/decision citations, milestones,
+# dates, history), and noise (what-the-code-does narration, name-restating KDoc, design
+# essays). This needs judgment, not a regex — so a headless model reviews only the ADDED
+# comment lines and returns a verdict.
 #
 # Contract: prints nothing and exits 0 on CLEAN; prints the model's cited lines and exits 1
 # on LEAK. Any infrastructure failure (CLI missing, timeout, unparseable output) exits 0
@@ -33,11 +33,11 @@ COMMENTS="$(printf '%s\n' "$DIFF" | grep -E '^\+' | grep -E '(//|^\+\s*\*|/\*)' 
 command -v claude >/dev/null 2>&1 || exit 0
 command -v perl >/dev/null 2>&1 || exit 0
 
-PROMPT="You are a commit gate for an Android codebase largely written by delegated coding agents. Below are the COMMENT lines a staged commit ADDS (unified-diff '+' lines). Decide whether any comment describes where the code CAME FROM — the authoring process, its provenance, or its edit history — instead of what the code does.
+PROMPT="You are a commit gate for an Android codebase largely written by delegated coding agents. Below are the COMMENT lines a staged commit ADDS (unified-diff '+' lines). House rule: a comment earns its place ONLY by stating a constraint, invariant, trap, or external fact the code cannot show — in as few lines as possible. Decide whether any added comment breaks that rule.
 
-FLAG (leak): references to the development conversation or orchestration — agents, waves, worktrees, sessions-of-work, the orchestrator/reviewer, instructions or prompts given to the author ('as requested', 'per the brief', 'the task said'), scope-of-my-work language ('not this wave', 'out of my scope', 'a sibling agent owns'), or first-person narration of the editing process ('I moved this', 'let me', 'I'll keep'). ALSO FLAG provenance and history: citations of audit findings or decision/planning records ('audit UI-9', 'PERF-25', 'DECISIONS 2026-08-07', 'STATUS backlog', 'docs/PLAN.md'), milestone or development-date provenance ('M7', 'added 2026-08-08'), and historical narration of past code states ('this used to be a runBlocking', 'previously', 'originally').
+FLAG (leak): (1) authoring-process voice — agents, waves, worktrees, sessions-of-work, the orchestrator/reviewer, instructions given to the author ('as requested', 'per the brief'), scope-of-my-work language, first-person narration of the editing process. (2) Provenance and history — citations of audit findings or decision/planning records ('audit UI-9', 'PERF-25', 'DECISIONS 2026-08-07', 'docs/PLAN.md'), milestone or development-date provenance, historical narration of past code states ('this used to be a runBlocking'). (3) Noise — comments that narrate what the adjacent code visibly does or how, KDoc that restates the declaration's name or signature, @param/@return lines that echo the name, design-rationale essays or storytelling, and restatements of documented framework behavior.
 
-DO NOT FLAG: present-tense statements of a real constraint or rationale the code cannot show; quoted protocol or UX semantics including first person inside quotes ('\"I am not ready yet\"'); references to the app's end user ('the user asked to be offline'); TODOs that name code-owned work.
+DO NOT FLAG: concise present-tense statements of a real constraint, invariant, trap, or measured external fact the code cannot show (threading/ordering/lifetime rules, magic-number arithmetic, server/codec/OEM quirks, 'deliberately not X because Y' guards); quoted protocol or UX semantics including first person inside quotes ('\"I am not ready yet\"'); references to the app's end user; TODOs that name code-owned work; short section dividers.
 
 Reply with EXACTLY one first line: 'VERDICT: CLEAN' or 'VERDICT: LEAK'. If LEAK, list each offending line verbatim on following lines with one short reason each.
 

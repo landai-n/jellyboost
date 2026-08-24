@@ -26,23 +26,15 @@ import timber.log.Timber
 import javax.inject.Inject
 
 /**
- * State holder for [MusicLibraryScreen] — Albums, Artists and Playlists, each its own paged grid
- * over [JellyfinRepository.getItemsPaged].
+ * **Artists** go through `getItemsPaged` rather than Jellyfin's dedicated `/Artists` endpoint; a
+ * plain `getItems(types=[MUSIC_ARTIST], recursive=true, parentId=libraryId)` answers correctly on
+ * 10.11.
  *
- * **Artists** ask `getItemsPaged` for [ItemType.MUSIC_ARTIST] scoped to this library, the same
- * shape the Albums tab uses. Jellyfin normally serves artists through a dedicated `/Artists`
- * endpoint (`ArtistsApi`), but a plain `getItems(types=[MUSIC_ARTIST], recursive=true,
- * parentId=libraryId)` also answers correctly on the dev server (10.11) — verified against the
- * SDK's request shape; a live-server check is still owed.
- * Reusing `getItemsPaged` keeps one query mechanism for all three tabs rather than a fourth
- * repository member for a single screen.
+ * **Playlists** deliberately carry **no** `parentId`: a library's playlists do not live inside its
+ * own folder — the server keeps one library-wide "Playlists" root — so scoping to `libraryId` asks
+ * the wrong folder and comes back empty.
  *
- * **Playlists** deliberately carry **no** `parentId`. On a Jellyfin server a library's playlists do
- * not live inside that library's own folder — the server keeps one library-wide (sometimes
- * per-user) "Playlists" root instead — so scoping the query to `libraryId` the way Albums/Artists
- * do would ask the wrong folder and come back empty. `getItems(types=[PLAYLIST], recursive=true)`
- * with no `parentId` searches the whole tree instead, which is the defensible query without a live
- * server to confirm against; device verification is still owed.
+ * TODO: both queries are still owed a live-server verification.
  */
 @HiltViewModel
 class MusicLibraryViewModel
@@ -60,10 +52,7 @@ class MusicLibraryViewModel
             )
         val uiState: StateFlow<MusicLibraryUiState> = _uiState.asStateFlow()
 
-        /**
-         * The app-wide download-state map, mirrored here — one subscription serving all three grids
-         * (precedent: `LibraryViewModel.downloadStates`).
-         */
+        /** One subscription serving all three grids. */
         private val downloadStates = MutableStateFlow<Map<String, DownloadState>>(emptyMap())
 
         val albums: Flow<PagingData<JellyfinItem>> =
@@ -116,8 +105,7 @@ class MusicLibraryViewModel
             viewModelScope.launch {
                 downloads
                     .observeStates()
-                    // Degrade to no badges rather than freezing them — see
-                    // `HomeViewModel.observeDownloadStates`.
+                    // Degrade to no badges rather than freezing them.
                     .catch { error ->
                         Timber.w(error, "The download-state flow failed; clearing the music library badges")
                         emit(emptyMap())
@@ -125,13 +113,12 @@ class MusicLibraryViewModel
             }
         }
 
-        /** Switches which grid is on screen. */
         fun selectTab(tab: MusicLibraryTab) {
             _uiState.update { it.copy(selectedTab = tab) }
         }
 
         private companion object {
-            /** `Routes.MusicLibrary` property names — Navigation stores type-safe args under these. */
+            /** Must match `Routes.MusicLibrary`'s property names. */
             const val KEY_LIBRARY_ID = "libraryId"
             const val KEY_LIBRARY_NAME = "libraryName"
 

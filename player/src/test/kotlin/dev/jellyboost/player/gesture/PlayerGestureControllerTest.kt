@@ -6,8 +6,6 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for [PlayerGestureController].
- *
  * These are the parts of the gesture layer that have a right answer: which half of the screen a
  * swipe belongs to, which third a double tap lands in, how far a finger has to travel for a full
  * sweep, and which edges belong to the system. Everything they leave out — `AudioManager`, the

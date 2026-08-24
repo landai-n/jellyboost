@@ -5,13 +5,9 @@ import dev.jellyboost.core.common.music.Lyrics
 import org.jellyfin.sdk.model.api.LyricDto
 
 /**
- * [LyricDto] → [Lyrics].
- *
- * `LyricDto.metadata` is non-null on the wire (verified against the SDK 1.8.12 model jar) and
- * carries its own nullable `isSynced` flag; that flag is trusted first, and only when the source
- * left it unset does this fall back to inferring sync from the lines themselves — a lyric file with
- * even one timed line is synced enough to drive the highlight, and a source that put timing on
- * every line but forgot the flag should not be demoted to static text.
+ * `LyricDto.metadata` is non-null on the wire (verified against the SDK 1.8.12 model jar); its
+ * nullable `isSynced` flag is trusted first, and sync is inferred from the lines only when the
+ * source left it unset — one timed line is enough to drive the highlight.
  */
 internal fun LyricDto.toDomain(): Lyrics {
     val domainLines = lyrics.map { line -> LyricLine(startTicks = line.start, text = line.text) }

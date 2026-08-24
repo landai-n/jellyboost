@@ -12,37 +12,23 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.time.Duration.Companion.milliseconds
 
-/**
- * The single SDK call the reachability probe makes, behind a seam so the probe's candidate-rotation
- * logic can be unit-tested without a server.
- */
 interface ServerProbeApi {
     /**
-     * The id of the Jellyfin server answering `getPublicSystemInfo` at [baseUrl] within
-     * [ServerReachabilityProbe.PROBE_TIMEOUT_MS], or `null` when nothing usable answers.
+     * Returning the id rather than a boolean is a security requirement: the caller re-points the
+     * **authenticated** client at whichever address answers, and any host on the network could 200 this
+     * unauthenticated endpoint, so "something answered" must never be conflated with "our server answered".
      *
-     * Returning the id rather than a boolean is a security requirement, not a convenience: the
-     * probe's caller re-points the **authenticated** client at whichever address answers, so
-     * "something answered" must never be conflated with "our server answered" — any host on the
-     * current network could 200 this unauthenticated endpoint.
-     *
-     * Never throws for an unreachable server — an unreachable server is the expected outcome here,
-     * not an error.
+     * Never throws for an unreachable server — that is the expected outcome here, not an error.
      */
     suspend fun reachableServerId(baseUrl: String): UUID?
 }
 
 /**
- * [ServerProbeApi] on jellyfin-sdk.
+ * `getPublicSystemInfo` is the right probe: unauthenticated (so it answers even with an expired token), tiny,
+ * carries the server's id for the identity check, and is served by the pipeline real requests use.
  *
- * `getPublicSystemInfo` is the right probe: it is unauthenticated (so it still answers with an
- * expired token), tiny, carries the server's id for the identity check, and is served by the same
- * pipeline real requests use, so a server that answers it is genuinely usable.
- *
- * A **throwaway** `ApiClient` is created per probe rather than reusing the app's one. Two reasons:
- * probing a candidate address must not re-point the live client before we know it works, and this
- * client carries deliberately short timeouts — the whole point of the probe is to fail in seconds
- * where a normal request would sit on a 30-second socket timeout.
+ * A **throwaway** `ApiClient` per probe: a candidate address must not re-point the live client before it is
+ * known to work, and this client carries deliberately short timeouts where a normal request would sit on 30s.
  */
 @Singleton
 internal class SdkServerProbeApi
@@ -70,8 +56,8 @@ internal class SdkServerProbeApi
 
         private companion object {
             /**
-             * Every timeout pinned to the probe budget, so the call cannot outlive the
-             * `withTimeoutOrNull` around it even if the transport declines to be cancelled.
+             * Every timeout pinned to the probe budget, so the call cannot outlive the `withTimeoutOrNull`
+             * around it even if the transport declines to be cancelled.
              */
             val PROBE_CLIENT_OPTIONS =
                 HttpClientOptions(

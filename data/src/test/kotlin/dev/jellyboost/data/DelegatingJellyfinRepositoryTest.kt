@@ -34,12 +34,8 @@ import kotlin.reflect.full.declaredMemberFunctions
 import kotlin.reflect.full.valueParameters
 
 /**
- * Unit tests for [DelegatingJellyfinRepository] — the per-call online/offline decision every
- * screen in the app depends on.
- *
- * This is the densest test class in `:data` on purpose. Getting the matrix wrong is not a visual
- * bug: falling back on a 401 would strand the user in a silently-expired session showing only
- * downloads, and *not* falling back on a transport failure would show an error screen to someone
+ * Dense on purpose: falling back on a 401 strands the user in a silently-expired session showing
+ * only downloads, and *not* falling back on a transport failure shows an error screen to someone
  * whose downloaded library is sitting right there.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -236,27 +232,20 @@ class DelegatingJellyfinRepositoryTest {
         }
 
     /**
-     * The same guarantee as the test above, but derived from the interface instead of typed out.
+     * The hand-written list above asserts the *values* come back, but it is only as complete as
+     * whoever last extended [JellyfinRepository] remembered to make it — `getResumeItems` went
+     * unlisted for a while. This walks the interface reflectively instead, so a member that is
+     * *stubbed out* rather than delegated fails here.
      *
-     * The hand-written list is worth keeping — it asserts the *values* come back, not just that
-     * something was called — but it is only ever as complete as whoever last extended
-     * [JellyfinRepository] remembered to make it, and that is easy to miss: `getResumeItems` went
-     * unlisted for a while before anyone noticed. This walks every member the interface declares, calls it
-     * reflectively on the delegate, and demands the identically-named member fire on the offline
-     * implementation. A member added tomorrow and forgotten in `DelegatingJellyfinRepository`
-     * cannot compile at all (Kotlin requires the override); a member added and *stubbed out* —
-     * `TODO()`, `AppResult.Success(emptyList())`, a delegate to the wrong side — fails here.
-     *
-     * [sampleFor] deliberately throws on a parameter type it has never seen, so a new parameter
-     * shape is a loud failure asking for one line rather than a silently skipped member.
+     * [sampleFor] throws on an unseen parameter type, so a new parameter shape is a loud failure
+     * rather than a silently skipped member.
      */
     @Test
     fun `every member the interface declares reaches a delegate, by reflection over the interface`() =
         runTest {
             state.value = ConnectionState.OFFLINE_NO_NETWORK
             val members = JellyfinRepository::class.declaredMemberFunctions
-            // Guards the whole test against a reflection change that hands back nothing to walk.
-            // A floor rather than an exact count: adding a member must fail *routing*, not this.
+            // A floor, not an exact count: adding a member must fail *routing*, not this.
             members.size shouldBeGreaterThan MINIMUM_INTERFACE_MEMBERS
 
             members.forEach { member ->
@@ -275,12 +264,7 @@ class DelegatingJellyfinRepositoryTest {
             }
         }
 
-    /**
-     * A value to call a repository member with, chosen only so the call is well-formed.
-     *
-     * Nothing asserts on these: the question this test asks is *where the call went*, and MockK
-     * matches the same constants on the way in and on the way out.
-     */
+    /** Nothing asserts on these; the question is *where the call went*. */
     private fun sampleFor(type: KType): Any =
         when (type.classifier) {
             Int::class -> 1
@@ -312,8 +296,8 @@ class DelegatingJellyfinRepositoryTest {
             every { online.getItemsPaged(any(), any()) } returns flowOf(PagingData.from(fromServer))
             every { offline.getItemsPaged(any(), any()) } returns flowOf(PagingData.from(fromCache))
 
-            // The grid's source is re-chosen on every connection change, so a subscription started
-            // online keeps working — against Room — once the network goes away.
+            // The source is re-chosen per connection change, so a subscription started online keeps
+            // working against Room once the network goes away.
             repository.getItemsPaged(ItemQuery()).test {
                 awaitItem()
                 verify(exactly = 1) { online.getItemsPaged(any(), any()) }
@@ -335,8 +319,8 @@ class DelegatingJellyfinRepositoryTest {
             repository.getItemsPaged(ItemQuery()).test {
                 awaitItem()
 
-                // Still offline, just for a different reason — re-creating the Pager here would
-                // throw the user back to the top of the grid for nothing.
+                // Still offline, different reason: re-creating the Pager would throw the user back
+                // to the top of the grid for nothing.
                 state.value = ConnectionState.OFFLINE_FORCED
 
                 expectNoEvents()
@@ -355,10 +339,7 @@ class DelegatingJellyfinRepositoryTest {
         /** The SDK's own default socket timeout — the number this repository's ceiling stays under. */
         const val SOCKET_TIMEOUT_MS = 30_000L
 
-        /**
-         * Below the surface the interface has ever had, so the structural walk cannot pass on an
-         * empty member list, and above nothing that a real extension would trip over.
-         */
+        /** A floor the structural walk cannot pass on an empty member list. */
         const val MINIMUM_INTERFACE_MEMBERS = 10
     }
 }

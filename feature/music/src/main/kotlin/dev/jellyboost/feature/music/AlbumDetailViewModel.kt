@@ -25,7 +25,7 @@ import javax.inject.Inject
 
 /**
  * State holder for [AlbumDetailScreen]: the album's own metadata plus its tracks, in disc/track
- * order, fetched concurrently (M13 Phase 2, docs/notes/music-m13-plan.md).
+ * order, fetched concurrently.
  */
 @HiltViewModel
 class AlbumDetailViewModel
@@ -60,7 +60,7 @@ class AlbumDetailViewModel
         }
 
         /**
-         * Downloads the whole album (M13 Phase 5).
+         * Downloads the whole album.
          *
          * The **album's** id goes to the repository, not the track ids: `DownloadEnqueuer` is the
          * one place that knows a music container expands into its tracks, in the album's own

@@ -145,7 +145,7 @@ class CastSessionCoordinatorTest {
     @Test
     fun `a local session's detach leaves no orphan for a later failed cast attempt to report`() {
         // Watch locally, back out, then try to cast and fail: the coordinator must not remember the
-        // local film as "what the receiver was playing" and stop-report it at zero (audit CAST-02).
+        // local film as "what the receiver was playing" and stop-report it at zero.
         coordinator.attachHost(host)
         coordinator.detachHost(host)
 
@@ -235,7 +235,7 @@ class CastSessionCoordinatorTest {
     @Test
     fun `the cast player is silenced once the session ends`() {
         // Left alone it keeps its listener, media items and the stale `loaded` spec for the life of
-        // the process (audit CAST-08).
+        // the process.
         framework.onSessionStarted("Living Room TV")
 
         framework.onSessionEnded()
@@ -243,9 +243,9 @@ class CastSessionCoordinatorTest {
         cast.stopped shouldBe true
     }
 
-    // ---- what the attached screen is told, and when (M12 Phase 3) --------------------------------
+    // ---- what the attached screen is told, and when -----------------------------------------------
 
-    /** A host that records the two transfer edges, which the Phase 2 one had no use for. */
+    /** A host that records the two transfer edges. */
     private class RecordingHost(
         override var castSource: PlaybackMediaSource?,
     ) : CastPlaybackHost {
@@ -280,7 +280,7 @@ class CastSessionCoordinatorTest {
     @Test
     fun `a repeated start for a live session does not re-run the transfer`() {
         // The framework reports a resumed (suspended) session as a start; re-running the transfer
-        // would reload the receiver off a cast player that may still answer zero (audit CAST-05).
+        // would reload the receiver off a cast player that may still answer zero.
         val recording = RecordingHost(source)
         coordinator.attachHost(recording)
         framework.onSessionStarted("Living Room TV")

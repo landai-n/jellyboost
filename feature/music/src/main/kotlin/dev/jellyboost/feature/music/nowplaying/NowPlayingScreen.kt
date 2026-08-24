@@ -83,8 +83,7 @@ import dev.jellyboost.feature.music.R
 
 /**
  * The full-screen now-playing surface: artwork, transport, seek, favourite, and the queue — either
- * behind [QueueSheet] (compact) or inline beside the controls (wide) (M13 Phase 4,
- * docs/notes/music-m13-plan.md).
+ * behind [QueueSheet] (compact) or inline beside the controls (wide).
  *
  * Pops itself the moment [dev.jellyboost.core.common.music.MusicController.state] goes
  * [dev.jellyboost.core.common.music.MusicPlaybackState.Idle] — the queue emptied from the
@@ -221,7 +220,7 @@ private fun NowPlayingContent(
 /**
  * @param onOpenQueue `null` hides the button — the wide layout already shows the queue inline, so a
  *   second way to reach the same list would be redundant chrome.
- * @param onToggleLyrics `null` hides the button — no lyrics for this track (M13 Phase 6), or the
+ * @param onToggleLyrics `null` hides the button — no lyrics for this track, or the
  *   wide layout, which shows its own Queue/Lyrics tab instead.
  * @param onStop ends the session; the screen then pops itself off the idle state, so this button
  *   never navigates. Unconditional, unlike its two neighbours: the wide layout draws the queue
@@ -304,7 +303,7 @@ private fun NowPlayingCompactContent(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         // The compact lyrics affordance: a toggle (the overlay nav's button) swaps this square for
-        // `LyricsPane`, same footprint, everything below unchanged (M13 Phase 6).
+        // `LyricsPane`, same footprint, everything below unchanged.
         if (showLyrics && state.lyrics != null) {
             LyricsPane(
                 lyrics = state.lyrics,
@@ -338,7 +337,7 @@ private fun NowPlayingCompactContent(
 
 /**
  * ≥560dp: artwork fixed to the left, everything else — including the queue, inline rather than
- * behind [QueueSheet] — in a column to the right (docs/notes/music-m13-plan.md, Phase 4).
+ * behind [QueueSheet] — in a column to the right.
  */
 @Composable
 private fun NowPlayingWideContent(
@@ -348,7 +347,7 @@ private fun NowPlayingWideContent(
     onArtistClick: (JellyfinItem) -> Unit,
     onStartRadio: () -> Unit,
 ) {
-    // The right pane's own Queue/Lyrics selector (M13 Phase 6) — independent of the compact
+    // The right pane's own Queue/Lyrics selector — independent of the compact
     // layout's `showLyrics`, since wide shows this pane's *chrome* (the tab row) unconditionally
     // once lyrics exist, rather than swapping the artwork the way compact does.
     var showLyrics by rememberSaveable { mutableStateOf(false) }
@@ -411,7 +410,7 @@ private fun NowPlayingWideContent(
 
 /**
  * Whatever the wide layout's right pane is showing under [NowPlayingRightPaneTabRow] — the inline
- * queue, or this track's lyrics once the Lyrics tab is selected (M13 Phase 6).
+ * queue, or this track's lyrics once the Lyrics tab is selected.
  *
  * The pane is the column's one flexible child, so the caller passes its `weight` in [modifier].
  */
@@ -442,8 +441,8 @@ private fun NowPlayingWidePaneBody(
 }
 
 /**
- * The wide layout's right-pane header: just the "Queue" title when there are no lyrics to show
- * (unchanged from before M13 Phase 6), or a two-way Queue/Lyrics tab once there are.
+ * The wide layout's right-pane header: just the "Queue" title when there are no lyrics to show,
+ * or a two-way Queue/Lyrics tab once there are.
  */
 @Composable
 private fun NowPlayingRightPaneTabRow(
@@ -661,7 +660,7 @@ private fun repeatContentDescription(mode: MusicRepeatMode): Int =
     }
 
 /**
- * The one solid surface on the screen — white fill, `#101010` glyph, the refresh's primary-action
+ * The one solid surface on the screen — white fill, `#101010` glyph, the app's primary-action
  * treatment (mirrors `PlayerControls.PlayPauseButton` in `:player`; `:feature:music` cannot depend
  * on `:player` to reuse it directly, so the same colours are restated here).
  */
@@ -726,8 +725,8 @@ private val NowPlayingWideBreakpoint = 560.dp
  * Whether the window gets the two-pane layout; a plain function so it is unit-testable.
  *
  * Width alone is not enough: a portrait tablet is wider than the breakpoint, and the two-pane
- * split there put the artwork in a half-width column beside the controls — the stacked layout is
- * what a taller-than-wide window wants, whatever its width (device walk, 2026-08-15). So the panes
+ * split there would put the artwork in a half-width column beside the controls — the stacked
+ * layout is what a taller-than-wide window wants, whatever its width. So the panes
  * additionally require the window to actually be wider than it is tall, the same width-and-height
  * reasoning `DownloadsScreen`'s `chromePinned` documents.
  */

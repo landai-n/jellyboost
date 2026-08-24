@@ -11,15 +11,15 @@ import java.util.UUID
  * decoder fallback — and duplicating any of that here would be a second playback pipeline.
  *
  * So the surface is the smallest one that lets the controller run the group handshake: open the
- * item, and tell me where you are. `PlayerViewModel` implements it in M11 Phase 3.
+ * item, and tell me where you are. `PlayerViewModel` implements it.
  */
 interface SyncPlayPlaybackHost {
     /**
      * Opens [itemId] at [startPositionTicks] **paused**, and returns once it is preparing.
      *
      * Paused is not a detail: the group decides when playback starts, and a host that began playing
-     * on its own would be out of sync from the first frame (docs/notes/syncplay-m11-plan.md, key
-     * decision 11). The controller reports `buffering` before calling this and reports `ready` when
+     * on its own would be out of sync from the first frame. The controller reports `buffering`
+     * before calling this and reports `ready` when
      * `PlayerEvent.Ready` arrives, so the implementation does not have to know the protocol.
      *
      * @return `false` when the item cannot be opened at all — the controller then tells the user

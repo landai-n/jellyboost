@@ -7,8 +7,8 @@ import java.security.GeneralSecurityException
 /**
  * Opens the encrypted credential file, and decides what a failure to open it costs the user.
  *
- * The two ways it can fail are not the same thing, and treating them alike is what the audit found
- * (docs/notes/audit-2026-07.md, SEC-03):
+ * The two ways it can fail are not the same thing, and treating them alike loses a session that a
+ * transient failure should have left alone:
  *
  * - a [GeneralSecurityException] means the file cannot be **decrypted** — a Keystore key the OS
  *   cleared, a backup restored onto another device, a tampered file. Nothing will ever read it
@@ -21,8 +21,8 @@ import java.security.GeneralSecurityException
  *   leaves the stored session alone"), so it propagates untouched: this app run is signed out, what
  *   is stored is not.
  *
- * Split out of [EncryptedSecureCredentialStore] so that this decision — the whole of the finding —
- * is unit-testable without an Android Keystore.
+ * Split out of [EncryptedSecureCredentialStore] so that this decision is unit-testable without an
+ * Android Keystore.
  *
  * @param create builds (or opens) the encrypted preferences.
  * @param deleteStore removes the underlying file so that [create] can start from nothing.

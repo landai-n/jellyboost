@@ -39,16 +39,15 @@ import dev.jellyboost.feature.library.toMessage
 import dev.jellyboost.core.ui.R as CoreUiR
 
 /**
- * The Libraries tab: every movie/TV library the user has, as a browsable grid
- * (docs/PLAN.md, "Confirmed decisions" — bottom nav bar Home / Libraries / Search / Downloads).
+ * The Libraries tab: every movie/TV library the user has, as a browsable grid.
  *
  * It draws no bar of its own: `:app`'s chrome carries the navigation and the app actions for every
- * top-level destination, and its selected tab already says "Libraries" (DECISIONS.md 2026-07-29).
- * Pushed screens such as `LibraryGridScreen` still own their bars, because they have a back action
- * and screen-specific actions to put in them.
+ * top-level destination, and its selected tab already says "Libraries". Pushed screens such as
+ * `LibraryGridScreen` still own their bars, because they have a back action and screen-specific
+ * actions to put in them.
  *
- * Since the 2026 refresh that chrome *floats over* the grid rather than sitting above it, so the
- * grid consumes `LocalAppChromePadding` in its `contentPadding` — see [LibrariesGrid].
+ * That chrome *floats over* the grid rather than sitting above it, so the grid consumes
+ * `LocalAppChromePadding` in its `contentPadding` — see [LibrariesGrid].
  *
  * @param viewModel passed in rather than resolved here so `:app` owns the `hiltViewModel()` call
  *   together with the rest of the navigation graph wiring, as it does for the other screens.
@@ -132,9 +131,8 @@ private fun LibrariesGrid(
             item(key = TITLE_ITEM_KEY, span = { GridItemSpan(maxLineSpan) }) {
                 Text(
                     text = stringResource(R.string.libraries_title),
-                    // Same wide switch as DownloadsScreen's own title (spec "4d Downloads" mocks use
-                    // the larger 30px title on wide) — reusing this file's own COMPACT_MAX_WIDTH
-                    // breakpoint rather than inventing a second one.
+                    // Same wide switch as DownloadsScreen's own title — reusing this file's own
+                    // COMPACT_MAX_WIDTH breakpoint rather than inventing a second one.
                     style =
                         if (maxWidth >= COMPACT_MAX_WIDTH) {
                             JellyfinTypeExtras.ScreenTitleLarge
@@ -143,7 +141,7 @@ private fun LibrariesGrid(
                         },
                     color = MaterialTheme.colorScheme.onBackground,
                     // The tab's own heading: it rides in the grid rather than in a bar, so it is
-                    // also the only thing that says which screen this is (audit A11Y-10).
+                    // also the only thing that says which screen this is.
                     modifier =
                         Modifier.padding(bottom = Dimens.SpaceExtraSmall).semantics { heading() },
                 )
@@ -179,7 +177,7 @@ private fun LibrariesGrid(
 /**
  * Minimum grid column width for tablet / regular-width screens (>= [COMPACT_MAX_WIDTH]).
  *
- * This screen has no spec in docs/PLAN.md (only `LibraryGrid` — the paged item grid *inside* a
+ * This screen has no spec of its own (only `LibraryGrid` — the paged item grid *inside* a
  * library — does), so 160dp was a screen-local guess. It read smaller than Home's library row,
  * which draws the same wide tile at a fixed [Dimens.ThumbWidth]; anchoring the floor to that same
  * token is what keeps the two surfaces drawing one card shape. On the test tablet the grid then

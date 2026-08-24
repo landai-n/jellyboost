@@ -25,7 +25,7 @@ import javax.inject.Singleton
  * The [PlayerHandle] that drives a Cast receiver, over media3-cast's `CastPlayer`.
  *
  * `CastPlayer` is an `androidx.media3.common.Player`, so the seam the ViewModel already talks to
- * fits it exactly — including the contract that carries the milestone: **a track selection that
+ * fits it exactly — including the contract that carries casting: **a track selection that
  * returns `false` makes the caller re-negotiate with the server**. That is not a workaround here,
  * it is the correct behaviour twice over. A receiver has whatever single audio track the server
  * encoded for it, and a subtitle it cannot render has to be burned in — both of which only the
@@ -34,9 +34,8 @@ import javax.inject.Singleton
  * ### What this handle deliberately does not do
  * - **No video surface.** [player] is always `null`. There is nothing to render on the phone while
  *   a television is rendering it, and handing `PlayerView` a `CastPlayer` would draw a black
- *   rectangle over the poster the screen shows instead (docs/notes/chromecast-m12-plan.md,
- *   decision 10). It is the one place where returning `null` from that property is not a
- *   "before the first prepare" state but the permanent, correct answer.
+ *   rectangle over the poster the screen shows instead. It is the one place where returning `null`
+ *   from that property is not a "before the first prepare" state but the permanent, correct answer.
  * - **No playback service.** [ExoPlayerHandle][dev.jellyboost.player.session.ExoPlayerHandle]
  *   starts `PlaybackService` so a backgrounded session keeps its notification. While casting the
  *   local player is stopped, so that notification would be for a player that is not playing; the
@@ -78,11 +77,9 @@ internal class CastPlayerHandle
          * `VideoSize.UNKNOWN` throughout, so forwarding it would only overwrite a good aspect ratio
          * with nothing.
          *
-         * That reasoning used to live in this KDoc above a hand-written listener that was otherwise
-         * byte-identical to the local one's — documented, but unenforced, so a sixth event added to
-         * one copy would simply have been missing from the other (audit 2026-08-08, DUP-3). It is
-         * now `forwardVideoSize = false`: the same decision, stated as an argument the shared bridge
-         * has to honour.
+         * Stated as `forwardVideoSize = false` on the shared bridge rather than as a hand-written
+         * listener of this handle's own: an argument the bridge has to honour cannot drift from the
+         * local handle's copy the way two byte-identical listeners would.
          */
         private val listener =
             playerEventListener(
@@ -185,7 +182,7 @@ internal class CastPlayerHandle
          * Home app unloads the media without ending the session, and another sender can replace it
          * outright. In both cases `CastPlayer` keeps answering — at position zero, or at the *other
          * app's* position — and a ticker that believed it would overwrite this item's resume
-         * position with either (audit CAST-01). The identity check is against the `mediaId` the
+         * position with either. The identity check is against the `mediaId` the
          * outbound converter stamps and, because the framework's round-trip rebuilds items with the
          * content URL as their id, against [CastMediaSpec.contentId] too. A natural finish is exempt:
          * the receiver unloads on its own at the end, and that reading is the one that marks the
@@ -239,9 +236,9 @@ internal class CastPlayerHandle
          * `true` is only claimed against what the receiver **reports** holding, not against what
          * [loaded] remembers: the media on the other end can have been unloaded, replaced by another
          * sender, or not finished loading, and `setActiveMediaTracks` against any of those is a
-         * silent no-op — the picker would show the track selected while the television draws nothing
-         * (audit CAST-03). A rejection the receiver only announces asynchronously is logged; the
-         * cases it adds beyond this check are the ones a re-negotiation could not fix either.
+         * silent no-op — the picker would show the track selected while the television draws
+         * nothing. A rejection the receiver only announces asynchronously is logged; the cases it
+         * adds beyond this check are the ones a re-negotiation could not fix either.
          */
         @Suppress(
             // Track selection tries the explicit index, then the language match, then off; order is the rule.

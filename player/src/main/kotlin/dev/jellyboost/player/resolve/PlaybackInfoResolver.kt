@@ -47,10 +47,9 @@ internal class PlaybackInfoResolver
          * Resolves [request] into something the player can open.
          *
          * Transport failures fold through `:core:network`'s [runCatchingApi] — the app's one
-         * exception→[AppError] mapper. This used to hold a nineteen-line copy of it, made when that
-         * mapper was `internal` and unreachable from here, and the copy had drifted: a 403 was
-         * reported as a server fault rather than an authentication failure, so a revoked token
-         * discovered at `/PlaybackInfo` never reached the session layer (audit DUP-1).
+         * exception→[AppError] mapper — rather than through a local copy of its taxonomy: a 403
+         * has to reach the session layer as an authentication failure, not as a server fault, or a
+         * token revoked between browsing and playing is never noticed.
          *
          * The whole negotiation, not just the call, sits inside it: building the device profile and
          * reading the response are both places the SDK can throw, and both belong in the same
@@ -67,13 +66,13 @@ internal class PlaybackInfoResolver
 
         /**
          * Negotiates [request], and re-negotiates once if Auto's measured cap became a transcode's
-         * *target* (DECISIONS.md, 2026-08-15 amendment).
+         * *target*.
          *
          * `maxStreamingBitrate` does double duty: to a direct play it is a ceiling the file either
          * fits under or does not, and a high one is exactly the point — the original bytes, no
          * re-encode. To a transcode it is the bitrate the server is asked to *produce*, and no
          * measurement of the **link** can say whether the encoder-plus-link chain can produce it in
-         * realtime. Measured on the user's server: at a 64.7 Mbps Auto cap a 4K HEVC source was
+         * realtime. Measured against a real server: at a 64.7 Mbps Auto cap a 4K HEVC source was
          * delivered at 0.76× realtime — a permanent stall — where the same file at
          * [PlaybackQuality.HIGH]'s 20 Mbps rung ran 2.50× realtime, and 20 Mbps is already
          * transparent for a 1080p transcode. So an Auto transcode above that rung is re-negotiated
@@ -115,10 +114,9 @@ internal class PlaybackInfoResolver
          * [PlaybackResolveRequest.autoBitrate] rides along onto the resolved source: everything
          * downstream reads the *effective* cap and the *original* flag off the same object.
          *
-         * Cast Auto keeps today's uncapped behaviour on purpose. The link that decides whether a
-         * receiver copes is the receiver's, not this device's, and the cast profile is already
-         * conservative — measuring here would cap a television by a tablet's Wi-Fi
-         * (DECISIONS.md, 2026-08-15).
+         * Cast Auto stays uncapped on purpose. The link that decides whether a receiver copes is
+         * the receiver's, not this device's, and the cast profile is already conservative —
+         * measuring here would cap a television by a tablet's Wi-Fi.
          */
         private suspend fun PlaybackResolveRequest.withMeasuredCap(): PlaybackResolveRequest =
             when {
@@ -129,7 +127,7 @@ internal class PlaybackInfoResolver
 
         /**
          * Negotiates [request], and re-negotiates once when a transcode would side-load its
-         * subtitles (DECISIONS.md, 2026-08-21).
+         * subtitles.
          *
          * Side-loaded cues are their own `MediaItem.SubtitleConfiguration`, so they never pass
          * through the `TimestampAdjuster` that the transcode's audio and video do — and that
@@ -244,9 +242,8 @@ internal class PlaybackInfoResolver
          *
          * A `LocalPlaybackMediaSource` has no play session by construction, which is exactly why
          * local playback tells the server nothing. In a SyncPlay group that silence is wrong: the
-         * other members are watching together with this device, and the dashboard should say so
-         * (docs/notes/syncplay-m11-plan.md, key decision 9). One `PlaybackInfo` POST is enough to
-         * get the id every report is keyed on.
+         * other members are watching together with this device, and the dashboard should say so.
+         * One `PlaybackInfo` POST is enough to get the id every report is keyed on.
          *
          * Two things it deliberately does *not* do, because both would put load on a server whose
          * bytes we are not going to use:
@@ -298,14 +295,14 @@ internal class PlaybackInfoResolver
                 mediaSourceId = mediaSourceId ?: itemId.toString().replace("-", ""),
                 // The profile is a claim about the decoders on the far end of the stream, and while
                 // casting those are the television's, not this tablet's. Sending the probed local
-                // profile for a receiver is how a file that plays in the hand becomes a black screen
-                // (docs/notes/chromecast-m12-plan.md, key decision 2).
+                // profile for a receiver is how a file that plays in the hand becomes a black
+                // screen on the television.
                 deviceProfile =
                     if (castTarget) {
                         // The receiver's class is read at negotiation time rather than carried on
                         // the request: the request describes what to play, the holder knows who is
                         // playing it, and a renegotiation mid-session should always describe the
-                        // receiver that is actually connected (M12 phase-2a).
+                        // receiver that is actually connected.
                         CastDeviceProfile.build(
                             maxStreamingBitrate = maxStreamingBitrate,
                             receiver = castStatus.receiver,
@@ -402,7 +399,7 @@ internal class PlaybackInfoResolver
 /**
  * One stream as the pickers see it.
  *
- * `internal` rather than file-private since M8: [LocalPlaybackResolver] builds its track lists from
+ * `internal` rather than file-private: [LocalPlaybackResolver] builds its track lists from
  * the very same `MediaStream` shape (read out of the cached item blob instead of off a
  * `PlaybackInfo` response), and the two must agree label for label — that identity is what makes
  * the player UI the same online and offline.

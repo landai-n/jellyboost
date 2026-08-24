@@ -70,7 +70,7 @@ class NowPlayingUiStateTest {
         state.queue[1].userData.isFavorite shouldBe false
     }
 
-    // ---- lyrics wiring (M13 Phase 6) -----------------------------------------------------------
+    // ---- lyrics wiring -------------------------------------------------------------------------
 
     @Test
     fun `the current track's cached lyrics are attached, a different track's are not`() {
@@ -121,7 +121,7 @@ class NowPlayingUiStateTest {
         state.lyrics.shouldBeNull()
     }
 
-    // ---- activeLyricLineIndex (M13 Phase 6) --------------------------------------------------
+    // ---- activeLyricLineIndex ----------------------------------------------------------------
 
     @Test
     fun `before the first timed line, nothing is active`() {

@@ -108,8 +108,7 @@ class DecoderFallbackHandlerTest {
                 source =
                     PlayerFixtures.remoteSource(
                         playMethod = PlayMethod.TRANSCODE,
-                        // What Auto's measurement produces: a number off the ladder entirely
-                        // (DECISIONS.md, 2026-08-15).
+                        // What Auto's measurement produces: a number off the ladder entirely.
                         maxStreamingBitrate = 5_000_000,
                         autoBitrate = true,
                     ),

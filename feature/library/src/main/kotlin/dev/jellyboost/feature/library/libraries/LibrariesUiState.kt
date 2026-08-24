@@ -5,8 +5,7 @@ import dev.jellyboost.core.common.model.LibraryView
 
 /**
  * Everything the Libraries tab draws: the current user's movie and TV libraries as a browsable
- * grid (docs/PLAN.md, "Confirmed decisions" — bottom nav bar Home / Libraries / Search /
- * Downloads).
+ * grid.
  *
  * This is the same [dev.jellyboost.data.JellyfinRepository.getUserViews] call the home
  * screen's *My Media* row already makes; the tab exists so the whole library list is one tap away

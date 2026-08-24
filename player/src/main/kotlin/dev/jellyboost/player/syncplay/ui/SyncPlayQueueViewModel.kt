@@ -25,16 +25,16 @@ import java.util.UUID
 import javax.inject.Inject
 
 /**
- * What the group has queued, with names and pictures on it (M11 Phase 4).
+ * What the group has queued, with names and pictures on it.
  *
  * The queue itself is `SyncPlayController`'s — it arrives as playlist-item ids and library item ids
  * and nothing else, because that is all the protocol carries. This class is the half that makes it
  * readable: it fetches each item once, keeps what it fetched, and re-projects the rows whenever the
  * server re-sends the queue. A reorder or a removal therefore redraws without a single request.
  *
- * Every edit below is a **request to the server** and changes nothing here (key decision 11,
- * docs/notes/syncplay-m11-plan.md): the row does not move, the item is not removed and playback does
- * not jump until the server's own `PlayQueueUpdate` comes back with the new queue. That is what
+ * Every edit below is a **request to the server** and changes nothing here: the row does not move,
+ * the item is not removed and playback does not jump until the server's own `PlayQueueUpdate` comes
+ * back with the new queue. That is what
  * makes the sheet show the same order to everyone in the group rather than an optimistic local one.
  */
 @HiltViewModel
@@ -49,20 +49,20 @@ internal class SyncPlayQueueViewModel
 
         /**
          * Ids the repository has already refused, so that a queue entry nobody can describe is asked
-         * about **once** rather than once per emission (audit HYG-9).
+         * about **once** rather than once per emission.
          *
-         * Only successes used to be remembered, and the queue re-arrives on every transport action —
-         * the server re-sends the whole `PlayQueueUpdate` when the group merely plays or pauses. An
-         * item the server will not describe (deleted from the library, or not visible to this user)
-         * therefore re-fired `getItem` on every play, pause and seek for as long as the sheet was
-         * open, forever, for a row that can never fill in.
+         * Remembering only successes is not enough: the queue re-arrives on every transport action
+         * — the server re-sends the whole `PlayQueueUpdate` when the group merely plays or pauses.
+         * An item the server will not describe (deleted from the library, or not visible to this
+         * user) would then re-fire `getItem` on every play, pause and seek for as long as the sheet
+         * is open, forever, for a row that can never fill in.
          *
          * [unresolvedFor] is what keeps that from being permanent: it holds the queue's *membership*
          * — its set of library item ids, order and playback state excluded — at the moment those
          * refusals were collected. When membership changes, the group has queued or unqueued
          * something and the server's answer may genuinely have changed, so the refusals are dropped
          * and every unknown id gets one more attempt. A reorder, a play or a pause changes neither
-         * set and re-fetches nothing, which is the case the finding was about.
+         * set and re-fetches nothing, which is the case this exists for.
          */
         private var unresolved = emptySet<UUID>()
 
@@ -90,7 +90,7 @@ internal class SyncPlayQueueViewModel
             controller.requestSetPlaylistItem(playlistItemId)
         }
 
-        /** The group's next / previous, which Phase 3 deliberately left without a call site. */
+        /** The group's next / previous; the player screen has no call site for either. */
         fun next() {
             controller.requestNext()
         }
@@ -103,7 +103,7 @@ internal class SyncPlayQueueViewModel
          * Moves a slot by one place.
          *
          * Buttons rather than a drag: the row cannot follow a finger, because where it ends up is
-         * the server's answer and not this device's (DECISIONS.md, 2026-07-30).
+         * the server's answer and not this device's.
          */
         fun move(
             playlistItemId: UUID,
@@ -121,8 +121,8 @@ internal class SyncPlayQueueViewModel
         /**
          * Fetches the entries not fetched yet, a few at a time.
          *
-         * One call per item rather than one call for the queue: the repository has no fetch-by-ids
-         * (DECISIONS.md, 2026-07-30), and `getItem` is also the call that answers from the Room cache
+         * One call per item rather than one call for the queue: the repository has no fetch-by-ids,
+         * and `getItem` is also the call that answers from the Room cache
          * with no server — which is what a group watching something this device has downloaded needs.
          * Bounded because a long queue would otherwise open a request per row at once.
          *

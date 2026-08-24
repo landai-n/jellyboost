@@ -5,7 +5,7 @@ package dev.jellyboost.core.common.model
  *
  * A track or album's `artists`/`albumArtist` fields on [JellyfinItem] are display strings only —
  * tapping one to open the artist's page needs an id, which the server carries separately on
- * `dto.artistItems`/`dto.albumArtists` (docs/notes/music-m13-plan.md, decision 5).
+ * `dto.artistItems`/`dto.albumArtists`.
  */
 data class ArtistRef(
     val id: String,

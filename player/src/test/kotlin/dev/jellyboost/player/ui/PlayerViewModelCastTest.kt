@@ -42,7 +42,7 @@ import org.junit.jupiter.api.Test
 import javax.inject.Provider
 
 /**
- * What the player does when a television takes the film, and when it gives it back (M12 Phase 3).
+ * What the player does when a television takes the film, and when it gives it back.
  *
  * Assembled from the real pieces wherever they are ours: a genuine [RoutingPlayerHandle] over two
  * [FakePlayerHandle]s and a genuine [CastSessionCoordinator] behind a fake [CastSessionMonitor], so
@@ -97,7 +97,7 @@ internal class PlayerViewModelCastTest : PlayerViewModelFixture() {
      *
      * Its own builder rather than the fixture's, because two of its collaborators have to be the
      * routing ones — the handle it holds *and* the one the session controller prepares through —
-     * and the fixture's builder is what every pre-M12 test uses unchanged.
+     * and the fixture's builder is what every non-casting test uses unchanged.
      */
     private fun castViewModel(): PlayerViewModel =
         PlayerViewModel(
@@ -109,8 +109,8 @@ internal class PlayerViewModelCastTest : PlayerViewModelFixture() {
                     playerHandle = routing,
                     reporter = reporter,
                     // The same holder the coordinator writes and the ViewModel reads: the controller
-                    // re-checks it at prepare time (audit CAST-04), and a private never-casting
-                    // default would make it re-resolve every cast open.
+                    // re-checks it at prepare time, and a private never-casting default would make
+                    // it re-resolve every cast open.
                     castStatus = castStatus,
                 ),
             playerHandle = routing,
@@ -321,8 +321,8 @@ internal class PlayerViewModelCastTest : PlayerViewModelFixture() {
     @Test
     fun `a download being streamed for a track keeps streaming it on the television`() =
         runTest(dispatcher) {
-            // The one fact a transfer must carry across an *open* rather than reset with the session
-            // (audit CPX-5, `ActiveSession.forcedRemote`): this item is on disk, but it is
+            // The one fact a transfer must carry across an *open* rather than reset with the
+            // session (`ActiveSession.forcedRemote`): this item is on disk, but it is
             // deliberately coming off the server for a track the file does not hold. A transfer that
             // dropped the flag would negotiate the receiver's stream against the download again and
             // silently lose the very track the user went to the server for.

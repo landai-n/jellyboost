@@ -36,19 +36,18 @@ import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
  * and whatever trailing affordance the screen owns, over the status-bar inset.
  *
  * Both navigation affordances rather than one: a pushed destination shows no tab bar to escape
- * through, so Home is as much a way out as Back is. `LibraryGridScreen` established the shape in the
- * 2026 refresh's Phase 5 sweep and settings and the SyncPlay groups screen copied it — including a
- * `private val HeaderPadding = 20.dp` apiece, kept in step by a prose comment in each file saying it
- * matched the other two (audit 2026-08-08, DUP-4). That is now [Dimens.HeaderPadding], and the row
- * itself is here.
+ * through, so Home is as much a way out as Back is. `LibraryGridScreen` established the shape and
+ * settings and the SyncPlay groups screen copied it — including a
+ * `private val HeaderPadding = 20.dp` apiece, kept in step by a prose comment in each file saying
+ * it matched the other two. That is now [Dimens.HeaderPadding], and the row itself is here.
  *
  * ### What the detail screen does instead, and why it is not a caller
- * `ItemDetailScreen.OverlayNav` is the fourth copy the audit counted, and it is deliberately left
- * out: it draws no title, and it puts Home at the *end* of the row behind the favourite heart,
+ * `ItemDetailScreen.OverlayNav` is a fourth copy of this shape, and it is deliberately left out:
+ * it draws no title, and it puts Home at the *end* of the row behind the favourite heart,
  * because it floats over a full-bleed backdrop rather than sitting above a list. Folding it in would
  * mean a boolean choosing where Home goes — exactly the representable-nonsense parameter this
  * codebase argues against elsewhere. It shares the two things worth sharing: the `action_back` /
- * `action_home` labels (DUP-6) and [GlassDefaults.ChromeFill], which [surfaceTint] exists to accept
+ * `action_home` labels and [GlassDefaults.ChromeFill], which [surfaceTint] exists to accept
  * from any future header that also sits on artwork.
  *
  * @param title the title block, laid out in a weighted column so a trailing action is pushed to the
@@ -105,8 +104,8 @@ fun ScreenHeader(
  * The title inside a [ScreenHeader].
  *
  * A heading to a screen reader as well as to the eye, and one that speaks its full text: this is
- * where TalkBack's heading-jump lands on a screen whose first stop is otherwise a Back button
- * (accessibility audit 2026-08-05, A11Y-10). The library grid's header was the only one of the three
+ * where TalkBack's heading-jump lands on a screen whose first stop is otherwise a Back button.
+ * The library grid's header was the only one of the three
  * that declared it; folding the three into one composable is what gives settings and the SyncPlay
  * groups screen the same landing spot.
  *

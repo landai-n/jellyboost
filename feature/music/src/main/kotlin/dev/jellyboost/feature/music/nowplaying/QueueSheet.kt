@@ -68,7 +68,7 @@ import dev.jellyboost.feature.music.R
 
 /**
  * The music queue, as a bottom sheet: current track highlighted, tap to jump, up/down to reorder,
- * a remove button per row (M13 Phase 4, docs/notes/music-m13-plan.md).
+ * a remove button per row.
  *
  * Modelled on `SyncPlayQueueSheet` (`:player`), the codebase's one prior queue-sheet — same header
  * shape, same row shape, same up/down reorder buttons rather than a drag. That sheet chose buttons
@@ -208,9 +208,9 @@ private fun QueueHeader(
  * The queue's rows, with no header or dismissal of their own — the part [QueueSheetContent] and
  * [dev.jellyboost.feature.music.nowplaying.NowPlayingScreen]'s wide two-pane layout both need.
  *
- * The wide layout shows the queue inline rather than behind [QueueSheet] (docs/notes/music-m13-plan.md,
- * Phase 4: "≥560dp: two-pane — artwork left, controls + queue list right"), so factoring the list
- * out is what lets both call sites draw the exact same rows instead of drifting apart.
+ * The wide layout (≥560dp) shows the queue inline — artwork left, controls and queue list right —
+ * rather than behind [QueueSheet], so factoring the list out is what lets both call sites draw the
+ * exact same rows instead of drifting apart.
  */
 @Composable
 internal fun QueueList(
@@ -346,10 +346,10 @@ private fun QueueTrackLabels(
 /**
  * Reorder up/down and remove, behind **one** overflow button.
  *
- * They were three always-visible 48dp `IconButton`s — 144dp of it, on top of the row's 56dp artwork
- * and the current track's equalizer glyph. The title column is the row's only flexible child, so it
- * absorbed all of that: on a phone-width sheet every single title ellipsised after a couple of words
- * (device walk, 2026-08-15). One overflow returns 96dp to the titles, which are what the sheet
+ * Three always-visible 48dp `IconButton`s would be 144dp of width, on top of the row's 56dp
+ * artwork and the current track's equalizer glyph. The title column is the row's only flexible
+ * child, so it absorbs all of that: on a phone-width sheet every single title would ellipsise
+ * after a couple of words. One overflow leaves that 96dp to the titles, which are what the sheet
  * exists to show; the three verbs keep their exact strings and their edge-disabled states, one tap
  * further in.
  *
@@ -357,7 +357,7 @@ private fun QueueTrackLabels(
  * two places — inside this sheet, where a `ModalBottomSheet`'s own `Surface` provides `onSurface`,
  * and inline in `NowPlayingScreen`'s wide right-hand pane, which has no `Surface` ancestor at all
  * and therefore inherits Material's *bare* default for that local, `Color.Black`. On the app's
- * `#101010` background that rendered these controls invisible (device walk, 2026-08-15).
+ * `#101010` background that renders these controls invisible.
  * [GlassIconTint] is the token every other icon button in this module already names.
  */
 @Composable
@@ -387,7 +387,7 @@ private fun QueueRowActions(
 
         // `LibrarySortMenu`'s dressing — the app's one prior menu on a dark surface: the theme's
         // `surface` rather than M3's `surfaceContainer`, and the panel hairline that gives every
-        // floating surface in the refresh its edge.
+        // floating surface in the app its edge.
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
@@ -430,7 +430,7 @@ private fun QueueRowActions(
  *
  * `Role.Button` is declared on the item itself rather than on its icon: `DropdownMenuItem`'s own
  * `clickable` merges its descendants and sets no role of its own, so a role on the leading icon
- * would sit under the node TalkBack focuses (accessibility audit 2026-08-05, ROLE-01).
+ * would sit under the node TalkBack focuses.
  */
 @Composable
 private fun QueueRowMenuItem(

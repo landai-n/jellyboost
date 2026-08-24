@@ -24,9 +24,9 @@ interface HomeLayoutStore {
     /**
      * Drops the persisted layout.
      *
-     * Called on sign-out (audit ARCH-12): without this, a fetch failure in the window right after
-     * a different user signs in would fall back to whatever the *previous* user's server told this
-     * device — [read] cannot tell whose layout it is holding.
+     * Called on sign-out: without this, a fetch failure in the window right after a different user
+     * signs in would fall back to whatever the *previous* user's server told this device — [read]
+     * cannot tell whose layout it is holding.
      */
     fun clear()
 }

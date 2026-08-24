@@ -109,7 +109,7 @@ fun PillSnackbar(
             // The pill's vertical padding lives on the message rather than on the row, so that the
             // action beside it can claim a full 48dp of height without adding that padding on top
             // of it: a message-only snackbar draws exactly as before, and one with an action is
-            // 48dp tall instead of 46 (accessibility audit 2026-08-05, M7).
+            // 48dp tall instead of 46.
             modifier =
                 Modifier
                     .weight(weight = 1f, fill = false)

@@ -13,9 +13,9 @@ import java.time.Duration
 
 /**
  * The two timer safety nets under the group's command channel: "the group said go and nothing
- * came" and "the group said stop and nothing came" (B3, both directions).
+ * came" and "the group said stop and nothing came", in both directions.
  *
- * Extracted from [SyncPlayController] (audit CPX-1/ARCH-5) because the nets own a disjoint slice
+ * Kept out of [SyncPlayController] because the nets own a disjoint slice
  * of state — their two timer jobs and the coarse [groupPlayingAnchor] — and read the rest of the
  * controller through [Driver]. Everything here runs on the confined single-threaded
  * `@SyncPlayScope` (see `SyncPlayScopeModule`), like the scheduler and the controller: the plain
@@ -28,19 +28,15 @@ import java.time.Duration
  * second window expires too, act locally. The re-sent command is strictly better than the local
  * guess, because it carries the group's own `when` and position.
  *
- * ### Cancellation discipline (audit CPX-4)
- * A net's job **owns its handle until its work is done**. The bodies used to null their own
- * handle the moment they woke, which made every later `cancel` a no-op against an orphaned job:
- * a `cancelPauseNet()` racing the body's main-thread hop could no longer stop it, and the local
- * fallback then paused (or started!) a player the group had just moved. Now the handle is
- * cleared only under an identity guard (`=== coroutineContext[Job]`, the scheduler's proven
- * SP-01 pattern), so a cancel always reaches the running body and takes effect at its next
- * suspension point. Chosen deliberately over the audit's alternative — one sealed
- * `RecoveryState` under a supervising coroutine — because that is a rewrite of a
- * device-verified handshake (B1–B3), and the identity guard closes the same race in-family
- * (DECISIONS.md 2026-08-07). The residual window — a cancel landing while the main-thread block
- * itself is mid-flight — costs at most one action the very next state update corrects, exactly
- * as before.
+ * ### Cancellation discipline
+ * A net's job **owns its handle until its work is done**. A body that nulled its own handle the
+ * moment it woke would make every later `cancel` a no-op against an orphaned job: a
+ * `cancelPauseNet()` racing the body's main-thread hop could no longer stop it, and the local
+ * fallback would then pause (or start!) a player the group had just moved. So the handle is
+ * cleared only under an identity guard (`=== coroutineContext[Job]`, the same pattern the
+ * scheduler uses), and a cancel always reaches the running body and takes effect at its next
+ * suspension point. The residual window — a cancel landing while the main-thread block itself is
+ * mid-flight — costs at most one action the very next state update corrects.
  */
 internal class SyncPlayRecoveryNets(
     private val playerHandle: PlayerHandle,
@@ -85,7 +81,7 @@ internal class SyncPlayRecoveryNets(
      */
     var groupPlayingAnchor: SyncPlayAnchor? = null
 
-    /** The B3 safety net: fires when a completed handshake produced no command. */
+    /** The play-direction safety net: fires when a completed handshake produced no command. */
     private var selfSyncJob: Job? = null
 
     /** The other half of it: fires when a paused group produced no pause command. */
@@ -95,7 +91,7 @@ internal class SyncPlayRecoveryNets(
      * Starts the clock on "the group said go and nothing came".
      *
      * Armed after every `ready`, and by a `StateChanged(Playing)`; disarmed by the first command
-     * applied. What it catches is the queue-advance wedge (B3): the handshake completes, the
+     * applied. What it catches is the queue-advance wedge: the handshake completes, the
      * group's own state update says `Playing`, and the unpause that should have followed it
      * never arrives — leaving this member parked at 0:00 under the WAITING overlay while
      * everyone else watches. A group unpause cannot recover it either, because the group *is*
@@ -108,10 +104,10 @@ internal class SyncPlayRecoveryNets(
      * that window expires too does [selfSyncToGroup] act locally, off the inferred anchor. The
      * order matters because the inferred anchor is the weaker reading of the two: it comes from
      * the queue's `startPositionTicks`/`lastUpdate` and goes stale the moment the group pauses
-     * and resumes without publishing a queue, which on device landed the self-sync seconds off
-     * and compounded across cycles (STATUS.md, logcat run 3).
+     * and resumes without publishing a queue, which lands the self-sync seconds off and compounds
+     * across cycles.
      *
-     * Nothing here reports a `ready`: that would re-enter the storm B1 is about. A request is not
+     * Nothing here reports a `ready`: that would re-enter the readiness storm. A request is not
      * a report — the server answers it with a command, not with a wait.
      */
     fun armSelfSync(stage: NetStage = NetStage.Elicit) {
@@ -142,11 +138,10 @@ internal class SyncPlayRecoveryNets(
     /**
      * Starts the clock on "the group said stop and nothing came" — the mirror of [armSelfSync].
      *
-     * The observed failure it exists for is the pause direction of B3, and it is the worse half:
-     * a `Pause` this client never receives leaves the member playing on alone, while the phase
-     * quietly goes to `Paused` and takes the drift monitor — which only runs in `Playing` — down
-     * with it. Nothing then measures anything, and the member free-runs for the rest of the
-     * evening (syncplay-bugreport.md, "Pause from browser: app continues playing").
+     * The failure it exists for is the pause direction, and it is the worse half: a `Pause` this
+     * client never receives leaves the member playing on alone, while the phase quietly goes to
+     * `Paused` and takes the drift monitor — which only runs in `Playing` — down with it. Nothing
+     * then measures anything, and the member free-runs for the rest of the evening.
      *
      * Two things separate it from the play net. It is **not** gated on a host: pausing a
      * detached background player that the group has paused is right, where *starting* one would
@@ -227,7 +222,7 @@ internal class SyncPlayRecoveryNets(
     /**
      * Asks the server to say again what this member never heard — the first stage of both nets.
      *
-     * The protocol has a recovery for exactly this and we were not using it. A group request
+     * The protocol has a recovery for exactly this. A group request
      * that asks for the state the group is *already* in is not a state change: the server reads
      * it as a member that has lost the thread and answers by re-sending the current command to
      * that one session, with the exact `When` and `PositionTicks` everyone else got —
@@ -289,7 +284,7 @@ internal class SyncPlayRecoveryNets(
         val current = driver.state() as? SyncPlayState.InGroup ?: return
         if (current.phase is SyncPlayPhase.Playing) return
         // Never on a detached player: a member with no screen open has told the group to stop
-        // waiting on it (key decision 5), and starting the shared ExoPlayer behind nothing at
+        // waiting on it, and starting the shared ExoPlayer behind nothing at
         // all would be sound from nowhere.
         if (!driver.hasHost()) return
         val anchor = groupPlayingAnchor ?: return
@@ -351,8 +346,7 @@ internal class SyncPlayRecoveryNets(
          * whose instant has, in the "client got lost" re-send, usually already passed — the
          * scheduler applies those immediately. Two seconds is generous for that on a tablet with
          * a busy main thread, and it is the whole of what the two-stage shape costs when the
-         * server does not answer: the local fallback that used to fire at three seconds now
-         * fires at five.
+         * server does not answer: the local fallback fires at five seconds rather than three.
          */
         const val COMMAND_REPEAT_TIMEOUT_MS = 2_000L
     }

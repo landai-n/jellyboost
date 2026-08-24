@@ -26,11 +26,11 @@ import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.core.ui.theme.cardShadow
 
 /**
- * A 1:1, circularly-clipped artist card (M13 Phase 2, docs/notes/music-m13-plan.md).
+ * A 1:1, circularly-clipped artist card.
  *
  * Deliberately lighter than [AlbumCard]/[PosterCard]: an artist has no resume progress, no watched
  * state and today no [dev.jellyboost.core.common.model.DownloadState] of its own (artist rows are
- * upserted as download *parents* in M13 Phase 5, but that never drives a badge here — see the
+ * upserted as download *parents*, but that never drives a badge here — see the
  * download-badge KDoc on [MediaCardArtwork]), so there is nothing for [MediaCardArtwork]'s overlay
  * stack to draw. The name sits centred underneath rather than left-aligned, matching a circular
  * portrait rather than a rectangular poster.

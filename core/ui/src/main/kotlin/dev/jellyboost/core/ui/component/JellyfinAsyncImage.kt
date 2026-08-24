@@ -33,8 +33,7 @@ private val PlaceholderGlyphTint = Color.White.copy(alpha = 0.35f)
  * Every remote image in the app goes through this composable.
  *
  * It takes an already-built URL string: assembling image URLs (server base URL, image tags,
- * requested size) is the data layer's job, so `:core:ui` stays free of any Jellyfin API knowledge
- * (docs/PLAN.md, ":core:ui").
+ * requested size) is the data layer's job, so `:core:ui` stays free of any Jellyfin API knowledge.
  *
  * When [url] is `null` or blank — the server has no artwork for the item — a gradient placeholder
  * with [placeholderIcon] is drawn instead, so rows never collapse into empty holes.
@@ -61,9 +60,8 @@ fun JellyfinAsyncImage(
             modifier
                 .background(JellyfinGradients.ImagePlaceholder)
                 // The label belongs to the *slot*, not to the bitmap that may or may not fill it:
-                // an item with no artwork used to be an unlabelled box, so anywhere no text follows
-                // the image — a cast rail, a queue row — the person simply was not there
-                // (accessibility audit 2026-08-05, M2).
+                // without it, anywhere no text follows the image — a cast rail, a queue row — the
+                // person would simply not be there.
                 .then(
                     if (url.isNullOrBlank() && contentDescription != null) {
                         Modifier.semantics { this.contentDescription = contentDescription }

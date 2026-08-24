@@ -44,13 +44,13 @@ import java.util.TimeZone
 import java.util.UUID
 
 /**
- * The most-recent-wins decision matrix (docs/PLAN.md, "Confirmed decisions": *"User-data sync
- * conflict: most-recent-wins — compare `lastPlayedDate` before pushing; keep newer position"*).
+ * The most-recent-wins decision matrix: compare `lastPlayedDate` before pushing, keep the newer
+ * position.
  *
- * This is the densest logic in M8 and the one the milestone's definition of done runs through:
- * an airplane-mode session leaves a pending row, and what happens to it on reconnect is decided
- * here. Every branch — local newer, server newer, a tie, no server date, no server user data at
- * all, transport failure, a deleted item, and a batch where only some rows fail — has its own test.
+ * This is the densest logic in this class and the one most worth getting right: an airplane-mode
+ * session leaves a pending row, and what happens to it on reconnect is decided here. Every
+ * branch — local newer, server newer, a tie, no server date, no server user data at all,
+ * transport failure, a deleted item, and a batch where only some rows fail — has its own test.
  *
  * The test zone is deliberately non-UTC, exactly as in [UserDataRepositoryImplTest]: the SDK's
  * `LocalDateTime` fields are serialised through `ZoneId.systemDefault()`, so a comparison that
@@ -191,7 +191,7 @@ class UserDataSyncerTest {
     @Test
     fun `the pushed played date resolves back to the instant that was stored`() =
         runTest {
-            // Regression guard for the M4/M6 timezone bug: the SDK stamps the device's offset onto
+            // Regression guard for the timezone bug: the SDK stamps the device's offset onto
             // whatever wall-clock time it is given.
             pending(row(played = true, lastPlayedDate = now))
             serverUserData(lastPlayedDate = null)

@@ -77,7 +77,7 @@ class MusicPlaybackViewModel
         }
 
         /**
-         * Resumes [item] from its saved position — Home's *Continue Listening* row (M13 Phase 4).
+         * Resumes [item] from its saved position — Home's *Continue Listening* row.
          *
          * A single-item queue, exactly like tapping any other track, except started at
          * [dev.jellyboost.core.common.model.UserData.playbackPositionTicks] rather than from zero.
@@ -113,7 +113,7 @@ class MusicPlaybackViewModel
         fun stop() = controller.stop()
 
         /**
-         * A downloaded track tapped on the Downloads screen (M13).
+         * A downloaded track tapped on the Downloads screen.
          *
          * Audio must not ride the Downloads tab's video path — `Routes.Player` is the immersive
          * video screen, which would fail on an audio file and bypass the music queue entirely.
@@ -147,7 +147,7 @@ class MusicPlaybackViewModel
 
         /**
          * "Start radio" — `AlbumDetailScreen`'s header action, `ArtistDetailScreen`'s, and
-         * `NowPlayingScreen`'s (M13 Phase 6, docs/notes/music-m13-plan.md, key decision 11).
+         * `NowPlayingScreen`'s.
          *
          * Fetches the server's Instant Mix seeded from [item] and hands it straight to the queue,
          * exactly like [play] but resolved from one seed item rather than a caller-supplied list. A

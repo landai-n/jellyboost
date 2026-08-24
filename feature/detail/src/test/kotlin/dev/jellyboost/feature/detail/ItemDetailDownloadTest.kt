@@ -16,17 +16,16 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 /**
- * The M7 Download button — solo items, containers (a season or series expanding into episode
+ * The Download button — solo items, containers (a season or series expanding into episode
  * downloads), and the on-device footprint the metadata line reads once a download finishes.
  *
  * Its own class rather than more of [ItemDetailViewModelTest], which is at detekt's `LargeClass`
  * ceiling — the same split [ItemDetailGroupActionsTest] and [ItemDetailSelectionTest] already make
  * for SyncPlay and batch selection.
  *
- * This file is [DetailDownloadsDelegate]'s coverage since the CPX-10 split, and it is deliberately
- * still driven through [ItemDetailViewModel]: the delegate writes into the ViewModel's own state
- * and the screen only ever sees the ViewModel, so the boundary worth holding still is the one these
- * tests already exercise. Not one of them changed when the implementation moved, which is the point.
+ * This file is [DetailDownloadsDelegate]'s coverage, and it is deliberately driven through
+ * [ItemDetailViewModel]: the delegate writes into the ViewModel's own state and the screen only
+ * ever sees the ViewModel, so the boundary worth holding still is the one these tests exercise.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class ItemDetailDownloadTest : ItemDetailViewModelFixture() {
@@ -35,7 +34,7 @@ internal class ItemDetailDownloadTest : ItemDetailViewModelFixture() {
         coEvery { repository.getEpisodes(any(), any()) } returns AppResult.Success(emptyList())
     }
 
-    // ---- M7: the Download button ----------------------------------------------------------------
+    // ---- the Download button ---------------------------------------------------------------------
 
     @Test
     fun `download enqueues an item that is not on the device`() =
@@ -65,7 +64,7 @@ internal class ItemDetailDownloadTest : ItemDetailViewModelFixture() {
             advanceUntilIdle()
 
             // A tap that would remove something already on the device is destructive enough to
-            // confirm first (docs/POLISH.md) — nothing is deleted until the dialog is confirmed.
+            // confirm first — nothing is deleted until the dialog is confirmed.
             model.uiState.value.showDeleteConfirmation shouldBe true
             coVerify(exactly = 0) { downloads.deleteAll(any()) }
             coVerify(exactly = 0) { downloads.enqueue(any()) }
@@ -224,14 +223,13 @@ internal class ItemDetailDownloadTest : ItemDetailViewModelFixture() {
             model.uiState.value.downloadedBytes shouldBe 123_456L
         }
 
-    // ---- the Download button on a container (docs/POLISH.md: downloading a season failed) --------
+    // ---- the Download button on a container ------------------------------------------------------
 
     @Test
     fun `a season's download button reads its episodes, not a row of its own`() =
         runTest(dispatcher) {
             // A season has no download row — the pipeline expands it into episode downloads — so
-            // "is this season downloaded" is a question about its episodes (DECISIONS.md,
-            // 2026-07-29).
+            // "is this season downloaded" is a question about its episodes.
             givenSeasonWithEpisodes()
             downloadStates.value =
                 mapOf(EPISODE_1 to DownloadState.Downloaded, EPISODE_2 to DownloadState.Downloaded)
@@ -317,7 +315,7 @@ internal class ItemDetailDownloadTest : ItemDetailViewModelFixture() {
             advanceUntilIdle()
 
             // One batch call for the whole season, and the season's own id is not in it: it
-            // never had a row, and deleting it would be a no-op round trip (audit CORR-3).
+            // never had a row, and deleting it would be a no-op round trip.
             coVerify(exactly = 1) { downloads.deleteAll(listOf(EPISODE_1, EPISODE_2)) }
             coVerify(exactly = 1) { downloads.deleteAll(any()) }
             model.uiState.value.userMessage shouldBe UserMessage.DownloadDeleted
@@ -344,8 +342,8 @@ internal class ItemDetailDownloadTest : ItemDetailViewModelFixture() {
     @Test
     fun `cancelling a partly-finished season keeps the episodes that already downloaded`() =
         runTest(dispatcher) {
-            // The bug this covers: Cancel used to run the same delete as Remove and take the
-            // finished episodes with it (DECISIONS.md, 2026-07-29).
+            // Cancel must not run the same delete as Remove and take the finished episodes
+            // with it.
             givenSeasonWithEpisodes()
             downloadStates.value =
                 mapOf(
@@ -369,7 +367,7 @@ internal class ItemDetailDownloadTest : ItemDetailViewModelFixture() {
         runTest(dispatcher) {
             // Each single delete stops the download worker and starts it again, and every restart
             // hands the queue the next doomed episode — a server transcode begun for an item the
-            // next iteration cancels. One call, one stop, one restart (audit CORR-3, STAB-09).
+            // next iteration cancels. One call, one stop, one restart.
             givenSeasonWithEpisodes()
             downloadStates.value =
                 mapOf(EPISODE_1 to DownloadState.Queued, EPISODE_2 to DownloadState.Queued)

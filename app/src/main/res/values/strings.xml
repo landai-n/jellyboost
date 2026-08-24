@@ -11,30 +11,30 @@
     <string name="state_on">On</string>
     <string name="state_off">Off</string>
 
-    <!-- Bottom navigation bar (M3/M4 integration) -->
+    <!-- Bottom navigation bar -->
     <string name="nav_home">Home</string>
     <string name="nav_libraries">Libraries</string>
     <string name="nav_search">Search</string>
     <string name="nav_downloads">Downloads</string>
 
-    <!-- Offline banner (M6) -->
+    <!-- Offline banner -->
     <string name="offline_no_network">No network — showing downloaded media</string>
     <string name="offline_server_unreachable">Can\'t reach the server — showing downloaded media</string>
     <string name="offline_forced">Offline mode is on — showing downloaded media</string>
     <string name="offline_go_online">Go online</string>
 
-    <!-- Home top-bar SyncPlay action (M11 Phase 5) -->
+    <!-- Home top-bar SyncPlay action -->
     <string name="syncplay_groups_action">SyncPlay groups</string>
     <string name="syncplay_groups_action_active">SyncPlay groups — you\'re in a group</string>
 
-    <!-- Music queue notices (M13 Phase 3), shown in the app chrome's snackbar. -->
+    <!-- Music queue notices, shown in the app chrome's snackbar. -->
     <string name="music_refused_in_group">Leave the SyncPlay group to play music on this device.</string>
     <string name="music_track_unavailable">Couldn\'t play “%1$s” — it was skipped.</string>
     <string name="music_queue_unavailable">Couldn\'t play any of those tracks.</string>
     <string name="music_playback_failed">Playback failed for “%1$s”.</string>
     <string name="music_radio_failed">Couldn\'t start radio from “%1$s”.</string>
 
-    <!-- MiniPlayer (M13 Phase 4) -->
+    <!-- MiniPlayer -->
     <string name="mini_player_play">Play</string>
     <string name="mini_player_pause">Pause</string>
     <string name="mini_player_next">Next</string>

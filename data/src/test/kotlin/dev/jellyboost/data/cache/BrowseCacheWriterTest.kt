@@ -60,14 +60,14 @@ import java.util.UUID
  * must replace it, so a row an older build gutted can be repaired). Both directions are pinned
  * below, because getting either one wrong leaves a downloaded film with a blank detail page.
  *
- * **A server read refreshes `user_data`, unless the row is pending.** Getting *that* wrong is the
- * corruption bug in STATUS.md: a local row that never learns about a change made from another
- * client is pushed straight back to the server by the next `setPosition`.
+ * **A server read refreshes `user_data`, unless the row is pending.** Getting *that* wrong causes
+ * real corruption: a local row that never learns about a change made from another client would be
+ * pushed straight back to the server by the next `setPosition`.
  *
  * **And the merge decides on a snapshot it holds.** The rule above is only as good as the read it
  * decides from: `DownloadEnqueuer` upserts `DOWNLOAD` rows straight to the same DAO, so a merge that
  * reads, thinks and writes as three separate statements can be overtaken between the first and the
- * last and downgrade the row it just protected (audit HYG-3). The transaction is pinned below.
+ * last and downgrade the row it just protected. The transaction is pinned below.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class BrowseCacheWriterTest {
@@ -228,9 +228,9 @@ class BrowseCacheWriterTest {
     @Test
     fun `a full detail read repairs a downloaded item whose blob an older build gutted`() =
         runTest {
-            // The state the device walk found: a pre-fix build wrote a lean list DTO over the rich
-            // blob, and every later browse write preserved *that*, so the offline detail page was
-            // bare forever. Opening the item online has to be able to undo it.
+            // The failure mode this repairs: a lean list write over the rich blob would leave every
+            // later browse write preserving *that*, so the offline detail page would stay bare
+            // forever. Opening the item online has to be able to undo it.
             val gutted =
                 entity(
                     BaseItemDto(id = uuid(1), type = BaseItemKind.MOVIE, name = "Arrival"),
@@ -279,12 +279,12 @@ class BrowseCacheWriterTest {
                 listOf(ItemSource.BROWSE_CACHE, ItemSource.DOWNLOAD, ItemSource.BROWSE_CACHE)
         }
 
-    // ---- the merge is atomic (audit HYG-3) ------------------------------------------------------
+    // ---- the merge is atomic ------------------------------------------------------------------
 
     /**
-     * The regression test for the downgrade race. Before the fix these three statements were three
-     * separate transactions, and `DownloadEnqueuer.write` — which upserts `DOWNLOAD` rows straight
-     * to this same DAO — could commit between the first and the last.
+     * The regression test for the downgrade race: without one transaction, these three statements
+     * would be three separate ones, and `DownloadEnqueuer.write` — which upserts `DOWNLOAD` rows
+     * straight to this same DAO — could commit between the first and the last.
      */
     @Test
     fun `the source snapshot, the blob read and the upsert all happen in one transaction`() =
@@ -346,7 +346,7 @@ class BrowseCacheWriterTest {
     @Test
     fun `a stale synced row is refreshed from what the server just said`() =
         runTest {
-            // The exact STATUS.md repro: the row says watched, the server says it is not.
+            // The row says watched, the server says it is not.
             coEvery { userDataDao.getPendingSyncIds(any(), any()) } returns emptyList()
 
             writer().writeItems(
@@ -370,7 +370,8 @@ class BrowseCacheWriterTest {
             )
 
             // The pending row is the only copy of a change the server has not accepted; adopting the
-            // server's older value here would silently discard it. Reconciling the two is M8's job.
+            // server's older value here would silently discard it. Reconciling the two is the sync
+            // worker's job.
             coVerify(exactly = 0) { userDataDao.upsertAll(any()) }
         }
 
@@ -444,10 +445,10 @@ class BrowseCacheWriterTest {
     @Test
     fun `the pending filter and the user-data write happen in one transaction`() =
         runTest {
-            // Audit CORR-5. These two used to sit outside the transaction the item merge got: a
-            // local write landing between them sets `toBeSynced = true` and is then overwritten
-            // flag and all by `upsertAll`, so the sync worker never sees it — and if that write's
-            // own push failed, which is the case the flag exists for, the user's change is gone.
+            // Without one transaction: a local write landing between them sets `toBeSynced = true`
+            // and is then overwritten flag and all by `upsertAll`, so the sync worker never sees
+            // it — and if that write's own push failed, which is the case the flag exists for, the
+            // user's change is gone.
             val depths = mutableListOf<Int>()
             coEvery { userDataDao.getPendingSyncIds(any(), any()) } answers {
                 depths += transactionRunner.depth
@@ -533,7 +534,7 @@ class BrowseCacheWriterTest {
     /**
      * A cancellation is not a failed write: these guards run on the never-cancelled application
      * scope today, but swallowing one turns any future structured cancellation of this writer into
-     * a silent no-op that logs a warning and reports success (audit STAB-06).
+     * a silent no-op that logs a warning and reports success.
      */
     @Test
     fun `a cancelled item write propagates instead of being logged as a failure`() =
@@ -577,7 +578,7 @@ class BrowseCacheWriterTest {
             writer().writeViews(
                 listOf(
                     library(MOVIES_LIBRARY, "Films", CollectionType.MOVIES),
-                    // Still outside app scope — unlike music (M13 Phase 2), photos never joined
+                    // Still outside app scope — unlike music, photos are not part of
                     // `CollectionKind.SUPPORTED`.
                     library(uuid(50), "Photos", CollectionType.PHOTOS),
                     library(uuid(51), "Séries", CollectionType.TVSHOWS),
@@ -613,7 +614,7 @@ class BrowseCacheWriterTest {
     @Test
     fun `never wipes the cached libraries when nothing supported came back`() =
         runTest {
-            // Photos — never joined `CollectionKind.SUPPORTED` (unlike music, M13 Phase 2).
+            // Photos — not part of `CollectionKind.SUPPORTED` (unlike music).
             writer().writeViews(listOf(library(uuid(50), "Photos", CollectionType.PHOTOS)))
 
             coVerify(exactly = 0) { libraryViewDao.deleteExcept(any()) }

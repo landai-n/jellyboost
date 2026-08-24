@@ -43,10 +43,10 @@ private val EyebrowDotSize = 6.dp
  * "See all" action, above a `LazyRow` of cards.
  *
  * Rendering nothing when [items] is empty is intentional — jellyfin-web hides empty rows rather
- * than showing an empty shelf, and matching that is part of the M2 side-by-side check.
+ * than showing an empty shelf, and this matches that behaviour.
  *
  * @param key stable identity per item so the row survives recomposition and in-place user-data
- *   patches (the `UserDataEventBus` pattern from docs/PLAN.md).
+ *   patches (the `UserDataEventBus` pattern).
  * @param eyebrow optional tracked-out caption above the title, preceded by an accent dot. Callers
  *   uppercase the text — the style tracks letters out but does not transform them, so a locale
  *   whose script has no case is unaffected.
@@ -92,8 +92,8 @@ fun <T> MediaRow(
                 overflow = TextOverflow.Ellipsis,
                 // A section title is a heading, which is what makes TalkBack's heading-jump work:
                 // without it, reaching the fourth row of the home screen means swiping through
-                // three rows of cards (accessibility audit 2026-08-05, M9/A11Y-10). The full title
-                // is also spoken, whatever the visible line had room for.
+                // three rows of cards. The full title is also spoken, whatever the visible line
+                // had room for.
                 modifier =
                     Modifier.weight(1f, fill = false).semantics {
                         heading()
@@ -111,7 +111,7 @@ fun <T> MediaRow(
                             contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                         ),
                     // Every row carries one of these, so a screen of them was a list of identical
-                    // "See all" stops with nothing saying all of *what* (audit A11Y-11).
+                    // "See all" stops with nothing saying all of *what*.
                     modifier = Modifier.semantics { contentDescription = seeAllDescription },
                 ) {
                     Text(text = stringResource(R.string.media_row_see_all), style = JellyfinTypeExtras.SeeAll)

@@ -27,13 +27,13 @@ import javax.inject.Inject
 
 /**
  * State holder for [MusicLibraryScreen] — Albums, Artists and Playlists, each its own paged grid
- * over [JellyfinRepository.getItemsPaged] (M13 Phase 2, docs/notes/music-m13-plan.md).
+ * over [JellyfinRepository.getItemsPaged].
  *
  * **Artists** ask `getItemsPaged` for [ItemType.MUSIC_ARTIST] scoped to this library, the same
  * shape the Albums tab uses. Jellyfin normally serves artists through a dedicated `/Artists`
  * endpoint (`ArtistsApi`), but a plain `getItems(types=[MUSIC_ARTIST], recursive=true,
  * parentId=libraryId)` also answers correctly on the dev server (10.11) — verified against the
- * SDK's request shape in Phase 2; a live-server check is still owed (see the milestone's device DoD).
+ * SDK's request shape; a live-server check is still owed.
  * Reusing `getItemsPaged` keeps one query mechanism for all three tabs rather than a fourth
  * repository member for a single screen.
  *
@@ -42,7 +42,7 @@ import javax.inject.Inject
  * per-user) "Playlists" root instead — so scoping the query to `libraryId` the way Albums/Artists
  * do would ask the wrong folder and come back empty. `getItems(types=[PLAYLIST], recursive=true)`
  * with no `parentId` searches the whole tree instead, which is the defensible query without a live
- * server to confirm against (flagged for device verification in the milestone DoD).
+ * server to confirm against; device verification is still owed.
  */
 @HiltViewModel
 class MusicLibraryViewModel
@@ -117,7 +117,7 @@ class MusicLibraryViewModel
                 downloads
                     .observeStates()
                     // Degrade to no badges rather than freezing them — see
-                    // `HomeViewModel.observeDownloadStates` (audit STAB-10).
+                    // `HomeViewModel.observeDownloadStates`.
                     .catch { error ->
                         Timber.w(error, "The download-state flow failed; clearing the music library badges")
                         emit(emptyMap())

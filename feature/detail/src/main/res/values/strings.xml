@@ -79,7 +79,7 @@
     </plurals>
     <string name="detail_message_user_data_failed">Couldn\'t save that. Try again.</string>
 
-    <!-- M11 SyncPlay: what this page can ask the active group to do. In a group the Play / Resume
+    <!-- SyncPlay: what this page can ask the active group to do. In a group the Play / Resume
          button is the group's play, so it takes the first two labels. -->
     <string name="detail_group_play">Play for %1$s</string>
     <string name="detail_group_resume">Resume for %1$s</string>
@@ -96,7 +96,7 @@
 
     <!--
       The screen-specific half of the shared failure copy (`AppError.toUiText`); see
-      `:core:ui`'s error strings. Only this screen can name what failed to load. (audit H8)
+      `:core:ui`'s error strings. Only this screen can name what failed to load.
     -->
     <string name="detail_error_unknown">Something went wrong loading this item.</string>
 </resources>

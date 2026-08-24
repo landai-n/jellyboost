@@ -16,11 +16,10 @@ import org.jellyfin.sdk.model.api.SortOrder as SdkSortOrder
  * Translates the domain [ItemQuery] into the SDK's `getItems` parameters.
  *
  * Kept out of the repository so the exact wire shape of a library/search request is unit-testable
- * on its own: the M3 definition of done ("one request per page") is as much about *what* is asked
- * for as about how often.
+ * on its own: one request per page is as much about *what* is asked for as about how often.
  *
  * The request stays deliberately lean — the same card-sized field set the home rows use. Full
- * field sets belong to the detail and playback paths (docs/PLAN.md, "Screens" → ItemDetail).
+ * field sets belong to the detail and playback paths.
  *
  * @param fields extra `ItemFields` the cards need (`PRIMARY_IMAGE_ASPECT_RATIO`).
  * @param imageTypes artwork kinds worth asking the server to resolve.
@@ -50,7 +49,7 @@ internal fun ItemQuery.toGetItemsRequest(
         // Off unless the caller explicitly asked: placeholders are off in the grid's PagingConfig,
         // so nothing on screen needs a per-page total — and computing it costs the server an extra
         // COUNT on every single page. The library grid's *first* page opts in, for the "N items"
-        // line in its header (DECISIONS.md 2026-08-01).
+        // line in its header.
         enableTotalRecordCount = includeTotalCount,
     )
 

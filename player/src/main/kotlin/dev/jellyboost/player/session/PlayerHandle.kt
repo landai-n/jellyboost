@@ -94,9 +94,8 @@ internal interface PlayerHandle {
      * Sets the playback rate, where `1f` is normal speed.
      *
      * Session-scoped by design and not persisted, matching jellyfin-web: a speed the user set for
-     * one lecture should not silently follow them into the next film (docs/PLAN.md, "M9 Polish" →
-     * speed). It therefore has to be re-applied after every re-resolve, since a re-negotiation
-     * builds a fresh media item.
+     * one lecture should not silently follow them into the next film. It therefore has to be
+     * re-applied after every re-resolve, since a re-negotiation builds a fresh media item.
      */
     fun setPlaybackSpeed(speed: Float)
 
@@ -106,8 +105,7 @@ internal interface PlayerHandle {
      * `true` for anything decoding on this device — ExoPlayer always has a rate — which is why the
      * default is the answer every implementation but one wants. A Cast receiver is the exception:
      * the rate is a *receiver* capability, published per session, and the player screen hides the
-     * speed picker rather than offering rows that are silently dropped
-     * (docs/notes/chromecast-m12-plan.md, decision 7).
+     * speed picker rather than offering rows that are silently dropped.
      *
      * Read rather than remembered: while casting the answer belongs to whatever is on the other end
      * of the network, and it is only knowable once that receiver has something loaded.
@@ -151,7 +149,7 @@ internal sealed interface PlayerEvent {
      * The decoded video size became known or changed.
      *
      * Picture-in-picture needs it: the floating window is created with the video's aspect ratio, and
-     * the only party that knows it is the decoder (docs/PLAN.md, "M9 Polish" → PiP).
+     * the only party that knows it is the decoder.
      */
     data class VideoSizeChanged(
         val width: Int,

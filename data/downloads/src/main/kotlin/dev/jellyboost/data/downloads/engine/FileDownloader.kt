@@ -93,10 +93,10 @@ internal fun interface MediaChunkSink {
  * A **transcode** is not a file; it is an encode the server runs while it answers. A second run
  * produces different bytes at the same offset, so appending its body to the first run's prefix
  * splices two encodes into one container: a file that still opens, still has `Cues` ending exactly
- * at its last byte, and would earn a `SeekHead` pointing into the middle of the wrong encode
- * (docs/notes/audit-2026-07.md, MKV-10). The server usually says so itself by ignoring `Range` and
- * answering `200` — but that is the server being careful, not this client. So a transcoded
- * download never asks to resume: see [download]'s `transcoded` parameter.
+ * at its last byte, and would earn a `SeekHead` pointing into the middle of the wrong encode. The
+ * server usually says so itself by ignoring `Range` and answering `200` — but that is the server
+ * being careful, not this client. So a transcoded download never asks to resume: see [download]'s
+ * `transcoded` parameter.
  *
  * ### Cancellation
  * Cancelling the coroutine cancels the OkHttp call and stops the write loop, leaving the partial
@@ -105,7 +105,7 @@ internal fun interface MediaChunkSink {
  * The call is cancelled during the **body** as well as while awaiting the headers: the copy loop's
  * blocking `read` cannot be reached by coroutine cancellation on its own, so a watcher coroutine
  * holds the [Call] and cancels it the moment the download's job is — which fails the blocked read
- * immediately instead of waiting out the socket (audit DL-01).
+ * immediately instead of waiting out the socket.
  */
 @Singleton
 internal class FileDownloader
@@ -123,8 +123,7 @@ internal class FileDownloader
          * @param transcoded whether [url] is a live transcode rather than a file the server already
          *   holds. One is un-resumable by nature, so no `Range` is asked for and a `206` answered
          *   anyway is treated exactly like a `200`: truncate and start over. Half of a discarded
-         *   encode costs bandwidth; splicing two encodes together costs the download
-         *   (docs/notes/audit-2026-07.md, MKV-10).
+         *   encode costs bandwidth; splicing two encodes together costs the download.
          * @return the total number of bytes the file holds once this call returns.
          * @throws IOException on any transport or HTTP failure the caller should treat as a
          *   download failure.
@@ -148,8 +147,8 @@ internal class FileDownloader
                 // `use` outside `cancellingCall`, not inside it: `cancellingCall` opens a
                 // `coroutineScope`, and a scope entered in an already-cancelled coroutine throws
                 // before it ever runs the block. With the `use` inside, a pause or a delete landing
-                // in that hairline window left the response — and the connection under it — open
-                // for the pool to discover later (audit 2026-08-08, CORR-7). Out here the response
+                // in that hairline window would leave the response — and the connection under it
+                // — open for the pool to discover later. Out here the response
                 // is closed on every path, cancellation included, and there is no suspension point
                 // between the two lines for a cancellation to arrive at.
                 response.use {
@@ -209,7 +208,7 @@ internal class FileDownloader
          * The `await()` continuation's own `invokeOnCancellation` has already resumed by the time
          * the body is being read, so without this nothing holds the call during `writeBody` — a
          * pause, a stop or a delete could only wait for the socket to fail on its own, which a
-         * half-open connection never does (audit DL-01). The blocked `read` then throws an
+         * half-open connection never does. The blocked `read` then throws an
          * `IOException` that [copy] converts back into the cancellation it really is.
          */
         private suspend fun <T> cancellingCall(
@@ -277,15 +276,15 @@ internal class FileDownloader
          * ### The buffer is *filled* before it is written
          * OkHttp's stream hands back one okio segment — 8 KB — per read however large the array
          * offered is, and [RandomAccessFile] is unbuffered: every `write` is a `pwrite` syscall.
-         * Writing each read straight through therefore turned the plan's one 64 KB write into
-         * eight 8 KB ones, ~15,300 syscalls a second on a gigabit LAN, for a loop whose whole job
-         * is to move bytes (audit 2026-08-08, PERF-12). Reads accumulate into the array until it is
-         * full, and the write, the tap and the progress callback all happen once per full buffer.
+         * Writing each read straight through would therefore turn one 64 KB write into eight 8 KB
+         * ones, ~15,300 syscalls a second on a gigabit LAN, for a loop whose whole job is to move
+         * bytes. Reads accumulate into the array until it is full, and the write, the tap and the
+         * progress callback all happen once per full buffer.
          *
-         * The cadence is unchanged by construction: the callback used to fire when *accumulated
-         * reads* reached [BUFFER_BYTES], which with 8 KB segments is exactly when the array would
-         * have filled. Cancellation granularity is unchanged too — [coroutineContext.ensureActive]
-         * is still checked once per read, not once per write.
+         * That is the same cadence as a callback firing when *accumulated reads* reach
+         * [BUFFER_BYTES], which with 8 KB segments is exactly when the array fills. Cancellation
+         * granularity is per read as well — [coroutineContext.ensureActive] is checked once per
+         * read, not once per write.
          */
         @Suppress("LongParameterList")
         private suspend fun copy(

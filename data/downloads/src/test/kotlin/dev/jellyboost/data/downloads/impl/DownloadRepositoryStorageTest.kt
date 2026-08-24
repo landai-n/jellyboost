@@ -45,7 +45,7 @@ import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * The storage half of [DownloadRepositoryImpl]: volume selection, and what the storage walk is
- * keyed on (audit PERF-02).
+ * keyed on.
  *
  * Split from [DownloadRepositoryImplTest] purely for size — the fixture is the same shape; the
  * subject is the same class.
@@ -126,7 +126,7 @@ class DownloadRepositoryStorageTest {
     @Test
     fun `switching volume while downloads exist is refused unless the caller agrees to lose them`() =
         runTest {
-            // docs/PLAN.md's v1 policy: nothing moves files yet, and a finished download's file
+            // The policy: nothing moves files yet, and a finished download's file
             // rows hold absolute paths on the old volume that nothing rewrites.
             coEvery { downloadDao.allItemIds() } returns listOf(uuid(1))
 
@@ -207,7 +207,7 @@ class DownloadRepositoryStorageTest {
     fun `progress writes alone do not re-walk the downloads tree`() =
         runTest {
             // `usedBytes()` is a stat() of every file under the root; a transfer writes progress
-            // twice a second for its whole length, and keying the walk on that was PERF-02.
+            // twice a second for its whole length, so the walk must not be keyed on it.
             val rows = MutableStateFlow(listOf(progress(uuid(1), DownloadStatus.DOWNLOADING)))
             every { downloadDao.observeProgress() } returns rows
             var walks = 0
@@ -306,13 +306,13 @@ class DownloadRepositoryStorageTest {
             }
         }
 
-    // ---- what observeStorageLocations is keyed on (audit PERF-13) ---------------------------------
+    // ---- what observeStorageLocations is keyed on -------------------------------------------------
 
     @Test
     fun `progress writes alone do not re-resolve the storage locations`() =
         runTest {
-            // `locations.resolve()` re-scans the mounted volumes; it used to be keyed on raw
-            // `observeProgress()`, the same 2/s hot path PERF-02 moved the storage walk off of.
+            // `locations.resolve()` re-scans the mounted volumes, so it must not be keyed on raw
+            // `observeProgress()` — the same 2/s hot path the storage walk stays off.
             // Only the download *count* is read here, and that does not move on a byte-count tick.
             val rows = MutableStateFlow(listOf(progress(uuid(1), DownloadStatus.DOWNLOADING)))
             every { downloadDao.observeProgress() } returns rows
@@ -382,8 +382,8 @@ class DownloadRepositoryStorageTest {
     // The dispatcher is a parameter only so the storage-location tests can share `runTest`'s
     // scheduler: they collect a projection that never completes, which needs the two in step.
     //
-    // `TestScope.repository`: `observeStates()` shares a `stateIn` over `@ApplicationScope`
-    // (PERF-07), and `backgroundScope` is `runTest`'s stand-in for it — none of these tests collect
+    // `TestScope.repository`: `observeStates()` shares a `stateIn` over `@ApplicationScope`, and
+    // `backgroundScope` is `runTest`'s stand-in for it — none of these tests collect
     // `observeStates()`, but the constructor still needs a real `CoroutineScope` to hand it. The
     // default dispatcher ties to the same `testScheduler` `backgroundScope` uses, matching every
     // explicit `UnconfinedTestDispatcher(testScheduler)` below — coroutines-test throws the moment

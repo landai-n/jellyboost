@@ -12,10 +12,9 @@ import org.jellyfin.sdk.model.api.UpdateUserItemDataDto
  * The wire half of user-data writes: the three requests a `user_data` row can be asserted with, and
  * the order they have to go in.
  *
- * Both writers used to spell these out for themselves — `UserDataRepositoryImpl` one endpoint per
- * operation, `UserDataSyncer` all three in sequence — which is how the **one rule that is not
- * obvious** came to be written down in exactly one of them (audit 2026-08-08, DUP-5). It is stated
- * here now, once:
+ * Both `UserDataRepositoryImpl` (one endpoint per operation) and `UserDataSyncer` (all three in
+ * sequence) need these calls, so the **one rule that is not obvious** is stated here once, for
+ * both:
  *
  * > `markPlayedItem` **clears the server's resume position**. Anything asserting a position
  * > alongside a played state must therefore send the position *after* it, never before.
@@ -23,12 +22,11 @@ import org.jellyfin.sdk.model.api.UpdateUserItemDataDto
  * ### Which caller sends what, and why that is not a third spelling
  * - [pushUserData] asserts the **whole row** through all three requests, in that order. It is what
  *   `UserDataSyncer` uses, because a pending row may hold several operations batched by an offline
- *   session and the worker cannot know which produced it (DECISIONS.md, 2026-07-29).
+ *   session and the worker cannot know which produced it.
  * - A single operation the app *did* originate sends only its own request:
  *   [pushPlayedState] for `setPlayed`, [pushFavoriteState] for `setFavorite`, [pushFullState] for
  *   `setPosition`. The dedicated played/favourite endpoints carry server-side side effects (the
- *   play count) that the merge endpoint does not, which is why they exist at all
- *   (DECISIONS.md, 2026-07-28).
+ *   play count) that the merge endpoint does not, which is why they exist at all.
  *
  * `setPlayed` therefore does not re-assert the position — and does not need to. Its local edit
  * mirrors the server's clearing (`playbackPositionTicks = 0` when played), so the two agree without
@@ -71,7 +69,7 @@ internal suspend fun ApiClient.pushFavoriteState(row: UserDataEntity) {
  * Asserts the item's **full** desired state through `updateItemUserData`.
  *
  * The whole state rather than the one field that changed: the endpoint merges what it is given, so
- * a partial DTO would risk resetting the rest (DECISIONS.md, 2026-07-28).
+ * a partial DTO would risk resetting the rest.
  */
 internal suspend fun ApiClient.pushFullState(row: UserDataEntity) {
     itemsApi.updateItemUserData(

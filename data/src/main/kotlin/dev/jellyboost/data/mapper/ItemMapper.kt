@@ -23,10 +23,10 @@ import org.jellyfin.sdk.model.api.PersonKind as SdkPersonKind
 /**
  * Turns the SDK's `BaseItemDto` into the domain models the rest of the app uses.
  *
- * This is the boundary the plan's hard rule protects: nothing downstream of the repositories ever
- * sees a DTO (docs/PLAN.md, "Data layer"). Image URLs are resolved here, following the same
- * artwork fallback chain jellyfin-web uses (own image → series image → parent image), so rows do
- * not degrade into placeholders for episodes that carry no artwork of their own.
+ * This is the boundary that keeps a DTO from ever crossing downstream of the repositories. Image
+ * URLs are resolved here, following the same artwork fallback chain jellyfin-web uses (own image →
+ * series image → parent image), so rows do not degrade into placeholders for episodes that carry
+ * no artwork of their own.
  *
  * @param widths the pixel widths artwork is requested at, resolved from the device's display
  *   density. Defaulted so unit tests can build a mapper without a display; Hilt always supplies the
@@ -63,7 +63,7 @@ internal class ItemMapper
                 thumbImageUrl = dto.thumbImageUrl(),
                 logoImageUrl = dto.logoImageUrl(),
                 primaryImageAspectRatio = dto.primaryImageAspectRatio,
-                // Detail-only fields (M4). A lean list request leaves them null/empty, which maps
+                // Detail-only fields. A lean list request leaves them null/empty, which maps
                 // straight onto the domain defaults — no branching needed here.
                 taglines = dto.taglines.orEmpty(),
                 childCount = dto.childCount,
@@ -72,14 +72,14 @@ internal class ItemMapper
                 people = dto.people.orEmpty().map { it.toDomain() },
                 sizeBytes = dto.mediaSources?.firstOrNull()?.size,
                 userData = dto.userData.toDomain(),
-                // Music fields (M13). A non-music item simply carries none of these on its DTO,
+                // Music fields. A non-music item simply carries none of these on its DTO,
                 // which maps straight onto the domain defaults.
                 album = dto.album,
                 albumId = dto.albumId?.toString(),
                 albumArtist = dto.albumArtists?.firstOrNull()?.name,
                 artists = dto.artists.orEmpty(),
                 // A track's own `artistItems` first; an album has none of its own, so it falls
-                // back to its `albumArtists` (docs/notes/music-m13-plan.md, decision 5).
+                // back to its `albumArtists`.
                 artistRefs = (dto.artistItems?.takeIf { it.isNotEmpty() } ?: dto.albumArtists).toArtistRefs(),
                 // The item's own container first; a `PlaybackInfo`-shaped response leaves it null
                 // and describes the container on the media source instead.
@@ -92,8 +92,8 @@ internal class ItemMapper
         /**
          * Maps a `getUserViews` entry into a [LibraryView].
          *
-         * Returns `null` for libraries outside app scope (live TV, photos … — music joined
-         * [CollectionKind.SUPPORTED] in M13 Phase 2) so callers can simply `mapNotNull`.
+         * Returns `null` for libraries outside app scope (live TV, photos … — music is part of
+         * [CollectionKind.SUPPORTED]) so callers can simply `mapNotNull`.
          *
          * [LibraryView.itemCount] is always left unset here: the only count `getUserViews` carries
          * is `ChildCount`, which counts a collection folder's *direct children* (its media folders),
@@ -116,7 +116,7 @@ internal class ItemMapper
         /** Maps `getUserViews` results, dropping every library kind v1 does not support. */
         fun toLibraryViews(dtos: List<BaseItemDto>): List<LibraryView> = dtos.mapNotNull(::toLibraryView)
 
-        // ---- people (M4) --------------------------------------------------------------------
+        // ---- people ---------------------------------------------------------------------------
 
         /**
          * Maps one credit. Kept here rather than as a file-level function because a person's
@@ -176,7 +176,7 @@ internal class ItemMapper
         }
     }
 
-/** Internal so the Room cache mapper folds `BaseItemKind` exactly the same way (M6). */
+/** Internal so the Room cache mapper folds `BaseItemKind` exactly the same way. */
 internal fun BaseItemKind.toItemType(): ItemType =
     when (this) {
         BaseItemKind.MOVIE -> ItemType.MOVIE
@@ -189,7 +189,7 @@ internal fun BaseItemKind.toItemType(): ItemType =
         BaseItemKind.PLAYLIST -> ItemType.PLAYLIST
         BaseItemKind.COLLECTION_FOLDER, BaseItemKind.USER_VIEW -> ItemType.COLLECTION_FOLDER
         BaseItemKind.FOLDER -> ItemType.FOLDER
-        // AUDIO_BOOK stays UNKNOWN: audiobooks are out of M13's scope (docs/notes/music-m13-plan.md).
+        // AUDIO_BOOK stays UNKNOWN: audiobooks are out of scope.
         else -> ItemType.UNKNOWN
     }
 

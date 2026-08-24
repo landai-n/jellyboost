@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.SharedFlow
 /**
  * Watched / favourite / resume-position writes.
  *
- * **Local-first, always** (docs/PLAN.md, "Data layer"): every operation writes Room with
+ * **Local-first, always**: every operation writes Room with
  * `toBeSynced = true` and publishes on [changes] *before* the server is contacted. The push that
  * follows is best effort — when it fails the flag stays set and `UserDataSyncWorker` is enqueued,
  * and the UI is none the wiser. That is what makes marking something watched feel instant, and
@@ -21,10 +21,10 @@ interface UserDataRepository {
     /**
      * Local user-data changes, for list ViewModels to patch their items in place.
      *
-     * The **only** observation surface this repository offers. A per-item `observe(itemId)` used to
-     * sit beside it, backed by a Room `Flow`; it never acquired a caller, because a screen that has
-     * already rendered an item wants the *delta* rather than a second subscription re-reading the
-     * table on every write in it (audit 2026-08-08, PERF-28).
+     * The **only** observation surface this repository offers. A per-item `observe(itemId)` backed
+     * by a Room `Flow` is deliberately not offered beside it: a screen that has already rendered an
+     * item wants the *delta* rather than a second subscription re-reading the table on every write
+     * in it.
      */
     val changes: SharedFlow<UserDataChange>
 
@@ -49,8 +49,8 @@ interface UserDataRepository {
     /**
      * Records a resume position, in Jellyfin ticks.
      *
-     * Called by the player on every progress tick from M5 onwards; writing it locally as well as
-     * reporting it is what makes resume behave identically online and offline.
+     * Called by the player on every progress tick; writing it locally as well as reporting it is
+     * what makes resume behave identically online and offline.
      */
     suspend fun setPosition(
         itemId: String,

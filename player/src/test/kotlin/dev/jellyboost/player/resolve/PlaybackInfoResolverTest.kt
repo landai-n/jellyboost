@@ -192,7 +192,7 @@ class PlaybackInfoResolverTest {
                 ?.maxStreamingBitrate shouldBe 3_000_000
         }
 
-    // ---- Auto's measured cap (DECISIONS.md, 2026-08-15) -------------------------------------------
+    // ---- Auto's measured cap ------------------------------------------------------------------
 
     @Test
     fun `an auto request is negotiated at the measured bitrate, profile included`() =
@@ -257,7 +257,7 @@ class PlaybackInfoResolverTest {
             coVerify(exactly = 0) { autoBitrateDetector.currentCap() }
         }
 
-    // ---- Auto's cap is not allowed to be a transcode's target (2026-08-15 amendment) --------------
+    // ---- Auto's cap is not allowed to be a transcode's target --------------------------------------
 
     @Test
     fun `an auto transcode above High's rung is re-negotiated at it`() =
@@ -704,7 +704,7 @@ class PlaybackInfoResolverTest {
             result.error.shouldBeInstanceOf<AppError.Unauthorized>()
         }
 
-    // ---- M11: minting a play session for a file that is already on disk -------------------------
+    // ---- minting a play session for a file that is already on disk ---------------------------------
 
     @Test
     fun `minting asks for the item once and answers with the play session id`() =
@@ -741,7 +741,7 @@ class PlaybackInfoResolverTest {
             coEvery { api.getPlaybackInfo(any(), any()) } throws TimeoutException("slow", null)
 
             // The caller reports without a session id rather than not reporting at all; a group
-            // member missing from the dashboard is the worse failure (M11, key decision 9).
+            // member missing from the dashboard is the worse failure.
             resolver.mintPlaySessionId(PlayerFixtures.ITEM_ID, mediaSourceId = null).shouldBeNull()
         }
 

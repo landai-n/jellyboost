@@ -8,8 +8,8 @@ import org.junit.jupiter.api.Test
 /**
  * Unit tests for the navigation options behind the app bar's four tabs.
  *
- * The pushed screens' Home affordance used to navigate with these very same options; it now has its
- * own, and the reason is pinned by [HomeNavOptionsTest].
+ * The pushed screens' Home affordance navigates with its own, separate options — the reason is
+ * pinned by [HomeNavOptionsTest].
  *
  * Driving a real `NavController` needs a device, but the options it is handed are a plain value, and
  * they are the whole of the tab-switching contract. The pop target is the part worth pinning: with

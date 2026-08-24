@@ -7,7 +7,7 @@ import java.util.UUID
  *
  * The same shape covers opening an item, changing quality, switching a track that the server has
  * to re-mux, and every decoder-fallback retry — all of which are re-negotiations, not local
- * changes (docs/PLAN.md, "Playback pipeline").
+ * changes.
  *
  * @param mediaSourceId which media source to play, or `null` to let the resolver apply the
  *   dash-less item-id convention the server expects.
@@ -26,10 +26,10 @@ import java.util.UUID
  *   changes two things and nothing else: the negotiation is sent with `CastDeviceProfile` instead of
  *   this device's, because the decoders that matter are the television's; and, like [forceRemote],
  *   it skips the copy on disk, because a `file://` URI means nothing on the other side of the
- *   network (docs/notes/chromecast-m12-plan.md, key decision 3).
+ *   network.
  * @param autoBitrate whether the cap should be chosen by measurement, not by the user:
  *   `PlaybackInfoResolver` overwrites [maxStreamingBitrate] with `AutoBitrateDetector`'s value when
- *   this is set (DECISIONS.md, 2026-08-15). A caller building an Auto request therefore leaves the
+ *   this is set. A caller building an Auto request therefore leaves the
  *   cap `null` and never waits on the measurement itself. Carried through to
  *   `RemotePlaybackMediaSource` so the picker can tell a measured 8 Mbps from a hand-picked one.
  */

@@ -67,7 +67,7 @@ import kotlin.time.Duration.Companion.seconds
 internal class DownloadRepositoryImpl
     @Suppress(
         // Thirteen DI collaborators: this is the facade over the entire downloads module. Splitting it is tracked as
-        // the `DownloadedMediaProvider` seam work (audit ARCH-3, STATUS backlog).
+        // the `DownloadedMediaProvider` seam work.
         "LongParameterList",
     )
     @Inject
@@ -90,18 +90,17 @@ internal class DownloadRepositoryImpl
          * The one Room subscription every `DownloadBadge` in the app reads from.
          *
          * Four ViewModels (`LibraryViewModel`, `HomeViewModel`, `SearchViewModel`,
-         * `ItemDetailViewModel`) each used to call [observeStates] and get their own cold flow back
-         * — four independent `observeProgress()` collectors, each re-running the same map and
-         * `distinctUntilChanged` over the same rows (docs/notes/audit-2026-07.md, PERF-07). Sharing
-         * one [stateIn] here means Room is asked once no matter how many screens are showing badges
-         * at once. `WhileSubscribed` still lets it stop when nothing is: badges are not worth a
-         * standing query with every screen backgrounded.
+         * `ItemDetailViewModel`) all call [observeStates], and a cold flow each would be four
+         * independent `observeProgress()` collectors, each re-running the same map and
+         * `distinctUntilChanged` over the same rows. Sharing one [stateIn] here means Room is asked
+         * once no matter how many screens are showing badges at once. `WhileSubscribed` still lets
+         * it stop when nothing is: badges are not worth a standing query with every screen
+         * backgrounded.
          *
          * `by lazy`, not a plain `val`: this is a constructor property, and every one of this
          * class's other ~40 unit tests constructs one without stubbing `observeProgress()` at all.
          * Building the chain eagerly would call it unconditionally and fail every test that never
-         * touches [observeStates] — laziness defers the call to the first real subscriber, same as
-         * before.
+         * touches [observeStates] — laziness defers the call to the first real subscriber.
          */
         private val downloadStates: StateFlow<Map<String, DownloadState>> by lazy {
             downloadDao
@@ -123,13 +122,13 @@ internal class DownloadRepositoryImpl
         /**
          * The download list, with each row joined to the item it belongs to.
          *
-         * The join is **memoised** per subscription. Rebuilding it from scratch meant a `SELECT *`
-         * over every downloaded item and a `Json.decodeFromString` of each one's full
+         * The join is **memoised** per subscription. Rebuilding it from scratch would mean a
+         * `SELECT *` over every downloaded item and a `Json.decodeFromString` of each one's full
          * `BaseItemDto` — tens of kilobytes apiece — on every emission, which is two to six times a
-         * second for the whole length of a transfer; the `distinctUntilChanged` below suppressed the
-         * recomposition but none of the parsing (docs/notes/audit-2026-07.md, PERF-01). What a
-         * progress write actually changes is a byte count, and metadata is keyed on `cachedAt`, so
-         * [DownloadMetadataCache] re-reads a blob only when the row behind it was rewritten.
+         * second for the whole length of a transfer; the `distinctUntilChanged` below suppresses the
+         * recomposition but none of the parsing. What a progress write actually changes is a byte
+         * count, and metadata is keyed on `cachedAt`, so [DownloadMetadataCache] re-reads a blob
+         * only when the row behind it was rewritten.
          *
          * The cache is created *inside* the flow rather than held as a field: it is then touched
          * only by this flow's own collector, which is what makes it safe without a lock, and it dies
@@ -153,8 +152,8 @@ internal class DownloadRepositoryImpl
          * `usedBytes()` is a `stat()` of *every* file under the root — media, subtitles, artwork and
          * one per trickplay tile — so what it may not be keyed on is `observeProgress` itself, which
          * lands twice a second for the whole of a transfer and would pay for the walk on each of them
-         * (docs/notes/audit-2026-07.md, PERF-02; the `distinctUntilChanged` below suppresses the
-         * recomposition but not the walk). Three coarser things move the number instead:
+         * (the `distinctUntilChanged` below suppresses the recomposition but not the walk). Three
+         * coarser things move the number instead:
          *
          * - the **shape** of the download table — which items exist and what status each is in. That
          *   is what actually adds and removes files, and it changes a handful of times per download
@@ -194,11 +193,10 @@ internal class DownloadRepositoryImpl
             val id = itemId.toUuidOrNull() ?: return flowOf(null)
             return downloadDao
                 .observeBytesOnDisk(id)
-                // The five flows above all carry this pair; this one did not. `download_files` is
-                // written on every throttled progress sample of *any* item in the queue, and Room
-                // re-runs the `SUM` for each of them — so an open detail page re-summed its own
-                // files at 2/s because something unrelated was downloading, and emitted the same
-                // number every time (audit 2026-08-08, PERF-9).
+                // `download_files` is written on every throttled progress sample of *any* item in
+                // the queue, and Room re-runs the `SUM` for each of them — so without this an open
+                // detail page would re-sum its own files at 2/s because something unrelated is
+                // downloading, and emit the same number every time.
                 .distinctUntilChanged()
                 .flowOn(ioDispatcher)
         }
@@ -209,8 +207,8 @@ internal class DownloadRepositoryImpl
          * Shared for [downloadStates]' reason, and it is the same `observeProgress()` query
          * underneath: two flows subscribe to this one ([observeStorage] and
          * [observeStorageLocations]) and the Downloads screen shows both at once, so a cold flow
-         * here meant two independent full reads of the table per progress sample — the samples this
-         * projection exists to *not* pay for (audit 2026-08-08, PERF-6).
+         * here would mean two independent full reads of the table per progress sample — the samples
+         * this projection exists to *not* pay for.
          *
          * `shareIn(replay = 1)` rather than [kotlinx.coroutines.flow.stateIn]: a `StateFlow` needs
          * an initial value, and the only honest one is an empty table — which both consumers would
@@ -234,10 +232,10 @@ internal class DownloadRepositoryImpl
         }
 
         /**
-         * `locations.resolve()` re-scans the mounted volumes, which is not free — and used to be
-         * keyed on raw `observeProgress()`, the same 2/s hot path [observeStorage] moved off of
-         * (PERF-02). Only the *count* of downloads matters here, and [downloadShape] already
-         * answers that at the rate it can actually change (docs/notes/audit-2026-07.md, PERF-13).
+         * `locations.resolve()` re-scans the mounted volumes, which is not free, so it must not be
+         * keyed on raw `observeProgress()` — the same 2/s hot path [observeStorage] stays off. Only
+         * the *count* of downloads matters here, and [downloadShape] already answers that at the
+         * rate it can actually change.
          */
         override fun observeStorageLocations(): Flow<StorageLocations> =
             combine(downloadShape, locations.selectedVolumeId) { shape, selectedId ->
@@ -304,7 +302,7 @@ internal class DownloadRepositoryImpl
                     // Settings' scope, so this is the user leaving the screen mid-switch. Reporting
                     // it as `AppError.Storage` would raise "could not change storage" over a screen
                     // that is already gone and swallow the cancellation structured concurrency is
-                    // owed (audit ARCH-08 / HYG-5).
+                    // owed.
                     throw cancellation
                 } catch (error: Exception) {
                     // Stays broad: the block mixes Room (`allItemIds`), the filesystem (`deleteAll`
@@ -344,10 +342,10 @@ internal class DownloadRepositoryImpl
             mutate(itemId) { id ->
                 // One transaction decides *and* writes. Only the row that is actually transferring
                 // needs the worker cancelled — stopping it for any other row would cancel an
-                // unrelated in-flight transcode from byte zero (audit DL-06) — but a separate
-                // read-then-write left a window for the drain's claim to slip between the two, and
-                // the item the user had just paused downloaded to completion with nobody left to
-                // stop it (audit DL-03; see DownloadDao.demoteRunnable).
+                // unrelated in-flight transcode from byte zero — but a separate read-then-write
+                // would leave a window for the drain's claim to slip between the two, and the item
+                // the user had just paused would download to completion with nobody left to stop
+                // it (see `DownloadDao.demoteRunnable`).
                 val interruptsTransfer =
                     downloadDao.demoteRunnable(listOf(id), DownloadStatus.PAUSED, clock.instant())
                 if (interruptsTransfer) {
@@ -371,10 +369,10 @@ internal class DownloadRepositoryImpl
             mutateAll(itemIds) { ids ->
                 // Same guarded write as the single pause. This is what keeps the "Pause all keeps
                 // transcodes" promise honest: the batch already excludes the running transcode, so
-                // stopping the worker for it anyway restarted that very encode from byte zero —
-                // the exact thing the button was designed not to do (audit DL-06). And the
-                // decision rides in the same transaction as the write, so a drain claim cannot
-                // land between the two and keep transferring a row just marked PAUSED (DL-03).
+                // stopping the worker for it anyway would restart that very encode from byte zero
+                // — the exact thing the button is designed not to do. And the decision rides in
+                // the same transaction as the write, so a drain claim cannot land between the two
+                // and keep transferring a row just marked PAUSED.
                 val interruptsTransfer =
                     downloadDao.demoteRunnable(ids, DownloadStatus.PAUSED, clock.instant())
                 if (interruptsTransfer) {
@@ -406,14 +404,14 @@ internal class DownloadRepositoryImpl
                     // row, so `stop()` (which waits for the worker) is guaranteed to be behind us
                     // whenever a target was being written when the first directory goes. Stopping
                     // is still conditional on that answer: doing it for any other row would cancel
-                    // an unrelated in-flight transcode from byte zero (audit DL-06), and a plain
-                    // read-then-stop left the DL-03 window where a claim landing between the two
-                    // let files be unlinked under a live writer.
+                    // an unrelated in-flight transcode from byte zero, and a plain read-then-stop
+                    // would leave a window where a claim landing between the two lets files be
+                    // unlinked under a live writer.
                     if (downloadDao.demoteRunnable(ids, DownloadStatus.CANCELLED, clock.instant())) {
                         scheduler.stop()
                     }
-                    // One cascade for the whole batch — the per-row loop re-ran the orphan prune
-                    // (a full-table metadata read) once per deleted item (audit DL-05).
+                    // One cascade for the whole batch — a per-row loop would re-run the orphan
+                    // prune (a full-table metadata read) once per deleted item.
                     val freed = deleter.deleteAll(ids)
                     // Something else may still be queued behind the deleted items.
                     scheduler.ensureRunning()
@@ -465,7 +463,7 @@ internal class DownloadRepositoryImpl
                     // with the screen. A cancelled scope is not a failed pause: folding it into
                     // `AppError.Storage` puts an error on a screen the user has left, spends the
                     // caller's retry budget on their own back-press, and swallows the cancellation
-                    // the machinery is owed (audit ARCH-08 / HYG-5, same shape as `DownloadEnqueuer`).
+                    // the machinery is owed (same shape as `DownloadEnqueuer`).
                     throw cancellation
                 } catch (error: Exception) {
                     // Not narrowed to `SQLiteException` like the enqueuer's: `block` is caller-
@@ -498,9 +496,8 @@ internal class DownloadRepositoryImpl
                     block(ids)
                     AppResult.Success(Unit)
                 } catch (cancellation: CancellationException) {
-                    // The bulk path is the one the audit caught in the act (HYG-5): a torn-down
-                    // scope during *Pause all* logged at E and answered `Failure(Storage)` for an
-                    // ordinary cancel. See [mutate].
+                    // A torn-down scope during *Pause all* is an ordinary cancel: logging it at E
+                    // and answering `Failure(Storage)` would be wrong for it too. See [mutate].
                     throw cancellation
                 } catch (error: Exception) {
                     // Broad for [mutate]'s reason: the block drives the scheduler as well as Room.
@@ -592,12 +589,11 @@ private class DownloadMetadataCache(
      *
      * The `getCacheKeys` probe runs on **every** emission and deliberately stays that way. It looks
      * like a candidate for a shape gate — an emission this flow gets is a `downloads` write, and a
-     * byte count cannot move an `items` row (audit 2026-08-08, PERF-7 suggests exactly that) — but
-     * this probe is the only thing that notices a *metadata* refresh: `DownloadedMetadataRefresher`
-     * rewrites `items` rows behind an open Downloads screen, and picking that up is pinned by
-     * `DownloadRepositoryImplTest`. The probe is a three-column projection over primary keys; what
-     * PERF-7 was really paying for was the emission *rate*, which the queue's transactional sample
-     * write halves at the source.
+     * byte count cannot move an `items` row — but this probe is the only thing that notices a
+     * *metadata* refresh: `DownloadedMetadataRefresher` rewrites `items` rows behind an open
+     * Downloads screen, and picking that up is pinned by `DownloadRepositoryImplTest`. The probe is
+     * a three-column projection over primary keys; what costs here is the emission *rate*, which
+     * the queue's transactional sample write halves at the source.
      */
     suspend fun itemsFor(ids: List<UUID>): Map<UUID, JellyfinItem> {
         if (ids.isEmpty()) {
@@ -645,11 +641,11 @@ private data class DownloadShape(
 /**
  * Whether the worker is transferring anything at all right now.
  *
- * What [restartOrJoin] consults before restarting the worker (audit DL-06): a restart cancels the
- * running job, and a cancelled transcode restarts from byte zero, since a live encode can never be
- * resumed. Pause and delete no longer read this — their answer has to be atomic with the status
- * write, so they get it from `DownloadDao.demoteRunnable` instead (audit DL-03). Top-level rather
- * than a method for detekt's function-count ceiling on the repository, like [walkTicks].
+ * What [restartOrJoin] consults before restarting the worker: a restart cancels the running job,
+ * and a cancelled transcode restarts from byte zero, since a live encode can never be resumed.
+ * Pause and delete do not read this — their answer has to be atomic with the status write, so they
+ * get it from `DownloadDao.demoteRunnable` instead. Top-level rather than a method for detekt's
+ * function-count ceiling on the repository, like [walkTicks].
  */
 private suspend fun DownloadDao.isDownloadingAnything(): Boolean =
     pending().any { row -> row.status == DownloadStatus.DOWNLOADING }
@@ -660,7 +656,7 @@ private suspend fun DownloadDao.isDownloadingAnything(): Boolean =
  * A `restart()` is only the right move while nothing is downloading: it re-reads the constraints
  * and breaks the worker out of a retry backoff, which is what a user tapping *Resume* expects. But
  * it restarts by **cancelling** the running worker — and if that worker is mid-transcode on an
- * unrelated item, every transferred byte is discarded (audit DL-06). With a live transfer the
+ * unrelated item, every transferred byte is discarded. With a live transfer the
  * worker is already awake and its drain loop picks the re-queued rows up from `nextRunnable()` on
  * its own; `ensureRunning` (KEEP) merely covers the race where it finishes in between.
  */

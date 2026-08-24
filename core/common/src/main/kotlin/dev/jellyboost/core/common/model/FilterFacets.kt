@@ -4,8 +4,7 @@ package dev.jellyboost.core.common.model
  * The set of values a library can actually be filtered by — what the filter sheet offers.
  *
  * Counterpart of [FilterOptions]: this is what the server *has*, [FilterOptions] is what the user
- * *picked*. Fetched once per library when the sheet is first opened (docs/PLAN.md, "Screens" →
- * LibraryGrid, "filter sheet `getQueryFilters`").
+ * *picked*. Fetched once per library when the filter sheet is first opened, via `getQueryFilters`.
  */
 data class FilterFacets(
     val genres: List<String> = emptyList(),

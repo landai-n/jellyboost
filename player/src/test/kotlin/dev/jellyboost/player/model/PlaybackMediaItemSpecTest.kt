@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test
  * numeric prefixes is a property of *how the player was assembled*, not of the track. A downloaded
  * item can be merged twice — `ExoPlayerHandle` merges the audio sidecars in, over a main source
  * `DefaultMediaSourceFactory` has already merged the subtitles into — which is what makes this a
- * loop rather than a single strip (DECISIONS.md 2026-07-31, "Offline multi-track Phase 2").
+ * loop rather than a single strip.
  */
 class PlaybackMediaItemSpecTest {
     @Test

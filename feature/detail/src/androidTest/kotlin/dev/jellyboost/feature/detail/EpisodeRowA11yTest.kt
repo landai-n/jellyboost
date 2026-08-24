@@ -22,12 +22,12 @@ import org.junit.runner.RunWith
 import dev.jellyboost.core.ui.R as CoreUiR
 
 /**
- * An episode row is one stop plus its Play button (accessibility audit 2026-08-05, A11Y-05/CR-6).
+ * An episode row is one stop plus its Play button.
  *
- * The row used to be *two* stops, and the first of them was useless: a nested clickable `ThumbCard`
- * announcing a title and offering the row's own action. The fix threads a `null` `onClick` into the
- * artwork so the row is a single node — which is a one-character change in the other direction, and
- * nothing visible would move if it were made.
+ * Two stops would make the first of them useless: a nested clickable `ThumbCard` announcing a title
+ * and offering the row's own action. A `null` `onClick` threaded into the artwork is what keeps the
+ * row a single node — which is a one-character change in the other direction, and nothing visible
+ * would move if it were made.
  *
  * The Play button is deliberately *not* folded in: it does something different from the row, and a
  * screen reader user has to be able to choose between "open this episode" and "play it".
@@ -74,7 +74,7 @@ class EpisodeRowA11yTest {
         // carries a `contentDescription`, and a description is what a screen reader speaks when a
         // node has both. So the claim to pin is about the sentence, not about the node's existence:
         // two lines of prose read out before the user can reach the next episode is a list nobody
-        // can scan (audit A11Y-05).
+        // can scan.
         val description =
             rule
                 .onNodeWithContentDescription(spoken)

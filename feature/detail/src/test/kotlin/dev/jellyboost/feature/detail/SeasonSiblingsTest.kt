@@ -7,8 +7,7 @@ import io.kotest.matchers.collections.shouldContainExactly
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for [seasonSiblings] — the episode page's "More from this season" row
- * (episode-detail-shortcuts, DECISIONS.md).
+ * Unit tests for [seasonSiblings] — the episode page's "More from this season" row.
  */
 class SeasonSiblingsTest {
     @Test

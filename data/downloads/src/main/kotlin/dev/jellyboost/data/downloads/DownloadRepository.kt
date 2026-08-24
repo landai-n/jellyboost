@@ -13,14 +13,13 @@ import kotlinx.coroutines.flow.Flow
  * This is the only type `:feature:*` modules see from `:data:downloads`; the queue, the worker, the
  * file plan and the storage backend are all implementation details behind it.
  *
- * Every read is a **Room Flow**, because Room is the single source of truth for download state
- * (docs/PLAN.md, "Download pipeline" → Progress). Nothing here caches; the screens are a projection
- * of the database and stay correct across process death by construction.
+ * Every read is a **Room Flow**, because Room is the single source of truth for download state.
+ * Nothing here caches; the screens are a projection of the database and stay correct across process
+ * death by construction.
  */
 interface DownloadRepository {
     /**
-     * Download state keyed by item id — what every `DownloadBadge` in the app renders from
-     * (docs/PLAN.md: "Every item card shows `DownloadBadge` from `DownloadDao.observeStatusMap()`").
+     * Download state keyed by item id — what every `DownloadBadge` in the app renders from.
      *
      * Items with no download row are simply absent from the map; callers default to
      * [DownloadState.NotDownloaded].
@@ -42,12 +41,12 @@ interface DownloadRepository {
     /**
      * Points future downloads at [volumeId].
      *
-     * The plan's v1 policy is enforced here rather than in the UI: **a location change is only
-     * allowed when no downloads exist**, or when the caller has agreed to delete them all first
-     * (docs/PLAN.md, "Download pipeline" → Storage; `MoveStorageWorker` is deferred). The reason is
-     * mechanical, not cautious: a finished download's file rows hold absolute paths that nothing
-     * rewrites, so files left on the old volume would still be found — until the card is pulled, at
-     * which point offline playback would silently fall back to streaming.
+     * The policy is enforced here rather than in the UI: **a location change is only allowed when
+     * no downloads exist**, or when the caller has agreed to delete them all first (moving existing
+     * downloads between volumes is deferred). The reason is mechanical, not cautious: a finished
+     * download's file rows hold absolute paths that nothing rewrites, so files left on the old
+     * volume would still be found — until the card is pulled, at which point offline playback would
+     * silently fall back to streaming.
      *
      * @param deleteExistingDownloads deletes every download — files, rows and orphaned metadata —
      *   before switching. Required when any download exists; the call fails otherwise, and nothing
@@ -69,11 +68,10 @@ interface DownloadRepository {
      * sure the queue is running.
      *
      * A **season or a series** is a folder with no file behind it, so it is expanded instead: one
-     * download per episode, in broadcast order, skipping the episodes already on the device
-     * (DECISIONS.md, 2026-07-29). An **album, an artist or a playlist** expands the same way (M13
-     * Phase 5) — tracks in disc/track order, an artist's whole discography album by album, a
-     * playlist's audio members in playlist order. Callers therefore never have to check the item's
-     * type.
+     * download per episode, in broadcast order, skipping the episodes already on the device. An
+     * **album, an artist or a playlist** expands the same way — tracks in disc/track order, an
+     * artist's whole discography album by album, a playlist's audio members in playlist order.
+     * Callers therefore never have to check the item's type.
      */
     suspend fun enqueue(itemId: String): AppResult<Unit>
 
@@ -90,8 +88,7 @@ interface DownloadRepository {
      * restarts the WorkManager job, so a bulk action built out of them issued one stop/start cycle
      * per row: forty overlapping `REPLACE` enqueues, each starting a drain while the previous one
      * was still unwinding, and each of those drains running `requeueInterrupted` over rows another
-     * drain was still writing (docs/notes/audit-2026-07.md, STAB-09). This writes one status
-     * transition and touches the scheduler once.
+     * drain was still writing. This writes one status transition and touches the scheduler once.
      *
      * Ids that name nothing are simply not matched; the call still succeeds.
      */

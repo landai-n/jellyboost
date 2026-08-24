@@ -15,15 +15,10 @@ import timber.log.Timber
  * The download half of the detail screen: the button, the confirmation, and the two Room
  * subscriptions that keep both honest.
  *
- * Split out of [ItemDetailViewModel] (docs/notes/audit-2026-08-06-quality.md, CPX-10). The
- * ViewModel had reached detekt's function-count ceiling and had started paying for it in design:
- * four functions were pushed out to file scope, taking back as parameters the very collaborators
- * the class already held, and an entire Room collector was inlined into `init` — each with a
- * comment saying the ceiling was the reason. A metric was choosing the structure. This is the
- * structure the code wanted anyway: the download button owns a slice of state nothing else on the
- * page touches ([states], the delete-confirmation flag, the bytes-on-disk figure), and the
- * ViewModel's remaining halves — loading the item, user-data toggles, selection, SyncPlay — never
- * read it.
+ * Separate from [ItemDetailViewModel] because the download button owns a slice of state nothing
+ * else on the page touches ([states], the delete-confirmation flag, the bytes-on-disk figure), and
+ * the ViewModel's remaining halves — loading the item, user-data toggles, selection, SyncPlay —
+ * never read it.
  *
  * A plain class constructed by its owner, not a Hilt binding: [state], [itemId] and [scope] are all
  * per-ViewModel values that no graph can supply. That is the same shape `:player`'s
@@ -64,13 +59,13 @@ internal class DetailDownloadsDelegate(
     /**
      * The Download button. One button, several meanings, decided by the current state:
      *
-     * - not on the device → enqueue it (M7's pipeline takes it from there);
+     * - not on the device → enqueue it; the download pipeline takes it from there;
      * - failed → put it back in the queue, which resumes from the bytes already on disk rather
      *   than starting the transfer over;
      * - queued, downloading or paused → cancel it. Nothing finished is lost — on a container
      *   the episodes that already completed are explicitly kept — so this stays immediate;
-     * - downloaded → ask for confirmation before removing it (docs/POLISH.md — deleting a
-     *   finished download straight away, with no way back, was too easy to trigger by accident).
+     * - downloaded → ask for confirmation before removing it; deleting a finished download
+     *   straight away, with no way back, is too easy to trigger by accident.
      *   [confirmDeleteDownload] does the actual removal once the user confirms.
      *
      * A separate "delete" affordance next to it would be dead most of the time, and "tap again
@@ -78,7 +73,7 @@ internal class DetailDownloadsDelegate(
      * favourite).
      *
      * On a **season or series** page every one of those meanings is about the episodes under it
-     * rather than the item itself (DECISIONS.md, 2026-07-29): enqueue expands the container in
+     * rather than the item itself: enqueue expands the container in
      * `:data:downloads`, and remove/cancel act on each episode row. *Failed* on a container is
      * an enqueue too, not a resume — the container has no row of its own to put back in the
      * queue, and enqueueing is what retries the episodes that failed.
@@ -185,13 +180,11 @@ internal class DetailDownloadsDelegate(
     /**
      * Cancels a download that is still in flight, **keeping whatever already finished**.
      *
-     * On a season, Cancel used to run the same delete as Remove and take the episodes that had
-     * completed with it (docs/POLISH.md) — a user stopping a season three episodes in lost those
-     * three. Cancel now only touches rows that are queued, transferring, paused or failed. A
-     * partly-kept season then aggregates back to *NotDownloaded* (the deliberate
-     * some-episodes-missing behaviour), so the button offers *Download* for the rest; removing
-     * the kept episodes goes through the Downloads screen's confirmed delete
-     * (DECISIONS.md, 2026-07-29).
+     * On a season, Cancel must not run the same delete as Remove: a user stopping a season three
+     * episodes in would lose those three. Cancel only touches rows that are queued, transferring,
+     * paused or failed. A partly-kept season then aggregates back to *NotDownloaded* (the
+     * deliberate some-episodes-missing behaviour), so the button offers *Download* for the rest;
+     * removing the kept episodes goes through the Downloads screen's confirmed delete.
      */
     private fun cancelDownloads() {
         val targets = state.value.downloadTargets.mapNotNull { id -> states[id]?.let { id to it } }
@@ -205,11 +198,11 @@ internal class DetailDownloadsDelegate(
      * this call deliberately left alone, which is what the snackbar tells the user about.
      *
      * **One batch call, never a loop.** Every single delete stops the download worker and starts it
-     * again, so cancelling a twenty-episode season one row at a time was twenty stop/restart cycles
-     * — and each restart hands the queue the next doomed episode, asking the server for a transcode
-     * that the very next iteration cancels. That is the lesson `DownloadDao.requeueForUser` records
-     * for the resume side (audit 2026-07, STAB-09); `deleteAll` is the delete side of it, and it
-     * also runs the metadata prune once instead of once per row (DL-05).
+     * again, so cancelling a twenty-episode season one row at a time would be twenty stop/restart
+     * cycles — and each restart hands the queue the next doomed episode, asking the server for a
+     * transcode that the very next iteration cancels. `DownloadDao.requeueForUser` batches the
+     * resume side for the same reason; `deleteAll` is the delete side of it, and it also runs the
+     * metadata prune once instead of once per row.
      */
     private fun removeDownloads(
         targets: List<String>,

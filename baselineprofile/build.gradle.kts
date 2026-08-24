@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 /**
- * Baseline profile generator (M10, docs/PLAN.md "Release hardening").
+ * Baseline profile generator.
  *
  * A `com.android.test` module: it ships no code, only an instrumented macrobenchmark that drives
  * `:app` through its startup and scrolling flows while ART records which methods and classes were
@@ -56,7 +56,7 @@ android {
 }
 
 baselineProfile {
-    // Generation runs against a real connected device — the test tablet test tablet used for every
+    // Generation runs against a real connected device — the test tablet used for every
     // milestone DoD — rather than a Gradle-managed AVD the project does not define.
     useConnectedDevices = true
 }

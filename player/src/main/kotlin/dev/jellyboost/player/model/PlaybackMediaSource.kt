@@ -8,9 +8,9 @@ import java.util.UUID
 /**
  * Everything the player needs to play one media source, independent of where it came from.
  *
- * The sealed type is the seam the plan relies on to make the player UI identical online and
- * offline (docs/PLAN.md, "Playback pipeline" → Offline): M5 ships [RemotePlaybackMediaSource] and
- * M8 adds a local variant built from `DownloadFileEntity` URIs. Nothing above this interface — the
+ * The sealed type is the seam that makes the player UI identical online and offline:
+ * [RemotePlaybackMediaSource] for a server stream, and a local variant built from
+ * `DownloadFileEntity` URIs for a download. Nothing above this interface — the
  * ViewModel, the controls, the track pickers — should have to know which one it holds.
  */
 sealed interface PlaybackMediaSource {
@@ -87,7 +87,7 @@ internal data class RemotePlaybackMediaSource(
      *
      * The picker's chip is derived from this flag rather than by reverse-mapping the cap: a measured
      * 8 Mbps is indistinguishable from a hand-picked "Medium" by its number alone, which would both
-     * mislabel Auto and swallow a genuine Medium tap (DECISIONS.md, 2026-08-15).
+     * mislabel Auto and swallow a genuine Medium tap.
      */
     val autoBitrate: Boolean = false,
     override val runTimeTicks: Long,
@@ -104,7 +104,7 @@ internal data class RemotePlaybackMediaSource(
         copy(selectedSubtitleIndex = jellyfinIndex)
 
     /**
-     * Prints no URL (audit SEC-12, same shape as `StoredSession.toString()`).
+     * Prints no URL — the same shape as `StoredSession.toString()`.
      *
      * [transcodingUrl] is built by the server with an `ApiKey` query parameter — the live access
      * token — so the generated data-class `toString()` prints a signed-in credential the moment an
@@ -137,8 +137,7 @@ internal data class RemotePlaybackMediaSource(
 }
 
 /**
- * A media source played straight off this device's storage — the M8 half of the sealed type
- * (docs/PLAN.md, "Playback pipeline" → Offline).
+ * A media source played straight off this device's storage — the offline half of the sealed type.
  *
  * Everything it carries is derived from what the download pipeline already stored: the cached
  * `BaseItemDto`'s media source supplies the tracks and the runtime, and `DownloadFileEntity` rows
@@ -147,15 +146,14 @@ internal data class RemotePlaybackMediaSource(
  * keyed on anything the server issued.
  *
  * @property mediaUri `file://` URI of the downloaded video file.
- * @property trickplay downloaded scrubbing thumbnails, when the server generated any. The scrubber
- *   that draws them arrives with M9; M8 only carries the data (DECISIONS.md 2026-07-29).
+ * @property trickplay downloaded scrubbing thumbnails, when the server generated any.
  * @property externalAudio audio tracks the download stored as their own files, which ExoPlayer has
  *   to be handed as extra sources rather than reading them out of the container. **The list order is
  *   a contract**: it is ascending Jellyfin stream index, and it is the order the merge children are
  *   built in, which is the only thing that ties an ExoPlayer audio group back to the Jellyfin stream
- *   behind it (DECISIONS.md 2026-07-31, "Offline multi-track Phase 2"). Empty for everything but a
- *   transcoded download — an original holds every track in the file, and a streamed source has no
- *   analogue at all, which is why this lives here rather than on [PlaybackMediaSource].
+ *   behind it. Empty for everything but a transcoded download — an original holds every track in
+ *   the file, and a streamed source has no analogue at all, which is why this lives here rather
+ *   than on [PlaybackMediaSource].
  * @property allAudioTracks / @property allSubtitleTracks every track of the **source**, as the
  *   cached blob describes it — a superset of [audioTracks] / [subtitleTracks], which are only what
  *   the file and its sidecars can actually play. The two lists are what makes the picker
@@ -235,7 +233,7 @@ internal data class LocalTrickplay(
      * The same sheets in the vocabulary the scrubber draws from.
      *
      * The geometry is identical — only the names differ, because "tileWidth" means *thumbnails per
-     * row* on the server and reads like a pixel width everywhere else. M9 renders
+     * row* on the server and reads like a pixel width everywhere else. The scrubber renders
      * [TrickplayTiles], and a downloaded item reaches it through here.
      */
     fun toTiles(): TrickplayTiles =
@@ -255,7 +253,7 @@ internal data class LocalTrickplay(
      * `null` when the geometry is unusable, or when the thumbnail would sit on a sheet that is not
      * on disk — which is what a position past the last generated thumbnail resolves to.
      *
-     * Delegates to [TrickplayTiles] since M9: the online scrubber needs the identical arithmetic
+     * Delegates to [TrickplayTiles]: the online scrubber needs the identical arithmetic
      * over sheets that live on the server, and two copies of it would be two chances to be wrong.
      */
     fun tileFor(positionMs: Long): TrickplayThumbnail? = toTiles().tileFor(positionMs)
@@ -302,10 +300,9 @@ data class ExternalSubtitle(
  * One audio track ExoPlayer has to load as its own source, merged alongside the media file.
  *
  * Only a downloaded item has any: a transcoded download bakes exactly one audio track into the
- * video file and stores every other language as its own `.m4a` next to it
- * (docs/notes/offline-multitrack-design.md, phase 2). There is no `MediaItem` analogue of
- * `SubtitleConfiguration` for audio, so these are not carried on the spec's subtitle path — they
- * become merge children in `ExoPlayerHandle.prepare`, **in list order**.
+ * video file and stores every other language as its own `.m4a` next to it. There is no `MediaItem`
+ * analogue of `SubtitleConfiguration` for audio, so these are not carried on the spec's subtitle
+ * path — they become merge children in `ExoPlayerHandle.prepare`, **in list order**.
  *
  * @property index the absolute Jellyfin `MediaStream.index` the file was fetched for.
  * @property uri `file://` URI of the audio-only sidecar.

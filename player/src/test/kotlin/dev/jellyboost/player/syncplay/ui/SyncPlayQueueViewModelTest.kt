@@ -142,8 +142,8 @@ class SyncPlayQueueViewModelTest {
         }
 
     /**
-     * The HYG-9 finding: only *successes* were memoized, and the server re-sends the whole queue on
-     * every transport action — so an item it will not describe was re-asked about on every play,
+     * If only *successes* were memoized, and the server re-sends the whole queue on every
+     * transport action, an item it will not describe would be re-asked about on every play,
      * pause and seek, for a row that can never fill in.
      */
     @Test

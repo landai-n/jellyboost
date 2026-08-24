@@ -138,10 +138,9 @@ class ConnectivityRefresherTest {
         }
 
     /**
-     * [ConnectivityRefresher.reloadOnChange] is the shape five ViewModels used to spell out for
-     * themselves (audit 2026-08-08, DUP-8). What is pinned here is what they collectively relied
-     * on: a reload per change in either direction, the predicate the two variants pass, and the
-     * collection dying with the scope — a ViewModel's `viewModelScope` in production.
+     * What [ConnectivityRefresher.reloadOnChange] guarantees is pinned here: a reload per change
+     * in either direction, the predicate the two variants pass, and the collection dying with the
+     * scope — a ViewModel's `viewModelScope` in production.
      */
     @Nested
     inner class ReloadOnChange {

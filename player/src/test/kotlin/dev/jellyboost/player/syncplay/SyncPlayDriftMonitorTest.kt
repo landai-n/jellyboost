@@ -88,7 +88,8 @@ class SyncPlayDriftMonitorTest {
             val fixture = fixture()
             // A phone call or a headphone unplug pauses ExoPlayer directly (audio focus), without
             // any command and without the phase leaving `Playing` — so the monitor keeps ticking
-            // against a frozen frame. Seek-"correcting" it every second for ever was audit SP-04.
+            // against a frozen frame. Seek-"correcting" it every second forever would only fight
+            // the user's own pause.
             advanceTimeBy(30_000)
             fixture.player.snapshot = PlaybackSnapshot(positionMs = 60_000, isPlaying = false)
 

@@ -6,8 +6,8 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for [DownloadsUiState.queueStats] — the wide-layout "QUEUE" stat panel's numbers
- * (2026 refresh, spec "4d Downloads"). Pure data over [DownloadsUiState.queue] and
+ * Unit tests for [DownloadsUiState.queueStats] — the wide-layout "QUEUE" stat panel's numbers.
+ * Pure data over [DownloadsUiState.queue] and
  * [DownloadsUiState.speeds], so — like [DownloadRowsTest]'s pure-function block — every assertion
  * here is a plain `DownloadsUiState` construction and a read of the computed [QueueStats], no
  * Compose harness or MockK/Turbine required.
@@ -142,7 +142,7 @@ class DownloadsUiStateTest {
         state.queueStats.etaSeconds shouldBe 86_400L
     }
 
-    // ---- The precomputed chrome (audit 2026-08-08, PERF-5) --------------------------------------
+    // ---- The precomputed chrome -----------------------------------------------------------------
 
     @Test
     fun `downloaded bytes are summed once, across every group`() {

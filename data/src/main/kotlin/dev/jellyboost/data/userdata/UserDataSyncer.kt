@@ -46,13 +46,11 @@ internal enum class SyncResolution {
 }
 
 /**
- * Reconciles the local `user_data` rows the server has never seen — **most-recent-wins**
- * (docs/PLAN.md, "Confirmed decisions": *"User-data sync conflict: most-recent-wins — compare
- * `lastPlayedDate` before pushing; keep newer position"*).
+ * Reconciles the local `user_data` rows the server has never seen — **most-recent-wins**: compare
+ * `lastPlayedDate` before pushing, keep the newer position.
  *
  * Separate from [UserDataSyncWorker] so the rule can be unit tested on the JVM with a fixed clock:
- * WorkManager only starts on a device, and the decision matrix is the densest logic in the
- * milestone.
+ * WorkManager only starts on a device, and the decision matrix is the densest logic here.
  *
  * ### The comparison
  * Two instants are compared, and they are deliberately *not* the same field on both sides:
@@ -175,9 +173,8 @@ internal class UserDataSyncer
          * The local row is newer: assert it on the server, then clear the flag.
          *
          * The three requests and the order they go in are [pushUserData]'s — shared with
-         * `UserDataRepositoryImpl`, which is where the second copy of them used to live (audit
-         * DUP-5). The rule that decides the order (`markPlayedItem` clears the server's resume
-         * position, so the position is asserted last) is documented there, once.
+         * `UserDataRepositoryImpl`. The rule that decides the order (`markPlayedItem` clears the
+         * server's resume position, so the position is asserted last) is documented there, once.
          */
         private suspend fun push(row: UserDataEntity): SyncResolution {
             val pushed = runCatchingApi { apiClient.pushUserData(row) }

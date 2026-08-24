@@ -81,7 +81,7 @@ internal fun Modifier.cardWidth(width: Dp): Modifier = if (width.isSpecified) th
  *
  * The long press is *labelled* — "Select" — which is what puts it in TalkBack's actions menu. An
  * unlabelled long press is a gesture only a sighted user can discover, and batch selection is the
- * one mode of this app that has no other way in (accessibility audit 2026-08-05, A11Y-19).
+ * one mode of this app that has no other way in.
  */
 @Composable
 fun Modifier.selectableCardClick(
@@ -131,7 +131,7 @@ internal val CardSubtitleGap = 2.dp
  *
  * 1.3 is where a 14sp title in a 130–232dp card stops fitting a useful number of characters on one:
  * below it the design's single line holds a real title, above it "The Bicameral…" becomes "The
- * Bic…" and the card stops distinguishing itself from its neighbour (audit SCALE-03).
+ * Bic…" and the card stops distinguishing itself from its neighbour.
  */
 private const val TITLE_RELAX_SCALE = 1.3f
 
@@ -227,7 +227,7 @@ private const val SELECTED_TINT_ALPHA = 0.22f
 /**
  * Track of the inset progress bar.
  *
- * 0.40, raised from 0.22 by the 2026-08-05 accessibility audit. This bar is the whole point of the
+ * 0.40, raised from 0.22. This bar is the whole point of the
  * Continue Watching row — "how far in am I" is unreadable if the unfilled half is not there — so
  * under WCAG 1.4.11 it owes 3:1 against what it sits on. White@22% was 1.79:1 over the darkest
  * artwork it can land on; white@40% is 3.66:1 there, 3.82:1 on the `#101010` background.
@@ -242,7 +242,7 @@ private const val PROGRESS_TRACK_ALPHA = 0.40f
  * same scale look like values on different ones. Locale-aware, because a decimal separator is not
  * universally a point.
  *
- * Public rather than `internal` (audit 2026-08-08, UI-6): the detail header had its own copy that
+ * Public rather than `internal`: the detail header had its own copy that
  * hardcoded `Locale.US`, so on a German device the header's starred rating read `8.6` beside the
  * cards' `8,6` on the very same screen, and `metaRowDescription` spoke the wrong separator to
  * TalkBack. One function, one answer, and it is the one `RatingBadgeFormatTest` already pins.
@@ -255,11 +255,10 @@ fun formatRatingBadge(
 /**
  * What makes a poster a poster and a thumb a thumb.
  *
- * The two cards were ~90% the same composable (docs/notes/audit-2026-08-06-quality.md,
- * CPX-11/DUP-9), and they had drifted: the click-and-semantics block was spelled two different
- * ways for what is meant to be identical behaviour. This is the *whole* remainder once they are
- * one — three values, plus a default width that stays on each public signature because it is what
- * a caller most often overrides.
+ * The two cards were ~90% the same composable, and they had drifted: the click-and-semantics block
+ * was spelled two different ways for what is meant to be identical behaviour. This is the *whole*
+ * remainder once they are one — three values, plus a default width that stays on each public
+ * signature because it is what a caller most often overrides.
  */
 internal sealed interface CardShape {
     /** 2:3 for a poster, 16:9 for a thumb — the shapes jellyfin-web uses for the same rows. */
@@ -298,11 +297,11 @@ internal sealed interface CardShape {
  * Three arms, and each card meets the ones it can:
  * - **no [onClick]** — `clearAndSetSemantics {}` and nothing else. This is `EpisodeRow`'s case: a
  *   card inside something already clickable was a second traversal stop offering the row's own
- *   action, the first of the two announcing nothing but a title (accessibility audit 2026-08-05,
- *   A11Y-05). [PosterCard] never reaches this arm — its `onClick` is not nullable.
+ *   action, the first of the two announcing nothing but a title. [PosterCard] never reaches this
+ *   arm — its `onClick` is not nullable.
  * - **no [onLongClick]** — a plain `clickable`, no combined-gesture detector at all.
  * - **both** — [selectableCardClick], whose long press is labelled so batch selection is reachable
- *   from TalkBack's actions menu (A11Y-19).
+ *   from TalkBack's actions menu.
  *
  * The named, merged node comes *before* the click in the chain in all three, which is what makes
  * the card one stop with an authored sentence rather than six — see [mediaCardSemantics], and
@@ -366,9 +365,8 @@ internal fun MediaCard(
  * They belong together because they are decided together and drawn together — the selection state
  * *claims the corner* the badge would otherwise take (see [TopStartOverlay]), and all four end up
  * in the card's spoken sentence via `mediaCardDescription`. Forwarded verbatim through four
- * signature levels they were four chances to drop one on the way down
- * (docs/notes/audit-2026-08-06-quality.md, CPX-11/DUP-9); as one value there is nothing to
- * mistype and nothing to forget.
+ * signature levels they were four chances to drop one on the way down; as one value there is
+ * nothing to mistype and nothing to forget.
  *
  * @param selected `null` when the list is **not** in selection mode, which is the ordinary case and
  *   draws nothing extra; `false`/`true` put the card in the mode's unselected/selected state. One
@@ -536,7 +534,7 @@ private fun BoxScope.TopStartOverlay(
             color = Color.White,
             maxLines = 1,
             // Clipped inside artwork with no room to spare: without this the last glyph is cut in
-            // half at ≥1.5× font scale rather than trailing off (audit SCALE-05).
+            // half at ≥1.5× font scale rather than trailing off.
             overflow = TextOverflow.Ellipsis,
             modifier =
                 Modifier
@@ -573,7 +571,7 @@ private fun TimeChip(
  * The bottom-left star + score badge, shown on library grids.
  *
  * Silent: the card's own description says "Rating 8.0 out of 10", which is the number *and* the
- * scale it is on — a bare "8.0" announced from a badge is a number out of nowhere (audit m1).
+ * scale it is on — a bare "8.0" announced from a badge is a number out of nowhere.
  */
 @Composable
 private fun RatingBadge(
@@ -611,8 +609,8 @@ private fun RatingBadge(
  * A hand-rolled pair of boxes rather than a `LinearProgressIndicator`: at 3dp with a 2dp radius and
  * neither stop indicator nor gap, nothing that component provides survives being configured away.
  *
- * It carries no `progressBarRangeInfo` of its own (which is what the audit's A11Y-03 sketched):
- * inside a card the bar is not a control, it is one fact among six, and a separate progress node
+ * It carries no `progressBarRangeInfo` of its own: inside a card the bar is not a control, it is
+ * one fact among six, and a separate progress node
  * would be a second stop announcing "45 percent" with nothing to say what is 45% done. The card's
  * merged description says "45% watched" instead, and the bar is explicitly silenced so the two
  * cannot both speak.

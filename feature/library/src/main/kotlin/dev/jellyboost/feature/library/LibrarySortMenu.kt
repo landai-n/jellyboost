@@ -29,11 +29,10 @@ import dev.jellyboost.core.ui.theme.GlassDefaults
  * Picking the key that is already active flips the direction, which is how jellyfin-web's sort
  * control behaves; the explicit direction row underneath makes that discoverable.
  *
- * Which key is active was drawn as a leading tick and nothing else — the icon carries no
- * description, so the menu announced six identically-shaped options with no way to tell which one
- * the grid is already sorted by (accessibility audit 2026-08-05, A11Y-13). Each option now carries
- * real `selected` semantics, which is the same fact the tick draws, said in the voice a screen
- * reader already has for it. The tick stays exactly as it was.
+ * Which key is active is drawn as a leading tick, but the icon alone carries no description —
+ * without `selected` semantics, the menu would announce six identically-shaped options with no way
+ * to tell which one the grid is already sorted by. Each option carries real `selected` semantics,
+ * which is the same fact the tick draws, said in the voice a screen reader already has for it.
  */
 @Composable
 internal fun LibrarySortMenu(

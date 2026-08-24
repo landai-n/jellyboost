@@ -129,7 +129,7 @@ internal class PlayerTrackPickerTest : PlayerViewModelFixture() {
 
             requests.last().audioStreamIndex shouldBe 2
             // The VM still sends no cap of its own — Auto's number is measured and filled in by the
-            // resolver, which is mocked here — and the flag is what says so (DECISIONS.md 2026-08-15).
+            // resolver, which is mocked here — and the flag is what says so.
             requests.last().maxStreamingBitrate.shouldBeNull()
             requests.last().autoBitrate shouldBe true
             // Nothing to bypass: there is no download of this item to be forced past.
@@ -273,10 +273,9 @@ internal class PlayerTrackPickerTest : PlayerViewModelFixture() {
     @Test
     fun `a direct-played stream of a download still goes home for a track the file holds`() =
         runTest(dispatcher) {
-            // The M10 device finding (check B.3): the server was direct-playing the original file,
-            // so the stream carried every track and the in-stream switch *succeeded* — which is
-            // exactly why it must not be offered one. Only the transcoded case reached the
-            // re-resolve, which is why the transcoded walk above looked fine.
+            // When the server is direct-playing the original file, the stream carries every track
+            // and the in-stream switch *succeeds* — which is exactly why it must not be offered
+            // one. Only the transcoded case reaches the re-resolve.
             playerHandle.trackSelectionSucceeds = true
             playerHandle.snapshot = PlaybackSnapshot(positionMs = 30_000L, isPlaying = true)
             val model = streamingDownloadedItem()

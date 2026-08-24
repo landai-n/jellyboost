@@ -53,13 +53,12 @@ internal interface DownloadScheduler {
      * unlinking files precisely so the downloader cannot be holding a handle to one of them, and
      * WorkManager's cancellation is asynchronous: a fire-and-forget cancel returns while the
      * transfer is still writing, and `FileDownloader` re-creates the item directory for every file
-     * it opens — so the cascade's delete raced a `mkdirs()` that put it straight back
-     * (docs/notes/audit-2026-07.md, STAB-04).
+     * it opens — so the cascade's delete would race a `mkdirs()` that puts it straight back.
      */
     suspend fun stop()
 }
 
-/** [DownloadScheduler] on WorkManager, per docs/PLAN.md's "Download pipeline" → Enqueue. */
+/** [DownloadScheduler] on WorkManager. */
 @Singleton
 internal class WorkManagerDownloadScheduler
     @Inject
@@ -137,7 +136,7 @@ internal class WorkManagerDownloadScheduler
         }
 
         companion object {
-            /** docs/PLAN.md: `enqueueUniqueWork("downloads", KEEP)`. */
+            /** The name the queue's unique work is enqueued under. */
             const val UNIQUE_WORK_NAME = "downloads"
 
             /**

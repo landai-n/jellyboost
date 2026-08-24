@@ -13,10 +13,9 @@ import java.time.Clock
 import javax.inject.Singleton
 
 /**
- * Hilt bindings for the M4 user-data layer.
+ * Hilt bindings for the user-data layer.
  *
- * Kept out of `DataModule` so the two milestones do not edit the same file: M3 and M4 are built on
- * parallel worktree branches.
+ * A separate Hilt module from `DataModule`, kept as its own file for the user-data bindings.
  */
 @Module
 @InstallIn(SingletonComponent::class)

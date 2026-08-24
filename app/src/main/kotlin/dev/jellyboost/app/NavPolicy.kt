@@ -10,10 +10,10 @@ import dev.jellyboost.core.common.Routes
  * two `NavOptions` behind them.
  *
  * It lives here, beside [JellyfinNavHost] — which owns the graph these options navigate *within* —
- * rather than in `AppScaffold.kt`, which merely draws the bars that call them (audit ARCH-8). The
- * saveState/restoreState asymmetry documented on `homeNavOptions` below was found on the test
- * tablet, and it is the kind of thing a reader goes looking for next to the graph, not next to the
- * chrome that happens to draw the buttons.
+ * rather than in `AppScaffold.kt`, which merely draws the bars that call them. The
+ * saveState/restoreState asymmetry documented on `homeNavOptions` below is the kind of thing a
+ * reader goes looking for next to the graph, not next to the chrome that happens to draw the
+ * buttons.
  */
 
 /**
@@ -32,8 +32,8 @@ internal fun NavHostController.navigateToTab(route: Any) {
  * shorter-looking way to say "pop everything above Home". The difference is what happens when Home
  * is *not* on the back stack. `popBackStack` to an absent destination returns `false` and does
  * nothing at all: the user taps Home and stays exactly where they are, with no feedback — the same
- * silent-no-op failure mode that produced duplicate `HomeViewModel`s before 649a7c8 (see
- * [topLevelNavOptions]). `navigate` cannot fail that way: the `popUpTo` clause may no-op, but
+ * silent-no-op failure mode that produced duplicate `HomeViewModel`s (see [topLevelNavOptions]).
+ * `navigate` cannot fail that way: the `popUpTo` clause may no-op, but
  * `launchSingleTop` then finds no Home to collapse onto and the navigation pushes one. The
  * affordance therefore always does what its icon promises.
  *
@@ -54,9 +54,9 @@ internal fun NavHostController.navigateHome() {
  * which are deliberately **off** — and that difference is the whole of this function's reason to
  * exist.
  *
- * `navigateHome` originally reused [topLevelNavOptions] verbatim, on the reasoning that the Home
- * button and the Home tab want the same thing. They do not, because `saveState`/`restoreState` are
- * not symmetric around the *pop target*. In `NavControllerImpl.executePopOperations`, a
+ * Reusing [topLevelNavOptions] verbatim here would assume the Home button and the Home tab want
+ * the same thing. They do not, because `saveState`/`restoreState` are not symmetric around the
+ * *pop target*. In `NavControllerImpl.executePopOperations`, a
  * **non-inclusive** `popUpTo(X) { saveState = true }` maps the state it just saved to `X`'s own id:
  *
  * ```
@@ -75,10 +75,11 @@ internal fun NavHostController.navigateHome() {
  * ```
  *
  * With `node == Routes.Home` those two are the same key. Tapping Home on a screen pushed from Home
- * therefore saved the chain under `Home`, then immediately restored it — the destination changed
- * from ItemDetail to Home to ItemDetail within one call, and the button looked completely dead.
- * Device-verified on the test tablet: the *same* LibraryGrid screen obeyed the button when reached
- * via the Libraries tab and ignored it when reached from Home's "See all".
+ * would therefore save the chain under `Home`, then immediately restore it — the destination flips
+ * from ItemDetail to Home to ItemDetail within one call, and the button looks completely dead.
+ * The *same* LibraryGrid screen would obey the button when reached via the Libraries tab and
+ * ignore it when reached from Home's "See all", since only the affordance's own pop target
+ * coincides with the saved key.
  *
  * The tab bar escapes this only by accident. `popUpTo<Home>` from Home itself pops nothing, so
  * `savedState.firstOrNull()?.id` is `null`, and `backStackMap[Home] = null` acts as a sentinel that

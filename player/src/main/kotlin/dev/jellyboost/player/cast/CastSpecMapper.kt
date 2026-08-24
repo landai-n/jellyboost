@@ -19,14 +19,14 @@ import javax.inject.Singleton
  * **Credentials.** Every URL the app itself opens is authorised by `JellyfinAuthInterceptor`, an
  * OkHttp interceptor on the media client. A receiver fetches its own bytes over its own network
  * stack, so nothing of ours is in that loop: the token has to travel in the URL, on the media URL
- * and on every subtitle URL. Probed against the dev server (2026-07-31), a transcode's
- * `TranscodingUrl` and every external-subtitle `DeliveryUrl` already arrive with `ApiKey` on them —
- * but a direct-play or direct-stream URL, which the SDK builds locally, does not. Applying
+ * and on every subtitle URL. A transcode's `TranscodingUrl` and every external-subtitle
+ * `DeliveryUrl` already arrive with `ApiKey` on them — but a direct-play or direct-stream URL,
+ * which the SDK builds locally, does not. Applying
  * [StreamUrlFactory.withApiKey] to all of them and relying on its idempotence is what covers both
  * without a table of which endpoint does what. The **poster** is the deliberate exception — see
  * [CastMetadata] handling in [map]: image endpoints answer without credentials, and every URL signed
  * here is published verbatim in the receiver's `MediaStatus`, readable by any sender on the network
- * (audit CAST-06) — so the token goes only where the fetch actually needs it.
+ * — so the token goes only where the fetch actually needs it.
  *
  * **Track ids.** ExoPlayer identifies a side-loaded subtitle by the `external:<index>` string id
  * `ExoMediaSourceFactory` invents for it; Cast identifies one by a numeric id the sender chooses.
@@ -62,12 +62,12 @@ internal class CastSpecMapper
                 streamType = if (source.runTimeTicks > 0L) CastStreamType.Buffered else CastStreamType.Live,
                 durationMs = source.runTimeTicks.ticksToMillis(),
                 startPositionMs = source.startPositionTicks.ticksToMillis(),
-                // The poster passes through *unsigned*, deliberately (audit CAST-06). Jellyfin's
-                // image endpoints answer `200` with no credentials (probed 2026-07-31), while every
-                // URL handed to the receiver — poster included, via `MediaMetadata`'s `WebImage` —
-                // is republished in its `MediaStatus` for any sender on the network to read. The
-                // media and subtitle URLs must carry the token or the receiver cannot fetch them;
-                // the poster's copy bought nothing and cost a third place the account token leaks.
+                // The poster passes through *unsigned*, deliberately. Jellyfin's image endpoints
+                // answer `200` with no credentials, while every URL handed to the receiver — poster
+                // included, via `MediaMetadata`'s `WebImage` — is republished in its `MediaStatus`
+                // for any sender on the network to read. The media and subtitle URLs must carry the
+                // token or the receiver cannot fetch them; the poster's copy would buy nothing and
+                // cost a third place the account token leaks.
                 // Cost of the server ever changing its image policy: a blank poster card, never a
                 // playback failure.
                 metadata = metadata,

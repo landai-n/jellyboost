@@ -6,7 +6,7 @@ import org.jellyfin.sdk.model.api.ProfileConditionValue
 
 /**
  * Ceilings [DeviceProfileBuilder] (local playback) and [CastDeviceProfile] (Chromecast) both send
- * the server, straight from jellyfin-web's `browserDeviceProfile.js` (DUP-14).
+ * the server, straight from jellyfin-web's `browserDeviceProfile.js`.
  *
  * The two profiles' *shapes* stay deliberately separate — local playback probes this device's own
  * decoders, casting is a fixed and conservative intersection every receiver satisfies — but the

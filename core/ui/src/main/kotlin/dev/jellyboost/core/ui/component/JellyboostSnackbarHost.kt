@@ -22,13 +22,12 @@ import dev.jellyboost.core.ui.theme.LocalAppChromePadding
 /**
  * The app's snackbar: the [PillSnackbar] and the one rule about where it sits.
  *
- * Five screens used to spell this host out for themselves and had drifted into four different
- * answers to the same question — `navigationBarsPadding()` on the two pushed destinations,
- * `LocalAppChromePadding`'s bottom on the downloads screen, a hardcoded padding in the player, and
- * nothing at all on the SyncPlay groups screen, whose snackbar therefore sat under the gesture bar
- * (audit DUP-3). None of the four is wrong for the screen that wrote it; what was wrong is that
- * each is only correct *there*, so a screen that changed category silently got the other screen's
- * bug.
+ * Hand-spelling this per screen invites drift into different answers to the same question —
+ * `navigationBarsPadding()` on the two pushed destinations, `LocalAppChromePadding`'s bottom on
+ * the downloads screen, a hardcoded padding in the player, and nothing at all on the SyncPlay
+ * groups screen, whose snackbar then sits under the gesture bar. None of the four is wrong for the
+ * screen that writes it; what's wrong is that each is only correct *there*, so a screen that
+ * changes category silently gets another screen's bug.
  *
  * [SnackbarBottomInset] is the rule that is correct in every category at once, because it asks the
  * two questions in the right order and takes the larger answer:
@@ -44,7 +43,8 @@ import dev.jellyboost.core.ui.theme.LocalAppChromePadding
  * is all at the top and its bottom padding is zero, so a screen that read only the chrome padding
  * (the downloads screen) put its snackbar under the gesture bar on exactly the tablet this app is
  * tested on. And **mid-navigation** the chrome's bottom animates through values smaller than the
- * inset, which used to let the snackbar dip under the gesture bar and jump back up.
+ * inset, so reading only the chrome padding would let the snackbar dip under the gesture bar and
+ * jump back up as it settles.
  *
  * @param minimumBottomInset a floor for a screen that consumes no system insets at all and must
  *   still clear something it drew itself — the player's transport controls. Zero everywhere else.
@@ -102,7 +102,7 @@ internal class SnackbarBottomInset(
  * carried a bug the others were one refactor away from: it keyed the effect on the **resolved
  * string**.
  *
- * That is a real wedge, not a cosmetic one (audit HYG-8). When a second message arrives before the
+ * That is a real wedge, not a cosmetic one. When a second message arrives before the
  * first has been consumed — a batch finishing while a download failure is still on screen — the
  * state goes straight from one message to the other with no `null` between them. If the two happen
  * to share their copy, the resolved string never changes, so `LaunchedEffect` never restarts: the

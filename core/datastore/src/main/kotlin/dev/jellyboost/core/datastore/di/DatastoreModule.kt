@@ -35,7 +35,7 @@ interface DatastoreModule {
     @Singleton
     fun bindSecureCredentialStore(impl: EncryptedSecureCredentialStore): SecureCredentialStore
 
-    /** Binds [AppPreferences] to its DataStore-backed implementation (M6). */
+    /** Binds [AppPreferences] to its DataStore-backed implementation. */
     @Binds
     @Singleton
     fun bindAppPreferences(impl: DataStoreAppPreferences): AppPreferences

@@ -15,8 +15,7 @@ import javax.inject.Singleton
  * A volume here is always an **app-specific** directory — one entry of `getExternalFilesDirs(null)`
  * — and never an arbitrary folder the user browsed to. That is what keeps the whole pipeline on
  * plain `java.io.File`: no runtime permission, no persisted URI grant, no `DocumentFile`, and the
- * same wipe-on-uninstall behaviour on the SD card as on internal storage (docs/PLAN.md, "Download
- * pipeline" → Storage; DECISIONS.md 2026-07-29).
+ * same wipe-on-uninstall behaviour on the SD card as on internal storage.
  *
  * @property id the token persisted in DataStore. `"primary"` for the built-in volume, otherwise the
  *   volume's UUID — deliberately not an index (they reorder when a card is pulled) and not a path

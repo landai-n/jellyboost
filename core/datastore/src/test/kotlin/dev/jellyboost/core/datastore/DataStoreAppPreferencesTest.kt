@@ -84,7 +84,7 @@ class DataStoreAppPreferencesTest {
             }
         }
 
-    // ---- M7: Wi-Fi-only downloads ----------------------------------------------------------------
+    // ---- Wi-Fi-only downloads -------------------------------------------------------------------
 
     @Test
     fun `Wi-Fi-only downloads default to on`() =
@@ -133,7 +133,7 @@ class DataStoreAppPreferencesTest {
             }
         }
 
-    // ---- M9: segment skip + picture-in-picture ---------------------------------------------------
+    // ---- segment skip + picture-in-picture --------------------------------------------------------
 
     @Test
     fun `both segment skip modes default to showing a button`() =
@@ -194,7 +194,7 @@ class DataStoreAppPreferencesTest {
             DataStoreAppPreferences(store).pipOnLeave.first() shouldBe false
         }
 
-    // ---- download quality (M9) ------------------------------------------------------------------
+    // ---- download quality ---------------------------------------------------------------------
 
     @Test
     fun `download quality defaults to the original file`() =

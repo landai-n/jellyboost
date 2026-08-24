@@ -30,10 +30,10 @@ import javax.inject.Inject
  * Application entry point.
  *
  * Owns Hilt's object graph, provides the WorkManager configuration used by the download and
- * user-data sync workers (docs/PLAN.md, ":app"), and configures the one Coil image loader every
- * `JellyfinAsyncImage` in the app draws through.
+ * user-data sync workers, and configures the one Coil image loader every `JellyfinAsyncImage` in
+ * the app draws through.
  *
- * ### The startup contract (audit PERF-2)
+ * ### The startup contract
  * The five process-lifetime collaborators below are injected as [Lazy] and started from a coroutine
  * on the application scope, **not** as `lateinit` fields resolved inside `super.onCreate()`. Held
  * eagerly, the member injection built the entire singleton graph on the main thread before the
@@ -74,7 +74,7 @@ class JellyboostApplication :
     lateinit var mainDispatcher: CoroutineDispatcher
 
     /**
-     * Watches the connection so user-data changes made offline reach the server (M8).
+     * Watches the connection so user-data changes made offline reach the server.
      *
      * Injected here rather than from a ViewModel because it has to run whether or not any screen is
      * showing — a device that comes back online with the app in the background is the case that
@@ -95,8 +95,7 @@ class JellyboostApplication :
     lateinit var downloadedMetadataRefresher: Lazy<DownloadedMetadataRefresher>
 
     /**
-     * Expires the browse cache, so the `items` table stops growing for the life of the install
-     * (audit HYG-1).
+     * Expires the browse cache, so the `items` table stops growing for the life of the install.
      *
      * The counterpart of the refresher above — that one keeps downloaded metadata current, this one
      * throws the *browsed* metadata away once it is old enough to be worthless. Here rather than on
@@ -107,8 +106,7 @@ class JellyboostApplication :
     lateinit var browseCacheMaintenance: Lazy<BrowseCacheMaintenance>
 
     /**
-     * Keeps a SyncPlay group alive while the app is off screen, and takes one back on return
-     * (DECISIONS.md 2026-07-31).
+     * Keeps a SyncPlay group alive while the app is off screen, and takes one back on return.
      *
      * Here for the same reason as the two above, and more sharply: the whole failure it fixes
      * happens while no screen exists — the platform cuts a backgrounded app's network, the group is
@@ -118,7 +116,7 @@ class JellyboostApplication :
     lateinit var syncPlayPresenceCoordinator: Lazy<SyncPlayPresenceCoordinator>
 
     /**
-     * Watches for a Cast session, and keeps reporting one after the player screen is gone (M12).
+     * Watches for a Cast session, and keeps reporting one after the player screen is gone.
      *
      * Here for the same reason as the three above, and it is the sharper case: a cast session is
      * started from the top bar, outlives whichever screen was open, and has to end with a stop
@@ -139,11 +137,10 @@ class JellyboostApplication :
     /**
      * The app-wide Coil image loader.
      *
-     * Coil 3 gives a hand-built loader **no** disk cache and no transition unless it is told to, and
-     * the app had been running on the bare defaults: every poster that scrolled out of the memory
-     * cache was re-fetched over the network, and each one popped in. Both are felt on the home
-     * screen and in the library grid, which are nothing but images (POLISH.md, "media list
-     * scrolling").
+     * Coil 3 gives a hand-built loader **no** disk cache and no transition unless it is told to:
+     * without them, every poster that scrolls out of the memory cache is re-fetched over the
+     * network, and each one pops in. Both are felt on the home screen and in the library grid,
+     * which are nothing but images.
      *
      * Sizes are deliberately modest: artwork is requested at fixed widths by
      * `SdkImageUrlFactory`, so the entries are small, and 25 % of the app's heap holds a screenful

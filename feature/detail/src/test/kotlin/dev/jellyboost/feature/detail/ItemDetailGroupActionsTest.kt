@@ -20,17 +20,17 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 /**
- * What the detail page offers, and sends, while a SyncPlay group is active (M11 Phase 4).
+ * What the detail page offers, and sends, while a SyncPlay group is active.
  *
  * Its own class rather than more of [ItemDetailViewModelTest], which is at detekt's `LargeClass`
  * ceiling — the same split [ItemDetailSelectionTest] already makes for batch selection.
  *
  * The claim underneath every test here is that in a group **everything this page starts is started
- * for the group** (DECISIONS.md, 2026-07-31): Play is a `SetNewQueue` and not a navigation, the two
- * queue actions are requests, nothing on this page changes locally, and the snackbar says only that
- * the ask went out. The control is the whole of the rest of this package, which runs with no group
- * and must be untouched by any of it — plus the solo tests below, which pin that a play with no
- * group is still the navigation it always was.
+ * for the group**: Play is a `SetNewQueue` and not a navigation, the two queue actions are
+ * requests, nothing on this page changes locally, and the snackbar says only that the ask went out.
+ * The control is the whole of the rest of this package, which runs with no group and must be
+ * untouched by any of it — plus the solo tests below, which pin that a play with no group is still
+ * a navigation.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class ItemDetailGroupActionsTest : ItemDetailViewModelFixture() {
@@ -53,7 +53,7 @@ internal class ItemDetailGroupActionsTest : ItemDetailViewModelFixture() {
                 model.onPlay(model.uiState.value.playTarget!!)
                 advanceUntilIdle()
 
-                // The resume position travels with it, exactly as the header button used to send it.
+                // The resume position travels with it, exactly as the header button sends it.
                 navigations shouldBe listOf(PlayRequest(ITEM_ID, RESUME_TICKS))
                 coVerify(exactly = 0) { syncPlaySession.playForGroup(any(), any()) }
             }
@@ -157,7 +157,7 @@ internal class ItemDetailGroupActionsTest : ItemDetailViewModelFixture() {
     fun `an episode row's own play button goes to the group, expanded and from its own position`() =
         runTest {
             // A season page: the row a user taps is not what the header would have resolved to, and
-            // it is the second entry point that used to navigate straight past the group.
+            // it is the second entry point, and it must not navigate straight past the group.
             coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(season)
             coEvery { repository.getEpisodes(SERIES_ID, ITEM_ID) } returns
                 AppResult.Success(listOf(episode(EPISODE_1), episode(EPISODE_2)))

@@ -7,11 +7,11 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.type
 
 /**
- * The player's keyboard layer (accessibility audit 2026-08-05, CR-4).
+ * The player's keyboard layer.
  *
- * The app is tablet-first and had no keyboard support at all: with a case keyboard, an external
- * mouse-and-keyboard setup or a switch device that emits key codes, the only reachable transport was
- * the media keys the `MediaSession` already answers. The mapping lives here, apart from
+ * The app is tablet-first: with a case keyboard, an external mouse-and-keyboard setup or a switch
+ * device that emits key codes, the only transport the platform offers on its own is the media keys
+ * the `MediaSession` already answers. The mapping lives here, apart from
  * `PlayerScreen`, because *which key does what* is a table worth testing without a device.
  */
 internal enum class PlayerKeyCommand {
@@ -83,7 +83,7 @@ internal fun playerKeyBinding(key: Key): PlayerKeyBinding? =
  *
  * Built outside the screen composable so that the table's `when` is not one more branch in a
  * function that is already a screen, and so that the one thing every shortcut shares — bringing the
- * controls back, the keyboard's counterpart of CR-1's tap — is stated once.
+ * controls back, the keyboard's counterpart of the tap surface's own action — is stated once.
  *
  * @param onShowControls run before every command, whatever the command is.
  */

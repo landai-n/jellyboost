@@ -25,7 +25,7 @@ import timber.log.Timber
 import javax.inject.Inject
 
 /**
- * State holder for the Settings screen (docs/PLAN.md, "Screens" → Settings).
+ * State holder for the Settings screen.
  *
  * It is a projection and nothing more: every switch reads a `Flow` and writes through the same
  * store, so there is no local copy to keep in step and no save/restore code. Flipping a switch and
@@ -73,8 +73,8 @@ class SettingsViewModel
                 )
             }.catch { error ->
                 // `stateIn` rethrows into `viewModelScope`, and a ViewModel scope has no handler —
-                // so an upstream throw here did not degrade the Settings screen, it took the
-                // process down with it (audit STAB-10). The screen falls back to its defaults: it
+                // so an upstream throw here would not degrade the Settings screen, it would take
+                // the process down with it. The screen falls back to its defaults: it
                 // is a projection with no local copy, so defaults are the honest thing to draw and
                 // every write path below still works.
                 Timber.e(error, "The settings projection failed; falling back to the defaults")
@@ -108,9 +108,9 @@ class SettingsViewModel
         /**
          * Sets the quality **future** downloads are fetched at.
          *
-         * Deliberately not retroactive: `DownloadEnqueuer` stamps the quality onto each row when the
-         * user taps Download, and the queue plans from the row (DECISIONS.md, 2026-07-29). Changing
-         * this while a transfer is running leaves that transfer exactly as it was.
+         * Deliberately not retroactive: `DownloadEnqueuer` stamps the quality onto each row when
+         * the user taps Download, and the queue plans from the row. Changing this while a
+         * transfer is running leaves that transfer exactly as it was.
          */
         fun setDownloadQuality(quality: DownloadQuality) {
             viewModelScope.launch { appPreferences.setDownloadQuality(quality) }
@@ -121,9 +121,9 @@ class SettingsViewModel
          *
          * The screen asks before setting [deleteExistingDownloads], but the rule is not the
          * screen's: `DownloadRepository` refuses the switch outright while downloads exist and the
-         * caller has not agreed to lose them (docs/PLAN.md's v1 policy — nothing moves files yet).
-         * A refusal is logged rather than surfaced: it can only be reached by a race with a
-         * download starting between the dialog and the confirm, and the picker simply stays put.
+         * caller has not agreed to lose them (nothing moves files yet). A refusal is logged
+         * rather than surfaced: it can only be reached by a race with a download starting between
+         * the dialog and the confirm, and the picker simply stays put.
          */
         fun setStorageLocation(
             volumeId: String,
@@ -157,10 +157,10 @@ class SettingsViewModel
          * The work runs in the **application** scope rather than [viewModelScope], because none of
          * it is this screen's to abandon. Signing out with an unreachable server waits on a network
          * goodbye (capped in `SessionRepository`, but still seconds long), and a user who backs out
-         * of Settings during that wait used to clear this ViewModel, cancel the coroutine somewhere
-         * between the deletes and the credential wipe, and stay quietly signed in. The state a
-         * sign-out leaves behind must be reached whether or not the screen that asked for it is
-         * still on screen.
+         * of Settings during that wait would otherwise clear this ViewModel, cancelling the
+         * coroutine somewhere between the deletes and the credential wipe, and stay quietly signed
+         * in. The state a sign-out leaves behind must be reached whether or not the screen that
+         * asked for it is still on screen.
          */
         fun signOut(deleteDownloads: Boolean) {
             // Never lowered again: the sign-out is now unstoppable, and its completion takes the

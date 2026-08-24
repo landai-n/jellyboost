@@ -189,7 +189,7 @@ class OnlineJellyfinRepositoryTest {
     @Test
     fun `getUserViews asks for no counts when there are no supported libraries`() =
         runTest {
-            // Music joined SUPPORTED in M13 Phase 2 — photos is what stays outside it.
+            // Music is part of SUPPORTED — photos is what stays outside it.
             coEvery { userViewsApi.getUserViews(any(), any(), any(), any()) } returns
                 queryResponse(listOf(libraryDto(UUID.randomUUID(), "Photos", CollectionType.PHOTOS)))
 
@@ -326,7 +326,7 @@ class OnlineJellyfinRepositoryTest {
             (result as AppResult.Failure).error.shouldBeInstanceOf<AppError.Unknown>()
         }
 
-    // ---- M4: item detail --------------------------------------------------------------------
+    // ---- item detail --------------------------------------------------------------------------
 
     @Test
     fun `getItem re-fetches the single item and maps it`() =
@@ -464,7 +464,7 @@ class OnlineJellyfinRepositoryTest {
             (result as AppResult.Failure).error.shouldBeInstanceOf<AppError.Network>()
         }
 
-    // ---- M13 Phase 2: music -------------------------------------------------------------------
+    // ---- music --------------------------------------------------------------------------------
 
     @Test
     fun `a music library's count asks only for albums, unlike a movie or TV library`() =
@@ -484,7 +484,7 @@ class OnlineJellyfinRepositoryTest {
 
             libraries.map { it.collectionType } shouldContainExactly listOf(CollectionKind.MOVIES, CollectionKind.MUSIC)
             // The movie library still asks for exactly [MOVIE, SERIES] — pinned above and
-            // untouched by M13 Phase 2 (docs/notes/music-m13-plan.md item 2).
+            // unaffected by a music library sharing the same count path.
             requests.first().includeItemTypes shouldContainExactly listOf(BaseItemKind.MOVIE, BaseItemKind.SERIES)
             requests.last().includeItemTypes shouldContainExactly listOf(BaseItemKind.MUSIC_ALBUM)
         }
@@ -593,7 +593,7 @@ class OnlineJellyfinRepositoryTest {
             (result as AppResult.Failure).error.shouldBeInstanceOf<AppError.Network>()
         }
 
-    // ---- getResumeAudioItems (M13 Phase 4) --------------------------------------------------
+    // ---- getResumeAudioItems --------------------------------------------------------------------
 
     @Test
     fun `getResumeAudioItems mirrors getResumeItems but narrows mediaTypes to audio`() =
@@ -621,7 +621,7 @@ class OnlineJellyfinRepositoryTest {
             (result as AppResult.Failure).error.shouldBeInstanceOf<AppError.Network>()
         }
 
-    // ---- getInstantMix / getLyrics (M13 Phase 6) --------------------------------------------
+    // ---- getInstantMix / getLyrics ---------------------------------------------------------------
 
     @Test
     fun `getInstantMix asks the music api by item id and limit, and maps the result`() =

@@ -12,7 +12,7 @@ import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 
 /**
- * Lazy-list `contentType` for every [ThumbCard] (DUP-15) — lets a `LazyRow`/`LazyColumn` reuse a
+ * Lazy-list `contentType` for every [ThumbCard] — lets a `LazyRow`/`LazyColumn` reuse a
  * scrolled-off thumb node instead of composing a fresh one when the next item is also a thumb.
  */
 const val THUMB_CARD_CONTENT_TYPE = "card-thumb"
@@ -29,9 +29,9 @@ const val THUMB_CARD_CONTENT_TYPE = "card-thumb"
  *
  * @param onClick what a tap does — or `null` when the card is *inside* something already clickable,
  *   which is how `EpisodeRow` uses it. A nested clickable card was a second traversal stop offering
- *   the row's own action, the first of the two announcing nothing but a title (accessibility audit
- *   2026-08-05, A11Y-05); `null` draws exactly the same artwork with no click target and no
- *   semantics at all, leaving the row to be the single node it should always have been.
+ *   the row's own action, the first of the two announcing nothing but a title; `null` draws exactly
+ *   the same artwork with no click target and no semantics at all, leaving the row to be the single
+ *   node it should always have been.
  * @param width fixed card width, as a row of cards needs; [Dp.Unspecified] fills the available
  *   width instead, which is what an adaptive grid cell wants.
  * @param onLongClick offered by lists that support batch selection; `null` everywhere else. Ignored

@@ -38,14 +38,14 @@ import javax.inject.Inject
  * [projection] is everything Room and DataStore answer; [local] is everything only a tap changes
  * (the tab, the *Cancel all* dialog, the snackbar). They are separate flows so that the projection
  * can be **stopped**: it is shared with [SharingStarted.WhileSubscribed], so leaving the screen
- * unsubscribes from it, and with it from the download list and the storage walk it pulls. Before,
- * a single collector launched in `init` kept those queries running from the first visit until
- * process death — with the screen off, and with the tab switch that "left" the screen saving rather
- * than popping it (docs/notes/audit-2026-07.md, PERF-03). [STOP_TIMEOUT_MS] of grace means a
- * rotation or a brief navigation away re-uses the running projection instead of restarting it.
+ * unsubscribes from it, and with it from the download list and the storage walk it pulls. A single
+ * collector launched in `init` would instead keep those queries running from the first visit until
+ * process death — with the screen off, and with the tab switch that "leaves" the screen saving
+ * rather than popping it. [STOP_TIMEOUT_MS] of grace means a rotation or a brief navigation away
+ * re-uses the running projection instead of restarting it.
  *
- * The projection itself runs on [DefaultDispatcher]. Grouping, sorting and the per-comparison
- * `lowercase()` in [toGroups] used to run in the collector's context — `Main.immediate` — at the
+ * The projection itself runs on [DefaultDispatcher]: grouping, sorting and the per-comparison
+ * `lowercase()` in [toGroups] must not run in the collector's context — `Main.immediate` — at the
  * throttle's two-to-six emissions a second for the whole of a transfer.
  */
 @HiltViewModel
@@ -88,12 +88,12 @@ class DownloadsViewModel
                         val queue = items.toQueue()
                         DownloadsProjection(
                             // Memoised: the finished half does not move during a transfer, but this
-                            // flow emits several times a second while one is running (PERF-11).
+                            // flow emits several times a second while one is running.
                             downloaded = groupCache.groups(items),
                             queue = queue,
                             speeds = speedTracker.update(items, clock.millis()),
                             // The queue subset, not the whole table: nothing but a queue row reads
-                            // the ratchet's answer (PERF-10).
+                            // the ratchet's answer.
                             progress = progressRatchet.update(queue),
                             storage = storage,
                             wifiOnly = wifiOnly,
@@ -122,10 +122,10 @@ class DownloadsViewModel
             viewModelScope.launch { downloads.setWifiOnly(enabled) }
         }
 
-        // The five row actions take an item **id** rather than a `DownloadItem` (audit 2026-08-08,
-        // PERF-14). Every one of them only ever used the id, and taking the whole row forced the
-        // composables that call them to take one too — `QueueRowActions` was handed a fresh, always-
-        // unstable `DownloadItem` on every progress tick where two booleans and an id would do.
+        // The five row actions take an item **id** rather than a `DownloadItem`. Every one of them
+        // only ever needs the id, and taking the whole row would force the composables that call
+        // them to take one too — `QueueRowActions` handed a fresh, always-unstable `DownloadItem`
+        // on every progress tick where two booleans and an id would do.
 
         /** Pauses one item; its partial files stay on disk for the next resume. */
         fun pause(itemId: String) {
@@ -212,8 +212,8 @@ class DownloadsViewModel
          *
          * **Finished downloads are never touched** — not by a filter here, but by construction: the
          * queue tab is `toQueue()`, which excludes `DOWNLOADED` rows, so there is no id in this list
-         * that names a completed file. This is the season-cancel rule (DECISIONS.md, 2026-07-29,
-         * "Cancel on a season keeps the episodes that already finished") applied to the whole queue.
+         * that names a completed file. This is the season-cancel rule — cancelling keeps whatever
+         * already finished — applied to the whole queue.
          */
         fun confirmCancelAll() {
             val targets = uiState.value.queue

@@ -283,7 +283,7 @@ class LocalPlaybackResolverTest {
     fun `a transcoded download offers the audio track its row recorded, not the source's default`() =
         runTest {
             // The download asked for stream 5, so stream 5 is what is in the file — whatever the
-            // source calls default. This is the assumption the M10 track fix flagged, now a record.
+            // source calls default.
             transcodedFilm(defaultAudioStreamIndex = 3, bakedAudioStreamIndex = 5)
 
             val source = resolver.resolve(request).shouldNotBeNull()
@@ -540,9 +540,9 @@ class LocalPlaybackResolverTest {
     @Test
     fun `an original download withholds an external audio stream — its file is not on this device`() =
         runTest {
-            // The DL-08 case 1: an `.mka` beside the video is listed in the source's streams with
-            // isExternal = true, but the download fetched only the container — offering the track
-            // routes selection to a server that offline playback exists to do without.
+            // An `.mka` beside the video is listed in the source's streams with isExternal = true,
+            // but the download fetched only the container — offering the track routes selection to
+            // a server that offline playback exists to do without.
             downloaded(
                 mediaSource =
                     PlayerFixtures.mediaSourceInfo(
@@ -572,10 +572,10 @@ class LocalPlaybackResolverTest {
     @Test
     fun `a baked track that happens to be external is not counted as a merge child`() =
         runTest {
-            // The DL-08 case 2: the encode baked in a track whose *source* stream was external.
-            // Flagging it side-loaded made `TrackSelectionController` count it among the merge
-            // children — every ordinal shifted by one, so the baked language played the first
-            // sidecar's file and the last sidecar pointed at a child that does not exist.
+            // The encode baked in a track whose *source* stream was external. Flagging it
+            // side-loaded would make `TrackSelectionController` count it among the merge
+            // children — every ordinal would shift by one, so the baked language would play the
+            // first sidecar's file and the last sidecar would point at a child that does not exist.
             downloaded(
                 mediaSource =
                     PlayerFixtures.mediaSourceInfo(
@@ -736,7 +736,7 @@ class LocalPlaybackResolverTest {
                     .shouldNotBeNull()
 
             // 10x10 thumbnails per sheet, one every 10 s: 23 min in is thumbnail 138 — sheet 1,
-            // cell 38, i.e. row 3 column 8. This is the arithmetic M9's scrubber will draw with.
+            // cell 38, i.e. row 3 column 8. This is the arithmetic the scrubber draws with.
             val thumbnail = trickplay.tileFor(positionMs = 1_380_000L).shouldNotBeNull()
 
             thumbnail.uri shouldBe "file:///downloads/t.1.jpg"

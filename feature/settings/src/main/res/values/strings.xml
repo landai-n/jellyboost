@@ -32,7 +32,7 @@
     <string name="settings_storage_missing">The storage you chose isn\'t available right now, so downloads are going to the location selected below.</string>
     <!-- Spoken-only hint on the row that is already in force while the chosen volume is missing:
          picking it again is the way out of the fallback state, and visually the row just looks
-         selected (accessibility audit 2026-08-05, F13). -->
+         selected. -->
     <string name="settings_storage_use_this_hint">Choose this one to keep downloads here</string>
     <string name="settings_storage_switch_title">Move downloads?</string>
     <plurals name="settings_storage_switch_message">

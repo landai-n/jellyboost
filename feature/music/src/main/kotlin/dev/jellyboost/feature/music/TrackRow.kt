@@ -35,15 +35,13 @@ import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 
 /**
- * One track row — shared by [AlbumDetailScreen] and [PlaylistDetailScreen] (M13 Phase 2,
- * docs/notes/music-m13-plan.md: "reuse one `TrackRow` composable inside `:feature:music`").
+ * One track row — the single row composable shared by [AlbumDetailScreen] and
+ * [PlaylistDetailScreen].
  *
  * @param index the track number drawn at the row's start; `null` hides that column (nothing
  *   meaningful to show — e.g. a playlist row whose source order carries no per-track index).
  * @param onClick the row was tapped. Wired to the album/playlist screen's `onPlay(tracks,
- *   startIndex)` callback today, which is a no-op until M13 Phase 3 wires an actual queue — the
- *   signature exists now so Phase 3 only fills the callback in (docs/notes/music-m13-plan.md,
- *   Phase 2 spec item 5).
+ *   startIndex)` callback.
  * @param onToggleFavorite the favourite heart was tapped.
  */
 @Composable

@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.StateFlow
  * drives playback — and `:feature:*` modules must not depend on `:player` (build-logic's feature
  * convention: features depend on `:core:*` and `:data`, never on each other and never on the
  * player). This interface is the seam that keeps that true while still letting a detail page say
- * "watch this together" (docs/notes/syncplay-m11-plan.md, key decision 2).
+ * "watch this together".
  *
  * It is deliberately tiny. A feature needs to know **whether** there is a group, so it can offer
  * the actions at all, and it needs the three verbs a browse surface has for a queue. It does not
@@ -35,7 +35,7 @@ interface SyncPlaySession {
      * Replaces the group's queue with [itemIds] and starts it at the first of them.
      *
      * The group's answer, not this device's: nothing plays here until the server broadcasts the
-     * resulting queue and the command that goes with it (key decision 11). A no-op outside a group.
+     * resulting queue and the command that goes with it. A no-op outside a group.
      *
      * A **list** rather than one id because the group queue has to be the shape jellyfin-web builds
      * for itself. Web expands a single-episode queue locally into the rest of the series and then

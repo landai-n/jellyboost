@@ -22,21 +22,19 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * State holder for [dev.jellyboost.feature.music.nowplaying.NowPlayingScreen] and its [QueueSheet]
- * (M13 Phase 4, docs/notes/music-m13-plan.md).
+ * State holder for [dev.jellyboost.feature.music.nowplaying.NowPlayingScreen] and its [QueueSheet].
  *
  * Unlike every other screen in `:feature:music`, this one injects [MusicController] directly rather
  * than going through `:app`'s `MusicPlaybackViewModel` — the arrangement that class's own KDoc
  * documents as existing so that *browse* screens do not each repeat the same two lines. NowPlaying
  * is not a browse screen; it *is* the queue's own view, so reading [MusicController.state] here is
- * the direct route the plan calls for (docs/notes/music-m13-plan.md, key decision 2: the interface
- * lives in `:core:common` precisely so any feature may inject it without ever depending on
- * `:player`).
+ * the direct route: the interface lives in `:core:common` precisely so any feature may inject it
+ * without ever depending on `:player`.
  *
  * Every transport verb is a thin pass-through — the controller already validates and no-ops the
  * ones that do not apply (e.g. [MusicController.togglePlayPause] while idle) — so this class adds
  * two things the controller does not know how to do itself: favouriting, and fetching the current
- * track's lyrics ([observeTrackChangesForLyrics], M13 Phase 6) for [LyricsPane].
+ * track's lyrics ([observeTrackChangesForLyrics]) for [LyricsPane].
  */
 @HiltViewModel
 class NowPlayingViewModel
@@ -51,7 +49,7 @@ class NowPlayingViewModel
 
         /**
          * Lyrics already fetched this session, by track id — `null` means "fetched, the server has
-         * none"; a missing key means "not fetched yet" (M13 Phase 6).
+         * none"; a missing key means "not fetched yet".
          *
          * Cleared to empty whenever the queue goes [MusicPlaybackState.Idle]: at that point there is
          * no current track for any of it to belong to, and the next queue this screen shows (a fresh
@@ -122,7 +120,7 @@ class NowPlayingViewModel
 
         /**
          * Fetches [LyricsPane]'s lyrics for whichever track is current, re-fetching on every track
-         * change and clearing the cache on [MusicPlaybackState.Idle] (M13 Phase 6).
+         * change and clearing the cache on [MusicPlaybackState.Idle].
          *
          * Keyed on the current item's id rather than [MusicPlaybackState.Active.currentIndex]: a
          * `moveItem` reorder changes the index without changing the *track*, and that must not

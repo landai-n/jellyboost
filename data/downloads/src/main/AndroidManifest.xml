@@ -5,7 +5,7 @@
     <!--
       The download queue runs as WorkManager foreground work: without the foreground promotion a
       multi-gigabyte transfer would hit WorkManager's 10-minute execution limit and be killed as
-      soon as the app left the screen (docs/PLAN.md, "Download pipeline").
+      soon as the app left the screen.
     -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />

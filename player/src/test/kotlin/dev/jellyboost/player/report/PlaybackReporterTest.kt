@@ -35,8 +35,8 @@ import kotlin.time.Duration.Companion.seconds
  *
  * Four things here are invisible until they break in production and are therefore pinned hard:
  * the 5-second cadence, the local position write that happens *whatever* the server does, the
- * `stopEncodingProcess` call without which a transcode outlives the app, and — since M8 — the fact
- * that an offline or local session writes that position locally while sending the server nothing.
+ * `stopEncodingProcess` call without which a transcode outlives the app, and the fact that an
+ * offline or local session writes that position locally while sending the server nothing.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class PlaybackReporterTest {
@@ -138,7 +138,7 @@ class PlaybackReporterTest {
     @Test
     fun `every progress report also writes the position locally`() =
         runTest {
-            // This is what makes resume identical online and offline (docs/PLAN.md).
+            // This is what makes resume identical online and offline.
             reporter().reportProgress(
                 PlayerFixtures.remoteSource(),
                 PlaybackSnapshot(positionMs = 90_000L, isPlaying = true),
@@ -179,8 +179,7 @@ class PlaybackReporterTest {
     fun `an invalid snapshot's position reaches neither the server nor the local store`() =
         runTest {
             // A cast player whose receiver was stopped from the television answers position zero for
-            // a session that is still alive; writing it would wipe the resume position everywhere
-            // (audit CAST-01).
+            // a session that is still alive; writing it would wipe the resume position everywhere.
             reporter().reportProgress(
                 PlayerFixtures.remoteSource(),
                 PlaybackSnapshot(positionMs = 0L, isPlaying = false, isValid = false),
@@ -261,7 +260,7 @@ class PlaybackReporterTest {
         runTest {
             // The receiver no longer held the item when the session ended: the stop still lands (and
             // the encoder still dies), but positionless — the ticker's last valid write is the
-            // honest resume position (audit CAST-01).
+            // honest resume position.
             val info = slot<PlaybackStopInfo>()
             coEvery { api.reportPlaybackStopped(capture(info)) } just Runs
 
@@ -312,7 +311,7 @@ class PlaybackReporterTest {
             coVerify(exactly = 0) { api.stopEncodingProcess(any(), any()) }
         }
 
-    // ---- M8: local playback and offline sessions ------------------------------------------------
+    // ---- local playback and offline sessions ------------------------------------------------------
 
     @Test
     fun `a locally played download tells the server nothing at all`() =
@@ -334,8 +333,8 @@ class PlaybackReporterTest {
     @Test
     fun `a locally played download still records every position locally`() =
         runTest {
-            // This is the mechanism behind the M8 definition of done: the rows it writes are the
-            // ones `UserDataSyncWorker` pushes when the network comes back.
+            // This is the mechanism behind the offline definition of done: the rows it writes are
+            // the ones `UserDataSyncWorker` pushes when the network comes back.
             val reporter = reporter()
             val source = PlayerFixtures.localSource()
 

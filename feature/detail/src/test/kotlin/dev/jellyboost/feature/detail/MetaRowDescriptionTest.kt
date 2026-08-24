@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 
 /**
  * Unit tests for [metaRowDescription] — the one sentence the detail header's metadata row says to a
- * screen reader (accessibility audit 2026-08-05, A11Y-21).
+ * screen reader.
  *
  * The row itself needs a device; what it *says* does not, which is why the ordering, the dropping
  * and the punctuation live in a plain function.
@@ -62,9 +62,8 @@ class MetaRowDescriptionTest {
         // `·` is read out as "dot" by some engines and swallowed by others; a comma is a pause in
         // all of them. The row keeps drawing Separators.DOT.
         //
-        // Asserted through the sentence rather than against a local constant: the join moved to
-        // `:core:ui`'s `describeParts` (audit DUP-8), and what this test is really pinning is that
-        // this row's output did not change with it.
+        // Asserted through the sentence rather than against a local constant: the join lives in
+        // `:core:ui`'s `describeParts`, and what this test pins is this row's own output.
         metaRowDescription(
             rating = "Rating 8.6",
             year = "2016",
@@ -76,9 +75,8 @@ class MetaRowDescriptionTest {
 
     @Test
     fun `a fact that repeats an earlier one is said once`() {
-        // Gained with the shared join: the header used to be the only one of the three assemblers
-        // without it, so a row whose runtime and time-left resolved to the same words said them
-        // twice.
+        // The shared join drops duplicates, so a row whose runtime and time-left resolve to the
+        // same words says them once.
         metaRowDescription(
             rating = null,
             year = "2016",

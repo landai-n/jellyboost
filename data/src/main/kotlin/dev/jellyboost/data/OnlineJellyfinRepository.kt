@@ -64,23 +64,19 @@ import javax.inject.Singleton
  * makes the server resolve the authenticated user, so this class needs no session dependency of
  * its own.
  *
- * Requests stay deliberately lean — only the fields a card actually draws — following the pattern
- * the plan takes from Swiftfin: list calls are minimal, detail and playback calls fetch everything
- * (docs/PLAN.md, "Screens" → ItemDetail).
+ * Requests stay deliberately lean — only the fields a card actually draws — following the same
+ * pattern Swiftfin uses: list calls are minimal, detail and playback calls fetch everything.
  *
- * Every successful read is **written through** to Room with `source = BROWSE_CACHE` (M6,
- * docs/PLAN.md "Data layer"). That write is fire-and-forget — see [BrowseCacheWriter] — so this
- * class still behaves like a pure network reader from the caller's point of view.
+ * Every successful read is **written through** to Room with `source = BROWSE_CACHE`. That write
+ * is fire-and-forget — see [BrowseCacheWriter] — so this class still behaves like a pure network
+ * reader from the caller's point of view.
  */
 @Singleton
 @Suppress(
     // One member per [JellyfinRepository] method, by construction — the interface is the
-    // implementation's whole surface, and M13 Phase 2's four music members (docs/notes/
-    // music-m13-plan.md) pushed this class from 17 to 21; Phase 4's `getResumeAudioItems` to 22;
-    // Phase 6's `getInstantMix`/`getLyrics` to 24. Splitting it would mean two
-    // repositories implementing one interface, which is the parallel-model the plan's
-    // "extend, don't parallel" rule (decision 5) rules out for the domain layer and would be
-    // worse here, for the same reason. Logged in DECISIONS.md.
+    // implementation's whole surface. Splitting it would mean two repositories implementing one
+    // interface, which the domain layer deliberately avoids, and would be worse here, for the
+    // same reason.
     "TooManyFunctions",
 )
 internal class OnlineJellyfinRepository
@@ -97,7 +93,7 @@ internal class OnlineJellyfinRepository
                 val response = apiClient.userViewsApi.getUserViews(includeHidden = false)
                 browseCache.cacheViews(response.content.items)
                 // The mapper drops everything outside app scope (live TV, photos, … — music
-                // joined `CollectionKind.SUPPORTED` in M13 Phase 2).
+                // is part of `CollectionKind.SUPPORTED`).
                 val views = mapper.toLibraryViews(response.content.items)
                 coroutineScope {
                     views
@@ -220,7 +216,7 @@ internal class OnlineJellyfinRepository
                 mapper.toDomain(response.content)
             }
 
-        // ---- M3 — library & search ----------------------------------------------------------
+        // ---- library & search -----------------------------------------------------------------
 
         override fun getItemsPaged(
             query: ItemQuery,
@@ -297,7 +293,7 @@ internal class OnlineJellyfinRepository
                 )
             }
 
-        // ---- M4 — item detail ---------------------------------------------------------------
+        // ---- item detail -----------------------------------------------------------------------
 
         /**
          * Note there is no `fields` argument to pass here: `/Users/{userId}/Items/{itemId}` is the
@@ -417,9 +413,9 @@ internal class OnlineJellyfinRepository
                 mapper.toDomain(response.content.items)
             }
 
-        // ---- end M4 -------------------------------------------------------------------------
+        // ---- end item detail ------------------------------------------------------------------
 
-        // ---- M13 Phase 2 — music --------------------------------------------------------------
+        // ---- music -----------------------------------------------------------------------------
 
         override suspend fun getAlbumTracks(albumId: String): AppResult<List<JellyfinItem>> =
             onIo {
@@ -490,16 +486,16 @@ internal class OnlineJellyfinRepository
             }
 
         /**
-         * `/Playlists/{id}/Items` rather than a `parentId` items query: the plan's Phase 2 note
-         * flags that a generic items query is not guaranteed to preserve playlist order, while the
-         * dedicated endpoint is built exactly for that (docs/notes/music-m13-plan.md, Phase 2).
+         * `/Playlists/{id}/Items` rather than a `parentId` items query: a generic items query is
+         * not guaranteed to preserve playlist order, while the dedicated endpoint is built exactly
+         * for that.
          *
          * Filtered to audio, because a Jellyfin playlist may legally mix in episodes and films and
          * every consumer of this member is the audio-only pipeline — `PlaylistDetailScreen` hands
          * the whole list to the music queue, whose resolver would build `/Audio/{id}/universal`
-         * URLs for video items. M13 is a view-only music app; a playlist's video members are out
+         * URLs for video items. This is a view-only music app; a playlist's video members are out
          * of its scope, exactly as `SdkDownloadApi.getPlaylistTrackIds` already drops them on the
-         * download path (DECISIONS.md, 2026-08-09).
+         * download path.
          */
         override suspend fun getPlaylistItems(playlistId: String): AppResult<List<JellyfinItem>> =
             onIo {
@@ -519,9 +515,9 @@ internal class OnlineJellyfinRepository
                 mapper.toDomain(tracks)
             }
 
-        // ---- end M13 Phase 2 ------------------------------------------------------------------
+        // ---- end music ------------------------------------------------------------------------
 
-        // ---- M13 Phase 4 — Continue Listening ---------------------------------------------------
+        // ---- Continue Listening ---------------------------------------------------------------
 
         override suspend fun getResumeAudioItems(limit: Int): AppResult<List<JellyfinItem>> =
             onIo {
@@ -542,9 +538,9 @@ internal class OnlineJellyfinRepository
                 mapper.toDomain(response.content.items)
             }
 
-        // ---- end M13 Phase 4 ------------------------------------------------------------------
+        // ---- end Continue Listening -------------------------------------------------------------
 
-        // ---- M13 Phase 6 — Instant Mix & lyrics ------------------------------------------------
+        // ---- Instant Mix & lyrics ---------------------------------------------------------------
 
         override suspend fun getInstantMix(
             itemId: String,
@@ -561,7 +557,7 @@ internal class OnlineJellyfinRepository
                 musicApi.getLyrics(UUID.fromString(itemId)).toDomain()
             }
 
-        // ---- end M13 Phase 6 ------------------------------------------------------------------
+        // ---- end Instant Mix & lyrics ------------------------------------------------------------
 
         /**
          * Runs an SDK call off the caller's dispatcher.
@@ -586,22 +582,22 @@ internal class OnlineJellyfinRepository
             /**
              * The item kinds a movie or TV library tile's count counts.
              *
-             * Projected from [ItemType.LIBRARY_TILE_TYPES] (DUP-11) via the same [toBaseItemKind]
+             * Projected from [ItemType.LIBRARY_TILE_TYPES] via the same [toBaseItemKind]
              * `:data` already maps query types through, rather than a second hand-written
              * `BaseItemKind` pair: the grid a tile opens must not report a different total than the
              * tile did, and `:data` cannot depend on `:feature:library` to share its list directly.
              *
-             * **Unchanged by M13 Phase 2** — pinned by `OnlineJellyfinRepositoryTest`'s "counts each
-             * library's titles instead of trusting ChildCount", which asserts a movie *and* a TV
-             * library's count request both send exactly `[MOVIE, SERIES]`. Music libraries get their
-             * own list instead of extending this one — see [countItemTypes].
+             * Pinned by `OnlineJellyfinRepositoryTest`'s "counts each library's titles instead of
+             * trusting ChildCount", which asserts a movie *and* a TV library's count request both
+             * send exactly `[MOVIE, SERIES]`. Music libraries get their own list instead of
+             * extending this one — see [countItemTypes].
              */
             val LIBRARY_COUNT_TYPES = ItemType.LIBRARY_TILE_TYPES.mapNotNull { it.toBaseItemKind() }
 
             /**
              * The item kind a music library tile's count counts: its albums, the top-level
              * browsable unit a music library shows — same role [LIBRARY_COUNT_TYPES] plays for a
-             * movie or TV library (M13 Phase 2, docs/notes/music-m13-plan.md item 2).
+             * movie or TV library.
              */
             val MUSIC_LIBRARY_COUNT_TYPES = listOf(BaseItemKind.MUSIC_ALBUM)
 
@@ -611,14 +607,14 @@ internal class OnlineJellyfinRepository
             /**
              * How close to the end of the loaded list the user has to scroll before the next page
              * is fetched. Deliberately far below Paging's default (which equals the page size and
-             * would queue page 2 the moment page 1 renders): the M3 definition of done is one
-             * request per screenful, not a read-ahead race.
+             * would queue page 2 the moment page 1 renders): one request per screenful, not a
+             * read-ahead race.
              */
             const val PREFETCH_DISTANCE = 10
 
             /**
              * Episode rows draw a synopsis under the title, so the season list is the one list
-             * request that pays for `OVERVIEW` (M4).
+             * request that pays for `OVERVIEW`.
              */
             val EPISODE_FIELDS = listOf(ItemFields.PRIMARY_IMAGE_ASPECT_RATIO, ItemFields.OVERVIEW)
         }

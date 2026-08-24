@@ -5,8 +5,8 @@ import javax.inject.Qualifier
 /**
  * Qualifies the process-lifetime [kotlinx.coroutines.CoroutineScope] SyncPlay coordination runs in.
  *
- * Group membership deliberately outlives the player screen (docs/notes/syncplay-m11-plan.md, key
- * decision 5): the websocket collection, the ping loop and a scheduled command all have to keep
+ * Group membership deliberately outlives the player screen: the websocket collection, the ping
+ * loop and a scheduled command all have to keep
  * running while the app is backgrounded and while no `PlayerViewModel` exists at all. So none of it
  * can hang off `viewModelScope` — it hangs off this, modelled on
  * `dev.jellyboost.player.di.DetachedPlayerScope`.

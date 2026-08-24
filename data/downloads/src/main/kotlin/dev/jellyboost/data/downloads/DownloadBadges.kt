@@ -9,21 +9,17 @@ import timber.log.Timber
 /**
  * The app-wide download-state map, guarded for the screens that draw badges from it.
  *
- * Every list screen wants the same two things from [DownloadRepository.observeStates] and used to
- * write them out for itself — four copies of the same subscription, linked only by a comment
- * pointing at whichever copy was written first (audit DUP-2). They are:
+ * Every list screen wants the same two things from [DownloadRepository.observeStates], and they are
+ * stated here once rather than in a `catch` block per screen:
  *
  * 1. **One subscription per screen, not one per card.** A home screen holds sixty cards between its
  *    rows and an episode list forty; `observeStates()` is a shared `stateIn` over a single Room
- *    query (audit PERF-07) precisely so a screen subscribes once and indexes the map.
+ *    query precisely so a screen subscribes once and indexes the map.
  * 2. **A collapse degrades to "nothing is downloaded", never to stale marks.** A badge is
- *    decoration; the screen behind it is not. An unguarded throw used to freeze every badge on the
- *    screen at its last value with no way back — marks the user would read as current (audit
- *    STAB-10). Emitting an empty map instead is the honest failure: the badges disappear, the
- *    screen keeps working, and the next successful emission restores them.
- *
- * That second rule is the one worth keeping in a single place, and this is that place — the
- * rationale above is now stated once rather than in four `catch` blocks.
+ *    decoration; the screen behind it is not. An unguarded throw would freeze every badge on the
+ *    screen at its last value with no way back — marks the user would read as current. Emitting an
+ *    empty map instead is the honest failure: the badges disappear, the screen keeps working, and
+ *    the next successful emission restores them.
  *
  * @param screen names the surface in the warning only ("home", "search", "detail", "library"); it
  *   is a log label, never user-visible copy.

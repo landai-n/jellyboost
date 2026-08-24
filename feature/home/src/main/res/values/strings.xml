@@ -8,13 +8,13 @@
     <string name="home_section_my_media">My Media</string>
     <string name="home_section_continue_watching">Continue Watching</string>
     <string name="home_section_next_up">Next Up</string>
-    <!-- Continue Listening — the music counterpart to Continue Watching (M13 Phase 4). Carried in
+    <!-- Continue Listening — the music counterpart to Continue Watching. Carried in
          all 69 locales this module ships, like every other string here. -->
     <string name="home_section_continue_listening">Continue Listening</string>
     <!-- %1$s is a library name, e.g. "Latest Movies" -->
     <string name="home_section_latest">Latest %1$s</string>
 
-    <!-- Continue-watching hero (2026 refresh) -->
+    <!-- Continue-watching hero -->
     <string name="home_hero_resume">Resume</string>
     <string name="home_hero_details">Details</string>
     <!-- The hero's age certificate, spoken rather than drawn: the metadata line is one node to a
@@ -27,7 +27,7 @@
         <item quantity="other">%1$d min left</item>
     </plurals>
 
-    <!-- Card overlays and quick access (2026 refresh) -->
+    <!-- Card overlays and quick access -->
     <!-- Time left on a card corner, where only a few characters fit. %1$d is minutes. -->
     <string name="home_time_left_short">%1$dm left</string>
     <!-- Quick-access chip that opens the Downloads tab -->
@@ -36,8 +36,7 @@
     <!--
       The screen-specific half of the shared failure copy (`AppError.toUiText`): every other branch
       comes from `:core:ui`, but "unknown" has to name what failed to load, and only this screen
-      knows that. It was a Kotlin literal until audit H8 — invisible to the translation gate, so
-      home showed English on all 68 other locales.
+      knows that.
     -->
     <string name="home_error_unknown">Something went wrong loading your home screen.</string>
 </resources>

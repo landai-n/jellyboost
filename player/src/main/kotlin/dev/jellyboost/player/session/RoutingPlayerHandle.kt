@@ -94,8 +94,7 @@ internal class RoutingPlayerHandle
          * decision: routing says where the *next* command goes, while this ends what the previous
          * player was still doing. A phone that kept playing under a television is the everyday
          * consequence of skipping it, and `ExoPlayerHandle.stop` takes the local media notification
-         * down with it — which is precisely what should happen when the film has moved elsewhere
-         * (docs/notes/chromecast-m12-plan.md, decision 1).
+         * down with it — which is precisely what should happen when the film has moved elsewhere.
          *
          * Not folded into [setActive] on purpose: a switch is not always a handover — the cast side
          * of one ends with a receiver that has already gone — and the caller that knows which it is

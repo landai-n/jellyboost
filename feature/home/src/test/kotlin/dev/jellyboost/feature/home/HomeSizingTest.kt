@@ -15,11 +15,11 @@ private const val TOLERANCE = 0.01f
  * *Continue watching* banner is) and the band that banner's copy is laid out in
  * ([wideHeroCopyTopInset], [wideHeroCopyHeight]).
  *
- * A phone-width viewport (360dp, 328dp available after [Dimens.ScreenPadding]) used to fit only
- * ~1.4 of the tablet-calibrated [Dimens.ThumbWidth] cards per row, reading as zoomed-in.
- * These tests pin the compact branch (160dp, below 600dp — sized so two full cards plus a peek of
- * a third fit) and the tablet branch (unchanged at [Dimens.ThumbWidth], at and above 600dp) so
- * that regression can't sneak back in.
+ * A phone-width viewport (360dp, 328dp available after [Dimens.ScreenPadding]) would fit only
+ * ~1.4 of the tablet-calibrated [Dimens.ThumbWidth] cards per row without a compact width, reading
+ * as zoomed-in. These tests pin the compact branch (160dp, below 600dp — sized so two full cards
+ * plus a peek of a third fit) and the tablet branch (unchanged at [Dimens.ThumbWidth], at and
+ * above 600dp) so that regression can't sneak back in.
  */
 class HomeSizingTest {
     @Test
@@ -140,7 +140,7 @@ class HomeSizingTest {
         compactHeroShowsSecondary(heroHeight(wide = false, viewportHeight = 800.dp)) shouldBe true
     }
 
-    // ---- accessibility font scales (audit A11Y-16) -------------------------------------------
+    // ---- accessibility font scales -------------------------------------------------------------
     //
     // Every threshold above was calibrated at font scale 1.0 and compared dp against text; these
     // pin that the default scale is unchanged to the pixel *and* that a banner asked to hold twice
@@ -210,9 +210,10 @@ class HomeSizingTest {
     @Test
     fun `the shortest wide banner there is sheds its secondary lines instead of clipping a button`() {
         // A 560dp-tall window is the shortest `isWideHome` accepts, and its 336dp banner leaves a
-        // 200dp copy band — 10dp short of the 211dp the full lockup wants at font scale 1.0, which
-        // until now was 10dp taken out of the bottom of the resume button by `clipToBounds`. This
-        // is the one place the wide shape's new shedding bites at the default font scale.
+        // 200dp copy band — 10dp short of the 211dp the full lockup wants at font scale 1.0.
+        // Without shedding, that would take 10dp out of the bottom of the resume button via
+        // `clipToBounds`; this is the one place the wide shape's shedding bites at the default
+        // font scale.
         val banner = heroHeight(wide = true, viewportHeight = 560.dp)
 
         banner.value shouldBe (336f plusOrMinus TOLERANCE)
@@ -233,8 +234,7 @@ class HomeSizingTest {
     fun `a tablet in landscape at 2x sheds the wide lockup's secondary lines rather than its buttons`() {
         // 711dp of viewport caps the banner at 533dp, whose copy band is 381dp — short of the
         // 386dp the full lockup wants at 2.0x, and comfortably over the 300dp the condensed one
-        // needs. Shedding is what keeps the resume button inside the banner (DECISIONS.md
-        // 2026-08-01, "the wide hero's copy is height-bounded").
+        // needs. Shedding is what keeps the resume button inside the banner.
         val banner = heroHeight(wide = true, viewportHeight = 711.dp, fontScale = 2f)
 
         wideHeroShowsSecondary(banner, fontScale = 2f) shouldBe false
@@ -244,9 +244,9 @@ class HomeSizingTest {
 
     @Test
     fun `the copy band still stops short of the rail at every font scale`() {
-        // The invariant of the 2026-08-01 entry, re-checked on the axis that entry did not have:
-        // whatever the scale, the band the copy is laid out in ends before the rows below rise
-        // into the banner.
+        // The invariant that the copy band stays clear of the rail, re-checked on the font-scale
+        // axis: whatever the scale, the band the copy is laid out in ends before the rows below
+        // rise into the banner.
         listOf(1f, 1.3f, 1.5f, 2f).forEach { scale ->
             listOf(360.dp, 640.dp, 800.dp, 1138.dp).forEach { viewport ->
                 val banner = heroHeight(wide = true, viewportHeight = viewport, fontScale = scale)

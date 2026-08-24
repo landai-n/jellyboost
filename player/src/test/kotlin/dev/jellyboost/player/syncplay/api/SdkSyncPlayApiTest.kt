@@ -46,7 +46,7 @@ import org.jellyfin.sdk.api.operations.SyncPlayApi as SdkSyncPlayOperations
  * Two things earn a test here: the DTO assembly the server is picky about (`SetNewQueue` takes
  * *library* item ids and an index, not playlist-item ids), and everything that touches a clock.
  * The clock cases run with a **non-UTC default zone** because that is the only setup in which
- * treating the SDK's `LocalDateTime` as UTC — the M4 bug — is visible.
+ * treating the SDK's `LocalDateTime` as UTC by mistake would be visible.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class SdkSyncPlayApiTest {

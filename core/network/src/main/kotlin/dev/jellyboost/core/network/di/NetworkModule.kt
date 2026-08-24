@@ -41,12 +41,12 @@ internal interface NetworkModule {
     @Singleton
     fun bindJellyfinApiFacade(impl: SdkJellyfinApiFacade): JellyfinApiFacade
 
-    /** Binds the connectivity monitor to its `ConnectivityManager` implementation (M6). */
+    /** Binds the connectivity monitor to its `ConnectivityManager` implementation. */
     @Binds
     @Singleton
     fun bindConnectivityMonitor(impl: AndroidConnectivityMonitor): ConnectivityMonitor
 
-    /** Binds the reachability probe's single SDK call (M6). */
+    /** Binds the reachability probe's single SDK call. */
     @Binds
     @Singleton
     fun bindServerProbeApi(impl: SdkServerProbeApi): ServerProbeApi
@@ -62,8 +62,8 @@ internal interface NetworkModule {
 /**
  * Provides the dispatchers and scopes the app runs its background work on.
  *
- * The qualifiers themselves live in `:core:common` (audit ARCH-1) — they are pure `javax.inject`
- * annotations every module can name — while the bindings stay here, because a `@Provides` needs
+ * The qualifiers themselves live in `:core:common` — they are pure `javax.inject` annotations
+ * every module can name — while the bindings stay here, because a `@Provides` needs
  * Hilt and `:core:common` is a plain JVM module with no Android or Dagger processor on it.
  */
 @Module

@@ -13,7 +13,7 @@ import java.net.SocketTimeoutException
  *
  * This is the string a user reads under a failed download, so the tests assert on the *copy* rather
  * than on a code — a mapping that silently starts printing an exception message again is exactly
- * the regression the M7 walk hit.
+ * the regression this guards against.
  */
 class DownloadErrorCopyTest {
     @Test
@@ -60,9 +60,9 @@ class DownloadErrorCopyTest {
 
     @Test
     fun `a row for a folder explains itself instead of quoting a 400`() {
-        // What the user actually saw: "The server couldn't send this download (error 400)", from a
-        // row keyed on a season id. Those rows still exist on devices that predate the fix, and a
-        // status code tells the user nothing they can act on (DECISIONS.md, 2026-07-29).
+        // The alternative is "The server couldn't send this download (error 400)" under a row
+        // keyed on a season id — such rows still exist on devices, and a status code tells the user
+        // nothing they can act on.
         val copy = DownloadErrorCopy.forFailure(NotDownloadableException(uuid(11)))
 
         copy shouldBe "This is a show or a season, not a single video. Remove it and download the episodes."

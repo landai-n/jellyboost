@@ -3,7 +3,7 @@ package dev.jellyboost.core.common.model
 /**
  * User-selected filters for a library grid or a search.
  *
- * Consumed by the paged library query in M3; kept here so that the online and offline query
+ * Consumed by the paged library query; kept here so that the online and offline query
  * paths take the exact same filter description.
  */
 data class FilterOptions(

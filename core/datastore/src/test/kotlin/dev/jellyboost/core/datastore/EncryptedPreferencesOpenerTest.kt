@@ -43,8 +43,8 @@ class EncryptedPreferencesOpenerTest {
 
     @Test
     fun `a transient read failure never deletes the stored session`() {
-        // The finding (audit SEC-03): an IOException was treated exactly like a decryption failure,
-        // so a busy or unmounted volume threw away a session that was perfectly intact.
+        // Treating an IOException exactly like a decryption failure would throw away a session
+        // that was perfectly intact just because a volume was busy or unmounted.
         val opener = opener(failures = ArrayDeque(listOf(IOException("volume busy"))))
 
         shouldThrow<IOException> { opener.open() }

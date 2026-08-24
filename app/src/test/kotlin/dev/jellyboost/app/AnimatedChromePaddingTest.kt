@@ -18,9 +18,9 @@ import org.junit.jupiter.api.Test
  * These tests pin the value side of that contract — the reads track the states, and the horizontal
  * sides stay zero, exactly as the `PaddingValues(top, bottom)` it replaced.
  *
- * The snackbar's own inset moved to `:core:ui` with the host that owns it (audit DUP-3); its rules
- * are pinned by `JellyboostSnackbarHostTest`, which keeps every assertion that used to live here
- * and adds the cases the other four hand-written hosts needed.
+ * The snackbar's own inset lives in `:core:ui` with the host that owns it; its rules are pinned by
+ * `JellyboostSnackbarHostTest`, not this file, alongside the cases the other four hand-written
+ * hosts need.
  */
 class AnimatedChromePaddingTest {
     @Test

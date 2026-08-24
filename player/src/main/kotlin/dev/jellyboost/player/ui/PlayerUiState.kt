@@ -16,8 +16,8 @@ import dev.jellyboost.player.upnext.UpNextEpisode
  * in [PlaybackPosition] for exactly that reason.
  *
  * [playMethod] is on screen deliberately: "is this direct playing or transcoding" is the single
- * most useful thing to know when playback misbehaves, and the M5 definition of done is checked
- * against exactly that value in the server dashboard.
+ * most useful thing to know when playback misbehaves, and it is the same value the server's
+ * dashboard reports for this session.
  *
  * [isLocalPlayback] is the *only* thing on this screen that differs between a streamed item and a
  * downloaded one, and it hides exactly one control — see its own documentation.
@@ -29,19 +29,20 @@ internal data class PlayerUiState(
     /**
      * The item's artwork, or `null` while it is still being fetched — or when the server has none.
      *
-     * Drawn in exactly one place: behind the "Casting to …" label, where the video surface would be
-     * (M12 Phase 4). A film playing on this device covers every pixel of it, so it is fetched with
+     * Drawn in exactly one place: behind the "Casting to …" label, where the video surface would
+     * be. A film playing on this device covers every pixel of it, so it is fetched with
      * the title, off the same `getItem`, and never on the path to the first frame.
      */
     val artworkUrl: String? = null,
     val playMethod: PlayMethod? = null,
     /**
-     * `true` while the bytes come off this device rather than off the server (M8).
+     * `true` while the bytes come off this device rather than off the server.
      *
      * It suppresses the quality picker, which caps a *streaming* bitrate and therefore has nothing
      * to act on for a local file — offering it would be a control that visibly does nothing. Track
      * and subtitle pickers are deliberately untouched: those work identically either way, which is
-     * the plan's "player UI byte-identical online/offline". What varies is their *content*, and
+     * what keeps the player UI byte-identical online and offline. What varies is their *content*,
+     * and
      * that is decided by connectivity rather than by this flag — see [audioTracks].
      */
     val isLocalPlayback: Boolean = false,
@@ -73,7 +74,7 @@ internal data class PlayerUiState(
     /** Jellyfin stream index of the active subtitle track; `null` means subtitles are off. */
     val selectedSubtitleIndex: Int? = null,
     val quality: PlaybackQuality = PlaybackQuality.AUTO,
-    /** Playback rate; session-scoped and never persisted (M9). */
+    /** Playback rate; session-scoped and never persisted. */
     val speed: PlaybackSpeed = PlaybackSpeed.NORMAL,
     /**
      * Whether the player that is actually decoding this has a playback rate at all.
@@ -83,11 +84,11 @@ internal data class PlayerUiState(
      * the receiver rather than to the app and is only knowable once one has loaded something. `false`
      * takes the speed picker off the bar: `CastPlayerHandle.setPlaybackSpeed` refuses to send a rate
      * a receiver has not published a command for, and a picker whose every row does nothing is worse
-     * than one fewer control (docs/notes/chromecast-m12-plan.md, decision 7).
+     * than one fewer control.
      */
     val canSetSpeed: Boolean = true,
     /**
-     * Scrubbing thumbnails, or `null` when this item has none (M9).
+     * Scrubbing thumbnails, or `null` when this item has none.
      *
      * `null` is the common case — trickplay is generated per-library and off by default — so the
      * scrubber has to treat its absence as ordinary rather than as a failure to report.
@@ -101,15 +102,15 @@ internal data class PlayerUiState(
      * reaches here (`SegmentSkipController`).
      */
     val skippableSegment: MediaSegment? = null,
-    /** Decoded video size; drives the picture-in-picture window's aspect ratio (M9). */
+    /** Decoded video size; drives the picture-in-picture window's aspect ratio. */
     val videoWidth: Int = 0,
     val videoHeight: Int = 0,
     val hasEnded: Boolean = false,
     /** One-shot message for the snackbar; cleared through `PlayerViewModel.consumeMessage`. */
     val userMessage: PlayerMessage? = null,
-    /** The group this session is watching with, or its default "no group" value (M11). */
+    /** The group this session is watching with, or its default "no group" value. */
     val syncPlay: PlayerSyncPlayState = PlayerSyncPlayState(),
-    /** The receiver this session is playing on, or its default "playing here" value (M12). */
+    /** The receiver this session is playing on, or its default "playing here" value. */
     val cast: PlayerCastState = PlayerCastState(),
     /**
      * The next episode, while the current one's ending is playing — or `null`, which is most of the
@@ -118,8 +119,8 @@ internal data class PlayerUiState(
      * Slow state despite being driven by the 500 ms tick: it is written exactly when the answer
      * *changes* (`PlayerViewModel.applyUpNextDecision` diffs before it updates), which is a handful
      * of times per session — the card appearing, a seek taking it away, a dismissal. Publishing it
-     * per tick would put the whole control surface back on the recompose treadmill PERF-04 took it
-     * off.
+     * per tick would put the whole control surface back on the recompose treadmill this split
+     * exists to avoid.
      */
     val upNext: UpNextState? = null,
 ) {
@@ -132,8 +133,8 @@ internal data class PlayerUiState(
      * Solo, this is just [isPlaying]. In a group it is [PlayerSyncPlayState.groupPlaying] instead —
      * the group's own state is the truth a tap reverses (`PlayerSyncPlayBridge.requestPlayPause`),
      * and an icon still drawn from the local player's `isPlaying` after a missed echo would show the
-     * opposite of what the next tap actually needs to ask for, inviting the very second tap the M11
-     * bug report described.
+     * opposite of what the next tap actually needs to ask for, inviting a second tap that undoes
+     * the first.
      */
     val showsPlaying: Boolean get() = if (syncPlay.inGroup) syncPlay.groupPlaying else isPlaying
 }
@@ -145,7 +146,7 @@ internal data class PlayerUiState(
  * One constant rather than two literals because the split only works if it is spelled exactly like
  * the join: `PlayerViewModel.loadTitleAndArtwork` builds the label, `TitleStack` takes it apart, and
  * a stray space between them would silently collapse the bar back to one line. Points at the shared
- * [Separators.DOT] (DUP-12) rather than its own literal, but stays a named constant here because
+ * [Separators.DOT] rather than its own literal, but stays a named constant here because
  * both the join and the split sites need one symbol to import, not a value they could drift apart
  * by retyping.
  */
@@ -168,14 +169,14 @@ internal data class UpNextState(
 )
 
 /**
- * The receiver, as much of it as the player screen draws (M12 Phase 3).
+ * The receiver, as much of it as the player screen draws.
  *
  * Derived from `CastStatusHolder.connection` by [PlayerCastBridge] and deliberately not the same
  * type: `CastConnection` is a sealed hierarchy the *playback* side matches on, and a control surface
  * that has to unwrap a sealed class to decide whether to draw a poster would be answering the same
  * question twice.
  *
- * @property isCasting `true` while a television has the film. It is the flag Phase 4's screen hangs
+ * @property isCasting `true` while a television has the film. It is the flag the screen hangs
  *   everything off: the video surface becomes a poster, the gesture layer goes away (brightness and
  *   volume belong to a device that is not here) and picture-in-picture is suppressed.
  * @property deviceName the receiver's friendly name, or `null` when the Cast framework has not
@@ -187,7 +188,7 @@ internal data class PlayerCastState(
 )
 
 /**
- * The group, as much of it as the player screen draws (M11 Phase 3).
+ * The group, as much of it as the player screen draws.
  *
  * Derived from `SyncPlayController.state` by [PlayerSyncPlayBridge] and deliberately smaller than
  * it: no group id, no playlist item ids, and — see [PlayerSyncPlayPhase] — no drift anchor. What is
@@ -238,7 +239,7 @@ internal data class PlayerSyncPlayState(
  *
  * A flat enum rather than `SyncPlayPhase` because that type's `Playing` carries the drift anchor,
  * which is replaced on every group unpause — putting it in [PlayerUiState] would make the whole
- * control surface recompose for a value nothing draws (audit PERF-04).
+ * control surface recompose for a value nothing draws.
  */
 internal enum class PlayerSyncPlayPhase {
     /** Not in a group at all. */
@@ -255,7 +256,7 @@ internal enum class PlayerSyncPlayPhase {
 }
 
 /**
- * The half of the player's state that ticks (audit PERF-04).
+ * The half of the player's state that ticks.
  *
  * Published as its own `StateFlow` and read *inside* the scrubber and the clock rather than at
  * screen scope. Position changes twice a second while the controls are up; every other field on
@@ -319,7 +320,7 @@ internal enum class PlayerMessage {
     /**
      * A re-negotiation failed to resolve, so the session went back to the terms it was playing.
      *
-     * Raised by the recovery in `PlayerViewModel.onResolveFailed` (audit PC-01): the tapped
+     * Raised by the recovery in `PlayerViewModel.onResolveFailed`: the tapped
      * subtitle, track or quality never arrived, but the film did not end over it — it restarted
      * under the previous terms from where it had got to, and this is what tells the user their
      * change was lost rather than applied.
@@ -329,7 +330,7 @@ internal enum class PlayerMessage {
     /**
      * The connection dropped while in a group, so the group was left and playback paused.
      *
-     * Key decision 10 as amended (docs/notes/syncplay-m11-plan.md): resuming from here plays solo —
+     * Resuming from here plays solo —
      * from the downloaded file if there is one. Only shown once an automatic rejoin has been tried.
      */
     SyncPlayConnectionLost,
@@ -357,7 +358,7 @@ internal enum class PlayerMessage {
      *
      * The only message whose copy names the device, which it takes from
      * [PlayerCastState.deviceName] at the moment it is drawn rather than from the message itself:
-     * this enum has stayed a plain one since M5 precisely so the ViewModel never handles copy, and
+     * this enum is deliberately a plain one so the ViewModel never handles copy, and
      * the name is already on screen-bound state.
      */
     CastTransferred,
@@ -365,7 +366,7 @@ internal enum class PlayerMessage {
     /**
      * A receiver connected while this session was in a SyncPlay group, so the group was left.
      *
-     * The two are mutually exclusive (docs/notes/chromecast-m12-plan.md, decision 6): SyncPlay
+     * The two are mutually exclusive: SyncPlay
      * synchronises *this* player, and a player whose bytes are being decoded in a television three
      * metres away cannot be held to a group's millisecond.
      */
@@ -376,7 +377,7 @@ internal enum class PlayerMessage {
      *
      * Distinct from [PlaybackFailed] because the diagnosis is: every rung of the decoder-fallback
      * ladder is a statement about *this device's* decoders, and none of them is true of a failure
-     * at the far end of a network (decision 8).
+     * at the far end of a network.
      */
     CastPlaybackFailed,
 }
@@ -398,7 +399,7 @@ internal data class PlayerActions(
     val onBack: () -> Unit,
     /**
      * Opens one of the player's seven panels — every one of them hosted by `PlayerScreen`, above the
-     * control bar and above its auto-hide (audit UI-1). See [PlayerPanel].
+     * control bar and above its auto-hide. See [PlayerPanel].
      */
     val onOpenPanel: (PlayerPanel) -> Unit = {},
     val onSetGroupShuffle: (Boolean) -> Unit = {},
@@ -409,7 +410,7 @@ internal data class PlayerActions(
 /**
  * The same actions, each of which also says "the user is still here" before it acts.
  *
- * The auto-hide timer restarts on every interaction (audit UI-3), and *this* is what makes that
+ * The auto-hide timer restarts on every interaction, and *this* is what makes that
  * true for the whole surface at once: every way a user can act on the player — the transport
  * buttons, the gesture layer's double-tap seeks, the keyboard runner, a chip tap, a choice made in
  * a picker — goes through exactly one of these lambdas. Wrapping the bundle rather than bumping at
@@ -459,22 +460,20 @@ private fun <T> reporting(
     }
 
 /**
- * The seven panels `PlayerScreen` hosts above the controls — **one at a time** (audit CPX-9, UI-1).
+ * The seven panels `PlayerScreen` hosts above the controls — **one at a time**.
  *
- * One nullable field rather than the independent booleans this used to be: booleans are 2^n states
+ * One nullable field rather than independent booleans: booleans are 2^n states
  * of which only n + 1 are legal, and the illegal ones — a display sheet and a group sheet up
- * together — were unreachable only by the accident that an open panel covers the very chips that
+ * together — would be unreachable only by the accident that an open panel covers the very chips that
  * open the next one. Making them unrepresentable is cheaper than relying on that.
  *
- * ### Why all seven, and not the three this started as
- * DISPLAY/GROUP/QUEUE were hoisted to the screen so they would survive the control bar composing
- * itself out four seconds after it appears — for the display sheet that is the whole reason it
- * exists, as the accessible alternative to the brightness and volume swipes (accessibility audit
- * 2026-08-05, CR-8). The other four pickers were left in the bar, held in a `remember` *inside* the
- * `AnimatedVisibility(controlsVisible)` that the auto-hide drives, so the Audio/Subtitles/Speed/
- * Quality dialog was disposed mid-selection — within a second or two of the tap, since the timer had
- * been running since before it (audit UI-1). The reasoning was right and had stopped at three of
- * seven; the split it justified is gone, and one panel enum now describes the whole set.
+ * ### Why all seven
+ * Every one of them is hosted by the screen so that it survives the control bar composing itself
+ * out four seconds after it appears. For the display sheet that is the whole reason it exists, as
+ * the accessible alternative to the brightness and volume swipes; for a track picker held in a
+ * `remember` *inside* the bar's `AnimatedVisibility(controlsVisible)` it would mean being disposed
+ * mid-selection, within a second or two of the tap, since the auto-hide timer has been running
+ * since before it. One panel enum describes the whole set.
  */
 internal enum class PlayerPanel {
     AUDIO,

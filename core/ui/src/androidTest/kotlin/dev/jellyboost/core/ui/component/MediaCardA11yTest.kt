@@ -26,12 +26,12 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * The merged card node, held still on a device (accessibility audit 2026-08-05, CR-6).
+ * The merged card node, held still on a device.
  *
- * This is the wave-2 fix whose whole value is what a screen reader *does not* say: the artwork's
+ * This test's whole value is what a screen reader *does not* say: the artwork's
  * description, the title's own node, the subtitle's, and every badge's, all collapsed into one
  * authored sentence. A JVM test can pin the sentence — `MediaCardFactsTest` does — but only a
- * composed tree can show that the card is one stop rather than six, which is the half of CR-6 that
+ * composed tree can show that the card is one stop rather than six, which
  * a careless `Modifier` change would silently undo.
  */
 @RunWith(AndroidJUnit4::class)
@@ -72,7 +72,7 @@ class MediaCardA11yTest {
         }
 
         // `maxLines = 1` cuts the drawn title after a few words; the sentence must not be cut with
-        // it, because the artwork description that used to carry the full name is gone (SCALE-04).
+        // it, because the artwork description is the only place the full name is preserved.
         assertEquals(true, rule.onlyCardDescription().contains(LONG_TITLE))
     }
 
@@ -86,9 +86,9 @@ class MediaCardA11yTest {
 
         val episode = rule.activity.getString(R.string.media_card_type_episode)
         val progress = rule.activity.getString(R.string.media_card_progress, HALF_PERCENT)
-        // Read from the resource, not spelled here: the card now *speaks* the same localized
-        // "S1 · E4" it *draws*, where it used to speak a hardcoded "S1:E4" while drawing the other
-        // (audit DUP-7). Spelling it in the test would re-create exactly the drift being fixed.
+        // Read from the resource, not spelled here: the card *speaks* the same localized
+        // "S1 · E4" it *draws*. Spelling it in the test would re-create exactly the kind of drift
+        // this guards against.
         val number = rule.activity.getString(R.string.media_episode_label, SEASON_NUMBER, EPISODE_NUMBER)
         assertEquals(
             "$episode, $SERIES_TITLE, $number${Separators.DOT}$EPISODE_TITLE, $progress",
@@ -134,7 +134,7 @@ class MediaCardA11yTest {
     @Test
     fun aPosterAndAThumbAnnounceTheSameItemIdentically() {
         // The two cards were ~90% the same composable, and the 10% that differed included two
-        // spellings of the same click-and-semantics block (audit CPX-11/DUP-9). They are one
+        // spellings of the same click-and-semantics block. They are one
         // `MediaCard` now; this is the property that made merging them worth doing, and the one a
         // future "just for the thumb" tweak would break silently.
         rule.setContent {

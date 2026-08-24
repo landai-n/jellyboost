@@ -7,8 +7,8 @@ import org.junit.jupiter.api.Test
 /**
  * Unit tests for [aggregateDownloadState] — one Download button for a folder full of episodes.
  *
- * A season has no download row of its own (DECISIONS.md, 2026-07-29), so this function *is* the
- * season's download state. Each case below is a tap the button has to get right.
+ * A season has no download row of its own, so this function *is* the season's download state. Each
+ * case below is a tap the button has to get right.
  */
 class AggregateDownloadStateTest {
     @Test

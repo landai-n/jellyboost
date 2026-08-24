@@ -22,12 +22,11 @@ import javax.inject.Singleton
 /**
  * The **read** half of the browse cache's retention policy: it throws rows away again.
  *
- * `BrowseCacheWriter` mirrors every successful server read into the `items` table, and until this
- * class existed nothing ever deleted one — the table grew monotonically for the life of the install
- * and an item deleted on the server kept resolving offline forever (audit 2026-08-06, HYG-1). The
- * plan's policy was only ever half-implemented: docs/PLAN.md, "Data layer" gives `ItemEntity` both a
- * `cachedAt` column and the rule that "DOWNLOAD rows never evicted", which is a statement about an
- * eviction pass that had never been wired up.
+ * `BrowseCacheWriter` mirrors every successful server read into the `items` table; without this
+ * class nothing would ever delete a row — the table would grow monotonically for the life of the
+ * install and an item deleted on the server would keep resolving offline forever. `ItemEntity`
+ * carries both a `cachedAt` column and the rule that "DOWNLOAD rows never evicted" for exactly the
+ * eviction pass this class runs.
  *
  * ### What it may delete, and what it may not
  * Exactly one query, [ItemDao.evictBrowseCacheOlderThan], and it excludes downloads by **source**
@@ -42,17 +41,16 @@ import javax.inject.Singleton
  * The TTL sweep answers "how long is a row worth keeping". It does **not** answer "how many", and
  * that was the gap: rows are written by *browsing*, which happens far faster than a month passes,
  * so a single afternoon of scrolling a large library could add tens of thousands of rows that the
- * age sweep would not touch for thirty days — each carrying a multi-kilobyte `BaseItemDto` blob
- * (audit 2026-08-08, PERF-17). [BROWSE_CACHE_MAX_ROWS] is the second bound: past it, the oldest
- * rows go however fresh they are.
+ * age sweep would not touch for thirty days — each carrying a multi-kilobyte `BaseItemDto` blob.
+ * [BROWSE_CACHE_MAX_ROWS] is the second bound: past it, the oldest rows go however fresh they are.
  *
  * ### When it runs
  * Once at startup, from `JellyboostApplication.onCreate` on the application scope — the same place
  * and for the same reason as `UserDataSyncTrigger` and `DownloadedMetadataRefresher` — **and** every
- * [WRITES_BETWEEN_SWEEPS]th write-through, which is what closes the other half of the same gap: a
- * process that stays alive for a long browsing session used to have no eviction at all between its
- * one startup sweep and its death. The counter is the whole of the throttle: a sweep is two indexed
- * `DELETE`s, cheap but not free, and it must not ride the write path itself.
+ * [WRITES_BETWEEN_SWEEPS]th write-through, so a process that stays alive for a long browsing
+ * session still gets eviction between its startup sweep and its death, not only at the two
+ * endpoints. The counter is the whole of the throttle: a sweep is two indexed `DELETE`s, cheap but
+ * not free, and it must not ride the write path itself.
  *
  * A periodic worker would be the wrong shape for either trigger. The table is only ever grown *by
  * using the app*, so the writes are the honest clock — a scheduled job would run on a device nobody
@@ -169,8 +167,8 @@ class BrowseCacheMaintenance
             /**
              * How long an unvisited browse-cache row is kept.
              *
-             * docs/PLAN.md fixes the *policy* (`cachedAt` + "DOWNLOAD rows never evicted") but not a
-             * number, so this is the project's, and it is chosen for what the row is actually for:
+             * The *policy* (`cachedAt` + "DOWNLOAD rows never evicted") fixes no number, so this
+             * one is chosen for what the row is actually for:
              * a `BROWSE_CACHE` row exists so that a **cached parent of a download** — a series page,
              * a season — still opens with no network, and so that a recently-browsed item does. Both
              * are about the recent past. A month covers a holiday's worth of offline use, which is

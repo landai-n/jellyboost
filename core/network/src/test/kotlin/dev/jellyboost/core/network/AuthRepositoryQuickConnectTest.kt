@@ -27,7 +27,7 @@ import kotlin.time.Duration.Companion.seconds
 
 /**
  * Unit tests for the Quick Connect polling loop, run on virtual time so the 5-second interval
- * and the 5-minute cap can be asserted exactly (docs/PLAN.md, "Login").
+ * and the 5-minute cap can be asserted exactly.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class AuthRepositoryQuickConnectTest {

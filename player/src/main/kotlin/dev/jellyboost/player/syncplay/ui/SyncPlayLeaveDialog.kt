@@ -10,14 +10,11 @@ import dev.jellyboost.player.R
  * action they offer: the in-player group sheet ([SyncPlayGroupSheet]) and the groups screen
  * ([SyncPlayGroupsContent]).
  *
- * It was written twice, byte for byte, which is how the audit's duplication cluster starts; hoisted
- * here so the copy and the button order can only ever drift together.
+ * Hoisted here so the copy and the button order can only ever drift together, rather than written
+ * out once per surface.
  *
- * The hairline this file used to spell out belongs to `:core:ui`'s [ConfirmDialog] now. The KDoc
- * here claimed the app's dialog idiom "can only ever drift together" while three dialogs elsewhere
- * were already drawing plain M3 chrome — exactly the drift it was written to rule out (audit
- * 2026-08-08, DUP-2). One composable owns the edge for all ten of them, so the claim is now true of
- * the app rather than of these two.
+ * The dialog's own edge belongs to `:core:ui`'s [ConfirmDialog], which owns it for every dialog in
+ * the app — so the chrome cannot drift between them either.
  */
 @Composable
 internal fun LeaveGroupDialog(

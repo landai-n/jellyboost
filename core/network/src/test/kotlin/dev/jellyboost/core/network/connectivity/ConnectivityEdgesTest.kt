@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for [onlineStateChanges] — the signal every screen refreshes itself on (M9).
+ * Unit tests for [onlineStateChanges] — the signal every screen refreshes itself on.
  *
  * Three properties: it reports a change in *either* direction, it says nothing about the value the
  * flow already holds when a screen subscribes (that screen has just loaded), and it says nothing

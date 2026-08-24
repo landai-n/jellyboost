@@ -81,7 +81,7 @@ internal data class LoginUiState(
     fun avatarUrlFor(user: PublicUserInfo): String? = publicUserAvatarUrl(serverAddress, user)
 
     /**
-     * Redacts [password] (audit SEC-09): the generated data-class `toString()` would otherwise
+     * Redacts [password]: the generated data-class `toString()` would otherwise
      * print it in full the moment this state ever reaches a log line — state-restoration crash
      * reports and `Timber` calls that dump a whole UI state are exactly the paths that do.
      */
@@ -104,11 +104,10 @@ internal sealed interface LoginNavigationEvent {
 }
 
 /**
- * Backs the Login screen: login context, password sign-in and Quick Connect
- * (docs/PLAN.md, "Login").
+ * Backs the Login screen: login context, password sign-in and Quick Connect.
  *
  * The server to authenticate against comes from [PendingServerStore], written by
- * `ServerSetupViewModel` (see DECISIONS.md, 2026-07-28).
+ * `ServerSetupViewModel`.
  *
  * A successful sign-in is announced twice on purpose: `SessionRepository.sessionState` flips to
  * `LoggedIn` inside `AuthRepository` (which is what drives app-wide reactions such as a future
@@ -161,7 +160,7 @@ internal class LoginViewModel
          *
          * Ignored while a sign-in is in flight, which is what lets the screen keep both credential
          * fields *enabled* through the exchange: a disabled field destroys its accessibility node
-         * and throws focus back to the top of the screen (accessibility audit 2026-08-05, F17).
+         * and throws focus back to the top of the screen.
          * [signIn] captured the credentials it is sending, so an edit landing mid-request could only
          * ever produce a screen whose fields disagree with the failure it is about to show.
          */
@@ -215,9 +214,9 @@ internal class LoginViewModel
                 viewModelScope.launch {
                     mutableUiState.update { it.copy(error = null) }
 
-                    // Exhaustive rather than a failure guard plus an unchecked cast (audit HYG-6):
-                    // the cast was only sound because `AppResult` has exactly two variants today,
-                    // and a third would have turned a compile error into a sign-in-path crash.
+                    // Exhaustive rather than a failure guard plus an unchecked cast: a cast would
+                    // only be sound because `AppResult` has exactly two variants today, and a
+                    // third would turn a compile error into a sign-in-path crash.
                     val session =
                         when (val initiated = authRepository.initiateQuickConnect()) {
                             is AppResult.Failure -> {

@@ -9,10 +9,10 @@ import java.util.UUID
 /**
  * A Jellyfin user that has signed in on this device, scoped to its owning [ServerEntity].
  *
- * IMPORTANT: this entity intentionally has NO access-token column. docs/PLAN.md mandates that
- * tokens live only in `:core:datastore`'s `SecureCredentialStore` (EncryptedSharedPreferences),
- * never in Room — verified at M1 via `run-as` inspection of the database file. Session restore
- * pairs a row here with the token looked up separately from `SecureCredentialStore`.
+ * IMPORTANT: this entity intentionally has NO access-token column. Tokens live only in
+ * `:core:datastore`'s `SecureCredentialStore` (EncryptedSharedPreferences), never in Room —
+ * verified via `run-as` inspection of the database file. Session restore pairs a row here with the
+ * token looked up separately from `SecureCredentialStore`.
  *
  * Rows are deleted automatically (`CASCADE`) when their owning [ServerEntity] is removed.
  */

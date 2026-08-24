@@ -8,8 +8,8 @@ import org.junit.jupiter.api.Test
 /**
  * Unit tests for what the app bar's offline status icon says about each connection state.
  *
- * This is the table the M6 banner used to carry: three reasons to be offline, three different
- * things to tell the user, and only two of them with anything to do about it.
+ * Three reasons to be offline, three different things to tell the user, and only two of them with
+ * anything to do about it.
  */
 class ConnectionStatusTest {
     @Test

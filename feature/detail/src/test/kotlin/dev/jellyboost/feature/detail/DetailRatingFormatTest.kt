@@ -6,17 +6,17 @@ import org.junit.jupiter.api.Test
 import java.util.Locale
 
 /**
- * Pins the detail header onto `:core:ui`'s rating formatter (audit 2026-08-08, UI-6).
+ * Pins the detail header onto `:core:ui`'s rating formatter.
  *
- * The header had a private `formatRating` that hardcoded `Locale.US` while the cards on the very
- * same screen used the locale-aware [formatRatingBadge]. On a German device that put `8.6` in the
- * starred header fact and `8,6` on every card beside it, and `metaRowDescription` spoke the wrong
- * separator to TalkBack.
+ * A private `formatRating` hardcoding `Locale.US`, while the cards on the very same screen use the
+ * locale-aware [formatRatingBadge], would put `8.6` in the starred header fact and `8,6` on every
+ * card beside it on a German device, and `metaRowDescription` would speak the wrong separator to
+ * TalkBack.
  *
  * `RatingBadgeFormatTest` in `:core:ui` owns the *formatting* rules — one decimal place always,
- * half-up rounding, the separator per locale. This file owns the thing that regressed: that the
+ * half-up rounding, the separator per locale. This file owns the thing that can regress: that the
  * detail screen is asking that function rather than one of its own. The German case is the one the
- * bug was visible in, so it is asserted here as well as there.
+ * mismatch is visible in, so it is asserted here as well as there.
  */
 class DetailRatingFormatTest {
     @Test
@@ -35,9 +35,9 @@ class DetailRatingFormatTest {
 
     @Test
     fun `the spoken metadata sentence carries the same separator the row draws`() {
-        // What UI-6 actually broke: the row drew the card-formatted number while the description
-        // built its sentence from the US-formatted one, so TalkBack and the screen disagreed. Both
-        // sides now come from the same call, which this composes end to end.
+        // The row must not draw the card-formatted number while the description builds its
+        // sentence from a US-formatted one, or TalkBack and the screen disagree. Both sides come
+        // from the same call, which this composes end to end.
         val rating = formatRatingBadge(8.6f, Locale.GERMANY)
         metaRowDescription(
             rating = "Bewertung $rating",

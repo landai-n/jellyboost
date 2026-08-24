@@ -86,30 +86,29 @@ import kotlin.time.Duration.Companion.milliseconds
  * - the stop report goes out on a detached scope, because `viewModelScope` is already cancelled by
  *   the time [onCleared] runs.
  *
- * Since M8 the source may equally be a local file: `PlaybackSourceResolver` picks between the
+ * The source may equally be a local file: `PlaybackSourceResolver` picks between the
  * download on disk and the server, and nothing below this line knows which it got. That is the
  * whole reason `PlaybackMediaSource` is a sealed type.
  *
- * ### What this class is, after the ARCH-10 decomposition
- * Three things that were sequencing-adjacent rather than sequencing now live next door and are
+ * ### What this class is
+ * Three things that are sequencing-adjacent rather than sequencing live next door and are
  * tested on their own: [PlaybackSessionController] (resolve → prepare → re-negotiate),
  * [PlayerSessionStore] (the route's arguments, and the live position written back over them), and
  * [PlaybackPositionTracker] (the 500 ms tick and the segment decision it feeds). What is left is
  * what was always the hard part — deciding *what to do* with a user action, a player event, or a
  * failure — plus the one state object the screen draws.
  *
- * `TooManyFunctions` still applies and is still suppressed, for a reason the decomposition does not
- * remove: this is the one place a playback session is sequenced, so it has one function per user
+ * `TooManyFunctions` is suppressed, for a reason no decomposition removes: this is the one place a
+ * playback session is sequenced, so it has one function per user
  * action and one per player event, and there are simply that many of both. Splitting *those* would
  * move the sequencing, which is the part that is actually hard and actually tested.
  *
- * ### What M11 adds
+ * ### Groups
  * The session can belong to a **group**. When it does, every transport action becomes a request to
- * the server and nothing here moves the player (docs/notes/syncplay-m11-plan.md, key decision 11);
- * the group moves it, through `SyncPlayController` and `PlayerHandle`, whether this screen exists or
- * not. All of that arrives through one collaborator, [PlayerSyncPlayBridge], and the solo path below
- * is deliberately untouched by it — `syncPlay.isInGroup` is `false` and every branch falls through
- * to what M5 through M10 built.
+ * the server and nothing here moves the player; the group moves it, through `SyncPlayController`
+ * and `PlayerHandle`, whether this screen exists or not. All of that arrives through one
+ * collaborator, [PlayerSyncPlayBridge], and the solo path below is deliberately untouched by it —
+ * `syncPlay.isInGroup` is `false` and every branch falls through to the solo path.
  *
  * The other half is [SyncPlayPlaybackHost], implemented here because opening an item is this class's
  * job and nothing else's: device profile, downloaded copy versus stream, track choices, reporting and
@@ -118,15 +117,14 @@ import kotlin.time.Duration.Companion.milliseconds
 @HiltViewModel
 @Suppress(
     "TooManyFunctions",
-    // The M10 decomposition already moved the machinery out (PlaybackSessionController,
-    // PlaybackReporter, gesture/segment layers, the SyncPlay bridge, the cast coordinator);
-    // what is left is the UI façade wiring those collaborators to one screen, and the 2026-08
-    // audit-fix wave nudged it just past the threshold with per-fix glue. Extracting another
-    // collaborator would publish `source`/session state to it — a larger surface than it saves,
-    // the same trade SyncPlayController documents. Logged in DECISIONS.md (2026-08-03).
+    // The machinery already lives elsewhere (PlaybackSessionController, PlaybackReporter,
+    // gesture/segment layers, the SyncPlay bridge, the cast coordinator); what is left is the UI
+    // façade wiring those collaborators to one screen. Extracting another collaborator would
+    // publish `source`/session state to it — a larger surface than it saves, the same trade
+    // SyncPlayController documents.
     "LargeClass",
-    // Sixteen constructor collaborators — the same trade as "LargeClass": this is the façade the
-    // M10 decomposition left behind, so every extracted machine reappears here as a parameter.
+    // Sixteen constructor collaborators — the same trade as "LargeClass": this is the façade over
+    // that machinery, so every extracted machine reappears here as a parameter.
     "LongParameterList",
 )
 internal class PlayerViewModel
@@ -153,7 +151,7 @@ internal class PlayerViewModel
          * `PlaybackReporter` takes a `SyncPlayStatusHolder`: this class only needs the one fact, and
          * taking it this way keeps every `com.google.android.gms` type — and the Cast session
          * lifecycle behind it — out of a ViewModel that has no business with either. Defaulted so a
-         * test constructs the M5-through-M11 behaviour exactly; Hilt always passes the singleton.
+         * test constructs the no-cast behaviour exactly; Hilt always passes the singleton.
          */
         castStatus: CastStatusHolder = CastStatusHolder(),
         /**
@@ -171,7 +169,7 @@ internal class PlayerViewModel
          *
          * The interface rather than `CastSessionCoordinator` so that it can be defaulted: a
          * coordinator cannot be constructed without the Cast framework's session manager behind it,
-         * and every pre-M12 test fixture builds this class with neither. [NoCastPlaybackCoordinator]
+         * and a test fixture builds this class with neither. [NoCastPlaybackCoordinator]
          * is the honest answer for a player with no Cast stack — there is nowhere to hand a session
          * to — and Hilt always passes the singleton.
          */
@@ -203,8 +201,8 @@ internal class PlayerViewModel
 
         // ktlint reads `_x`/`x` as an idiom for exposing a mutable field *publicly*, and refuses it
         // when the read-only half is not `public`. Here the read-only half is `internal` because
-        // nothing outside `:player` may see it (audit ARCH-2) — the pairing is otherwise exactly the
-        // idiom the rule is about, and renaming the backing field would churn 35 unrelated lines.
+        // nothing outside `:player` may see it — the pairing is otherwise exactly the idiom the
+        // rule is about.
         @Suppress("ktlint:standard:backing-property-naming")
         private val _uiState = MutableStateFlow(PlayerUiState())
 
@@ -212,7 +210,7 @@ internal class PlayerViewModel
         internal val uiState: StateFlow<PlayerUiState> = _uiState.asStateFlow()
 
         /**
-         * The seek bar's position and buffer, ticking twice a second (audit PERF-04).
+         * The seek bar's position and buffer, ticking twice a second.
          *
          * Separate from [uiState] so that a number only the scrubber and the clock read cannot
          * invalidate the top bar, the transport row and the pickers along with them.
@@ -244,11 +242,11 @@ internal class PlayerViewModel
          * Everything that is true of the session playing right now, or `null` before the first
          * resolve succeeds.
          *
-         * Nine mutable fields used to say this between them, and the only thing tying them together
-         * was the order the methods below happened to run in (audit CPX-5): `pendingAudioIndex` and
-         * `pendingSubtitleApply` belonged to the open that resolved them, `stopReported` to the
-         * source it had reported, `recoverySource` to the re-negotiation that armed it — and a new
-         * session had to remember to reset each one by hand. Boxed, a new session is *one*
+         * Nine mutable fields would say this between them, tied together by nothing but the order
+         * the methods below happen to run in: `pendingAudioIndex` and `pendingSubtitleApply` belong
+         * to the open that resolved them, `stopReported` to the source it has reported,
+         * `recoverySource` to the re-negotiation that armed it — and a new session would have to
+         * remember to reset each one by hand. Boxed, a new session is *one*
          * assignment ([publish]), and forgetting a field is a compile error rather than a stale
          * value from the film before.
          *
@@ -260,7 +258,7 @@ internal class PlayerViewModel
         /**
          * The currently playing source; `null` until the first resolve succeeds.
          *
-         * Derived rather than stored since the CPX-5 boxing, because roughly a dozen call sites want
+         * Derived rather than stored, because roughly a dozen call sites want
          * exactly this and nothing else about the session. Read-only on purpose: everything that
          * *changes* it goes through [session], so there is one place a session can be replaced.
          */
@@ -373,9 +371,9 @@ internal class PlayerViewModel
                 ).copy(castTarget = isCasting),
                 // In a group, **paused** — for the same reason `loadItem` opens paused: the group
                 // decides when playback starts, and a member that started on its own would be out of
-                // sync from the first frame. This is the route a group play actually takes now that
-                // the detail page sends the group a queue rather than navigating (DECISIONS.md,
-                // 2026-07-31): the server's `PlayQueueUpdate` becomes a launch request, the NavHost
+                // sync from the first frame. This is the route a group play takes: the detail page
+                // sends the group a queue rather than navigating, so
+                // the server's `PlayQueueUpdate` becomes a launch request, the NavHost
                 // opens this screen, and the open-paused → buffering → ready → server-unpause
                 // handshake is what puts this member in step.
                 playWhenReady = sessionStore.playWhenReady && !syncPlay.isInGroup,
@@ -403,7 +401,7 @@ internal class PlayerViewModel
          * *is* a still from the episode, so the fallbacks end somewhere sensible for every type.
          *
          * @param itemId the item this label is *for* — the navigation argument on the ordinary open,
-         *   but whatever the group just moved to on [loadItem] (B4). `withSource` refreshes every
+         *   but whatever the group just moved to on [loadItem]. `withSource` refreshes every
          *   other item-bound field off the resolved [PlaybackMediaSource] already; the title is the
          *   one piece of item-bound state this class fetches for itself rather than receiving from
          *   the resolve, so it is the one call site that has to be told which item it is for rather
@@ -434,7 +432,7 @@ internal class PlayerViewModel
         }
 
         /**
-         * Keeps the M9 preferences current for as long as playback lasts.
+         * Keeps the playback preferences current for as long as playback lasts.
          *
          * Read continuously rather than once because the settings screen can change them from under
          * a playing item — turning auto-skip on mid-episode should take effect at the next segment,
@@ -490,7 +488,7 @@ internal class PlayerViewModel
                 syncPlay.messages.collect { message -> _uiState.update { it.copy(userMessage = message) } }
             }
             // A downloaded item joins the group's session when the group is joined, and leaves it
-            // when the group is (M11 Phase 6) — including in the middle of the film, which is the
+            // when the group is — including in the middle of the film, which is the
             // only moment anything has to be *sent* rather than simply started or stopped.
             viewModelScope.launch {
                 syncPlay.membership.collect { syncPlay.syncServerSession(source, playerHandle.snapshot()) }
@@ -526,7 +524,7 @@ internal class PlayerViewModel
         /**
          * The film moves to a receiver, from wherever it had got to here.
          *
-         * Three things happen in one sequence, and the order is the plan's (decision 11): the
+         * Three things happen in one sequence, and the order is load-bearing: the
          * outgoing session is **stopped and reported** at [from] — which kills its transcode on the
          * way past — and only then is the item negotiated again, this time against the cast profile,
          * resuming at that same position and playing if the phone was playing. Sequencing them in
@@ -536,7 +534,7 @@ internal class PlayerViewModel
          * The snapshot is the coordinator's rather than this class's, because by now
          * [playerHandle] is the receiver's and it has never played anything.
          *
-         * A group is left first (decision 6). Its message wins the snackbar over the transfer's:
+         * A group is left first. Its message wins the snackbar over the transfer's:
          * moving to a television is visible on screen a second later, while leaving a group is a
          * thing the user did not ask for and would otherwise discover by finding the group sheet
          * gone.
@@ -577,7 +575,7 @@ internal class PlayerViewModel
             // An invalid snapshot means the receiver no longer held the item when the session ended
             // (stopped from the television) — its position is meaningless, so the film resumes where
             // this session started rather than jumping to zero. The stop report handles the same
-            // reading on its own (PlaybackReporter, audit CAST-01).
+            // reading on its own (see `PlaybackReporter`).
             val resumeTicks = if (at.isValid) at.positionTicks else current.startPositionTicks
             Timber.i("Bringing %s back to this device at %d ticks", current.itemId, resumeTicks)
             openSession(
@@ -637,9 +635,8 @@ internal class PlayerViewModel
          * ### Known gap: process death after a swap
          * [PlayerSessionStore.itemId] is the navigation argument, and this method does not — cannot —
          * rewrite it. A process death after a swap therefore restores the *original* episode, at the
-         * position the swapped-in one had reached. SyncPlay has lived with exactly this since M11 and
-         * it is not fixed here; the route argument is the user's tap and rewriting it is a larger
-         * change than this feature.
+         * position the swapped-in one had reached. The SyncPlay swap has exactly the same gap; the
+         * route argument is the user's tap and rewriting it is a larger change than this feature.
          *
          * @return `true` when something is playing at the end of it.
          */
@@ -792,9 +789,9 @@ internal class PlayerViewModel
          * session is not necessarily a transcode: when the server direct-plays the original file the
          * stream carries every track, so `PlayerHandle.selectAudioTrack` succeeds — and a session that
          * only left the file for one track it lacked would then stay on the network for good, still
-         * paying for a stream of bytes that are already on the disk. That is the M10 device finding
-         * (check B.3): the transcoded case reached the re-resolve below and went home, the
-         * direct-played one never got there.
+         * paying for a stream of bytes that are already on the disk. The transcoded case reaches
+         * the re-resolve below and goes home; without this check the direct-played one never
+         * would.
          *
          * Both selections are weighed, not just the one being changed, because going home has to
          * take the *whole* session with it. Turning subtitles off during a session that went remote
@@ -822,7 +819,7 @@ internal class PlayerViewModel
          *   `PlaybackSourceResolver` pick the local copy again, which costs no bandwidth and survives
          *   the network dropping — the whole reason the download exists. Anything else keeps
          *   streaming;
-         * - **an item that was never downloaded:** nothing to bypass; this is M5's path untouched.
+         * - **an item that was never downloaded:** nothing to bypass; the ordinary streaming path.
          */
         private fun ActiveSession.needsServer(goesHome: Boolean): Boolean =
             when {
@@ -857,7 +854,7 @@ internal class PlayerViewModel
          * restarted for it. That loop is what a transcoded download did on every attempt to change
          * language or subtitles.
          *
-         * Since the pickers became connectivity-aware this is the **offline** answer only: online
+         * The pickers are connectivity-aware, so this is the **offline** answer only: online
          * the same tap is satisfied by streaming the item ([needsServer]). Offline the picker offers
          * nothing the file cannot play, so this should be unreachable from it, and it stays as the
          * honest answer for whatever slips past — a selection restored from a previous session, a
@@ -872,10 +869,9 @@ internal class PlayerViewModel
         /**
          * Applies a bitrate cap and reopens the stream.
          *
-         * Choosing a cap below the file's bitrate is what makes the server transcode, and is how
-         * the milestone's forced-transcode verification is driven from the UI.
+         * Choosing a cap below the file's bitrate is what makes the server transcode.
          *
-         * The no-op guard compares *picker entries*, not bitrates (DECISIONS.md, 2026-08-15). Since
+         * The no-op guard compares *picker entries*, not bitrates. Since
          * Auto resolves to a measured cap, comparing numbers would make a stream measured at 8 Mbps
          * indistinguishable from a hand-picked Medium — swallowing the Medium tap, and letting a tap
          * on Auto look like a change when it is not.
@@ -906,8 +902,7 @@ internal class PlayerViewModel
          * Applies a playback rate.
          *
          * Session-scoped: it is held in [PlayerUiState] and re-applied after every re-resolve
-         * ([PlaybackSessionController.open]), and nothing writes it to disk (docs/PLAN.md,
-         * "M9 Polish" → speed).
+         * ([PlaybackSessionController.open]), and nothing writes it to disk.
          */
         internal fun selectSpeed(speed: PlaybackSpeed) {
             if (syncPlay.isInGroup) {
@@ -962,7 +957,7 @@ internal class PlayerViewModel
          * defaults, which is what a different episode's stream list actually supports.
          *
          * A no-op in a group: the server owns what everyone watches next, and a member opening its
-         * own next episode would silently leave the group behind (key decision 11).
+         * own next episode would silently leave the group behind.
          */
         internal fun playNextEpisode() {
             if (syncPlay.isInGroup) return
@@ -1012,8 +1007,8 @@ internal class PlayerViewModel
          *
          * Driven by the screen's presence rather than by playback because it is purely cosmetic —
          * polling behind a backgrounded screen would burn battery updating a slider nobody can
-         * see. Progress *reporting* is a separate ticker and keeps running regardless, which since
-         * M9 is also what keeps a backgrounded film reporting while the notification controls it.
+         * see. Progress *reporting* is a separate ticker and keeps running regardless, which is
+         * also what keeps a backgrounded film reporting while the notification controls it.
          *
          * The first reading is taken immediately rather than after a tick, so returning to the
          * screen after a spell in the background — or in picture-in-picture — shows the live
@@ -1085,7 +1080,7 @@ internal class PlayerViewModel
          *
          * The `_uiState` write is diffed rather than unconditional: this is called twice a second,
          * and a `copy` that produces an equal value would still be a new object for every collector
-         * of [uiState] to compare (audit PERF-04).
+         * of [uiState] to compare.
          */
         private fun applyUpNextDecision(snapshot: PlaybackSnapshot) {
             val active = session ?: return
@@ -1112,8 +1107,7 @@ internal class PlayerViewModel
          * Acts on what the segment rules made of the last tick.
          *
          * The auto-skip case is the one that changes in a group: nothing may move this player on its
-         * own there, so the skip is *offered* instead (docs/notes/syncplay-m11-plan.md, key decision
-         * 11, and DECISIONS.md 2026-07-30). Suppressing it outright would leave a user whose
+         * own there, so the skip is *offered* instead. Suppressing it outright would leave a user whose
          * preference is auto-skip with no way to skip an intro at all, since the button is normally
          * only drawn for the other preference; offering it keeps the preference meaningful and lets
          * the whole group skip together.
@@ -1158,7 +1152,7 @@ internal class PlayerViewModel
          * preference is on, and the film is on *this* device — so `MainActivity`, which hosts every
          * other screen too, only has to read one boolean.
          *
-         * The last of them is M12's: while casting there is no video surface to shrink
+         * The last of them is about casting: while casting there is no video surface to shrink
          * (`CastPlayerHandle.player` is permanently `null`), so leaving the app would ask the system
          * for a floating window over nothing while the television carries on playing. Backgrounding
          * a cast session is the ordinary way to use one, and it must simply leave the screen.
@@ -1229,9 +1223,9 @@ internal class PlayerViewModel
          * Reopens the current item under new terms.
          *
          * One coroutine, not two: [PlaybackSessionController.reopen] stops the outgoing transcode
-         * and asks for the next stream in sequence. Launching them independently — which is what
-         * this used to do — let the new `PlaybackInfo` reach the server before the old encoder was
-         * killed, which is the stranded ffmpeg process the ordering exists to prevent.
+         * and asks for the next stream in sequence. Launching them independently would let the new
+         * `PlaybackInfo` reach the server before the old encoder was killed, which is the stranded
+         * ffmpeg process the ordering exists to prevent.
          */
         private fun reopenSession(
             request: PlaybackResolveRequest,
@@ -1242,7 +1236,7 @@ internal class PlayerViewModel
             updateSession { it.copy(forcedRemote = request.forceRemote) }
             setReportingActive(false)
             // The group has to know this member is rebuilding its player, or it plays on without us.
-            // `PlayerEvent` has no "buffering", so nothing else can tell it (DECISIONS, Phase 2).
+            // `PlayerEvent` has no "buffering", so nothing else can tell it.
             syncPlay.onBuffering()
             val resumed =
                 request.copy(
@@ -1287,7 +1281,7 @@ internal class PlayerViewModel
          * [session] is assigned before anything suspends, so a player event arriving during the first
          * buffer is attributed to the stream that produced it rather than to the one it replaced.
          *
-         * The one assignment is also the whole of the CPX-5 boxing: everything a session remembers is
+         * The one assignment is also the whole of the boxing: everything a session remembers is
          * reset here, together, and the two facts that deliberately *survive* an open —
          * [ActiveSession.localSource] and [ActiveSession.forcedRemote] — say so in one place instead
          * of by omission spread over nine fields.
@@ -1344,7 +1338,7 @@ internal class PlayerViewModel
                     upNext.reset()
 
                     // Before the start report, not after: in a group a downloaded item reports too,
-                    // and the id that report is keyed on is minted here (M11, key decision 9).
+                    // and the id that report is keyed on is minted here.
                     syncPlay.syncServerSession(resolved, playerHandle.snapshot())
                     reporter.reportStart(resolved, playerHandle.snapshot())
                     setReportingActive(true)
@@ -1372,7 +1366,7 @@ internal class PlayerViewModel
          * same message a refused offline switch gets. The retry is not forced, so it can only
          * resolve locally, and a second failure falls through to the error.
          *
-         * The second recovery is the streamed mirror of the first (audit PC-01): a re-negotiation
+         * The second recovery is the streamed mirror of the first: a re-negotiation
          * — a subtitle tap, a quality row, a fallback rung — that fails to resolve had a working
          * session behind it, whose transcode [reopenSession] has by then already stopped, and the
          * terminal error's only offered action is leaving the player. [recoverySource] holds that
@@ -1529,14 +1523,14 @@ internal class PlayerViewModel
          * `onBack()`. **In a group with a queue behind it, it is not** — `SyncPlayController` has
          * already asked the server for the next item and its `PlayQueueUpdate` reloads this very
          * session, so popping the screen here would close the player the group is about to fill and
-         * make the launch-request path re-open one a second later (DECISIONS.md, 2026-07-30). When
+         * make the launch-request path re-open one a second later. When
          * the group's queue really is finished, the ordinary behaviour stands.
          *
          * **Solo, an up-next tap is the same shape of exception** ([advancing]): the episode really
          * has ended and a replacement is already being negotiated into this very session, so popping
          * the route would close the player the swap is about to fill.
          *
-         * **And since the 2026-08-24 decision, so is the natural end itself:** an episode that plays
+         * **And so is the natural end itself:** an episode that plays
          * out solo with a successor prefetched advances to it here, through the same
          * [playNextEpisode] path a tap takes — including from the background, where the tick-driven
          * card may never have shown at all. The one opt-out is the card's dismissal: "watch credits"
@@ -1582,7 +1576,7 @@ internal class PlayerViewModel
          * for it" — and none of that is true of a failure on the far end of a network: retrying a
          * receiver error at a lower bitrate would restart the film for a reason that was never the
          * reason. One message — [PlayerMessage.CastPlaybackFailed], which says where the failure
-         * actually was — and it stops (docs/notes/chromecast-m12-plan.md, decision 8).
+         * actually was — and it stops.
          */
         private fun onError(event: PlayerEvent.Error) {
             val active = session ?: return
@@ -1683,7 +1677,7 @@ internal class PlayerViewModel
          * the stop report exists on a detached scope — can be unit tested without reflecting into
          * the lifecycle library's internals.
          *
-         * [PlayerHandle.release] is the audit's STAB-05 fix: `stop()` alone idles the player but
+         * [PlayerHandle.release] matters here: `stop()` alone idles the player but
          * leaves its playback thread, loaders, allocator buffers and ffmpeg renderer alive for the
          * rest of the process. It is idempotent, and the media-session service's teardown reaches it
          * too — this is the path that covers a session whose service never started.
@@ -1700,7 +1694,7 @@ internal class PlayerViewModel
             setReportingActive(false)
             setScreenVisible(false)
             // The group survives the screen: the controller sends `ignoreWait` from here so nobody
-            // is left waiting on a player that no longer exists (key decision 5).
+            // is left waiting on a player that no longer exists.
             syncPlay.detach()
             // And so does the receiver. After the ticker above is stopped, never before: the
             // coordinator starts its own from here, and two would double every reported position.
@@ -1717,7 +1711,7 @@ internal class PlayerViewModel
             syncPlay.onSessionClosed()
             // …and after it too: video's claim on the shared player carries a relinquish that
             // would close this same session, and disowning the claim before the report was handed
-            // over would leave nothing to close it at all (M13, key decision 3).
+            // over would leave nothing to close it at all.
             sessionController.endVideoSession()
             _videoPlayer.value = null
             if (isCasting) return
@@ -1759,13 +1753,13 @@ internal class PlayerViewModel
     }
 
 /**
- * Everything one playback session remembers, in one value (audit CPX-5).
+ * Everything one playback session remembers, in one value.
  *
- * These facts used to be eight `private var`s on `PlayerViewModel`, and what bound them
- * together was nothing but the order the methods happened to run in: a new open had to remember to
- * re-arm two of them, clear one, leave two alone and never touch the last. Boxed, "a new session"
- * is a single assignment in `PlayerViewModel.publish`, and every field added since — [upNext] is the
- * ninth — is reset there with the rest rather than by a `var` somebody has to remember.
+ * As separate `private var`s on `PlayerViewModel` these facts would be bound together by nothing
+ * but the order the methods happen to run in: a new open would have to remember to re-arm two of
+ * them, clear one, leave two alone and never touch the last. Boxed, "a new session" is a single
+ * assignment in `PlayerViewModel.publish`, and every field added here is reset with the rest rather
+ * than by a `var` somebody has to remember.
  *
  * They are the ones whose lifetime really is one session. The other mutable fields on
  * that class deliberately stay where they are, each because its lifetime is something else's:
@@ -1840,7 +1834,7 @@ private data class ActiveSession(
  *   server's copy of one the user is deliberately streaming for a track the file lacks.
  * @param castTarget whether the stream is for a receiver, likewise unknowable from the source: a
  *   cast stream and a streamed local one are the same shape, and only the live cast session says
- *   which profile the next negotiation belongs to (M12 Phase 2).
+ *   which profile the next negotiation belongs to.
  */
 private fun PlaybackMediaSource.asRequest(
     forceRemote: Boolean,
@@ -1893,10 +1887,10 @@ private fun PlayerUiState.withSource(
 /**
  * The picker entry that describes what is playing.
  *
- * Flag-driven rather than a reverse lookup of the cap (DECISIONS.md, 2026-08-15): Auto now resolves
- * to a *measured* number, and a measurement that happens to land on 8 Mbps would otherwise light up
- * "Medium" — a chip the user never chose, and one that makes their next Medium tap a no-op. A local
- * source has no cap at all and reads as [PlaybackQuality.AUTO], exactly as it did before.
+ * Flag-driven rather than a reverse lookup of the cap: Auto resolves to a *measured* number, and a
+ * measurement that happens to land on 8 Mbps would otherwise light up "Medium" — a chip the user
+ * never chose, and one that makes their next Medium tap a no-op. A local source has no cap at all
+ * and reads as [PlaybackQuality.AUTO].
  */
 private fun qualityOf(source: PlaybackMediaSource): PlaybackQuality {
     val remote = source as? RemotePlaybackMediaSource ?: return PlaybackQuality.forBitrate(null)

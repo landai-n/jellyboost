@@ -20,9 +20,8 @@ import java.util.concurrent.atomic.AtomicBoolean
  *
  * ### Why a class and not a `Boolean`
  * [AtomicBoolean.compareAndSet] is the whole point: two threads racing `start()` must produce one
- * winner, and a plain `if (!started) { started = true; … }` gives them both the block. The three
- * call sites each spelled this out with their own field and their own three-line KDoc saying the
- * same thing (audit 2026-08-08, DUP-7); this is that reasoning, written once.
+ * winner, and a plain `if (!started) { started = true; … }` gives them both the block. Every call
+ * site needs exactly this reasoning, so it is written once here instead of once per field.
  *
  * ```kotlin
  * private val startOnce = StartOnce()

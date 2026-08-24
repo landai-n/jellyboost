@@ -54,13 +54,11 @@ interface UserDataDao {
      * The rows that exist for [itemIds] — what the offline repository overlays onto a page of
      * cached items it has just read.
      *
-     * **One-shot on purpose, and this DAO deliberately exposes no `Flow` at all.** Two observing
-     * counterparts used to sit here (`observeUserData`, `observeUserDataFor`) and neither ever
-     * acquired a subscriber: screens are patched by `UserDataEventBus`, which broadcasts the
-     * optimistic write that has *already* landed, so a second Room subscription per open page
-     * would re-read this table on every progress tick to re-deliver what the bus delivered first.
-     * They were removed rather than left as a tempting hook (audit 2026-08-08, PERF-28); the bus is
-     * the pattern to follow.
+     * **One-shot on purpose, and this DAO deliberately exposes no `Flow` at all.** Screens are
+     * patched by `UserDataEventBus`, which broadcasts the optimistic write that has *already*
+     * landed, so a Room subscription per open page would re-read this table on every progress tick
+     * to re-deliver what the bus already delivered. The bus is the pattern to follow, not a `Flow`
+     * from here.
      */
     @Query("SELECT * FROM user_data WHERE userId = :userId AND itemId IN (:itemIds)")
     suspend fun getUserDataFor(
@@ -100,10 +98,10 @@ interface UserDataDao {
      *
      * Called by `SessionRepository.signOut`: a synced row is pure cache — a copy of state the server
      * already holds, worth nothing once the account has left the device — while a pending one is the
-     * only copy of a change the server has not seen, and docs/PLAN.md's local-first story is a
-     * promise that it survives to be pushed when the same account signs back in.
+     * only copy of a change the server has not seen, and this app's local-first promise means it
+     * survives to be pushed when the same account signs back in.
      *
-     * (The per-item version of the same rule, used by the M7 download-delete cascade, is
+     * (The per-item version of the same rule, used by the download-delete cascade, is
      * `DownloadDao.deleteSyncedUserData`.)
      */
     @Query("DELETE FROM user_data WHERE userId = :userId AND toBeSynced = 0")

@@ -51,8 +51,7 @@ import kotlin.math.abs
  * `PlayingGroupState`'s equivalent both do it, verbatim ("Client got lost, sending current state").
  * Those repeats carry the same `when` and the same position as the command already applied, so
  * acting on them again is at best wasted work and at worst a re-seek that re-buffers, emits another
- * readiness, and earns another repeat — the feedback storm found on device (STATUS.md, DoD session
- * #1, B1/B2).
+ * readiness, and earns another repeat — a feedback storm.
  *
  * The guard therefore remembers two things, not one: the command *applied* to the player, and the
  * command currently *pending*. A repeat of either is a no-op — the applied one because acting twice
@@ -133,7 +132,7 @@ internal class SyncPlayCommandScheduler
                     if (waitMillis > 0L) delay(waitMillis)
                     // Bookkeeping on the scheduler's own single-threaded scope, never on main:
                     // schedule() reads these fields from this thread, so the dedupe and staleness
-                    // checks always see them coherently (audit SP-01). Written *before* the main
+                    // checks always see them coherently. Written *before* the main
                     // hop, deliberately — a command superseded mid-apply stays remembered, and its
                     // superseder is what corrects the player either way; the reverse order would
                     // let an applied command go unrecorded and its verbatim re-send re-applied.
@@ -141,7 +140,7 @@ internal class SyncPlayCommandScheduler
                     lastApplied = taken
                     val result = withContext(mainDispatcher) { apply(command, localWhen) }
                     _applied.tryEmit(result)
-                    // Guarded by identity, unlike before (audit SP-01): a completion racing a
+                    // Guarded by identity: a completion racing a
                     // schedule() that already replaced this job must not orphan the replacement's
                     // cancellation handle.
                     if (pending === coroutineContext[Job]) pending = null
@@ -175,9 +174,9 @@ internal class SyncPlayCommandScheduler
          * session) has not been applied to the player that comes back. The rebuild re-runs the
          * buffering→ready handshake, and the server answers a ready from a group it considers
          * settled by re-sending the standing command *verbatim* — same `when`, same position, the
-         * command this member already applied once. Remembering it would drop exactly that answer,
-         * which was measured on device (2026-07-31, run 3 follow-up): a track change at 6:35 left
-         * the resumed Unpause deduplicated as a repeat, and the blind fallback then jumped to 27:27.
+         * command this member already applied once. Remembering it would drop exactly that answer:
+         * the resumed Unpause would be deduplicated as a repeat, and the blind fallback would then
+         * jump to wherever the coarse anchor guesses.
          *
          * The pending slot survives: a command still waiting for its instant is the group's newest
          * word either way. Its `emittedAt` also keeps anchoring the staleness check, so this cannot

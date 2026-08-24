@@ -10,7 +10,7 @@ import io.kotest.matchers.types.shouldNotBeSameInstanceAs
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for [DownloadGroupCache] — the memoisation the 2026-08-08 audit asked for (PERF-11).
+ * Unit tests for [DownloadGroupCache] — the memoisation over the finished half of the table.
  *
  * Two properties, and the second is the one that makes it safe. **Identity**: while the finished
  * half of the table is unchanged, the *same* `List<DownloadGroup>` comes back, which is what lets

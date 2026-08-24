@@ -25,7 +25,7 @@ import javax.inject.Inject
 
 /**
  * State holder for [ArtistDetailScreen]: the artist's own metadata, their albums (newest first)
- * and their top tracks, fetched concurrently (M13 Phase 2, docs/notes/music-m13-plan.md).
+ * and their top tracks, fetched concurrently.
  */
 @HiltViewModel
 class ArtistDetailViewModel

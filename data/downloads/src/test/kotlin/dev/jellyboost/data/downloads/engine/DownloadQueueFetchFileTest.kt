@@ -40,8 +40,7 @@ import java.time.ZoneOffset
 
 /**
  * Unit tests for the one rule `withFetchFile` states: a sidecar's fetch cannot be resumed, so its
- * part file is worthless however the transfer ends (docs/notes/audit-2026-08-06-quality.md,
- * CPX-12).
+ * part file is worthless however the transfer ends.
  *
  * Separate from [DownloadQueueTest], which owns the transfer itself, and from
  * [DownloadQueueFileGuardTest], which owns what happens *before* a byte is fetched. What lives

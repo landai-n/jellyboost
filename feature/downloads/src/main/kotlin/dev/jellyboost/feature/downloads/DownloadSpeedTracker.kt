@@ -6,7 +6,7 @@ import dev.jellyboost.data.downloads.model.DownloadItem
 /**
  * Derives a transfer speed from successive Room emissions.
  *
- * The plan asks the queue tab for a speed, and the pipeline deliberately does not store one: a
+ * The queue tab wants a speed, and the pipeline deliberately does not store one: a
  * bytes-per-second column would be a second, staler source of truth next to `bytesDownloaded`, and
  * it would have to be written on every throttled progress update. Two samples of a counter that is
  * already there give the same answer for free.
@@ -16,7 +16,7 @@ import dev.jellyboost.data.downloads.model.DownloadItem
  * `downloads` *and* `download_files`, so it re-emits for the file-level write as well as the
  * item-level one — and `DownloadQueue` writes those back to back, milliseconds apart. Dividing a
  * whole throttle window's worth of bytes by the few milliseconds between two halves of one write
- * reported 100–180 MB/s for a transfer actually running at 2–8 MB/s (docs/POLISH.md).
+ * reports 100–180 MB/s for a transfer actually running at 2–8 MB/s.
  *
  * So a sample is only *folded in* once at least [windowMillis] has passed since the last one; until
  * then the bytes accumulate against the same anchor and the previous answer stands. Rapid emissions

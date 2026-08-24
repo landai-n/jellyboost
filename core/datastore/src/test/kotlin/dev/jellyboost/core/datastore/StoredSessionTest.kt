@@ -7,9 +7,9 @@ import org.junit.jupiter.api.Test
 import java.util.UUID
 
 /**
- * Pins [StoredSession]'s redacting `toString()` (audit NET-02): the class's own contract says the
- * token must never reach a log, and a regenerated data-class `toString()` is the easiest way to
- * break that silently.
+ * Pins [StoredSession]'s redacting `toString()`: the class's own contract says the token must
+ * never reach a log, and a regenerated data-class `toString()` is the easiest way to break that
+ * silently.
  */
 class StoredSessionTest {
     private val session =

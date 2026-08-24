@@ -65,9 +65,9 @@ private val MPillVerticalPadding = 2.dp
  *
  * The chip is `selectable`, not merely `clickable`: on/off is the *whole* point of a filter, and a
  * plain click node made the library rail's state invisible to a screen reader — eleven chips that
- * all announced their own label and nothing else (accessibility audit 2026-08-05, A11Y-06/M3). It
- * also sits inside an invisible [Dimens.MinTouchTarget] frame, the same pattern the pill buttons
- * use: the drawn capsule keeps its 32dp design height and the target around it is 48dp (A11Y-07).
+ * all announced their own label and nothing else. It also sits inside an invisible
+ * [Dimens.MinTouchTarget] frame, the same pattern the pill buttons use: the drawn capsule keeps
+ * its 32dp design height and the target around it is 48dp.
  *
  * A chip that is *never* interactive is [InfoPillChip], not this with `enabled = false`.
  *
@@ -103,8 +103,8 @@ fun PillChip(
  *
  * The library's "Filters" chip is the case this exists for: it opens a sheet, it can never be in an
  * "on" state, and as a [PillChip] it announced "not selected" every single time — a state a user
- * could reasonably spend a while trying to change (accessibility audit 2026-08-05, wave 5). A
- * button is what it is, so a button is what it says.
+ * could reasonably spend a while trying to change. A button is what it is, so a button is what it
+ * says.
  *
  * Visually identical to an unselected [PillChip], and inside the same invisible 48dp frame.
  */
@@ -136,7 +136,7 @@ fun ActionPillChip(
  * Its own component rather than `PillChip(enabled = false)` because the two states a screen reader
  * hears are not the same thing: a disabled chip announces "disabled", which invites the user to
  * wonder what they did wrong, when the truth is that a genre on a detail page is a *label* and was
- * never going to do anything (accessibility audit 2026-08-05, A11Y-14/M3). This one carries no
+ * never going to do anything. This one carries no
  * click node, no role and no state — just its word.
  */
 @Composable

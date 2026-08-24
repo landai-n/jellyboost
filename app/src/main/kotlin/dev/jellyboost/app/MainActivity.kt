@@ -41,12 +41,11 @@ import javax.inject.Inject
  * Single activity hosting the whole app.
  *
  * It holds the splash screen until session restore has answered, then hands the resulting
- * [SessionState] to [JellyboostApp], which picks the start destination from it. The bottom
- * navigation bar and the offline banner join the NavHost in M2/M6.
+ * [SessionState] to [JellyboostApp], which picks the start destination from it.
  *
  * A `FragmentActivity` rather than a plain `ComponentActivity`, and for exactly one reason: the
  * Cast chooser is a `DialogFragment` and `MediaRouteButton` throws without a fragment manager to
- * show it in (M12, DECISIONS.md 2026-07-31). No fragment is ever added by this app's own code.
+ * show it in. No fragment is ever added by this app's own code.
  */
 @AndroidEntryPoint
 class MainActivity : FragmentActivity() {
@@ -63,7 +62,7 @@ class MainActivity : FragmentActivity() {
     lateinit var pipController: PipController
 
     /**
-     * The Cast stack, brought up once from here (M12 Phase 1).
+     * The Cast stack, brought up once from here.
      *
      * `CastContext` is process-wide and has to be created from an Android context on the main
      * thread, which makes the single activity the natural — and the framework's own recommended —
@@ -76,11 +75,11 @@ class MainActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
         splashScreen.setKeepOnScreenCondition { viewModel.sessionState.value is SessionState.Unknown }
-        // The app is dark-only by design (JellyfinTheme, docs/PLAN.md) — the system bar icons must
+        // The app is dark-only by design (see JellyfinTheme) — the system bar icons must
         // always be light, regardless of the *system's* light/dark setting. enableEdgeToEdge()'s
         // default SystemBarStyle.auto() derives icon appearance from the system's night-mode
         // configuration, not from the app's own (always-dark) theme, so on a system in light mode it
-        // was drawing dark (black) icons over our dark UI. SystemBarStyle.dark(...) pins both bars to
+        // draws dark (black) icons over the app's dark UI. SystemBarStyle.dark(...) pins both bars to
         // the dark appearance (light icons) unconditionally, matching the theme.
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
@@ -104,17 +103,12 @@ class MainActivity : FragmentActivity() {
      * Brings the Cast stack up — a no-op, silently, on a device without Google Play services, which
      * is the whole point (see [CastAvailability]).
      *
-     * **Posted, not called inline** (audit 2026-08-08, PERF-26). `initialize` used to open with
-     * `GoogleApiAvailability.isGooglePlayServicesAvailable`, a binder round trip to another process,
-     * running in the middle of `onCreate` — on the critical path to the first frame, where every
-     * millisecond is one the user spends looking at the splash screen. Nothing needs the answer
-     * until a screen with a cast button is drawn.
-     *
-     * The probe itself has since moved behind [CastAvailability]'s own executor, which is where the
-     * earlier note said it would have to go, so `initialize` now returns as soon as it has captured
-     * the application context. This post stays regardless, and does the remaining work: it keeps the
-     * first touch of a `com.google.android.gms` class — the class loading, the singleton graph, the
-     * executor — out of `onCreate` entirely.
+     * **Posted, not called inline.** A direct call in the middle of `onCreate` would put a binder
+     * round trip to another process — the Play services check behind [CastAvailability]'s own
+     * executor — on the critical path to the first frame, where every millisecond is one the user
+     * spends looking at the splash screen. Nothing needs the answer until a screen with a cast
+     * button is drawn. Posting keeps the first touch of a `com.google.android.gms` class — the
+     * class loading, the singleton graph, the executor — out of `onCreate` entirely.
      *
      * Still on the **main thread**, and deliberately: [CastAvailability.initialize] is `@MainThread`
      * for its own guard, and `CastContext` is created from the main looper. `Dispatchers.Main`
@@ -191,9 +185,9 @@ class MainActivity : FragmentActivity() {
  * Asks once for `POST_NOTIFICATIONS` on API 33+.
  *
  * The download queue runs as foreground work and its notification is the only place a transfer can
- * be paused or cancelled from outside the app (docs/PLAN.md, "Download pipeline"). Without the
- * permission the work still runs — the promotion is what keeps it alive, not the notification being
- * *visible* — but the user loses that control surface, so it is worth one dialog.
+ * be paused or cancelled from outside the app. Without the permission the work still runs — the
+ * promotion is what keeps it alive, not the notification being *visible* — but the user loses that
+ * control surface, so it is worth one dialog.
  *
  * Declining is final and harmless: nothing here re-asks, and nothing depends on the answer.
  */

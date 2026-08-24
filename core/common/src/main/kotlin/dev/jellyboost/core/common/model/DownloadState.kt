@@ -4,10 +4,7 @@ package dev.jellyboost.core.common.model
  * Download state of an item as far as the UI is concerned.
  *
  * Every item card renders a `DownloadBadge` from this — the one visual marker that distinguishes
- * downloaded media in the otherwise identical online/offline UI (docs/PLAN.md).
- *
- * The full pipeline that produces these states lands in M7; until then everything is
- * [NotDownloaded].
+ * downloaded media in the otherwise identical online/offline UI.
  */
 sealed interface DownloadState {
     /** Not present on this device and not queued. */

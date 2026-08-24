@@ -48,7 +48,7 @@ internal class DownloadWorker
             notifier.ensureChannel()
             // Before "Preparing…", not after: the notifier is a singleton and remembers what the
             // *previous* run last posted, so without this the first sample of this run could match
-            // it and be skipped, leaving the notification on "Preparing…" (PERF-15).
+            // it and be skipped, leaving the notification on "Preparing…".
             notifier.resetPostedProgress()
             promote { notifier.startingForegroundInfo() }
 
@@ -76,7 +76,7 @@ internal class DownloadWorker
                 ) {
                     // `null` means nothing the user would see changed since the last post — the
                     // throttle calls this at up to six times a second, and the whole percent it
-                    // renders moves far less often than that (docs/notes/audit-2026-07.md, PERF-12).
+                    // renders moves far less often than that.
                     val info =
                         notifier.foregroundInfoIfChanged(
                             itemId = download.itemId,
@@ -88,7 +88,7 @@ internal class DownloadWorker
                 }
 
                 // The queue ran dry with this worker still alive: whatever it posts next describes
-                // a new run of the drain, and must not be suppressed as "unchanged" (PERF-15).
+                // a new run of the drain, and must not be suppressed as "unchanged".
                 override suspend fun onIdle() = notifier.resetPostedProgress()
             }
 
@@ -100,9 +100,9 @@ internal class DownloadWorker
          * permission. Losing the *notification* is survivable; losing the download because of it is
          * not.
          *
-         * A cancellation is not a refusal: `runCatching` used to swallow the one every Pause
-         * produces here too, turning a stop into "could not show the notification" and letting the
-         * worker carry on inside a cancelled coroutine.
+         * A cancellation is not a refusal: swallowing the one every Pause produces here would turn
+         * a stop into "could not show the notification" and let the worker carry on inside a
+         * cancelled coroutine.
          */
         private suspend fun promote(info: () -> androidx.work.ForegroundInfo) {
             try {
@@ -128,7 +128,7 @@ internal class DownloadWorker
  * `WorkManagerDownloadScheduler` attaches, which is deliberately the only retry mechanism in the
  * pipeline: [DrainOutcome.RETRY] means the queue kept the row `QUEUED` and counted the attempt, so
  * WorkManager owns *when* the next try happens and `DownloadQueue.MAX_ATTEMPTS` owns *whether*
- * there is one (docs/notes/audit-2026-07.md, STAB-01).
+ * there is one.
  *
  * [DrainOutcome.INCOMPLETE] is a success on purpose: the item is already `ERROR` in Room and shown
  * as such, and re-running the job over a permanently broken item would loop forever.

@@ -198,7 +198,7 @@ class NowPlayingViewModelTest {
             }
         }
 
-    // ---- lyrics (M13 Phase 6) -------------------------------------------------------------------
+    // ---- lyrics ---------------------------------------------------------------------------------
     //
     // The lyrics fetch is a second, asynchronous contributor to `uiState` alongside the queue
     // transition itself (a track becomes current with `lyrics = null` for one tick, then the fetch

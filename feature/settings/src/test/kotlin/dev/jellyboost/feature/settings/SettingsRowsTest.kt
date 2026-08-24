@@ -7,11 +7,11 @@ import org.junit.jupiter.api.Test
 /**
  * Unit tests for what `SettingsRows.kt` decides outside of composition.
  *
- * [choiceRowDescription] is the whole of the F12 fix from the 2026-08-05 accessibility audit: a
- * choice row used to announce its own two or three words and nothing else, so the two skip-mode
- * groups were six rows reading "Off / Show button / Auto" twice over, with the words that tell them
- * apart sitting in a caption that belonged to nothing. Folding the group name into every row is the
- * only association a screen reader can rely on, and this is where the wording is settled.
+ * [choiceRowDescription] is what keeps a choice row from announcing only its own two or three
+ * words: without it, the two skip-mode groups would be six rows reading "Off / Show button /
+ * Auto" twice over, with the words that tell them apart sitting in a caption that belongs to
+ * nothing. Folding the group name into every row is the only association a screen reader can
+ * rely on, and this is where the wording is settled.
  */
 class SettingsRowsTest {
     @Test

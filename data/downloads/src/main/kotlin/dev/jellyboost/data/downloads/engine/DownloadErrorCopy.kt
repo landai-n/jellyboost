@@ -10,9 +10,9 @@ import java.net.HttpURLConnection
  * Turns a download failure into the sentence the Queue tab prints under the item.
  *
  * `DownloadEntity.errorMessage` is user-visible copy, not a log line: it is rendered verbatim as
- * *"Download failed: %s"*. Storing `throwable.message` there leaked SDK internals onto the screen —
- * the M7 device walk showed a queue row reading *"Download failed: Required value baseUrl is null.
- * Provide it by setting ApiClient.baseUrl."*, which tells the user nothing they can act on.
+ * *"Download failed: %s"*. Storing `throwable.message` there leaks SDK internals onto the screen —
+ * a queue row reading *"Download failed: Required value baseUrl is null. Provide it by setting
+ * ApiClient.baseUrl."* tells the user nothing they can act on.
  *
  * The taxonomy is `:core:network`'s [AppError] (via [toAppError]) so that a download failure and a browse
  * failure describe the same underlying problem the same way; only the *copy* is download-specific,
@@ -21,10 +21,10 @@ import java.net.HttpURLConnection
  * Copy lives in Kotlin rather than in `strings.xml` for one reason: the message is written to Room
  * at the moment of failure and read back days later, so it cannot be re-resolved against the
  * device's current locale anyway — a row failed in French would still read English after the user
- * switched the device to German. This is now the *only* place that trade is made: the browse-side
- * mappers this one used to cite have moved behind `AppError.toUiText` (audit H8), which keeps the
- * resource id in state and resolves it at draw time. Doing the same here needs the row to store a
- * key rather than a sentence, which is a schema migration, not a copy change.
+ * switched the device to German. This is the *only* place that trade is made: the browse side goes
+ * through `AppError.toUiText`, which keeps the resource id in state and resolves it at draw time.
+ * Doing the same here needs the row to store a key rather than a sentence, which is a schema
+ * migration, not a copy change.
  */
 internal object DownloadErrorCopy {
     /** The message stored on the row for [error]. Never contains exception text. */
@@ -71,13 +71,13 @@ internal object DownloadErrorCopy {
 
     /**
      * A show or a season that was queued as if it were a file — only reachable for rows created
-     * before containers were expanded into their episodes (DECISIONS.md, 2026-07-29). It says what
-     * to do about it, because the row itself can never succeed.
+     * before containers were expanded into their episodes. It says what to do about it, because the
+     * row itself can never succeed.
      */
     private const val NOT_A_FILE =
         "This is a show or a season, not a single video. Remove it and download the episodes."
 
     // Unknown failures are classified PERMANENT (DownloadFailure.kt), so this must not promise a
-    // retry the queue will not attempt — that was the exact lie an unclassified NPE used to tell.
+    // retry the queue will not attempt.
     private const val UNKNOWN = "Something went wrong. Try the download again."
 }

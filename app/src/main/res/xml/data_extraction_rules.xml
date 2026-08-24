@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Audit finding SEC-04 (docs/notes/audit-2026-07.md §3-4).
-
     `android:allowBackup="false"` is enough on API 30 and below, but from Android 12 (API 31) it no
     longer covers device-to-device transfer: on a new-phone setup the platform copies the app's data
     directory across unless these rules say otherwise. That directory holds the unencrypted Room
@@ -32,7 +30,7 @@
         <exclude domain="device_sharedpref" />
     </cloud-backup>
 
-    <!-- Device-to-device transfer. This is the section SEC-04 is actually about. -->
+    <!-- Device-to-device transfer. -->
     <device-transfer>
         <exclude domain="root" />
         <exclude domain="file" />

@@ -41,21 +41,20 @@ import javax.inject.Singleton
  * lifetime of the download, and the offline library slowly drifts away from the library it is a copy
  * of. That is what it is for, permanently, on a device that never had a bug at all.
  *
- * ### The historical repair, which is simply the first thing it does
+ * ### Gutted rows heal on the same pass
  * `DownloadEnqueuer` stores each downloaded item's complete `DOWNLOAD_FIELDS` response in
  * [ItemEntity.dto] — the offline detail page's only source of overview, genres, cast, taglines,
- * chapters and media streams. An earlier build let a **lean** browse-list write replace that blob,
- * so scrolling past a downloaded film online reduced its offline detail page to a title and a
- * poster. `BrowseCacheWriter` no longer allows it, and `OnlineJellyfinRepository.getItem` (the one
- * caller that passes `full = true`) repairs a gutted row on the way past — but only for the item the
- * user happens to open while online. On a device that upgraded across the bug, every other damaged
- * row stays damaged until someone visits it, one by one, which is not a repair anyone would finish.
- * The first pass this class makes on such a device happens to heal all of them at once. That is a
- * welcome side effect of keeping metadata current, not the reason the sync exists.
+ * chapters and media streams. A row whose blob is a **lean** browse-list response instead has an
+ * offline detail page of nothing but a title and a poster. `BrowseCacheWriter` refuses to write one
+ * over a downloaded item, and `OnlineJellyfinRepository.getItem` (the one caller that passes
+ * `full = true`) repairs a gutted row on the way past — but only for the item the user happens to
+ * open while online, one by one, which is not a repair anyone would finish. A pass over the whole
+ * downloads table heals every such row at once. That is a welcome side effect of keeping metadata
+ * current, not the reason the sync exists.
  *
  * Either way the work is the same: one batched `getFullItems` for the whole downloads table, written
  * exactly the way the enqueuer writes a fresh download — parents included, because the series and
- * season rows behind a downloaded episode go stale (and were gutted) for the same reasons, and they
+ * season rows behind a downloaded episode go stale, and are gutted, for the same reasons, and they
  * are what the offline "walk up to the show" path reads.
  *
  * ### The files, too
@@ -187,7 +186,7 @@ class DownloadedMetadataRefresher
 
         /**
          * The parent ids of [items] that are not already being written — series and season for an
-         * episode, album and album artist for a track (M13 Phase 5).
+         * episode, album and album artist for a track.
          *
          * Mirrors `DownloadEnqueuer.fetchParents` exactly, and has to: a downloaded episode is only
          * reachable from its show offline, and a downloaded track from its artist, because those

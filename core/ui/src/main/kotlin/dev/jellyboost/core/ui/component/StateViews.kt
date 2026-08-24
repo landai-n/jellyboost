@@ -71,11 +71,10 @@ private val DashGap = 5.dp
 /**
  * Centred spinner shown while a screen loads its first page of data.
  *
- * It says so: a spinning ring is a picture of waiting, and before the 2026-08-05 accessibility
- * audit a screen that replaced its content with one announced nothing at all — the previous
- * screen's node vanished and TalkBack landed on an empty page (audit CR-3/M4). The label makes the
- * spinner a stop with words, and the polite live region announces it when it appears without
- * interrupting whatever is being read.
+ * It says so: a spinning ring is a picture of waiting, and a screen that replaces its content with
+ * one and no label announces nothing at all — the previous screen's node vanishes and TalkBack
+ * lands on an empty page. The label makes the spinner a stop with words, and the polite live
+ * region announces it when it appears without interrupting whatever is being read.
  */
 @Composable
 fun LoadingState(modifier: Modifier = Modifier) {
@@ -110,7 +109,7 @@ fun LoadingState(modifier: Modifier = Modifier) {
  * @param actionLabel what the button says. Defaults to "Retry", which is what [onRetry] means
  *   almost everywhere — but not everywhere: a screen whose only recovery is to leave (the player's
  *   error state closes the player) has to say so, because a control has to be named for what it
- *   does (WCAG 2.5.3; accessibility audit 2026-08-05). Ignored when [onRetry] is `null`, since
+ *   does (WCAG 2.5.3). Ignored when [onRetry] is `null`, since
  *   there is no button to label.
  * @param dashedPanel draws the message inside a dashed outline. Off by default: a state view that
  *   fills a screen needs no container, but one that sits *inside* other content (an empty tab under
@@ -148,8 +147,8 @@ fun ErrorState(
  *   only when someone swipes onto it. Opt-in and `null` by default: these views also appear on a
  *   first composition, where the screen reader is about to read the message anyway and an
  *   announcement would be a stutter. Pass it where the view *replaces* content the user was
- *   already in — a failed refresh, a filter that matched nothing (accessibility audit 2026-08-05,
- *   CR-3). `Polite` waits its turn; `Assertive` interrupts and belongs to failures.
+ *   already in — a failed refresh, a filter that matched nothing. `Polite` waits its turn;
+ *   `Assertive` interrupts and belongs to failures.
  */
 @Composable
 fun EmptyState(

@@ -10,7 +10,7 @@ import androidx.compose.ui.unit.sp
  *
  * These are deliberately **additions**, not overrides of `MaterialTheme.typography`: every existing
  * screen is written against the stock M3 roles, and re-tuning `titleMedium` or `labelSmall` to hit
- * one mock would silently restyle dozens of call sites that were never part of this pass. A
+ * one mock would silently restyle dozens of call sites the mock never covered. A
  * separate object keeps the refresh's type opt-in and greppable — `JellyfinTypeExtras.Eyebrow`
  * says which design the style came from, `MaterialTheme.typography.labelSmall` does not.
  *

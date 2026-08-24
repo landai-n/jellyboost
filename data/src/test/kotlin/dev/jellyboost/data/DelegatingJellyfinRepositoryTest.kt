@@ -240,8 +240,8 @@ class DelegatingJellyfinRepositoryTest {
      *
      * The hand-written list is worth keeping — it asserts the *values* come back, not just that
      * something was called — but it is only ever as complete as whoever last extended
-     * [JellyfinRepository] remembered to make it, and it was not: `getResumeItems` was missing for
-     * three milestones (audit ARCH-09). This walks every member the interface declares, calls it
+     * [JellyfinRepository] remembered to make it, and that is easy to miss: `getResumeItems` went
+     * unlisted for a while before anyone noticed. This walks every member the interface declares, calls it
      * reflectively on the delegate, and demands the identically-named member fire on the offline
      * implementation. A member added tomorrow and forgotten in `DelegatingJellyfinRepository`
      * cannot compile at all (Kotlin requires the override); a member added and *stubbed out* —
@@ -352,7 +352,7 @@ class DelegatingJellyfinRepositoryTest {
     private fun item(name: String) = JellyfinItem(id = name, name = name, type = ItemType.MOVIE)
 
     private companion object {
-        /** The SDK's own default socket timeout — the number M6's definition of done rules out. */
+        /** The SDK's own default socket timeout — the number this repository's ceiling stays under. */
         const val SOCKET_TIMEOUT_MS = 30_000L
 
         /**

@@ -12,29 +12,27 @@ import javax.inject.Singleton
  *
  * A distinct type because the condition is transient by nature: an ejected SD card, an MTP session
  * or the seconds after boot before the card mounts all empty `volumes()` for a while and then stop.
- * As a bare `IllegalStateException` it fell through `toAppError()` to `AppError.Unknown`, which the
- * failure classifier calls PERMANENT — one unmounted volume then marked every queued row ERROR
- * within seconds, the exact STAB-01 shape the transient/permanent split exists to prevent
- * (audit DL-10). `DownloadFailureClassifier` recognises this type as TRANSIENT instead, so the
- * drain stops, backs off and retries.
+ * As a bare `IllegalStateException` it would fall through `toAppError()` to `AppError.Unknown`,
+ * which the failure classifier calls PERMANENT — one unmounted volume would then mark every queued
+ * row ERROR within seconds, the exact shape the transient/permanent split exists to prevent.
+ * `DownloadFailureClassifier` recognises this type as TRANSIENT instead, so the drain stops, backs
+ * off and retries.
  */
 internal class StorageUnavailableException(
     message: String,
 ) : IllegalStateException(message)
 
 /**
- * Where downloaded files live, and the only thing in the pipeline that knows it (docs/PLAN.md,
- * "Download pipeline" → Storage).
+ * Where downloaded files live, and the only thing in the pipeline that knows it.
  *
- * The plan's default is `getExternalFilesDir(null)/downloads` [D] — app-private external storage,
- * which needs no runtime permission, is wiped on uninstall (so a removed app leaves no gigabytes
- * behind) and is excluded from the media scanner.
+ * The default is `getExternalFilesDir(null)/downloads` — app-private external storage, which needs
+ * no runtime permission, is wiped on uninstall (so a removed app leaves no gigabytes behind) and is
+ * excluded from the media scanner.
  *
- * The root is no longer fixed: `StorageLocationManager` resolves it from the volume the user picked
- * in Settings, which may be an SD card (DECISIONS.md 2026-07-29, "the storage location picker ships
- * now, backed by secondary volumes"). It stays a plain `java.io.File` on every volume, so this
- * interface is unchanged by that; the SAF-tree backend the plan also describes is still the reason
- * the interface exists, and is still deferred.
+ * The root is not fixed: `StorageLocationManager` resolves it from the volume the user picked in
+ * Settings, which may be an SD card. It stays a plain `java.io.File` on every volume, so this
+ * interface does not have to know which; a SAF-tree backend is the reason the interface exists at
+ * all, and is deferred.
  */
 internal interface DownloadStorage {
     /** Absolute path of the storage root, or `null` when no external volume is mounted. */
@@ -63,7 +61,7 @@ internal interface DownloadStorage {
      * Removes an item's directory and everything in it.
      *
      * @return how many bytes were actually freed — what the Downloads screen reports after a
-     *   delete, and what the milestone's "delete frees bytes" check measures.
+     *   delete, and what the "delete frees bytes" check measures.
      */
     fun deleteItemDirectory(directoryName: String): Long
 

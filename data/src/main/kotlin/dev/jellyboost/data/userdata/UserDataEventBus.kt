@@ -18,8 +18,8 @@ data class UserDataChange(
  * App-wide broadcast of local user-data changes.
  *
  * Every list ViewModel collects this and patches its already-loaded items in place, so marking an
- * episode watched on a detail page updates the home rows behind it with **no refetch** — the
- * Swiftfin pattern the plan adopts (docs/PLAN.md, "Data layer" → `UserDataRepositoryImpl`).
+ * episode watched on a detail page updates the home rows behind it with **no refetch** — the same
+ * pattern Swiftfin uses.
  *
  * The flow is hot and replay-free on purpose: a screen that was not listening at the time will
  * pick the value up from its next load, and replaying stale toggles into a freshly loaded screen

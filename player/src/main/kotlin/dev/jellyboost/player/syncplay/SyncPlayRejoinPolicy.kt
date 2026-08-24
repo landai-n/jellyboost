@@ -25,7 +25,7 @@ internal enum class SyncPlayRejoinOutcome {
 /**
  * Decides when a lost membership is taken back, and runs the attempts that take it.
  *
- * Extracted from [SyncPlayController] (audit CPX-1/ARCH-5) because the rejoin machinery owns a
+ * Kept out of [SyncPlayController] because the rejoin machinery owns a
  * disjoint slice of state — the remembered [rejoinTarget], the attempt loop's [rejoinJob], the
  * [lostMembership] memory that survives teardown, and the [troubledAt] reading that tells a
  * removal-by-connection apart from a removal-by-decision. The membership transitions themselves
@@ -147,11 +147,11 @@ internal class SyncPlayRejoinPolicy(
     /**
      * The connection is gone as far as this client can tell — ask for the group back first.
      *
-     * It used to be the end of the group outright. On the device it is also the *usual* way the
-     * membership is lost: a three-second Wi-Fi drop costs more than the grace window of
-     * reported-offline once association, DHCP and the reachability probe are counted, so the
-     * grace expires before anything has had the chance to discover a `NotInGroup`. Handing it to
-     * the rejoin loop changes nothing when the connection really has gone — every attempt is
+     * On the device this is also the *usual* way the membership is lost: a three-second Wi-Fi drop
+     * costs more than the grace window of reported-offline once association, DHCP and the
+     * reachability probe are counted, so the grace expires before anything has had the chance to
+     * discover a `NotInGroup`. Handing it to the rejoin loop rather than ending the group outright
+     * changes nothing when the connection really has gone — every attempt is
      * gated on being online, and the ending is the same [SyncPlayMessage.ConnectionLost] a few
      * seconds later, with the player paused from this moment either way.
      */
@@ -171,7 +171,7 @@ internal class SyncPlayRejoinPolicy(
      * The server no longer has this session in the group — decide whether that was meant.
      *
      * A removal over a connection that has been well all along is the server or another client
-     * saying so, and is obeyed exactly as it always was. A removal after [recentlyTroubled] is
+     * saying so, and is obeyed. A removal after [recentlyTroubled] is
      * the websocket having dropped, `OnSessionEnded` having called `LeaveGroup` on our behalf,
      * and nobody having wanted any of it — so the membership is taken back.
      */
@@ -216,7 +216,7 @@ internal class SyncPlayRejoinPolicy(
      * [onTeardown]'s abort, but waited out — for the deliberate exits that go on to tell the
      * server.
      *
-     * The order is the point (audit SP-10): a rejoin can be suspended inside `api.joinGroup`,
+     * The order is the point: a rejoin can be suspended inside `api.joinGroup`,
      * and a leave sent while that join is still in flight can be answered *before* it — the app
      * ends at Idle while the server keeps the session in the group, a phantom participant the
      * others wait on. Cancelling first and joining the job means any join the server already

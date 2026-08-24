@@ -32,8 +32,8 @@ internal interface DownloadApi {
     /**
      * The episodes of a series, or of one of its seasons, in broadcast order.
      *
-     * This is what turns "download this season" into downloads (DECISIONS.md, 2026-07-29): a season
-     * and a series are folders, and a folder has no file to fetch. Only the **ids** are returned —
+     * This is what turns "download this season" into downloads: a season and a series are folders,
+     * and a folder has no file to fetch. Only the **ids** are returned —
      * [getFullItems] then fetches the same rich DTOs a single-episode download uses, so an expanded
      * episode is byte-for-byte the row a direct tap on that episode would have produced.
      *
@@ -46,7 +46,7 @@ internal interface DownloadApi {
     ): AppResult<List<UUID>>
 
     /**
-     * An album's tracks, in disc-then-track order (M13 Phase 5).
+     * An album's tracks, in disc-then-track order.
      *
      * [getEpisodeIds]'s music counterpart, and it exists for the same reason: a `MUSIC_ALBUM` is a
      * folder, so tapping Download on one has to become one download per track. The order matches
@@ -56,17 +56,17 @@ internal interface DownloadApi {
     suspend fun getAlbumTrackIds(albumId: UUID): AppResult<List<UUID>>
 
     /**
-     * Every track of an artist, **grouped by album** (M13 Phase 5).
+     * Every track of an artist, **grouped by album**.
      *
      * Sorted album-then-disc-then-track rather than by any global key, so a whole-artist download
      * drains one album at a time: the Downloads screen's album groups fill in one by one and each
      * reads as complete or not, instead of every album of the artist sitting half-downloaded at
-     * once (docs/notes/music-m13-plan.md, key decision 10).
+     * once.
      */
     suspend fun getArtistTrackIds(artistId: UUID): AppResult<List<UUID>>
 
     /**
-     * A playlist's **audio** members, in playlist order (M13 Phase 5).
+     * A playlist's **audio** members, in playlist order.
      *
      * `/Playlists/{id}/Items` rather than a `parentId` items query, for the reason
      * `OnlineJellyfinRepository.getPlaylistItems` gives: a generic items query is not guaranteed to
@@ -78,8 +78,7 @@ internal interface DownloadApi {
 }
 
 /**
- * [DownloadApi] on `itemsApi.getItems`, with the plan's field list (docs/PLAN.md, "Download
- * pipeline" → Enqueue).
+ * [DownloadApi] on `itemsApi.getItems`, with an explicit field list.
  *
  * `getItems(ids = …)` rather than the per-item `getItem` endpoint because an episode is fetched
  * together with its series and season — one request instead of three, and the field list is

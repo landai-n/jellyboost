@@ -23,9 +23,8 @@ import org.junit.jupiter.api.Test
  * Unit tests for [UserDataSyncTrigger].
  *
  * It exists for the two moments nothing else can enqueue the drain — a cold start with rows already
- * pending, and connectivity coming back — and the milestone's definition of done depends on the
- * second one: the airplane-mode positions only reach the server because something notices the
- * network return.
+ * pending, and connectivity coming back — and the second one matters most: the airplane-mode
+ * positions only reach the server because something notices the network return.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class UserDataSyncTriggerTest {
@@ -132,7 +131,7 @@ class UserDataSyncTriggerTest {
      * The broad guard above must not also swallow a cancellation: the count runs inside
      * `withContext`, so a cancelled application scope arrives here as a `CancellationException`,
      * and treating it as "could not count" would log a warning for an ordinary shutdown and let the
-     * caller carry on inside a cancelled coroutine (audit STAB-06 / ARCH-08).
+     * caller carry on inside a cancelled coroutine.
      */
     @Test
     fun `a cancelled count propagates rather than being logged as a failure`() =

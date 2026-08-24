@@ -11,8 +11,8 @@ import kotlinx.coroutines.flow.Flow
  * against jellyfin-sdk 1.8.12) exposes only `state`, `subscribeAll()` and `subscribe(KClass)`, and
  * `DefaultSocketApi` reference-counts its subscribers: the socket opens when the first of these
  * flows is collected and closes when the last collection is cancelled, with reconnect and
- * keep-alive handled inside the SDK. So "connect while in a group" (docs/PLAN.md M11, key decision
- * 3) is implemented by *collecting* these flows for exactly as long as the group lasts.
+ * keep-alive handled inside the SDK. So "connect while in a group" is implemented by *collecting*
+ * these flows for exactly as long as the group lasts.
  */
 internal interface SyncPlaySocket {
     /** Group lifecycle, state, queue and membership updates. Cold — collecting it opens the socket. */

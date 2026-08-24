@@ -95,9 +95,8 @@ class MusicStreamResolverTest {
             val stream = resolver.resolve(MusicFixtures.track(0)).shouldNotBeNull()
 
             // maxStreamingBitrate is the *direct-play* ceiling (the video path's 120 Mbps number)
-            // and audioBitRate the transcode's 384 kbps quality. The old request sent 384 kbps as
-            // the ceiling, which forced even direct-capable flac through the encoder — that value
-            // was the bug this assertion used to pin, hence the change.
+            // and audioBitRate the transcode's 384 kbps quality. Sending 384 kbps as the ceiling
+            // would force even direct-capable flac through the encoder.
             urls.requests.single() shouldBe
                 "${MusicFixtures.TRACK_IDS[0]}|opus+mp3+aac+m4a+flac+webma+webm+wav+ogg|aac|ts|120000000|384000"
             stream.uri shouldContain "PlaySessionId=${stream.playSessionId}"

@@ -20,7 +20,7 @@ import java.time.Instant
 import java.util.UUID
 
 /**
- * Fixtures shared by the M6 cache and offline-repository tests.
+ * Fixtures shared by the cache and offline-repository tests.
  *
  * Rows are built by running real DTOs through the real [ItemEntityMapper] rather than hand-writing
  * `ItemEntity` literals: the blob is the thing the offline path reads back, so a fixture that
@@ -141,7 +141,7 @@ internal object CacheFixtures {
             indexNumber = seasonNumber,
         )
 
-    // ---- M13 Phase 2 — music fixtures ------------------------------------------------------
+    // ---- music fixtures ---------------------------------------------------------------------
 
     fun audioDto(
         id: UUID,

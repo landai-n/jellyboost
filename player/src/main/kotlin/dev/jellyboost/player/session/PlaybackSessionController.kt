@@ -21,16 +21,15 @@ import javax.inject.Singleton
  * Turns a [PlaybackResolveRequest] into a prepared stream, and re-negotiates one without stranding
  * the last.
  *
- * Extracted from `PlayerViewModel` (audit ARCH-10): resolve → build a media item → prepare is a
- * fixed sequence with no UI state in it, and it was the largest thing standing between the ViewModel
- * and its actual subject, which is *what to do* with the outcome.
+ * Kept out of `PlayerViewModel`: resolve → build a media item → prepare is a fixed sequence with no
+ * UI state in it, and it is the largest thing that would otherwise stand between the ViewModel and
+ * its actual subject, which is *what to do* with the outcome.
  *
- * Everything here is `suspend` and nothing here launches. That is deliberate, and it is the fix for
- * the ordering bug the audit found: a re-negotiation used to be two coroutines racing — one killing
- * the outgoing transcode, one asking the server for the next — so the server could receive the new
- * `PlaybackInfo` before the `stopEncodingProcess` for the old one, which is exactly the stranded
- * ffmpeg process the whole dance exists to prevent. Sequential `suspend` calls in one coroutine
- * cannot get that wrong.
+ * Everything here is `suspend` and nothing here launches, and that is deliberate. As two coroutines
+ * racing — one killing the outgoing transcode, one asking the server for the next — a
+ * re-negotiation could reach the server with the new `PlaybackInfo` before the
+ * `stopEncodingProcess` for the old one, which is exactly the stranded ffmpeg process the whole
+ * dance exists to prevent. Sequential `suspend` calls in one coroutine cannot get that wrong.
  *
  * [open] deliberately stops at `prepare`. Publishing the new source, re-applying the session's rate
  * and reporting the start all belong to the caller, because a player event arriving during the first
@@ -40,10 +39,10 @@ import javax.inject.Singleton
 @Singleton
 internal class PlaybackSessionController
     @Inject
-    // Five collaborators plus the two M13 handover seams (the arbiter and the dispatcher its
+    // Five collaborators plus the two handover seams (the arbiter and the dispatcher its
     // relinquish closure marshals player calls to), both defaulted so tests construct the
-    // pre-M13 behaviour. Each is a distinct seam; bundling any pair would invent a type with
-    // no meaning of its own — the PlayerViewModel precedent (DECISIONS.md 2026-08-03).
+    // no-handover behaviour. Each is a distinct seam; bundling any pair would invent a type with
+    // no meaning of its own, which is why the list is suppressed rather than shortened.
     @Suppress("LongParameterList")
     constructor(
         private val resolver: PlaybackSourceResolver,
@@ -55,18 +54,18 @@ internal class PlaybackSessionController
          *
          * A cast session can start or end while [PlaybackSourceResolver.resolve] is on the wire, and
          * the routing handle follows it immediately — so a stream negotiated for one side would be
-         * prepared on the other (audit CAST-04). Defaulted so that everything with no interest in
+         * prepared on the other. Defaulted so that everything with no interest in
          * casting (tests included) gets a holder that never casts and the check never fires; Hilt
          * always injects the singleton the coordinator writes.
          */
         private val castStatus: CastStatusHolder = CastStatusHolder(),
         /**
-         * The video⇄music arbiter (M13, key decision 3).
+         * The video⇄music arbiter.
          *
          * This is where video *actually starts* — the one place every open, transfer and
          * re-negotiation funnels through on its way to `prepare` — so it is where the claim
          * belongs. Defaulted for the same reason [castStatus] is: it holds nothing and depends on
-         * nothing, so a test constructs the pre-M13 behaviour exactly (no other owner ever exists,
+         * nothing, so a test constructs the no-handover behaviour exactly (no other owner exists,
          * so no relinquish ever runs); Hilt always passes the singleton the music controller
          * shares.
          */
@@ -129,7 +128,7 @@ internal class PlaybackSessionController
 
             // Immediately before `prepare`, and it suspends until whatever held the player has
             // finished closing its own server session — a music queue's stop report lands before
-            // this film's start report, which is the whole point (key decision 3). Claiming for a
+            // this film's start report, which is the whole point. Claiming for a
             // kind that already owns the player only replaces the callback, so a re-negotiation
             // does not report itself stopped. The closure runs inline in the *claimant's* context
             // — music's background session scope — so its player calls hop to the main thread
@@ -143,7 +142,7 @@ internal class PlaybackSessionController
 
             // The source travels alongside the spec: a cast receiver has to be told more about the
             // negotiation than its URL says, and this is the one place both are in hand
-            // (`PlayerHandle.prepare`, M12 Phase 2). Locally the overload drops it.
+            // (`PlayerHandle.prepare`). Locally the overload drops it.
             playerHandle.prepare(
                 source = resolved,
                 spec = spec,
@@ -171,7 +170,7 @@ internal class PlaybackSessionController
 
         /**
          * The video session ended on its own terms, so nobody should close it on video's behalf
-         * later (M13).
+         * later.
          *
          * Called from `PlayerViewModel`'s teardown, which has already issued the stop report on
          * the detached scope. Without it the relinquish registered by [open] would still be armed,

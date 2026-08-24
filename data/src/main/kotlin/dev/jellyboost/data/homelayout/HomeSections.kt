@@ -9,7 +9,7 @@ import dev.jellyboost.core.common.model.HomeSectionType
  * This is jellyfin-web's `DEFAULT_SECTIONS`, and it has to be hardcoded identically: a user who
  * never opened Settings → Home has **no** `homesectionN` keys at all, so "missing" means "apply
  * the client defaults", not "show nothing". Getting this list wrong would give a fresh account an
- * empty home screen (see `docs/notes/home-sections-feasibility.md`).
+ * empty home screen.
  */
 private val DEFAULT_SLOTS =
     listOf(

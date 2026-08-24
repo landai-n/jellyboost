@@ -35,8 +35,7 @@ import dev.jellyboost.core.ui.theme.glassSurface
 import dev.jellyboost.core.ui.theme.popShadow
 
 /**
- * The compact layout's navigation: a floating glass pill carrying the four top-level destinations
- * (DECISIONS.md 2026-08-01, the 2026-refresh chrome).
+ * The compact layout's navigation: a floating glass pill carrying the four top-level destinations.
  *
  * It is a *floating* bar rather than a docked one — [BottomNavMargin] of clear background on all
  * three sides, a [popShadow] under it, and the page's own content blurred through it — which is

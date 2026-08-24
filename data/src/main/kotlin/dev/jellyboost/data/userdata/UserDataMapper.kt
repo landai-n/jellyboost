@@ -10,10 +10,9 @@ import java.util.UUID
 /**
  * Maps a stored row onto the domain model the UI sees.
  *
- * `playedPercentage` and `playCount` are deliberately not persisted (docs/PLAN.md lists exactly
- * six columns for this table), so they come back at their defaults: progress then falls back to
- * `playbackPositionTicks / runTimeTicks`, which is the same number the server's percentage would
- * have produced.
+ * `playedPercentage` and `playCount` are deliberately not persisted, so they come back at their
+ * defaults: progress then falls back to `playbackPositionTicks / runTimeTicks`, which is the same
+ * number the server's percentage would have produced.
  */
 internal fun UserDataEntity.toDomain(): UserData =
     UserData(
@@ -32,7 +31,7 @@ internal fun UserDataEntity.toDomain(): UserData =
  * The two timestamps mean different things and are deliberately sourced differently:
  *
  * - [UserDataEntity.lastPlayedDate] is the server's own value, copied verbatim (`null` included).
- *   It is the *server* half of M8's most-recent-wins comparison, so inventing one here — say, the
+ *   It is the *server* half of the most-recent-wins comparison, so inventing one here — say, the
  *   time of the read — would make an unplayed item look freshly watched.
  * - [UserDataEntity.updatedAt] is [adoptedAt], the moment this device learned the server's state.
  *   It is the *local* half of that comparison, and it only ever decides anything for a

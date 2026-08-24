@@ -88,11 +88,11 @@ class DownloadFailureClassifierTest {
 
     @Test
     fun `an unavailable storage volume is transient — it is an eject, an MTP session, or a boot`() {
-        // The DL-10 shape: `Environment.getExternalStorageState` != MEDIA_MOUNTED empties the
-        // volume list for exactly as long as the condition lasts. As a bare IllegalStateException
-        // this fell to AppError.Unknown → PERMANENT, and one unmounted card marked a forty-episode
-        // queue ERROR within seconds — the STAB-01 cascade, reproduced for a condition that is
-        // transient by nature.
+        // `Environment.getExternalStorageState` != MEDIA_MOUNTED empties the volume list for
+        // exactly as long as the condition lasts. As a bare IllegalStateException it would fall to
+        // AppError.Unknown → PERMANENT, and one unmounted card would mark a forty-episode queue
+        // ERROR within seconds — the whole-queue cascade, for a condition that is transient by
+        // nature.
         DownloadFailureClassifier.classify(StorageUnavailableException("no volume mounted")) shouldBe
             FailureKind.TRANSIENT
     }

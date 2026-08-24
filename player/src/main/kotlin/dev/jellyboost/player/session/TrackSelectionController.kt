@@ -27,13 +27,13 @@ import timber.log.Timber
  *   `MediaItem` cannot name an audio source's tracks the way `SubtitleConfiguration` names a
  *   subtitle's. It is matched by **merge-child position** instead, the k-th external audio track of
  *   the source being merge child `k + 1` because `ExoPlayerHandle.prepare` builds them in exactly
- *   that order (DECISIONS.md 2026-07-31, "Offline multi-track Phase 2");
+ *   that order;
  * - **embedded streams** are matched by their position among the *embedded* streams of the same
- *   type, which is the order ExoPlayer exposes them in. Since 2026-08-21 a transcode's subtitles
+ *   type, which is the order ExoPlayer exposes them in. A transcode's subtitles
  *   are in that third group too: they arrive as `#EXT-X-MEDIA` renditions of the transcoding
  *   master playlist, one per text stream, in Jellyfin stream order — the very order
  *   `PlaybackMediaSource.subtitleTracks` is in — and Media3 publishes them as ordinary text groups
- *   with a manifest id, so the same positional count finds them (DECISIONS.md, 2026-08-21).
+ *   with a manifest id, so the same positional count finds them.
  *
  * The id the player hands back is not the id that went in — merging a side-loaded source prefixes
  * every format and group with the child's index — which is why the subtitle read goes through
@@ -78,11 +78,11 @@ internal class TrackSelectionController(
      *   the k-th external track is the group whose id begins `"${k + 1}:"`. There is no id to match
      *   on the way subtitles have one — `MediaItem` cannot name an audio source's tracks.
      * - **in the container** (everything streamed, and an original download): matched by position
-     *   among the *container's* audio groups, as before. The sidecar groups share the list and are
+     *   among the *container's* audio groups. The sidecar groups share the list and are
      *   excluded first by the same prefix; a group with no prefix, prefix 0, or a prefix past the
      *   last sidecar is the primary source's.
      *
-     * With no sidecars the exclusion is empty and this is the plain positional match it always was.
+     * With no sidecars the exclusion is empty and this is a plain positional match.
      *
      * @return `false` when the requested audio stream is not in the current ExoPlayer track list,
      *   meaning the caller has to ask the server for it instead.

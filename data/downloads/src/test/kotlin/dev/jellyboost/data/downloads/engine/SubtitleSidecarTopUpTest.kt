@@ -38,7 +38,7 @@ import java.util.UUID
 
 /**
  * Unit tests for [SubtitleSidecarTopUp] — the repair path for downloads whose file plan has moved on
- * without them (docs/notes/offline-multitrack-design.md, phase 0).
+ * without them.
  *
  * Two properties carry the whole class, and both are about what it *refuses* to do: it never touches
  * the media file (re-queueing the row would re-download a transcode from zero, since the server
@@ -103,14 +103,14 @@ class SubtitleSidecarTopUpTest {
                 ),
         )
 
-    // ---- the Wi-Fi-only rule (DL-04) --------------------------------------------------------------
+    // ---- the Wi-Fi-only rule ----------------------------------------------------------------------
 
     @Test
     fun `a Wi-Fi-only user gets no top-up over a metered connection`() =
         runTest {
             // This class runs on the application scope, not inside the constrained worker — the
             // UNMETERED constraint that normally *is* the Wi-Fi-only preference does not apply
-            // here, so it must enforce the rule itself (audit DL-04).
+            // here, so it must enforce the rule itself.
             every { preferences.downloadOverWifiOnly } returns flowOf(true)
             meteredNow = true
             given(files = listOf(mediaFile()))
@@ -238,11 +238,11 @@ class SubtitleSidecarTopUpTest {
     @Test
     fun `a finished download is never given the audio sidecars today's plan would add`() =
         runTest {
-            // Phase 2 is new downloads only (DECISIONS.md, 2026-07-31, "Offline multi-track
-            // Phase 2", point 5): an extra language is ~165 MB fetched through a junk-video
-            // transcode, which is not a repair to perform silently behind a user who already has
-            // the film. The `type == SUBTITLE` filter is the whole guard, and this is what holds it
-            // there — widening it later has to be a decision, not a diff nobody noticed.
+            // Audio sidecars are for new downloads only: an extra language is ~165 MB fetched
+            // through a junk-video transcode, which is not a repair to perform silently behind a
+            // user who already has the film. The `type == SUBTITLE` filter is the whole guard, and
+            // this is what holds it there — widening it later has to be a decision, not a diff
+            // nobody noticed.
             given(files = listOf(mediaFile()))
             val dubbed =
                 movie(

@@ -1,7 +1,7 @@
 package dev.jellyboost.core.common.music
 
 /**
- * A track's lyrics, synced or plain (M13 Phase 6, docs/notes/music-m13-plan.md, key decision 11).
+ * A track's lyrics, synced or plain.
  *
  * The domain shape for `LyricsApi.getLyrics`'s `LyricDto` — `:data`'s `OnlineJellyfinRepository`
  * maps one onto this, never the other way; `NowPlayingViewModel` and `LyricsPane` (`:feature:music`)

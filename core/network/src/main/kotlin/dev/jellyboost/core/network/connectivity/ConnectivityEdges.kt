@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.map
  *
  * A screen already loads its data once, in its `init`, so a signal that also fired on the initial
  * value would make every ordinary launch fetch everything twice — which is why this deliberately
- * `drop(1)`s where `UserDataSyncTrigger` deliberately does not (see DECISIONS.md, 2026-07-29).
+ * `drop(1)`s where `UserDataSyncTrigger` deliberately does not.
  *
  * `distinctUntilChanged` on *online-ness* is what keeps a flapping connection from becoming a
  * refetch storm: swapping between two offline reasons is not a change, and neither is a repeated
@@ -36,7 +36,7 @@ fun Flow<ConnectionState>.onlineStateChanges(): Flow<Boolean> = onlineStates().d
  * moments it must act on are "the app started, possibly with work left over from last time" and
  * "the connection came back". The state flow replays its current value, so **not** dropping it
  * makes the first collection the app-start check and every later `false → true` the reconnect one:
- * one code path, both cases, no separate startup call to keep in sync (DECISIONS.md, 2026-07-29).
+ * one code path, both cases, no separate startup call to keep in sync.
  *
  * `distinctUntilChanged` on online-ness is what keeps a flapping probe from becoming a burst of
  * passes; [onOffline] is where a caller resets whatever "already done this stretch" flag it keeps,

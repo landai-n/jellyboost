@@ -53,7 +53,7 @@ class LibraryViewModelTest {
     private val dispatcher = StandardTestDispatcher()
     private val repository = mockk<JellyfinRepository>()
 
-    /** The badge source (M7); emits an empty map unless a test says otherwise. */
+    /** The badge source; emits an empty map unless a test says otherwise. */
     private val downloadStates = MutableStateFlow<Map<String, DownloadState>>(emptyMap())
     private val downloads =
         mockk<DownloadRepository> {
@@ -68,7 +68,7 @@ class LibraryViewModelTest {
             every { changes } returns userDataChanges
         }
 
-    /** The connectivity-change signal (M9); fires only when a test says the server came back. */
+    /** The connectivity-change signal; fires only when a test says the server came back. */
     private val connectivityChanges = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
     private val connectivityRefresher =
         mockk<ConnectivityRefresher> {
@@ -462,7 +462,7 @@ class LibraryViewModelTest {
             state.facets.genres shouldContainExactly listOf("Drama")
         }
 
-    // ---- M7: download badges -------------------------------------------------------------------
+    // ---- download badges -------------------------------------------------------------------
 
     @Test
     fun `a download state change re-maps the loaded pages without re-querying the server`() =
@@ -495,7 +495,7 @@ class LibraryViewModelTest {
             }
         }
 
-    // ---- M9: refresh when connectivity changes ---------------------------------------------------------------
+    // ---- refresh when connectivity changes ---------------------------------------------------------------
 
     @Test
     fun `re-loads the facets it had already fetched when the server becomes reachable again`() =
@@ -695,7 +695,7 @@ class LibraryViewModelTest {
 
             // Only the card with no row of its own is enqueued. A series never has one — the
             // pipeline expands it — so it always reaches the enqueuer, which skips the episodes
-            // already downloaded itself (DECISIONS.md, 2026-07-29).
+            // already downloaded itself.
             coVerify(exactly = 0) { downloads.enqueue("m1") }
             coVerify(exactly = 0) { downloads.enqueue("m2") }
             coVerify(exactly = 1) { downloads.enqueue("m3") }
@@ -760,8 +760,8 @@ class LibraryViewModelTest {
                 userDataChanges.tryEmit(UserDataChange("m1", UserData(played = true)))
                 advanceUntilIdle()
 
-                // The plan's Swiftfin pattern: a batch *Mark watched* is reflected on the cards
-                // from the local write, never from a refetch (docs/PLAN.md, "Data layer").
+                // The Swiftfin pattern: a batch *Mark watched* is reflected on the cards
+                // from the local write, never from a refetch.
                 queries.shouldBeEmpty()
             }
         }

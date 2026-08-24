@@ -45,9 +45,9 @@ import kotlin.time.Duration.Companion.seconds
 /**
  * The music queue: what is in it, where it is, and everything the server is told about it.
  *
- * A `@Singleton` with its own confined scope rather than a ViewModel, for the reason the whole
- * milestone rests on: **the queue is not a screen** (docs/notes/music-m13-plan.md, key decision
- * 1). The user backs out of the album, opens Search, backgrounds the app, turns the screen off,
+ * A `@Singleton` with its own confined scope rather than a ViewModel, for the reason music
+ * playback rests on: **the queue is not a screen**.
+ * The user backs out of the album, opens Search, backgrounds the app, turns the screen off,
  * and the album plays on with its reports still going out. Every screen that draws music —
  * `NowPlaying`, the queue sheet, the mini-player in `:app`'s chrome — is a view onto [state].
  *
@@ -77,8 +77,8 @@ internal class MusicPlaybackController
     // Eight collaborators, each a seam the class's KDoc names: the port (the one player), the
     // resolver and spec factory (pure), the reporter, the handover arbiter, the SyncPlay refusal
     // gate, the session scope and the main dispatcher Media3 requires. Bundling any pair would
-    // invent a type with no meaning of its own — the PlayerViewModel precedent (DECISIONS.md
-    // 2026-08-03) for a justified suppression.
+    // invent a type with no meaning of its own, which is why the list is suppressed rather than
+    // shortened.
     @Suppress("LongParameterList")
     constructor(
         private val port: MusicPlayerPort,
@@ -441,8 +441,7 @@ internal class MusicPlaybackController
          * the arbiter never dictates a thread ([PlaybackHandover]'s contract).
          *
          * The queue is not thrown away — it becomes a paused [MusicPlaybackState.Active] snapshot,
-         * so the mini-player still shows what was playing and one tap resumes it where it was
-         * (key decision 3).
+         * so the mini-player still shows what was playing and one tap resumes it where it was.
          */
         private suspend fun relinquishToOther() {
             withContext(sessionDispatcher()) {

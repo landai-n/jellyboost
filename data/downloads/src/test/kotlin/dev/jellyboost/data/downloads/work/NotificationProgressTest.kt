@@ -7,7 +7,7 @@ import java.util.UUID
 
 /**
  * Unit tests for [notificationProgressOf] — the whole of [DownloadNotifier.foregroundInfoIfChanged]'s
- * change guard (docs/notes/audit-2026-07.md, PERF-12).
+ * change guard.
  *
  * `DownloadNotifier` itself needs a `Context` to build a real `Notification`, but the decision the
  * guard makes — has anything the user would see actually changed? — depends only on these four

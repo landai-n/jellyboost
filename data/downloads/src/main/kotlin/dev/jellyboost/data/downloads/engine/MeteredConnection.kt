@@ -12,8 +12,8 @@ import javax.inject.Singleton
  * The Wi-Fi-only download preference is normally enforced by WorkManager's `UNMETERED` constraint
  * on the queue worker — but not everything that fetches download bytes runs inside that worker.
  * [SubtitleSidecarTopUp] is driven by the metadata refresher on every offline→online edge, on the
- * application scope, and used to fetch sidecars over mobile data for a user who had asked for
- * Wi-Fi only (audit DL-04). Anything outside the worker that transfers download bytes must consult
+ * application scope, and would otherwise fetch sidecars over mobile data for a user who has asked
+ * for Wi-Fi only. Anything outside the worker that transfers download bytes must consult
  * this alongside `AppPreferences.downloadOverWifiOnly`.
  *
  * An interface so the engine's unit tests can dictate the answer on the JVM.

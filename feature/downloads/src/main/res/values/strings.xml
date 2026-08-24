@@ -4,7 +4,7 @@
     <string name="downloads_tab_queue">Queue</string>
     <string name="downloads_wifi_only">Wi‑Fi only</string>
 
-    <!-- Screen header (top-level tab, 2026 refresh — no back button). -->
+    <!-- Screen header (top-level tab — no back button). -->
     <string name="downloads_screen_title">Downloads</string>
 
     <!-- Downloaded tab grouping -->
@@ -14,12 +14,11 @@
 
     <!-- Storage header -->
     <string name="downloads_storage_summary">%1$s used · %2$s free</string>
-    <!-- The compact storage card's free-space caption (2026 refresh), standing on its own baseline
+    <!-- The compact storage card's free-space caption, standing on its own baseline
          row beside the used-bytes figure rather than joined into one sentence. -->
     <string name="downloads_storage_free">%1$s free</string>
 
-    <!-- Wide-layout tablet stat panels (2026 refresh, spec "4d Downloads"). Eyebrow labels are
-         uppercased in code. -->
+    <!-- Wide-layout tablet stat panels. Eyebrow labels are uppercased in code. -->
     <string name="downloads_stat_on_device">On this device</string>
     <string name="downloads_stat_queue">Queue</string>
     <string name="downloads_stat_network">Network</string>
@@ -44,8 +43,7 @@
 
     <!-- A queue row as a screen reader hears it: one sentence tying the item to its progress and
          its status, instead of a truncated title, a bare percentage and a status line as three
-         unrelated stops (accessibility audit 2026-08-05, F7). %1$s title, %2$d percent complete,
-         %3$s the status line the row shows. -->
+         unrelated stops. %1$s title, %2$d percent complete, %3$s the status line the row shows. -->
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
 
     <!-- Row actions -->

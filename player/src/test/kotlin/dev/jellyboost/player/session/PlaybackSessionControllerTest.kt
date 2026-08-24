@@ -27,11 +27,11 @@ import kotlin.coroutines.CoroutineContext
 
 /**
  * Unit tests for [PlaybackSessionController] — the resolve → prepare sequence extracted from
- * `PlayerViewModel` (audit ARCH-10).
+ * `PlayerViewModel`.
  *
- * The ordering test is the point of the class. `reopen` used to be two coroutines launched
- * independently, so the assertion that could be made was "stopTranscoding happened", not "it
- * happened first" — and "first" is the entire reason the call exists.
+ * The ordering test is the point of the class: `reopen` must run its work so that
+ * `stopTranscoding` provably happens *first*, not merely happens — "first" is the entire reason
+ * the call exists.
  */
 class PlaybackSessionControllerTest {
     private val resolver = mockk<PlaybackSourceResolver>()
@@ -133,7 +133,7 @@ class PlaybackSessionControllerTest {
             coVerify(exactly = 0) { reporter.reportStart(any(), any()) }
         }
 
-    // ---- the relinquish closure (M13 handover) --------------------------------------------------
+    // ---- the relinquish closure ------------------------------------------------------------------
 
     @Test
     fun `the relinquish marshals its player calls onto the main dispatcher, report in between`() =
@@ -173,7 +173,7 @@ class PlaybackSessionControllerTest {
             playerHandle.stopped shouldBe true
         }
 
-    // ---- the cast state changing underneath a resolve (audit CAST-04) ---------------------------
+    // ---- the cast state changing underneath a resolve ---------------------------------------------
 
     @Test
     fun `a cast session starting mid-resolve makes the item re-negotiate for the receiver`() =

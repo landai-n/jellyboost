@@ -34,7 +34,7 @@ internal sealed interface ReconcileAction {
 }
 
 /**
- * The pure decision behind `SyncPlayController.reconcile` (audit CPX-15).
+ * The pure decision behind `SyncPlayController.reconcile`.
  *
  * Four outcomes: nothing to do (the slot is already open — which is every reorder, removal,
  * shuffle and repeat change that leaves the playing item alone), ask the app to open a player

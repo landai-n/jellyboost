@@ -9,8 +9,7 @@ import javax.inject.Inject
 
 /**
  * Exposes [SyncPlayController.launchRequests] to [JellyfinNavHost], which is the app's one
- * collector for "the group moved on and no player is open" (docs/notes/syncplay-m11-plan.md, key
- * decision 5 and Phase 5).
+ * collector for "the group moved on and no player is open".
  *
  * A ViewModel rather than an injection straight into the NavHost composable because Compose has no
  * `@Inject` of its own — `hiltViewModel()` is the seam every other screen already uses to reach a
@@ -30,8 +29,8 @@ class SyncPlayLaunchViewModel
          * Tells the controller its replayed request has been handled.
          *
          * The flow replays its last request so one raised with no Activity composed survives until
-         * the next composition (audit SP-12); consuming it is what stops a *handled* request from
-         * re-opening the player on every later recomposition.
+         * the next composition; consuming it is what stops a *handled* request from re-opening the
+         * player on every later recomposition.
          */
         fun consume() {
             controller.consumeLaunchRequest()

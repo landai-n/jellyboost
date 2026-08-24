@@ -49,7 +49,7 @@ import java.util.UUID
  * each with its own failure mode: the server's exact figure for an original; an arithmetic figure
  * for a transcode the server will answer by *copying* the video track; and, for a real re-encode, a
  * deterministic ceiling optionally improved by what finished episodes of the same show actually
- * weighed (docs/notes/download-size-estimation.md, schema v6).
+ * weighed.
  *
  * The same arithmetic then decides something larger than a number: a transcode estimated to weigh
  * what the source already does is not requested at all, and the row is written as an `ORIGINAL`
@@ -79,7 +79,7 @@ class DownloadEnqueuerSizeTest {
         coEvery { itemDao.upsert(capture(upserted)) } just Runs
         coEvery { downloadDao.upsert(capture(rows)) } just Runs
         coEvery { downloadDao.get(any()) } returns null
-        // The season path reads its whole batch in one statement (audit PERF-25); routing it
+        // The season path reads its whole batch in one statement; routing it
         // through the per-id stub keeps every test below expressing its rows one at a time.
         coEvery { downloadDao.getAll(any()) } coAnswers {
             firstArg<List<UUID>>().mapNotNull { downloadDao.get(it) }

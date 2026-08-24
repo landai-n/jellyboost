@@ -39,8 +39,8 @@ import javax.inject.Inject
  * State holder for the movie / series / season detail screen.
  *
  * Loads the item in full first — the detail path deliberately re-fetches instead of reusing the
- * lean item a list handed it (docs/PLAN.md, "Screens" → ItemDetail) — then fans out to whatever
- * related rows that item's type calls for, concurrently.
+ * lean item a list handed it — then fans out to whatever related rows that item's type calls for,
+ * concurrently.
  *
  * Failure policy matches the home screen: only the item itself failing produces an error state; a
  * related row that fails is simply absent.
@@ -50,11 +50,8 @@ import javax.inject.Inject
  * local write, not from a server round-trip.
  *
  * The **download** half of the page — the button, its confirmation dialog, and the two Room
- * subscriptions behind them — lives in [DetailDownloadsDelegate] (audit CPX-10). It is the one
- * slice of this screen with state of its own that nothing else here reads, and keeping it in this
- * class had begun to cost: four functions were exiled to file scope and a Room collector inlined
- * into `init`, each with a comment naming detekt's function count as the reason. Those are back
- * where they belong, as methods of whichever half owns them.
+ * subscriptions behind them — lives in [DetailDownloadsDelegate]. It is the one slice of this
+ * screen with state of its own that nothing else here reads.
  */
 @HiltViewModel
 class ItemDetailViewModel
@@ -84,7 +81,7 @@ class ItemDetailViewModel
          * Constructed here rather than injected: three of its four collaborators — the state, the
          * route's item id and the scope — are this instance's, and no graph can supply them. The
          * three entry points below forward to it so the screen keeps one ViewModel to talk to
-         * (audit CPX-10; see [DetailDownloadsDelegate] for what the split is for).
+         * (see [DetailDownloadsDelegate] for what the split is for).
          */
         private val downloadsDelegate =
             DetailDownloadsDelegate(
@@ -110,7 +107,7 @@ class ItemDetailViewModel
         val selection: StateFlow<ItemSelection> = _selection.asStateFlow()
 
         /**
-         * The SyncPlay group this device is in, or `null` (M11 Phase 4).
+         * The SyncPlay group this device is in, or `null`.
          *
          * Handed through as the session's own flow rather than folded into [uiState]: this page
          * re-emits its state several times a second while a download runs, and a value that changes
@@ -141,7 +138,7 @@ class ItemDetailViewModel
         }
 
         /**
-         * Re-fetches this item whenever the connection changes (M9), in either direction — see
+         * Re-fetches this item whenever the connection changes, in either direction — see
          * [reloadOnChange] for the general argument.
          *
          * Offline, `getItem` answers from the cache — and for anything that is not downloaded, with
@@ -245,14 +242,13 @@ class ItemDetailViewModel
          * either way, and it is a decision only this class can make — the screen can see neither the
          * group nor the series listing an episode has to be expanded against.
          *
-         * **In a group, a play is the group's play** (DECISIONS.md, 2026-07-31, superseding the
-         * "the group buttons join Play rather than replace it" rule of M11 Phase 4). It is sent as a
-         * `SetNewQueue` carrying the same series-tail expansion and the same resume position the old
-         * *Play for group* button used, and this screen deliberately **does not navigate**: nothing
-         * plays anywhere until the server broadcasts the resulting queue (key decision 11), and the
-         * player is then opened by `SyncPlayController.launchRequests` → `JellyfinNavHost`. Before
-         * the fix, this path opened a local player that the group knew nothing about, which sat under
-         * a "Waiting for group" overlay for ever (`syncplay-bugreport.md`).
+         * **In a group, a play is the group's play.** It is sent as a `SetNewQueue` carrying the
+         * same series-tail expansion and the same resume position a solo play would use, and this
+         * screen deliberately **does not navigate**: nothing plays anywhere until the server
+         * broadcasts the resulting queue, and the player is then opened by
+         * `SyncPlayController.launchRequests` → `JellyfinNavHost`. Opening a local player here
+         * instead would leave it sitting under a "Waiting for group" overlay for ever, since the
+         * group knows nothing about it.
          *
          * Solo — and in a group for anything a group cannot play (`ItemType.isPlayable`, the same
          * narrowing `ItemDetailUiState.groupTarget` makes) — it is the navigation it has always
@@ -302,7 +298,7 @@ class ItemDetailViewModel
         }
 
         /**
-         * Sends one *queue* action for whatever this page's Play button resolves to (M11 Phase 4).
+         * Sends one *queue* action for whatever this page's Play button resolves to.
          *
          * One entry point rather than a method per action, exactly as [onSelection] is.
          *

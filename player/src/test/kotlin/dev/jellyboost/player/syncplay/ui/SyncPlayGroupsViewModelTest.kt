@@ -38,9 +38,9 @@ import java.util.UUID
  * Unit tests for [SyncPlayGroupsViewModel].
  *
  * Two things carry this suite. First, the poll: it must run on its own 10 s cadence, treat HTTP 403
- * as permanent (docs/notes/syncplay-m11-plan.md, "Phase 5" — "SyncPlay is disabled for your
- * account") and treat everything else as one tick's worth of bad luck. Second, every membership
- * action is a one-line forward to [dev.jellyboost.player.syncplay.SyncPlayController] — this
+ * as permanent ("SyncPlay is disabled for your account") and treat everything else as one tick's
+ * worth of bad luck. Second, every membership action is a one-line forward to
+ * [dev.jellyboost.player.syncplay.SyncPlayController] — this
  * class owns no socket and no join handshake of its own.
  */
 @OptIn(ExperimentalCoroutinesApi::class)

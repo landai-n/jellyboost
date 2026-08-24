@@ -61,7 +61,7 @@ import dev.jellyboost.core.ui.theme.LocalAppChromePadding
 
 /**
  * The search screen: a debounced text field over one server query, rendered as one section per
- * item type (docs/PLAN.md, "Screens" → Search).
+ * item type.
  *
  * Like the other top-level tabs it draws no bar of its own: `:app`'s chrome floats over it and
  * publishes how much of the window it covers through `LocalAppChromePadding`, which this screen
@@ -109,8 +109,7 @@ fun SearchContent(
     // were left to the list's `contentPadding`. The BOTTOM half stays with the list — see
     // [SearchResults] — so results still scroll under the floating nav pill.
     //
-    // Handed to `Modifier.padding` as an object rather than read here (audit 2026-08-08, PERF-20):
-    // see [ChromeAwarePadding].
+    // Handed to `Modifier.padding` as an object rather than read here — see [ChromeAwarePadding].
     Column(modifier = modifier.fillMaxSize().padding(chromeTopPadding())) {
         SearchField(
             query = state.query,
@@ -152,8 +151,8 @@ fun SearchContent(
  * How many things the search found, under the field.
  *
  * A polite live region, and the reason this composable exists: results appear *below* a field the
- * user is still typing in, so the one thing a search actually produces used to happen in complete
- * silence — no count, no "found something", nothing (accessibility audit 2026-08-05, A11Y-09). It
+ * user is still typing in, so the one thing a search actually produces would otherwise happen in
+ * complete silence — no count, no "found something", nothing. It
  * is a real line of visible text rather than an invisible announcer because a zero-sized node is a
  * node TalkBack can never come back to, and because the count is worth showing anyway: the sections
  * below are capped at [SearchViewModel.SEARCH_LIMIT] between them and each one only says its own
@@ -245,7 +244,7 @@ private fun SearchField(
         singleLine = true,
         placeholder = { Text(text = stringResource(R.string.search_field_label)) },
         // The placeholder is the only thing naming this field on screen, and a placeholder vanishes
-        // the moment there is a query — so the node carries the same words itself (audit CR-2).
+        // the moment there is a query — so the node carries the same words itself.
         // No caption: the name is spoken, never drawn — the placeholder already draws it.
         label = FieldLabel(text = stringResource(R.string.search_field_label)),
         leadingIcon = { Icon(imageVector = Icons.Filled.Search, contentDescription = null) },
@@ -289,7 +288,7 @@ private fun SearchResults(
     }
 }
 
-/** Movies, series, episodes — the sections search had before M13. */
+/** Movies, series, episodes — the video-item sections, as distinct from music. */
 private fun LazyListScope.videoSections(
     state: SearchUiState,
     onItemClick: (JellyfinItem) -> Unit,
@@ -328,7 +327,7 @@ private fun LazyListScope.videoSections(
     }
 }
 
-/** M13 Phase 2 — music sections, in the same order the milestone plan lists them. */
+/** Music sections, in a fixed order. */
 private fun LazyListScope.musicSections(
     state: SearchUiState,
     onItemClick: (JellyfinItem) -> Unit,
@@ -416,9 +415,8 @@ private fun listContentPadding(): PaddingValues {
 
 /**
  * A song search result: a compact list row rather than a card. `:feature:search` cannot reuse
- * `:feature:music`'s `TrackRow` — features never depend on each other (docs/PLAN.md, "Project
- * skeleton") — so this is a small local equivalent, without the download badge / favourite affordances
- * a track's own screen offers.
+ * `:feature:music`'s `TrackRow` — features never depend on each other — so this is a small local
+ * equivalent, without the download badge / favourite affordances a track's own screen offers.
  */
 @Composable
 private fun SongRow(
@@ -463,7 +461,7 @@ private const val SECTION_SONGS = "section-songs"
 private const val SECTION_PLAYLISTS = "section-playlists"
 
 // Content types: rows of the same shape are interchangeable nodes, whatever section they belong to.
-// The card types (poster/thumb) come from `:core:ui`, beside the cards they describe (DUP-15).
+// The card types (poster/thumb) come from `:core:ui`, beside the cards they describe.
 private const val ROW_POSTERS = "row-posters"
 private const val ROW_THUMBS = "row-thumbs"
 private const val ROW_ARTISTS = "row-artists"

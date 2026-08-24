@@ -18,11 +18,10 @@ internal enum class FailureKind {
 /**
  * Decides whether a download failure is worth another attempt.
  *
- * Until this existed every non-cancellation exception moved the row straight to
- * `DownloadStatus.ERROR`, and because the drain loop carried on it did that to *every remaining
- * row* within seconds: one proxy 502 or one server restart emptied a forty-episode queue into the
- * failed state, under a message that promised a retry nothing performed
- * (docs/notes/audit-2026-07.md, STAB-01).
+ * Without it every non-cancellation exception would move the row straight to
+ * `DownloadStatus.ERROR`, and because the drain loop carries on it would do that to *every
+ * remaining row* within seconds: one proxy 502 or one server restart emptying a forty-episode queue
+ * into the failed state, under a message promising a retry nothing performs.
  *
  * The taxonomy is `:core:network`'s [AppError] (via [toAppError]), deliberately the same one
  * [DownloadErrorCopy] reads: what the user is *told* about a failure and what the queue *does*
@@ -48,7 +47,7 @@ internal object DownloadFailureClassifier {
             error is MissingMetadataException -> FailureKind.PERMANENT
             error is NotDownloadableException -> FailureKind.PERMANENT
             // Before the taxonomy: it *is* an IllegalStateException, which would otherwise land in
-            // AppError.Unknown and read as permanent — the DL-10 queue-emptying failure mode.
+            // AppError.Unknown and read as permanent — emptying the queue over a transient mount.
             error is StorageUnavailableException -> FailureKind.TRANSIENT
             // Checked before the taxonomy: it is an IOException, which would otherwise read as a
             // transport failure and hide the status the server actually sent.

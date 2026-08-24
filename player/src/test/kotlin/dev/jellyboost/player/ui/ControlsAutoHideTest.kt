@@ -11,12 +11,12 @@ import org.junit.jupiter.api.Test
  * Unit tests for [controlsAutoHideArmed] and the [ControlsAutoHide] key it goes into — when the
  * player's control bar takes itself away, and what starts its four seconds over.
  *
- * The rule used to live inside a `LaunchedEffect`'s key list, where the only way to check it was a
- * stopwatch and a tablet, and where audit UI-3 found it wrong: the key was `(shouldHide, timeoutMs)`,
- * so nothing a user *did* with the controls restarted the timer — the bar hid four seconds after it
- * first appeared whether it had been used or ignored. Both halves are pinned here: [ControlsAutoHide]
- * `armed` for the four things that stop the timer, and the value's own equality for the one thing
- * that restarts it, since equality is exactly what Compose asks of an effect key.
+ * The rule lives in an explicit [ControlsAutoHide] value rather than a `LaunchedEffect`'s key
+ * list: a key of `(shouldHide, timeoutMs)` alone would mean nothing a user *did* with the controls
+ * restarted the timer — the bar would hide four seconds after it first appeared whether it had
+ * been used or ignored. Both halves are pinned here: [ControlsAutoHide] `armed` for the four
+ * things that stop the timer, and the value's own equality for the one thing that restarts it,
+ * since equality is exactly what Compose asks of an effect key.
  */
 class ControlsAutoHideTest {
     @Test
@@ -37,23 +37,23 @@ class ControlsAutoHideTest {
 
     @Test
     fun `an open panel suspends the timer`() {
-        // Audit UI-1, the belt to the braces of hosting the panels above the bar: a user with a
+        // The belt to the braces of hosting the panels above the bar: a user with a
         // picker open is using the player, and dismissing it must not reveal bare video.
         timer(panelOpen = true).armed shouldBe false
     }
 
     @Test
     fun `touch exploration suspends the timer entirely`() {
-        // Audit CR-1: four seconds is not a traversal, and no finite timeout is long enough to read
-        // every control one element at a time.
+        // Four seconds is not a traversal, and no finite timeout is long enough to read every
+        // control one element at a time.
         timer(touchExplorationEnabled = true).armed shouldBe false
     }
 
     @Test
     fun `an interaction restarts the timer`() {
-        // The UI-3 regression, stated as the Compose runtime sees it: the key changes, so the
-        // running delay is cancelled and a fresh four seconds begin. Both timers are armed — the
-        // difference is *only* the interaction, which is the point.
+        // Stated as the Compose runtime sees it: the key changes, so the running delay is
+        // cancelled and a fresh four seconds begin. Both timers are armed — the difference is
+        // *only* the interaction, which is the point.
         val before = timer(interactions = 3)
         val after = timer(interactions = 4)
 
@@ -81,7 +81,7 @@ class ControlsAutoHideTest {
     @Test
     fun `an interaction while the timer is suspended still does not arm it`() {
         // Interaction restarts; it does not override. A screen reader user tapping play must not
-        // start a countdown CR-1 exists to prevent.
+        // start a countdown while touch exploration is suspending it.
         timer(touchExplorationEnabled = true, interactions = 9).armed shouldBe false
     }
 
@@ -109,7 +109,7 @@ class ControlsAutoHideTest {
 
 /**
  * Unit tests for [PlayerActions.reportingInteraction] — the wrapper that makes "every interaction
- * restarts the auto-hide" (audit UI-3) true for the whole screen at once.
+ * restarts the auto-hide" true for the whole screen at once.
  *
  * The test that matters is the last one: it invokes *every* lambda in the bundle and insists each
  * one both reported and forwarded. An action added to [PlayerActions] and forgotten in the wrapper

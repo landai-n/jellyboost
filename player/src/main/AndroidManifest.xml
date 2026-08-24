@@ -11,9 +11,9 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <!--
       Group membership survives the app being backgrounded *without* playback, which needs the
-      process's network to stay up — see SyncPlayPresenceService and DECISIONS.md 2026-07-31.
-      `specialUse` rather than `mediaPlayback` (nothing is playing), `connectedDevice` (no device)
-      or the deprecated, time-capped `dataSync`.
+      process's network to stay up — see SyncPlayPresenceService. `specialUse` rather than
+      `mediaPlayback` (nothing is playing), `connectedDevice` (no device) or the deprecated,
+      time-capped `dataSync`.
     -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />

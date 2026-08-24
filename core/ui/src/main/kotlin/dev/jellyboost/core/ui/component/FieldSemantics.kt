@@ -8,12 +8,11 @@ import androidx.compose.ui.text.input.VisualTransformation
 /**
  * What a [JellyfinTextField] is called, in the two spellings a screen has for it.
  *
- * The field used to take these as two independent parameters — a `label` composable and a
- * `labelText` string — which every caller had to keep saying the same thing by hand, and which
- * nothing checked. That is the whole of the CR-2 fix resting on call-site discipline
- * (docs/notes/audit-2026-08-06-quality.md, CPX-8): a field given a caption and no [text] is
- * exactly as unlabelled to a screen reader as it was before the accessibility audit, and a field
- * whose two spellings drift apart says one word and draws another.
+ * The field takes these as one type rather than two independent parameters — a `label` composable
+ * and a `labelText` string, which a caller could otherwise say twice by hand with nothing to check
+ * it. A field given a caption and no [text] is exactly as unlabelled to a screen reader as a field
+ * with no caption at all, and a field whose two spellings drift apart says one word and draws
+ * another.
  *
  * @param text the field's name, as a *person* hears it. It becomes the field node's
  *   `contentDescription`, which is what an editable node uses as its name (its value stays the
@@ -22,7 +21,7 @@ import androidx.compose.ui.text.input.VisualTransformation
  *   `null` for a field whose name is never drawn — a search box named by its placeholder, a
  *   dialog's single input. When it is drawn it is muted for the screen reader, so the caption and
  *   the field are not two stops saying the same word, the first of them spelled out letter by
- *   letter (accessibility audit 2026-08-05, CR-2/F16).
+ *   letter.
  */
 @Immutable
 data class FieldLabel(
@@ -46,11 +45,11 @@ data class FieldLabel(
  * `errorMessage`. Two of those pairs were traps rather than combinations:
  *
  * - `isError = true` with no `errorMessage` is a field that announces "invalid" and nothing else,
- *   which is worse for a screen-reader user than saying nothing at all (audit CR-2). [Error]
+ *   which is worse for a screen-reader user than saying nothing at all. [Error]
  *   carries its sentence, so there is no way to raise one without the other.
  * - `enabled = false` for an in-flight request destroys the node the user is standing on at the
- *   exact moment they pressed the button, and a screen reader dropped mid-form has nowhere to land
- *   (audit F17). [InFlight] is `readOnly`: the field keeps its focus, its name and its value and
+ *   exact moment they pressed the button, and a screen reader dropped mid-form has nowhere to land.
+ *   [InFlight] is `readOnly`: the field keeps its focus, its name and its value and
  *   refuses to be typed into. There is no disabled state, because no screen in this app wants one
  *   and its only use here was that mistake.
  */
@@ -63,8 +62,8 @@ sealed interface FieldState {
      * A request is in flight over what the field holds.
      *
      * The screens guard the edit in their state holders as well — belt and braces, and the guard
-     * is the part a JVM test can hold still (DECISIONS.md, "an in-flight auth field stays
-     * enabled"). `readOnly` says the same thing to the platform, so the IME does not offer a
+     * is the part a JVM test can hold still: an in-flight auth field stays enabled.
+     * `readOnly` says the same thing to the platform, so the IME does not offer a
      * keyboard for a field whose contents cannot move.
      */
     data object InFlight : FieldState
@@ -96,8 +95,8 @@ internal val FieldState.errorMessage: String? get() = (this as? FieldState.Error
  * Marking a node as holding a secret ([androidx.compose.ui.semantics.password]) and masking the
  * characters on screen (a [VisualTransformation]) are two different mechanisms, and they were two
  * independent parameters: a field could be masked without being announced as a password, or
- * announced as one while showing its characters. Both are wrong, and both were one keystroke away
- * (audit F5 / CPX-8). Here they are the same choice made once.
+ * announced as one while showing its characters. Both are wrong, and both were one keystroke away.
+ * Here they are the same choice made once.
  */
 @Immutable
 sealed interface FieldContent {

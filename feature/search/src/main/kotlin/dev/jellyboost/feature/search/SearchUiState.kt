@@ -11,8 +11,8 @@ import dev.jellyboost.data.downloads.withDownloadStates
  * Everything the search screen draws.
  *
  * Results arrive as one server response and are split here into the sections the screen renders,
- * in jellyfin-web's order: movies, shows, episodes, then M13 Phase 2's music kinds — artists,
- * albums, songs, playlists (docs/PLAN.md, "Screens" → Search; docs/notes/music-m13-plan.md).
+ * in jellyfin-web's order: movies, shows, episodes, then the music kinds — artists, albums,
+ * songs, playlists.
  */
 data class SearchUiState(
     /** The raw text in the field — echoed back so the field stays a controlled component. */
@@ -37,8 +37,8 @@ data class SearchUiState(
      * Derived rather than stored: it is the size of three lists this state already carries, and a
      * separate field would be one more thing every `copy` has to remember to keep true. It exists
      * because the screen has to *say* it — results arriving is the whole outcome of a search, and
-     * until the 2026-08-05 accessibility audit (A11Y-09) it happened in complete silence, with the
-     * user's focus still in the field and nothing announcing that the page below had filled up.
+     * it would otherwise happen in complete silence, with the user's focus still in the field and
+     * nothing announcing that the page below had filled up.
      */
     val resultCount: Int
         get() =
@@ -112,7 +112,7 @@ internal fun SearchUiState.withSearchResult(
 private fun List<JellyfinItem>.ofType(type: ItemType) = filter { it.type == type }
 
 /**
- * Stamps the app-wide download-state map onto every result card (M7).
+ * Stamps the app-wide download-state map onto every result card.
  *
  * The per-list work — and the identity preservation that lets an unaffected section skip
  * recomposition — is `:data:downloads`' shared [withDownloadStates].

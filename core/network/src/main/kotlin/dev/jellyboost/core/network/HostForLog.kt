@@ -4,20 +4,19 @@ package dev.jellyboost.core.network
  * The host part of [address], for a log line.
  *
  * Discovery, reachability, sign-in and the SyncPlay socket are the paths that hold a user's server
- * address, and they are also the ones whose logs get pasted into a bug report — the scrubbed git
- * history (2026-08-01) exists because that happened. What a maintainer needs from those lines is
- * *which candidate this was*, and
- * a host alone answers that; the scheme says nothing and the port is the remaining half of a
- * ready-to-use address. So the port and scheme are dropped, consistently with the SEC-05/06
- * precedent of logging the shape of a value rather than the value.
+ * address, and they are also the ones whose logs get pasted into a bug report. What a maintainer
+ * needs from those lines is *which candidate this was*, and a host alone answers that; the scheme
+ * says nothing and the port is the remaining half of a ready-to-use address. So the port and scheme
+ * are dropped, consistent with logging the shape of a value elsewhere in this codebase rather than
+ * the value itself.
  *
  * This is a log helper and nothing more — never route, connect or compare on its output. It accepts
  * anything a user might have typed (a bare hostname, `host:port`, a full URL, an IPv6 literal), so
  * it cannot be strict, and it answers `<none>` rather than throwing for input it cannot read.
  *
- * Public rather than module-internal since audit SEC-11: `:player`'s SyncPlay socket logs the
- * websocket URL it is opening, and a second copy of this in that module is exactly the drift DUP-1
- * was about.
+ * Public rather than module-internal: `:player`'s SyncPlay socket logs the websocket URL it is
+ * opening, and a second copy of this in that module is exactly the kind of drift a shared helper
+ * prevents.
  */
 fun hostForLog(address: String?): String {
     val trimmed = address?.trim().orEmpty()

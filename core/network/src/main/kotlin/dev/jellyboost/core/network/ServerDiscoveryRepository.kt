@@ -16,7 +16,7 @@ import javax.inject.Singleton
 
 /**
  * Finds Jellyfin servers, either by listening for their local-network announcements or by
- * probing the address a user typed (docs/PLAN.md, "ServerSetup" screen).
+ * probing the address a user typed.
  *
  * Nothing is persisted here: a resolved server is only written to Room once the user actually
  * signs in on it (see [AuthRepository]).
@@ -62,9 +62,9 @@ class ServerDiscoveryRepository
             "ReturnCount",
         )
         suspend fun resolveServerAddress(input: String): AppResult<ResolvedServer> {
-            // Debug, and host only, on every line below that holds an address (audit HYG-10): this
-            // is the path that knows where a user's server lives, and its logs are the ones that end
-            // up pasted into a bug report. See [hostForLog].
+            // Debug, and host only, on every line below that holds an address: this is the path
+            // that knows where a user's server lives, and its logs are the ones that end up pasted
+            // into a bug report. See [hostForLog].
             Timber.d("Resolving server address for '%s'", hostForLog(input))
 
             val candidates =

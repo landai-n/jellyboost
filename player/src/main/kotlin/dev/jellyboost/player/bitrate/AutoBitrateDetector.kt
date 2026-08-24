@@ -16,12 +16,12 @@ import javax.inject.Singleton
 
 /**
  * Measures how much throughput this device actually has to the server, and turns it into the cap
- * `PlaybackQuality.AUTO` negotiates with (DECISIONS.md, 2026-08-15).
+ * `PlaybackQuality.AUTO` negotiates with.
  *
- * Auto used to send no cap at all, which let the device profile's 120 Mbps ceiling stand and had the
- * server direct-play 60 Mbps remuxes over links that cannot carry them. A progressive direct play
- * has no renditions to adapt between, so the negotiated cap is the *only* adaptive point there is —
- * which is why this measurement exists at all, and why jellyfin-web's Auto does the same thing.
+ * Without a cap the device profile's 120 Mbps ceiling stands and the server direct-plays 60 Mbps
+ * remuxes over links that cannot carry them. A progressive direct play has no renditions to adapt
+ * between, so the negotiated cap is the *only* adaptive point there is — which is why this
+ * measurement exists at all, and why jellyfin-web's Auto does the same thing.
  *
  * The measurement itself is a ramp: [CHUNK_SIZES] bytes are fetched from `/Playback/BitrateTest` in
  * turn and each one is timed, stopping early as soon as one takes longer than [SLOW_CHUNK_MS] —
@@ -30,9 +30,9 @@ import javax.inject.Singleton
  * budget, because a measurement that outlives the user's patience is worse than no measurement.
  *
  * The rate is **cumulative** — every byte fetched over every millisecond spent, including the chunk
- * that ended the ramp — and not the last chunk's own rate (DECISIONS.md, 2026-08-15 amendment).
+ * that ended the ramp — and not the last chunk's own rate.
  * A few megabytes are small enough to be answered largely out of TCP's congestion window and the
- * server's buffers, so the last chunk on its own measures a burst: on the user's link a 3 MB chunk
+ * server's buffers, so the last chunk on its own measures a burst: on a measured link a 3 MB chunk
  * timed ~81 Mbps where a 30 MB pull sustained ~55. Counting the slow start and the earlier chunks
  * against the total is what turns the burst back into something the link can hold for a film.
  *

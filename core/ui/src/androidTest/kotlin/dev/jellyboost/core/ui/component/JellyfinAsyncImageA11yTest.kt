@@ -17,11 +17,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * The placeholder path keeps the caller's label (accessibility audit 2026-08-05, "JellyfinAsyncImage
- * drops the caller's contentDescription on the placeholder path").
+ * The placeholder path keeps the caller's label ("JellyfinAsyncImage drops the caller's
+ * contentDescription on the placeholder path").
  *
- * Wave 2 fixed this and wave 4b reported it as still broken — one of the two had to be wrong, and
- * the only way to settle it permanently is a test rather than a reading of the file. An item with no
+ * Pinned by a test rather than left to a reading of the file. An item with no
  * artwork is the case that matters: a cast rail or a queue row draws no text beside the picture, so
  * an unlabelled placeholder is a person who is simply not there.
  */

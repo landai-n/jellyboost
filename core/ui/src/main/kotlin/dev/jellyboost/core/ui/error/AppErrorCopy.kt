@@ -10,8 +10,8 @@ import dev.jellyboost.core.ui.text.UiText
  *
  * Every other branch — network, unauthorized, storage — says the same thing whichever screen asked,
  * so it is not a slot: "can't reach your server" is one sentence, translated once, in `:core:ui`.
- * Before audit H8 it was five sentences in five files, three of them Kotlin literals, and they had
- * already drifted.
+ * Hand-spelling it per screen would mean five sentences in five files, three of them Kotlin
+ * literals, with nothing to keep them from drifting apart.
  *
  * @param unknown always overridden. An unclassified failure can only be described by naming what
  *   was being done — "loading this library", "starting playback" — and only the screen knows that.

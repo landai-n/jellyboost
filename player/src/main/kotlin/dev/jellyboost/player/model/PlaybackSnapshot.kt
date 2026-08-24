@@ -13,7 +13,7 @@ import dev.jellyboost.core.common.Ticks
  *   only ever play what it was prepared with, so its snapshots are always valid; a *cast* player
  *   mirrors a receiver that anything on the network may unload or reload, and a reading taken after
  *   that happened is a position — usually zero — that belongs to nothing of ours. `PlaybackReporter`
- *   refuses to write an invalid snapshot's position anywhere (audit CAST-01).
+ *   refuses to write an invalid snapshot's position anywhere.
  */
 data class PlaybackSnapshot(
     val positionMs: Long = 0L,
@@ -30,10 +30,8 @@ data class PlaybackSnapshot(
 /**
  * Converts Jellyfin ticks to milliseconds, the unit ExoPlayer seeks in.
  *
- * Thin wrapper around [Ticks.ticksToMillis] (DUP-6) kept here, rather than switching every call
- * site to `Ticks.ticksToMillis(x)` directly, because `SyncPlayController.kt` — frozen for a later
- * wave — imports this extension by its `dev.jellyboost.player.model` package name; changing that
- * import would count as editing that file.
+ * A thin wrapper around [Ticks.ticksToMillis], kept here because call sites across `:player` import
+ * it by its `dev.jellyboost.player.model` package name.
  */
 internal fun Long.ticksToMillis(): Long = Ticks.ticksToMillis(this)
 

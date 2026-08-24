@@ -6,7 +6,7 @@ import dev.jellyboost.player.model.PlaybackSnapshot
 /**
  * The player route's arguments, and the live position written back over them for a process death.
  *
- * Extracted from `PlayerViewModel` (audit ARCH-10). The handle carries two quite different things
+ * Kept out of `PlayerViewModel`. The handle carries two quite different things
  * under one type — what the user tapped (`ARG_`), which is read-only and must stay intact, and what
  * the session had reached (`KEY_`), which is written every five seconds — and keeping the rule
  * straight is worth a class of its own.

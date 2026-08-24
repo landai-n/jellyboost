@@ -16,7 +16,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 /**
- * What the quality picker does now that Auto resolves to a *measured* cap (DECISIONS.md, 2026-08-15).
+ * What the quality picker does now that Auto resolves to a *measured* cap.
  *
  * Its own class rather than more of [PlayerViewModelTest] — which the addition tipped over detekt's
  * `LargeClass` threshold — and its own subject besides: every test here turns on the one thing a

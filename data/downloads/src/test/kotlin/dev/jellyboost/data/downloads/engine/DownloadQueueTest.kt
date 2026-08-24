@@ -52,7 +52,7 @@ import java.time.Clock
 import java.time.ZoneOffset
 
 /**
- * Unit tests for [DownloadQueue] — the state machine the whole milestone hangs off.
+ * Unit tests for [DownloadQueue] — the state machine the whole pipeline hangs off.
  *
  * The properties worth protecting are the ones a user notices when they break: an item that fails
  * on its poster must still be playable, an item that fails on its media file must not claim to be
@@ -173,9 +173,8 @@ class DownloadQueueTest {
     @Test
     fun `no session parks the queue instead of failing the item`() =
         runTest {
-            // The regression this pins: the item used to go ERROR with the SDK's own
-            // "Required value baseUrl is null" text, and the user had to press Retry on a download
-            // that was never broken.
+            // Without the park the item goes ERROR with the SDK's own "Required value baseUrl is
+            // null" text, and the user has to press Retry on a download that was never broken.
             coEvery { sessionGate.ensureSession() } returns false
             queueWith(download())
 
@@ -206,7 +205,7 @@ class DownloadQueueTest {
     fun `a failing media file marks the item ERROR`() =
         runTest {
             // Once its retry budget is spent: a transport failure on a row with attempts left is
-            // requeued instead (see the retry-policy section below), which is the STAB-01 fix.
+            // requeued instead — see the retry-policy section below.
             queueWith(download(attemptCount = DownloadQueue.MAX_ATTEMPTS - 1))
             coEvery { downloader.download(match { it.contains("download") }, any(), any(), any(), any(), any()) } throws
                 IOException("connection reset")
@@ -299,7 +298,7 @@ class DownloadQueueTest {
             coVerify(exactly = 0) { urls.videoStreamUrl(any(), any()) }
         }
 
-    // ---- download quality (M9) ------------------------------------------------------------------
+    // ---- download quality -------------------------------------------------------------------------
 
     @Test
     fun `the plan is built from the quality on the row, not from the live preference`() =
@@ -324,7 +323,7 @@ class DownloadQueueTest {
             // make a resumed transcode ask for a *different* track than the bytes already on disk
             // hold, the moment the server's default audio stream moved between the tap and the
             // drain — a re-encode, a re-tag, a metadata refresh. `bakedAudioStreamIndex` is the
-            // record of what was actually asked for (DECISIONS.md, 2026-07-30).
+            // record of what was actually asked for.
             every { itemMapper.toDtoOrNull(any()) } returns
                 movie(
                     streams = listOf(audioStream(index = 1), audioStream(index = 3)),
@@ -589,7 +588,7 @@ class DownloadQueueTest {
 
             // The fifth argument is `transcoded`. A sidecar is a `/Videos` encode of its own, so the
             // server ignores `Range` on it exactly as it does on the media file's, and a resumed
-            // fetch would splice two encodes into one file (docs/notes/audit-2026-07.md, MKV-10).
+            // fetch would splice two encodes into one file.
             coVerify { downloader.download(AUDIO_URL, partFile(), any(), any(), true, any()) }
         }
 
@@ -682,10 +681,10 @@ class DownloadQueueTest {
     @Test
     fun `cancellation never writes QUEUED over whatever status the row now has`() =
         runTest {
-            // The M9 bug (docs/POLISH.md, "pausing a download doesn't work"): *Pause* writes
-            // `PAUSED` and then cancels the work to interrupt the transfer, so this handler runs
-            // *after* the user's own write. An unconditional `setStatus(QUEUED)` here undid it and
-            // `nextRunnable` picked the item straight back up — pause looked like it did nothing.
+            // *Pause* writes `PAUSED` and then cancels the work to interrupt the transfer, so this
+            // handler runs *after* the user's own write. An unconditional `setStatus(QUEUED)` here
+            // would undo it and `nextRunnable` would pick the item straight back up — pause looking
+            // like it did nothing.
             // The status test lives in the statement (`requeueIfDownloading`) so it cannot race.
             queueWith(download())
             coEvery { downloader.download(any(), any(), any(), any(), any(), any()) } throws
@@ -729,9 +728,9 @@ class DownloadQueueTest {
     @Test
     fun `a retry targets the same file names as the first attempt`() =
         runTest {
-            // The M7 regression, end to end: attempt one plans the media file from the DTO's `path`
-            // (`Backrooms…-BATGirl.mkv`), the retry runs from a DTO with no `path` and would plan
-            // `Backrooms (2026).mkv` — orphaning 1.38 GB and restarting the transfer from zero.
+            // End to end: attempt one plans the media file from the DTO's `path`, the retry runs
+            // from a DTO with no `path` and would plan a different name — orphaning gigabytes and
+            // restarting the transfer from zero.
             val rows = mutableListOf<DownloadFileEntity>()
             coEvery { downloadDao.insertFile(capture(rows)) } answers { nextFileId++ }
             every { itemMapper.toDtoOrNull(any()) } returns

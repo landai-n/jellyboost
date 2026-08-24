@@ -16,10 +16,11 @@ import org.junit.jupiter.api.Test
 /**
  * What the media session is allowed to do to the player while this member is in a SyncPlay group.
  *
- * The notification, a headset button and a Bluetooth remote all dispatch through the session, and
- * before [SyncPlayAwareForwardingPlayer] they dispatched onto the shared `ExoPlayer` itself — so a
- * pause from the notification paused this member and nobody else, which is exactly the silent drift
- * the M11 rule exists to prevent ("in-group transport never acts locally — API calls only").
+ * The notification, a headset button and a Bluetooth remote all dispatch through the session.
+ * Without [SyncPlayAwareForwardingPlayer] guarding it, they would dispatch onto the shared
+ * `ExoPlayer` itself — so a pause from the notification would pause this member and nobody else,
+ * which is exactly the silent drift the rule exists to prevent ("in-group transport never acts
+ * locally — API calls only").
  *
  * Every in-group test therefore asserts both halves, as `PlayerSyncPlayTest` does for the in-app
  * controls: the request that reached the coordinator, *and* the delegate having been left alone.
@@ -197,10 +198,10 @@ internal class SyncPlayAwareForwardingPlayerTest {
 
     @Test
     fun `a stop in a group becomes a pause request, never a local stop`() {
-        // A MEDIA_STOP from a headset or car control used to reach the delegate directly (audit
-        // SP-06): this member lost its prepared player while the phase still said Playing, and the
-        // drift monitor then measured against a stopped player — the exact drift the wrapper
-        // exists to prevent, through the one call it forgot.
+        // A MEDIA_STOP from a headset or car control reaching the delegate directly would cost
+        // this member its prepared player while the phase still said Playing, and the drift
+        // monitor would then measure against a stopped player — the exact drift this wrapper
+        // exists to prevent.
         joinGroup()
 
         player.stop()

@@ -12,8 +12,8 @@ import org.junit.jupiter.api.Test
 /**
  * Unit tests for what `DownloadRows.kt` draws.
  *
- * Two things live here. The row-title rules pin the M9 device-walk fix (docs/POLISH.md): a row drawn
- * under its series' own group header must not repeat the series name the header already shows.
+ * Two things live here. The row-title rules: a row drawn under its series' own group header must
+ * not repeat the series name the header already shows.
  *
  * The rest pin **which size a queue row shows, and how it is worded**. `statusLine` and
  * `expectedSizeText` are `@Composable`, so what is asserted here is the pair of values they branch
@@ -232,9 +232,9 @@ class DownloadRowsTest {
         }
     }
 
-    // ---- where a tap on the row starts playback (M10 device walk) --------------------------------
+    // ---- where a tap on the row starts playback --------------------------------------------------
     //
-    // A completed row is now clickable to play (see `DownloadedRow`'s `onPlay`), which the screen
+    // A completed row is clickable to play (see `DownloadedRow`'s `onPlay`), which the screen
     // wires as `onPlay(item.itemId, item.playbackStartTicks)`. There is no Compose click-simulation
     // harness in this repo (no Robolectric / androidTest here — every other screen's click wiring is
     // pinned the same way, at the pure function feeding the callback's arguments; see
@@ -275,7 +275,7 @@ class DownloadRowsTest {
         item.playbackStartTicks shouldBe 0L
     }
 
-    // ---- row titles (M9 device walk, docs/POLISH.md) ---------------------------------------------
+    // ---- row titles ------------------------------------------------------------------------------
 
     @Test
     fun `an episode outside a series group shows series and title`() {
@@ -299,7 +299,7 @@ class DownloadRowsTest {
         film.rowTitle(inSeriesGroup = true) shouldBe "Dune"
     }
 
-    // ---- the percentage a queue row announces (accessibility audit 2026-08-05, F7) ---------------
+    // ---- the percentage a queue row announces ----------------------------------------------------
 
     @Test
     fun `a fraction becomes the whole percentage a screen reader says`() {

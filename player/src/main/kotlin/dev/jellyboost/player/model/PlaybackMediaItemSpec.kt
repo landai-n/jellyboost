@@ -5,7 +5,7 @@ package dev.jellyboost.player.model
  *
  * Deliberately free of `MediaItem`/`Uri`: `android.net.Uri` is a throwing stub in local unit
  * tests, so keeping URL selection in plain data is what makes `ExoMediaSourceFactory`'s decision
- * table — the riskiest logic in this milestone — testable without an emulator. The conversion to
+ * table — the riskiest logic in the playback path — testable without an emulator. The conversion to
  * a real `MediaItem` is a single mechanical step performed on-device.
  *
  * @property audioSidecars audio tracks that live in their own files and have to be merged alongside
@@ -13,8 +13,7 @@ package dev.jellyboost.player.model
  *   [subtitles] these cannot ride along on the item: `ExoPlayerHandle.prepare` turns each into its
  *   own `MediaSource` and builds a `MergingMediaSource`. **Element `i` becomes merge child `i + 1`**
  *   — child 0 is always the main source — and that positional contract is the whole of the mapping
- *   `TrackSelectionController` navigates back by (DECISIONS.md 2026-07-31, "Offline multi-track
- *   Phase 2"). Only a transcoded download has any.
+ *   `TrackSelectionController` navigates back by. Only a transcoded download has any.
  */
 internal data class PlaybackMediaItemSpec(
     /** `MediaItem.mediaId`; the Jellyfin item id, used to correlate player callbacks. */
@@ -71,9 +70,9 @@ internal fun externalSubtitleTrackId(index: Int): String = "$EXTERNAL_SUBTITLE_I
  * `setId(childIndex + ":" + format.id)` before publishing the merged track groups — so
  * `external:2` comes back as `1:external:2`. Reading the id without allowing for that prefix
  * matched nothing, which is how a downloaded sidecar ended up refused as "not in the downloaded
- * file" (docs/notes/offline-multitrack-design.md, phase 1).
+ * file".
  *
- * Since phase 2 there can be **two** such prefixes. A downloaded item with both audio sidecars and
+ * There can be **two** such prefixes. A downloaded item with both audio sidecars and
  * subtitles is merged twice: `ExoPlayerHandle` builds the outer merge over the audio files, and
  * `DefaultMediaSourceFactory` has already wrapped the main item in its own merge for the subtitles.
  * The same `external:2` then arrives as `0:1:external:2`, so the strip is a loop rather than one

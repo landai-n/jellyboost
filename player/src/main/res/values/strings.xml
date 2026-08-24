@@ -9,7 +9,7 @@
 
     <!--
       The tap surface over the video. It is the only way back to the controls once they have hidden,
-      so it carries a real accessibility action rather than a bare touch gesture (audit CR-1).
+      so it carries a real accessibility action rather than a bare touch gesture.
     -->
     <string name="player_show_controls">Show player controls</string>
 
@@ -18,8 +18,8 @@
     <string name="player_brightness_percent">Brightness %1$d percent</string>
 
     <!--
-      The mid-playback rebuffer spinner's label. `isBuffering` had no UI at all before the
-      accessibility pass: a stall showed a frozen frame and said nothing (audit CR-3).
+      The mid-playback rebuffer spinner's label — without it a stall shows a frozen frame and
+      says nothing.
     -->
     <string name="player_buffering">Buffering</string>
 
@@ -52,7 +52,7 @@
 
     <!--
       The Display sheet: brightness and volume as controls rather than as vertical swipes, which
-      touch exploration, a switch device and a keyboard all have no way to perform (audit CR-8).
+      touch exploration, a switch device and a keyboard all have no way to perform.
     -->
     <string name="player_display">Display</string>
     <string name="player_brightness">Brightness</string>
@@ -97,7 +97,7 @@
     <string name="player_message_change_reverted">Couldn\'t apply that change — continuing as before.</string>
 
     <!--
-      M13 music: the two mode buttons the media notification and the lock screen draw. They are
+      The two mode buttons the media notification and the lock screen draw. They are
       content descriptions for icon-only system buttons, so each says what the button *does now*
       rather than naming the mode it is in.
     -->
@@ -107,7 +107,7 @@
     <string name="music_notification_repeat_all">Repeating the queue</string>
     <string name="music_notification_repeat_one">Repeating this track</string>
 
-    <!-- M11 SyncPlay: the group as the player screen shows it. -->
+    <!-- SyncPlay: the group as the player screen shows it. -->
     <string name="player_syncplay_group">Group</string>
     <string name="player_syncplay_waiting">Waiting for group…</string>
     <string name="player_syncplay_shuffle">Shuffle queue</string>
@@ -120,11 +120,11 @@
     <string name="player_syncplay_leave_body">Playback carries on here, on its own. Rejoining means picking the group again.</string>
 
     <!--
-      This module's dialogs take their dismiss label from `:core:ui`'s `action_cancel` (audit
-      2026-08-08, DUP-6) — an app string rather than `android.R.string.cancel` for the reason B10
-      recorded: the system string follows the device locale, so a French device showed "Annuler"
-      next to an English "Create" in the same dialog. It is now one string for the whole app rather
-      than one per module, which is the same argument one level up.
+      This module's dialogs take their dismiss label from `:core:ui`'s `action_cancel` — an app
+      string rather than `android.R.string.cancel`: the system string follows the device locale,
+      so a French device showed "Annuler" next to an English "Create" in the same dialog. It is
+      now one string for the whole app rather than one per module, which is the same argument one
+      level up.
     -->
 
     <plurals name="player_syncplay_participants">
@@ -133,13 +133,12 @@
     </plurals>
 
     <!--
-      B6: the groups screen used to show only this count. `player_syncplay_groups_participants_more`
-      is what a row falls back to once the joined names stop fitting — `%1$s` is the names shown,
-      `%2$d` how many more there are.
+      `player_syncplay_groups_participants_more` is what a row falls back to once the joined names
+      stop fitting — `%1$s` is the names shown, `%2$d` how many more there are.
     -->
     <string name="player_syncplay_groups_participants_more">%1$s +%2$d more</string>
 
-    <!-- M11 Phase 4: the group queue. -->
+    <!-- The group queue. -->
     <string name="player_syncplay_queue">Queue</string>
     <string name="player_syncplay_queue_empty">The group hasn\'t queued anything yet.</string>
     <string name="player_syncplay_queue_item_loading">Loading…</string>
@@ -149,8 +148,7 @@
 
     <!--
       The queue row's three actions, each named for the item it acts on (%1$s is its title). A queue
-      of ten episodes otherwise offers thirty identical labels with nothing to tell them apart
-      (audit A11Y-P-18).
+      of ten episodes otherwise offers thirty identical labels with nothing to tell them apart.
     -->
     <string name="player_syncplay_queue_move_up_item">Move %1$s up</string>
     <string name="player_syncplay_queue_move_down_item">Move %1$s down</string>
@@ -169,7 +167,7 @@
     <string name="player_message_syncplay_library_denied">The group is watching something you don\'t have access to.</string>
     <string name="player_message_syncplay_item_unavailable">Couldn\'t open what the group is watching.</string>
 
-    <!-- M11 Phase 5: the dedicated SyncPlay section. -->
+    <!-- The dedicated SyncPlay section. -->
     <string name="player_syncplay_groups_title">SyncPlay</string>
     <string name="player_syncplay_groups_create">Create group</string>
     <string name="player_syncplay_groups_create_title">Name your group</string>
@@ -198,7 +196,7 @@
     <string name="player_cast">Cast to a device</string>
 
     <!--
-      M12 Phase 3. What a receiver is called when the Cast framework has not published a name:
+      What a receiver is called when the Cast framework has not published a name:
       every message and label that names the device falls back to this rather than to a gap.
     -->
     <string name="player_cast_device_unnamed">your TV</string>
@@ -207,7 +205,7 @@
     <string name="player_message_cast_failed">Couldn\'t play that on %1$s.</string>
 
     <!--
-      M12 Phase 4. Drawn over the item's artwork, where the video would be, for as long as a
+      Drawn over the item's artwork, where the video would be, for as long as a
       receiver has the film. Takes the same unnamed-device fallback as the messages above.
     -->
     <string name="player_casting_to">Casting to %1$s</string>
@@ -217,7 +215,7 @@
       answered but would not open a stream is a different sentence from a server that would not
       answer a browse request, and the player says so; the rest of the taxonomy comes from
       `:core:ui`. `player_error_unsupported_source` is the local verdict — nothing was asked of the
-      server at all. All four were Kotlin literals until audit H8.
+      server at all.
     -->
     <string name="player_error_server">The server could not start playback.</string>
     <string name="player_error_server_with_code">The server could not start playback (%1$d).</string>

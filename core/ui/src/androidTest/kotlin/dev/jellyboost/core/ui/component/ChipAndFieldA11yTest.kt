@@ -21,13 +21,12 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * The three chips and the text field — the two components the audit's waves 2 and 5 reshaped most.
+ * The three chips and the text field.
  *
  * The chips are one component split into three because a screen reader hears three different
- * things (DECISIONS.md, "an inert chip is its own component" and "a chip that opens a sheet is a
+ * things ("an inert chip is its own component" and "a chip that opens a sheet is a
  * button"); this is where that split is a fact rather than a comment. The field's label semantics
- * are CR-2, the highest-traffic finding in the audit: every field in the app used to announce its
- * value and the words "edit box".
+ * ensure every field in the app announces its label, not just its value and the words "edit box".
  */
 @RunWith(AndroidJUnit4::class)
 class ChipAndFieldA11yTest {
@@ -119,7 +118,7 @@ class ChipAndFieldA11yTest {
 
         val field = rule.onNodeWithText(ADDRESS)
         // Still a named node — which `enabled = false` would have destroyed, dropping a TalkBack
-        // user to the top of the form at the moment they pressed Connect (audit F17).
+        // user to the top of the form at the moment they pressed Connect.
         assertEquals(LABEL, field.fetchSemanticsNode().config[SemanticsProperties.ContentDescription].single())
 
         // Asserted as behaviour rather than as the absence of a `SetText` action: a read-only field
@@ -147,7 +146,7 @@ class ChipAndFieldA11yTest {
 
         val field = rule.onNodeWithText(ADDRESS).fetchSemanticsNode()
         // `error(…)` on the field's own node, not a sentence floating below it: it is what makes a
-        // screen reader say *what* went wrong instead of only that something did (audit CR-2).
+        // screen reader say *what* went wrong instead of only that something did.
         assertEquals(FAILURE, field.config[SemanticsProperties.Error])
         // …and the name is still the label, so the failure is added to the field rather than
         // replacing what the field is called.

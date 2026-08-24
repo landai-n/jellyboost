@@ -21,21 +21,19 @@ internal data class ItemPage(
 )
 
 /**
- * Paging 3 source over an offset/limit item query — the library grid's data spine
- * (docs/PLAN.md, "Screens" → LibraryGrid).
+ * Paging 3 source over an offset/limit item query — the library grid's data spine.
  *
  * **Keys are item offsets, not page numbers.** Jellyfin's `getItems` is paged by
  * `startIndex`/`limit`, so making the key *be* the `startIndex` keeps the arithmetic exact even
  * when Paging asks for a load size other than [pageSize] (which it does for the initial load
- * unless `initialLoadSize` is pinned). That exactness is what the M3 definition of done —
- * ">500-item library scrolls clean, one request per page" — actually rests on: one [load] call
- * produces exactly one server request, and no offset is ever requested twice or skipped.
+ * unless `initialLoadSize` is pinned). That exactness is what makes ">500-item library scrolls
+ * clean, one request per page" possible: one [load] call produces exactly one server request, and
+ * no offset is ever requested twice or skipped.
  *
  * The end of the list is detected by a short page (`items.size < loadSize`) rather than by a total
  * record count, so **appending** a page never asks the server to count anything. The *first* load
  * does ask, once, because the grid's header shows "N items" and no cheaper source for that number
- * exists (DECISIONS.md 2026-08-01, "the library grid's first page asks for the total record
- * count"). "First load" is expressed as `params is LoadParams.Refresh`: a paging source is created
+ * exists. "First load" is expressed as `params is LoadParams.Refresh`: a paging source is created
  * fresh for every refresh and invalidated after it, so a `Refresh` is always this instance's first
  * load — including the anchored one [getRefreshKey] resumes from, whose key is not zero.
  *

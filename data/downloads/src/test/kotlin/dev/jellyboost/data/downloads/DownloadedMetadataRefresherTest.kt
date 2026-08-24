@@ -231,7 +231,7 @@ class DownloadedMetadataRefresherTest {
 
             // The music parents matter more than the video ones: an album and an artist are pure
             // metadata with no file of their own, so nothing but this pass ever brings a re-tagged
-            // album or a renamed artist up to date on the device (M13 Phase 5).
+            // album or a renamed artist up to date on the device.
             upserted.captured.map { it.id } shouldContainExactlyInAnyOrder listOf(uuid(30), uuid(40), uuid(50))
         }
 
@@ -436,7 +436,7 @@ class DownloadedMetadataRefresherTest {
     /**
      * The two guards above tolerate everything a disk or a server can do, and must keep tolerating
      * it — but not a cancellation, which is the scope shutting the refresher down rather than a
-     * failure to work around (audit STAB-06).
+     * failure to work around.
      */
     @Test
     fun `a cancelled table read propagates instead of degrading to an empty list`() =
@@ -499,7 +499,7 @@ class DownloadedMetadataRefresherTest {
     )
 
     private companion object {
-        /** When the items were originally downloaded — the offline "recently downloaded" key. */
+        /** When the items were downloaded — the offline "recently downloaded" key. */
         val DOWNLOADED_AT: Instant = NOW
 
         /** Two days later: a refresh pass must be invisible to that ordering. */

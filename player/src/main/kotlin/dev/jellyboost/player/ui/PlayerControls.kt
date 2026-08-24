@@ -92,25 +92,23 @@ import dev.jellyboost.core.ui.R as CoreUiR
  *
  * Scrubbing is deliberately local while the finger is down — the slider follows the touch and only
  * seeks on release, so a drag across a two-hour film does not fire hundreds of seeks at a
- * transcoding server. Since M9 that same drag also drives the trickplay preview, which is the whole
+ * transcoding server. That same drag also drives the trickplay preview, which is the whole
  * reason the scrub position is state rather than a callback.
  *
  * The bottom bar is width-capped and centred: on a 2560 px tablet a seek bar stretched edge to edge
  * puts the time readout and the pickers a hand-span apart from each other.
  *
  * **This composable draws and nothing else.** It holds no picker state: a chip tap goes straight to
- * `PlayerActions.onOpenPanel`, and `PlayerScreen` hosts every panel above the auto-hide. It used to
- * `remember` an open sheet here, inside the very `AnimatedVisibility(controlsVisible)` the auto-hide
- * drives, so the picker was disposed mid-selection a second or two after it was opened (audit UI-1).
+ * `PlayerActions.onOpenPanel`, and `PlayerScreen` hosts every panel above the auto-hide. A
+ * `remember`ed open sheet here would sit inside the very `AnimatedVisibility(controlsVisible)` the
+ * auto-hide drives, and the picker would be disposed mid-selection a second or two after it opened.
  * Anything on this screen that must outlive four seconds belongs to the screen, not to the bar.
  *
- * ### The 2026 refresh
+ * ### The glass language
  * Everything here is glass over the film — circles for the seek buttons and the chrome, a pill for
- * each picker — with exactly one solid surface on the screen: the white play/pause disc. That is the
- * refresh's rule for primary actions (DECISIONS.md 2026-08-01, "primary action buttons are white"),
- * and over a moving image it is also the only thing that stays findable at a glance. No control was
- * added, removed or rewired in the restyle; the seek amounts, the picker set and the label threshold
- * are the M9–M12 ones.
+ * each picker — with exactly one solid surface on the screen: the white play/pause disc. Primary
+ * action buttons are white by rule, and over a moving image white is also the only thing that stays
+ * findable at a glance.
  *
  * The glass here is *flat* dark glass — [VIDEO_GLASS_FILL] plus the standard hairline — not a Haze
  * blur. The video is a `SurfaceView` whose pixels are composited by the system and never reach the
@@ -185,12 +183,12 @@ private fun TopBar(
             TagPill(text = state.speed.label)
         }
         state.playMethod?.let { method ->
-            // On screen on purpose: the M5 definition of done is "the server shows the expected
-            // play method", and having it here makes that check possible without the dashboard.
+            // On screen on purpose: it makes "which play method did the server pick" answerable
+            // without opening the server's dashboard.
             TagPill(text = playbackMethodTag(method = method, videoHeight = state.videoHeight))
         }
-        // Casting and SyncPlay are mutually exclusive (docs/notes/chromecast-m12-plan.md, decision
-        // 6), so in a group the button is not drawn at all rather than drawn and refused. Composed
+        // Casting and SyncPlay are mutually exclusive, so in a group the button is not drawn at
+        // all rather than drawn and refused. Composed
         // out rather than given a hidden state: a group is a deliberate, long-lived thing, unlike
         // the receivers appearing and disappearing that the button animates through on its own.
         if (!state.syncPlay.inGroup) {
@@ -210,10 +208,10 @@ private fun TopBar(
  * The two-line lockup at the head of the top bar: what is playing, and which episode of what.
  *
  * The second line is *derived* rather than plumbed. `PlayerViewModel.loadTitleAndArtwork` already
- * joins the item's title and its episode line with [PLAYER_LABEL_SEPARATOR] into the single label
- * this bar used to draw, so the two lines the refresh wants are recovered by splitting that label
- * back apart at the separator it was built with — no second field on the state, and nothing new
- * fetched. An item with no episode line (a film) joins to one part and draws one line.
+ * joins the item's title and its episode line with [PLAYER_LABEL_SEPARATOR] into a single label, so
+ * the two lines are recovered by splitting that label back apart at the separator it was built
+ * with — no second field on the state, and nothing new fetched. An item with no episode line (a
+ * film) joins to one part and draws one line.
  */
 @Composable
 private fun TitleStack(
@@ -222,7 +220,7 @@ private fun TitleStack(
 ) {
     val (title, subtitle) = remember(label) { label.asTitleAndSubtitle() }
 
-    // One node, not two (audit A11Y-P-14): "The Original" and "Star Trek · S1 E10" are one answer to
+    // One node, not two: "The Original" and "Star Trek · S1 E10" are one answer to
     // "what am I watching", and as separate stops the second reads as an orphan.
     Column(modifier = modifier.semantics(mergeDescendants = true) { }) {
         Text(
@@ -248,9 +246,9 @@ private fun TitleStack(
  * A small tinted tag — the playback method, and the playback rate when it is not 1×.
  *
  * Primary-tinted rather than glass: these two say something *about the stream* rather than offering
- * an action, and the refresh reserves glass for surfaces the user can press.
+ * an action, and glass is reserved for surfaces the user can press.
  *
- * The uppercasing is this composable's, and stops here (audit A11Y-P-15): an uppercased *string*
+ * The uppercasing is this composable's, and stops here: an uppercased *string*
  * reaches text-to-speech as one, and "TRANSCODING 1080P" is read out letter by letter by some
  * engines. The pill draws the shouted form and describes the sentence-case one.
  */
@@ -462,7 +460,7 @@ private fun BottomBar(
             ) {
                 Clock(position = position, durationMs = state.durationMs, modifier = Modifier.weight(1f))
 
-                // Keyed by identity, not by position (audit UI-13): this list changes shape at
+                // Keyed by identity, not by position: this list changes shape at
                 // runtime — joining a group inserts two chips in the middle of it, a receiver
                 // connecting removes another — and an unkeyed `forEach` gives Compose positional
                 // slots, so the chip that *was* third keeps the third slot's remembered state while
@@ -485,7 +483,7 @@ private fun BottomBar(
 
 /**
  * What the top and bottom bars hold themselves off: the system bars **and** the display cutout, as a
- * union rather than as a sum (audit UI-16).
+ * union rather than as a sum.
  *
  * `systemBarsPadding()` alone was the wrong question in this window. The player hides the system
  * bars, so on most devices that inset resolves to zero — and a bar drawn at the very top of a
@@ -506,27 +504,26 @@ private fun playerBarInsets(): WindowInsets = WindowInsets.systemBars.union(Wind
  * picker row itself was handed, inside the bar's padding — and [fontScale], the system text scale
  * those words are drawn at.
  *
- * A device sweep put the fullest bar it knew of — five pickers plus the clock — at near-zero slack
- * once its row drops much below [LABELLED_BUTTONS_MIN_WIDTH]: the clock is what gives first, and then
- * the last picker clips off the end. Phone landscape (roughly 640–800 dp of viewport) and tablet
- * portrait (711 dp) both land there, so both go icon-only rather than squeezing the readout out;
- * tablet landscape, where the bar is capped at [MAX_BAR_WIDTH], stays labelled exactly as before.
+ * A device-width sweep put the fullest bar it knew of — five pickers plus the clock — at near-zero
+ * slack once its row drops much below [LABELLED_BUTTONS_MIN_WIDTH]: the clock is what gives first,
+ * and then the last picker clips off the end. Phone landscape (roughly 640–800 dp of viewport) and
+ * tablet portrait (711 dp) both land there, so both go icon-only rather than squeezing the readout
+ * out; tablet landscape, where the bar is capped at [MAX_BAR_WIDTH], stays labelled.
  *
- * **The fullest bar is now [MAX_SHEET_CHIPS] pickers, not five**, and that is a fact rather than a
- * guess since [sheetChipSpecs] made the rules enumerable: the accessibility audit's display picker
- * (CR-8) landed after the sweep and pushed the in-a-group-with-a-queue case from five to six. The dp
- * number below is left exactly where the sweep put it — moving a measured constant on the strength of
- * arithmetic would be inventing a measurement — so the honest statement of where this stands is that
- * the threshold is known to be right for five labelled chips and unverified for six, on a viewport
- * between 840 dp and [MAX_BAR_WIDTH], in a SyncPlay group with a queue. `SheetChipSpecTest` pins the
- * count so the next picker cannot widen the gap silently.
+ * **The fullest bar is [MAX_SHEET_CHIPS] pickers, not five** — a group with a queue and a display
+ * picker reaches six, which [sheetChipSpecs] makes enumerable. The dp number below is left exactly
+ * where the measurement put it — moving a measured constant on the strength of arithmetic would be
+ * inventing a measurement — so the honest statement of where this stands is that the threshold is
+ * known to be right for five labelled chips and unverified for six, on a viewport between 840 dp
+ * and [MAX_BAR_WIDTH], in a SyncPlay group with a queue. `SheetChipSpecTest` pins the count so the
+ * next picker cannot widen the gap silently.
  *
- * The 2026 refresh's chips are *narrower* than the text buttons that sweep measured, so the
- * threshold is now conservative where it used to be tight. The dp number is deliberately unchanged:
- * it is the same devices either side of it, and moving a pinned number for extra slack buys nothing.
+ * The chips are *narrower* than the plain text buttons that sweep measured, so the threshold is
+ * conservative rather than tight. The dp number is deliberately unchanged: it is the same devices
+ * either side of it, and moving a pinned number for extra slack buys nothing.
  *
- * What *has* changed is that the words are no longer assumed to be 12sp (audit A11Y-P-10). A width
- * sweep measured at the default text size says nothing about the same row at 1.5× or 2×, where every
+ * The words are not assumed to be 12sp. A width sweep measured at the default text size says
+ * nothing about the same row at 1.5× or 2×, where every
  * label is half again or twice as wide and the last picker clips off the end — the very failure the
  * threshold exists to prevent. Scaling the threshold by [fontScale] asks the honest question: is
  * there room for these words *at the size they will actually be drawn*. Below 1× the threshold is
@@ -564,12 +561,12 @@ internal fun String.asTitleAndSubtitle(): Pair<String, String?> {
  * The elapsed / total readout.
  *
  * Its own composable so that collecting the position confines the twice-a-second recomposition to
- * two `Text`s, instead of dragging the picker row it sits in along with it (audit PERF-04).
+ * two `Text`s, instead of dragging the picker row it sits in along with it.
  *
  * The elapsed text is `remember`ed against the *whole second*, not the raw position: `asClock()`
  * already truncates to seconds, so most of the twice-a-second ticks land on a second this composable
- * already formatted, and `String.format` had been re-run for a string identical to the one still on
- * screen (audit PERF-09). Keying on the second means the cached value — and the `Text` reading it —
+ * already formatted, and `String.format` would otherwise be re-run for a string identical to the one
+ * still on screen. Keying on the second means the cached value — and the `Text` reading it —
  * only changes when the number displayed actually does.
  *
  * Tabular figures ([CLOCK_STYLE]): a proportional `1` is narrower than a `0`, and a readout that
@@ -589,7 +586,7 @@ private fun Clock(
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        // One node saying "12 minutes 34 seconds of 45 minutes" (audit A11Y-P-13). Two nodes reading
+        // One node saying "12 minutes 34 seconds of 45 minutes". Two nodes reading
         // "12:34" and "/ 45:00" is two stops for one fact, and "12:34" reaches a speech engine as
         // "twelve thirty-four" — a time of day, not a position in a film.
         modifier = modifier.semantics(mergeDescendants = true) { contentDescription = spoken },
@@ -618,17 +615,17 @@ private fun Clock(
  *
  * The position arrives as a flow and is collected here rather than passed down as a value: this is
  * one of the two places on the screen that wants it twice a second, and reading it any higher up
- * recomposes everything between (audit PERF-04).
+ * recomposes everything between.
  *
- * Two more things follow from a drag firing this at up to 90 Hz (audit PERF-09): the preview's clock
+ * Two more things follow from a drag firing this at up to 90 Hz: the preview's clock
  * text is `remember`ed against the whole second the same way [Clock] is, rather than reformatted on
  * every frame of the drag, and the floating preview is positioned with the *lambda* `offset {}`
  * overload rather than `offset(x = Dp, y = Dp)` — the lambda is read during placement, not
- * composition, so a drag no longer has to recompose this modifier chain to move the preview; moving
+ * composition, so a drag does not have to recompose this modifier chain to move the preview; moving
  * it is layout's job.
  *
  * ### Why the slider keeps its slots rather than being rebuilt
- * The 2026 refresh wants a buffered segment behind the played one, which no `SliderColors` can
+ * A buffered segment behind the played one is wanted, which no `SliderColors` can
  * express — but everything else about a slider (the drag, the press-anywhere-to-seek, the
  * accessibility actions, the RTL mapping) is exactly what is wanted. So the M3 `Slider` stays and
  * only its `track` and `thumb` are supplied: [ScrubberTrack] draws the three layers, [ScrubberThumb]
@@ -668,8 +665,8 @@ private fun Scrubber(
                         .offset {
                             IntOffset(
                                 x = (maxWidth * fraction - previewWidth / 2).coerceIn(0.dp, slack).roundToPx(),
-                                // The label's height is text, so it grows with the system text scale
-                                // (audit A11Y-P-11): at 2× a fixed 18dp allowance left the preview
+                                // The label's height is text, so it grows with the system text
+                                // scale: at 2× a fixed 18dp allowance would leave the preview
                                 // sitting half on top of the very clock it is captioned with.
                                 y =
                                     -(
@@ -711,13 +708,13 @@ private fun Scrubber(
  * What the seek bar is, where it is, and the two moves that mean something in a film.
  *
  * The M3 `Slider` underneath already exposes a range and commits a seek on `setProgress`, which is
- * the hard half and was done right. What it had was no name at all and a percentage for a position
- * ("34 percent"), and one TalkBack adjust of a `0f..1f` slider with no steps is about six minutes on
- * a feature film (audit A11Y-P-04/05).
+ * the hard half. What it does not supply is a name, and its position reads as a percentage
+ * ("34 percent") — and one TalkBack adjust of a `0f..1f` slider with no steps is about six minutes
+ * on a feature film.
  *
  * So: a name, a `stateDescription` in *time* rather than percent, and two custom actions carrying
  * the transport's own −10s/+30s — the same numbers, the same words, as the buttons above the bar.
- * The fractional adjust stays exactly as it was for anyone who wants a coarse jump.
+ * The fractional adjust remains for anyone who wants a coarse jump.
  *
  * The actions are keyed to the whole second the position is in, not to the raw twice-a-second tick:
  * the list would otherwise be rebuilt for a position that reads the same, which is the same argument
@@ -852,8 +849,8 @@ private fun SpokenTimeUnit.pluralRes(): Int =
  * The seek bar's three layers: the whole length, how much of it is in the buffer, and how much has
  * been played.
  *
- * The buffered layer is what the refresh adds — [PlaybackPosition.bufferedMs] has been published by
- * the position tracker since M9 and had no way to be drawn through `SliderColors`. It is measured
+ * The buffered layer is [PlaybackPosition.bufferedMs], published by the position tracker and not
+ * expressible through `SliderColors`, which is why the track is a supplied slot. It is measured
  * from zero rather than from the play head, matching every other player: on an HLS transcode the
  * gap between the two edges is the answer to "why did it stall", and starting it at the play head
  * would hide exactly the case where it is short.
@@ -930,7 +927,7 @@ private fun ScrubberThumb() {
  * `Button` — see the JellyfinButtons header for the full story.
  *
  * @param modifier applied to the invisible touch frame, which is this composable's outermost node —
- *   so a caller positions the 48dp frame and the capsule stays centred in it (audit UI-18).
+ *   so a caller positions the 48dp frame and the capsule stays centred in it.
  */
 @Composable
 private fun SheetChip(
@@ -942,7 +939,7 @@ private fun SheetChip(
     value: String? = null,
 ) {
     // The chip's *state*, in the settings rows' pattern: "Audio, English" rather than "Audio", so a
-    // picker says what it is set to without being opened (audit A11Y-P-09). `null` where there is no
+    // picker says what it is set to without being opened. `null` where there is no
     // current value to speak — the label is then the whole truth.
     val state = if (value == null) Modifier else Modifier.semantics { stateDescription = value }
 
@@ -1032,13 +1029,13 @@ internal const val SKIP_FORWARD_MS = 30_000L
 /**
  * The flat wash the whole control layer sits on.
  *
- * Sized by contrast, not by taste (accessibility audit 2026-08-05, CR-5). The worst case a scrim
+ * Sized by contrast, not by taste. The worst case a scrim
  * over video has to survive is a *white* frame, and black@35% only pulls that down to rgb(166),
  * where the title read at 2.44:1 and the seek track at 1.23:1 — both under WCAG 1.4.3/1.4.11.
  * Black@62% composites the same frame to rgb(97), where full-white text is 6.20:1 and every dimmed
  * token below is sized against that one number. It is also the value the file's own
- * [VIDEO_GLASS_FILL] already used for exactly this reason, so the wash and the glass on it now
- * agree. A darker wash costs a little of the film while the controls are up; the controls are only
+ * [VIDEO_GLASS_FILL] uses for exactly this reason, so the wash and the glass on it agree. A darker
+ * wash costs a little of the film while the controls are up; the controls are only
  * up for four seconds at a time.
  */
 private val SCRIM = Color.Black.copy(alpha = 0.62f)
@@ -1161,7 +1158,7 @@ private val MAX_BAR_WIDTH = 1000.dp
 
 /**
  * Below this much room for the picker row, the pickers drop their words — see
- * [showSheetButtonLabels] for what the sweep measured, and [MAX_SHEET_CHIPS] for how many chips the
+ * [showSheetButtonLabels] for what was measured, and [MAX_SHEET_CHIPS] for how many chips the
  * row it measured can actually hold.
  */
 private val LABELLED_BUTTONS_MIN_WIDTH = 840.dp

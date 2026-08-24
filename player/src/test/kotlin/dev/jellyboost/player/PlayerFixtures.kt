@@ -171,7 +171,7 @@ internal object PlayerFixtures {
             selectedSubtitleIndex = selectedSubtitleIndex,
         )
 
-    // ---- M8, offline ---------------------------------------------------------------------------
+    // ---- offline -------------------------------------------------------------------------------
 
     /** `file://` URI of the downloaded media file used throughout the offline tests. */
     const val LOCAL_MEDIA_URI = "file:///downloads/Arrival%20(2016)/Arrival.mkv"

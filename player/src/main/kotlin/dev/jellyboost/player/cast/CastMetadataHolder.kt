@@ -11,7 +11,7 @@ import javax.inject.Singleton
  * `PlaybackInfo` response: the negotiation answers with codecs, URLs and stream indices, so
  * `CastPlayerHandle.prepare` has everything needed to *play* the film and nothing to *name* it.
  * The one place that does know is `PlayerViewModel`, which fetches the item for the top bar and the
- * backdrop anyway (DECISIONS.md 2026-07-31, "the casting artwork is fetched with the title").
+ * backdrop anyway, so the casting artwork is fetched with the title.
  *
  * Shaped exactly like [CastStatusHolder], and for the same reasons: it breaks a dependency that
  * would otherwise have to run backwards — the handle cannot ask a ViewModel anything — and it names

@@ -52,7 +52,7 @@ import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 
 /**
- * The invisible touch surface over the video (docs/PLAN.md, "M9 Polish" → gestures).
+ * The invisible touch surface over the video.
  *
  * It is a sibling *below* the transport controls rather than a wrapper around them: a tap that
  * lands on a button is consumed by the button, and everything else falls through to here. That is
@@ -154,8 +154,8 @@ internal fun PlayerGestureLayer(
             }
         }
 
-    // The tap surface has to be a real accessibility node, not only a `pointerInput` (accessibility
-    // audit 2026-08-05, CR-1): touch exploration consumes taps, so without an `onClick` action a
+    // The tap surface has to be a real accessibility node, not only a `pointerInput`: touch
+    // exploration consumes taps, so without an `onClick` action a
     // TalkBack user whose controls had auto-hidden could never bring them back — the film would
     // play on with no reachable transport at all. The raw gesture detector stays for touch; this
     // adds the node TalkBack, Switch Access and every other action-driven service need.
@@ -197,7 +197,7 @@ private data class GestureIndicator(
 /**
  * The transient "volume 60%" / "brightness 40%" panel a swipe raises.
  *
- * Labelled rather than semantics-cleared (accessibility audit 2026-08-05, A11Y-P-16): the panel *is*
+ * Labelled rather than semantics-cleared: the panel *is*
  * the feedback for a gesture that otherwise changes nothing on screen, so as a polite live region it
  * doubles as the announcement of what the swipe just did. The bar and the glyph inside it stay
  * unlabelled and are merged into this one node — three announcements for one gesture would be worse
@@ -253,8 +253,8 @@ private fun GestureIndicatorOverlay(
 /**
  * Current media volume as `0f..1f`, or `0f` when there is no audio service to ask.
  *
- * `internal` since the accessibility pass: the Display sheet (`PlayerSheets`) is the non-gesture way
- * to the same two levels (audit CR-8), and it has to move *the same* volume and *the same* window
+ * `internal` rather than private: the Display sheet (`PlayerSheets`) is the non-gesture way
+ * to the same two levels, and it has to move *the same* volume and *the same* window
  * brightness the swipes do — a second implementation would be a second set of rounding rules and a
  * second place for the brightness override to leak out of.
  */
@@ -297,7 +297,7 @@ internal fun Activity?.brightnessFraction(): Float {
  * A window attribute rather than `Settings.System`: it needs no permission and never touches the
  * device setting. The app is single-activity, so the window itself *outlives* the player —
  * `ImmersiveLandscapeEffect` in `PlayerScreen` captures the previous override and restores it when
- * the player leaves (audit PC-02); a film watched dimmed must not leave the whole app dark.
+ * the player leaves; a film watched dimmed must not leave the whole app dark.
  */
 internal fun Activity?.setBrightnessFraction(fraction: Float) {
     val window = this?.window ?: return

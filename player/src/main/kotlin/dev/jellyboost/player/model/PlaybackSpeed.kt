@@ -1,7 +1,7 @@
 package dev.jellyboost.player.model
 
 /**
- * The choices in the player's speed picker (docs/PLAN.md, "M9 Polish" → speed).
+ * The choices in the player's speed picker.
  *
  * The steps are jellyfin-web's, and so is the lifetime: a speed is **session-scoped and never
  * persisted**. A rate set for one talking-head documentary following the user into the next film

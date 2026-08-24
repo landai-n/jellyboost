@@ -20,9 +20,9 @@ import javax.inject.Singleton
  * Hilt bindings for `:data`.
  *
  * [JellyfinRepository] is bound to `DelegatingJellyfinRepository`, which picks between the online
- * (SDK) and offline (Room) implementations per call based on `ConnectionState` (docs/PLAN.md,
- * "Data layer"). Both implementations are constructor-injectable and are reached only through it —
- * nothing outside `:data` should inject either one directly.
+ * (SDK) and offline (Room) implementations per call based on `ConnectionState`. Both implementations
+ * are constructor-injectable and are reached only through it — nothing outside `:data` should inject
+ * either one directly.
  *
  * The `org.jellyfin.sdk.api.client.ApiClient` these implementations depend on is provided by
  * `:core:network` (the session layer owns its lifecycle and access token).
@@ -40,7 +40,7 @@ internal interface DataModule {
     @Singleton
     fun bindImageUrlFactory(impl: SdkImageUrlFactory): ImageUrlFactory
 
-    /** Binds Instant Mix and lyrics to the SDK's `instantMixApi`/`lyricsApi` (M13 Phase 6). */
+    /** Binds Instant Mix and lyrics to the SDK's `instantMixApi`/`lyricsApi`. */
     @Binds
     @Singleton
     fun bindMusicApi(impl: SdkMusicApi): MusicApi

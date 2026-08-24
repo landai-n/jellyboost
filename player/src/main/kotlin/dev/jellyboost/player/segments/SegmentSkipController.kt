@@ -5,7 +5,7 @@ import dev.jellyboost.core.common.model.SegmentSkipMode
 
 /**
  * Decides what should happen at a given playback position, given the item's segments and the user's
- * per-type preference (docs/PLAN.md, "M9 Polish" → segment skip).
+ * per-type preference.
  *
  * All of the feature's judgement lives here rather than in the ViewModel or the composable, because
  * all of it is a pure function of position plus one piece of remembered state — and that one piece

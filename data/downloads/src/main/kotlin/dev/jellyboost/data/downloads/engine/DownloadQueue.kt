@@ -66,7 +66,7 @@ internal enum class DrainOutcome {
      *
      * The rest of the queue is untouched and still `QUEUED`: the point of stopping is that whatever
      * made the first item fail — a restarting server, a proxy answering `502`, a VPN handover — is
-     * about to do the same to every row behind it (docs/notes/audit-2026-07.md, STAB-01).
+     * about to do the same to every row behind it.
      */
     RETRY,
 
@@ -87,7 +87,7 @@ internal class MissingMetadataException(
 
 /**
  * Runs the download queue: one item at a time, in `queuePosition` order, until nothing runnable is
- * left (docs/PLAN.md, "Download pipeline").
+ * left.
  *
  * ### Why one item at a time
  * It matches the unique-work model (`enqueueUniqueWork("downloads", KEEP)`), it makes the "which
@@ -108,23 +108,21 @@ internal class MissingMetadataException(
  * failure marks the item [DownloadStatus.ERROR] and the drain moves on to the next item. A
  * **transient** one leaves the row `QUEUED` with its [DownloadEntity.attemptCount] raised and stops
  * the drain, so the worker can ask WorkManager for a retry on its existing exponential backoff; the
- * row only reaches ERROR once it has spent [MAX_ATTEMPTS]. Carrying on past a transient failure is
- * what used to turn one server blip into a queue of forty failed episodes
- * (docs/notes/audit-2026-07.md, STAB-01).
+ * row only reaches ERROR once it has spent [MAX_ATTEMPTS]. Carrying on past a transient failure
+ * would turn one server blip into a queue of forty failed episodes.
  *
  * ### One drain at a time
  * [drain] holds a process-wide lease. Two drains overlapping is not hypothetical: every
  * `ExistingWorkPolicy.REPLACE` enqueue starts the new worker while the old one is still unwinding,
  * and both of them would run `requeueInterrupted` — the second claiming the very row the first
- * still holds a `RandomAccessFile` on (docs/notes/audit-2026-07.md, STAB-09). Serialising them is
- * also what makes "one item at a time" a property of the *process* rather than of one drain.
+ * still holds a `RandomAccessFile` on. Serialising them is also what makes "one item at a time" a
+ * property of the *process* rather than of one drain.
  *
  * ### Cancellation
  * A cancelled coroutine (the user paused, WorkManager withdrew the network constraint, the process
  * is going away) leaves the partial file exactly where it is and the row back in
  * [DownloadStatus.QUEUED] — *unless* something already gave it another status, which is what a
- * pause does. The next run resumes it from its byte offset, which is the property the milestone's
- * definition of done measures.
+ * pause does. The next run resumes it from its byte offset.
  *
  * ### The session
  * Nothing here can build a URL until the API client knows its server, and on a cold start this
@@ -231,9 +229,9 @@ internal class DownloadQueue
         ): ItemOutcome {
             val download = queued.download
             // A guarded claim, not a plain write: `pause`/`pauseAll` write PAUSED before stopping
-            // the worker, and a drain sitting between `nextRunnable()` and this line used to
-            // clobber that with DOWNLOADING — the cancellation then re-queued the row and the item
-            // the user had just paused downloaded anyway (audit DL-03). Zero rows updated means
+            // the worker, and a drain sitting between `nextRunnable()` and this line would
+            // otherwise clobber that with DOWNLOADING — the cancellation would re-queue the row
+            // and the item the user had just paused would download anyway. Zero rows updated means
             // the row changed hands since it was picked; leave it exactly as its new owner put it.
             if (downloadDao.markDownloadingIfRunnable(download.itemId, clock.instant()) == 0) {
                 Timber.i("%s changed status before its transfer began; leaving it alone", download.itemName)
@@ -326,11 +324,9 @@ internal class DownloadQueue
          * with, because that name *is* the partial file on disk and the plan cannot be trusted to
          * produce it twice: `DownloadPaths.mediaFileName` prefers the server's own filename from
          * `BaseItemDto.path`, and `path` is only returned to users allowed to see it and is absent
-         * from some cached shapes of the DTO. On the M7 device walk that difference renamed a
-         * half-finished 1.38 GB film from `Backrooms.2026…-BATGirl.mkv` to `Backrooms (2026).mkv`
-         * on the retry, orphaning the partial file and restarting the transfer from zero — the
-         * opposite of the milestone's resume guarantee. Room holds the file plan; Room wins
-         * (docs/PLAN.md, "Room = single source of truth").
+         * from some cached shapes of the DTO. That difference renames a half-finished
+         * multi-gigabyte film on the retry, orphaning the partial file and restarting the transfer
+         * from zero — the opposite of the resume guarantee. Room holds the file plan; Room wins.
          *
          * ### When a genuine re-plan happens
          * Only when there are no rows: a first attempt, or an item re-enqueued after a delete (the
@@ -350,14 +346,13 @@ internal class DownloadQueue
         ): List<DownloadFileEntity> {
             storage.prepareItemDirectory(download.directoryName)
             // The quality comes from the row, never from the live preference: the bytes already on
-            // disk were fetched at it (DECISIONS.md, 2026-07-29). The baked audio track comes from
-            // the row for the same reason and one more: the DTO's default audio stream is the
-            // server's *current* answer, and re-deriving it here would silently re-plan a
-            // half-downloaded transcode onto a different track if the server's metadata moved
-            // between the tap and the drain. `bakedAudioStreamIndex` is what the enqueue actually
-            // asked for, and it is null exactly when there was no pin to make — an ORIGINAL row,
-            // or an item with no audio streams — which is the same thing the planner does with an
-            // absent index (DECISIONS.md, 2026-07-30).
+            // disk were fetched at it. The baked audio track comes from the row for the same
+            // reason and one more: the DTO's default audio stream is the server's *current*
+            // answer, and re-deriving it here would silently re-plan a half-downloaded transcode
+            // onto a different track if the server's metadata moved between the tap and the drain.
+            // `bakedAudioStreamIndex` is what the enqueue actually asked for, and it is null
+            // exactly when there was no pin to make — an ORIGINAL row, or an item with no audio
+            // streams — which is the same thing the planner does with an absent index.
             val planned =
                 planner.plan(
                     dto,
@@ -396,11 +391,9 @@ internal class DownloadQueue
          * An extra audio language is a live `/Videos` transcode of one stream, so what arrives over
          * the wire is that stream's bitrate multiplied by the server's encoding speed — a few
          * hundred KB/s no matter how good the link is. Draining those rows *after* the media file
-         * therefore added their whole duration to the item's: two tracks cost about eleven minutes
-         * after the film itself had finished, on the first device walk. Run alongside the media
-         * file the same minutes disappear into it, and an item costs `max(media, sidecars)` rather
-         * than their sum (DECISIONS.md, 2026-07-31, "Audio sidecars fetch concurrently with the
-         * media file").
+         * therefore adds their whole duration to the item's: two tracks cost about eleven minutes
+         * after the film itself has finished. Run alongside the media file the same minutes
+         * disappear into it, and an item costs `max(media, sidecars)` rather than their sum.
          *
          * **At most two live encodes per item, by construction.** The sidecar lane runs its own
          * rows strictly sequentially, and the only other transcode in the plan is the media file
@@ -449,7 +442,7 @@ internal class DownloadQueue
             }
 
         /**
-         * Everything but the audio sidecars, in plan order — the lane the queue has always had.
+         * Everything but the audio sidecars, in plan order.
          *
          * @return `false` when the item's row disappeared mid-transfer; see [transfer].
          */
@@ -480,7 +473,7 @@ internal class DownloadQueue
                 } else {
                     // try/catch(Exception), not runCatching: the latter catches Throwable, so an
                     // OutOfMemoryError from an optional file would be logged as "optional file
-                    // failed" and the drain would carry on in an undefined state (audit DL-12).
+                    // failed" and the drain would carry on in an undefined state.
                     try {
                         downloadOne(publisher)
                     } catch (cancellation: CancellationException) {
@@ -517,7 +510,7 @@ internal class DownloadQueue
                 // files of its own, and the delete cascade can land between any two of them.
                 if (downloadDao.get(download.itemId) == null) return
 
-                // try/catch(Exception) for the same reason as the ordinary lane (audit DL-12).
+                // try/catch(Exception) for the same reason as the ordinary lane.
                 try {
                     downloadOne(ProgressPublisher(download, file, progress, projector = null, listener))
                 } catch (cancellation: CancellationException) {
@@ -672,9 +665,9 @@ internal class DownloadQueue
                 // resume at *file* granularity. This matters most for a transcoded media file: an
                 // interruption during the sidecar tail (a lane that runs for minutes after the
                 // film itself finished) re-queues the whole item, and without this guard the
-                // completed multi-gigabyte encode was truncated and re-fetched from byte zero,
-                // because a live encode can never be resumed (audit DL-02). A finished sidecar is
-                // the same case — its fetch cannot be resumed either.
+                // completed multi-gigabyte encode would be truncated and re-fetched from byte
+                // zero, because a live encode can never be resumed. A finished sidecar is the same
+                // case — its fetch cannot be resumed either.
                 publisher.alreadyWhole(target.length())
                 return
             }
@@ -781,14 +774,14 @@ internal class DownloadQueue
         }
 
         /**
-         * One file's transfer, from the progress side: everything the 64 KB callback used to do
-         * inline, as a value the transfer is handed instead of five parameters.
+         * One file's transfer, from the progress side: everything the 64 KB callback does, as one
+         * value the transfer is handed instead of five parameters.
          *
-         * Five concerns lived in that fourteen-line lambda and were forwarded, unchanged, through
-         * two signatures to reach it (docs/notes/audit-2026-08-06-quality.md, CPX-12): the item's
-         * running totals, the 500 ms/1 % write throttle, the live size projection, the file's own
-         * row, and the host's notification. They are one object now, and the transfer's own
-         * signatures name a *file* and a publisher rather than the publisher's parts.
+         * Five concerns that would otherwise be forwarded, unchanged, through two signatures to
+         * reach that callback: the item's running totals, the 500 ms/1 % write throttle, the live
+         * size projection, the file's own row, and the host's notification. As one object, the
+         * transfer's own signatures name a *file* and a publisher rather than the publisher's
+         * parts.
          *
          * One per **file**, not per item: the [ProgressThrottle] and the [MediaChunkSink] are a
          * file's own (a throttle carried across files would let one file's cadence decide the
@@ -863,9 +856,9 @@ internal class DownloadQueue
              * **One transaction, because `observeAll()` is one.** The Downloads screen's query is a
              * `@Transaction` join across `downloads` and `download_files`, and Room's invalidation
              * tracker fires once per committed transaction — so two auto-commit writes per sample
-             * re-ran that whole join twice, two to eight times a second for the length of a
-             * multi-gigabyte transfer, each re-run probing `items` behind it (audit 2026-08-08,
-             * PERF-7). Wrapped, a sample is one invalidation.
+             * would re-run that whole join twice, two to eight times a second for the length of a
+             * multi-gigabyte transfer, each re-run probing `items` behind it. Wrapped, a sample is
+             * one invalidation.
              *
              * @param fileBytes / [fileTotal] this file's own counters, written in the same
              *   transaction as the item's; `null` for a publication that is not about this file's
@@ -934,18 +927,16 @@ internal class DownloadQueue
  * A sidecar's fetch cannot be resumed, so its part file is worthless the moment the transfer stops
  * needing it. An extra audio language is fetched as a video+audio mkv — the only shape the server
  * will hand a named `audioStreamIndex` over in — and stored as an audio-only m4a, so the fetch
- * lands beside the sidecar as `<name>.part.mkv` and is stripped into place
- * (DECISIONS.md, 2026-07-31, "Offline multi-track Phase 2"). Whatever ends the transfer, that mkv
- * has no future: a strip consumed it, a failure cannot resume it, and a cancellation would leave
- * hundreds of megabytes of junk video in the item's directory for as long as the pause lasts —
- * possibly a week. The next attempt truncates it from byte zero either way, because the fetch is
- * flagged un-resumable.
+ * lands beside the sidecar as `<name>.part.mkv` and is stripped into place. Whatever ends the
+ * transfer, that mkv has no future: a strip consumed it, a failure cannot resume it, and a
+ * cancellation would leave hundreds of megabytes of junk video in the item's directory for as long
+ * as the pause lasts — possibly a week. The next attempt truncates it from byte zero either way,
+ * because the fetch is flagged un-resumable.
  *
- * That rule used to be stated three times — the cancellation arm, the failure arm, and the strip's
- * own success path — which is what made it a rule three places could drift out of
- * (docs/notes/audit-2026-08-06-quality.md, CPX-12). As a `finally` it is also stated for the two
- * exits the three arms did not cover: a `Throwable` that is not an `Exception`, and a strip that
- * throws after the fetch succeeded.
+ * Stated once, as a `finally`, rather than in each arm that ends a transfer — the cancellation arm,
+ * the failure arm and the strip's own success path are three places a rule can drift out of, and a
+ * `finally` also covers the two exits those arms miss: a `Throwable` that is not an `Exception`,
+ * and a strip that throws after the fetch succeeded.
  *
  * A part file that outlived a process death — the crash landed between the fetch and the strip —
  * is not appended to either: `FileDownloader` truncates it, because the fetch is flagged
@@ -975,7 +966,7 @@ private inline fun <T> withFetchFile(
  * drain; resolving somewhere else now means the root moved underneath the item (an SD card ejected
  * or remounted mid-transfer). Writing there anyway would split one download across two volumes —
  * where neither the sweep, the delete cascade nor `usedBytes()` can see the half on the inactive
- * root (audit DL-07). [StorageUnavailableException] is transient on purpose: the next drain
+ * root. [StorageUnavailableException] is transient on purpose: the next drain
  * re-reconciles every path against whichever root answers then. Top-level for detekt's
  * function-count ceiling on the queue.
  */
@@ -1002,7 +993,7 @@ private fun requireStableRoot(
  *   floor for as long as **any** file's real size is still unknown, which is the permanent state of
  *   a transcoded download: the server encodes on the fly and never sends a `Content-Length`, so
  *   without the floor `bytesTotal` would collapse onto `bytesDownloaded` and the queue tab would
- *   read 100 % from the first chunk (DECISIONS.md, 2026-07-29). Once every file has reported a real
+ *   read 100 % from the first chunk. Once every file has reported a real
  *   size — the ordinary end of an `ORIGINAL` download — the estimate is dropped and the exact sum
  *   wins, so an estimate that was too generous cannot leave a finished item short of 100 %.
  * @param seededProjection the projection already on the row when the transfer started — for an
@@ -1055,15 +1046,15 @@ private class ItemProgress(
     /**
      * The three figures one publication needs, summed in **one** pass over each map.
      *
-     * They used to be three computed properties, and a publish read all three: `bytesTotal` walks
-     * `totals` twice and `bytesDownloaded` once, `projectedBytes` walks `totals` again and then
-     * both of the others — seven traversals of two `ConcurrentHashMap`s per sample, at up to twice
-     * a second per lane (audit 2026-08-08, PERF-22).
+     * As three computed properties a publish would read all three: `bytesTotal` walks `totals`
+     * twice and `bytesDownloaded` once, `projectedBytes` walks `totals` again and then both of the
+     * others — seven traversals of two `ConcurrentHashMap`s per sample, at up to twice a second
+     * per lane.
      *
-     * Consistency, not just cost: the three used to be sampled at three different instants while
-     * the other lane was writing, so `projectedBytes` could clamp a projection into a range whose
-     * ends came from different moments — and `coerceIn` throws outright when the low end has
-     * overtaken the high one. One pass cannot disagree with itself.
+     * Consistency, not just cost: three properties are three readings taken at three different
+     * instants while the other lane is writing, so `projectedBytes` could clamp a projection into
+     * a range whose ends came from different moments — and `coerceIn` throws outright when the low
+     * end has overtaken the high one. One pass cannot disagree with itself.
      */
     fun snapshot(): ProgressSnapshot {
         var downloadedSum = 0L

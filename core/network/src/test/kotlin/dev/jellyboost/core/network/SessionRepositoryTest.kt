@@ -177,7 +177,7 @@ class SessionRepositoryTest {
             repository.sessionState.value shouldBe SessionState.LoggedOut
         }
 
-    // ---- involuntary session loss (audit SEC-03) ------------------------------------------------
+    // ---- involuntary session loss -----------------------------------------------------------------
 
     @Test
     @DisplayName("a first run is not reported as a session the user lost")
@@ -296,7 +296,7 @@ class SessionRepositoryTest {
             repository.sessionState.value shouldBe SessionState.LoggedOut
         }
 
-    // ---- sign-out clears this account's local data (audit HYG-2) --------------------------------
+    // ---- sign-out clears this account's local data ------------------------------------------------
 
     /** Signs in for real first, because the cleanup is keyed on the session that is still current. */
     private suspend fun SessionRepository.signInThenOut() {
@@ -322,7 +322,7 @@ class SessionRepositoryTest {
             repository().signInThenOut()
 
             // `deleteSynced` is the whole guarantee: a `toBeSynced` row is the only copy of a change
-            // made offline, and docs/PLAN.md's local-first story promises it is not lost. Signing
+            // made offline, and this app's local-first story promises it is not lost. Signing
             // out on a train and back in at home must still push it. Nothing may delete the table
             // wholesale.
             coVerify(exactly = 0) { userDataDao.getPendingSync() }
@@ -347,7 +347,7 @@ class SessionRepositoryTest {
             repository().signInThenOut()
 
             // Deleting one would orphan the files on disk. Removing downloads is a separate,
-            // explicit choice on the sign-out screen (docs/PLAN.md, "Settings").
+            // explicit choice on the sign-out screen.
             coVerify(exactly = 0) { itemDao.deleteDownloadsNotIn(any(), any()) }
             coVerify(exactly = 0) { itemDao.deleteAllBrowseCache(ItemSource.DOWNLOAD) }
         }
@@ -396,7 +396,7 @@ class SessionRepositoryTest {
             coVerify(exactly = 0) { userDataDao.deleteSynced(any()) }
         }
 
-    // ---- pre-revocation hooks (audit NET-03) ----------------------------------------------------
+    // ---- pre-revocation hooks -----------------------------------------------------------------
 
     @Test
     @DisplayName("sign-out hooks run before the server revokes the token, so their requests can still authenticate")
@@ -451,8 +451,8 @@ class SessionRepositoryTest {
             serverAnswers.complete(Unit)
             advanceUntilIdle()
 
-            // Cancelling the *caller* used to cancel the teardown between revoking the token and
-            // clearing the credentials, leaving the user signed in against a dead session.
+            // Cancelling the *caller* must not cancel the teardown between revoking the token and
+            // clearing the credentials — that would leave the user signed in against a dead session.
             coVerify(exactly = 1) { secureCredentialStore.clear() }
             coVerify(exactly = 1) { apiClientProvider.clearSession() }
             repository.sessionState.value shouldBe SessionState.LoggedOut
@@ -480,7 +480,7 @@ class SessionRepositoryTest {
     fun signOutGivesUpOnAHangingHook() =
         runTest {
             val repository = repository()
-            // The SyncPlay group leave against the same unreachable server (audit NET-03/SP-10).
+            // The SyncPlay group leave against the same unreachable server.
             signOutHooks += SignOutHook { awaitCancellation() }
 
             repository.signOut()

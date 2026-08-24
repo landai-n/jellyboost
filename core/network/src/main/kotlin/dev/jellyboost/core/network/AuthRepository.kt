@@ -34,7 +34,7 @@ import kotlin.time.Duration.Companion.seconds
 
 /**
  * Signs the user in — by password or by Quick Connect — and is the only writer of the
- * credentials that result (docs/PLAN.md, "Login" screen; M1).
+ * credentials that result.
  *
  * Every successful authentication funnels through one private path that: upserts the server,
  * its address and the user into Room (all token-free), writes the access token to
@@ -84,9 +84,8 @@ class AuthRepository
             val quickConnectEnabled =
                 runCatchingApi { apiFacade.getQuickConnectEnabled() }.getOrNull() ?: false
 
-            // Host only, at debug (audit SEC-11): this is the sign-in flow, so it is the log a user
-            // captures when sign-in misbehaves and pastes into a bug report — the same reason the
-            // git history had to be scrubbed on 2026-08-01. See `hostForLog`.
+            // Host only, at debug: this is the sign-in flow, so it is the log a user captures when
+            // sign-in misbehaves and pastes into a bug report. See `hostForLog`.
             Timber.d(
                 "Login context for %s: %d public user(s), quickConnect=%b, disclaimer=%b",
                 hostForLog(server.address),
@@ -126,8 +125,8 @@ class AuthRepository
             return when (val result = runCatchingApi { apiFacade.authenticateUserByName(username, password) }) {
                 is AppResult.Success -> completeAuthentication(server, result.value)
                 is AppResult.Failure -> {
-                    // The username value is deliberately not logged (audit SEC-05): what the user
-                    // typed there can be a mistyped password.
+                    // The username value is deliberately not logged: what the user typed there can
+                    // be a mistyped password.
                     Timber.w("Password login failed: %s", result.error)
                     result
                 }
@@ -146,8 +145,8 @@ class AuthRepository
                 is AppResult.Success -> {
                     val secret = result.value.secret
                     val code = result.value.code
-                    // The code is not logged (audit SEC-06): it is what authorizes this login, and
-                    // logcat is a wider audience than the screen showing it to the user.
+                    // The code is not logged: it is what authorizes this login, and logcat is a
+                    // wider audience than the screen showing it to the user.
                     Timber.i("Quick Connect initiated")
                     AppResult.Success(QuickConnectSession(secret = secret, code = code))
                 }
@@ -157,8 +156,7 @@ class AuthRepository
 
         /**
          * Polls the state of the Quick Connect request identified by [secret] every
-         * [QUICK_CONNECT_POLL_INTERVAL], giving up after [QUICK_CONNECT_TIMEOUT]
-         * (docs/PLAN.md, "Login": poll every 5s with a 5-minute cap).
+         * [QUICK_CONNECT_POLL_INTERVAL], giving up after [QUICK_CONNECT_TIMEOUT].
          *
          * The flow emits [QuickConnectState.WaitingForApproval] once per poll and then completes
          * with exactly one terminal value. Cancel the collection to stop polling early.
@@ -181,8 +179,7 @@ class AuthRepository
                             val error = result.error
                             if (error is AppError.NotFound) {
                                 // The server forgets a request once it expires or is denied. A 404
-                                // reaches here as `NotFound` since DUP-1 unified the mapper; it was
-                                // `Server(404)` while this module had a mapper of its own.
+                                // reaches here as `NotFound`, via the shared status-code mapper.
                                 Timber.i("Quick Connect request no longer exists on the server")
                                 emit(QuickConnectState.Expired)
                             } else {
@@ -254,9 +251,9 @@ class AuthRepository
                 ),
             )
 
-            // docs/PLAN.md risk #4: a server that forbids content downloading changes the whole
-            // offline story, so surface the policy loudly at every sign-in.
-            // The username is deliberately not logged here (audit SEC-05).
+            // A server that forbids content downloading changes the whole offline story, so
+            // surface the policy loudly at every sign-in.
+            // The username is deliberately not logged here.
             Timber.i(
                 "Signed in on '%s' (version %s, device %s); downloads allowed by policy: %b",
                 server.name,
@@ -312,10 +309,10 @@ class AuthRepository
             }
 
         companion object {
-            /** Interval between Quick Connect status polls (docs/PLAN.md: 5s). */
+            /** Interval between Quick Connect status polls. */
             val QUICK_CONNECT_POLL_INTERVAL: Duration = 5.seconds
 
-            /** How long this client keeps polling before giving up (docs/PLAN.md: 5 minutes). */
+            /** How long this client keeps polling before giving up. */
             val QUICK_CONNECT_TIMEOUT: Duration = 5.minutes
         }
     }

@@ -215,7 +215,7 @@ class DownloadPathsTest {
         // `mdat` it indexes, so it emits a zero-sized `mdat` running to EOF with the `moov` behind
         // it. Media3 reads that as one `mdat` swallowing the index and fails the whole load with
         // `contentIsMalformed=true` — the file is unplayable, which is the only thing a download is
-        // for (DECISIONS.md, 2026-07-29).
+        // for.
         DownloadQuality.entries.filter { it.isTranscoded }.forEach { quality ->
             DownloadPaths.mediaFileName(item, "Arrival (2016)", quality) shouldEndWith ".mkv"
         }

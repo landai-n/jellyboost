@@ -10,7 +10,7 @@ import androidx.compose.ui.unit.dp
 
 /**
  * How much of a top-level screen the app's floating chrome covers, provided by `:app`'s
- * `AppScaffold` (DECISIONS.md 2026-08-01, the 2026-refresh chrome).
+ * `AppScaffold`.
  *
  * The refresh's navigation does not occupy a `Scaffold` slot any more: the bottom nav is a pill
  * floating over the content, the wide layout's nav bar is a translucent row drawn on top of it, and
@@ -44,7 +44,7 @@ val LocalAppChromePadding: ProvidableCompositionLocal<PaddingValues> =
 
 /**
  * A fixed inset plus one or both edges of [LocalAppChromePadding], with the chrome's half read in
- * the **layout** phase rather than in composition (audit 2026-08-08, PERF-20).
+ * the **layout** phase rather than in composition.
  *
  * `AppScaffold` publishes the chrome padding as a stable object whose `calculate*` methods read two
  * running animations, precisely so that a consumer can defer the read — the composition local's own
@@ -59,11 +59,10 @@ val LocalAppChromePadding: ProvidableCompositionLocal<PaddingValues> =
  * `@Stable`, and meant to be `remember`ed by its caller, so the identity a lazy list keys its
  * measure policy on does not change either.
  *
- * Hoisted here from the two private copies the PERF-20 wave left in `:feature:downloads` and
- * `:feature:search` — both of which said in prose that a shared home beside [LocalAppChromePadding]
- * was the obvious next step, and that the hoist was deliberately not part of that change. This is
- * that step. `SnackbarBottomInset` is the third relative of the shape and stays where it is: it
- * reads the same local, but it is a snackbar's *offset* rather than a list's content padding.
+ * `:feature:downloads` and `:feature:search` each had a private copy of this shape before it was
+ * hoisted here beside [LocalAppChromePadding]. `SnackbarBottomInset` is the third relative of the
+ * shape and stays where it is: it reads the same local, but it is a snackbar's *offset* rather
+ * than a list's content padding.
  *
  * @param chrome the value read from [LocalAppChromePadding] at the call site. Passed in rather than
  *   read here because this is a plain class, not a composable — which is also what makes it
@@ -82,8 +81,7 @@ val LocalAppChromePadding: ProvidableCompositionLocal<PaddingValues> =
 @Stable
 // A PaddingValues implementation: the parameters ARE the type's four axes plus the two
 // chrome-edge switches its KDoc explains — there is nothing to bundle that is not already
-// this one object. The PlayerViewModel precedent (DECISIONS.md 2026-08-03) for a justified
-// suppression.
+// this one object. The PlayerViewModel precedent for a justified suppression.
 @Suppress("LongParameterList")
 class ChromeAwarePadding(
     private val chrome: PaddingValues,

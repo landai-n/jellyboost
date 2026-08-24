@@ -44,7 +44,8 @@ import java.time.ZoneOffset
 import java.util.UUID
 
 /**
- * The audit's CORR-1 interleaving, played out through the real repository, deleter and enqueuer.
+ * The cancel-then-redownload interleaving, played out through the real repository, deleter and
+ * enqueuer.
  *
  * The sequence, in the order a user produces it:
  *
@@ -56,8 +57,8 @@ import java.util.UUID
  *    a fresh `QUEUED` row;
  * 3. `stop()` returns and the delete cascade finally runs.
  *
- * Before the fix, step 3 read the row it found — the *new* one — and deleted it, its directory and
- * its metadata: no download, no error, nothing on screen. The re-enqueue is driven from inside the
+ * Unguarded, step 3 reads the row it finds — the *new* one — and deletes it, its directory and its
+ * metadata: no download, no error, nothing on screen. The re-enqueue is driven from inside the
  * `stop()` stub, which is exactly where it happens in life.
  *
  * Room is a map rather than a stack of per-call stubs, for `SeasonSeedingScenarioTest`'s reason:

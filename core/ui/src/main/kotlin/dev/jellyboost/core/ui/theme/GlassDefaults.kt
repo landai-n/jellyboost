@@ -21,7 +21,7 @@ import dev.chrisbanes.haze.hazeEffect
 
 /**
  * The glass language the 2026 refresh uses for every floating surface: navigation chrome, icon
- * buttons, metadata pills, and the panels that sit over artwork (DECISIONS.md 2026-08-01).
+ * buttons, metadata pills, and the panels that sit over artwork.
  *
  * All of it is white at a very low alpha over the `#101010` background rather than an opaque grey,
  * because the point of the material is that whatever is behind it stays *slightly* visible. The
@@ -54,7 +54,7 @@ object GlassDefaults {
      * The one hairline in the set that is not decoration: it is the *entire* visual boundary of a
      * control the user is meant to press, so WCAG 1.4.11 asks 3:1 of it against the page. On
      * `#101010` white needs α ≥ 0.333 for that; at the original 0.12 the edge was 1.38:1 — visible
-     * on an OLED in a dark room and nowhere else (accessibility audit 2026-08-05). 0.40 gives
+     * on an OLED in a dark room and nowhere else. 0.40 gives
      * 3.82:1, keeping a little margin for the ghost pills that sit on `#202020` (3.75:1) rather
      * than on the background. [Hairline] and the rest stay where they are: those draw seams on
      * surfaces that already have a fill, and are not the only thing saying where a control is.
@@ -71,9 +71,9 @@ object GlassDefaults {
      * subtractive: the backdrop still shows through, but it is pulled far enough down that white
      * content on top of it keeps its contrast whatever is behind. In-content glass — overlay badges
      * on card artwork, metadata pills — keeps [Fill], because those already sit on artwork the card
-     * itself has scrimmed (DECISIONS.md 2026-08-01, chrome readability).
+     * itself has scrimmed.
      *
-     * The alpha is [BottomNavFill]'s, and for the identical reason (accessibility audit 2026-08-05):
+     * The alpha is [BottomNavFill]'s, and for the identical reason:
      * at 45% a worst-case backdrop — a white frame — composited to rgb(147), where a white top-nav
      * label is 3.05:1, short of the 4.5:1 body text owes. At 72% the same backdrop composites to
      * rgb(83) and the label reads 7.70:1. The bottom pill had that arithmetic in its KDoc since the
@@ -95,9 +95,9 @@ object GlassDefaults {
      * for coherence) pulls a worst-case backdrop down far enough that full-white labels read
      * (7.70:1 over a white one).
      *
-     * This was the first token in the set sized by that arithmetic and, until the 2026-08-05
-     * accessibility audit, the only one — [ChromeFill] has since been brought to the same value for
-     * the same reason, so the two are now equal by argument rather than by coincidence. Kept as a
+     * This was the first token in the set sized by that arithmetic; [ChromeFill] has since been
+     * brought to the same value for the same reason, so the two are now equal by argument rather
+     * than by coincidence. Kept as a
      * separate token because they are separate design decisions: if the top bars ever gain a real
      * scrim of their own, this one still cannot have it.
      */
@@ -105,20 +105,19 @@ object GlassDefaults {
 
     /**
      * The input scale every glass surface blurs its backdrop at: full resolution, Haze's own
-     * pre-PERF-1 default.
+     * default.
      *
-     * The history is a retreat in two steps, each forced by the panel. PERF-1 (audit 2026-08-08)
-     * set [HazeInputScale.Auto] app-wide on an unmeasured "an 18dp blur discards the detail
-     * anyway" argument; at [BlurRadius] `Auto` picks aggressively enough that the downscaled
-     * backdrop survives as visible structure — an ~8–24px checkerboard on the wide chrome bars,
-     * then the same texture on the small icon circles (device walks, 2026-08-21). The first
-     * retreat pinned `Fixed(0.5f)`, the one factor that maps whole source pixels onto whole
-     * destination ones; screenshot analysis measured it clean (high-pass p99 ≈ 4/255), but the
-     * user still saw pixels on the physical panel — including on the mini-player the measurement
-     * had cleared. Screenshot amplitude evidently under-represents what a large dark panel makes
-     * visible, so the eye, not the scan, is the acceptance test, and full resolution is what
-     * passes it. PERF-1's saving is surrendered entirely; it was never measured on either side,
-     * and any future re-attempt must be judged on the panel.
+     * The history is a retreat in two steps. Setting [HazeInputScale.Auto] app-wide, on an
+     * unmeasured "an 18dp blur discards the detail anyway" argument, turned out wrong: at
+     * [BlurRadius] `Auto` picks aggressively enough that the downscaled backdrop survives as
+     * visible structure — an ~8–24px checkerboard on the wide chrome bars, then the same texture
+     * on the small icon circles. The first retreat pinned `Fixed(0.5f)`, the one factor that maps
+     * whole source pixels onto whole destination ones; screenshot analysis measured it clean
+     * (high-pass p99 ≈ 4/255), but it was still visible on the physical panel — including on the
+     * mini-player the measurement had cleared. Screenshot amplitude evidently under-represents
+     * what a large dark panel makes visible, so the eye, not the scan, is the acceptance test, and
+     * full resolution is what passes it. Any downscaling re-attempt must be judged on the panel,
+     * not on a screenshot diff, and its saving has never been measured against that bar.
      */
     val DefaultInputScale: HazeInputScale = HazeInputScale.None
 
@@ -158,12 +157,12 @@ val LocalHazeState = compositionLocalOf<HazeState?> { null }
  * only inside the shape; the border comes last so the hairline is drawn *over* the fill rather
  * than under it, which at a 9% alpha is the difference between a visible edge and none.
  *
- * A `@Composable` modifier factory rather than `composed {}` (which it originally was, purely to
- * read [LocalHazeState]): `composed` modifiers compare equal to nothing, so every recomposition of
- * a caller re-materialised the whole chain and lazy layouts could never reuse the node — measurable
- * on the hot paths this is applied to (every library tile, the downloads bulk bar, the player
- * controls). The factory reads the composition local at the call site and returns plain node-backed
- * elements (`clip`/`hazeEffect`/`background`/`border`), which diff and reuse normally.
+ * A `@Composable` modifier factory rather than `composed {}`, which would only be needed to
+ * read [LocalHazeState]: `composed` modifiers compare equal to nothing, so every recomposition of
+ * a caller would re-materialise the whole chain and lazy layouts could never reuse the node — a
+ * real cost on the hot paths this is applied to (every library tile, the downloads bulk bar, the
+ * player controls). The factory reads the composition local at the call site and returns plain
+ * node-backed elements (`clip`/`hazeEffect`/`background`/`border`), which diff and reuse normally.
  *
  * @param borderColor the edge to draw. Defaults to [GlassDefaults.Hairline], which is what every
  *   floating surface uses; a ghost *button* is the exception and passes
@@ -174,11 +173,11 @@ val LocalHazeState = compositionLocalOf<HazeState?> { null }
  *   the flat fill that stands in for it). [GlassDefaults.Fill] — white@6% — for anything sitting
  *   inside a screen's own content; chrome that floats over arbitrary artwork passes
  *   [GlassDefaults.ChromeFill] instead, for the reason spelled out there.
- * @param inputScale the resolution the backdrop is sampled and blurred at (audit 2026-08-08,
- *   PERF-1). Defaults to [GlassDefaults.DefaultInputScale] — half resolution — because `Auto`'s
- *   aggressive factor at this blur radius shows as visible texture on every surface size it was
- *   checked on (that token's KDoc has the history). The parameter survives for the day a surface
- *   measurably wants something else; no caller passes it today.
+ * @param inputScale the resolution the backdrop is sampled and blurred at. Defaults to
+ *   [GlassDefaults.DefaultInputScale] — full resolution — because `Auto`'s aggressive factor at
+ *   this blur radius shows as visible texture on every surface size it was checked on (that
+ *   token's KDoc has the history). The parameter survives for the day a surface measurably wants
+ *   something else; no caller passes it today.
  */
 @Composable
 fun Modifier.glassSurface(
@@ -188,10 +187,10 @@ fun Modifier.glassSurface(
     inputScale: HazeInputScale = GlassDefaults.DefaultInputScale,
 ): Modifier {
     val hazeState = LocalHazeState.current
-    // Blur the backdrop at reduced resolution — GPU cost otherwise paid per frame for detail an
-    // 18dp blur throws away anyway. The structural half of PERF-1 (dropping `hazeSource` where the
-    // glass could be flat `mSurface`) is deliberately left until a systrace fling measures it, as
-    // the audit asks.
+    // The backdrop blurs at the resolution [inputScale] picks — full by default; the visible-mush
+    // trade-off behind that default is documented on [GlassDefaults.DefaultInputScale]. Dropping
+    // `hazeSource` where the glass could be flat `mSurface` instead is deliberately left until a
+    // systrace fling measures it.
     //
     // The block is remembered on [inputScale] rather than written inline: it now *captures* that
     // parameter, so a fresh lambda per recomposition would make the `hazeEffect` element compare
@@ -215,14 +214,14 @@ fun Modifier.glassSurface(
 }
 
 /**
- * The restyled 2026 "m-surface" card fill (spec, "Panels (`m-panel`)"): a solid [surfaceColor] fill,
- * set apart from the page by the same white@6% hairline glass surfaces use rather than by blur —
- * `glassSurface` without the translucency, for cards and stat panels that sit over other cards
- * rather than over a backdrop image.
+ * The restyled 2026 "m-surface" card fill: a solid [surfaceColor] fill, set apart from the page by
+ * the same white@6% hairline glass surfaces use rather than by blur — `glassSurface` without the
+ * translucency, for cards and stat panels that sit over other cards rather than over a backdrop
+ * image.
  *
- * Hoisted from `:feature:downloads`' own private copy (2026 refresh, Phase 5 sweep): SyncPlay's
- * group/queue rows want the identical fill, and a second private copy in `:player` would drift the
- * moment either screen's card language moved half a step.
+ * Hoisted from `:feature:downloads`' own private copy: SyncPlay's group/queue rows want the
+ * identical fill, and a second private copy in `:player` would drift the moment either screen's
+ * card language moved half a step.
  *
  * @param radius [Dimens.CardCornerRadius] by default; callers that need a different rounding — a
  *   screen's own spec calls for something else — pass their own.

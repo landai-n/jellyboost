@@ -18,7 +18,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * The single door between the app and Google Cast (docs/notes/chromecast-m12-plan.md, Phase 1).
+ * The single door between the app and Google Cast.
  *
  * Two jobs. It owns the process-wide [CastContext] — created once, from `MainActivity.onCreate`,
  * and only when Play services are actually there — and it publishes what the Cast world looks like
@@ -37,8 +37,7 @@ class CastAvailability
     constructor() {
         // ktlint reads `_x`/`x` as an idiom for exposing a mutable field *publicly*, and refuses it
         // when the read-only half is not `public`. Here [state] is `internal` because
-        // `CastDeviceState` is (audit ARCH-2) — the pairing is otherwise exactly the idiom the rule
-        // is about.
+        // `CastDeviceState` is — the pairing is otherwise exactly the idiom the rule is about.
         @Suppress("ktlint:standard:backing-property-naming")
         private val _state = MutableStateFlow<CastDeviceState>(CastDeviceState.Unavailable)
 
@@ -49,14 +48,14 @@ class CastAvailability
         internal val state: StateFlow<CastDeviceState> = _state.asStateFlow()
 
         /**
-         * The shared [CastContext], or `null` while unavailable — the sender-side API the later
-         * phases (`CastPlayerHandle`, `CastSessionCoordinator`) hang off. Callers outside this
+         * The shared [CastContext], or `null` while unavailable — the sender-side API
+         * `CastPlayerHandle` and `CastSessionCoordinator` hang off. Callers outside this
          * package have no business with it; the type is what confines them.
          *
          * `@Volatile` for the same reason `CastMetadataHolder`'s field is: today every write and
          * read happens on the main thread, but that is a convention rather than a checked property
          * of a `@Singleton`, and a future off-main reader seeing a stale `null` would silently
-         * disable casting (audit CAST-07).
+         * disable casting.
          */
         @Volatile
         internal var castContext: CastContext? = null
@@ -74,12 +73,10 @@ class CastAvailability
          * worth. Failure of any kind simply leaves [state] at [CastDeviceState.Unavailable].
          *
          * ### Nothing here blocks the main thread
-         * `isGooglePlayServicesAvailable` is a **binder round trip to another process**, and it used
-         * to run inline in this method — which `MainActivity.onCreate` called inline in turn, on the
-         * critical path to the first frame (audit 2026-08-08, PERF-26). The prior wave posted the
-         * *call* off `onCreate`; this is the other half the note there asked for, and it is the half
-         * that could only be done here: the probe now runs on the same single-thread executor the
-         * framework's own initialisation uses.
+         * `isGooglePlayServicesAvailable` is a **binder round trip to another process**, and
+         * `MainActivity.onCreate` reaches this method on the critical path to the first frame. Run
+         * inline it would cost a synchronous IPC there, so the probe runs on the same single-thread
+         * executor the framework's own initialisation uses.
          *
          * `getSharedInstance` still has to be reached from the **main** thread — it builds a
          * `CastContext` bound to the caller's looper — so a successful probe posts back to the main

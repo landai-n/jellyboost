@@ -16,9 +16,9 @@ import kotlin.math.ceil
 /**
  * An item that is a folder, not a video — a series, a season, a box set.
  *
- * `/Items/{id}/Download` answers `400` for one of these, which is the error the user saw when
- * tapping Download on a season used to enqueue the season itself (docs/POLISH.md, DECISIONS.md
- * 2026-07-29). The queue turns this into copy that says so, instead of quoting the status code.
+ * `/Items/{id}/Download` answers `400` for one of these, which is what a user sees if a folder ever
+ * reaches the queue as a download of its own. The queue turns this into copy that says so, instead
+ * of quoting the status code.
  */
 internal class NotDownloadableException(
     itemId: UUID,
@@ -43,17 +43,16 @@ internal data class PlannedFile(
 }
 
 /**
- * Turns a fully-fetched `BaseItemDto` into the ordered list of files to download (docs/PLAN.md,
- * "Download pipeline" → File plan).
+ * Turns a fully-fetched `BaseItemDto` into the ordered list of files to download.
  *
- * **Order is the contract**, and it is the plan's:
+ * **Order is the contract**:
  * 1. the primary image, so the queue row and the notification have artwork within a second;
  * 2. the media file, the item's whole point and usually 99.9 % of the bytes;
  * 3. the backdrop and the parent series' poster, which the offline detail page draws;
  * 4. text subtitle sidecars, one per stream — kilobytes, so they finish first;
  * 5. extra audio language sidecars, one per stream not already baked into the media file — every
  *    other language outranks scrub thumbnails, but not the subtitles a viewer needs from second one;
- * 6. trickplay tiles, for offline scrubbing (M9 renders them).
+ * 6. trickplay tiles, for offline scrubbing.
  *
  * Only step 2 is essential. Everything else failing degrades the offline experience without making
  * the item unplayable, which is why they come after it and are attempted independently.
@@ -64,7 +63,7 @@ internal data class PlannedFile(
  * @param downloadAllowed the user's `enableContentDownloading` policy. `false` swaps the dedicated
  *   download endpoint for the static video stream — same bytes, a route the server does not gate on
  *   that policy.
- * @param quality the *download quality* stamped on the row when the user tapped Download (M9).
+ * @param quality the *download quality* stamped on the row when the user tapped Download.
  *   Anything but [DownloadQuality.ORIGINAL] replaces the media entry with a server-side transcode —
  *   and, since the transcode drops every embedded subtitle, adds a sidecar for each embedded text
  *   subtitle the server can extract. Artwork and trickplay tiles are the same files either way.
@@ -92,7 +91,7 @@ internal class DownloadFilePlanner
          *   caller with no row in hand still gets the enqueue-time answer. Every caller that *has*
          *   a row passes that column instead: the DTO's default audio stream is the server's
          *   current answer and can move between the tap and the drain, while the column is what
-         *   the download actually asked for (DECISIONS.md, 2026-07-30).
+         *   the download actually asked for.
          */
         @Suppress("LongParameterList")
         fun plan(
@@ -124,14 +123,14 @@ internal class DownloadFilePlanner
 
         /**
          * A music track's whole plan: the album's artwork, then the original file. Two entries, and
-         * that is the point (docs/notes/music-m13-plan.md, key decision 10).
+         * that is the point.
          *
          * Everything the video plan does after its media entry is deliberately absent:
          * - **no transcode, ever.** Music downloads are originals only, so [DownloadQuality] does
          *   not reach this branch at all — the parameter is not even read here, and `DownloadEnqueuer`
          *   stamps [DownloadQuality.ORIGINAL] on every audio row so nothing downstream (the size
          *   projector, the no-resume rule, the *Transcoded* marker) can misread one. Audio
-         *   transcoding for downloads is a recorded deferred item, not an accident of omission.
+         *   transcoding for downloads is deferred, not an accident of omission.
          * - **no subtitles, no audio sidecars.** A track has one audio stream and no subtitle
          *   streams; the sidecar machinery exists to rescue tracks a *transcode* dropped, and
          *   nothing is dropped here.
@@ -254,12 +253,11 @@ internal class DownloadFilePlanner
          * - **[MediaStream.supportsExternalStream]** — *can the server hand this stream over on its
          *   own?* `/Videos/{id}/{msId}/Subtitles/{index}/Stream.{format}` extracts an embedded
          *   track with ffmpeg on demand, and this flag is the server's own statement that it will.
-         *   It replaces the old [MediaStream.isExternal] test, which asked a different question
-         *   (*is this already a file next to the video?*) and answered `false` for every embedded
-         *   SRT — the reason a transcoded download used to lose subtitles it could perfectly well
-         *   have kept (docs/notes/offline-multitrack-design.md, phase 0). `deliveryMethod` is used
-         *   for neither: it is only populated by playback-info negotiation, and a download works
-         *   from a plain item request.
+         *   Not [MediaStream.isExternal], which asks a different question (*is this already a file
+         *   next to the video?*) and answers `false` for every embedded SRT — which is how a
+         *   transcoded download loses subtitles it could perfectly well have kept. `deliveryMethod`
+         *   is used for neither: it is only populated by playback-info negotiation, and a download
+         *   works from a plain item request.
          * - **[TEXT_SUBTITLE_CODECS]** — *can ExoPlayer play it from a standalone file?* Bitmap
          *   formats (PGS, VobSub) cannot be side-loaded at all, so a sidecar for one would be a
          *   track that exists and never renders. They survive only in an `ORIGINAL` download, which
@@ -297,7 +295,7 @@ internal class DownloadFilePlanner
 
         /**
          * Every audio language a transcode did *not* bake into the media file, fetched as its own
-         * sidecar (docs/notes/offline-multitrack-design.md, phase 2).
+         * sidecar.
          *
          * Two guards, both narrower than [subtitles]'s: [DownloadQuality.isTranscoded], because an
          * `ORIGINAL` download already holds every track in the one file — a sidecar there would be a
@@ -339,9 +337,9 @@ internal class DownloadFilePlanner
          * `MediaStream.language` is the raw container track tag from ffprobe — controlled by
          * whoever supplied the media file, not by the server. Interpolated verbatim it reached
          * `File(root/dir, fileName)` with `FileDownloader` running `mkdirs()` on the parent, so a
-         * tag containing `../` or `/` wrote attacker-influenced bytes *outside* the item directory
-         * — where neither the delete cascade nor the orphan sweep ever collects them (audit
-         * DL-15). Restricted to the alphabet a real language tag uses (letters, digits, `-`),
+         * tag containing `../` or `/` would write attacker-influenced bytes *outside* the item
+         * directory — where neither the delete cascade nor the orphan sweep ever collects them.
+         * Restricted to the alphabet a real language tag uses (letters, digits, `-`),
          * bounded, and falling back to the server's own "undetermined" code when nothing survives.
          */
         private fun sidecarLanguage(raw: String?): String =

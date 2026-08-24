@@ -57,7 +57,7 @@ internal class SdkAudioStreamUrlFactory
                     transcodingContainer = request.transcodingContainer,
                     // HLS, not the device profile's mp3-over-HTTP audio transcoding profile: HLS is
                     // seekable, ExoPlayer plays it natively, and it sidesteps the video resolver's
-                    // HLS-only transcode gate entirely (key decision 4).
+                    // HLS-only transcode gate entirely.
                     transcodingProtocol = MediaStreamProtocol.HLS,
                     enableRedirection = true,
                 )

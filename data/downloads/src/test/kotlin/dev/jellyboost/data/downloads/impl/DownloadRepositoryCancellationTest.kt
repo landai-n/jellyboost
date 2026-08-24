@@ -32,13 +32,12 @@ import java.time.Clock
 import java.time.ZoneOffset
 
 /**
- * The cancellation half of [DownloadRepositoryImpl] (audit HYG-5).
+ * The cancellation half of [DownloadRepositoryImpl].
  *
  * Every mutation here runs in the **caller's** coroutine — the Downloads screen's ViewModel scope,
- * which dies with the screen. Four broad catches were folding that cancellation into
- * `AppError.Storage`: an ordinary back-press logged at E level, answered "could not pause", and
- * swallowed the cancellation the parent job is owed. The 2026-07-30 sweep fixed this shape in
- * `DownloadEnqueuer` and `UserDataRepositoryImpl` and missed these; each test below is one of them.
+ * which dies with the screen. A broad catch that folded that cancellation into `AppError.Storage`
+ * would log an ordinary back-press at E level, answer "could not pause", and swallow the
+ * cancellation the parent job is owed. Each test below is one such catch.
  *
  * Split from [DownloadRepositoryImplTest] purely for size — the fixture is the same shape; the
  * subject is the same class (as [DownloadRepositoryStorageTest] already is).
@@ -74,7 +73,7 @@ class DownloadRepositoryCancellationTest {
     @Test
     fun `a cancelled bulk pause propagates instead of being reported as a storage failure`() =
         runTest {
-            // The one the audit caught in the act: `mutateAll`, mid *Pause all*.
+            // `mutateAll`, mid *Pause all*.
             coEvery {
                 downloadDao.demoteRunnable(any(), any(), any())
             } throws CancellationException("scope cancelled")

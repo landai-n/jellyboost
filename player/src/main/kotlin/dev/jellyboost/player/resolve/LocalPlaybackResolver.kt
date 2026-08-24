@@ -18,7 +18,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * The offline counterpart of [PlaybackInfoResolver] (docs/PLAN.md, "Playback pipeline" → Offline).
+ * The offline counterpart of [PlaybackInfoResolver].
  *
  * Where the online resolver asks the server how to play an item, this one answers the same question
  * from what is already on the device: the downloaded media file, the streams recorded in the cached
@@ -33,11 +33,11 @@ import javax.inject.Singleton
  *
  * ### What is offered, and what is quietly withheld
  * A subtitle track is offered whenever **its sidecar is on disk**, whatever the stream's own
- * `isExternal` says. That is the whole of the rule since the sidecar pipeline stopped being limited
- * to genuinely external streams (docs/notes/offline-multitrack-design.md, phase 0): a transcoded
- * download now fetches an extracted `.srt` for each embedded text subtitle too, and a file on disk
- * is a file on disk. Everything else is withheld unless the media file itself can supply it: an
- * embedded stream with no sidecar survives only in a download the server did not re-encode, and a
+ * `isExternal` says. That is the whole of the rule, because the sidecar pipeline is not limited to
+ * genuinely external streams: a transcoded download fetches an extracted `.srt` for each embedded
+ * text subtitle too, and a file on disk is a file on disk. Everything else is withheld unless the
+ * media file itself can supply it: an embedded stream with no sidecar survives only in a download
+ * the server did not re-encode, and a
  * sidecar that failed to download (bitmap formats are never planned, and any optional file is
  * allowed to fail) is not offered at all — a picker entry that cannot do anything is worse than one
  * fewer language.
@@ -50,13 +50,13 @@ import javax.inject.Singleton
  * [DownloadedMedia.isTranscoded] is therefore consulted before anything embedded is offered, and
  * [DownloadedMedia.bakedAudioStreamIndex] names the one audio track that did survive *in the file*.
  *
- * The other languages are back since phase 2: a transcoded download fetches each of them as its own
+ * The other languages come back as sidecars: a transcoded download fetches each of them as its own
  * audio-only `.m4a`, exactly as it does for subtitles, and [DownloadedMedia.audio] lists them. They
  * become audio tracks here — flagged side-loaded, because that is how they reach ExoPlayer — and
  * [LocalPlaybackMediaSource.externalAudio] carries the files themselves for
  * `ExoPlayerHandle.prepare` to merge in. The baked track stays first in both lists; everything after
  * it is in the pipeline's own ascending-index order, which is the merge-child order the whole
- * mapping back to Jellyfin stream indices rests on (DECISIONS.md 2026-07-31).
+ * mapping back to Jellyfin stream indices rests on.
  *
  * ### …and what is offered anyway, when there is a server
  * The withheld tracks are not discarded, they are set aside:
@@ -162,8 +162,7 @@ internal class LocalPlaybackResolver
          *
          * For an original download that is every audio stream of the source, straight out of the
          * container. For a transcoded one it is the **baked** track — the one the encode put in the
-         * video file — followed by one track per audio sidecar on disk, each its own `.m4a`
-         * (docs/notes/offline-multitrack-design.md, phase 2).
+         * video file — followed by one track per audio sidecar on disk, each its own `.m4a`.
          *
          * The baked track stays first, and that placement is load-bearing twice over: it is what
          * `defaultAudioIndex` reads, and it is merge child 0, the primary source
@@ -179,7 +178,7 @@ internal class LocalPlaybackResolver
             // and is never in the downloaded container; no sidecar is planned for it either, so
             // offline it is simply not here — the same rule the subtitle filter applies at the
             // resolve site. Offering it would put a language in the picker that routes to a server
-            // this mode exists to do without (audit DL-08).
+            // this mode exists to do without.
             if (!downloaded.isTranscoded) return audio.filter { !it.isExternal }
             return listOfNotNull(bakedAudio) + audio.filter { it.index in sidecarIndices }
         }
@@ -194,9 +193,9 @@ internal class LocalPlaybackResolver
          *
          * The sidecar set *alone* decides the flag — deliberately not `MediaStream.isExternal`.
          * The flag's contract downstream is "this track has a merge child", and a baked track
-         * whose source stream happened to be external has none: flagging it shifted every
-         * merge-child ordinal by one, so selecting the baked language played the first sidecar's
-         * file and the last sidecar resolved to a child that does not exist (audit DL-08).
+         * whose source stream happened to be external has none: flagging it would shift every
+         * merge-child ordinal by one, so selecting the baked language would play the first
+         * sidecar's file and the last sidecar would resolve to a child that does not exist.
          */
         private fun List<MediaStream>.toAudioTracks(
             defaultIndex: Int?,
@@ -233,7 +232,7 @@ internal class LocalPlaybackResolver
          *
          * That order — ascending Jellyfin stream index — is passed through untouched, because it
          * becomes the merge-child order and so the whole of the mapping back from an ExoPlayer track
-         * group to a Jellyfin stream (DECISIONS.md 2026-07-31, "Offline multi-track Phase 2").
+         * group to a Jellyfin stream.
          *
          * Three are dropped. An original download has none by construction — every track is already
          * in the file, and a sidecar row on such an item would only duplicate one. A sidecar for a

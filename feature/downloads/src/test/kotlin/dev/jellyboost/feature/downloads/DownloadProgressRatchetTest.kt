@@ -108,8 +108,8 @@ class DownloadProgressRatchetTest {
 
     @Test
     fun `only the rows it was given are answered for`() {
-        // The ViewModel passes `toQueue()`'s subset rather than the whole table (audit 2026-08-08,
-        // PERF-10), so the map is the size of the queue and not of everything ever downloaded.
+        // The ViewModel passes `toQueue()`'s subset rather than the whole table, so the map is the
+        // size of the queue and not of everything ever downloaded.
         val answers =
             ratchet.update(
                 listOf(

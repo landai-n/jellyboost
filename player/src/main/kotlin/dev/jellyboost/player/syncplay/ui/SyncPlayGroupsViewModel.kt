@@ -29,15 +29,14 @@ import java.util.UUID
 import javax.inject.Inject
 
 /**
- * The dedicated SyncPlay section (M11 Phase 5): every joinable group on the server, and the one
- * this device may already be in.
+ * The dedicated SyncPlay section: every joinable group on the server, and the one this device may
+ * already be in.
  *
  * Membership itself is never this class's business — [SyncPlayController] owns the socket, the
- * join handshake and the group's own state, and this ViewModel only *reads* [SyncPlayController.state]
- * and forwards the three membership intents (docs/notes/syncplay-m11-plan.md, "Phase 5"). The one
- * thing genuinely local here is the group **list**, because the plan's design decision 3 makes that
- * a plain polled `GET /SyncPlay/List` rather than anything the websocket carries — the socket is
- * connected only while already in a group.
+ * join handshake and the group's own state, and this ViewModel only *reads*
+ * [SyncPlayController.state] and forwards the three membership intents. The one thing genuinely
+ * local here is the group **list**, which is a plain polled `GET /SyncPlay/List` rather than
+ * anything the websocket carries — the socket is connected only while already in a group.
  *
  * ### Polling
  * [SyncPlayApi.getGroups] is polled every [POLL_INTERVAL_MS] while this screen is visible — the
@@ -200,7 +199,7 @@ private fun SyncPlayState.toMembership(): SyncPlayGroupsMembership =
                 participants = group.participants,
                 // Reuses the launch-request shape rather than inventing a second one: "somewhere to
                 // open a player for" is exactly what a launch request already means, and the app
-                // NavHost's own collector (M11 Phase 5) resolves the same way from the same state.
+                // NavHost's own collector resolves the same way from the same state.
                 openPlayer =
                     queue?.playingEntry?.let { entry -> SyncPlayLaunchRequest(entry.itemId, queue.startPositionTicks) },
             )

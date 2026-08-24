@@ -34,7 +34,7 @@ import javax.inject.Singleton
  *
  * That is why this is a callback and a button list rather than a notification of our own: the
  * whole feature is two `SessionCommand`s, two `CommandButton`s and a dispatch back into
- * [MusicController] (docs/notes/music-m13-plan.md, key decision 7).
+ * [MusicController].
  *
  * ### Why the buttons carry custom commands rather than player commands
  * `Player.COMMAND_SET_SHUFFLE_MODE` and `COMMAND_SET_REPEAT_MODE` would move the *player* directly,
@@ -64,8 +64,8 @@ class MusicSessionCallback
          * player command would flip the player directly, behind the controller's back, with no
          * `PlaybackOrder`/`RepeatMode` ever reaching the server and the queue state going stale.
          * The notification's own buttons never used them (they carry the custom session commands
-         * above). External shuffle requests land as a no-op until the Android Auto follow-up
-         * routes them through the controller (DECISIONS.md, 2026-08-09).
+         * above). External shuffle requests land as a no-op until a follow-up routes them through
+         * the controller.
          */
         override fun onConnect(
             session: MediaSession,

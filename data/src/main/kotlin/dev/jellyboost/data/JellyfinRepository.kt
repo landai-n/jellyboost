@@ -15,22 +15,18 @@ import kotlinx.coroutines.flow.Flow
  *
  * Both the online (SDK) and offline (Room) implementations satisfy this contract and return the
  * exact same domain models, which is what lets a single set of screens serve streamed and
- * downloaded media (docs/PLAN.md, "Data layer"). `BaseItemDto` and `ItemEntity` never appear here.
- *
- * M2 declares only the home-screen surface; the paged library grid, search and item detail extend
- * this interface in M3 and M4.
+ * downloaded media. `BaseItemDto` and `ItemEntity` never appear here.
  */
 @Suppress(
     // The interface *is* the whole surface `OnlineJellyfinRepository`/`OfflineJellyfinRepository`/
     // `DelegatingJellyfinRepository` implement, all three of which already carry this same
-    // suppression for the same reason. M13 Phase 6's `getInstantMix`/`getLyrics` pushed this
-    // declaration past the threshold too. Logged in DECISIONS.md.
+    // suppression for the same reason.
     "TooManyFunctions",
 )
 interface JellyfinRepository {
     /**
      * The current user's libraries, filtered to the kinds the app supports (movies, TV shows, and
-     * music since M13 Phase 2 — [dev.jellyboost.core.common.model.CollectionKind.SUPPORTED]).
+     * music — [dev.jellyboost.core.common.model.CollectionKind.SUPPORTED]).
      *
      * Backs the home screen's *My Media* row and the Libraries tab.
      */
@@ -61,15 +57,14 @@ interface JellyfinRepository {
         limit: Int = DEFAULT_LATEST_LIMIT,
     ): AppResult<List<JellyfinItem>>
 
-    // ---- M4 — item detail -------------------------------------------------------------------
+    // ---- item detail ---------------------------------------------------------------------------
 
     /**
      * Re-fetches one item in full — overview, taglines, genres, people, media sources, streams,
      * chapters and trickplay.
      *
-     * Detail screens deliberately do not reuse the lean item a list handed them: the plan follows
-     * Swiftfin here, where lists are minimal and the detail/playback path fetches everything
-     * (docs/PLAN.md, "Screens" → ItemDetail).
+     * Detail screens deliberately do not reuse the lean item a list handed them: lists are minimal
+     * and the detail/playback path fetches everything, the same split Swiftfin uses.
      */
     suspend fun getItem(id: String): AppResult<JellyfinItem>
 
@@ -114,13 +109,13 @@ interface JellyfinRepository {
         limit: Int = DEFAULT_SIMILAR_LIMIT,
     ): AppResult<List<JellyfinItem>>
 
-    // ---- end M4 ------------------------------------------------------------------------------
+    // ---- end item detail -----------------------------------------------------------------------
 
     companion object {
-        /** Row size jellyfin-web uses for *Continue watching* (DECISIONS.md 2026-07-28). */
+        /** Row size jellyfin-web uses for *Continue watching*. */
         const val DEFAULT_RESUME_LIMIT = 12
 
-        /** Row size jellyfin-web uses for *Next up* (DECISIONS.md 2026-07-28). */
+        /** Row size jellyfin-web uses for *Next up*. */
         const val DEFAULT_NEXT_UP_LIMIT = 24
 
         /** Row size jellyfin-web uses for the per-library *Latest* rows. */
@@ -130,16 +125,15 @@ interface JellyfinRepository {
          * Ceiling on any single server call made through this repository, in milliseconds.
          *
          * Comfortably above a slow library page on a remote server, comfortably below the SDK's
-         * own 30-second socket timeout — which is the number the M6 definition of done rules out
-         * ("server-down (Wi-Fi up) degrades without a 30s hang"). `DelegatingJellyfinRepository`
-         * is what enforces it.
+         * own 30-second socket timeout: a server that is down while Wi-Fi stays up must degrade
+         * without a 30-second hang. `DelegatingJellyfinRepository` is what enforces it.
          *
          * Declared on the interface rather than on that implementation because it is a property of
          * the *contract* — how long a caller may be made to wait — and callers outside `:data`
          * legitimately need the number (`:player`'s `PlaybackSourceResolver` deliberately reuses
          * it). The implementations are `internal` so that the delegate's ceiling and offline
-         * fallback cannot be bypassed by injecting one of them directly (audit ARCH-13); this
-         * constant is the one piece of them that was public for a reason.
+         * fallback cannot be bypassed by injecting one of them directly; this constant is the one
+         * piece of them that was public for a reason.
          */
         const val ONLINE_CALL_TIMEOUT_MS = 10_000L
 
@@ -149,29 +143,29 @@ interface JellyfinRepository {
         /**
          * Ceiling on [getInstantMix] when the caller does not ask for a different one.
          *
-         * The plan's large-queue note (docs/notes/music-m13-plan.md, "Risks"): an artist-seeded mix
-         * could otherwise hand the queue hundreds of tracks in one `setMediaItems` call.
+         * Guards against a large queue: an artist-seeded mix could otherwise hand the queue
+         * hundreds of tracks in one `setMediaItems` call.
          */
         const val DEFAULT_INSTANT_MIX_LIMIT = 200
     }
 
-    // ---- M3 — library & search ---------------------------------------------------------------
+    // ---- library & search -----------------------------------------------------------------------
 
     /**
      * A paged stream of the items matching [query] — the library grid's source.
      *
      * The paging configuration (page size, prefetch distance, placeholders) belongs to the
-     * implementation, not to the caller: the offline implementation pages Room behind the same
-     * `Pager` in M6 and must be free to configure it differently.
+     * implementation, not to the caller: the offline implementation pages Room behind its own
+     * `Pager` and must be free to configure it differently.
      *
      * @param query everything the grid can vary: library, item types, sort and filters.
      *   [ItemQuery.startIndex] and [ItemQuery.limit] are overridden per page and can be left at
      *   their defaults.
      * @param onTotalCount how many items match [query] in total, reported at most once per load of
      *   the stream and only where the source can answer — the online grid asks the server for it on
-     *   its first page, the offline one never does (DECISIONS.md 2026-08-01). It is a callback
-     *   rather than part of the stream because `PagingData` carries items and nothing else; the
-     *   default drops it, which is what every caller but the library header wants.
+     *   its first page, the offline one never does. It is a callback rather than part of the stream
+     *   because `PagingData` carries items and nothing else; the default drops it, which is what
+     *   every caller but the library header wants.
      */
     fun getItemsPaged(
         query: ItemQuery,
@@ -198,7 +192,7 @@ interface JellyfinRepository {
         itemTypes: List<ItemType>,
     ): AppResult<FilterFacets>
 
-    // ---- M13 Phase 2 — music -------------------------------------------------------------------
+    // ---- music ---------------------------------------------------------------------------------
 
     /**
      * A music album's tracks, in disc/track order.
@@ -206,7 +200,7 @@ interface JellyfinRepository {
      * Online: items parented under [albumId], narrowed to [ItemType.AUDIO] and sorted
      * `ParentIndexNumber, IndexNumber, SortName` — disc, then track, then a stable tiebreak for
      * tracks that share both numbers. Offline:
-     * [dev.jellyboost.core.database.dao.ItemDao.tracksOfAlbum], the M13 Phase 1 query-only column.
+     * [dev.jellyboost.core.database.dao.ItemDao.tracksOfAlbum], a query-only column.
      */
     suspend fun getAlbumTracks(albumId: String): AppResult<List<JellyfinItem>>
 
@@ -248,15 +242,14 @@ interface JellyfinRepository {
      * Offline: **always empty, deliberately and for the foreseeable future.** Room has no
      * playlist-membership table — a playlist's members are only ever known from the server's own
      * ordering, and nothing about a downloaded track records which playlist(s) it belongs to — so
-     * there is no honest non-empty answer without a new table and a schema bump. M13 Phase 5
-     * decided not to spend one: the milestone's offline walk is artist → album → tracks, and a
-     * playlist *download* is fully supported (it expands to its tracks, which land under their own
-     * albums). Recorded as the deferred item "offline playlist membership"
-     * (docs/notes/music-m13-plan.md, deferred list; DECISIONS.md, 2026-08-05).
+     * there is no honest non-empty answer without a new table and a schema bump. Nothing spends
+     * one: the offline walk is artist → album → tracks, and a playlist *download* is fully
+     * supported (it expands to its tracks, which land under their own albums). Recorded as the
+     * deferred item "offline playlist membership".
      */
     suspend fun getPlaylistItems(playlistId: String): AppResult<List<JellyfinItem>>
 
-    // ---- M13 Phase 4 — Continue Listening -------------------------------------------------------
+    // ---- Continue Listening ---------------------------------------------------------------------
 
     /**
      * Partially-played tracks, newest first — the *Continue Listening* row (`HomeSectionType
@@ -274,14 +267,14 @@ interface JellyfinRepository {
      */
     suspend fun getResumeAudioItems(limit: Int = DEFAULT_RESUME_LIMIT): AppResult<List<JellyfinItem>>
 
-    // ---- M13 Phase 6 — Instant Mix & lyrics -----------------------------------------------------
+    // ---- Instant Mix & lyrics -------------------------------------------------------------------
 
     /**
      * A server-generated "radio" queue seeded from [itemId] — an album, artist or track's "Start
-     * radio" action (docs/notes/music-m13-plan.md, key decision 11).
+     * radio" action.
      *
-     * Online: `InstantMixApi.getInstantMixFromItem`, capped at [limit] — the plan's large-queue
-     * note: an artist seed could otherwise hand the player a very large playlist.
+     * Online: `InstantMixApi.getInstantMixFromItem`, capped at [limit] — guards against a large
+     * queue: an artist seed could otherwise hand the player a very large playlist.
      *
      * Offline: **always [dev.jellyboost.core.common.AppError.Network]**. Instant Mix is a server
      * recommendation and there is nothing local that could stand in for it — the same "no network,
@@ -301,17 +294,17 @@ interface JellyfinRepository {
      * an error to show.
      *
      * Offline: always [dev.jellyboost.core.common.AppError.Network] — lyrics are not cached
-     * ("offline lyrics" is a recorded deferred item, docs/notes/music-m13-plan.md).
+     * ("offline lyrics" is a recorded deferred item).
      */
     suspend fun getLyrics(itemId: String): AppResult<Lyrics>
 }
 
-// ---- M4 — item detail ------------------------------------------------------------------------
+// ---- item detail --------------------------------------------------------------------------
 
 /**
  * Row size for the detail page's *More like this* row.
  *
- * Declared at file scope rather than inside [JellyfinRepository.Companion] so that the M4 surface
- * stays one append-only block while M3 extends the same file in parallel.
+ * Declared at file scope rather than inside [JellyfinRepository.Companion] to keep it grouped
+ * with the item-detail surface it belongs to.
  */
 const val DEFAULT_SIMILAR_LIMIT = 12

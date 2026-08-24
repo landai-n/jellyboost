@@ -10,8 +10,8 @@ import org.junit.jupiter.api.Test
  * Back button (`AppScaffold.navigateHome`).
  *
  * Driving a real `NavController` needs a device, but these options are a plain value — and they are
- * the whole of the affordance's contract, because what broke the button on its first outing was one
- * flag, not one line of UI.
+ * the whole of the affordance's contract: one wrong flag is enough to break the button, not one
+ * line of UI.
  */
 class HomeNavOptionsTest {
     @Test
@@ -31,9 +31,9 @@ class HomeNavOptionsTest {
     @DisplayName("the Home affordance re-enters an already-open Home rather than stacking a second")
     fun homeAffordanceNeverStacksASecondHome() {
         // The chain is popped down *to* Home, which leaves Home on top — at which point the
-        // `navigate` in `navigateHome` would push a duplicate without this flag. That duplicate is
-        // exactly the 649a7c8 bug: two `HomeViewModel`s, two `UserDataEventBus` collectors, two
-        // refreshes per watched-state change.
+        // `navigate` in `navigateHome` would push a duplicate without this flag. That duplicate
+        // means two `HomeViewModel`s, two `UserDataEventBus` collectors, two refreshes per
+        // watched-state change.
         homeNavOptions().shouldLaunchSingleTop() shouldBe true
     }
 

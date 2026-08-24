@@ -10,7 +10,7 @@
         button's appearance ours rather than a side effect of whatever the activity theme happens to
         be. It does NOT reach the chooser/controller dialogs: those are DialogFragments hosted by
         the activity and are themed from the *activity's* theme, which is why
-        `app/src/main/res/values/themes.xml` is AppCompat-derived (DECISIONS.md 2026-07-31).
+        `app/src/main/res/values/themes.xml` is AppCompat-derived.
 
         NOT DayNight — the app is dark-only by design, whatever the system is set to.
     -->

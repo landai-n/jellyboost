@@ -13,7 +13,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Which volume the download root sits on (docs/PLAN.md, ":data:downloads" → `StorageLocationManager`).
+ * Which volume the download root sits on.
  *
  * It owns exactly one rule, and the rule is a fallback: **the stored choice if that volume is
  * mounted, the primary volume otherwise.** A user who picks the SD card and then takes it out gets
@@ -30,12 +30,11 @@ import javax.inject.Singleton
  * through [select], which updates the cache with it, so there is no window where the two disagree.
  *
  * ### And why nothing blocks to fill it
- * That first read used to be a `runBlocking` — the only one in production code — hidden under a
- * non-suspending property, i.e. a DataStore read that any thread reaching [DownloadStorage.rootPath]
- * would have paid for on the spot. Every current caller happens to be on IO, so it was latent
- * rather than live, but "the whole storage surface is safe as long as nobody ever calls it from the
- * main thread" is not a property this class can enforce, and the price of being wrong is a frame
- * drop with no trace back to here (audit 2026-08-08, PERF-19).
+ * Filling it with a `runBlocking` under a non-suspending property would put a DataStore read on
+ * whatever thread reaches [DownloadStorage.rootPath]. Every current caller happens to be on IO, so
+ * that would be latent rather than live, but "the whole storage surface is safe as long as nobody
+ * ever calls it from the main thread" is not a property this class can enforce, and the price of
+ * being wrong is a frame drop with no trace back to here.
  *
  * The cache is seeded from the application scope at construction instead, and an unseeded read
  * answers `null` — which is not a failure mode but the documented default: `null` means "no volume
@@ -43,8 +42,7 @@ import javax.inject.Singleton
  * picker existed was written to. So the worst a read in the seeding window can do is resolve the
  * primary volume for an install that has chosen an SD card, in the milliseconds before the app has
  * read its own preferences — and `DownloadQueue.requireStableRoot` already refuses to write a file
- * whose row was planned against a different root (audit DL-07), so a download cannot be split
- * across the two.
+ * whose row was planned against a different root, so a download cannot be split across the two.
  */
 @Singleton
 internal class StorageLocationManager
@@ -138,7 +136,7 @@ internal class StorageLocationManager
         private fun cachedVolumeId(): String? = cachedVolumeId
 
         private companion object {
-            /** Sub-directory of the volume's app-specific directory, per docs/PLAN.md. */
+            /** Sub-directory of the volume's app-specific directory. */
             const val DOWNLOADS_DIRECTORY = "downloads"
         }
     }

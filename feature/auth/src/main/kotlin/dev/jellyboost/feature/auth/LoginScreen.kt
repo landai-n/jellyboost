@@ -86,7 +86,7 @@ private val AvatarSizeCompact = 64.dp
 
 /**
  * Ring around every public-user avatar: a solid primary ring on the selected profile, a faint
- * neutral one on the rest — per the claude.ai/design "Login (landscape tablet)" card.
+ * neutral one on the rest.
  */
 private val AvatarRingWidth = 2.dp
 
@@ -110,7 +110,7 @@ private val WhosWatchingStyle =
         letterSpacing = 0.12.em,
     )
 
-/** Server name atop the identity block — bold and tracked in tight, the 2026 refresh's hero type. */
+/** Server name atop the identity block — bold and tracked in tight, the app's hero type. */
 private val ServerNameStyle =
     TextStyle(
         fontSize = 32.sp,
@@ -157,7 +157,7 @@ private val QuickConnectDigitFill = Color.White.copy(alpha = 0.05f)
 
 /**
  * Second screen of the auth flow: sign in to the server ServerSetup resolved, by password or by
- * Quick Connect (docs/PLAN.md, "Login").
+ * Quick Connect.
  *
  * It carries the same branding as ServerSetup — accent halo, the Jellyboost mark above the server
  * name — so the two screens read as one flow, and it shows the server's real profile pictures for
@@ -221,10 +221,9 @@ private fun LoginContent(
         },
         modifier = modifier,
     ) {
-        // The whole sign-in form lives on one m-panel (claude.ai/design, "Login (landscape
-        // tablet)") — the same [AuthPanel] ServerSetup's manual-address form sits on, so the two
-        // screens keep reading as one flow. They were two hand-spelled copies until audit
-        // 2026-08-08 (DUP-9), and had drifted by 2dp of inner gap in the process.
+        // The whole sign-in form lives on one m-panel — the same [AuthPanel] ServerSetup's
+        // manual-address form sits on, so the two screens keep reading as one flow and share
+        // the exact same inner gap.
         AuthPanel {
             LoginFormFields(
                 state = state,
@@ -314,8 +313,8 @@ private fun ColumnScope.LoginHeader(
 /**
  * "Loading…" while the server's context is fetched.
  *
- * Bar and caption are one polite live region (accessibility audit 2026-08-05, F4): the screen
- * arrives already loading, and until this the only sign of it was a moving bar. The inner spacing
+ * Bar and caption are one polite live region: the screen arrives already loading, and without
+ * grouping them, only the moving bar would signal that, with nothing spoken. The inner spacing
  * repeats the enclosing pane's own gap, so grouping the two into one node leaves the layout exactly
  * where it was.
  */
@@ -358,9 +357,9 @@ private fun LoginFormFields(
 
     // Both credential fields carry the failure, because a rejected sign-in does not say which of
     // the two was wrong — and a field marked invalid with nothing to say about it is worse than
-    // one that repeats the screen's sentence (accessibility audit 2026-08-05, CR-2/F2).
+    // one that repeats the screen's sentence.
     //
-    // Both also stay *enabled* while the exchange runs (audit F17): disabling the field a TalkBack
+    // Both also stay *enabled* while the exchange runs: disabling the field a TalkBack
     // user is standing on destroys its node, dropping accessibility focus to the top of the screen
     // at the exact moment the user wants to hear what happened. `LoginViewModel` ignores edits
     // while `isSigningIn`, so "enabled" does not mean "mutable" — what is in flight is what was in
@@ -532,7 +531,7 @@ private fun PublicUsersRow(
             Row(
                 // `selectableGroup()` is what turns N independent circles into one set of radio
                 // buttons, so TalkBack can say "2 of 3" and a user knows how many profiles there
-                // are without swiping to the end (accessibility audit 2026-08-05, F6).
+                // are without swiping to the end.
                 modifier = Modifier.horizontalScroll(rememberScrollState()).selectableGroup(),
                 horizontalArrangement =
                     Arrangement.spacedBy(if (compact) AvatarRowSpacingCompact else AvatarRowSpacing),
@@ -561,13 +560,13 @@ private fun PublicUsersRow(
  * none (`primaryImageTag == null`), and those keep the initial-letter circle instead of showing an
  * empty hole.
  *
- * The **whole column** is the selectable, not the circle inside it (accessibility audit 2026-08-05,
- * F6). Two things were wrong with the circle owning the click: selection was conveyed by ring colour
- * alone, with nothing in the semantics saying which profile was in force; and the name — the only
- * place the user's actual name is written — sat outside the clickable's merged node, so a user
- * without a profile picture announced as the one letter drawn in their fallback circle. "C", not
- * "claude". `Role.RadioButton` inside the row's `selectableGroup()` gives the name, the state and
- * the position in the set, all on one stop.
+ * The **whole column** is the selectable, not the circle inside it. Restricting the click target to
+ * the circle would leave two problems: selection conveyed by ring colour alone, with nothing in the
+ * semantics saying which profile is in force; and the name — the only place the user's actual name
+ * is written — sitting outside the clickable's merged node, so a user without a profile picture
+ * would be announced as the one letter drawn in their fallback circle. "C", not "claude".
+ * `Role.RadioButton` inside the row's `selectableGroup()` gives the name, the state and the position
+ * in the set, all on one stop.
  */
 @Composable
 private fun PublicUserAvatar(
@@ -623,8 +622,8 @@ private fun PublicUserAvatar(
  * What fills the avatar ring: the user's profile picture, or their initial on a solid disc.
  *
  * Both are decorative. The name is written below, inside the same merged node, so describing the
- * picture would say the name twice — and the *initial*, spoken, was the whole of the audit bug this
- * row's semantics were rewritten for: "C", not "claude".
+ * picture would say the name twice — and the *initial*, spoken on its own by a screen reader, would
+ * say only "C", not "claude".
  */
 @Composable
 private fun AvatarFace(
@@ -684,7 +683,7 @@ private fun QuickConnectDialog(
                     Row(
                         // Polite live region: the dialog opens on the code, and this line appears
                         // (and later disappears, when the code is approved and the token exchange
-                        // starts) with nothing else on screen changing (audit 2026-08-05, F4).
+                        // starts) with nothing else on screen changing.
                         modifier =
                             Modifier.semantics(mergeDescendants = true) {
                                 liveRegion = LiveRegionMode.Polite
@@ -720,7 +719,7 @@ private fun QuickConnectDialog(
  *
  * To a screen reader it is **one** node, not one per box: six separate stops each holding a bare
  * glyph is a code you have to assemble yourself from six swipes, with nothing saying what the digits
- * are for (accessibility audit 2026-08-05, F3). The single description names it and spells the code
+ * are for. The single description names it and spells the code
  * out character by character — [spacedOutCode] — because a TTS engine reads "482913" as "four
  * hundred and eighty-two thousand nine hundred and thirteen", which is not a code anybody can type.
  */
@@ -824,7 +823,7 @@ private fun LoginTwoPanePreview() {
     }
 }
 
-// A typical compact-width phone window (docs/PLAN.md target: ~360x800dp, minus system bars).
+// A typical compact-width phone window (~360x800dp, minus system bars).
 @Preview(name = "Login — phone", showBackground = true, backgroundColor = 0xFF101010, widthDp = 360, heightDp = 740)
 @Composable
 private fun LoginPhonePreview() {

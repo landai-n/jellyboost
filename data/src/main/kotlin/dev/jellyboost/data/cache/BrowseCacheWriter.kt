@@ -25,8 +25,7 @@ import javax.inject.Singleton
 
 /**
  * Write-through half of the browse cache: everything the user successfully reads from the server
- * is mirrored into Room with `source = BROWSE_CACHE` (docs/PLAN.md, "Data layer" →
- * `OnlineJellyfinRepository`).
+ * is mirrored into Room with `source = BROWSE_CACHE`.
  *
  * ### Rule one: a browse write must never downgrade a download
  * If a row already exists with [ItemSource.DOWNLOAD], the refreshed metadata is stored but the row
@@ -43,14 +42,14 @@ import javax.inject.Singleton
  * for the fields the list needs (`OnlineJellyfinRepository`'s list calls request just
  * `PRIMARY_IMAGE_ASPECT_RATIO`), so its DTO is lean by construction — writing it straight into
  * [ItemEntity.dto] would replace the rich blob `DownloadEnqueuer` stored at download time with one
- * missing everything read back out of it. This was exactly that bug (docs/POLISH.md): browsing
- * online wiped the description of a film downloaded for offline viewing.
+ * missing everything read back out of it — silently wiping the description of a film downloaded
+ * for offline viewing.
  *
- * Preserving the blob **unconditionally** was the over-correction, and it was its own bug: it also
- * discarded the one response that is strictly better than what is stored. `getItem`
+ * Preserving the blob **unconditionally** would be its own bug: it would also discard the one
+ * response that is strictly better than what is stored. `getItem`
  * (`/Users/{userId}/Items/{itemId}`) is the endpoint that always serialises the *complete* field
- * set, and a row whose blob an earlier build already gutted could therefore never be repaired —
- * opening the item online refetched everything and then threw it away, leaving a bare offline
+ * set, so a row whose blob a lean write had already gutted would otherwise never be repaired —
+ * opening the item online would refetch everything and then throw it away, leaving a bare offline
  * detail page forever.
  *
  * So the distinction is made **explicitly, by the caller**, not sniffed out of the DTO's shape: the
@@ -65,25 +64,22 @@ import javax.inject.Singleton
  * always returns it), and that block is the server's own truth about watched/favourite/resume. It
  * is adopted into the `user_data` table for every item **whose row is not `toBeSynced`**.
  *
- * Without this the local mirror only ever moved on local writes, so it went stale the moment the
- * same user touched an item from another client — and `UserDataRepositoryImpl.setPosition`, which
- * pushes the item's *full* desired state built from that row, then quietly wrote the stale state
- * back to the server. That is the "stale local user-data rows corrupt server state on playback"
- * bug in STATUS.md: an item unwatched in jellyfin-web came back watched after five seconds of
- * playback in the app.
+ * Without this the local mirror would only ever move on local writes, so it would go stale the
+ * moment the same user touched an item from another client — and
+ * `UserDataRepositoryImpl.setPosition`, which pushes the item's *full* desired state built from
+ * that row, would then quietly write the stale state back to the server: an item unwatched in
+ * jellyfin-web would come back watched after five seconds of playback in the app.
  *
  * A `toBeSynced = true` row is left completely untouched — it is the only copy of a change the
- * server has not accepted yet, and reconciling the two versions is most-recent-wins in M8's sync
- * worker, not a cache write's business. That filter and the write it guards run in the **same
- * transaction** as the item merge below. They did not until audit CORR-5, and the in-code comment
- * that called the window benign was wrong about which direction it lost data in: a local write
- * landing between the filter and the `upsertAll` sets `toBeSynced = true` and is then overwritten
- * flag and all, so the row no longer *looks* pending — and if that write's own push then fails
- * (which is the case the flag exists for), `UserDataSyncWorker` never sees it and the user's change
- * is gone for good, not corrected by the next read.
+ * server has not accepted yet, and reconciling the two versions is most-recent-wins in the sync
+ * worker's job, not a cache write's business. That filter and the write it guards run in the
+ * **same transaction** as the item merge below: without it, a local write landing between the
+ * filter and the `upsertAll` sets `toBeSynced = true` and is then overwritten flag and all, so the
+ * row no longer *looks* pending — and if that write's own push then fails (which is the case the
+ * flag exists for), `UserDataSyncWorker` never sees it and the user's change is gone for good, not
+ * corrected by the next read.
  *
- * This stays a *read* concern on purpose: the plan's "local-first always" write path
- * (docs/PLAN.md, "Data layer") is untouched.
+ * This stays a *read* concern on purpose: the "local-first always" write path is untouched.
  *
  * ### Fire and forget
  * [cacheItems] and [cacheViews] hand the work to the application scope and return immediately: a
@@ -92,14 +88,14 @@ import javax.inject.Singleton
  *
  * ### The merge decides in Kotlin, but reads and writes atomically
  * The merge *rule* lives here rather than inside a `@Transaction` DAO method deliberately — this way
- * it is JVM-unit-testable instead of only exercisable on a device. What that cost, until audit
- * HYG-3 found it, was atomicity: [writeItemRows] read the existing rows' sources, spent thirty lines
- * deciding, and only then upserted, so `DownloadEnqueuer` — which upserts `DOWNLOAD` rows straight
+ * it is JVM-unit-testable instead of only exercisable on a device. That risks atomicity unless the
+ * read and the write are kept together: if [writeItemRows] read the existing rows' sources, spent
+ * time deciding, and only then upserted, `DownloadEnqueuer` — which upserts `DOWNLOAD` rows straight
  * to the DAO — could turn one of those rows into a download in between. The stale snapshot's
- * else-branch then wrote `BROWSE_CACHE` back over it with the lean list blob: rule one broken by the
- * very class that exists to enforce it, and (now that eviction is wired) a downloaded film made
- * evictable while its files sit on disk. The window is real and reachable — open a season page and
- * tap Download while the list write is still in flight.
+ * else-branch would then write `BROWSE_CACHE` back over it with the lean list blob: rule one broken
+ * by the very class that exists to enforce it, and a downloaded film made evictable while its files
+ * sit on disk. The window is real and reachable — open a season page and tap Download while the
+ * list write is still in flight.
  *
  * Both properties are kept: the decision is still the pure, testable [mergeRows], and the read that
  * feeds it plus the write that follows it run inside one [TransactionRunner.inTransaction] block, so
@@ -109,7 +105,7 @@ import javax.inject.Singleton
 internal class BrowseCacheWriter
     @Suppress(
         // Nine DI collaborators: the write-through merge needs three DAOs plus the transaction runner that makes the
-        // read-merge-write atomic (audit H3), and the maintenance pass it counts writes into (PERF-17).
+        // read-merge-write atomic, and the maintenance pass it counts writes into.
         "LongParameterList",
     )
     @Inject
@@ -163,14 +159,14 @@ internal class BrowseCacheWriter
             refreshUserData(dtos, now)
             // Writing is what grows this table, so writing is what has to pay for bounding it.
             // The counter throttles that to one sweep per `WRITES_BETWEEN_SWEEPS`, and the sweep
-            // itself runs on the application scope — nothing here waits for it (audit PERF-17).
+            // itself runs on the application scope — nothing here waits for it.
             maintenance.onWriteThrough()
         }
 
         /**
          * Reads what is already stored, merges the response against it, and writes the result —
          * **as one transaction**, so no concurrent `DOWNLOAD` upsert can land between the read the
-         * decision is made from and the write that acts on it (audit HYG-3).
+         * decision is made from and the write that acts on it.
          */
         private suspend fun writeItemRows(
             dtos: List<BaseItemDto>,
@@ -245,7 +241,7 @@ internal class BrowseCacheWriter
          * The pending-row filter and the write it guards are one transaction, for the reason the
          * item merge above is: a check-then-write that another writer can step into is a decision
          * made about a state that no longer exists. It is all Room work, so it costs nothing but
-         * the block (audit CORR-5).
+         * the block.
          */
         private suspend fun refreshUserData(
             dtos: List<BaseItemDto>,

@@ -70,7 +70,7 @@ import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
 import dev.jellyboost.core.ui.R as CoreUiR
 
 /**
- * The movie / series / season detail screen (docs/PLAN.md, "Screens" → ItemDetail).
+ * The movie / series / season detail screen.
  *
  * Like `HomeScreen`, the ViewModel is passed in rather than resolved here so that `:app` owns the
  * `hiltViewModel()` call together with the rest of the navigation graph.
@@ -81,8 +81,7 @@ import dev.jellyboost.core.ui.R as CoreUiR
  *   the caller pushes `Routes.Player`. Which item a Play tap means (a series plays its next-up
  *   episode) is resolved on this side, because only this screen knows the rows it loaded; *whether*
  *   it is a solo play at all is resolved by `ItemDetailViewModel.onPlay`, since in a SyncPlay group
- *   a play is sent to the group and the player is opened by the group's answer instead
- *   (DECISIONS.md, 2026-07-31).
+ *   a play is sent to the group and the player is opened by the group's answer instead.
  * @param onBack pops one entry — the plain back affordance.
  * @param onHome leaves the whole pushed chain at once and lands on the Home tab; see
  *   `AppScaffold.navigateHome`.
@@ -104,7 +103,7 @@ fun ItemDetailScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val selectionState = viewModel.selection.collectAsStateWithLifecycle()
     // Collected separately from [uiState] on purpose: the group changes a handful of times a
-    // session, the state several times a second while a download runs (M11 Phase 4).
+    // session, the state several times a second while a download runs.
     val activeGroup by viewModel.activeGroup.collectAsStateWithLifecycle()
     // Only *whether* the mode is on is read in this scope — it flips twice per selection. Reading
     // the set here would recompose the page (and re-create the episode list's content lambda) on
@@ -118,7 +117,7 @@ fun ItemDetailScreen(
 
     // A play tap resolves to a navigation only when it is a *solo* play; in a group the ViewModel
     // sends the group a queue instead and the player is opened by the group's answer, through
-    // `SyncPlayController.launchRequests` (DECISIONS.md, 2026-07-31).
+    // `SyncPlayController.launchRequests`.
     val currentOnPlay by rememberUpdatedState(onPlay)
     LaunchedEffect(viewModel) {
         viewModel.playRequests.collect { request ->
@@ -132,7 +131,7 @@ fun ItemDetailScreen(
 
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         // The overlay needs the same answer the content does, because the favourite heart is only
-        // *up here* on the shapes whose action row has no room for it (spec section 4c).
+        // *up here* on the shapes whose action row has no room for it.
         val layout = detailLayoutFor(maxWidth = maxWidth, maxHeight = maxHeight)
 
         ItemDetailContent(
@@ -205,10 +204,10 @@ private fun detailActions(
  * behind it is meant to draw edge-to-edge under the status bar.
  *
  * Home sits beside Back because a detail chain is the one place in the app that gets deep: series →
- * season → episode → "More like this" → … with no app bar to escape through, so the only way out
- * used to be tapping Back once per hop. The favourite heart joins them on compact, where the action
- * row below keeps one worded button and two circles and has no room for a third (spec section 4c);
- * on wide it stays in that row instead.
+ * season → episode → "More like this" → … with no app bar to escape through, so without it the
+ * only way out is tapping Back once per hop. The favourite heart joins them on compact, where the
+ * action row below keeps one worded button and two circles and has no room for a third; on wide it
+ * stays in that row instead.
  *
  * The contextual bar *replaces* this pair rather than sitting beside or below it. The screen has no
  * top bar of its own, so the overlaid pair *is* its bar, and a contextual bar's whole job is to
@@ -245,12 +244,12 @@ private fun DetailTopOverlay(
  * The floating navigation the detail screen wears instead of a top bar: glass circles over the
  * backdrop, Back at the start and the page's own affordances at the end.
  *
- * Not `:core:ui`'s `ScreenHeader`, deliberately (audit 2026-08-08, DUP-4): this row draws no title
- * and puts Home at the *end*, behind the favourite heart, because it floats over a full-bleed
- * backdrop rather than sitting above a list. Expressing both arrangements in one composable would
- * take a boolean saying which end Home belongs at, which is the kind of representable nonsense the
- * same audit's UI-8 is about. What is genuinely shared it does share: the `action_back`/`action_home`
- * labels (DUP-6), and `ChromeFill` — the tint `ScreenHeader.surfaceTint` exists to accept.
+ * Not `:core:ui`'s `ScreenHeader`, deliberately: this row draws no title and puts Home at the
+ * *end*, behind the favourite heart, because it floats over a full-bleed backdrop rather than
+ * sitting above a list. Expressing both arrangements in one composable would take a boolean saying
+ * which end Home belongs at — representable nonsense. What is genuinely shared it does share: the
+ * `action_back`/`action_home` labels, and `ChromeFill` — the tint `ScreenHeader.surfaceTint` exists
+ * to accept.
  *
  * @param showFavorite `false` on the wide layout, whose action row hosts the heart, and before the
  *   item has loaded — there is nothing to favourite yet.
@@ -325,14 +324,11 @@ private fun SelectionOverlay(
 }
 
 /**
- * Confirms removing a download from this screen's Download button (docs/POLISH.md — deleting a
- * downloaded file from the detail screen used to happen with no confirmation at all).
+ * Confirms removing a download from this screen's Download button — deleting a downloaded file
+ * with no confirmation at all is too easy to trigger by accident.
  *
- * It cited `SignOutDialog` in `:feature:settings` as its precedent and then copied only half of it:
- * a bare `AlertDialog` with none of the hairline every other dialog in the app draws, so this one
- * appeared as default M3 chrome over the backdrop it opens on (audit 2026-08-08, DUP-2). `:core:ui`'s
- * [ConfirmDialog] owns that edge now, and this dialog looks like the rest of the app — a deliberate
- * visual change, DECISIONS.md 2026-08-08.
+ * `:core:ui`'s [ConfirmDialog] owns the edge, so this dialog draws the hairline every other dialog
+ * in the app does rather than default M3 chrome over the backdrop it opens on.
  */
 @Composable
 private fun DeleteDownloadDialog(
@@ -353,7 +349,7 @@ private fun DeleteDownloadDialog(
  *
  * @param onPlay an episode row's play button was tapped. It hands over the *item*, not an id and a
  *   position: what a play means depends on whether there is a group, and that is the ViewModel's
- *   answer to give (DECISIONS.md, 2026-07-31).
+ *   answer to give.
  * @param onNavigateToItemId an episode page's series/season origin chip, or the season-siblings
  *   row's "See all", was tapped, by id rather than by item.
  */
@@ -431,8 +427,8 @@ private fun DetailSections(
         contentPadding = PaddingValues(bottom = Dimens.SpaceExtraLarge),
         verticalArrangement = Arrangement.spacedBy(Dimens.SpaceExtraLarge),
     ) {
-        // The backdrop and the lockup drawn on it are one node: the refresh puts the title *over*
-        // the artwork, and two lazy items cannot overlap.
+        // The backdrop and the lockup drawn on it are one node: the title sits *over* the artwork,
+        // and two lazy items cannot overlap.
         item(key = SECTION_HERO, contentType = DetailContentType.SECTION) {
             DetailHero(
                 item = detail,
@@ -480,9 +476,9 @@ private fun DetailSections(
 }
 
 /**
- * The episode page's own two rows: the positional next episode, and the rest of its season
- * (episode-detail-shortcuts, DECISIONS.md 2026-08-21). Both stay empty — and so undrawn — on every
- * other item type, since only `fetchRelated`'s episode branch populates [ItemDetailUiState.nextEpisode]
+ * The episode page's own two rows: the positional next episode, and the rest of its season. Both
+ * stay empty — and so undrawn — on every other item type, since only `fetchRelated`'s episode
+ * branch populates [ItemDetailUiState.nextEpisode]
  * / [ItemDetailUiState.seasonEpisodes].
  */
 private fun LazyListScope.episodeOriginRows(
@@ -545,7 +541,7 @@ private fun LazyListScope.relatedSections(
 
 /**
  * The season's episodes: a column of full-width cards on a phone, a horizontal strip of tiles on a
- * wide layout (spec section 4c).
+ * wide layout.
  *
  * The wide shape is one lazy node holding a `LazyRow`, not one node per episode, because a row that
  * scrolls sideways is a single item of the column it sits in — the same shape every `MediaRow` on
@@ -654,7 +650,7 @@ internal fun seasonSiblings(
 ): List<JellyfinItem> = seasonEpisodes.filterNot { it.id == currentEpisodeId }
 
 /**
- * The two node shapes this screen's `LazyColumn` draws (audit PERF-08).
+ * The two node shapes this screen's `LazyColumn` draws.
  *
  * `SECTION` covers the hero, and every `MediaRow`/`SectionTitle` block: each is structurally
  * different, but none of them repeats — there is exactly one of each per screen — so there is
@@ -672,12 +668,11 @@ private enum class DetailContentType {
 }
 
 /**
- * A section heading on this screen, in the refresh's row-title type (spec, "Sections").
+ * A section heading on this screen, in the row-title type.
  *
- * A heading to a screen reader as well as to the eye: `MediaRow`'s own titles became headings in
- * this audit's wave 2, and the two blocks this file titles itself — the episode list and the cast
- * rail — are exactly the ones a heading-jump has to be able to land on to skip a season's worth of
- * rows (accessibility audit 2026-08-05, A11Y-10).
+ * A heading to a screen reader as well as to the eye, like `MediaRow`'s own titles: the two blocks
+ * this file titles itself — the episode list and the cast rail — are exactly the ones a
+ * heading-jump has to be able to land on to skip a season's worth of rows.
  */
 @Composable
 internal fun DetailSectionTitle(
@@ -739,18 +734,18 @@ private const val SECTION_SIMILAR = "section-similar"
 /**
  * The three shapes the detail screen lays out in, derived **once** from the viewport.
  *
- * It used to be two independent booleans read at two different call sites — `isWideLayout(w, h)` for
- * the header, and a bare `maxWidth < COMPACT_MAX_WIDTH` for the overview clamp — from two different
- * breakpoints (720dp and 480dp). Two consequences, both of them bugs (audit 2026-08-08, UI-8):
+ * One enum rather than two independent booleans read at two different call sites — an
+ * `isWideLayout(w, h)` for the header and a bare `maxWidth < COMPACT_MAX_WIDTH` for the overview
+ * clamp, off two different breakpoints (720dp and 480dp). Two booleans have two bugs in them:
  *
  * - The **480–720dp band** — a small tablet in portrait, a large phone in landscape, a freeform or
- *   split-screen window — came out `isWide = false, compact = false`, so it took the stacked header
- *   (right) *and* lost the overview clamp (wrong): a full unclamped synopsis on a viewport with no
- *   more room for one than a phone has. [MEDIUM] is that band, and it clamps.
- * - `isWide = true, compact = true` was **representable and undefined**. Nothing produced it, because
- *   720 > 480 — but nothing said so either, and `WideStage` silently drops `compact`, so the day a
- *   breakpoint moved the screen would have had a state with no defined rendering. Three named cases
- *   cannot express it at all.
+ *   split-screen window — comes out `isWide = false, compact = false`, so it takes the stacked
+ *   header (right) *and* loses the overview clamp (wrong): a full unclamped synopsis on a viewport
+ *   with no more room for one than a phone has. [MEDIUM] is that band, and it clamps.
+ * - `isWide = true, compact = true` is **representable and undefined**. Nothing produces it, because
+ *   720 > 480 — but nothing says so either, and `WideStage` silently drops `compact`, so the day a
+ *   breakpoint moves there is a state with no defined rendering. Three named cases cannot express
+ *   it at all.
  *
  * @see clampsOverview
  */
@@ -760,7 +755,7 @@ internal enum class DetailLayout {
 
     /**
      * Too wide for the compact treatment, too small for the side-by-side stage: the stacked header,
-     * still clamped. The band the two-boolean version had no answer for.
+     * still clamped.
      */
     MEDIUM,
 
@@ -792,8 +787,8 @@ internal fun detailLayoutFor(
 /**
  * Whether the overview is clamped to a tappable few lines rather than run in full.
  *
- * Both non-stage layouts clamp. [DetailLayout.MEDIUM] is the behaviour change: that band used to
- * get the full paragraph because the clamp was keyed on the compact *width* alone.
+ * Both non-stage layouts clamp, [DetailLayout.MEDIUM] included — a clamp keyed on the compact
+ * *width* alone would hand that band the full paragraph.
  */
 internal val DetailLayout.clampsOverview: Boolean
     get() = this != DetailLayout.WIDE
@@ -803,7 +798,7 @@ internal val DetailLayout.clampsOverview: Boolean
  *
  * In **portrait** the banner is a share of the viewport *height* rather than a fixed number of dp:
  * a tablet in portrait is wide enough to take the [WIDE_BACKDROP_HEIGHT] branch on a screen twice
- * as tall, which left the poster stranded at the top with dead space below it (docs/POLISH.md).
+ * as tall, which would leave the poster stranded at the top with dead space below it.
  * The width-derived value stays as the floor — a proportional banner never gets *shorter* than the
  * fixed one — and [MAX_BACKDROP_HEIGHT] keeps it from pushing the facts and Play button off-screen
  * on a very tall device.
@@ -844,14 +839,13 @@ private val WIDE_BREAKPOINT = 720.dp
 private val WIDE_MIN_HEIGHT = 480.dp
 
 /**
- * The banner on a wide layout, which is also the floor the poster overlaps into (2026 refresh: 320
- * → 360dp, DECISIONS.md 2026-08-01 "card metrics and radii leave the jellyfin-web footprint").
+ * The banner on a wide layout, which is also the floor the poster overlaps into.
  */
 private val WIDE_BACKDROP_HEIGHT = 360.dp
 
 /**
- * The floor under a narrow layout's proportional banner (220 → 320dp in the refresh): the title
- * lockup is drawn *on* the artwork now, so a banner shorter than this has nothing to say it on.
+ * The floor under a narrow layout's proportional banner: the title lockup is drawn *on* the
+ * artwork, so a banner shorter than this has nothing to say it on.
  */
 private val NARROW_BACKDROP_HEIGHT = 320.dp
 
@@ -862,9 +856,9 @@ private const val PORTRAIT_BACKDROP_FRACTION = 0.46f
  * Share of the viewport height the banner claims in portrait on a compact-width ([COMPACT_MAX_WIDTH])
  * phone screen, instead of [PORTRAIT_BACKDROP_FRACTION].
  *
- * The refresh takes both fractions up (0.32 → 0.52, 0.40 → 0.46) because the banner now carries the
- * eyebrow, the title and the metadata row that used to sit under it — on a 360×800 phone that is
- * 416dp of hero, and the text it holds is the reason for the height rather than dead art.
+ * Both fractions are generous because the banner carries the eyebrow, the title and the metadata
+ * row rather than leaving them below it — on a 360×800 phone that is 416dp of hero, and the text it
+ * holds is the reason for the height rather than dead art.
  */
 private const val COMPACT_PORTRAIT_BACKDROP_FRACTION = 0.52f
 

@@ -40,15 +40,12 @@ internal interface PlayerApi {
     /**
      * `DELETE /Videos/ActiveEncodings` — kills the server-side ffmpeg process for this session.
      *
-     * Skipping this is what leaves orphaned transcodes behind on the server, which the M5
-     * definition of done explicitly checks for.
+     * Skipping this is what leaves orphaned transcodes behind on the server.
      */
     suspend fun stopEncodingProcess(
         deviceId: String,
         playSessionId: String,
     )
-
-    // M9 -------------------------------------------------------------------------------------------
 
     /**
      * The item's trickplay geometry — `BaseItemDto.trickplay`, keyed by media source id and then by
@@ -63,9 +60,9 @@ internal interface PlayerApi {
     /**
      * `GET /MediaSegments/{itemId}` — the intro/outro ranges a plugin detected.
      *
-     * Server-only by definition (docs/PLAN.md, "Playback pipeline" → "Media segments (M9)"), and
-     * optional: a server without the Media Segments API, or without a provider plugin, answers 404
-     * or with nothing, and the feature is simply absent rather than broken.
+     * Server-only by definition, and optional: a server without the Media Segments API, or without
+     * a provider plugin, answers 404 or with nothing, and the feature is simply absent rather than
+     * broken.
      */
     suspend fun getMediaSegments(
         itemId: UUID,
@@ -78,7 +75,7 @@ internal interface PlayerApi {
      * The endpoint jellyfin-web's Auto quality measures with: the server streams zeroes, so what
      * comes back is worth nothing except how long it took to arrive. `AutoBitrateDetector` is the
      * only caller, and it keeps the sizes small enough that the returned array is never a memory
-     * problem (DECISIONS.md, 2026-08-15).
+     * problem.
      */
     suspend fun getBitrateTestBytes(size: Int): ByteArray
 }

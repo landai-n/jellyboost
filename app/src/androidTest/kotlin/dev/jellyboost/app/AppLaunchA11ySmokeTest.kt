@@ -14,7 +14,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * One real screen, swept by the Accessibility Test Framework (accessibility audit 2026-08-05, CR-7).
+ * One real screen, swept by the Accessibility Test Framework.
  *
  * Everything else in the instrumented suite composes a component in isolation, which is what makes
  * those tests fast and precise — and also what makes them blind to the things that only exist once

@@ -48,12 +48,12 @@ private val JellyfinShapes =
 
 /**
  * The app theme. Dark only by design — jellyfin-web's dark theme is the reference and a light
- * scheme is explicitly out of scope for v1 (docs/PLAN.md).
+ * scheme is explicitly out of scope for v1.
  *
- * **Reduced motion is already handled — do not add a `MotionDurationScale` provider here.** The
- * 2026-08-05 accessibility audit flagged the app's ~54 animation sites as ignoring the system
- * "Remove animations" setting; verified against the resolved artifacts (compose-ui / animation-core
- * 1.11.4), they do not. `androidx.activity.compose.setContent` installs a lifecycle-aware window
+ * **Reduced motion is already handled — do not add a `MotionDurationScale` provider here.** It
+ * might look like the app's ~54 animation sites ignore the system "Remove animations" setting, but
+ * verified against the resolved artifacts (compose-ui / animation-core 1.11.4), they do not.
+ * `androidx.activity.compose.setContent` installs a lifecycle-aware window
  * recomposer, and `WindowRecomposer.android.kt` puts a `MotionDurationScaleImpl` into that
  * recomposer's effect context unless one is already there; it reads
  * `Settings.Global.ANIMATOR_DURATION_SCALE` and keeps watching it with a `ContentObserver`.

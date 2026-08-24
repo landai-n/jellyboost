@@ -119,7 +119,7 @@ class CastSessionCoordinator
          * casting or not (`releaseSession` cannot know), and a source remembered from an ordinary
          * local session would later be "orphaned" by a failed cast attempt — [onCastEnded] would
          * then report a stop, at position zero, for a film that was never cast, wiping its resume
-         * position (audit CAST-02).
+         * position.
          *
          * @param host ignored unless it is the attached one, so a stale ViewModel's teardown cannot
          *   detach the screen that replaced it.
@@ -140,15 +140,14 @@ class CastSessionCoordinator
          * flip comes before [RoutingPlayerHandle.stopInactive] so that the local player's own
          * shutdown events land on a subscription nothing is listening to any more — stopping it
          * first would let its `IsPlayingChanged(false)` reach the screen as if the session it is
-         * about to open had failed. Stopping it at all is decision 1: two players must not sound at
+         * about to open had failed. Stopping it at all is deliberate: two players must not sound at
          * once, and the local media notification has no business surviving a film that has moved to
          * a television.
          *
          * A start for a session that is **already** connected is dropped. The framework delivers one
          * on `onSessionResumed` after a Wi-Fi blip, and the monitor's own start-time replay can add
          * another; re-running the transfer for either would stop and re-negotiate a stream the
-         * receiver is happily playing — off a cast player that may still answer position zero
-         * (audit CAST-05).
+         * receiver is happily playing — off a cast player that may still answer position zero.
          */
         private fun onCastStarted(
             deviceName: String?,
@@ -202,8 +201,8 @@ class CastSessionCoordinator
             detachedSource = null
             routing.setActive(PlaybackTarget.Local)
             // The receiver is gone, but the cast player is not: left alone it keeps its listener,
-            // its media items and the `loaded` spec a later subtitle selection would match against
-            // (audit CAST-08). Stopping the now-inactive side clears all three; the session itself
+            // its media items and the `loaded` spec a later subtitle selection would match
+            // against. Stopping the now-inactive side clears all three; the session itself
             // is already over, so there is nothing this could interrupt.
             routing.stopInactive()
             host?.onCastEnded(last)

@@ -44,7 +44,7 @@ internal interface SyncPlayModule {
     fun bindSyncPlayApi(impl: SdkSyncPlayApi): SyncPlayApi
 
     /**
-     * **Not** `SdkSyncPlaySocket` (DECISIONS.md 2026-07-31): the SDK's socket routes received
+     * **Not** `SdkSyncPlaySocket`: the SDK's socket routes received
      * messages through a conflated `StateFlow` and loses the first of any back-to-back pair —
      * which is precisely how the server sends every SyncPlay transport action. The SDK-backed
      * implementation is kept in the tree as the reference for that defect.
@@ -54,7 +54,7 @@ internal interface SyncPlayModule {
     fun bindSyncPlaySocket(impl: OkHttpSyncPlaySocket): SyncPlaySocket
 
     /**
-     * The cross-feature contract (M11 Phase 4, key decision 2).
+     * The cross-feature contract.
      *
      * Bound here rather than in `:app` because this is where the implementation is: Hilt aggregates
      * modules across the whole app graph, so `:feature:detail` — which cannot see `:player` at all —
@@ -65,8 +65,8 @@ internal interface SyncPlayModule {
     fun bindSyncPlaySession(impl: ControllerSyncPlaySession): SyncPlaySession
 
     /**
-     * Contributes the SyncPlay group leave to `SessionRepository`'s pre-revocation hooks
-     * (audit NET-03): the leave must be sent while the access token still works.
+     * Contributes the SyncPlay group leave to `SessionRepository`'s pre-revocation hooks: the
+     * leave must be sent while the access token still works.
      */
     @Binds
     @IntoSet
@@ -85,7 +85,7 @@ internal object SyncPlayScopeModule {
      * controller's own per-session child job instead, so the singleton scope stays usable for the
      * next group.
      *
-     * **Single-threaded, and that is the controller's synchronization** (audit SP-07/SP-01/SP-08):
+     * **Single-threaded, and that is the controller's synchronization**:
      * `SyncPlayController` and `SyncPlayCommandScheduler` keep a session's bookkeeping in plain
      * `var`s and mutate it from half a dozen concurrent collectors, which on the default pool is a
      * data race on every field. `limitedParallelism(1)` serialises every coroutine on this scope —
@@ -120,7 +120,7 @@ internal object SyncPlayScopeModule {
      * websocket's reader, so an idle group is not a dropped connection, and the server-driven
      * `ForceKeepAlive` cadence is what keeps the *session* alive.
      *
-     * The [OkHttpClient.pingIntervalMillis] is what keeps the *connection* honest (audit SP-16):
+     * The [OkHttpClient.pingIntervalMillis] is what keeps the *connection* honest:
      * the app-level keep-alive is one-directional and `send` on a half-open TCP connection succeeds
      * into the send buffer for minutes, so without RFC 6455 pings a NAT timeout or a Wi-Fi↔cellular
      * handover leaves `connectionState` reading `Connected` for ever. A missed pong fails the

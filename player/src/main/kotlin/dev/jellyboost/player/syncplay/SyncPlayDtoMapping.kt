@@ -32,7 +32,7 @@ import java.time.ZoneId
 // `DateTimeSerializer` reads and writes those as **local wall-clock** time in
 // [ZoneId.systemDefault] — not UTC — so `SendCommand.when` parsed as if it were UTC is wrong by the
 // device's offset, which for SyncPlay means every scheduled play/pause/seek fires hours away from
-// the rest of the group. (Same bug class as the M4 two-hour progress-report shift; see
+// the rest of the group. (Same bug class as the two-hour progress-report shift; see
 // `dev.jellyboost.core.network.toSdkInstant`, whose helpers do the conversion.)
 //
 // Every function here takes an explicit [zone] so the round-trip can be tested against a fixed

@@ -15,11 +15,10 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for the shared download-badge helpers every list screen now sources (audit DUP-2).
+ * Unit tests for the shared download-badge helpers every list screen sources.
  *
- * The two properties worth pinning are the two the four hand-written copies existed to provide:
- * a collapsing flow degrades to "nothing is downloaded" instead of freezing the badges
- * (audit STAB-10), and a patch that changes nothing returns the *same* list instance so an
+ * Two properties are worth pinning: a collapsing flow degrades to "nothing is downloaded" instead
+ * of freezing the badges, and a patch that changes nothing returns the *same* list instance so an
  * unaffected row can skip recomposition entirely.
  */
 @OptIn(ExperimentalCoroutinesApi::class)

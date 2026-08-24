@@ -1,8 +1,10 @@
 #!/bin/bash
-# Agent gate: does the staged diff add code comments written in the AUTHORING PROCESS's
-# voice instead of the code's? This distinction needs judgment, not a regex — "session",
-# "the user", and quoted first person are all legitimate app-domain vocabulary — so a
-# headless model reviews only the ADDED comment lines and returns a verdict.
+# Agent gate: does the staged diff add code comments that describe where the code came
+# from instead of what it does? Flagged: authoring-process voice, audit/decision-record
+# citations, milestone/date provenance, and historical narration. This distinction needs
+# judgment, not a regex — "session", "the user", and quoted first person are all legitimate
+# app-domain vocabulary — so a headless model reviews only the ADDED comment lines and
+# returns a verdict.
 #
 # Contract: prints nothing and exits 0 on CLEAN; prints the model's cited lines and exits 1
 # on LEAK. Any infrastructure failure (CLI missing, timeout, unparseable output) exits 0
@@ -31,11 +33,11 @@ COMMENTS="$(printf '%s\n' "$DIFF" | grep -E '^\+' | grep -E '(//|^\+\s*\*|/\*)' 
 command -v claude >/dev/null 2>&1 || exit 0
 command -v perl >/dev/null 2>&1 || exit 0
 
-PROMPT="You are a commit gate for an Android codebase largely written by delegated coding agents. Below are the COMMENT lines a staged commit ADDS (unified-diff '+' lines). Decide whether any comment leaks the AUTHORING PROCESS's voice instead of describing the code.
+PROMPT="You are a commit gate for an Android codebase largely written by delegated coding agents. Below are the COMMENT lines a staged commit ADDS (unified-diff '+' lines). Decide whether any comment describes where the code CAME FROM — the authoring process, its provenance, or its edit history — instead of what the code does.
 
-FLAG (leak): references to the development conversation or orchestration — agents, waves, worktrees, sessions-of-work, the orchestrator/reviewer, instructions or prompts given to the author ('as requested', 'per the brief', 'the task said'), scope-of-my-work language ('not this wave', 'out of my scope', 'a sibling agent owns'), or first-person narration of the editing process ('I moved this', 'let me', 'I'll keep').
+FLAG (leak): references to the development conversation or orchestration — agents, waves, worktrees, sessions-of-work, the orchestrator/reviewer, instructions or prompts given to the author ('as requested', 'per the brief', 'the task said'), scope-of-my-work language ('not this wave', 'out of my scope', 'a sibling agent owns'), or first-person narration of the editing process ('I moved this', 'let me', 'I'll keep'). ALSO FLAG provenance and history: citations of audit findings or decision/planning records ('audit UI-9', 'PERF-25', 'DECISIONS 2026-08-07', 'STATUS backlog', 'docs/PLAN.md'), milestone or development-date provenance ('M7', 'added 2026-08-08'), and historical narration of past code states ('this used to be a runBlocking', 'previously', 'originally').
 
-DO NOT FLAG: citations of audit findings or decision records (e.g. 'audit UI-9', 'DECISIONS 2026-08-07', 'STATUS backlog'); historical narration about the code itself ('this used to be a runBlocking'); quoted protocol or UX semantics including first person inside quotes ('\"I am not ready yet\"'); references to the app's end user ('the user asked to be offline'); TODOs that name code-owned work.
+DO NOT FLAG: present-tense statements of a real constraint or rationale the code cannot show; quoted protocol or UX semantics including first person inside quotes ('\"I am not ready yet\"'); references to the app's end user ('the user asked to be offline'); TODOs that name code-owned work.
 
 Reply with EXACTLY one first line: 'VERDICT: CLEAN' or 'VERDICT: LEAK'. If LEAK, list each offending line verbatim on following lines with one short reason each.
 

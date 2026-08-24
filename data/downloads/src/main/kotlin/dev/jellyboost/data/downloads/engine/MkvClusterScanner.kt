@@ -6,10 +6,10 @@ package dev.jellyboost.data.downloads.engine
  *
  * This is the one piece of information a progressive transcode does not otherwise give us. The
  * server encodes the file as it sends it, so the response is chunked and there is no
- * `Content-Length` to divide into (docs/notes/download-size-estimation.md) — but Matroska writes an
- * absolute timestamp at the head of every cluster (ffmpeg's muxer emits one roughly every 5 s or
- * 5 MB), and `bytesReceived × runtime / mediaTimeReceived` is exactly "the average output bitrate
- * so far", which is the number the estimate needs. See [TranscodeSizeProjector].
+ * `Content-Length` to divide into — but Matroska writes an absolute timestamp at the head of every
+ * cluster (ffmpeg's muxer emits one roughly every 5 s or 5 MB), and
+ * `bytesReceived × runtime / mediaTimeReceived` is exactly "the average output bitrate so far",
+ * which is the number the estimate needs. See [TranscodeSizeProjector].
  *
  * ### Why not `MatroskaExtractor`
  * Media3 ships a complete one, and it is the wrong tool here: it wants a `SeekMap`, an
@@ -38,9 +38,9 @@ package dev.jellyboost.data.downloads.engine
  *    — the one element Matroska allows in front of it, because the spec requires `CRC-32` to be the
  *    first Child Element of whatever contains it. ffmpeg's muxer writes one on every cluster by
  *    default, so on a real transcode `Timestamp` is the *second* child; insisting it be the first
- *    is what made this read zero clusters off an actual server response. Requiring that shape is
- *    still what makes a stray `1F 43 B6 75` inside a video frame essentially impossible to accept:
- *    the id, a well-formed size, the `0xBF`/`0xE7` and a length byte all have to line up;
+ *    reads zero clusters off a real server response. Requiring that shape is still what makes a
+ *    stray `1F 43 B6 75` inside a video frame essentially impossible to accept: the id, a
+ *    well-formed size, the `0xBF`/`0xE7` and a length byte all have to line up;
  * 4. the timestamp's own size is a one-byte varint in `0x81..0x88` — a 1–8 byte unsigned integer;
  * 5. every one of those bytes is actually present. A candidate that runs off the end of the chunk
  *    is dropped whole and re-examined on the next chunk through the carry buffer; it is never
@@ -61,9 +61,8 @@ package dev.jellyboost.data.downloads.engine
  * thread copying it.
  */
 @Suppress(
-    // Class-level, replacing the single function-level copy this file already carried: like `MatroskaSeekIndexRepair`,
-    // every helper is a guard chain over untrusted bytes where each early return names a distinct malformation
-    // (2026-08-07 detekt un-blinding).
+    // Like `MatroskaSeekIndexRepair`, every helper is a guard chain over untrusted bytes where each early return
+    // names a distinct malformation.
     "ReturnCount",
 )
 internal class MkvClusterScanner {
@@ -74,9 +73,9 @@ internal class MkvClusterScanner {
      * Scratch for the carry-plus-head join, allocated once and reused.
      *
      * At most `(WINDOW - 1)` carried bytes joined to at most `(WINDOW - 1)` of the new chunk, so
-     * this is the largest join that can ever be needed. It used to be a fresh `ByteArray` per
-     * chunk, alongside a second one in [rememberTail] — two allocations for every 64 KB of a
-     * transfer, on the thread copying it (audit 2026-08-08, PERF-13).
+     * this is the largest join that can ever be needed. A fresh `ByteArray` per chunk here, plus a
+     * second one in [rememberTail], would be two allocations for every 64 KB of a transfer, on the
+     * thread copying it.
      */
     private val joined = ByteArray(2 * (WINDOW - 1))
 
@@ -124,10 +123,10 @@ internal class MkvClusterScanner {
      * Scans `[from, end)` for candidates that *begin* before [startEnd].
      *
      * The two ids this looks for begin with distinct bytes, so the loop tests one byte per offset
-     * and only calls [matches] where a lead byte actually landed. It used to call it at *every*
-     * offset — twice, once per pattern — which is two calls and two bounds checks for each byte of
-     * a multi-gigabyte transfer, on the thread copying it (audit 2026-08-08, PERF-13). Identical
-     * results: a byte that is not the pattern's first byte can never start the pattern.
+     * and only calls [matches] where a lead byte actually landed. Calling it at *every* offset —
+     * twice, once per pattern — would be two calls and two bounds checks for each byte of a
+     * multi-gigabyte transfer, on the thread copying it. Identical results: a byte that is not the
+     * pattern's first byte can never start the pattern.
      */
     private fun scan(
         buffer: ByteArray,
@@ -158,8 +157,8 @@ internal class MkvClusterScanner {
      * Keeps the tail of `carry + chunk` for the next call, so a split element is not lost.
      *
      * Shifted in place. `System.arraycopy` is a `memmove`, so the surviving carry bytes can slide
-     * down over themselves before the chunk's tail is appended — the third array this used to
-     * allocate per chunk bought nothing (audit 2026-08-08, PERF-13).
+     * down over themselves before the chunk's tail is appended — a third array allocated per chunk
+     * would buy nothing.
      */
     private fun rememberTail(
         chunk: ByteArray,
@@ -223,8 +222,7 @@ internal class MkvClusterScanner {
      *
      * The size is read as a full varint rather than as a single byte: nothing in the format says a
      * muxer must spell "3" as `0x83` when `0x40 0x03` is equally legal, and reading only the
-     * one-byte form silently left every later timestamp on the default scale
-     * (docs/notes/audit-2026-07.md, MKV-08).
+     * one-byte form would silently leave every later timestamp on the default scale.
      */
     private fun readTimestampScale(
         buffer: ByteArray,
@@ -328,9 +326,9 @@ internal class MkvClusterScanner {
          * Steps over a cluster's `CRC-32` child when it has one.
          *
          * A `CRC-32` is a 32-bit checksum and nothing else, so its length has to be exactly four —
-         * `0x84`. Accepting 1..8 the way a general integer would made a `BF` byte followed by any
-         * plausible length a step this would take, which is one fewer byte that has to line up for a
-         * random `1F 43 B6 75` to be believed (docs/notes/audit-2026-07.md, MKV-09).
+         * `0x84`. Accepting 1..8 the way a general integer would makes a `BF` byte followed by any
+         * plausible length a step this would take, which is one fewer byte that has to line up for
+         * a random `1F 43 B6 75` to be believed.
          *
          * @param at the index of the cluster's first child.
          * @return the index of the first child that is not a `CRC-32`, or `null` when one is there

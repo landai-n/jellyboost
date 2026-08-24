@@ -6,8 +6,7 @@ import java.net.URI
 import java.util.UUID
 
 /**
- * Everything on this device that is needed to play one downloaded item without a network
- * (docs/PLAN.md, "Playback pipeline" → Offline).
+ * Everything on this device that is needed to play one downloaded item without a network.
  *
  * It is the hand-off between the download pipeline, which knows what is on disk, and `:player`'s
  * `LocalPlaybackResolver`, which turns it into a `PlaybackMediaSource`. The split is deliberate:
@@ -20,7 +19,7 @@ import java.util.UUID
  *
  * [quality] is the one thing that stops [mediaSource] from being taken at face value. It records
  * what was *asked of the server*, and for anything but [DownloadQuality.ORIGINAL] the file on disk
- * is a re-encode that no longer matches the streams the cached blob describes — exactly one audio
+ * is a re-encode that does not match the streams the cached blob describes — exactly one audio
  * track and no embedded subtitles at all, because the endpoint takes one `audioStreamIndex` and
  * drops everything else. `LocalPlaybackResolver` needs it to keep the offline pickers from offering
  * tracks that are not in the file. [bakedAudioStreamIndex] says *which* audio track that is; the
@@ -37,8 +36,8 @@ import java.util.UUID
  * @property audio the extra audio tracks of a transcoded download, sorted ascending by
  *   [DownloadedAudio.streamIndex] — **this order is the contract**: the player builds its
  *   `MergingMediaSource` children in exactly this order and maps ExoPlayer track groups back to
- *   Jellyfin stream indices by position (docs/notes/offline-multitrack-design.md, phase 2). Empty
- *   for an `ORIGINAL` download, where every track is already in the file.
+ *   Jellyfin stream indices by position. Empty for an `ORIGINAL` download, where every track is
+ *   already in the file.
  */
 data class DownloadedMedia(
     val itemId: UUID,
@@ -85,9 +84,8 @@ data class DownloadedAudio(
 /**
  * The downloaded trickplay tile sheets of one item, with the geometry needed to address them.
  *
- * The scrubber that draws these is M9 (docs/PLAN.md, "M9 Polish" → trickplay scrubber); M8 only
- * makes the data reachable from a playing local source, so that the scrubber is a UI change rather
- * than a data change (DECISIONS.md 2026-07-29).
+ * This type only makes the data reachable from a playing local source, so that the scrubber that
+ * draws it is a UI change rather than a data change.
  *
  * @property width pixel width of a single thumbnail — also the resolution the tiles were requested
  *   at, and part of their URL.

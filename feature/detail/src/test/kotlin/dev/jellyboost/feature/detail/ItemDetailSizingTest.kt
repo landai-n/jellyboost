@@ -8,20 +8,17 @@ import org.junit.jupiter.api.Test
  * Unit tests for [backdropHeight] and [detailLayoutFor] — the two viewport-driven decisions that
  * make up the item-detail screen's responsive layout.
  *
- * Phone landscape (~800×360dp) used to be misread as the wide/tablet shape: it clears
- * [WIDE_BREAKPOINT] on width alone, so the header laid out side by side and the banner took the
- * fixed tablet height on a viewport far too short for either. [WIDE_MIN_HEIGHT] rules that shape
- * out — the cases below cover every quadrant (phone/tablet × portrait/landscape) to pin the fix
- * without moving tablet behavior at all.
+ * Phone landscape (~800×360dp) must not be read as the wide/tablet shape: it clears
+ * [WIDE_BREAKPOINT] on width alone, so the header would lay out side by side and the banner would
+ * take the fixed tablet height on a viewport far too short for either. [WIDE_MIN_HEIGHT] rules that
+ * shape out — the cases below cover every quadrant (phone/tablet × portrait/landscape) without
+ * moving tablet behaviour at all.
  *
- * The expected heights are the 2026-refresh values (DECISIONS.md 2026-08-01, "card metrics and
- * radii leave the jellyfin-web footprint"): the banner now carries the title lockup, so both
- * portrait fractions and both floors went up. Same viewports, same assertions — only the numbers
- * the refresh moved.
+ * The banner carries the title lockup, which is why both portrait fractions and both floors sit as
+ * high as they do.
  *
- * The layout assertions are [DetailLayout] rather than the old `isWideLayout` boolean (audit
- * 2026-08-08, UI-8). Every case that used to read `shouldBe false` now says *which* non-wide shape
- * it is, which is the distinction the two-boolean version could not make.
+ * The layout assertions are [DetailLayout] rather than a plain wide/not-wide boolean: every case
+ * says *which* non-wide shape it is, which is the distinction a two-boolean version cannot make.
  */
 class ItemDetailSizingTest {
     @Test
@@ -100,7 +97,7 @@ class ItemDetailSizingTest {
 
     @Test
     fun `only the wide stage runs the overview in full`() {
-        // The behaviour change UI-8 is about: MEDIUM clamps, where it used not to.
+        // MEDIUM clamps too — a clamp keyed on the compact width alone would not.
         DetailLayout.COMPACT.clampsOverview shouldBe true
         DetailLayout.MEDIUM.clampsOverview shouldBe true
         DetailLayout.WIDE.clampsOverview shouldBe false

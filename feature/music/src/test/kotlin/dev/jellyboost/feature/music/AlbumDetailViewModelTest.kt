@@ -189,7 +189,7 @@ class AlbumDetailViewModelTest {
             coVerify(exactly = 2) { repository.getItem(ALBUM_ID) }
         }
 
-    // ---- downloads (M13 Phase 5) -----------------------------------------------------------------
+    // ---- downloads -------------------------------------------------------------------------------
 
     @Test
     fun `downloading the album enqueues the album id, not the track ids`() =

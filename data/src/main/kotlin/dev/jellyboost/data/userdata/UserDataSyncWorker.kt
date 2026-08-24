@@ -12,12 +12,7 @@ import timber.log.Timber
 
 /**
  * Pushes the rows [UserDataRepository] could not deliver (`toBeSynced = true`) to the server, and
- * adopts the server's copy where that one is newer (docs/PLAN.md, "Data layer" → most-recent-wins).
- *
- * Real since M8; it was deliberately a stub through M4–M7 ("M4 Item detail + user data … sync worker
- * stubbed"). Everything around the worker was already real — the `NetworkType.CONNECTED` constraint,
- * the unique-work policy, the exponential backoff, the pending-row query — so filling it in meant
- * writing [UserDataSyncer] and nothing else.
+ * adopts the server's copy where that one is newer (most-recent-wins).
  *
  * The worker itself is deliberately thin: the session check lives in [SessionGate] and the decision
  * matrix lives in [UserDataSyncer], both of which run on the JVM, while a `CoroutineWorker` only runs
@@ -30,8 +25,8 @@ import timber.log.Timber
  *
  * Any of the three can run before `MainViewModel` has restored the session — app start is the
  * obvious one, but a reconnect right after process death races it too — so [doWork] consults
- * [SessionGate] before touching [UserDataSyncer], the same fix M7 shipped for `DownloadWorker`
- * (see `DECISIONS.md`, "the download worker restores the session itself").
+ * [SessionGate] before touching [UserDataSyncer], the same reasoning `DownloadWorker` follows to
+ * restore the session itself.
  */
 @HiltWorker
 internal class UserDataSyncWorker

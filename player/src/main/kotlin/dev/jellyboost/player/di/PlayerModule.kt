@@ -58,7 +58,7 @@ internal interface PlayerBindingsModule {
      * cast session, so nothing above it changed. `ExoPlayerHandle` stays a `@Singleton` and stays
      * injectable concretely: `PlaybackService` takes it directly, because the local media session
      * and its notification belong to the *local* player and should disappear while a television has
-     * the film (docs/notes/chromecast-m12-plan.md, key decision 1).
+     * the film.
      */
     @Binds
     @Singleton
@@ -79,7 +79,7 @@ internal interface PlayerBindingsModule {
     fun bindCastSessionMonitor(impl: GmsCastSessionMonitor): CastSessionMonitor
 
     /**
-     * Where the player screen hands its cast session over (M12 Phase 3).
+     * Where the player screen hands its cast session over.
      *
      * The interface, not the coordinator, because `PlayerViewModel` has to be constructible without
      * one — `NoCastPlaybackCoordinator` is its default, and the graph's job here is only to make
@@ -122,7 +122,7 @@ internal object PlayerProvidersModule {
      * Separate from anything the SDK uses: media transfers are long-lived, so their timeouts and
      * connection pool have nothing in common with a JSON API call's.
      *
-     * Qualified (audit ARCH-06): `:data:downloads` already qualifies its own no-timeout download
+     * Qualified: `:data:downloads` already qualifies its own no-timeout download
      * client, and leaving this one the graph's only unqualified `OkHttpClient` would make it the
      * silent default for any future unqualified `@Inject` — explicit is safer than "whichever
      * client happened to stay nameless".
@@ -133,7 +133,7 @@ internal object PlayerProvidersModule {
     fun provideMediaOkHttpClient(authInterceptor: JellyfinAuthInterceptor): OkHttpClient =
         OkHttpClient
             .Builder()
-            // Network interceptor, not application (audit NET-05): the auth header's same-origin
+            // Network interceptor, not application: the auth header's same-origin
             // check must run per hop, so a redirect off-server is inspected — and refused — too.
             .addNetworkInterceptor(authInterceptor)
             .build()
@@ -142,7 +142,7 @@ internal object PlayerProvidersModule {
      * Where ExoPlayer gets its bytes.
      *
      * `DefaultDataSource` wraps the HTTP source so `file://` and `content://` URIs resolve too —
-     * that is what M8's downloaded-file playback will need, with no change here.
+     * that is what downloaded-file playback needs, with no change here.
      */
     @Provides
     @Singleton
@@ -153,7 +153,7 @@ internal object PlayerProvidersModule {
     ): DataSource.Factory = DefaultDataSource.Factory(context, OkHttpDataSource.Factory(okHttpClient))
 }
 
-/** Marks the OkHttp client ExoPlayer transfers media on (audit ARCH-06). */
+/** Marks the OkHttp client ExoPlayer transfers media on. */
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
 internal annotation class MediaHttpClient

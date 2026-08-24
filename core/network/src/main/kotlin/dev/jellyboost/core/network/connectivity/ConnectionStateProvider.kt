@@ -30,7 +30,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * The app's single source of truth for online/offline (docs/PLAN.md, "Connectivity").
+ * The app's single source of truth for online/offline.
  *
  * Three inputs, one answer:
  *
@@ -56,12 +56,12 @@ import javax.inject.Singleton
  * A probe is requested on a usable network, on a reported transport failure, on app resume or a
  * *Retry* tap, and **on every change of session** — see [probeOnSessionChange].
  *
- * Three things beyond that keep a wrong verdict from sticking (DECISIONS.md, 2026-07-31):
+ * Three things beyond that keep a wrong verdict from sticking:
  *
  * - A probe requested while the session is still [SessionState.Unknown] is dropped rather than run.
  *   [ServerReachabilityProbe] answers "unreachable" when nobody is signed in, so probing during the
- *   milliseconds before `restoreSession()` publishes anything used to demote the launch optimism and
- *   put every cold start on the offline home.
+ *   milliseconds before `restoreSession()` publishes anything would otherwise demote the launch
+ *   optimism and put every cold start on the offline home.
  * - While the state reads [ConnectionState.OFFLINE_SERVER_UNREACHABLE] the provider re-probes every
  *   [UNREACHABLE_REPROBE_MS] — see [reprobeWhileUnreachable].
  * - A probe that confirms an already-reachable server after a [reportFailure] emits
@@ -134,8 +134,8 @@ class ConnectionStateProvider
         /**
          * Asks for a re-probe because a request just failed at the transport level.
          *
-         * Called by `DelegatingJellyfinRepository` (docs/PLAN.md, "Data layer"). Cheap and
-         * non-suspending: it only drops a token in the channel.
+         * Called by `DelegatingJellyfinRepository`. Cheap and non-suspending: it only drops a
+         * token in the channel.
          */
         fun reportFailure() {
             Timber.d("Transport failure reported; queueing a reachability probe")

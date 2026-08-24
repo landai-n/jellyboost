@@ -75,8 +75,7 @@ class AutoBitrateDetectorTest {
             val cap = detector().currentCap()
 
             // Cumulative, not last-chunk: 4_500_000 bytes × 8 ÷ 1.4 s ≈ 25.71 Mbps, minus the 20%
-            // headroom. The last chunk alone would read 30 Mbps — TCP's window, not the link
-            // (DECISIONS.md, 2026-08-15 amendment).
+            // headroom. The last chunk alone would read 30 Mbps — TCP's window, not the link.
             cap shouldBe 20_571_428
             coVerify(exactly = 3) { api.getBitrateTestBytes(any()) }
         }

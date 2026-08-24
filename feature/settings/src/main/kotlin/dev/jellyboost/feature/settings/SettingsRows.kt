@@ -46,9 +46,9 @@ internal val SettingsRowMinHeight: Dp = 48.dp
 /**
  * A titled group of rows.
  *
- * The heading wears the refresh's shared [JellyfinTypeExtras.SectionTitle] style (2026 refresh,
- * Phase 5 sweep) but keeps its primary accent colour rather than going plain white like a home or
- * library row's heading: a long scrolling preference list has no artwork or layout to orient by, so
+ * The heading wears the shared [JellyfinTypeExtras.SectionTitle] style but keeps its primary
+ * accent colour rather than going plain white like a home or library row's heading: a long
+ * scrolling preference list has no artwork or layout to orient by, so
  * the accent is the one piece of wayfinding a thumb flicking past divider lines gets, and dropping it
  * would leave "Playback"/"Downloads"/"Account" reading exactly like the [SettingsChoiceGroup] labels
  * one level below them.
@@ -73,10 +73,9 @@ internal fun SettingsSection(
                         bottom = Dimens.SpaceSmall,
                     )
                     // Settings is the longest scrolling list in the app and these five words are
-                    // its only wayfinding. Marked as headings they are also TalkBack's, which had
-                    // no heading anywhere in the app to jump between (accessibility audit
-                    // 2026-08-05, A11Y-10) — reaching "Account" meant swiping past every playback
-                    // and download preference above it.
+                    // its only wayfinding. Marked as headings they are also TalkBack's: without
+                    // them there is no heading anywhere in the app to jump between, so reaching
+                    // "Account" means swiping past every playback and download preference above it.
                     .semantics { heading() },
         )
         content()
@@ -116,17 +115,17 @@ internal fun SettingsSwitchRow(
  * caveat under the group, the way the download-quality picker does it.
  *
  * @param groupLabel the name of the [SettingsChoiceGroup] this row belongs to, folded into what a
- *   screen reader says. Required, not optional, because the alternative is what the 2026-08-05
- *   accessibility audit found (F12): three "Off / Show button / Auto" rows and three more of them
- *   further down, with the two words that tell them apart — "Skip intro", "Skip outro" — in a
- *   caption above that belonged to nothing. A user landing on a row (from a heading jump, from a
- *   rotation, from anywhere but a linear swipe through the whole screen) had no way to know which
- *   preference they were about to change. The group's caption is muted in turn, so it is said once
- *   per row rather than once more on its own.
+ *   screen reader says. Required, not optional, because the alternative is three "Off / Show
+ *   button / Auto" rows and three more of them further down, with the two words that tell them
+ *   apart — "Skip intro", "Skip outro" — in a caption above that belongs to nothing. A user
+ *   landing on a row (from a heading jump, from a rotation, from anywhere but a linear swipe
+ *   through the whole screen) would have no way to know which preference they were about to
+ *   change. The group's caption is muted in turn, so it is said once per row rather than once
+ *   more on its own.
  * @param actionHint what activating this row *does*, when that is not simply "select it". Rides in
  *   the description because `Modifier.selectable` has no `onClickLabel` — see the storage picker's
- *   recovery row (audit F13), where re-picking the option already in force is the way out of a
- *   missing-volume state and looks, visually, like a row that is already selected.
+ *   recovery row, where re-picking the option already in force is the way out of a missing-volume
+ *   state and looks, visually, like a row that is already selected.
  */
 @Composable
 internal fun SettingsChoiceRow(
@@ -179,16 +178,16 @@ internal fun choiceRowDescription(
  * instead of reading three unrelated radio buttons.
  *
  * The label is styled as a **subsection heading** — `labelLarge` in `onSurfaceVariant` — and not
- * like the rows beneath it. It used to be `bodyLarge`/`onSurface`, pixel for pixel what [RowLabel]
- * draws, so "Skip intro" read as one more tappable row sitting above three others and nothing said
- * otherwise until you pressed it (POLISH.md). It stays quieter than [SettingsSection]'s
+ * like the rows beneath it: styled as `bodyLarge`/`onSurface`, pixel for pixel what [RowLabel]
+ * draws, "Skip intro" would read as one more tappable row sitting above three others with nothing
+ * saying otherwise until you pressed it. It stays quieter than [SettingsSection]'s
  * `titleSmall`-in-primary heading, which is the level above it.
  *
  * The caption is drawn but not *spoken*: every row inside carries [label] in its own description
  * (`SettingsChoiceRow`'s `groupLabel`), which is the only association a screen reader can actually
- * rely on — a caption above a group is, semantically, a sentence next to some radio buttons
- * (accessibility audit 2026-08-05, F12). Muting it here is the same trade `JellyfinTextField` makes
- * with its own field caption: said once, on the thing it names, rather than twice.
+ * rely on — a caption above a group is, semantically, a sentence next to some radio buttons.
+ * Muting it here is the same trade `JellyfinTextField` makes with its own field caption: said
+ * once, on the thing it names, rather than twice.
  */
 @Composable
 internal fun SettingsChoiceGroup(
@@ -218,8 +217,8 @@ internal fun SettingsChoiceGroup(
  * A row that only reports something — a name, a server, a storage figure.
  *
  * One node, like every other row on this screen: a caption and the fact it captions are not two
- * pieces of information, and read as two stops they arrive as "Version" … "0.1.0-debug" with a
- * swipe in between (accessibility audit 2026-08-05, F11).
+ * pieces of information, and read as two stops they would arrive as "Version" … "0.1.0-debug"
+ * with a swipe in between.
  */
 @Composable
 internal fun SettingsInfoRow(

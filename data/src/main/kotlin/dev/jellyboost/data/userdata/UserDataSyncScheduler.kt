@@ -23,7 +23,7 @@ internal interface UserDataSyncScheduler {
     fun enqueue()
 }
 
-/** [UserDataSyncScheduler] backed by WorkManager, per docs/PLAN.md's "Data layer". */
+/** [UserDataSyncScheduler] backed by WorkManager. */
 @Singleton
 internal class WorkManagerUserDataSyncScheduler
     @Inject

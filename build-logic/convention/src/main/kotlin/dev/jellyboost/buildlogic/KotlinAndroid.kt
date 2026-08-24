@@ -27,7 +27,7 @@ internal fun Project.configureKotlinAndroid(commonExtension: CommonExtension) {
         defaultConfig.minSdk = libs.intVersion("androidMinSdk")
         // Every module, not only `:app`: the instrumented accessibility suite lives in the module
         // that owns the component it holds still, and a library with no runner declared has no
-        // `connectedDebugAndroidTest` to run (accessibility audit 2026-08-05, CR-7).
+        // `connectedDebugAndroidTest` to run.
         defaultConfig.testInstrumentationRunner = ANDROID_JUNIT_RUNNER
 
         with(compileOptions) {
@@ -40,8 +40,8 @@ internal fun Project.configureKotlinAndroid(commonExtension: CommonExtension) {
             // Lint is a build gate, not a report: an issue at `error` severity stops the build.
             // Which issues those are is decided in one place — `config/lint/lint.xml` — where the
             // accessibility checks are errors and the families this project has never enforced are
-            // demoted to warnings, so turning the switch on could not fail anything that was
-            // passing (accessibility audit 2026-08-05, CR-7 / A11Y-LINT-01).
+            // demoted to warnings, so turning the switch on cannot fail anything that is
+            // otherwise passing.
             abortOnError = true
             // One config for every module. Without this each module would pick up its own
             // `lint.xml` (or none), which is how a per-module exemption gets added by accident.

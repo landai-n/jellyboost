@@ -14,12 +14,11 @@ import javax.inject.Singleton
 import kotlin.coroutines.cancellation.CancellationException
 
 /**
- * Fetches the intro/outro ranges for a playing item (docs/PLAN.md, "Playback pipeline" →
- * "Media segments (M9): `getItemSegments(INTRO/OUTRO)` → skip button; per-type pref; server-only").
+ * Fetches the intro/outro ranges for a playing item.
  *
- * **Server-only, and silent about it.** A local source is never asked — the plan scopes the feature
- * to the server and the download pipeline stores no segments, so offline the feature is not
- * degraded, it is absent. So is the case the plan does not name but every real deployment has: the
+ * **Server-only, and silent about it.** A local source is never asked — the feature is server-only
+ * and the download pipeline stores no segments, so offline it is not degraded, it is absent. So is
+ * the everyday deployment case: the
  * Media Segments API arrived in Jellyfin 10.10 and only answers with anything when a detection
  * plugin is installed, so a 404 or an empty answer has to leave the UI exactly as it was rather
  * than surface an error the user cannot act on. Every failure therefore ends at "no segments".

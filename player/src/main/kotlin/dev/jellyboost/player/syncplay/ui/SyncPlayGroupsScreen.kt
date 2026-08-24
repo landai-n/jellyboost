@@ -63,19 +63,19 @@ import java.util.UUID
 import dev.jellyboost.core.ui.R as CoreUiR
 
 /**
- * The dedicated SyncPlay section (M11 Phase 5, docs/notes/syncplay-m11-plan.md): every group this
- * account may join, the one it is already in pinned above them, and the three membership actions.
+ * The dedicated SyncPlay section: every group this account may join, the one it is already in
+ * pinned above them, and the three membership actions.
  *
  * A pushed destination like `SettingsScreen` and `LibraryGridScreen` — reached from the home top
  * bar's Groups action, not one of the four tabs — so it owns the same back-plus-home glass header
- * `LibraryGridScreen` established (2026 refresh, Phase 5 sweep) rather than the app's own chrome.
+ * `LibraryGridScreen` uses rather than the app's own chrome.
  *
  * Join, create and leave are never handled here: they go straight to [SyncPlayGroupsViewModel],
  * which forwards them to `SyncPlayController` — the only thing that owns the socket and the join
- * handshake (key decision 11 again: this screen only ever *asks*).
+ * handshake. This screen only ever *asks*.
  *
- * The ViewModel is resolved here rather than by the caller: [SyncPlayGroupsViewModel] is `internal`
- * (audit ARCH-2), so `:app` names the destination and nothing else.
+ * The ViewModel is resolved here rather than by the caller: [SyncPlayGroupsViewModel] is
+ * `internal`, so `:app` names the destination and nothing else.
  *
  * @param onOpenPlayer opens the full-screen player for the pinned group's current item — the same
  *   `(itemId, startPositionTicks)` shape the app NavHost's own launch-request collector uses, so a
@@ -138,9 +138,9 @@ internal fun SyncPlayGroupsContent(
 ) {
     var showCreateDialog by remember { mutableStateOf(false) }
     var confirmingLeave by remember { mutableStateOf(false) }
-    // The shared one-shot idiom, keyed on the message rather than on its copy (audit DUP-3/HYG-8):
-    // two `SyncPlayMessage`s that happen to resolve to the same sentence are still two messages, and
-    // the copy-keyed version this replaces would have shown neither the second one nor consumed it.
+    // The shared one-shot idiom, keyed on the message rather than on its copy: two
+    // `SyncPlayMessage`s that happen to resolve to the same sentence are still two messages, and a
+    // copy-keyed version would show neither the second one nor consume it.
     val snackbarHostState =
         rememberOneShotSnackbar(
             message = state.userMessage,
@@ -152,9 +152,9 @@ internal fun SyncPlayGroupsContent(
         // The header below carries its own status-bar padding, the same way `LibraryGridScreen`'s
         // does — nothing here reserves space for a `TopAppBar` any more.
         contentWindowInsets = WindowInsets(0),
-        // The shared host, which is also the fix for this screen's missing inset: taking no window
-        // insets at all (above) meant the `Scaffold` handed its snackbar slot none either, so the
-        // pill sat under the gesture bar (audit DUP-3).
+        // The shared host, which also carries this screen's inset: taking no window insets at all
+        // (above) leaves the `Scaffold`'s own snackbar slot with none either, and the pill would
+        // sit under the gesture bar.
         snackbarHost = { JellyboostSnackbarHost(hostState = snackbarHostState) },
     ) { innerPadding ->
         Column(
@@ -225,8 +225,8 @@ private fun GroupsBody(
         state.disabled -> EmptyState(message = stringResource(R.string.player_syncplay_groups_disabled))
         // Full-screen only when there is nothing else worth keeping on screen: with a membership
         // standing, the pinned card — this screen's only Leave affordance — must survive a single
-        // failed 10 s poll, which lands precisely in the flaky network the user wants to leave from
-        // (audit SP-05). The membership comes from the controller, not the poll, so it was never in
+        // failed 10 s poll, which lands precisely in the flaky network the user wants to leave
+        // from. The membership comes from the controller, not the poll, so it was never in
         // doubt; the error shows inline in [GroupsList] instead.
         state.transientError && state.membership == SyncPlayGroupsMembership.None ->
             ErrorState(message = stringResource(R.string.player_syncplay_groups_error), onRetry = onRetry)
@@ -245,9 +245,8 @@ private fun GroupsBody(
 }
 
 /**
- * The screen's header: the pushed-screen glass idiom `LibraryGridScreen` established (2026 refresh,
- * Phase 5 sweep) — back-then-home glass circles, the screen title, and a trailing glass *Create*
- * circle where the old `TopAppBar`'s `actions` slot used to sit.
+ * The screen's header: the pushed-screen glass idiom `LibraryGridScreen` uses — back-then-home
+ * glass circles, the screen title, and a trailing glass *Create* circle.
  */
 @Composable
 private fun SyncPlayGroupsHeader(
@@ -330,7 +329,7 @@ private fun ActiveGroupCard(
     onLeave: () -> Unit,
     onOpenPlayer: (SyncPlayLaunchRequest) -> Unit,
 ) {
-    // An "m-surface" panel (2026 refresh, Phase 5 sweep) — the container language `:feature:downloads`
+    // An "m-surface" panel — the container language `:feature:downloads`
     // established for cards that sit inside another screen rather than over a backdrop image.
     Column(
         modifier =
@@ -438,7 +437,7 @@ private fun GroupRow(
                 .fillMaxWidth()
                 .mSurface(MaterialTheme.colorScheme.surface)
                 // Role, so the row announces as something that can be pressed rather than as three
-                // fragments of text that happen to react to a tap (audit A11Y-ROLE-01).
+                // fragments of text that happen to react to a tap.
                 .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
                 .padding(Dimens.PanelPadding),
         verticalAlignment = Alignment.CenterVertically,
@@ -461,12 +460,12 @@ private fun GroupRow(
     }
 }
 
-/** [CircularProgressIndicator] geometry per the shared "inline hint" spinner (spec, "Spinner"). */
+/** [CircularProgressIndicator] geometry for the shared "inline hint" spinner. */
 private val SPINNER_STROKE = 2.dp
 private const val SPINNER_TRACK_ALPHA = 0.14f
 
 /**
- * Turns [participants] into the row's secondary text (B6).
+ * Turns [participants] into the row's secondary text.
  *
  * Follows `SyncPlayGroupSheet`, which already lists everyone in the group this device is in — the
  * browsable list has no room for one row per name, so it joins them instead and falls back to
@@ -516,8 +515,8 @@ private fun CreateGroupDialog(
                 placeholder = { Text(text = stringResource(R.string.player_syncplay_groups_create_hint)) },
                 // The field's name, not just its hint: a placeholder is gone the moment the user
                 // types, and this field then announced as a bare edit box holding whatever it
-                // holds. The dialog's own title is a separate node and does not name it
-                // (accessibility audit 2026-08-05, CR-2). No error state exists here — the confirm
+                // holds. The dialog's own title is a separate node and does not name it.
+                // No error state exists here — the confirm
                 // button is simply disabled until the name is non-blank — so no `errorMessage`.
                 // No caption: the name is spoken, never drawn — the placeholder already draws it.
                 label = FieldLabel(text = stringResource(R.string.player_syncplay_groups_create_hint)),

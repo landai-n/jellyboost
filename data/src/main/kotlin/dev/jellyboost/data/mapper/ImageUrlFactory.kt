@@ -15,7 +15,7 @@ internal enum class ImageKind {
  *
  * Kept behind an interface so [ItemMapper] can be unit-tested without an
  * `org.jellyfin.sdk.api.client.ApiClient`, and so the offline path can substitute local file URIs
- * in M8 without touching the mapper.
+ * without touching the mapper.
  */
 internal interface ImageUrlFactory {
     /**

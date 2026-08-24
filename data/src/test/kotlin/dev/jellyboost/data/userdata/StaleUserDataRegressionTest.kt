@@ -41,16 +41,15 @@ import java.time.ZoneOffset
 import java.util.UUID
 
 /**
- * Regression test for STATUS.md's "**Stale local user-data rows corrupt server state on
- * playback**".
+ * Regression test for **stale local user-data rows corrupting server state on playback**.
  *
  * The bug needed two halves to bite, so this test uses both of them against one shared `user_data`
  * store: [BrowseCacheWriter] (the read path) and [UserDataRepositoryImpl] (the write path).
  *
- * Observed on the device: an item was marked played in-app (row `played = true`,
- * `toBeSynced = false`), later unmarked from jellyfin-web (server `Played = false`), and playing it
- * in the app re-marked it played on the server — because `setPosition` pushes the item's *full*
- * desired state built from a local row that no read had ever refreshed.
+ * The failure mode: an item marked played in-app (row `played = true`, `toBeSynced = false`),
+ * later unmarked from jellyfin-web (server `Played = false`) — playing it in the app would
+ * re-mark it played on the server, because `setPosition` pushes the item's *full* desired state
+ * built from a local row that no read had ever refreshed.
  *
  * The rule this pins: **a server read is authoritative for an item unless a local write is still
  * waiting to be pushed.**

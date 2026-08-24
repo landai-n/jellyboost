@@ -6,12 +6,11 @@ import java.io.File
 // The test doubles the DownloadQueue drain tests are built on — the SyncPlayTestDoubles shape
 // (player/src/test/.../syncplay/SyncPlayTestDoubles.kt).
 //
-// Every DownloadQueue*Test in this package used to declare its own FakeExtractor and
-// RecordingListener, each carrying a different subset of the same two behaviors: call recording
-// (for the tests that check *what* was stripped or reported) and failure injection (for the tests
-// that check what a strip failure costs). This file is their union — a test that never reads
-// `calls`/`progress`/`idleCount` or sets `failure` behaves exactly as the bare no-op version it
-// replaced.
+// One FakeExtractor and one RecordingListener for every DownloadQueue*Test in this package, rather
+// than a per-test double carrying its own subset of the same two behaviors: call recording (for the
+// tests that check *what* was stripped or reported) and failure injection (for the tests that check
+// what a strip failure costs). A test that never reads `calls`/`progress`/`idleCount` or sets
+// `failure` behaves exactly as a bare no-op double would.
 
 /**
  * The strip stage, without a `Looper`, a muxer or a device.

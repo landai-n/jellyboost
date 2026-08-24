@@ -23,7 +23,7 @@ import javax.inject.Singleton
  *
  * [MusicController] is the one binding that leaves `:player`: it is declared in `:core:common`, so
  * binding it here — where the implementation is — makes it available to `:app`'s mini-player and
- * to `:feature:music` without either module ever depending on the player (key decision 2).
+ * to `:feature:music` without either module ever depending on the player.
  */
 @Module
 @InstallIn(SingletonComponent::class)

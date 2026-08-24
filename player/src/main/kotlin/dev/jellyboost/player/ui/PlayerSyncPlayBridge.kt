@@ -23,13 +23,13 @@ import kotlinx.coroutines.flow.map
  * It exists so that group membership costs the ViewModel a *question* rather than a branch —
  * [isInGroup] plus a handful of one-line requests — and so that the mapping from the protocol's
  * vocabulary to the screen's ([PlayerSyncPlayState], [PlayerMessage]) lives somewhere it can be read
- * in one go. The ViewModel is already the longest class in the module (audit ARCH-10); this is the
- * same decomposition the position tracker and the session store got.
+ * in one go. The ViewModel is already the longest class in the module; this is the
+ * same decomposition the position tracker and the session store have.
  *
  * ### The rule it enforces at this end
  * In a group, **no user action moves this player**: play, pause, seek and skip all become requests,
- * and the player moves only when the server rebroadcasts the command to everyone
- * (docs/notes/syncplay-m11-plan.md, key decision 11). The controller enforces the same rule at its
+ * and the player moves only when the server rebroadcasts the command to everyone. The controller
+ * enforces the same rule at its
  * end — there is no path from an intent to `PlayerHandle` — so this class never needs to know what
  * the player is doing, only whether there is a group to ask.
  *
@@ -50,7 +50,7 @@ internal class PlayerSyncPlayBridge(
     /**
      * `true` when the group's queue has somewhere to go after the item playing now.
      *
-     * Read at exactly one moment — the item ending (M11 Phase 4). The controller answers an ended
+     * Read at exactly one moment — the item ending. The controller answers an ended
      * item by asking the server for the next one, whose `PlayQueueUpdate` reloads *this* session
      * through `SyncPlayPlaybackHost.loadItem`; a screen that popped itself in the meantime would
      * close the player the group is about to fill, and force the launch-request path to open a new
@@ -69,7 +69,7 @@ internal class PlayerSyncPlayBridge(
      * Group membership *changing*, as the one bit that changes what gets reported.
      *
      * Distinct from [states] on purpose: that flow changes on every participant, phase and queue
-     * edit, and the server-visible session only cares about joining and leaving (M11 Phase 6). The
+     * edit, and the server-visible session only cares about joining and leaving. The
      * current value is dropped because it is not news — whatever group the player opened into is
      * accounted for by the session open itself, which reconciles before it reports the start.
      */
@@ -94,7 +94,7 @@ internal class PlayerSyncPlayBridge(
     /**
      * Takes the player back.
      *
-     * The controller sends `ignoreWait` from here (key decision 5) so a member with no player never
+     * The controller sends `ignoreWait` from here so a member with no player never
      * gates the group; this end must not send it as well.
      */
     fun detach() {
@@ -187,7 +187,7 @@ private fun SyncPlayState.toPlayerState(): PlayerSyncPlayState =
  *
  * `SyncPlayPhase.Playing` carries the anchor the drift monitor measures against, and it is replaced
  * on every group unpause. Keeping it in [PlayerUiState] would make the whole control surface
- * unequal to its predecessor for a value nothing on screen draws (audit PERF-04's rule).
+ * unequal to its predecessor for a value nothing on screen draws.
  */
 private fun SyncPlayPhase.toPlayerPhase(): PlayerSyncPlayPhase =
     when (this) {

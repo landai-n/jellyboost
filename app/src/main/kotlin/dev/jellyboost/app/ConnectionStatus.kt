@@ -14,11 +14,11 @@ import dev.jellyboost.core.ui.R as CoreUiR
  * one thing the user can do about it.
  *
  * Kept as a plain enum rather than inlined into the composable so the mapping is unit-testable —
- * it is the same "three reasons, three answers" table the M6 banner carried.
+ * three reasons, three answers.
  *
- * It lives in its own file since the 2026 refresh, because the bar it used to live in does not
- * exist any more: the status icon is drawn by the wide layout's `GlassTopNav` and by the compact
- * layout's floating action cluster, and neither is a better home for the table than the other.
+ * It lives in its own file because the status icon is drawn by both the wide layout's
+ * `GlassTopNav` and the compact layout's floating action cluster, and neither is a better home
+ * for the table than the other.
  */
 internal enum class ConnectionStatus(
     @param:StringRes val messageRes: Int,

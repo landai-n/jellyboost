@@ -14,9 +14,9 @@ import org.junit.jupiter.api.Test
  * Unit tests for [useBottomNav] — which of the app's two navigation layouts a window of a given
  * width gets.
  *
- * The breakpoint is the same 560dp the combined app bar used to decide whether its four tabs could
- * afford labels, and it is the one number the whole frame hangs off: it picks the bar, and through
- * it the shape of `LocalAppChromePadding`. Pinning it here keeps it a plain function of the measured
+ * The breakpoint is 560dp, the width below which four labelled tabs would crowd the app actions
+ * out, and it is the one number the whole frame hangs off: it picks the bar, and through it the
+ * shape of `LocalAppChromePadding`. Pinning it here keeps it a plain function of the measured
  * width — testable without a device, the same way `homeThumbCardWidth` and `librariesMinCellWidth`
  * are.
  */
@@ -52,8 +52,8 @@ class AppChromeTest {
         // The cluster is one row of app actions under `ActionClusterTopGap`, and every action lays
         // out `Dimens.MinTouchTarget` around the smaller circle it draws (`JellyfinButtons.kt`).
         // Pinned because this is the number `AppScaffold` keeps clear of a compact screen's first,
-        // non-scrolling row: it used to be a literal 44dp — neither the circle nor the row — and the
-        // shortfall is what let the search field slide under the Cast and overflow buttons.
+        // non-scrolling row: a literal 44dp would be neither the circle nor the row — and the
+        // shortfall would let the search field slide under the Cast and overflow buttons.
         ActionClusterHeight shouldBe 56.dp
         ActionClusterHeight shouldBe ActionClusterTopGap + Dimens.MinTouchTarget
     }
@@ -61,8 +61,8 @@ class AppChromeTest {
 
 /**
  * Unit tests for [showsMiniPlayer], [miniPlayerBottomOffset] and [chromeBottomTarget] — the three
- * plain functions behind the M13 Phase 4 mini-player's visibility, its docking position and the
- * clearance a screen underneath it has to reserve, split out from `NavDestination` and from
+ * plain functions behind the mini-player's visibility, its docking position and the clearance a
+ * screen underneath it has to reserve, split out from `NavDestination` and from
  * composition so they are testable without either (the same reasoning [AppChromeTest] documents for
  * [useBottomNav]).
  *
@@ -81,11 +81,10 @@ class MiniPlayerVisibilityTest {
     @Test
     @DisplayName("the destination is not part of the rule beyond those two: a pushed screen shows the bar")
     fun theRuleIsTheTwoDestinationsRatherThanTopLevelness() {
-        // `AppScaffold` used to `&&` this with `isTopLevel`, which hid the bar on exactly the four
-        // screens playback starts from — the music library, an album, an artist, a playlist, all
-        // pushed — so a tap on Play showed nothing until the user navigated back to a tab (device
-        // walk, 2026-08-15). The gate is gone, and this function is the whole rule; the clearance
-        // argument it rested on is [chromeBottomTarget]'s job, pinned below.
+        // `&&`ing this with `isTopLevel` would hide the bar on exactly the four screens playback
+        // starts from — the music library, an album, an artist, a playlist, all pushed — so a tap
+        // on Play would show nothing until the user navigated back to a tab. This function is the
+        // whole rule; the clearance argument is [chromeBottomTarget]'s job, pinned below.
         //
         // Nothing here says "pushed" because this function never took a destination: what it pins
         // is that its only two exclusions are the two named ones, whatever else is on screen.
@@ -139,7 +138,7 @@ class MiniPlayerVisibilityTest {
         // The half `:feature:music`'s four browse screens add to their list's `contentPadding` on
         // top of the navigation-bar inset they apply by hand. It has to be exactly the bar's height
         // plus the gap it docks above that inset (`miniPlayerBottomOffset(isTopLevel = false)`), or
-        // the last track ends under the bar — which is what the device walk found.
+        // the last track ends under the bar.
         chromeBottomTarget(
             isTopLevel = false,
             bottomNav = true,

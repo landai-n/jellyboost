@@ -1,8 +1,7 @@
 package dev.jellyboost.player.model
 
 /**
- * Scrubbing thumbnails for one item, whatever their origin (docs/PLAN.md, "M9 Polish" → trickplay
- * scrubber).
+ * Scrubbing thumbnails for one item, whatever their origin.
  *
  * Jellyfin does not store one file per thumbnail: it stores *sprite sheets* of
  * `columns × rows` thumbnails, each thumbnail [thumbnailWidth] × [thumbnailHeight] pixels, one
@@ -12,7 +11,7 @@ package dev.jellyboost.player.model
  *
  * The same type describes a downloaded item (tile URIs are `file://` paths on disk, resolved by
  * `LocalTrickplay`) and a streamed one (tile URIs are server URLs built by
- * `TrickplayResolver`). That is deliberate: the scrubber has one code path, and the M8 promise that
+ * `TrickplayResolver`). That is deliberate: the scrubber has one code path, and the promise that
  * the player UI is byte-identical online and offline extends to it.
  *
  * @property thumbnailWidth pixel width of a single thumbnail — also the resolution the sheets were

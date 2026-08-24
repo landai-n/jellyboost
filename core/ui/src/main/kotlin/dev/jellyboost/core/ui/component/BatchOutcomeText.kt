@@ -15,9 +15,8 @@ import dev.jellyboost.core.ui.R
  * unit-tested without Android. Both surfaces call this, so "Marked 4 watched, 1 failed" reads the
  * same in the library grid and on a season page.
  *
- * *Which* shape applies is [resolveBatchMessage] — a plain function with no Android dependency, and
- * the thing worth pinning: `:core:ui` had no tests at all before it (docs/notes/audit-2026-07.md,
- * ARCH-07). This composable's only job is turning that decision into a string.
+ * *Which* shape applies is [resolveBatchMessage] — a plain function with no Android dependency, so
+ * it is unit-testable directly. This composable's only job is turning that decision into a string.
  */
 @Composable
 fun batchOutcomeText(

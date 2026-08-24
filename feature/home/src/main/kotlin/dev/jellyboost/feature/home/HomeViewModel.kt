@@ -95,7 +95,7 @@ class HomeViewModel
         }
 
         /**
-         * Swaps the rows for the other source's the moment the connection changes (M9) — see
+         * Swaps the rows for the other source's the moment the connection changes — see
          * [reloadOnChange] for why both directions matter.
          */
         private fun observeConnectivityChanges() {
@@ -103,7 +103,7 @@ class HomeViewModel
         }
 
         /**
-         * Keeps the `DownloadBadge` on every home card current (M7).
+         * Keeps the `DownloadBadge` on every home card current.
          *
          * One subscription for the whole screen, error-guarded so a collapse clears the badges
          * rather than freezing them — both rules, and why, live in [observeBadgeStates].
@@ -120,15 +120,14 @@ class HomeViewModel
         /**
          * Patches the loaded rows in place whenever user data changes anywhere in the app.
          *
-         * The patch itself is never a refresh: M4's definition of done is that marking an item
-         * watched on its detail page updates the home row **without a refetch** (docs/PLAN.md,
-         * "Data layer"), and that still holds for everything a patch can express — the tick, the
-         * favourite heart, the progress bar, and an item leaving *Continue watching* or *Next up*
-         * because it is now played.
+         * The patch itself is never a refresh: marking an item watched on its detail page updates
+         * the home row **without a refetch**, and that still holds for everything a patch can
+         * express — the tick, the favourite heart, the progress bar, and an item leaving
+         * *Continue watching* or *Next up* because it is now played.
          *
-         * What a patch cannot express is the rest of the membership question, and that is where
-         * this screen was wrong: which episode takes a watched one's place in *Next up*, an item
-         * coming back after being un-marked, and — the case with no matching card at all — *Mark
+         * What a patch cannot express is the rest of the membership question: which episode takes
+         * a watched one's place in *Next up*, an item coming back after being un-marked, and —
+         * the case with no matching card at all — *Mark
          * watched* on a series or season page, whose id no home row contains. Those changes queue
          * a [refreshMembershipRows] pass, debounced so that marking a whole season watched costs
          * one pair of requests rather than one per episode.

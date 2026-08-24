@@ -10,7 +10,7 @@ import java.util.UUID
  * window where the token and the identifiers it belongs to can disagree.
  *
  * The [accessToken] must NEVER be persisted anywhere other than [SecureCredentialStore]
- * (not Room, not `DataStore`, not logs) — see `docs/PLAN.md`, `:core:datastore` row.
+ * (not Room, not `DataStore`, not logs).
  */
 data class StoredSession(
     val serverId: UUID,
@@ -18,10 +18,9 @@ data class StoredSession(
     val accessToken: String,
 ) {
     /**
-     * Redacts [accessToken] (audit NET-02, same shape as SEC-09's `LoginUiState`): the generated
-     * data-class `toString()` would print the live token the moment an instance reaches a log
-     * line — a `Timber` call that dumps a whole value, or a wrapped exception message, is all it
-     * would take.
+     * Redacts [accessToken]: the generated data-class `toString()` would print the live token the
+     * moment an instance reaches a log line — a `Timber` call that dumps a whole value, or a
+     * wrapped exception message, is all it would take.
      */
     override fun toString(): String = "StoredSession(serverId=$serverId, userId=$userId, accessToken=<redacted>)"
 }

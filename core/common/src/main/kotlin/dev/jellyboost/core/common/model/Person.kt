@@ -4,7 +4,7 @@ package dev.jellyboost.core.common.model
  * One credited person on an item — an actor, a director, a writer …
  *
  * Only fetched on the detail path (the `PEOPLE` item field); list requests stay lean, so cards
- * never carry this (docs/PLAN.md, "Screens" → ItemDetail).
+ * never carry this.
  */
 data class Person(
     val id: String,

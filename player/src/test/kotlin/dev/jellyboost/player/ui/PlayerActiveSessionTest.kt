@@ -18,15 +18,14 @@ import org.junit.jupiter.api.Test
 import java.util.UUID
 
 /**
- * That a new session is a *clean* session (audit CPX-5).
+ * That a new session is a *clean* session.
  *
- * The eight facts a playback session remembers used to be eight independent fields, and "a new
- * session" was eight assignments spread over one method that had to be kept in step by hand — the
- * classic temporal coupling: nothing about `stopReported` said it belonged to the source that had
- * been reported, and a field left un-reset simply carried the previous film's answer into the next
- * one. They are now one value reassigned in one place (`PlayerViewModel.publish`), and these tests
- * pin the properties that assignment is *for*, so the boxing cannot be quietly unpicked back into
- * per-field writes.
+ * The eight facts a playback session remembers live in one value reassigned in one place
+ * (`PlayerViewModel.publish`), avoiding the classic temporal coupling of eight independent
+ * fields kept in step by hand: nothing about `stopReported` alone would say it belonged to the
+ * source that had been reported, and a field left un-reset would carry the previous film's answer
+ * into the next one. These tests pin the properties that assignment is *for*, so the boxing
+ * cannot be quietly unpicked back into per-field writes.
  *
  * Deliberately behavioural, not structural: none of this reaches inside the ViewModel. Each test
  * names a fact that would leak from one session into the next if the reset were partial.

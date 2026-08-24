@@ -7,8 +7,8 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for [castMembers] — who the detail screen's cast rail shows, and in what order
- * (2026-refresh spec section 4c: "Cap ~12 people, actors first").
+ * Unit tests for [castMembers] — who the detail screen's cast rail shows, and in what order:
+ * roughly twelve people, actors first.
  */
 class CastRailTest {
     @Test

@@ -22,7 +22,7 @@ import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.core.ui.theme.SQUARE_ASPECT_RATIO
 
 /**
- * A 1:1 album card — Jellyfin's music artwork shape (M13 Phase 2, docs/notes/music-m13-plan.md).
+ * A 1:1 album card — Jellyfin's music artwork shape.
  *
  * Otherwise the same shape as [PosterCard]/[ThumbCard]: [MediaCardArtwork] carries the resume
  * progress bar, watched tick and [DownloadState] badge, and the title/subtitle sit underneath —

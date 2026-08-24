@@ -2,7 +2,7 @@ package dev.jellyboost.core.network
 
 /**
  * Single source of truth for whether repository calls should take the online or the offline
- * path. Produced by the connectivity monitor + server reachability probe (M6).
+ * path. Produced by the connectivity monitor + server reachability probe.
  */
 enum class ConnectionState {
     ONLINE,

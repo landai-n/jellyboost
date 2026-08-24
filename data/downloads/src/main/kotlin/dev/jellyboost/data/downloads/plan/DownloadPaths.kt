@@ -6,10 +6,9 @@ import org.jellyfin.sdk.model.api.BaseItemKind
 import java.util.Locale
 
 /**
- * Naming rules for what lands on disk (docs/PLAN.md, "Download pipeline" → File plan:
- * `Series - S01E02 - Title/` or `Movie (Year)/`).
+ * Naming rules for what lands on disk: `Series - S01E02 - Title/` or `Movie (Year)/`.
  *
- * These names are user-visible — the whole point of the plan's layout is that someone plugging the
+ * These names are user-visible — the whole point of the layout is that someone plugging the
  * tablet into a computer can tell what the folders are — so they are built from the item's metadata
  * rather than from its id, and then made safe for a FAT/exFAT volume, which is what an SD card
  * usually is.
@@ -47,7 +46,7 @@ internal object DownloadPaths {
      * The directory one item's files live in.
      *
      * - episode → `Westworld - S01E02 - Chestnut`
-     * - track (M13) → `Fleetwood Mac - Rumours - 04 - Go Your Own Way`
+     * - track → `Fleetwood Mac - Rumours - 04 - Go Your Own Way`
      *   (`2-04` on disc 2 of a multi-disc album)
      * - anything else → `Arrival (2016)`, dropping the parenthesis when the year is unknown
      *
@@ -113,7 +112,7 @@ internal object DownloadPaths {
      * well as by bytes. When the item carries no path (the `PATH` field is only returned to users
      * allowed to see it) the container extension is enough for ExoPlayer to sniff the format.
      *
-     * A transcoded download (M9) is none of that: the source's name and container describe a file
+     * A transcoded download is none of that: the source's name and container describe a file
      * this device is not going to receive, so it is named after its directory and given the
      * container the transcode actually produces. The quality is part of the name because it is the
      * one thing a user cannot see from the outside, and because it keeps a re-download at a

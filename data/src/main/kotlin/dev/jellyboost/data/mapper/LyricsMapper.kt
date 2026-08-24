@@ -5,7 +5,7 @@ import dev.jellyboost.core.common.music.Lyrics
 import org.jellyfin.sdk.model.api.LyricDto
 
 /**
- * [LyricDto] → [Lyrics] (M13 Phase 6, docs/notes/music-m13-plan.md, key decision 11).
+ * [LyricDto] → [Lyrics].
  *
  * `LyricDto.metadata` is non-null on the wire (verified against the SDK 1.8.12 model jar) and
  * carries its own nullable `isSynced` flag; that flag is trusted first, and only when the source

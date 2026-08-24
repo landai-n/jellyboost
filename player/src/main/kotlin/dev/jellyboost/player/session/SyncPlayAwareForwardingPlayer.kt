@@ -11,15 +11,14 @@ import timber.log.Timber
 /**
  * The player the media session is given, so that the notification obeys the group.
  *
- * In a SyncPlay group **nothing this client does moves this client's player** (docs/PLAN.md, M11;
- * key decision 11): transport is a request to the server, and the player moves when the server
- * rebroadcasts the command to everyone. `PlayerViewModel` has enforced that for the in-app controls
- * since Phase 3 — but the media notification, a headset button and a steering-wheel control do not
- * go through the ViewModel. They go through [androidx.media3.session.MediaSession], which dispatches
- * straight onto the player it was built with, and that player was the shared `ExoPlayer` itself. A
- * pause from the notification therefore paused *this* member and nobody else: the same silent drift
- * the rule exists to prevent, reached by the one surface that stays reachable when the app is not on
- * screen.
+ * In a SyncPlay group **nothing this client does moves this client's player**: transport is a
+ * request to the server, and the player moves when the server rebroadcasts the command to everyone.
+ * `PlayerViewModel` enforces that for the in-app controls — but the media notification, a headset
+ * button and a steering-wheel control do not go through the ViewModel. They go through
+ * [androidx.media3.session.MediaSession], which dispatches straight onto the player it was built
+ * with. Built on the shared `ExoPlayer` itself, a pause from the notification would pause *this*
+ * member and nobody else: the same silent drift the rule exists to prevent, reached by the one
+ * surface that stays reachable when the app is not on screen.
  *
  * So the session is built on this wrapper instead. Outside a group every call is the delegate's own,
  * unchanged; inside one, the calls that would move the player become the matching request and the

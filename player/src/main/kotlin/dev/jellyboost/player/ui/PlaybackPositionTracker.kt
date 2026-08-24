@@ -14,10 +14,9 @@ import kotlinx.coroutines.flow.update
 /**
  * Everything the 500 ms player tick produces, kept away from [PlayerUiState].
  *
- * Extracted from `PlayerViewModel` (audit ARCH-10) and the home of the audit's PERF-04 fix. Position
- * used to ride inside `PlayerUiState`, which is one `StateFlow` read at screen scope: a value that
- * changes twice a second inside an object the whole control surface reads meant the top bar, the
- * transport row, the picker buttons and the sheet host all recomposed twice a second for a number
+ * Deliberately not part of `PlayerUiState`, which is one `StateFlow` read at screen scope: a value
+ * that changes twice a second inside an object the whole control surface reads would recompose the
+ * top bar, the transport row, the picker buttons and the sheet host twice a second for a number
  * only the scrubber and the clock display. Splitting the flow is what makes the rest of the state
  * conflate to nothing between ticks.
  *

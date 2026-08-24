@@ -39,7 +39,7 @@ internal class SyncPlayRejoinPolicyTest : SyncPlayControllerTestBase() {
             fixture.controller.leaveGroup()
             runCurrent()
 
-            // The leave reached the server even though the rejoin owned the session (audit SP-10)...
+            // The leave reached the server even though the rejoin owned the session...
             fixture.api.callsOf<SyncPlayCall.LeaveGroup>() shouldBe listOf(SyncPlayCall.LeaveGroup)
             fixture.controller.state.value shouldBe SyncPlayState.Idle
 
@@ -226,8 +226,8 @@ internal class SyncPlayRejoinPolicyTest : SyncPlayControllerTestBase() {
                 .last()
                 .playlistItemId shouldBe playlistItemId
 
-            // The adopted player is prepared already and may never re-buffer, so the owed `ready` is
-            // the fallback's (DECISIONS.md, 2026-07-31) — but it is still owed and still sent.
+            // The adopted player is prepared already and may never re-buffer, so the owed `ready`
+            // is the fallback's — but it is still owed and still sent.
             advanceTimeBy(SyncPlayController.SETTLED_READY_FALLBACK_MS + 1)
             runCurrent()
 

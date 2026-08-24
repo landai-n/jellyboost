@@ -354,10 +354,11 @@ class SettingsViewModelTest {
         }
 
     /**
-     * The bug this is here to keep fixed: sign-out used to run in `viewModelScope`, and the network
-     * goodbye inside it takes seconds against an unreachable server. Leaving Settings during that
-     * wait cleared the ViewModel, cancelled the coroutine somewhere between the deletes and the
-     * credential wipe, and left the user signed in with nothing on screen to say so.
+     * The bug this is here to keep fixed: sign-out running in `viewModelScope` would leave the
+     * network goodbye inside it exposed to cancellation — it takes seconds against an unreachable
+     * server, and leaving Settings during that wait would clear the ViewModel, cancel the
+     * coroutine somewhere between the deletes and the credential wipe, and leave the user signed
+     * in with nothing on screen to say so.
      *
      * Cancelling `viewModelScope` is what "the screen was popped" looks like from here, and the
      * dispatcher is `Standard`, so nothing has run yet when it happens.
@@ -397,7 +398,7 @@ class SettingsViewModelTest {
             }
         }
 
-    // ---- a collapsed projection (audit STAB-10) --------------------------------------------------
+    // ---- a collapsed projection --------------------------------------------------
 
     /**
      * The crash, pinned where it happens. `stateIn` runs the projection in `viewModelScope`, whose
@@ -450,7 +451,7 @@ class SettingsViewModelTest {
      * The ViewModel under test.
      *
      * Its `@ApplicationScope` stand-in is a [SupervisorJob] on the suite's scheduler that belongs to
-     * no coroutine — nothing cancels it, which is the entire point of sign-out no longer using
+     * no coroutine — nothing cancels it, which is the entire point of sign-out running outside
      * `viewModelScope`. Not `runTest`'s `backgroundScope`, whose work `advanceUntilIdle` skips.
      */
     private fun TestScope.viewModel() =

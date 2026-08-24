@@ -58,7 +58,7 @@ data class DownloadItem(
 
     /**
      * What the *Downloaded* tab groups by: the show an episode belongs to, the **album** a track
-     * belongs to (M13), or `null` for a film.
+     * belongs to, or `null` for a film.
      *
      * One column serves both because it only ever meant "the heading these rows belong under" —
      * `DownloadEnqueuer` writes a track's album into [seriesName] for exactly that reason.
@@ -79,8 +79,8 @@ data class DownloadItem(
      *   has actually delivered, or seeded from finished episodes of the same show at the same
      *   quality. It is the app's best guess and it will move, so it is hedged rather than promised.
      * - [SizeCertainty.CEILING] — nothing but the enqueue-time bound, `runtime × min(cap, source
-     *   bitrate)`. The encoder routinely undershoots it on easy content (DECISIONS.md,
-     *   2026-07-29), so it can only honestly be stated as a limit.
+     *   bitrate)`. The encoder routinely undershoots it on easy content, so it can only honestly
+     *   be stated as a limit.
      */
     val sizeCertainty: SizeCertainty
         get() =

@@ -40,7 +40,7 @@ internal class SyncPlayPinger
          * Asks the loop to take its next sample now instead of at the end of the current wait.
          *
          * What it is for: the app coming back to the foreground after the platform quietly cut its
-         * network (DECISIONS.md 2026-07-31). The connection may have been dead for minutes and
+         * network. The connection may have been dead for minutes and
          * nothing here knows it, so the useful thing is to find out at once rather than up to
          * [STEADY_INTERVAL_MS] later — the three-failure streak that confirms a loss then starts
          * immediately.
@@ -60,7 +60,7 @@ internal class SyncPlayPinger
          *   failed one. This loop is the only thing that talks to the server on a fixed cadence, so
          *   it is also the only honest signal for "the REST API has stopped answering" — which is
          *   how the controller notices a connection that is gone while the OS still says the device
-         *   is online (STATUS.md, DoD session #1, B8).
+         *   is online.
          */
         suspend fun run(onOutcome: (Boolean) -> Unit = {}) {
             while (wake.tryReceive().isSuccess) Unit

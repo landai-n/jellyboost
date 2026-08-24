@@ -38,9 +38,9 @@ internal class FakePlayerHandle : PlayerHandle {
     /**
      * Transport calls, counted.
      *
-     * SyncPlay's rule is that an in-group intent must produce *no* local playback call at all
-     * (docs/notes/syncplay-m11-plan.md, key decision 11), which is a claim about calls that were
-     * never made — so the flags above are not enough to state it.
+     * SyncPlay's rule is that an in-group intent must produce *no* local playback call at all,
+     * which is a claim about calls that were never made — so the flags above are not enough to
+     * state it.
      */
     var playCount = 0
         private set
@@ -124,10 +124,10 @@ internal class FakePlayerHandle : PlayerHandle {
 
     /**
      * Whether this player admits to having a playback rate, writable so a test can be a receiver
-     * that has none (M12 Phase 4).
+     * that has none.
      *
-     * `true` by default, which is every local player's answer and therefore leaves every test that
-     * predates casting saying exactly what it said before.
+     * `true` by default, which is every local player's answer, so a test that never sets this
+     * exercises that default unchanged.
      */
     override var supportsPlaybackSpeed: Boolean = true
 

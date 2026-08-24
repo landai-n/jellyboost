@@ -41,8 +41,7 @@ import java.time.ZoneOffset
 
 /**
  * Unit tests for the guards [DownloadQueue] applies *before* touching a file — the claim on the
- * item row (audit DL-03), the already-whole-on-disk skip (audit DL-02) and the cancellation
- * clean-up of a half-written strip (audit DL-12).
+ * item row, the already-whole-on-disk skip and the cancellation clean-up of a half-written strip.
  *
  * Separate from [DownloadQueueTest], which owns the transfer itself: what lives here is only what
  * keeps a re-entered or interrupted item from spending bytes it has already paid for, or from
@@ -86,14 +85,14 @@ class DownloadQueueFileGuardTest {
         coEvery { sweeper.sweep() } returns 0L
     }
 
-    // ---- the guarded claim (DL-03) --------------------------------------------------------------
+    // ---- the guarded claim ------------------------------------------------------------------------
 
     @Test
     fun `a row whose status changed between being picked and being claimed is left alone`() =
         runTest {
-            // The DL-03 race: Pause writes PAUSED and then stops the worker, and a drain sitting
-            // between nextRunnable() and the start of the transfer used to write DOWNLOADING over
-            // it — the cancellation then re-queued the row and the paused item downloaded anyway.
+            // The race: Pause writes PAUSED and then stops the worker, and a drain sitting between
+            // nextRunnable() and the start of the transfer must not write DOWNLOADING over it —
+            // the cancellation would re-queue the row and the paused item would download anyway.
             // A claim that touches zero rows means the row changed hands; nothing is transferred
             // and nothing is written.
             queueWith(download())
@@ -105,16 +104,16 @@ class DownloadQueueFileGuardTest {
             coVerify(exactly = 0) { downloadDao.setStatus(uuid(1), any(), any(), any()) }
         }
 
-    // ---- file-granular resume (DL-02) -----------------------------------------------------------
+    // ---- file-granular resume ---------------------------------------------------------------------
 
     @Test
     fun `a media file already downloaded whole is not re-fetched when the item re-enters the queue`() =
         runTest {
-            // The DL-02 window: the audio lane keeps running for minutes after the film itself has
+            // The window: the audio lane keeps running for minutes after the film itself has
             // finished, and any interruption there re-queues the whole item. The media row is
             // already DOWNLOADED and its transcode is complete on disk — re-entering `downloadOne`
-            // used to truncate it and restart the server-side encode from byte zero, because a
-            // live encode is flagged un-resumable.
+            // without the guard truncates it and restarts the server-side encode from byte zero,
+            // because a live encode is flagged un-resumable.
             every { urls.transcodedVideoUrl(any(), any(), any(), any()) } returns TRANSCODE_URL
             val media = File(directory, "Arrival (2016) (medium).mkv").apply { writeBytes(ByteArray(500)) }
             queueWith(
@@ -145,14 +144,14 @@ class DownloadQueueFileGuardTest {
             coVerify(exactly = 1) { downloader.download(TRANSCODE_URL, any(), any(), any(), any(), any()) }
         }
 
-    // ---- cancellation of the strip (DL-12) ------------------------------------------------------
+    // ---- cancellation of the strip ----------------------------------------------------------------
 
     @Test
     fun `a strip cancelled midway leaves no half-written sidecar behind`() =
         runTest {
-            // The cancellation branch used to keep the truncated m4a — junk occupying disk for as
-            // long as the pause lasted, for a file the next attempt rebuilds from its first byte
-            // anyway (the row stays DOWNLOADING, so nothing reads it as whole).
+            // Keeping the truncated m4a would be junk occupying disk for as long as the pause
+            // lasts, for a file the next attempt rebuilds from its first byte anyway (the row stays
+            // DOWNLOADING, so nothing reads it as whole).
             givenTwoLanguageTranscode()
             extractor.failure = CancellationException("paused")
 

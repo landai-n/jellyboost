@@ -10,11 +10,10 @@ import javax.inject.Singleton
  * Which of the two things that can drive the shared player is driving it, and the orderly way of
  * taking it from the other.
  *
- * The device has one `ExoPlayer` and one media session, and from M13 it has two callers with a
- * legitimate claim on both: the video screen and the music queue. Letting either simply prepare
- * over the other loses the *server's* half of the picture — the outgoing session is never stopped,
- * so the dashboard shows two sessions for one device and a transcode's ffmpeg process is left
- * running (docs/notes/music-m13-plan.md, key decision 3).
+ * The device has one `ExoPlayer` and one media session, and two callers with a legitimate claim on
+ * both: the video screen and the music queue. Letting either simply prepare over the other loses
+ * the *server's* half of the picture — the outgoing session is never stopped, so the dashboard
+ * shows two sessions for one device and a transcode's ffmpeg process is left running.
  *
  * ### The invariant
  * **Exactly one stop report per session, issued by the outgoing owner, completed before

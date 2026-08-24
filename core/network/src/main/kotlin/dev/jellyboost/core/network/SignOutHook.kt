@@ -1,8 +1,7 @@
 package dev.jellyboost.core.network
 
 /**
- * Work that must run against the still-valid session **before** sign-out revokes the token
- * (audit NET-03).
+ * Work that must run against the still-valid session **before** sign-out revokes the token.
  *
  * `SessionRepository.signOut` awaits every bound hook, then tells the server the session ended —
  * which revokes the access token — and only then reports `SessionState.LoggedOut`. Anything that

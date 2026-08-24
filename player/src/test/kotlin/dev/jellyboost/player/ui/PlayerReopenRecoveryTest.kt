@@ -19,7 +19,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 /**
- * What happens to a session when a *re*-negotiation goes wrong (audit PC-01/PC-05).
+ * What happens to a session when a *re*-negotiation goes wrong.
  *
  * A failed initial open is honestly the end — there was never anything playing. A failed reopen is
  * not: the resolve fails before `prepare`, so the player is still sitting on the source that was

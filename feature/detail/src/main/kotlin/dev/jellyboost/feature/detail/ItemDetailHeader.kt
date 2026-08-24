@@ -92,11 +92,11 @@ import dev.jellyboost.core.ui.R as CoreUiR
 
 /**
  * The top of the detail screen: the backdrop, the title lockup drawn **on** it, the action row, and
- * the long-form text under them (2026 refresh, spec section 4c).
+ * the long-form text under them.
  *
- * The lockup moved onto the artwork in the refresh — eyebrow, title and metadata now sit in the
- * bottom-left of the banner instead of in a block below it, which is what the taller backdrop
- * (`ItemDetailScreen`'s fractions) exists to make room for.
+ * The lockup sits on the artwork — eyebrow, title and metadata in the bottom-left of the banner
+ * rather than in a block below it, which is what the taller backdrop (`ItemDetailScreen`'s
+ * fractions) exists to make room for.
  *
  * On a wide screen the same lockup lives in a *stage*: a 190×285 poster overlaps the bottom of the
  * backdrop and the facts column runs beside it, capped at [FACTS_MAX_WIDTH] so a paragraph never
@@ -233,7 +233,7 @@ private fun WideStage(
     }
 }
 
-/** The artwork itself, with the scrim it always had and — on wide — the refresh's accent halo. */
+/** The artwork itself, with its scrim and — on wide — the accent halo. */
 @Composable
 private fun DetailBackdrop(
     item: JellyfinItem,
@@ -257,12 +257,12 @@ data class DetailActionHandlers(
     val onToggleFavorite: () -> Unit,
     /**
      * The SyncPlay group this page is acting for, or `null` when there is no group — which is the
-     * ordinary case, and why the field is nullable rather than a flag beside a lambda (M11 Phase 4).
+     * ordinary case, and why the field is nullable rather than a flag beside a lambda.
      * Carried in this bundle so no composable between here and the buttons grows a parameter for a
      * feature it does not otherwise know about.
      *
-     * Non-null also changes what [onPlay] *means*: in a group a play is the group's play
-     * (DECISIONS.md, 2026-07-31), which is why the Play button reads its label from here.
+     * Non-null also changes what [onPlay] *means*: in a group a play is the group's play, which is
+     * why the Play button reads its label from here.
      */
     val group: DetailGroupActions? = null,
 )
@@ -333,7 +333,7 @@ private fun TitleLockup(
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             // The page's own heading, which is what makes TalkBack's heading-jump land somewhere
-            // useful on a screen whose first stop is otherwise a backdrop (audit A11Y-10). The full
+            // useful on a screen whose first stop is otherwise a backdrop. The full
             // title is spoken whatever the two ellipsized lines had room for.
             modifier =
                 Modifier.semantics {
@@ -359,9 +359,8 @@ private fun TitleLockup(
 }
 
 /**
- * The series and season an episode belongs to, as tappable chips under the title lockup —
- * a shortcut past the season page an episode used to require (episode-detail-shortcuts,
- * DECISIONS.md).
+ * The series and season an episode belongs to, as tappable chips under the title lockup — a
+ * shortcut that saves a trip through the season page.
  *
  * Lives in [TitleLockup] and nowhere else: that composable is shared by both the compact and the
  * wide hero, so one call site serves both layouts (the point of putting it here rather than in
@@ -418,9 +417,9 @@ internal fun EpisodeOriginChips(
 /**
  * `★ 8.6 · 2016 · TV-MA · 4 seasons`, skipping whatever the server does not know.
  *
- * The refresh splits the old single metadata line into three kinds of element — the accent-starred
- * community rating, the outlined certificate badge, and plain muted text for the rest — but the
- * *data* is the pre-refresh line's, in the pre-refresh order: a fact that used to show still shows.
+ * The line is split into three kinds of element — the accent-starred community rating, the
+ * outlined certificate badge, and plain muted text for the rest — drawn in the order the server
+ * states them.
  *
  * The size entry reads from the device rather than the server once a local copy is what the user
  * actually has: [downloadedBytes] is only trusted while [downloadState] itself is
@@ -428,9 +427,9 @@ internal fun EpisodeOriginChips(
  * `Downloaded`) keeps showing the server's figure rather than a partial sum, and a fully-downloaded
  * container — which has no download row, and so no bytes, of its own — falls back to it too.
  *
- * To a screen reader the row is **one** node. Read as drawn it was four or five disconnected
- * fragments — "8.6", "2016", "TV-MA" — none of which says what it is a number *of* (accessibility
- * audit 2026-08-05, A11Y-21). The merged sentence qualifies the two that need it in words, the way
+ * To a screen reader the row is **one** node. Read as drawn it would be four or five disconnected
+ * fragments — "8.6", "2016", "TV-MA" — none of which says what it is a number *of*. The merged
+ * sentence qualifies the two that need it in words, the way
  * the star glyph and the badge outline qualify them to the eye: "Rating 8.6, 2016, rated TV-MA,
  * 4 seasons".
  */
@@ -481,7 +480,7 @@ private fun MetaRow(
  * A plain function, so the *order* is held still by a JVM test rather than by a device. The join
  * itself — blanks dropped so a server that answers `""` for a certificate cannot produce a dangling
  * "rated", duplicates collapsed, and a comma rather than the interpunct the row draws — is
- * `:core:ui`'s [describeParts], shared with the cards and the home hero (audit DUP-8).
+ * `:core:ui`'s [describeParts], shared with the cards and the home hero.
  *
  * @param rating the community rating, already qualified ("Rating 8.6") and formatted.
  * @param certificate the age certificate, already qualified ("rated TV-MA").
@@ -495,7 +494,7 @@ internal fun metaRowDescription(
     facts: List<String>,
 ): String = describeParts(listOf(rating, year, certificate) + facts)
 
-/** The starred community rating — the one part of the metadata line the refresh draws in colour. */
+/** The starred community rating — the one part of the metadata line drawn in colour. */
 @Composable
 private fun RatingFact(
     rating: Float,
@@ -593,10 +592,9 @@ private fun DetailBody(
                 verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
             ) {
                 item.genres.forEach { genre ->
-                    // Not a filter yet — genre filtering lives on the library grid (M3). The inert
-                    // chip is what keeps it looking like the filter it will be without claiming to
-                    // be a disabled one: a genre here is a label, and a screen reader is told so
-                    // (accessibility audit 2026-08-05, A11Y-14).
+                    // Not a filter — genre filtering lives on the library grid. The inert chip is
+                    // what keeps it looking like the filter it will be without claiming to be a
+                    // disabled one: a genre here is a label, and a screen reader is told so.
                     InfoPillChip(text = genre)
                 }
             }
@@ -681,14 +679,14 @@ private fun DetailActions(
  * What the Play button says.
  *
  * In a group there is one Play button and it plays for the group — there is no second "Play for
- * group" button beside it, and no solo escape hatch on this page (DECISIONS.md, 2026-07-31): while
+ * group" button beside it, and no solo escape hatch on this page: while
  * a group is joined, everything this page starts is started for everyone in it. What must *not*
  * happen is the meaning changing silently, so the label carries the group's name and the group icon
  * replaces the play triangle.
  *
- * Outside a group the refresh names the *episode* a container page will start — "Play S1 · E10",
- * from [playTarget] — which is the one thing "Play" on a series page never said. An episode's own
- * page keeps the bare word: its title lockup is already the episode.
+ * Outside a group the label names the *episode* a container page will start — "Play S1 · E10",
+ * from [playTarget] — which a bare "Play" on a series page never says. An episode's own page keeps
+ * the bare word: its title lockup is already the episode.
  */
 @Composable
 private fun playLabel(
@@ -716,18 +714,18 @@ private fun playLabel(
  * again) on tap. A paragraph that already fits is not made tappable — a ripple on inert text
  * would promise interaction it doesn't have.
  *
- * Non-visually the affordance used to be invisible: a clickable paragraph with no state and no
- * label, announced as five ellipsized lines that could be activated for reasons unknown
- * (accessibility audit 2026-08-05, A11Y-12). It now says which of the two states it is in, and
- * names what a tap does — TalkBack reads the click label in place of its own "double tap to
- * activate", so "Read full overview" is the whole of the promise.
+ * Non-visually the affordance would otherwise be invisible: a clickable paragraph with no state
+ * and no label, announced as five ellipsized lines that could be activated for reasons unknown. It
+ * says which of the two states it is in, and names what a tap does — TalkBack reads the click label
+ * in place of its own "double tap to activate", so "Read full overview" is the whole of the
+ * promise.
  *
  * ### Why both flags are saveable, and why the measurement is written once
  * `expanded` and `overflowing` together decide whether the paragraph is tappable at all, so they
  * have to survive the same events or the control comes back in a state that cannot be described:
- * `expanded` was `rememberSaveable` and `overflowing` a plain `remember`, which meant a collapsed
- * paragraph restored after process death was briefly inert — clickable only once a layout pass had
- * re-measured it (audit 2026-08-08, UI-17). One saveable [OverviewState] holds both.
+ * a saveable `expanded` beside a plain `remember`ed `overflowing` would leave a collapsed paragraph
+ * restored after process death briefly inert — clickable only once a layout pass had re-measured
+ * it. One saveable [OverviewState] holds both.
  *
  * The write from `onTextLayout` is also **conditional on the value changing**. `onTextLayout` runs
  * inside layout, and this `Text` sits under `animateContentSize`, so an unconditional
@@ -805,8 +803,7 @@ private const val COMPACT_OVERVIEW_MAX_LINES = 5
 
 /**
  * The "mark watched/unwatched" toggle: a 44dp glass circle whose glyph goes accent when the item is
- * watched. The label it used to carry moved to the icon's `contentDescription`, so TalkBack reads
- * the same thing it always did.
+ * watched. The icon's `contentDescription` carries the label, so TalkBack still names the action.
  */
 @Composable
 private fun WatchedButton(
@@ -844,7 +841,7 @@ private fun FavoriteButton(
 }
 
 /**
- * The two group *queue* actions, drawn only while a SyncPlay group is active (M11 Phase 4).
+ * The two group *queue* actions, drawn only while a SyncPlay group is active.
  *
  * They join the Play button — which is itself the group's play, see [playLabel] — because they are
  * the two things playing has no way to say: put this after what we are watching, or at the end.
@@ -875,11 +872,9 @@ private fun GroupActionButtons(group: DetailGroupActions) {
  *
  * @param labelled `true` on the wide layout, which has the room to say the word as well as draw the
  *   glyph, so the control becomes a ghost pill rather than a 44dp circle. The state machine is the
- *   same either way — which is the point. The wide layout used to draw a *static* `GhostPillButton`
- *   straight off `labelRes()`, so a tablet showed a frozen "Cancel" pill for the whole of a transfer
- *   the phone reported as a filling ring, and a finished download got none of the accent tint
- *   (audit 2026-08-08, UI-4). This function's KDoc claimed the ring for "the Download control" while
- *   only one of its two layouts had it.
+ *   same either way — which is the point. A *static* `GhostPillButton` drawn straight off
+ *   `labelRes()` would show a frozen "Cancel" pill on a tablet for the whole of a transfer the
+ *   phone reports as a filling ring, and would give a finished download none of the accent tint.
  */
 @Composable
 private fun DownloadButton(
@@ -916,7 +911,7 @@ private fun DownloadButton(
                     .size(Dimens.PillHeight)
                     .glassSurface(CircleShape)
                     // The one action row control that is not a `GlassIconButton`, and the only one
-                    // that had no role: a progress ring you can tap is a button (ROLE-01).
+                    // that had no role: a progress ring you can tap is a button.
                     .clickable(role = Role.Button, onClick = onClick)
                     .semantics { contentDescription = label },
             contentAlignment = Alignment.Center,
@@ -1002,8 +997,7 @@ private fun JellyfinItem.childCountLabel(): String? {
  * `SERIES` / `MOVIE` — the lockup's eyebrow, or nothing for the shapes a user never opens.
  *
  * Returns the drawn text and the spoken one, which are deliberately not the same string — the same
- * split `TagPill` documents, and the pattern this eyebrow was missing both halves of (audit
- * 2026-08-08, UI-9):
+ * split `TagPill` documents:
  *
  * - **Uppercased in the *device's* locale**, not the JVM's root: `uppercase()` with no argument
  *   takes `Locale.getDefault()`, which on Android is the *system* locale rather than the one the
@@ -1011,7 +1005,7 @@ private fun JellyfinItem.childCountLabel(): String? {
  *   (`PlayerControls.kt`, `config/lint/lint.xml`) says to pass the locale explicitly; the lint rule
  *   is not gateable, so this is the second place it has to be written down rather than checked.
  * - **Spoken in sentence case.** An all-caps word is a word to the eye and an initialism to a screen
- *   reader: TalkBack spelled the eyebrow out letter by letter, "S-E-R-I-E-S". The
+ *   reader: TalkBack spells the eyebrow out letter by letter, "S-E-R-I-E-S". The
  *   `contentDescription` carries the untransformed resource.
  */
 @Composable
@@ -1082,8 +1076,8 @@ private val DownloadRingWidth = 2.dp
 /**
  * Track of the resume bar — the same white@40% the cards' inset progress uses.
  *
- * Raised from 22% by the 2026-08-05 accessibility audit: an unfilled track is what gives the filled
- * part a scale, so WCAG 1.4.11 asks 3:1 of it. 1.97:1 → 3.82:1 on `#101010`.
+ * 40% rather than something fainter: an unfilled track is what gives the filled part a scale, so
+ * WCAG 1.4.11 asks 3:1 of it. White@22% is 1.97:1 on `#101010`; white@40% is 3.82:1.
  */
 private const val PROGRESS_TRACK_ALPHA = 0.40f
 

@@ -9,9 +9,9 @@ import java.util.UUID
  * [StreamUrlFactory] is `videosApi`-only by construction — every method on it names a `/Videos`
  * endpoint — and the universal audio endpoint is not a video URL under another name: it decides
  * direct-play-versus-transcode *server side*, from a container list the client sends, which is the
- * whole property the music queue is built on (docs/notes/music-m13-plan.md, key decision 4).
- * Keeping the two interfaces apart also keeps the video path's three existing test doubles from
- * having to grow a member none of them can meaningfully answer (DECISIONS.md 2026-08-05).
+ * whole property the music queue is built on. Keeping the two interfaces apart also keeps the video
+ * path's three existing test doubles from having to grow a member none of them can meaningfully
+ * answer.
  *
  * ### Why one URL is enough for a whole album
  * The video path asks the server how to play each item (`PlaybackInfo`) before it can build a URL.

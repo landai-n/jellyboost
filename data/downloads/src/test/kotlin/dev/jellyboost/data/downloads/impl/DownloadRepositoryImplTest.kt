@@ -109,7 +109,7 @@ class DownloadRepositoryImplTest {
     /**
      * Makes the demote transaction report that [ids]' batch included the row being transferred —
      * the answer `pause`/`delete` act on *instead of* a separate read, so that no drain claim can
-     * land between deciding and writing (DL-03).
+     * land between deciding and writing.
      */
     private fun givenDemoteTakesLiveTransfer(ids: List<java.util.UUID>) {
         coEvery { downloadDao.demoteRunnable(ids, any(), NOW) } returns true
@@ -119,7 +119,7 @@ class DownloadRepositoryImplTest {
      * Stands the two item reads the download list makes up over one set of rows.
      *
      * They are seeded together because they are two halves of one lookup: `getCacheKeys` says which
-     * blobs are still current and `getItems` hands over only the ones that are not (PERF-01).
+     * blobs are still current and `getItems` hands over only the ones that are not.
      */
     private fun givenCachedItems(vararg rows: ItemEntity) {
         coEvery { itemDao.getCacheKeys(any()) } answers {
@@ -134,7 +134,7 @@ class DownloadRepositoryImplTest {
 
     // ---- badge states ---------------------------------------------------------------------------
 
-    // `observeStates()` shares its Room subscription over `@ApplicationScope` (PERF-07) instead of
+    // `observeStates()` shares its Room subscription over `@ApplicationScope` instead of
     // being a fresh cold flow per call, so these four tests run on an `UnconfinedTestDispatcher`
     // rather than the suite's default `StandardTestDispatcher`: unconfined dispatch is what lets a
     // `backgroundScope` collector — standing in for a screen subscribing — actually run the sharing
@@ -199,10 +199,9 @@ class DownloadRepositoryImplTest {
     @Test
     fun `two callers of observeStates share one Room subscription`() =
         runTest(UnconfinedTestDispatcher()) {
-            // Before this (docs/notes/audit-2026-07.md, PERF-07), `observeStates()` built a fresh
-            // cold flow on every call: four ViewModels — Library, Home, Search, ItemDetail — each
-            // calling it meant four independent `observeProgress()` collectors doing the same map
-            // and `distinctUntilChanged` over the same rows. The repository now holds one, shared
+            // A cold flow per call would mean four ViewModels — Library, Home, Search, ItemDetail
+            // — each holding an independent `observeProgress()` collector doing the same map and
+            // `distinctUntilChanged` over the same rows. The repository holds one instead, shared
             // no matter how many callers ask for it.
             every { downloadDao.observeProgress() } returns
                 flowOf(listOf(progress(uuid(1), DownloadStatus.QUEUED)))
@@ -260,8 +259,7 @@ class DownloadRepositoryImplTest {
     fun `an Original download's row carries the exact quality the server reported`() =
         runTest {
             // The UI's wording is decided from `quality`, `sizeIsExact` and `projectedBytes`
-            // together (DECISIONS.md, 2026-07-29 and the v6 entry) — each must survive the Room
-            // round trip untouched.
+            // together — each must survive the Room round trip untouched.
             every { downloadDao.observeAll() } returns
                 flowOf(listOf(DownloadWithFiles(download(quality = DownloadQuality.ORIGINAL), emptyList())))
 
@@ -360,14 +358,14 @@ class DownloadRepositoryImplTest {
             }
         }
 
-    // ---- what a progress write costs (audit PERF-01) ---------------------------------------------
+    // ---- what a progress write costs -------------------------------------------------------------
 
     @Test
     fun `a progress write does not re-parse the metadata it did not change`() =
         runTest {
-            // Every emission used to `SELECT *` each downloaded item and decode its whole
-            // BaseItemDto — tens of kilobytes apiece — and a transfer writes progress twice a
-            // second for its whole length. What actually changed is a byte count.
+            // `SELECT *` per emission would decode each downloaded item's whole BaseItemDto —
+            // tens of kilobytes apiece — and a transfer writes progress twice a second for its
+            // whole length. What actually changed is a byte count.
             val rows = MutableStateFlow(listOf(row(bytesOnDisk = 0L)))
             every { downloadDao.observeAll() } returns rows
             givenCachedItems(ITEM_ROW)
@@ -469,7 +467,7 @@ class DownloadRepositoryImplTest {
     fun `enqueueing a season starts the queue once, however many episodes it expanded to`() =
         runTest {
             // The repository does not know or care that one tap became ten downloads: the queue is
-            // idempotent and drains whatever Room holds (DECISIONS.md, 2026-07-29).
+            // idempotent and drains whatever Room holds.
             coEvery { enqueuer.enqueue(uuid(11), uuid(99)) } returns
                 AppResult.Success(listOf(download(itemId = uuid(2)), download(itemId = uuid(3))))
 
@@ -515,7 +513,7 @@ class DownloadRepositoryImplTest {
     @Test
     fun `pausing a row that is not transferring leaves the running transfer alone`() =
         runTest {
-            // The DL-06 finding: stopping the worker for a row it is not even on cancels whatever
+            // Stopping the worker for a row it is not even on cancels whatever
             // it *is* on — and a cancelled transcode restarts from byte zero, throwing away every
             // byte a multi-gigabyte encode had transferred.
             repository().pause(uuid(1).toString())
@@ -527,11 +525,11 @@ class DownloadRepositoryImplTest {
     @Test
     fun `pausing decides and writes in one transaction, not a read then a write`() =
         runTest {
-            // The DL-06 rework's blocker: a separate "is it transferring?" read before an
-            // unguarded PAUSED write let the drain's claim land between the two — the read said
-            // no (so the worker was never stopped), the claim took the row, and the item the user
-            // had just paused downloaded to completion (DL-03's window, reopened). The stop
-            // decision must come back from the very transaction that writes PAUSED.
+            // A separate "is it transferring?" read before an unguarded PAUSED write would let
+            // the drain's claim land between the two — the read says no (so the worker is never
+            // stopped), the claim takes the row, and the item the user just paused downloads to
+            // completion. The stop decision must come back from the very transaction that writes
+            // PAUSED.
             repository().pause(uuid(1).toString())
 
             coVerify(exactly = 0) { downloadDao.pending() }
@@ -541,10 +539,9 @@ class DownloadRepositoryImplTest {
     @Test
     fun `pausing writes PAUSED and leaves the rest of the queue running`() =
         runTest {
-            // The other half of the M9 pause bug (docs/POLISH.md): the repository's own writes must
-            // leave exactly one status behind — `DownloadQueue` is what used to add a second one
-            // when it saw the cancellation — and the queue must be brought back up with
-            // `ensureRunning`, so items behind the paused one keep draining.
+            // The repository's own writes must leave exactly one status behind — `DownloadQueue`
+            // must not add a second one when it sees the cancellation — and the queue must be
+            // brought back up with `ensureRunning`, so items behind the paused one keep draining.
             givenDemoteTakesLiveTransfer(listOf(uuid(1)))
 
             repository().pause(uuid(1).toString())
@@ -569,7 +566,7 @@ class DownloadRepositoryImplTest {
     fun `resuming while another item is transferring joins the live drain instead of restarting it`() =
         runTest {
             // A restart cancels the running worker; mid-transcode that discards the transfer so
-            // far (DL-06). The live drain picks the re-queued row up from nextRunnable() itself.
+            // far. The live drain picks the re-queued row up from nextRunnable() itself.
             givenTransferring(uuid(9))
 
             repository().resume(uuid(1).toString())
@@ -598,7 +595,7 @@ class DownloadRepositoryImplTest {
 
             // The downloader must not be holding a handle to a file we are about to remove — and
             // the row is flipped out of the queue's reach in the same transaction that says the
-            // worker was on it, so a drain claim cannot slip in after the decision (DL-03).
+            // worker was on it, so a drain claim cannot slip in after the decision.
             coVerifyOrder {
                 downloadDao.demoteRunnable(listOf(uuid(1)), DownloadStatus.CANCELLED, NOW)
                 scheduler.stop()
@@ -632,13 +629,13 @@ class DownloadRepositoryImplTest {
         runTest {
             // A queued item can still have bytes on disk: it was interrupted mid-transfer and put
             // back in the queue, which is precisely the resume case. The worker, though, is on
-            // some *other* row — stopping it here would cancel an unrelated transcode (DL-06).
+            // some *other* row — stopping it here would cancel an unrelated transcode.
             coEvery { deleter.deleteAll(listOf(uuid(1))) } returns 900_000L
 
             repository().delete(uuid(1).toString()) shouldBe AppResult.Success(900_000L)
 
             // The row is still taken out of the queue's reach before the unlink: CANCELLED is
-            // what makes a drain claim arriving *after* this decision refuse the row (DL-03).
+            // what makes a drain claim arriving *after* this decision refuse the row.
             coVerify(exactly = 1) { downloadDao.demoteRunnable(listOf(uuid(1)), DownloadStatus.CANCELLED, NOW) }
             coVerify(exactly = 1) { deleter.deleteAll(listOf(uuid(1))) }
             coVerify(exactly = 0) { scheduler.stop() }
@@ -654,7 +651,7 @@ class DownloadRepositoryImplTest {
             result.shouldBeInstanceOf<AppResult.Failure>().error.shouldBeInstanceOf<AppError.Storage>()
         }
 
-    // ---- the awaited stop (STAB-04) --------------------------------------------------------------
+    // ---- the awaited stop ------------------------------------------------------------------------
 
     @Test
     fun `nothing is unlinked until the queue has actually stopped`() =
@@ -678,14 +675,14 @@ class DownloadRepositoryImplTest {
             coVerify(exactly = 1) { deleter.deleteAll(listOf(uuid(1))) }
         }
 
-    // ---- bulk actions (STAB-09) ------------------------------------------------------------------
+    // ---- bulk actions ----------------------------------------------------------------------------
 
     @Test
     fun `pausing everything is one status write and one restart, not one per row`() =
         runTest {
-            // The finding: a bulk action built out of single-item mutations issued a stop/start
-            // cycle per row, so a forty-episode queue produced forty overlapping drains — each of
-            // them running `requeueInterrupted` over rows another drain was still writing.
+            // A bulk action built out of single-item mutations would issue a stop/start cycle per
+            // row, so a forty-episode queue would produce forty overlapping drains — each of them
+            // running `requeueInterrupted` over rows another drain is still writing.
             val ids = listOf(uuid(1), uuid(2), uuid(3))
             givenDemoteTakesLiveTransfer(ids)
 
@@ -704,11 +701,11 @@ class DownloadRepositoryImplTest {
     @Test
     fun `pause all keeps the transcode it deliberately excluded from the batch`() =
         runTest {
-            // The DL-06 headline: the snackbar says "1 transcode keeps downloading", and the batch
+            // The snackbar says "1 transcode keeps downloading", and the batch
             // the UI passes here excludes it — so the worker must not be stopped, or the encode is
             // cancelled anyway and restarts from byte zero when the queue comes back up. The
             // demote transaction reports the live transfer untouched, and that answer — atomic
-            // with the PAUSED write itself, unlike the read it replaces (DL-03) — is what spares
+            // with the PAUSED write itself, unlike a separate read — is what spares
             // the worker.
             val pausable = listOf(uuid(1), uuid(2))
 
@@ -872,8 +869,8 @@ class DownloadRepositoryImplTest {
     // observeStates()` collection reaching Room through `ioDispatcher` and being shared through
     // `appScope` at once.
     //
-    // `TestScope.repository` rather than a bare function: `observeStates()` is now a `stateIn`
-    // shared over `@ApplicationScope` (PERF-07), and a `StateFlow` never completes on its own —
+    // `TestScope.repository` rather than a bare function: `observeStates()` is a `stateIn`
+    // shared over `@ApplicationScope`, and a `StateFlow` never completes on its own —
     // `backgroundScope` is `runTest`'s stand-in for that scope, cancelled when the test ends rather
     // than keeping the never-completing projection alive past it (same idiom as
     // `DownloadedMetadataRefresherTest`/`DownloadsViewModelTest`).

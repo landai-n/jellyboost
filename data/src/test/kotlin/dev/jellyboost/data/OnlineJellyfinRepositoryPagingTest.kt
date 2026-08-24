@@ -45,11 +45,11 @@ import java.util.UUID
 import org.jellyfin.sdk.model.api.SortOrder as SdkSortOrder
 
 /**
- * Unit tests for the M3 (library grid + search) surface of [OnlineJellyfinRepository].
+ * Unit tests for the library grid + search surface of [OnlineJellyfinRepository].
  *
  * The paged tests drive the real `Pager` through `asSnapshot`, so the assertions about how many
  * server requests a scroll costs are the actual Paging behaviour rather than a restatement of the
- * `PagingConfig` — that is the M3 definition of done ("one request per page").
+ * `PagingConfig` — that is what "one request per page" actually rests on.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class OnlineJellyfinRepositoryPagingTest {
@@ -240,8 +240,7 @@ class OnlineJellyfinRepositoryPagingTest {
             repository.getItemsPaged(libraryQuery()).asSnapshot { scrollTo(index = 60) }
 
             requests.size shouldBe 2
-            // The header's "N items" costs one COUNT for the whole scroll, not one per page
-            // (DECISIONS.md 2026-08-01).
+            // The header's "N items" costs one COUNT for the whole scroll, not one per page.
             requests.first().enableTotalRecordCount shouldBe true
             requests.drop(1).none { it.enableTotalRecordCount == true } shouldBe true
         }

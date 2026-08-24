@@ -353,7 +353,7 @@ internal class FakeSyncPlayPlaybackHost : SyncPlayPlaybackHost {
     /** What [loadItem] answers — `false` is "this item cannot be opened here". */
     var loadSucceeds = true
 
-    /** Thrown by [loadItem] when set — the host's own scope dying mid-load (audit SP-02). */
+    /** Thrown by [loadItem] when set — the host's own scope dying mid-load. */
     var loadError: Throwable? = null
 
     var snapshot = SyncPlayHostSnapshot(itemId = null, positionTicks = 0L, isPlaying = false)

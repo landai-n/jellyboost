@@ -303,8 +303,7 @@ internal class PlayerUpNextTest : PlayerViewModelFixture() {
     @Test
     fun `an episode that plays out advances to its successor on its own`() =
         runTest(dispatcher) {
-            // The 2026-08-24 decision, reversing the button-only pin that used to live here: a
-            // natural solo end with a successor prefetched is the middle of a binge, not an exit.
+            // A natural solo end with a successor prefetched is the middle of a binge, not an exit.
             // The screen must not pop — the same session carries straight into the next episode.
             val model = offering()
             coEvery { resolver.resolve(any()) } returns AppResult.Success(source.copy(itemId = nextItemId))
@@ -401,10 +400,10 @@ internal class PlayerUpNextTest : PlayerViewModelFixture() {
     @Test
     fun `a swap after the end does not report the outgoing episode twice`() =
         runTest(dispatcher) {
-            // Since auto-advance (2026-08-24) an undismissed end advances by itself — that order has
-            // its own pin above — so the dismissal is what arranges an episode that ended without
-            // advancing, with a swap arriving after. `endCurrentSource`'s idempotence is what this
-            // pins, whatever triggers the swap.
+            // An undismissed end advances by itself — that order has its own pin above — so the
+            // dismissal is what arranges an episode that ended without advancing, with a swap
+            // arriving after. `endCurrentSource`'s idempotence is what this pins, whatever
+            // triggers the swap.
             val model = offering()
             model.dismissUpNext()
             playerHandle.emit(PlayerEvent.Ended)

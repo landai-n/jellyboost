@@ -22,11 +22,11 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * The states that used to be silent (accessibility audit 2026-08-05, CR-3).
+ * States that swap out their content announce the change.
  *
  * A screen swapping its content for a spinner, an error or an empty panel destroys the node a
- * screen-reader user was standing on. Before the audit nothing announced the replacement, so the
- * reader simply landed nowhere. These pin that the announcement exists, that its urgency is the one
+ * screen-reader user was standing on, so the replacement must announce itself or the reader
+ * simply lands nowhere. These pin that the announcement exists, that its urgency is the one
  * the caller asked for, and — the part that is easy to break by moving one modifier — that the
  * Retry button stays a node of its own rather than being swallowed into the sentence.
  */
@@ -66,7 +66,7 @@ class StateViewsA11yTest {
 
     @Test
     fun aStateViewStaysSilentByDefault() {
-        // The default matters: search draws its own announcement in wave 4a, and a state view that
+        // The default matters: search draws its own announcement, and a state view that
         // announced unconditionally would make that screen say the same sentence twice.
         rule.setContent { JellyfinTheme { EmptyState(message = MESSAGE) } }
 

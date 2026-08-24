@@ -49,13 +49,12 @@ import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
 
 /**
- * An artist's header (circular art, name, favourite), their albums and their top tracks (M13
- * Phase 2, docs/notes/music-m13-plan.md).
+ * An artist's header (circular art, name, favourite), their albums and their top tracks.
  *
  * @param onAlbumClick an album card in the "Albums" row was tapped.
- * @param onTrackClick `(tracks, startIndex)` — a top-track row was tapped. No-op until M13 Phase 3
- *   wires an actual queue, exactly as [AlbumDetailScreen]'s `onPlay` — see that screen's KDoc.
- * @param onStartRadio the artist itself — "Start radio" (M13 Phase 6), the header action next to
+ * @param onTrackClick `(tracks, startIndex)` — a top-track row was tapped; wired to the queue
+ *   exactly as [AlbumDetailScreen]'s `onPlay` — see that screen's KDoc.
+ * @param onStartRadio the artist itself — "Start radio", the header action next to
  *   the favourite heart; see [AlbumDetailScreen]'s `onStartRadio` for the wiring this mirrors.
  */
 @Composable

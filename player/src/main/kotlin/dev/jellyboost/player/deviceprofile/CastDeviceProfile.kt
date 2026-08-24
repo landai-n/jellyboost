@@ -21,12 +21,12 @@ import org.jellyfin.sdk.model.api.TranscodingProfile
  * plays perfectly in the hand becomes a black television screen.
  *
  * So this one is static, pure, and deliberately conservative — the floor is the intersection every
- * Cast receiver since the first-generation dongle satisfies (docs/notes/chromecast-m12-plan.md, key
- * decision 2): H.264 High up to level 4.2 and 1080p with AAC or MP3 in `mp4`, VP8/VP9 in `webm`,
- * and an HLS transcode to H.264 + AAC in `ts` segments for everything else. On top of that floor,
- * a receiver classified HEVC-capable by [CastReceiverClass] (model-name allowlist — the only
- * signal a sender has; see that class's doc) additionally direct-plays HEVC Main/Main 10 in `mp4`
- * up to its class's resolution ceiling (M12 phase-2a, DECISIONS.md 2026-08-15). Direct play only:
+ * Cast receiver since the first-generation dongle satisfies: H.264 High up to level 4.2 and 1080p
+ * with AAC or MP3 in `mp4`, VP8/VP9 in `webm`, and an HLS transcode to H.264 + AAC in `ts` segments
+ * for everything else. On top of that floor, a receiver classified HEVC-capable by
+ * [CastReceiverClass] (model-name allowlist — the only signal a sender has; see that class's doc)
+ * additionally direct-plays HEVC Main/Main 10 in `mp4` up to its class's resolution ceiling. Direct
+ * play only:
  * the transcode target is identical in every class, because CAF's TS demuxer is H.264-only and the
  * fMP4 segments HEVC would need were device-measured broken on the reference Ultra (below).
  * H.264 itself stays at the 1080p floor everywhere — correct even for the Ultra, whose published
@@ -42,7 +42,7 @@ import org.jellyfin.sdk.model.api.TranscodingProfile
  * matrix, which is why it is the ceiling here rather than a per-receiver detail — in **every**
  * receiver class, including the 4K ones: the audio floor is a measured fact about the Default
  * Media Receiver, not spec-sheet conservatism, so relaxing it per model (for a receiver that
- * *does* take 5.1) stays deferred to a device walk (phase-2b).
+ * *does* take 5.1) would need its own measurement on that hardware first.
  *
  * The profiles are constants, one per receiver class; [build] picks one and stamps the quality
  * picker's cap onto it.
@@ -60,8 +60,7 @@ internal object CastDeviceProfile {
      * @param receiver the connected receiver's [class][CastReceiverClass]. HEVC-capable classes
      *   gain HEVC **direct play** and nothing else — the transcode target and the audio ceilings
      *   are identical in every class, because those are bounded by CAF's TS demuxer and the
-     *   measured stereo floor respectively, not by the receiver's video decoder
-     *   (DECISIONS.md, 2026-08-15, M12 phase-2a).
+     *   measured stereo floor respectively, not by the receiver's video decoder.
      */
     fun build(
         maxStreamingBitrate: Int? = null,
@@ -277,8 +276,8 @@ internal object CastDeviceProfile {
      *
      * HLS with `ts` segments rather than the local profile's wide audio list: the Cast Application
      * Framework's own player is what consumes this, and it decodes H.264 + AAC in MPEG-TS
-     * everywhere. Verified against the dev server (2026-07-31): the returned `TranscodingUrl` is a
-     * `master.m3u8` with `SegmentContainer=ts`.
+     * everywhere. Verified against the server: the returned `TranscodingUrl` is a `master.m3u8`
+     * with `SegmentContainer=ts`.
      *
      * `maxAudioChannels = "2"` puts `TranscodingMaxAudioChannels=2` on that same `TranscodingUrl` —
      * device-measured on a real Chromecast Ultra: without it the server was transcoding 5.1 sources
@@ -311,8 +310,8 @@ internal object CastDeviceProfile {
      * The format list is not a statement about the *source* — it decides what the server converts
      * a text subtitle **into** before handing over a delivery URL. Declaring `srt`/`subrip` here
      * makes it deliver `Stream.subrip`, which a Cast receiver cannot parse; with only `vtt` declared
-     * the very same `subrip` stream comes back as `Stream.vtt` (probed against the dev server,
-     * 2026-07-31). `CastSpecMapper` relies on that: every side-loaded cast track is WebVTT.
+     * the very same `subrip` stream comes back as `Stream.vtt` (probed against the server).
+     * `CastSpecMapper` relies on that: every side-loaded cast track is WebVTT.
      *
      * Image subtitles (PGS, DVB) are omitted altogether rather than declared. A format the profile
      * does not mention cannot be delivered externally, so the server burns it into the video — which

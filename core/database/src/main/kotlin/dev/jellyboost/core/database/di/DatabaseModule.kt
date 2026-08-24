@@ -44,25 +44,25 @@ object DatabaseModule {
     @Provides
     fun provideUserDao(database: JellyfinDatabase): UserDao = database.userDao()
 
-    /** Exposes [JellyfinDatabase.userDataDao] for injection (M4). */
+    /** Exposes [JellyfinDatabase.userDataDao] for injection. */
     @Provides
     fun provideUserDataDao(database: JellyfinDatabase): UserDataDao = database.userDataDao()
 
-    /** Exposes [JellyfinDatabase.itemDao] for injection (M6). */
+    /** Exposes [JellyfinDatabase.itemDao] for injection. */
     @Provides
     fun provideItemDao(database: JellyfinDatabase): ItemDao = database.itemDao()
 
-    /** Exposes [JellyfinDatabase.libraryViewDao] for injection (M6). */
+    /** Exposes [JellyfinDatabase.libraryViewDao] for injection. */
     @Provides
     fun provideLibraryViewDao(database: JellyfinDatabase): LibraryViewDao = database.libraryViewDao()
 
-    /** Exposes [JellyfinDatabase.downloadDao] for injection (M7). */
+    /** Exposes [JellyfinDatabase.downloadDao] for injection. */
     @Provides
     fun provideDownloadDao(database: JellyfinDatabase): DownloadDao = database.downloadDao()
 
     /**
      * The seam `:data` uses to make a read-decide-write sequence atomic without seeing the database
-     * itself (audit HYG-3) — see [TransactionRunner].
+     * itself — see [TransactionRunner].
      */
     @Provides
     @Singleton

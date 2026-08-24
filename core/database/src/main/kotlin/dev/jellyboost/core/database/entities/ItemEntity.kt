@@ -10,9 +10,9 @@ import java.util.UUID
 /**
  * Why a row exists in the `items` table — and therefore whether it may ever be evicted.
  *
- * The distinction is the backbone of the offline read path (docs/PLAN.md, "Data layer"):
- * everything the user browses online is cached opportunistically, but only what they explicitly
- * downloaded is guaranteed to still be there when the network is not.
+ * The distinction is the backbone of the offline read path: everything the user browses online is
+ * cached opportunistically, but only what they explicitly downloaded is guaranteed to still be
+ * there when the network is not.
  */
 enum class ItemSource {
     /**
@@ -23,9 +23,9 @@ enum class ItemSource {
     BROWSE_CACHE,
 
     /**
-     * The item is downloaded, or is the series/season parent of a downloaded episode (M7 upserts
-     * both). **Never evicted, and never downgraded to [BROWSE_CACHE]** by a later browse — losing
-     * this row would orphan the files on disk.
+     * The item is downloaded, or is the series/season parent of a downloaded episode — the download
+     * pipeline upserts both. **Never evicted, and never downgraded to [BROWSE_CACHE]** by a later
+     * browse — losing this row would orphan the files on disk.
      */
     DOWNLOAD,
 }
@@ -33,8 +33,8 @@ enum class ItemSource {
 /**
  * One media item, cached locally.
  *
- * Single table for every item kind ([D] in docs/PLAN.md — deliberately not Findroid's four typed
- * tables), split into two halves with different jobs:
+ * Single table for every item kind — deliberately not Findroid's four typed tables — split into two
+ * halves with different jobs:
  *
  * - **structured columns** exist purely so that lists can be *queried*: filtered by type/parent,
  *   sorted by name, searched, grouped by series. Nothing reconstructs a domain model from them.
@@ -53,12 +53,12 @@ enum class ItemSource {
  * single-column `source` / `cachedAt` indices they replace are not kept alongside them: `source` is
  * an exact leftmost prefix of `(source, type)`, and no query orders or filters by `cachedAt`
  * without also fixing `source`. Verified with `EXPLAIN QUERY PLAN` on a 20k-row copy of this
- * schema — dropping both leaves every plan byte-identical (audit 2026-08-08, PERF-3/PERF-24).
+ * schema — dropping both leaves every plan byte-identical.
  *
- * - `(source, type)` turned four full-ish scans into two-column searches. They previously picked
- *   `index_items_type` and then visited **every** browsed episode ever cached, deserialising a
- *   multi-kilobyte [dto] blob per row before `source` discarded it (`unwatchedDownloadedEpisodes`,
- *   `searchDownloaded`, `downloadedListKeys`, `facetKeysBySource`).
+ * - `(source, type)` turns four full-ish scans into two-column searches. Without it, these queries
+ *   would fall back to `index_items_type` and visit **every** browsed episode ever cached,
+ *   deserialising a multi-kilobyte [dto] blob per row before `source` discarded it
+ *   (`unwatchedDownloadedEpisodes`, `searchDownloaded`, `downloadedListKeys`, `facetKeysBySource`).
  * - `(source, cachedAt)` serves the browse-cache eviction sweep as a two-column range delete
  *   instead of a scan of *every* row older than the cutoff regardless of source, and lets
  *   `latestDownloadedKeys` read its `cachedAt DESC` order straight off the index — its
@@ -66,11 +66,11 @@ enum class ItemSource {
  * - `type` stays as a single column even though it is the *second* member of `(source, type)`: a
  *   composite cannot answer a type-only predicate, and unlike `source` it has no covering prefix
  *   to fall back on.
- * - **There is deliberately no `sortName` index.** Room's `@Index` cannot express a collation, so
- *   the one this table used to carry was `BINARY` while both consumers sort
- *   `sortName COLLATE NOCASE` — proven never used (the NOCASE plans build a `TEMP B-TREE` and
- *   ignore it), i.e. pure write amplification on every cached page. The sorts it would have served
- *   run over the `source`-filtered subset, which the composite above now bounds.
+ * - **There is deliberately no `sortName` index.** Room's `@Index` cannot express a collation, so a
+ *   plain one would be `BINARY` while both consumers sort `sortName COLLATE NOCASE` — never used by
+ *   either query plan (the NOCASE plans build a `TEMP B-TREE` and ignore it), i.e. pure write
+ *   amplification on every cached page. The sorts run over the `source`-filtered subset, which the
+ *   composite above already bounds.
  *
  * @property sortName the server's `sortName`, falling back to [name]; the library grid's sort key.
  * @property cachedAt when this row was last written. Doubles as the "recently downloaded" ordering
@@ -118,12 +118,12 @@ data class ItemEntity(
     val logoImageTag: String? = null,
     val primaryImageAspectRatio: Double? = null,
     /**
-     * The album a track belongs to (M13). Query-only, like [albumArtistId] below: it exists so an
+     * The album a track belongs to. Query-only, like [albumArtistId] below: it exists so an
      * offline "tracks of this album, in order" query can filter and sort in SQL, but a domain item
      * still rebuilds from [dto] like everything else — there is no shortcut back the other way.
      */
     val albumId: UUID? = null,
-    /** The id of a track's album's artist, or an album's own artist (M13). Query-only, see [albumId]. */
+    /** The id of a track's album's artist, or an album's own artist. Query-only, see [albumId]. */
     val albumArtistId: UUID? = null,
     /** The complete `BaseItemDto` as JSON — the only thing a domain item is rebuilt from. */
     val dto: String,
@@ -143,13 +143,13 @@ data class ItemCacheKey(
 
 /**
  * One item reduced to the rows the offline read path walks *up* through — its series, season and
- * containing folder, and for a downloaded track its album and album artist (M13).
+ * containing folder, and for a downloaded track its album and album artist.
  *
  * A projection rather than [ItemEntity] because its one consumer, the delete cascade's orphan
- * prune, only needs the parent links: `SELECT *` materialised every surviving download's
- * multi-kilobyte `dto` blob once per pruned item (audit DL-05).
+ * prune, only needs the parent links: `SELECT *` would materialise every surviving download's
+ * multi-kilobyte `dto` blob once per pruned item.
  *
- * [albumId] and [albumArtistId] are the M13 query columns, and they are here for exactly the reason
+ * [albumId] and [albumArtistId] are query-only columns, and they are here for exactly the reason
  * [seriesId] is: without them the prune would drop the album and artist rows of a *surviving*
  * downloaded track the moment any other download was deleted, and the offline artist → album →
  * tracks walk would dead-end at the artist page.
@@ -192,7 +192,7 @@ data class DownloadedItemKey(
  * behind them has no `WHERE` beyond source and type and no `LIMIT` at all. Reading it as
  * [ItemEntity] deserialised every downloaded item's multi-kilobyte `dto` blob — the whole offline
  * library, in bytes — to answer a question about three small columns, every time the sheet was
- * opened (audit 2026-08-08, PERF-18).
+ * opened.
  */
 data class FacetKey(
     val genres: List<String>,

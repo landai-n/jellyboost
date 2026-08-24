@@ -11,12 +11,11 @@ import javax.inject.Singleton
  *
  * It exists to break a dependency cycle rather than to hold state for its own sake: `PlaybackReporter`
  * has to know whether this session is in a group (a local file only reports to the server while it
- * is — docs/notes/syncplay-m11-plan.md, key decision 9), and `SyncPlayController` has to be able to
- * drive playback, which means reaching the reporter's world. Injecting the controller into the
- * reporter would close that loop and Hilt would reject it; both can depend on this instead.
+ * is), and `SyncPlayController` has to be able to drive playback, which means reaching the
+ * reporter's world. Injecting the controller into the reporter would close that loop and Hilt would
+ * reject it; both can depend on this instead.
  *
- * Written only by the controller and by `PlaybackInfoResolver`'s mint path (M11 Phase 6), read by
- * anyone.
+ * Written only by the controller and by `PlaybackInfoResolver`'s mint path, read by anyone.
  */
 @Singleton
 internal class SyncPlayStatusHolder

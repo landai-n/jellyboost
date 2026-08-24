@@ -24,7 +24,7 @@ import javax.inject.Singleton
 
 /**
  * The [JellyfinRepository] the whole app actually injects: it picks between the online and the
- * offline implementation **per call** (docs/PLAN.md, "Data layer").
+ * offline implementation **per call**.
  *
  * There is no "offline mode" the app enters. Every call asks the same question — is
  * `ConnectionState` online right now? — and takes the corresponding path, which is what lets the
@@ -52,9 +52,7 @@ import javax.inject.Singleton
 @Singleton
 @Suppress(
     // One member per [JellyfinRepository] method, by construction — same rationale as
-    // `OnlineJellyfinRepository`'s and `OfflineJellyfinRepository`'s identical suppression. M13
-    // Phase 4's `getResumeAudioItems` pushed this class to the threshold (20); Phase 6's
-    // `getInstantMix`/`getLyrics` to 22. Logged in DECISIONS.md.
+    // `OnlineJellyfinRepository`'s and `OfflineJellyfinRepository`'s identical suppression.
     "TooManyFunctions",
 )
 internal class DelegatingJellyfinRepository
@@ -110,7 +108,7 @@ internal class DelegatingJellyfinRepository
         ): AppResult<FilterFacets> =
             delegate({ getFilterFacets(parentId, itemTypes) }, { getFilterFacets(parentId, itemTypes) })
 
-        // ---- M13 Phase 2 — music -------------------------------------------------------------
+        // ---- music -----------------------------------------------------------------------------
 
         override suspend fun getAlbumTracks(albumId: String): AppResult<List<JellyfinItem>> =
             delegate({ getAlbumTracks(albumId) }, { getAlbumTracks(albumId) })
@@ -127,12 +125,12 @@ internal class DelegatingJellyfinRepository
         override suspend fun getPlaylistItems(playlistId: String): AppResult<List<JellyfinItem>> =
             delegate({ getPlaylistItems(playlistId) }, { getPlaylistItems(playlistId) })
 
-        // ---- M13 Phase 4 — Continue Listening -------------------------------------------------
+        // ---- Continue Listening -------------------------------------------------------------
 
         override suspend fun getResumeAudioItems(limit: Int): AppResult<List<JellyfinItem>> =
             delegate({ getResumeAudioItems(limit) }, { getResumeAudioItems(limit) })
 
-        // ---- M13 Phase 6 — Instant Mix & lyrics -------------------------------------------------
+        // ---- Instant Mix & lyrics -------------------------------------------------------------
 
         override suspend fun getInstantMix(
             itemId: String,

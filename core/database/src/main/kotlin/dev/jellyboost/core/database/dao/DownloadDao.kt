@@ -18,7 +18,7 @@ import java.time.Instant
 import java.util.UUID
 
 /**
- * Data access for the download schema (docs/PLAN.md, "Download pipeline").
+ * Data access for the download schema.
  *
  * Like [ItemDao] this DAO is deliberately dumb — queries and nothing else. Every rule worth
  * testing (which item runs next, what a delete cascade prunes, how progress is throttled) lives in
@@ -62,9 +62,9 @@ interface DownloadDao {
     /**
      * Several download rows without their files, in no particular order.
      *
-     * What the delete cascade reads before it starts deleting. It used to call [get] once per
-     * target, so cancelling a forty-episode season opened forty statements before the first row
-     * went (audit 2026-08-08, PERF-25). The deletes themselves stay per-row on purpose: each one
+     * What the delete cascade reads before it starts deleting: one statement rather than one call to
+     * [get] per target, so cancelling a forty-episode season does not open forty statements before
+     * the first row goes. The deletes themselves stay per-row on purpose: each one
      * is a guarded `DELETE` whose *own* return value says whether the cascade still owns that item
      * (see [deleteUnlessRunnable]), and a batched delete could only report a total.
      */
@@ -72,7 +72,7 @@ interface DownloadDao {
     suspend fun getAll(itemIds: List<UUID>): List<DownloadEntity>
 
     /**
-     * One download **with** its files — what offline playback resolves against (M8).
+     * One download **with** its files — what offline playback resolves against.
      *
      * [observeAll] returns the same shape for the whole table; a player opening a single item has
      * no use for the other rows and no use for a Flow, since the file set of a finished download
@@ -87,7 +87,7 @@ interface DownloadDao {
      * waiting or were interrupted mid-transfer.
      *
      * [DownloadStatus.DOWNLOADING] is included deliberately. A row left in that state is one whose
-     * process died mid-file; picking it up again is exactly what the plan's Range resume is for.
+     * process died mid-file; picking it up again is exactly what Range resume is for.
      */
     @Transaction
     @Query(
@@ -109,7 +109,7 @@ interface DownloadDao {
      *
      * Distinct from [allItemIds] because the thing on disk is keyed by name, not by id: the sweep
      * has to decide whether a directory it found belongs to anything, and the row that would answer
-     * that may already be gone (docs/notes/audit-2026-07.md, STAB-04).
+     * that may already be gone.
      */
     @Query("SELECT directoryName FROM downloads")
     suspend fun allDirectoryNames(): List<String>
@@ -207,8 +207,7 @@ interface DownloadDao {
      * waiting out `DownloadScheduler.stop()` (up to five seconds). A user who re-taps in that
      * window gets a fresh `QUEUED` row from `DownloadEnqueuer`, and an unguarded
      * `DELETE … WHERE itemId = :itemId` then deleted *that* row, its files and its metadata: the
-     * download the user had just asked for vanished with no error anywhere (audit 2026-08-08,
-     * CORR-1).
+     * download the user had just asked for vanished with no error anywhere.
      *
      * `QUEUED` and `DOWNLOADING` are exactly the two statuses the drain can pick up
      * ([nextRunnable]), so a row holding one of them at cascade time is a *new* download somebody
@@ -239,11 +238,11 @@ interface DownloadDao {
      * Claims a row the drain is about to transfer, and says whether the claim took.
      *
      * The status test lives in the statement for the same reason [requeueIfDownloading]'s does:
-     * the racer is real. `pause`/`pauseAll` write `PAUSED` *before* stopping the worker, and a
-     * drain sitting between `nextRunnable()` and the start of the transfer used to write
-     * `DOWNLOADING` unconditionally over it — the cancellation then hit `requeueIfDownloading`,
-     * which put the row back to `QUEUED`, and the next drain downloaded the item the user had just
-     * paused (audit DL-03). A return of `0` means the row changed hands (paused, cancelled,
+     * the racer is real. `pause`/`pauseAll` write `PAUSED` *before* stopping the worker, and without
+     * this guard a drain sitting between `nextRunnable()` and the start of the transfer would write
+     * `DOWNLOADING` unconditionally over it — the cancellation would then hit `requeueIfDownloading`,
+     * which puts the row back to `QUEUED`, and the next drain would download the item the user had
+     * just paused. A return of `0` means the row changed hands (paused, cancelled,
      * deleted) since it was picked, and the item must be skipped, not transferred.
      */
     @Query(
@@ -258,15 +257,16 @@ interface DownloadDao {
     /**
      * Takes rows out of the queue's reach, and says whether the live transfer was among them.
      *
-     * One transaction on purpose, and the *only* rule this DAO carries. Pause and delete used to
-     * decide in two DB calls — read "is a target `DOWNLOADING`?", then write the new status — and
-     * the drain's [markDownloadingIfRunnable] claim could land in between: the read saw `QUEUED`
-     * (so the caller chose not to stop the worker), the claim took the row, and the unguarded
-     * write buried the evidence. The item the user had just paused (or was deleting out from
-     * under the worker) then transferred to completion with nothing left to stop it — the same
-     * window as audit DL-03, reopened on the caller's side by the DL-06 stop-elision. Inside a
-     * transaction the claim must land either before (the `DOWNLOADING` leg takes the row and the
-     * caller stops the worker) or after (the claim's own status guard sees [status] and refuses).
+     * One transaction on purpose, and the *only* rule this DAO carries. Two separate DB calls —
+     * read "is a target `DOWNLOADING`?", then write the new status — would let the drain's
+     * [markDownloadingIfRunnable] claim land in between: the read would see `QUEUED` (so the
+     * caller chose not to stop the worker), the claim would take the row, and the unguarded write
+     * would bury the evidence. The item the user had just paused (or was deleting out from under
+     * the worker) would then transfer to completion with nothing left to stop it — the same kind
+     * of race [markDownloadingIfRunnable] guards against, reopened here on the caller's side.
+     * Inside a transaction the claim must land either before (the `DOWNLOADING` leg takes the row
+     * and the caller stops the worker) or after (the claim's own status guard sees [status] and
+     * refuses).
      *
      * Only `QUEUED` and `DOWNLOADING` rows are touched: they are the two statuses the drain can
      * pick up, and a finished, failed or already-paused row is not being taken from anyone.
@@ -312,10 +312,9 @@ interface DownloadDao {
      * user asks for it again, or *Retry* would be worth exactly one attempt.
      *
      * Like [demoteRunnable]'s legs it is one statement for the whole batch, and that batching is
-     * not a micro-optimisation: a bulk action used to issue one repository mutation per row, and
-     * each of those stopped and restarted the WorkManager job, so a forty-episode queue produced
-     * forty stop/start cycles and as many overlapping drains (docs/notes/audit-2026-07.md,
-     * STAB-09). One statement, one transition, one restart.
+     * not a micro-optimisation: one repository mutation per row would stop and restart the
+     * WorkManager job each time, so a forty-episode queue would produce forty stop/start cycles and
+     * as many overlapping drains. One statement, one transition, one restart.
      */
     @Query(
         "UPDATE downloads SET status = 'QUEUED', errorMessage = NULL, attemptCount = 0, " +
@@ -399,8 +398,8 @@ interface DownloadDao {
      * rather than in a read-then-write in Kotlin because the two racers are exactly a user pressing
      * *Pause* — which writes `PAUSED` and *then* cancels the work — and this handler reacting to
      * that cancellation. An unconditional write here overwrites the `PAUSED` the user asked for
-     * with `QUEUED`, and `nextRunnable` picks the item straight back up (docs/POLISH.md,
-     * "pausing a download doesn't work").
+     * with `QUEUED`, and `nextRunnable` picks the item straight back up — the "pausing a download
+     * doesn't work" failure mode.
      */
     @Query(
         "UPDATE downloads SET status = 'QUEUED', updatedAt = :updatedAt " +
@@ -443,14 +442,13 @@ interface DownloadDao {
 
     /**
      * Drops the local user-data row for a deleted download **unless it still owes the server a
-     * change** (docs/PLAN.md, "Delete cascade": "keep `UserDataEntity` only if `toBeSynced`").
+     * change** — keep `UserDataEntity` only if `toBeSynced`.
      *
-     * It queries `user_data` from the download DAO on purpose. The rule is part of *this* cascade
-     * and nothing else uses it, and M7 was built alongside a parallel branch that owns
-     * [UserDataDao] — putting the statement here kept the two changes from colliding over one file.
+     * It queries `user_data` from the download DAO, not from [UserDataDao], on purpose: the rule is
+     * part of *this* cascade and nothing else uses it.
      *
-     * Batched, unlike the row deletes above: this one has no per-item verdict to report, and it ran
-     * once per deleted item inside the cascade's transaction (audit 2026-08-08, PERF-25).
+     * Batched, unlike the row deletes above: this one has no per-item verdict to report, so there is
+     * no reason to run it once per deleted item inside the cascade's transaction.
      */
     @Query("DELETE FROM user_data WHERE itemId IN (:itemIds) AND toBeSynced = 0")
     suspend fun deleteSyncedUserData(itemIds: List<UUID>)

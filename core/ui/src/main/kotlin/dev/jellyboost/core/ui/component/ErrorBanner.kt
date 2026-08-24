@@ -66,9 +66,9 @@ private val BannerLabel =
  * already has one.
  *
  * It announces itself. A banner appears *because* something the user just did failed, and a failure
- * nobody is told about is a screen that silently did nothing (accessibility audit 2026-08-05,
- * CR-3/M4) — so the whole banner is one node, marked assertive, which is the one live-region level
- * that interrupts. Assertive rather than polite precisely because the user is mid-flow: they are
+ * nobody is told about is a screen that silently did nothing — so the whole banner is one node,
+ * marked assertive, which is the one live-region level that interrupts. Assertive rather than
+ * polite precisely because the user is mid-flow: they are
  * about to retype a password into a form that has already rejected it.
  *
  * @param message already translated by the caller; `:core:ui` never sees the failure taxonomy.

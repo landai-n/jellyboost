@@ -20,9 +20,8 @@ import org.junit.runner.RunWith
 
 /**
  * The series and season chips are two individually-focusable buttons, each with its own spoken
- * label (accessibility audit checklist: "Dynamic a11y ships with the surface" — new cards/rows
- * merge descendants with one spoken sentence, and every interactive one carries the Button role
- * rather than announcing as plain text). Modelled on [EpisodeRowA11yTest].
+ * label: cards and rows merge their descendants into one spoken sentence, and every interactive one
+ * carries the Button role rather than announcing as plain text. Modelled on [EpisodeRowA11yTest].
  */
 @RunWith(AndroidJUnit4::class)
 class EpisodeOriginChipsA11yTest {

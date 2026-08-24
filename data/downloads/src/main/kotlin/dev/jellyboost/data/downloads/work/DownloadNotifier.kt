@@ -17,8 +17,8 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * The foreground notification the download worker runs behind (docs/PLAN.md, "Download pipeline":
- * "foreground notification (pause/cancel actions)").
+ * The foreground notification the download worker runs behind, carrying the pause and cancel
+ * actions.
  *
  * It is not decoration. A `CoroutineWorker` that does not promote itself to the foreground is
  * subject to WorkManager's 10-minute execution limit and to the system killing it whenever the app
@@ -77,11 +77,10 @@ internal class DownloadNotifier
          * call.
          *
          * The throttle posts progress at up to six times a second; the whole percentage it renders
-         * moves far less often than that. Every call used to rebuild the `Notification` and its two
-         * `PendingIntent`s regardless, which is work spent on byte deltas nobody sees
-         * (docs/notes/audit-2026-07.md, PERF-12). One item downloads at a time, so the single
-         * [lastPosted] field is all the state this needs — a new item's first call always differs
-         * from whatever the previous item last posted.
+         * moves far less often than that. Rebuilding the `Notification` and its two
+         * `PendingIntent`s on every call would be work spent on byte deltas nobody sees. One item
+         * downloads at a time, so the single [lastPosted] field is all the state this needs — a new
+         * item's first call always differs from whatever the previous item last posted.
          */
         fun foregroundInfoIfChanged(
             itemId: UUID,
@@ -102,10 +101,10 @@ internal class DownloadNotifier
          * the notification it describes does not: every worker run opens with
          * [startingForegroundInfo] ("Preparing…"), which does not go through
          * [foregroundInfoIfChanged] and so leaves the field holding the previous run's figure. A
-         * pause and an immediate resume then produced a first sample equal to it, the promotion was
-         * skipped as "nothing the user would see changed", and the notification sat on *Preparing…*
-         * until the whole percent happened to tick over — for a paused-at-73 %-of-4 GB episode,
-         * tens of seconds (audit 2026-08-08, PERF-15).
+         * pause and an immediate resume would otherwise produce a first sample equal to it, the
+         * promotion would be skipped as "nothing the user would see changed", and the notification
+         * would sit on *Preparing…* until the whole percent happened to tick over — for a
+         * paused-at-73 %-of-4 GB episode, tens of seconds.
          *
          * Called from both ends of a run: the worker resets before it posts *Preparing…* (a pause
          * cancels the worker outright, so the idle path below never runs for the case that actually
@@ -138,7 +137,7 @@ internal class DownloadNotifier
         ): Notification {
             val progress = notificationProgressOf(itemId, title, bytesDownloaded, bytesTotal)
 
-            // SEC-07: the real title names what the user is downloading — a show or a film — and
+            // The real title names what the user is downloading — a show or a film — and
             // that is exactly the kind of thing "sensitive content" lockscreen settings exist to
             // hide. VISIBILITY_PRIVATE plus a generic public version means a locked device with that
             // setting on shows "Downloading…" instead, never the title.
@@ -220,9 +219,9 @@ internal class DownloadNotifier
  *
  * Byte counts are deliberately absent — they are what changes on every throttled progress write,
  * and `percent` already rounds almost all of those away. Two of these being `==` is the whole of
- * [DownloadNotifier.foregroundInfoIfChanged]'s change guard (docs/notes/audit-2026-07.md, PERF-12),
- * and keeping this a plain data class free of `Context`/`Notification` is what lets that guard's
- * decision be pinned by a JVM test with none of the Android framework in the way.
+ * [DownloadNotifier.foregroundInfoIfChanged]'s change guard, and keeping this a plain data class
+ * free of `Context`/`Notification` is what lets that guard's decision be pinned by a JVM test with
+ * none of the Android framework in the way.
  */
 internal data class NotificationProgress(
     val itemId: UUID,

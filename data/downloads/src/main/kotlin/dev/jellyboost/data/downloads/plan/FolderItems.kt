@@ -9,11 +9,11 @@ import org.jellyfin.sdk.model.api.BaseItemKind
  *
  * The whole download pipeline turns on this one question, because a folder has no file to fetch:
  * `/Items/{id}/Download` answers `400` for one, which is exactly the failure this predicate exists
- * to make impossible (DECISIONS.md, 2026-07-29). `DownloadEnqueuer` uses it to decide whether to
+ * to make impossible. `DownloadEnqueuer` uses it to decide whether to
  * *expand* the item into its episodes, and [DownloadFilePlanner] uses it as the last guard before a
  * URL is built — which is why it lives here, in `.plan`, rather than in the root package: the
  * planner is upstream of the enqueuer, and a predicate the planner imports upwards was one half of
- * the root↔plan package cycle (audit ARCH-05).
+ * the root↔plan package cycle.
  *
  * `isFolder` is the server's own answer and is authoritative; the kind list is the fallback for a
  * DTO that reached us without it (an older cached blob, a hand-built test fixture). Deliberately

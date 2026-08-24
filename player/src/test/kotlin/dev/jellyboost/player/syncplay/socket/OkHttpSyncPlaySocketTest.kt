@@ -36,9 +36,9 @@ import java.util.UUID
  * Unit tests for [OkHttpSyncPlaySocket].
  *
  * **This class exists because of one bug, and the first two tests are it.** The SDK's socket routes
- * received messages through a conflated `StateFlow` (DECISIONS.md 2026-07-31): of two frames
- * arriving closer together than one decode the first is lost, and two identical consecutive frames
- * are dropped by `StateFlow`'s equality check. The server sends every SyncPlay transport action as
+ * received messages through a conflated `StateFlow`: of two frames arriving closer together than
+ * one decode the first is lost, and two identical consecutive frames are dropped by `StateFlow`'s
+ * equality check. The server sends every SyncPlay transport action as
  * a `SendCommand`/`GroupStateUpdate` pair ~2 ms apart — so on the SDK, `back-to-back frames` fails
  * on the command and `identical consecutive commands` fails on the second unpause. Both must pass
  * here, for ever.

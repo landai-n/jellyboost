@@ -5,10 +5,9 @@ import javax.inject.Qualifier
 /**
  * Qualifies the process-lifetime scope the music queue is orchestrated on.
  *
- * The queue is not a screen (docs/notes/music-m13-plan.md, key decision 1): the user backs out of
- * the album, the app is backgrounded, the screen goes off, and the album keeps playing with its
- * reports still going to the server. The scope is therefore a `@Singleton` and is never cancelled,
- * the `@SyncPlayScope` precedent.
+ * The queue is not a screen: the user backs out of the album, the app is backgrounded, the screen
+ * goes off, and the album keeps playing with its reports still going to the server. The scope is
+ * therefore a `@Singleton` and is never cancelled, the same shape as `@SyncPlayScope`.
  *
  * **Single-threaded, and that is `MusicPlaybackController`'s synchronization.** The controller
  * keeps the queue, the current index and the open server session in plain fields and mutates them

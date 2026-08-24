@@ -8,8 +8,8 @@ import java.time.Instant
  * The single item model the UI ever sees.
  *
  * Both the online (SDK) and the offline (Room) repositories map onto this exact type — that
- * identity is the mechanism behind the one seamless online/offline UI (docs/PLAN.md,
- * "Data layer"). `BaseItemDto` and `ItemEntity` never cross a repository boundary.
+ * identity is the mechanism behind the one seamless online/offline UI. `BaseItemDto` and
+ * `ItemEntity` never cross a repository boundary.
  *
  * Image fields are fully-built URL strings: URL construction (server base URL, image tags,
  * sizing) belongs to the data layer, so `:core:ui` only has to hand a string to Coil.
@@ -26,10 +26,10 @@ data class JellyfinItem(
     val genres: List<String> = emptyList(),
     /**
      * Episode number within its season, or a movie's position in a box set. Doubles as a track's
-     * position within its disc (M13) — Jellyfin numbers tracks the same way it numbers episodes.
+     * position within its disc — Jellyfin numbers tracks the same way it numbers episodes.
      */
     val indexNumber: Int? = null,
-    /** Season number for an episode. Doubles as a track's disc number (M13). */
+    /** Season number for an episode. Doubles as a track's disc number. */
     val parentIndexNumber: Int? = null,
     val seriesId: String? = null,
     val seriesName: String? = null,
@@ -44,9 +44,8 @@ data class JellyfinItem(
     /**
      * Short marketing line(s) shown under the title on a detail page.
      *
-     * Detail-only (M4), like the four fields below it: they are populated by the full `getItem`
-     * re-fetch the detail screen performs, and a lean list request leaves them at their defaults
-     * (docs/PLAN.md, "Screens" → ItemDetail).
+     * Detail-only, like the four fields below it: they are populated by the full `getItem`
+     * re-fetch the detail screen performs, and a lean list request leaves them at their defaults.
      */
     val taglines: List<String> = emptyList(),
     /** Season count for a series, episode count for a season. Detail-only. */
@@ -66,11 +65,11 @@ data class JellyfinItem(
      * opened right now. The offline repository sets this instead of throwing.
      */
     val available: Boolean = true,
-    /** The album a track belongs to. Music only (M13). */
+    /** The album a track belongs to. Music only. */
     val album: String? = null,
-    /** Id of the album a track belongs to. Music only (M13). */
+    /** Id of the album a track belongs to. Music only. */
     val albumId: String? = null,
-    /** The album's artist, as display text. Music only (M13). */
+    /** The album's artist, as display text. Music only. */
     val albumArtist: String? = null,
     /** Every performing artist, as display text — a track or album may credit more than one. */
     val artists: List<String> = emptyList(),
@@ -79,7 +78,7 @@ data class JellyfinItem(
     /**
      * The media file's container (`flac`, `mp3`, `m4a` …), when the server named one.
      *
-     * Added in M13 Phase 3 for one purpose: the music queue streams through `/Audio/{id}/universal`,
+     * Exists for one purpose: the music queue streams through `/Audio/{id}/universal`,
      * which decides direct-play-versus-transcode server side from the container list the client
      * sends, and answers with bytes rather than with a description of what it decided. This is the
      * only fact the client has to infer the `PlayMethod` its reports carry, and inferring it here
@@ -97,7 +96,7 @@ data class JellyfinItem(
 
     /**
      * Second line on a card: `S1:E4 · Episode title` for episodes, the production year otherwise.
-     * A track's subtitle is its performing artists (M13); an album's is `albumArtist · year`.
+     * A track's subtitle is its performing artists; an album's is `albumArtist · year`.
      *
      * **Not the drawing surfaces' form — see [episodeLabel] for what still reads this and why.**
      */
@@ -119,7 +118,7 @@ data class JellyfinItem(
      * `S` and `E` are the initials of words, and these build them from Kotlin string templates —
      * invisible to the `MissingTranslation` gate, and untranslatable in a 69-locale app. Every
      * *drawing* surface therefore goes through `:core:ui`'s `JellyfinItem.episodeNumberLabel()` /
-     * `subtitleLine()`, which read the `media_episode_label` resources instead (audit DUP-7). These
+     * `subtitleLine()`, which read the `media_episode_label` resources instead. These
      * two survive as the non-composable fallback, and are read from exactly three places:
      *
      * - `PlayerViewModel.loadTitleAndArtwork` → `CastMetadata.subtitle`, which becomes the Cast

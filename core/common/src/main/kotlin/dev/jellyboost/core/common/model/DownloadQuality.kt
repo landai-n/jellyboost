@@ -1,11 +1,10 @@
 package dev.jellyboost.core.common.model
 
 /**
- * How much of a file the download pipeline asks the server for (DECISIONS.md, 2026-07-29,
- * "transcoded downloads ship after all").
+ * How much of a file the download pipeline asks the server for.
  *
- * [ORIGINAL] is the plan's behaviour and the default: `/Items/{id}/Download`, the source file
- * untouched. Every other entry asks the server to re-encode on the way out, trading fidelity — and
+ * [ORIGINAL] is the default: `/Items/{id}/Download`, the source file untouched. Every other entry
+ * asks the server to re-encode on the way out, trading fidelity — and
  * an exact size, and byte-level resume — for a file that fits on the device.
  *
  * It lives in `:core:common` for the same reason [SegmentSkipMode] does: the preference store
@@ -67,7 +66,7 @@ enum class DownloadQuality(
          * `Mp4Extractor` resolves a zero-sized `mdat` as running to EOF, swallowing the trailing
          * `moov`, and gives up with `ParserException: Loading finished before preparation is
          * complete, contentIsMalformed=true`. Every non-`ORIGINAL` download produced exactly that
-         * (DECISIONS.md, 2026-07-29).
+         * failure with `mp4`.
          *
          * Matroska has no such ordering constraint — every element declares its own size as it is
          * written, which is why it is the basis of WebM and of every live-streamed mkv — so the
@@ -109,10 +108,10 @@ enum class DownloadQuality(
          * The obvious route — `/Audio/{id}/stream.{container}?audioStreamIndex=N` — does not honor
          * `audioStreamIndex` on server 10.11: `EncodingHelper.AttachMediaSourceInfo` hard-codes it to
          * `null` for a non-video request, so every audio-only fetch silently returns the source's
-         * *default* track regardless of which index was asked for (verified empirically; DECISIONS.md,
-         * 2026-07-31, "Offline multi-track Phase 2"). `/Videos/{id}/stream.{container}` does honor it,
-         * so the extra track is fetched through the video endpoint with a video stream present only
-         * because the endpoint requires one — [AUDIO_FETCH_VIDEO_BITRATE] through [AUDIO_FETCH_MAX_WIDTH]
+         * *default* track regardless of which index was asked for (verified empirically).
+         * `/Videos/{id}/stream.{container}` does honor it, so the extra track is fetched through the
+         * video endpoint with a video stream present only because the endpoint requires one —
+         * [AUDIO_FETCH_VIDEO_BITRATE] through [AUDIO_FETCH_MAX_WIDTH]
          * shape that stream to be as cheap as the server will produce, and it is discarded by a local
          * strip to [AUDIO_SIDECAR_CONTAINER] once the fetch lands. Measured on the dev server: ~54×
          * realtime, ~45 MB of junk video for a 2-hour film at these settings.

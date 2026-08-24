@@ -12,7 +12,7 @@ import androidx.room.withTransaction
  * existing rows' sources, spent a merge deciding what to write, and upserted — while
  * `DownloadEnqueuer` could turn one of those rows into a `DOWNLOAD` in between. The stale snapshot
  * then wrote `BROWSE_CACHE` back over it with a lean blob, which is precisely the downgrade the
- * merge exists to prevent (audit 2026-08-06, HYG-3).
+ * merge exists to prevent.
  *
  * This seam is how both properties are had at once: the *decision* stays a pure function in `:data`,
  * and the read that feeds it plus the write that follows it run inside one transaction, so nothing

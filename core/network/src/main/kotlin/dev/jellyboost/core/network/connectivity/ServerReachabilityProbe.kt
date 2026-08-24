@@ -16,7 +16,7 @@ import javax.inject.Singleton
 
 /**
  * Answers "is our server reachable right now?", and rotates through the server's known addresses
- * while doing so (docs/PLAN.md, "Connectivity").
+ * while doing so.
  *
  * A Jellyfin server usually has more than one address — a LAN address, a remote/tunnel address,
  * whatever the user typed at setup — all stored as `ServerAddressEntity` rows. Losing the LAN when
@@ -25,13 +25,13 @@ import javax.inject.Singleton
  * at whichever one answers.
  *
  * An address only counts as answering when the server behind it reports the signed-in session's
- * server id (audit NET-01). The stored addresses are routinely private LAN ones that mean a
+ * server id. The stored addresses are routinely private LAN ones that mean a
  * different machine on a different network — the shared client carries the access token, so
  * re-pointing it at whatever 200s `/System/Info/Public` would hand the token to any host squatting
  * that address. A mismatched id is treated exactly like an unreachable address.
  *
- * Every attempt is capped at [PROBE_TIMEOUT_MS]. That cap is the mechanism behind the M6 definition
- * of done — "server-down (Wi-Fi up) degrades without a 30s hang".
+ * Every attempt is capped at [PROBE_TIMEOUT_MS]. That cap is what keeps a server-down-but-Wi-Fi-up
+ * case degrading without a 30-second hang.
  */
 @Singleton
 class ServerReachabilityProbe
@@ -71,7 +71,7 @@ class ServerReachabilityProbe
                             // instance, or anything at all squatting a reused LAN address.
                             // Never switch to it.
                             //
-                            // Debug, and host only, on this line and the two below (audit HYG-10):
+                            // Debug, and host only, on this line and the two below:
                             // the probe walks every address the user's server is known by, so its
                             // log is a list of where that server lives, and it is exactly the log a
                             // user pastes when connectivity misbehaves. See `hostForLog`.
@@ -99,7 +99,7 @@ class ServerReachabilityProbe
          * other address stored for this server. Rotating only matters once the current one failed.
          */
         private suspend fun candidateAddresses(session: SessionState.LoggedIn): List<String> {
-            // `runCatchingUnlessCancelled`, not `runCatching` (audit QUAL-2): the Room read is a
+            // `runCatchingUnlessCancelled`, not `runCatching`: the Room read is a
             // suspend call, and the plain one would swallow the CancellationException that unwinds
             // a cancelled probe — turning "the caller gave up" into "the server has no addresses".
             val stored =
@@ -113,8 +113,8 @@ class ServerReachabilityProbe
             /**
              * Per-address budget, in milliseconds.
              *
-             * The plan's number: "3s `getPublicSystemInfo`". Long enough for a sleepy LAN server,
-             * short enough that a dead one degrades the UI before the user notices.
+             * Long enough for a sleepy LAN server, short enough that a dead one degrades the UI
+             * before the user notices.
              */
             const val PROBE_TIMEOUT_MS = 3_000L
         }

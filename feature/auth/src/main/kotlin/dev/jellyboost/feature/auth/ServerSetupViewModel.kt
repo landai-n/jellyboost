@@ -37,14 +37,13 @@ internal data class ServerSetupUiState(
      * True when this screen is being shown because a stored session was lost, rather than because
      * the user has never signed in.
      *
-     * Without it the two are indistinguishable: an unreadable credential store used to be wiped and
-     * recreated in silence, and the user simply found themselves at server setup
-     * (docs/notes/audit-2026-07.md, SEC-03).
+     * Without it the two are indistinguishable: an unreadable credential store is wiped and
+     * recreated in silence, and the user simply finds themselves at server setup.
      */
     val sessionWasLost: Boolean = false,
     /**
      * Host of a server that resolved to a plain `http://` address outside the local network, or
-     * `null` when there is nothing to warn about (audit SEC-10).
+     * `null` when there is nothing to warn about.
      *
      * Set instead of navigating: the flow stops here, says what is about to happen to the access
      * token, and the next press of Connect goes through. Non-null only between the resolve that
@@ -57,8 +56,7 @@ internal data class ServerSetupUiState(
 }
 
 /**
- * Backs the ServerSetup screen: local-network discovery plus manual address resolution
- * (docs/PLAN.md, "ServerSetup").
+ * Backs the ServerSetup screen: local-network discovery plus manual address resolution.
  *
  * Resolving an address is where this screen's job ends — the resolved server is handed to the
  * Login screen through [PendingServerStore] and a one-shot [navigateToLogin] event. Fetching the
@@ -104,11 +102,11 @@ internal class ServerSetupViewModel
         /**
          * Records what the user typed into the address field.
          *
-         * Ignored while a probe is in flight. The field is no longer disabled during one — a
-         * disabled field destroys its accessibility node and drops focus (accessibility audit
-         * 2026-08-05, F17) — so the guard moved here, where it is stronger: [connectTo] captured the
-         * address it is resolving, and letting the field drift away from it would leave the screen
-         * showing one address while reporting the outcome of another.
+         * Ignored while a probe is in flight. The field stays enabled throughout — a disabled field
+         * destroys its accessibility node and drops focus — so this guard is what keeps it from
+         * being edited mid-probe: [connectTo] captured the address it is resolving, and letting the
+         * field drift away from it would leave the screen showing one address while reporting the
+         * outcome of another.
          */
         fun onAddressChange(value: String) {
             if (mutableUiState.value.isConnecting) return
@@ -121,7 +119,7 @@ internal class ServerSetupViewModel
         /**
          * Probes whatever is currently in the address field — or, when a cleartext warning is
          * standing for the server this field already resolved to, takes the press as the
-         * acknowledgement of it and goes on to Login (audit SEC-10).
+         * acknowledgement of it and goes on to Login.
          */
         fun connect() {
             val acknowledged = warnedServer

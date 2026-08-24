@@ -58,7 +58,7 @@ import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
 
 /**
- * A music library's Albums / Artists / Playlists tabs (M13 Phase 2, docs/notes/music-m13-plan.md).
+ * A music library's Albums / Artists / Playlists tabs.
  *
  * A pushed destination, styled like `LibraryGridScreen`: its own back/home header rather than
  * `:app`'s floating chrome, and `contentWindowInsets = WindowInsets(0)` because the header carries

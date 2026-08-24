@@ -39,7 +39,7 @@ class SchemaMigrationTest {
         val before = columns(5, "downloads")
         val after = columns(6, "downloads")
 
-        // Exactly the two columns the live size projection needs (docs/features/download-quality.md).
+        // Exactly the two columns the live size projection needs.
         (after.keys - before.keys) shouldContainExactly setOf("projectedBytes", "sizeIsExact")
     }
 
@@ -118,9 +118,9 @@ class SchemaMigrationTest {
 
     @Test
     fun `v8 to v9 changes no column at all, on any table`() {
-        // v9 is an *index-only* bump (audit 2026-08-08, PERF-3/4/23/24). Room can derive index work
-        // itself, so this stays an `@AutoMigration` — but only because nothing about the columns
-        // moved, which is the property that would otherwise break the upgrade.
+        // v9 is an *index-only* bump. Room can derive index work itself, so this stays an
+        // `@AutoMigration` — but only because nothing about the columns moved, which is the
+        // property that would otherwise break the upgrade.
         tables(9) shouldContainExactly tables(8)
         tables(9).forEach { table -> columns(9, table) shouldBe columns(8, table) }
     }

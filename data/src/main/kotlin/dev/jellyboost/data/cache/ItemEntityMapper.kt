@@ -31,9 +31,9 @@ import javax.inject.Singleton
  *
  * 1. **The blob is the source of truth for reading.** An entity is turned back into a domain item
  *    by deserialising [ItemEntity.dto] and running it through the very same [ItemMapper] the online
- *    path uses. That identity is not an optimisation, it *is* the plan's mechanism for one seamless
- *    UI (docs/PLAN.md, "Data layer"): a cached item and a freshly fetched one are indistinguishable
- *    downstream, artwork fallbacks and all.
+ *    path uses. That identity is not an optimisation, it *is* what makes one seamless UI possible:
+ *    a cached item and a freshly fetched one are indistinguishable downstream, artwork fallbacks
+ *    and all.
  * 2. **The columns are for querying only.** Nothing reconstructs an item from them; they exist so
  *    the offline grid can sort, the offline search can match, and the offline home rows can group
  *    by series.
@@ -113,7 +113,7 @@ class ItemEntityMapper
          * be decoded.
          *
          * Almost everything wants [toDomainOrNull] instead — the whole point of this class is that
-         * `BaseItemDto` does not cross a repository boundary. The download pipeline (M7) is the one
+         * `BaseItemDto` does not cross a repository boundary. The download pipeline is the one
          * exception: its file plan is built from `mediaSources`, `mediaStreams`, `trickplay` and
          * the image tags, which are SDK-shaped details deliberately absent from `JellyfinItem`. It
          * consumes them inside `:data:downloads` and hands the UI domain models like everyone else.

@@ -21,7 +21,7 @@ import org.junit.runner.RunWith
 import dev.jellyboost.core.ui.R as CoreUiR
 
 /**
- * The up-next card as a screen reader meets it (accessibility audit 2026-08-05, CR-3/CR-6).
+ * The up-next card as a screen reader meets it.
  *
  * Three claims, each of which is one modifier away from being silently untrue:
  * - the card is **not** one merged node. It offers two different things — play the next episode, or

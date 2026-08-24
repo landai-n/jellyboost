@@ -26,13 +26,13 @@ data class ArtistDetailUiState(
         get() = topTracks.size > COLLAPSED_TOP_TRACKS
 
     companion object {
-        /** Rows shown before "show more" — the milestone plan's "Top tracks (5, expandable)". */
+        /** Rows shown before "show more" — the top-tracks list is expandable past this. */
         const val COLLAPSED_TOP_TRACKS = 5
     }
 }
 
 /**
- * Stamps the app-wide download-state map onto the artist's albums and top tracks (M13 Phase 5).
+ * Stamps the app-wide download-state map onto the artist's albums and top tracks.
  *
  * Both halves, not just the tracks: an album card carries the same `DownloadBadge` every other card
  * in the app does, and the artist page is where a user checks what of an artist they already have

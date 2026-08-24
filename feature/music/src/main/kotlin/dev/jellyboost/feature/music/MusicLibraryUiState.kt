@@ -1,7 +1,7 @@
 package dev.jellyboost.feature.music
 
 /**
- * The three tabs a music library opens onto (M13 Phase 2, docs/notes/music-m13-plan.md).
+ * The three tabs a music library opens onto.
  *
  * Each tab is its own paged grid ([MusicLibraryViewModel.albums]/`.artists`/`.playlists`), kept
  * separate from the ones the user is not looking at rather than swapping one `Pager` between three

@@ -33,9 +33,9 @@ import javax.inject.Singleton
  * `MatroskaExtractor` only learns where `Cues` live from a `SeekHead`, and on reaching the first
  * `Cluster` without one it publishes `SeekMap.Unseekable`; `ProgressiveMediaPeriod.seekToUs` then
  * reads `positionUs = seekMap.isSeekable() ? positionUs : 0`, so **every** drag of the seek bar
- * restarts the episode from zero. That is the whole of the reported fault. An `ORIGINAL` download is
- * a file the server had already finished writing, has a real `SeekHead` at the same offset 52, and
- * has always seeked correctly — which is why only transcoded downloads were affected.
+ * restarts the episode from zero. That is the whole of the fault. An `ORIGINAL` download is a file
+ * the server had already finished writing, carries a real `SeekHead` at the same offset 52, and
+ * seeks correctly — which is why only transcoded downloads are affected.
  *
  * ### The repair
  * Write a 26-byte `SeekHead` naming the `Cues` into the Void that was reserved for it, and — when
@@ -48,14 +48,13 @@ import javax.inject.Singleton
  * The alternative — teaching the player a custom `Extractor` that injects a `SeekMap` built from an
  * index we record during the download — was rejected: it needs a schema change, a bespoke `SeekMap`
  * and an `ExtractorOutput` wrapper to deliver a *worse* index than the one already sitting in the
- * file, and it would leave every download made before it shipped unseekable. See DECISIONS.md,
- * 2026-07-29.
+ * file, and it would leave every download already on the device unseekable.
  *
  * ### Where it runs, and why there
  * From [dev.jellyboost.data.downloads.offline.DownloadedMediaProvider], the single gate every
  * offline playback passes through — not from the download pipeline. That is deliberate: downloads
- * already on the device when this shipped are exactly the ones the user reported, and repairing at
- * first play fixes those too. It is idempotent and cheap to repeat: a file that already has a
+ * already on the device were fetched without the repair, and repairing at first play fixes those
+ * too. It is idempotent and cheap to repeat: a file that already has a
  * `SeekHead` (every `ORIGINAL` download, and every transcode after its first play) is recognised in
  * two reads of twelve bytes, and only a file that genuinely needs the repair pays the
  * [CUES_SCAN_BYTES] tail scan — once, ever.
@@ -80,10 +79,9 @@ import javax.inject.Singleton
  */
 @Singleton
 @Suppress(
-    // Class-level rather than six identical function-level copies (2026-08-07 detekt un-blinding): this is a byte-level
-    // EBML walker over an untrusted file, and every private helper here is the same shape — read a header, bail out the
-    // moment the bytes stop making sense. Each early return names a distinct malformation, which is precisely what must
-    // not be collapsed into one exit.
+    // A byte-level EBML walker over an untrusted file: every private helper here is the same shape — read a header,
+    // bail out the moment the bytes stop making sense. Each early return names a distinct malformation, which is
+    // precisely what must not be collapsed into one exit.
     "ReturnCount",
 )
 internal class MatroskaSeekIndexRepair
@@ -110,10 +108,10 @@ internal class MatroskaSeekIndexRepair
              *
              * The shape that reaches here is an unknown-size element other than the `Segment`, an
              * element id the spec forbids, or a length that runs past the end of the file. A live
-             * remux writing unknown-size *clusters* would land here (docs/notes/audit-2026-07.md,
-             * MKV-01); no producer we feed does, and the file is left exactly as it was either way.
-             * Told apart from [NOT_MATROSKA] because "this is not a Matroska file" and "this is a
-             * Matroska file whose header we decline to parse" are different things to read in a log.
+             * remux writing unknown-size *clusters* would land here; no producer we feed does, and
+             * the file is left exactly as it was either way. Told apart from [NOT_MATROSKA]
+             * because "this is not a Matroska file" and "this is a Matroska file whose header we
+             * decline to parse" are different things to read in a log.
              */
             UNSUPPORTED_HEADER,
 
@@ -204,11 +202,11 @@ internal class MatroskaSeekIndexRepair
         /**
          * The `Duration` a file that is *already* indexed may still be missing.
          *
-         * A `SeekHead` means the seek index needs nothing, and until now it also meant the run
-         * stopped there — so a transcode first opened before its runtime was known (an item played
-         * straight off a bare download row) got its index and *never* got a `Duration`, however many
-         * times it was played afterwards. `Player.getDuration()`, the media notification and PiP stay
-         * unset for the life of that file (docs/notes/audit-2026-07.md, MKV-04).
+         * A `SeekHead` means the seek index needs nothing, but it must not end the run: a transcode
+         * first opened before its runtime was known (an item played straight off a bare download
+         * row) has its index and no `Duration`, and stopping at the `SeekHead` would leave it that
+         * way however many times it is played afterwards — `Player.getDuration()`, the media
+         * notification and PiP unset for the life of the file.
          *
          * The outcome is still [Outcome.ALREADY_INDEXED]: it describes the seek index, which this
          * did not touch. Only a write that would not stay written turns it into [Outcome.FAILED].
@@ -244,8 +242,8 @@ internal class MatroskaSeekIndexRepair
          * memory for exactly as long as the file is in a half-patched state, and a write that dies
          * part-way has to be treated the same as one that verifies wrong: leaving the file as it lies
          * would cost the user a downloaded gigabyte that no longer parses, with a Room row still
-         * saying `DOWNLOADED` (docs/notes/audit-2026-07.md, STAB-08/MKV-03). What this cannot cover is
-         * the process dying between the two — which is what the patch order in [index] is for.
+         * saying `DOWNLOADED`. What this cannot cover is the process dying between the two — which
+         * is what the patch order in [index] is for.
          *
          * @return whether the patches are on the platter and the header still walks.
          */
@@ -321,9 +319,9 @@ internal class MatroskaSeekIndexRepair
          * An `Info` carrying a **written** `CRC-32` is left alone: the checksum covers the Void this
          * would write into, so filling it in would leave a file a strict parser is entitled to reject.
          * The shape this repair exists for does not have one — ffmpeg leaves a six-byte Void where a
-         * `CRC-32` would go, which is a Void and not that element (docs/notes/audit-2026-07.md, §5).
-         * It matters more since the back-fill: an already-indexed file is far likelier to be an
-         * `ORIGINAL` the server checksummed than a transcode.
+         * `CRC-32` would go, which is a Void and not that element. It matters most on the
+         * duration back-fill: an already-indexed file is far likelier to be an `ORIGINAL` the
+         * server checksummed than a transcode.
          */
         private fun duration(
             media: RandomAccessFile,
@@ -376,9 +374,9 @@ internal class MatroskaSeekIndexRepair
          *
          * A `SeekHead` does **not** end the walk, though it settles the seek index: `Info` sits
          * behind it in every file a muxer writes, and an already-indexed file may still be owed a
-         * `Duration` (docs/notes/audit-2026-07.md, MKV-04). What a `SeekHead` does buy is the answer
-         * to the only question left if the walk then breaks down — the file is indexed — so that
-         * case reports the index it found and nothing else, and nothing is written.
+         * `Duration`. What a `SeekHead` does buy is the answer to the only question left if the
+         * walk then breaks down — the file is indexed — so that case reports the index it found and
+         * nothing else, and nothing is written.
          *
          * @return `null` when the header does not parse and no `SeekHead` was reached, which is a
          *   file this has no business writing to.
@@ -421,11 +419,11 @@ internal class MatroskaSeekIndexRepair
          *
          * It scans in [CUES_SCAN_BYTES] windows rather than in one, because "the `Cues` are near the
          * end" is a rule of thumb and not a guarantee: `Tags`, `Chapters` or an attachment written
-         * behind them push them arbitrarily far back, and a single window silently reported
-         * [Outcome.NO_CUES] for a file whose index was sitting a megabyte and one byte from the end
-         * (docs/notes/audit-2026-07.md, MKV-05). Windows overlap by an id width so a `Cues` id split
-         * between two of them is still seen, and the whole search is bounded by [MAX_CUES_SCAN_BYTES]
-         * — past that this is not looking for a trailer any more, it is reading the film.
+         * behind them push them arbitrarily far back, and a single window would silently report
+         * [Outcome.NO_CUES] for a file whose index sits a megabyte and one byte from the end.
+         * Windows overlap by an id width so a `Cues` id split between two of them is still seen, and
+         * the whole search is bounded by [MAX_CUES_SCAN_BYTES] — past that this is not looking for a
+         * trailer any more, it is reading the film.
          */
         private fun findCues(
             media: RandomAccessFile,
@@ -537,7 +535,7 @@ internal class MatroskaSeekIndexRepair
          * zero is a longer spelling of a shorter id, and value bits all one is the reserved id no
          * element may carry. Both are `null` here, which vetoes the whole header — a file that
          * declares an id the format says cannot exist is not one to write into, whether or not the
-         * bytes behind it happen to tile (docs/notes/audit-2026-07.md, MKV-07).
+         * bytes behind it happen to tile.
          */
         private fun identifier(
             header: ByteArray,
@@ -765,9 +763,9 @@ internal class MatroskaSeekIndexRepair
              * make, and it is also the number every one of the byte counts below is derived from —
              * `toInt()` on a Void of more than two gigabytes wraps negative, and the padding
              * `ByteArray` sized from it is either a `NegativeArraySizeException` or a two-gigabyte
-             * allocation, thrown out of a coroutine that was opening a file for playback
-             * (docs/notes/audit-2026-07.md, MKV-02). Refusing the Void instead costs a file that
-             * could not have been a live transcode nothing but a repair it never needed.
+             * allocation, thrown out of a coroutine that was opening a file for playback. Refusing
+             * the Void instead costs a file that could not have been a live transcode nothing but a
+             * repair it never needed.
              */
             const val MAX_VOID_BYTES = 64L * 1024L
 

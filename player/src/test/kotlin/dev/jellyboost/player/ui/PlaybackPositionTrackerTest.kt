@@ -12,8 +12,8 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for [PlaybackPositionTracker] — the fast half of the player's state, which the audit's
- * PERF-04 finding moved out of `PlayerUiState`.
+ * Unit tests for [PlaybackPositionTracker] — the fast half of the player's state, kept out of
+ * `PlayerUiState`.
  *
  * The flow it publishes is the thing under test: a tick must move the position and nothing else, so
  * that the control surface around the scrubber has nothing to recompose for.

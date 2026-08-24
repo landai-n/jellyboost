@@ -135,7 +135,7 @@ internal class PlayerViewModelTest : PlayerViewModelFixture() {
             model.uiState.value.hasEnded shouldBe true
             // The detached scope, not viewModelScope: publishing `hasEnded` makes the screen pop
             // the route on the next frame, which cancels viewModelScope before a report launched
-            // there could reach the server (audit PC-03).
+            // there could reach the server.
             coVerify(exactly = 1) { reporter.reportStopDetached(source, match { it.hasEnded }) }
         }
 
@@ -434,7 +434,7 @@ internal class PlayerViewModelTest : PlayerViewModelFixture() {
             advanceUntilIdle()
 
             // The refused local switch, then the re-resolved stream's own selection reaching the
-            // player — which is the half that used to be missing.
+            // player.
             playerHandle.selectedSubtitleIndices shouldContainExactly listOf(7, 7)
         }
 
@@ -463,8 +463,7 @@ internal class PlayerViewModelTest : PlayerViewModelFixture() {
             model.releaseSession()
 
             // `stop()` frees the codecs and the audio focus but keeps the playback thread, the
-            // loaders, the allocator's buffers and the ffmpeg renderer for the life of the process
-            // (audit STAB-05).
+            // loaders, the allocator's buffers and the ffmpeg renderer for the life of the process.
             playerHandle.releaseCount shouldBe 1
         }
 
@@ -480,7 +479,7 @@ internal class PlayerViewModelTest : PlayerViewModelFixture() {
             coVerify(exactly = 0) { reporter.reportStopDetached(any(), any()) }
         }
 
-    // ---- M8, playing a download -------------------------------------------------------------------
+    // ---- playing a download ---------------------------------------------------------------------
 
     @Test
     fun `a downloaded item opens off its file with no quality control on screen`() =
@@ -527,7 +526,7 @@ internal class PlayerViewModelTest : PlayerViewModelFixture() {
             coVerify(exactly = 1) { reporter.reportStopDetached(local, any()) }
         }
 
-    // ---- M9: speed ----------------------------------------------------------------------------
+    // ---- speed --------------------------------------------------------------------------------
 
     @Test
     fun `applies a chosen playback rate to the player`() =
@@ -566,7 +565,7 @@ internal class PlayerViewModelTest : PlayerViewModelFixture() {
             playerHandle.playbackSpeeds.shouldBeEmpty()
         }
 
-    // ---- M9: trickplay ------------------------------------------------------------------------
+    // ---- trickplay ----------------------------------------------------------------------------
 
     @Test
     fun `publishes the scrubbing thumbnails once they resolve`() =
@@ -589,7 +588,7 @@ internal class PlayerViewModelTest : PlayerViewModelFixture() {
                 .shouldBeNull()
         }
 
-    // ---- M9: media segments -------------------------------------------------------------------
+    // ---- media segments -----------------------------------------------------------------------
 
     @Test
     fun `offers a skip while playback is inside an intro`() =
@@ -649,7 +648,7 @@ internal class PlayerViewModelTest : PlayerViewModelFixture() {
                 .shouldBeNull()
         }
 
-    // ---- the ticking half of the state (PERF-04) ------------------------------------------------
+    // ---- the ticking half of the state -----------------------------------------------------------
 
     @Test
     fun `a tick moves the seek bar`() =
@@ -689,7 +688,7 @@ internal class PlayerViewModelTest : PlayerViewModelFixture() {
             model.position.value.positionMs shouldBe 90_000L
         }
 
-    // ---- M9: picture-in-picture ---------------------------------------------------------------
+    // ---- picture-in-picture ---------------------------------------------------------------------
 
     @Test
     fun `arms picture-in-picture only while the screen is up and something is playing`() =

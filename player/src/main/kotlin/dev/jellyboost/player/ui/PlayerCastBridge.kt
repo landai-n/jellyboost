@@ -13,8 +13,8 @@ import kotlinx.coroutines.flow.map
 /**
  * The player's half of casting: one object between [PlayerViewModel] and the Cast session.
  *
- * The same decomposition [PlayerSyncPlayBridge] got, for the same reason — the ViewModel is the
- * longest class in the module (audit ARCH-10) and this keeps a whole subsystem down to a question
+ * The same decomposition [PlayerSyncPlayBridge] has, for the same reason — the ViewModel is the
+ * longest class in the module and this keeps a whole subsystem down to a question
  * ([isCasting]), a flow ([states]) and two edges. It also does one thing that bridge does not: it
  * **is** the [CastPlaybackHost]. `PlayerViewModel` cannot implement that interface itself without
  * the Cast package's vocabulary appearing in a public class's supertypes, and the host is one

@@ -6,10 +6,9 @@ import kotlinx.coroutines.flow.Flow
 /**
  * The seam between the music queue's orchestration and the player it runs on.
  *
- * `PlayerHandle` is deliberately **not** widened to carry any of this
- * (docs/notes/music-m13-plan.md, key decision 1): a queue on that interface would have to be
- * implemented three times — Exo, Cast, Routing — and would drag casting into M13's scope for a
- * feature the plan explicitly defers. This is a second, narrower seam over the same shared
+ * `PlayerHandle` is deliberately **not** widened to carry any of this: a queue on that interface
+ * would have to be implemented three times — Exo, Cast, Routing — and would drag casting in for a
+ * feature that does not cast. This is a second, narrower seam over the same shared
  * `ExoPlayer`, used only by [MusicPlaybackController], and the reason that controller can be unit
  * tested at all: everything below here is Media3, everything above is plain data.
  *

@@ -49,17 +49,15 @@ import dev.jellyboost.data.downloads.model.StorageVolumeOption
 import dev.jellyboost.core.ui.R as CoreUiR
 
 /**
- * The Settings screen (docs/PLAN.md, "Screens" → Settings): preferences, account and sign-out.
+ * The Settings screen: preferences, account and sign-out.
  *
  * Reached from the home top bar's overflow menu rather than from a user avatar — there is no avatar
- * asset pipeline in this app (DECISIONS.md 2026-07-29, "Settings is opened from the home overflow
- * menu"). It is a pushed destination, not a bottom-nav tab, so it owns the glass back-plus-home header
- * `LibraryGridScreen` established (2026 refresh, Phase 5 sweep) rather than a `TopAppBar`.
+ * asset pipeline in this app. It is a pushed destination, not a bottom-nav tab, so it owns the
+ * glass back-plus-home header `LibraryGridScreen` established rather than a `TopAppBar`.
  *
  * The Downloads section's storage **location picker** chooses between the app-specific directories
  * the platform reports — internal storage and, when one is in, the SD card. Picking an arbitrary
- * folder still waits on SAF, which stays deferred behind the `DownloadStorage` seam (DECISIONS.md
- * 2026-07-29, "the storage location picker ships now, backed by secondary volumes").
+ * folder still waits on SAF, which stays deferred behind the `DownloadStorage` seam.
  *
  * @param viewModel passed in rather than resolved here so `:app` owns the `hiltViewModel()` call.
  * @param onBack pops this destination off the back stack.
@@ -136,9 +134,8 @@ fun SettingsContent(
     var confirmingSignOut by remember { mutableStateOf(false) }
 
     Column(modifier = modifier.fillMaxSize()) {
-        // The pushed-screen glass idiom `LibraryGridScreen` established (2026 refresh): back-then-home
-        // glass circles ahead of the screen title, no `TopAppBar` (DECISIONS.md 2026-08-01, "2026
-        // design refresh (Phase 5)").
+        // The pushed-screen glass idiom `LibraryGridScreen` established: back-then-home
+        // glass circles ahead of the screen title, no `TopAppBar`.
         SettingsHeader(onBack = onBack, onHome = onHome)
 
         Column(
@@ -231,7 +228,7 @@ private fun SkipModeGroup(
         SegmentSkipMode.entries.forEach { mode ->
             SettingsChoiceRow(
                 // "Skip intro" and "Skip outro" draw the same three options; the group name is the
-                // only thing telling one set apart from the other (audit F12).
+                // only thing telling one set apart from the other.
                 groupLabel = label,
                 label = stringResource(mode.labelRes()),
                 selected = mode == selected,
@@ -260,7 +257,7 @@ private fun DownloadsSection(
 }
 
 /**
- * The storage-location picker (docs/PLAN.md, "Screens" → Settings).
+ * The storage-location picker.
  *
  * One row per **mounted** volume: internal storage always, the SD card when there is one. A card
  * that is not in the device is not a disabled row, it is no row — there is nothing to explain about
@@ -268,8 +265,8 @@ private fun DownloadsSection(
  * its absence matters. The group hides itself entirely when there is only one place to put files,
  * which is what most devices look like.
  *
- * Switching while downloads exist deletes them (the plan's v1 policy — files are not moved yet), so
- * that switch goes through a confirmation. Switching with an empty device is immediate: there is
+ * Switching while downloads exist deletes them (files are not moved yet), so that switch goes
+ * through a confirmation. Switching with an empty device is immediate: there is
  * nothing to lose and nothing to warn about.
  */
 @Composable
@@ -294,9 +291,9 @@ private fun StorageLocationGroup(
                     )
                     // Assertive: this appears because the volume the user chose is *gone* and
                     // downloads are landing somewhere else, which is the kind of thing a screen
-                    // should say rather than wait to be found (audit 2026-08-05, F13). It also
-                    // appears on arrival, not in response to a tap, so nothing else on the screen
-                    // would ever draw attention to it.
+                    // should say rather than wait to be found. It also appears on arrival, not in
+                    // response to a tap, so nothing else on the screen would ever draw attention
+                    // to it.
                     .semantics { liveRegion = LiveRegionMode.Assertive },
         )
     }
@@ -305,7 +302,7 @@ private fun StorageLocationGroup(
     // What tapping the row that is *already* selected actually does when the chosen volume is
     // missing: it stores the fallback as the choice, so downloads stop being a fallback and the
     // warning above goes away. Nothing on screen says that — the row simply looks selected — so the
-    // affordance existed only for someone who could see it was the odd one out (audit F13).
+    // affordance existed only for someone who could see it was the odd one out.
     val recoveryHint = stringResource(R.string.settings_storage_use_this_hint)
 
     SettingsChoiceGroup(label = pickerLabel) {
@@ -380,7 +377,7 @@ private fun StorageVolumeOption.label(): String =
     )
 
 /**
- * The download-quality picker (M9).
+ * The download-quality picker.
  *
  * Each option carries its bitrate in the label rather than in a supporting line, because what the
  * user is choosing between is four numbers and the numbers are the choice. The caveat under the
@@ -508,8 +505,8 @@ private fun AccountSection(
 /**
  * The build's version — the one section that never changes based on account state or preferences.
  *
- * Last in the list, so it carries the screen's bottom breathing room ([Dimens.SpaceExtraLarge]) that
- * used to sit under the sign-out button in [AccountSection].
+ * Last in the list, so it carries the screen's bottom breathing room ([Dimens.SpaceExtraLarge])
+ * instead of the sign-out button in [AccountSection] holding it.
  */
 @Composable
 private fun AboutSection(appVersion: String) {

@@ -10,10 +10,10 @@
     <!--
       Chrome action labels — the words the app's own furniture uses, as opposed to anything a
       screen has to say for itself. Each of these was declared in up to six modules and translated
-      into 69 locales apiece (audit 2026-08-08, DUP-6), which is ~1,600 translated strings where
-      ~350 do the job, and the copies had already drifted: `Retry` had two Bulgarian spellings and
-      `Play` two French ones, so the same button said different things depending on which screen
-      drew it. They live here because a Back button is a Back button.
+      into 69 locales apiece, which is ~1,600 translated strings where ~350 do the job, and the
+      copies had already drifted: `Retry` had two Bulgarian spellings and `Play` two French ones,
+      so the same button said different things depending on which screen drew it. They live here
+      because a Back button is a Back button.
 
       What deliberately stayed per-module: `Downloaded`, `Movie`/`Series`/`Season`/`Episode` and
       `Waiting`/`Paused`, whose translations legitimately differ by context (a tab heading is not
@@ -131,7 +131,7 @@
       The failure taxonomy's shared copy (`AppError.toUiText`). It lives here, not per feature,
       because "can't reach your server" is the same sentence whichever screen asked: five copies
       were five chances to drift, and three of them had already drifted into Kotlin literals no
-      translator could see (audit H8). A screen overrides a branch only where its wording genuinely
+      translator could see. A screen overrides a branch only where its wording genuinely
       differs — the player's server/unknown copy, and every screen's "unknown", which names what
       failed to load.
     -->
@@ -145,9 +145,8 @@
     <!--
       The season/episode number, spelled once for the whole app: the detail header's Play button,
       every card's top-left badge, the subtitle line under a card, and what a screen reader speaks
-      for all three. Two spellings used to exist — a hardcoded "S1:E4" on cards and this resource
-      on the header — so TalkBack said one thing while the screen drew the other (audit DUP-7).
-      A resource because the letters are initials of words that translate.
+      for all three. A second spelling anywhere means TalkBack saying one thing while the screen
+      draws the other. A resource because the letters are initials of words that translate.
     -->
     <string name="media_episode_label">S%1$d · E%2$d</string>
     <string name="media_episode_label_short">E%1$d</string>

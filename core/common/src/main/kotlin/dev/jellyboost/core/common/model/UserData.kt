@@ -6,7 +6,7 @@ import java.time.Instant
  * Per-user playback state for a single item.
  *
  * Produced identically by the online and the offline repository so that resume behaviour is
- * byte-identical in both modes (docs/PLAN.md, "Data layer").
+ * byte-identical in both modes.
  */
 data class UserData(
     val played: Boolean = false,

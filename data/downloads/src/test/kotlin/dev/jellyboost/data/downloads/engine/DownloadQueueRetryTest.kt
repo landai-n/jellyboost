@@ -43,9 +43,8 @@ import java.time.ZoneOffset
 /**
  * Unit tests for what [DownloadQueue] does when an item *does not* finish.
  *
- * Separate from [DownloadQueueTest], which owns the transfer itself, because these three rules were
- * all added together and are all about the same question — whether a failure is the item's fault or
- * the moment's (docs/notes/audit-2026-07.md, STAB-01, STAB-04 and STAB-09).
+ * Separate from [DownloadQueueTest], which owns the transfer itself, because these three rules are
+ * all about the same question — whether a failure is the item's fault or the moment's.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class DownloadQueueRetryTest {
@@ -80,13 +79,13 @@ class DownloadQueueRetryTest {
         coEvery { sweeper.sweep() } returns 0L
     }
 
-    // ---- the retry policy (STAB-01) ---------------------------------------------------------------
+    // ---- the retry policy -------------------------------------------------------------------------
 
     @Test
     fun `a transient failure keeps the row queued instead of failing it`() =
         runTest {
-            // The finding, in one test: a proxy 502 or a reset connection used to move the row to
-            // ERROR under a message promising a retry that nothing performed.
+            // A proxy 502 or a reset connection must not move the row to ERROR under a message
+            // promising a retry that nothing performs.
             queueWith(download())
             coEvery { downloader.download(match { it.contains("download") }, any(), any(), any(), any(), any()) } throws
                 IOException("connection reset")
@@ -100,9 +99,9 @@ class DownloadQueueRetryTest {
     @Test
     fun `a transient failure stops the drain instead of walking the rest of the queue into it`() =
         runTest {
-            // The cascade the finding describes: whatever made the first item fail is about to do
-            // the same to the thirty-nine behind it, and the drain loop used to give it the chance
-            // within seconds. Nothing after the first failure is even attempted.
+            // Whatever made the first item fail is about to do the same to the thirty-nine behind
+            // it, and a drain loop that carried on would give it the chance within seconds. Nothing
+            // after the first failure is even attempted.
             val first = download(itemId = uuid(1))
             val second = download(itemId = uuid(2), queuePosition = 1)
             coEvery { downloadDao.nextRunnable() } returnsMany
@@ -184,8 +183,8 @@ class DownloadQueueRetryTest {
     @Test
     fun `a storage root that moves mid-item requeues the item instead of splitting it across volumes`() =
         runTest {
-            // The DL-07 shape: `reconcile` resolved every row's path against the active root at
-            // the start of the drain, and an SD card ejected (or remounted) between two files
+            // `reconcile` resolves every row's path against the active root at the start of the
+            // drain, and an SD card ejected (or remounted) between two files
             // silently redirects the rest of the item — and its rows — to another volume, where
             // neither the sweep nor the delete cascade can see the first half. The item must fail
             // *transiently* instead: the next drain re-reconciles against whichever root answers.
@@ -212,10 +211,10 @@ class DownloadQueueRetryTest {
     @Test
     fun `an unavailable storage volume stops the drain instead of failing every row behind it`() =
         runTest {
-            // The DL-10 shape end to end: no volume mounted (an eject, an MTP session, the seconds
+            // End to end: no volume mounted (an eject, an MTP session, the seconds
             // after boot) throws from `prepareItemDirectory`, and the item behind the failing one
-            // must never be touched — one unmounted card used to empty a forty-episode queue into
-            // ERROR within seconds.
+            // must never be touched — one unmounted card would otherwise empty a forty-episode
+            // queue into ERROR within seconds.
             val first = download(itemId = uuid(1))
             val second = download(itemId = uuid(2), queuePosition = 1)
             coEvery { downloadDao.nextRunnable() } returnsMany
@@ -256,7 +255,7 @@ class DownloadQueueRetryTest {
             coVerify(exactly = 0) { downloadDao.setStatus(uuid(1), DownloadStatus.ERROR, any(), any()) }
         }
 
-    // ---- the drain lease (STAB-09) ----------------------------------------------------------------
+    // ---- the drain lease --------------------------------------------------------------------------
 
     @Test
     fun `two drains never overlap, so one file never has two writers`() =
@@ -302,7 +301,7 @@ class DownloadQueueRetryTest {
             subject.drain(listener) shouldBe DrainOutcome.COMPLETED
         }
 
-    // ---- the orphan sweep (STAB-04) ---------------------------------------------------------------
+    // ---- the orphan sweep -------------------------------------------------------------------------
 
     @Test
     fun `every drain starts by sweeping the directories no row claims`() =

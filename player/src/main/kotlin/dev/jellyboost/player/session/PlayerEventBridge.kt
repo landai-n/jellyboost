@@ -11,11 +11,11 @@ import timber.log.Timber
 /**
  * The bridge from Media3's `Player.Listener` to this app's [PlayerEvent] vocabulary.
  *
- * Both [PlayerHandle] implementations translate the same five callbacks the same way — the local
- * [ExoPlayerHandle] and the Cast [CastPlayerHandle][dev.jellyboost.player.cast.CastPlayerHandle]
- * held byte-identical 26-line anonymous listeners, and the *one* place they differed was silent
- * (audit 2026-08-08, DUP-3). One function means a sixth event cannot be added to one and forgotten
- * in the other, and the divergence has to be spelled out as an argument rather than as an absence.
+ * Both [PlayerHandle] implementations — the local [ExoPlayerHandle] and the Cast
+ * [CastPlayerHandle][dev.jellyboost.player.cast.CastPlayerHandle] — translate the same five
+ * callbacks the same way. One function means a sixth event cannot be added to one and forgotten
+ * in the other, and the one place they differ has to be spelled out as an argument rather than as
+ * an absence.
  *
  * @param emit where the translated events go. A lambda rather than the flow itself so this function
  *   knows nothing about buffering policy, and so a test can pass a list.
@@ -24,7 +24,7 @@ import timber.log.Timber
  *   `CastPlayer` reports `VideoSize.UNKNOWN` throughout, so forwarding it would only overwrite a
  *   good aspect ratio with nothing.
  * @param errorLogPrefix distinguishes the two players in a bug report's logcat — "Playback error"
- *   against "Cast playback error", which is what the two copies each spelled inline.
+ *   against "Cast playback error".
  */
 internal fun playerEventListener(
     emit: (PlayerEvent) -> Unit,

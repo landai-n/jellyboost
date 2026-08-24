@@ -25,10 +25,9 @@ import javax.inject.Singleton
  * Fetches the subtitle sidecars a **finished** download is missing, without touching its media file.
  *
  * ### Why this exists
- * The file plan is not fixed for all time. Phase 0 of the offline multi-track work
- * (docs/notes/offline-multitrack-design.md) made a transcoded download fetch an extracted `.srt`
- * for every *embedded* text subtitle as well, and a row already on the device does not retroactively
- * grow one. Without a repair path an old MEDIUM download holds fewer subtitles than a fresh one,
+ * The file plan is not fixed for all time. A transcoded download fetches an extracted `.srt` for
+ * every *embedded* text subtitle as well, and a row already on the device does not retroactively
+ * grow one when the plan widens. Without a repair path an old MEDIUM download holds fewer subtitles than a fresh one,
  * permanently, and the only fix a user has is to delete it and download it again — which is not a
  * fix, it is a two-gigabyte apology. The same gap opens whenever an optional file simply failed: the
  * queue logs it, marks the item `DOWNLOADED` anyway (correctly — a film without one subtitle track
@@ -46,7 +45,7 @@ import javax.inject.Singleton
  * - Nothing at all on a metered connection while the user has asked for Wi-Fi-only downloads. The
  *   preference is normally WorkManager's `UNMETERED` constraint on the queue worker, but this
  *   class fetches on the application scope where no constraint applies — it must enforce the rule
- *   itself or silently spend mobile data on every connectivity edge (audit DL-04). The gap it
+ *   itself or silently spend mobile data on every connectivity edge. The gap it
  *   leaves closes for free: the next unmetered stretch runs the same pass.
  * - Only rows that are [DownloadStatus.DOWNLOADED]. Anything still in the queue is the queue's, and
  *   the two must not write the same file rows at once.
@@ -208,9 +207,8 @@ internal class SubtitleSidecarTopUp
          * A failure is one gap left unrepaired, which is the state the item was already in — so it
          * is logged and folded to `null` rather than surfaced. The cancellation still gets through:
          * this runs on the application scope behind the metadata refresher, and swallowing it would
-         * keep a coroutine writing to Room after the scope was torn down (the audit's STAB-06 rule).
-         * That rule lives in `:core:common` since the 2026-08-06 hygiene wave; this is the local
-         * half — the log line — and nothing more.
+         * keep a coroutine writing to Room after the scope was torn down. That rule lives in
+         * `:core:common`; this is the local half — the log line — and nothing more.
          */
         private inline fun <T> topUpOrNull(block: () -> T): T? =
             runCatchingUnlessCancelled(block)

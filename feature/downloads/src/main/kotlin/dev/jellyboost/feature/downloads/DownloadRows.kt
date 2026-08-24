@@ -50,7 +50,7 @@ import dev.jellyboost.core.ui.R as CoreUiR
 /** Artwork corner radius for every row on this screen — the "m-surface card" language's own radius. */
 private val ROW_ART_RADIUS = 8.dp
 
-/** [QueueRow]'s compact-layout artwork size (2026 refresh, spec "4d Downloads"). */
+/** [QueueRow]'s compact-layout artwork size. */
 private val ROW_ART_WIDTH_COMPACT = 64.dp
 private val ROW_ART_HEIGHT_COMPACT = 38.dp
 
@@ -64,9 +64,9 @@ private val ROW_GAP_HALF = 5.dp
 /**
  * Track alpha behind a queue row's 3dp progress bar — the app's standing "inset progress" alpha.
  *
- * 0.40, raised from 0.22 by the 2026-08-05 accessibility audit: the track is what makes the filled
- * part of the bar *mean* a fraction, so under WCAG 1.4.11 it owes 3:1 against the row behind it.
- * White@22% was 1.97:1 on `#101010`; white@40% is 3.82:1 there and 3.75:1 on a card's `#202020`.
+ * 0.40 rather than something fainter: the track is what makes the filled part of the bar *mean* a
+ * fraction, so under WCAG 1.4.11 it owes 3:1 against the row behind it. White@22% is 1.97:1 on
+ * `#101010`; white@40% is 3.82:1 there and 3.75:1 on a card's `#202020`.
  */
 private const val QUEUE_TRACK_ALPHA = 0.40f
 
@@ -75,12 +75,12 @@ private val QueueTitleWide = TextStyle(fontSize = 14.sp, fontWeight = FontWeight
 private val QueueStatusCompact = TextStyle(fontSize = 11.sp)
 private val QueueStatusWide = TextStyle(fontSize = 12.sp)
 
-/** Shared "card text" title/subtitle styles (spec, "Shared visual language" → Card text). */
+/** Shared "card text" title/subtitle styles. */
 private val CardTitle = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.W500, lineHeight = 18.sp)
 private val CardSubtitle = TextStyle(fontSize = 12.sp)
 
 /**
- * One finished download: artwork, title, size on disk, delete — an "m-surface card" (2026 refresh).
+ * One finished download: artwork, title, size on disk, delete — an "m-surface card".
  *
  * @param onPlay the row itself is the play target — tapping anywhere on it starts playback of
  *   [item] from its resume position, the same as the detail page's Play button (see
@@ -109,9 +109,9 @@ internal fun DownloadedRow(
                 .fillMaxWidth()
                 .padding(horizontal = Dimens.PanelPadding, vertical = ROW_GAP_HALF)
                 .mSurface(MaterialTheme.colorScheme.surface)
-                // Named and typed (accessibility audit 2026-08-05, F8): the row's primary action
-                // used to be a role-less `clickable`, so the one thing tapping a downloaded film
-                // does — play it, from where it was left — announced as nothing at all.
+                // Named and typed: a role-less `clickable` would leave the one thing tapping a
+                // downloaded film does — play it, from where it was left — announced as nothing
+                // at all.
                 .clickable(
                     onClickLabel = stringResource(CoreUiR.string.action_play),
                     role = Role.Button,
@@ -153,18 +153,17 @@ internal fun DownloadedRow(
 }
 
 /**
- * One pending download: progress, speed, and the four queue actions — an "m-surface card" (2026
- * refresh).
+ * One pending download: progress, speed, and the four queue actions — an "m-surface card".
  *
  * @param progress the fraction to draw, which is **not** `item.progress`: it comes through
  *   [DownloadProgressRatchet] so the bar can never run backwards while the projection behind its
  *   denominator settles.
  * @param compact below the `COMPACT_MAX_WIDTH` breakpoint (`DownloadsScreen.kt`), a single row of
- *   artwork, weighted text column and up to four action buttons leaves the title under ~90dp — a
- *   device-verified defect that crushed titles to ~4 characters ("Hous…") on a 360dp phone. Compact
+ *   artwork, weighted text column and up to four action buttons leaves the title under ~90dp,
+ *   which crushes titles to ~4 characters ("Hous…") on a 360dp phone. Compact
  *   switches to two tiers: artwork+text get the full row width, and the actions move to their own
  *   end-aligned row below rather than shrinking to fit; wide keeps them trailing on one row, with
- *   title and status sharing a baseline instead of stacking (spec "4d Downloads"). Decided once at
+ *   title and status sharing a baseline instead of stacking. Decided once at
  *   the screen level (`DownloadsScreen.kt`'s `BoxWithConstraints`), not per row.
  */
 @Composable
@@ -204,7 +203,7 @@ internal fun QueueRow(
 
 /**
  * [QueueRow]'s compact form: artwork and text on the first tier, the action circles end-aligned on
- * their own tier below — see [QueueRow]'s `compact` for the device-verified defect that split them.
+ * their own tier below — see [QueueRow]'s `compact` for the crushed-title defect that splits them.
  */
 @Composable
 private fun TwoTierQueueRow(
@@ -283,18 +282,17 @@ private fun OneTierQueueRow(
  * The title, progress bar and status line shared by both [QueueRow] layouts.
  *
  * To a screen reader this whole column is **one** node carrying one authored sentence: the item,
- * how far along it is, and what it is doing (accessibility audit 2026-08-05, F7). Before that it was
- * three unrelated stops — a truncated title, a bare "45 percent" from the raw
- * `LinearProgressIndicator`, and a status line — with nothing tying the percentage to the download
- * it belonged to, which in a queue of five rows is a percentage that means nothing at all.
- * `clearAndSetSemantics` rather than a merge because the visible title is `maxLines = 1` and the
- * description has to carry the *whole* one, and because it takes the progress bar's own node out in
- * the same stroke — the number is in the sentence now.
+ * how far along it is, and what it is doing. Left alone it would be three unrelated stops — a
+ * truncated title, a bare "45 percent" from the raw `LinearProgressIndicator`, and a status line —
+ * with nothing tying the percentage to the download it belongs to, which in a queue of five rows is
+ * a percentage that means nothing at all. `clearAndSetSemantics` rather than a merge because the
+ * visible title is `maxLines = 1` and the description has to carry the *whole* one, and because it
+ * takes the progress bar's own node out in the same stroke — the number is in the sentence.
  *
  * The row's four action buttons are siblings of this column, not descendants, so each keeps its own
  * stop and its own label.
  *
- * @param compact stacks title, track and status on three lines (spec "4d Downloads", COMPACT). Wide
+ * @param compact stacks title, track and status on three lines. Wide
  *   instead shares one baseline row between title and status, with the track on its own line below —
  *   there is room for both on a tablet width, which the phone width the compact layout answers does
  *   not have.
@@ -366,7 +364,7 @@ private fun QueueRowText(
 }
 
 /**
- * A queue row's 3dp progress track (spec, "Shared visual language" → INSET progress geometry).
+ * A queue row's 3dp progress track, in the app's shared inset-progress geometry.
  *
  * @param fillColor [MaterialTheme.colorScheme.error] for a failed row, so the bar reads as stopped
  *   partway rather than as still making progress — [MaterialTheme.colorScheme.primary] otherwise.
@@ -389,10 +387,10 @@ private fun QueueTrack(
 /**
  * A queue row's up/down, pause-or-resume and cancel circles.
  *
- * Takes the id and the two predicates rather than the row (audit 2026-08-08, PERF-14): those three
- * values are its entire input, and a `DownloadItem` — unstable to the Compose compiler, and freshly
- * built by the projection two to six times a second — meant four icon buttons were recomposed on
- * every progress write for a row whose buttons had not changed since it was enqueued.
+ * Takes the id and the two predicates rather than the row: those three values are its entire
+ * input, and a `DownloadItem` — unstable to the Compose compiler, and freshly built by the
+ * projection two to six times a second — would recompose four icon buttons on every progress write
+ * for a row whose buttons have not changed since it was enqueued.
  *
  * @param isResumeTarget paused and failed rows both offer *Resume*: retrying a failure is the same
  *   operation, and for an original download the partial file means it costs only the bytes that are
@@ -425,7 +423,7 @@ private fun QueueRowActions(
             size = size,
         )
 
-        // Tinted primary — the one action circle on the row worth reaching for (spec "4d Downloads").
+        // Tinted primary — the one action circle on the row worth reaching for.
         if (isResumeTarget) {
             GlassIconButton(
                 icon = Icons.Filled.PlayArrow,
@@ -455,9 +453,8 @@ private fun QueueRowActions(
 /**
  * A row's thumbnail.
  *
- * Takes the URL, not the row (audit 2026-08-08, PERF-14): the image is the only thing on a queue row
- * that never changes while it downloads, and taking a `DownloadItem` meant it was re-composed on
- * every progress write anyway.
+ * Takes the URL, not the row: the image is the only thing on a queue row that never changes while
+ * it downloads, and taking a `DownloadItem` would re-compose it on every progress write anyway.
  */
 @Composable
 private fun RowArtwork(
@@ -496,7 +493,7 @@ private const val PERCENT_SCALE = 100
  * @param inSeriesGroup `true` when the row is drawn under its series' own group header (the
  *   *Downloaded* tab's series groups) — the header already names the series, so repeating it on
  *   every row underneath ("Pyjamasques" header over "Pyjamasques · Bibou et le ballon-lune" rows)
- *   was the M9 device walk's other title-duplication bug (docs/POLISH.md). Standalone rows — the
+ *   duplicates it. Standalone rows — the
  *   queue tab, and films, which are never grouped — keep the full form.
  */
 internal fun DownloadItem.rowTitle(inSeriesGroup: Boolean = false): String =
@@ -605,7 +602,7 @@ private fun DownloadItem.transcodedMarker(): String? =
  *
  * *"552,4 MB"* when the number is the file's size, *"~301,2 MB"* when it is the app's projection,
  * *"up to 552,4 MB"* when it is only a bound. Stating a ceiling as exact is what read as wrong once
- * the real file landed at less than half of it (DECISIONS.md, 2026-07-29); stating a projection as
+ * the real file landed at less than half of it; stating a projection as
  * exact would be the same mistake with a better number behind it.
  */
 @Composable

@@ -4,7 +4,7 @@ import dev.jellyboost.core.common.model.DownloadStatus
 import dev.jellyboost.data.downloads.model.DownloadItem
 import dev.jellyboost.data.downloads.model.StorageUsage
 
-/** The two tabs the plan specifies for this screen (docs/PLAN.md, "Screens" → Downloads). */
+/** The two tabs this screen offers. */
 enum class DownloadsTab {
     /** Finished downloads, grouped by show or film, with sizes and delete. */
     DOWNLOADED,
@@ -17,10 +17,10 @@ enum class DownloadsTab {
  * A run of finished downloads that belong together, or the one shared block that gathers every
  * standalone film.
  *
- * Episodes are gathered under their series, and **tracks under their album** (M13 Phase 5) — one
- * mechanism, because `DownloadEnqueuer` files a track's album in the same `seriesName` column an
- * episode's show goes in, and this screen only ever asked that column for "the heading these rows
- * belong under" ([DownloadItem.seriesKey]). *Nine tracks of Rumours* is how a user thinks about
+ * Episodes are gathered under their series, and **tracks under their album** — one mechanism,
+ * because `DownloadEnqueuer` files a track's album in the same `seriesName` column an episode's
+ * show goes in, and this screen only ever asks that column for "the heading these rows belong
+ * under" ([DownloadItem.seriesKey]). *Nine tracks of Rumours* is how a user thinks about
  * what is on the device, exactly as *three episodes of Westworld* is.
  *
  * Albums are the **top** grouping; artists do not gather albums above them. The tab is a flat list
@@ -34,8 +34,7 @@ enum class DownloadsTab {
  * right after a series' last episode reads as one more episode of that series (there is nothing
  * marking where the series ended). [isMoviesSection] is the fix: every film is gathered under one
  * shared "Movies" heading in that case, placed after every series group, so every row on the tab
- * sits under some heading (DECISIONS.md, 2026-07-29, "Downloads: a shared Movies heading marks
- * where a series group ends").
+ * sits under some heading, and the shared Movies heading marks where the series groups end.
  */
 data class DownloadGroup(
     val title: String,
@@ -43,8 +42,7 @@ data class DownloadGroup(
     /**
      * `true` when [title] is a series name, and therefore worth a heading over the rows.
      *
-     * A film's heading would repeat its own row's title verbatim ("Dune" over "Dune"), which the
-     * M9 device walk found on every film on the screen (docs/POLISH.md).
+     * A film's heading would repeat its own row's title verbatim ("Dune" over "Dune").
      */
     val isSeries: Boolean = false,
     /**
@@ -60,9 +58,9 @@ data class DownloadGroup(
      *
      * Computed once, in the constructor body, rather than on every read: the group header draws it,
      * and [DownloadsUiState.downloadedBytes] sums it across every group — so a `get()` here walked
-     * the whole *Downloaded* tab several times per progress tick, at the two to six ticks a second a
-     * live queue writes (docs/notes/audit-2026-08-08.md, PERF-5). A group is only ever rebuilt when
-     * its contents actually changed ([DownloadGroupCache]), so this runs when the number changes.
+     * the whole *Downloaded* tab several times per progress tick, at the two to six ticks a second
+     * a live queue writes. A group is only ever rebuilt when its contents actually changed
+     * ([DownloadGroupCache]), so this runs when the number changes.
      */
     val bytesOnDisk: Long = items.sumOf { it.bytesOnDisk }
 
@@ -91,7 +89,7 @@ data class DownloadsUiState(
      *
      * Distinct from an empty screen: "nothing downloaded" is an answer, this is the absence of one,
      * and the two must not look alike. It exists because the alternative was the worst possible
-     * failure mode, a spinner that never stops (audit STAB-10).
+     * failure mode, a spinner that never stops.
      */
     val loadFailed: Boolean = false,
     /**
@@ -106,14 +104,12 @@ data class DownloadsUiState(
     /** One-shot message for the snackbar; cleared by `DownloadsViewModel.consumeMessage`. */
     val userMessage: DownloadsMessage? = null,
 ) {
-    // Every value below is computed once, here, rather than recomputed on each read: before this
-    // (docs/notes/audit-2026-07.md, PERF-06) these were `get()`-computed properties, so a queue
-    // that writes progress two to six times a second re-filtered the same list on every one of the
-    // several call sites that read them per emission — `QueueActionsBar`'s two `enabled` reads, and
-    // `DownloadsViewModel.pauseAll()` reading both `pauseAllTargets` and `unpausableCount` off the
-    // same state. A plain `val` in the constructor body runs once, when this instance is built —
-    // exactly the ViewModel-projection step the audit asked for — and every read after that is a
-    // field access.
+    // Every value below is computed once, here, rather than recomputed on each read: as
+    // `get()`-computed properties, a queue that writes progress two to six times a second would
+    // re-filter the same list on every one of the several call sites that read them per emission —
+    // `QueueActionsBar`'s two `enabled` reads, and `DownloadsViewModel.pauseAll()` reading both
+    // `pauseAllTargets` and `unpausableCount` off the same state. A plain `val` in the constructor
+    // body runs once, when this instance is built, and every read after that is a field access.
 
     /** `true` when there is nothing at all on the device and nothing queued. */
     val isEmpty: Boolean = downloaded.isEmpty() && queue.isEmpty()
@@ -121,10 +117,10 @@ data class DownloadsUiState(
     /**
      * Everything on the device, in bytes — the "on device" figure both storage panels draw.
      *
-     * Here rather than in the composable that draws it: `DownloadsChrome` used to sum it inline, so
-     * the walk over every group (each of which was itself walking its own items — see
-     * [DownloadGroup.bytesOnDisk]) ran on every recomposition of a screen that recomposes several
-     * times a second during a transfer (audit 2026-08-08, PERF-5).
+     * Here rather than in the composable that draws it: summed inline in `DownloadsChrome`, the
+     * walk over every group (each of which walks its own items — see [DownloadGroup.bytesOnDisk])
+     * would run on every recomposition of a screen that recomposes several times a second during a
+     * transfer.
      */
     val downloadedBytes: Long = downloaded.sumOf { it.bytesOnDisk }
 
@@ -148,8 +144,7 @@ data class DownloadsUiState(
     val canResumeAll: Boolean = resumeAllTargets.isNotEmpty()
 
     /**
-     * The queue's tablet-summary numbers (2026 refresh, Phase 4d — DECISIONS.md 2026-08-01,
-     * "Downloads restyle: a wide-layout queue summary").
+     * The queue's tablet-summary numbers, drawn by the wide layout's queue summary.
      *
      * A pure derivation over [queue] and [speeds] — nothing here reads anything this class does not
      * already carry — computed once in the constructor body for the same reason every other `val`
@@ -185,13 +180,13 @@ data class DownloadsUiState(
 
     /**
      * Exactly what the screen's chrome — header, storage/queue summary, tab row — draws, and nothing
-     * else (audit 2026-08-08, PERF-5).
+     * else.
      *
-     * The chrome used to take this whole class. Nothing taking [DownloadsUiState] can ever skip a
+     * The chrome must not take this whole class. Nothing taking [DownloadsUiState] can ever skip a
      * recomposition: its `List` and `Map` fields are unstable to the Compose compiler, and a fresh
      * instance arrives two to six times a second for the whole of a transfer. Every field of
      * [DownloadsChromeState] is a scalar or a stable value type declared in this module, so the
-     * chrome now recomposes when one of the *numbers it draws* changes rather than when any download
+     * chrome recomposes when one of the *numbers it draws* changes rather than when any download
      * anywhere moves a byte.
      *
      * Computed here, in the projection step, for the same reason every `val` above is: once per
@@ -203,8 +198,8 @@ data class DownloadsUiState(
             storage = storageSummary(storage = storage, downloadedBytes = downloadedBytes),
             queueStats = queueStats,
             // The wide queue panel's own bar: what has arrived, against what has arrived plus what
-            // is left. Derived here rather than in `WideSummary`, which re-summed `bytesDownloaded`
-            // across the whole queue on every one of its recompositions.
+            // is left. Derived here rather than in `WideSummary`, which would re-sum
+            // `bytesDownloaded` across the whole queue on every one of its recompositions.
             queueProgress =
                 queue.sumOf { it.bytesDownloaded }.let { done ->
                     usageFraction(used = done, total = done + queueStats.remainingBytes)
@@ -218,8 +213,8 @@ data class DownloadsUiState(
 
 /**
  * The storage figures the "on device" panel draws, in one place rather than recomputed by each of
- * the two panels that draw them (audit 2026-08-08, UI-7/DUP-11: the compact [StorageUsage] card and
- * the wide stat panel each carried their own copy of the same two lines of arithmetic).
+ * the two panels that draw them — the compact [StorageUsage] card and the wide stat panel would
+ * otherwise each carry their own copy of the same two lines of arithmetic.
  *
  * @property usedBytes what the screen reports as used. The filesystem walk is the source
  *   ([StorageUsage.usedBytes] — the number a file manager would agree with), floored at what the
@@ -317,7 +312,7 @@ internal data class DownloadsProjection(
     val progress: Map<String, Float> = emptyMap(),
     val storage: StorageUsage = StorageUsage(),
     val wifiOnly: Boolean = true,
-    /** `true` for the one value the projection's `.catch` emits after it collapsed (audit STAB-10). */
+    /** `true` for the one value the projection's `.catch` emits after it collapsed. */
     val loadFailed: Boolean = false,
 )
 
@@ -387,7 +382,7 @@ internal val DownloadItem.playbackStartTicks: Long
  *
  * A type rather than a string so the ViewModel stays free of resources and the copy lives in
  * `strings.xml`, matching `:feature:detail`'s `UserMessage` — and, like it, a sealed interface
- * rather than an enum since [PausedKeepingTranscodes] carries counts (DECISIONS.md, 2026-07-29).
+ * rather than an enum since [PausedKeepingTranscodes] carries counts.
  */
 sealed interface DownloadsMessage {
     /** A delete could not remove the files or the rows. */
@@ -420,8 +415,8 @@ sealed interface DownloadsMessage {
  * alphabetically: the list is short and read by title, and with nothing else on the tab a bare row
  * cannot be mistaken for part of anything. Once at least one series group exists, every film is
  * gathered under one shared *Movies* group ([DownloadGroup.isMoviesSection]) placed after every
- * series group, so the boundary between the last series' episodes and the films is always marked
- * (DECISIONS.md, 2026-07-29). Series groups are always ordered alphabetically among themselves, and
+ * series group, so the boundary between the last series' episodes and the films is always marked.
+ * Series groups are always ordered alphabetically among themselves, and
  * so are the films inside the Movies group.
  */
 internal fun List<DownloadItem>.toGroups(): List<DownloadGroup> {
@@ -453,18 +448,18 @@ internal fun List<DownloadItem>.toGroups(): List<DownloadGroup> {
 }
 
 /**
- * [toGroups] with the answer kept until the finished half of the table actually changes (audit
- * 2026-08-08, PERF-11).
+ * [toGroups] with the answer kept until the finished half of the table actually changes.
  *
  * The *Downloaded* tab does not move during a transfer, but the flow it is projected from emits two
- * to six times a second while one is running — so the whole finished half was being re-partitioned,
- * re-grouped, re-sorted and re-`lowercase()`d several times a second to produce a list identical to
- * the last one. Worse than the arithmetic: a fresh, never-equal `List<DownloadGroup>` reached
- * Compose on every one of those emissions, so every visible finished row recomposed for no visible
- * change. Returning the *same instance* while nothing changed is what lets those rows skip.
+ * to six times a second while one is running — so without this the whole finished half would be
+ * re-partitioned, re-grouped, re-sorted and re-`lowercase()`d several times a second to produce a
+ * list identical to the last one. Worse than the arithmetic: a fresh, never-equal
+ * `List<DownloadGroup>` would reach Compose on every one of those emissions, so every visible
+ * finished row would recompose for no visible change. Returning the *same instance* while nothing
+ * changed is what lets those rows skip.
  *
  * ### Why the whole item is compared, and not a cheap key
- * The audit suggested a signature of ids, statuses and byte counts. That is not enough here, because
+ * A signature of ids, statuses and byte counts is not enough here, because
  * the groups hold the [DownloadItem]s the rows draw *from*: a metadata refresh that fills in the
  * artwork URL, or a playback position arriving from another screen, changes nothing about the
  * grouping and everything about what the row should show — and a signature that ignored those fields

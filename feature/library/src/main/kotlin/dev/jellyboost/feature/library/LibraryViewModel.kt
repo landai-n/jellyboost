@@ -106,10 +106,9 @@ class LibraryViewModel
         /**
          * Local user-data changes seen since this screen opened, keyed by item id.
          *
-         * The plan's Swiftfin pattern — "every list ViewModel patches in-memory items instantly"
-         * (docs/PLAN.md, "Data layer") — applied to a paged grid: a batch *Mark watched* writes
-         * locally and publishes on the bus, and the ticks appear on the cards without the grid
-         * asking the server for anything.
+         * The Swiftfin pattern — "every list ViewModel patches in-memory items instantly" —
+         * applied to a paged grid: a batch *Mark watched* writes locally and publishes on the bus,
+         * and the ticks appear on the cards without the grid asking the server for anything.
          */
         private val userDataPatches = MutableStateFlow<Map<String, UserData>>(emptyMap())
 

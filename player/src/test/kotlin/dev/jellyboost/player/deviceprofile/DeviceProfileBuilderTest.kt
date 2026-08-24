@@ -134,9 +134,8 @@ class DeviceProfileBuilderTest {
 
     @Test
     fun `emits exactly one containerless profile per codec`() {
-        // Container-bound codec profiles were measured being dropped by the server when sizing a
-        // Dolby Vision transcode, so containerless-and-deduplicated is load-bearing, not tidiness
-        // (DECISIONS.md, 2026-08-16).
+        // Container-bound codec profiles are dropped by the server when sizing a Dolby Vision
+        // transcode, so containerless-and-deduplicated is load-bearing, not tidiness.
         val profile =
             builder(
                 DeviceCodecs(

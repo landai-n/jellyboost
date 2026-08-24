@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test
 import java.util.UUID
 
 /**
- * Unit tests for [DownloadDeleter] — docs/PLAN.md's delete cascade.
+ * Unit tests for [DownloadDeleter] — the delete cascade.
  *
  * The interesting rule is the one that is easy to get catastrophically wrong: deleting one episode
  * of a show must prune the metadata nothing needs any more **without** taking the series and season
@@ -42,8 +42,8 @@ class DownloadDeleterTest {
     fun setUp() {
         every { storage.deleteItemDirectory(any()) } returns 0L
         coEvery { downloadDao.get(any()) } returns download()
-        // The cascade reads its whole batch in one statement (audit PERF-25); routing it through
-        // the per-id stub keeps every test below expressing its rows one at a time, as it did.
+        // The cascade reads its whole batch in one statement; routing it through the per-id stub
+        // keeps every test below expressing its rows one at a time.
         coEvery { downloadDao.getAll(any()) } coAnswers {
             firstArg<List<UUID>>().mapNotNull { downloadDao.get(it) }
         }
@@ -66,10 +66,9 @@ class DownloadDeleterTest {
     @Test
     fun `the guarded row delete goes before the files`() =
         runTest {
-            // The order the plan's cascade gives is the other one, and audit CORR-1 is why it
-            // changed: the guard has to be the first destructive act or it guards nothing. What
-            // the old order protected against — a process death leaving bytes nothing points at —
-            // is `OrphanSweeper`'s job at the head of every drain.
+            // The guard has to be the first destructive act or it guards nothing. What unlinking
+            // first would protect against — a process death leaving bytes nothing points at — is
+            // `OrphanSweeper`'s job at the head of every drain.
             deleter().delete(uuid(1))
 
             coVerifyOrder {
@@ -81,7 +80,7 @@ class DownloadDeleterTest {
     @Test
     fun `a download re-enqueued while the cascade waited keeps its row, its metadata and its files`() =
         runTest {
-            // The CORR-1 interleaving, at the seam that decides it. The user cancelled (row
+            // The interleaving, at the seam that decides it. The user cancelled (row
             // CANCELLED, UI instantly offers *Download*), the cascade is behind a five-second
             // `stop()`, and the user re-tapped: `DownloadEnqueuer` has written a fresh QUEUED row,
             // so the guarded delete matches nothing and this item is not this cascade's any more.
@@ -203,7 +202,7 @@ class DownloadDeleterTest {
             kept.captured shouldContainExactlyInAnyOrder listOf(uuid(5))
         }
 
-    // ---- the metadata prune, for music (M13 Phase 5) ---------------------------------------------
+    // ---- the metadata prune, for music -----------------------------------------------------------
 
     @Test
     fun `a surviving track keeps its album and artist rows alive`() =
@@ -250,14 +249,14 @@ class DownloadDeleterTest {
             kept.captured shouldNotContain uuid(40)
         }
 
-    // ---- the batch cascade (DL-05) --------------------------------------------------------------
+    // ---- the batch cascade ------------------------------------------------------------------------
 
     @Test
     fun `a bulk delete runs the metadata prune once, not once per row`() =
         runTest {
-            // Cancel all on a 40-row queue used to re-read every surviving download's whole
-            // metadata blob once per deleted row — O(deleted × remaining) blob reads with the UI
-            // waiting on the result.
+            // Cancel all on a 40-row queue would otherwise re-read every surviving download's
+            // whole metadata blob once per deleted row — O(deleted × remaining) blob reads with the
+            // UI waiting on the result.
             coEvery { downloadDao.get(uuid(1)) } returns download(itemId = uuid(1))
             coEvery { downloadDao.get(uuid(2)) } returns download(itemId = uuid(2), directoryName = "Dune (2021)")
             every { storage.deleteItemDirectory("Arrival (2016)") } returns 100L
@@ -268,7 +267,7 @@ class DownloadDeleterTest {
             coVerify(exactly = 1) { itemDao.deleteDownloadsNotIn(any(), any()) }
             coVerify(exactly = 1) { downloadDao.deleteUnlessRunnable(uuid(1)) }
             coVerify(exactly = 1) { downloadDao.deleteUnlessRunnable(uuid(2)) }
-            // One statement for the whole batch now, not one per removed row (audit PERF-25).
+            // One statement for the whole batch, not one per removed row.
             coVerify(exactly = 1) { downloadDao.deleteSyncedUserData(listOf(uuid(1), uuid(2))) }
         }
 

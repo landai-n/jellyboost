@@ -18,12 +18,12 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for [JellyfinAuthInterceptor]'s same-origin gate (audit NET-04).
+ * Unit tests for [JellyfinAuthInterceptor]'s same-origin gate.
  *
  * The header this interceptor attaches is the session's full credential, so what matters most is
  * every request it does **not** decorate: a different host, obviously, but also the same host on a
  * different port (a different service) or a different scheme (the token in cleartext). The gate
- * runs per network hop (audit NET-05), so these are exactly the redirect targets it must refuse.
+ * runs per network hop, so these are exactly the redirect targets it must refuse.
  */
 class JellyfinAuthInterceptorTest {
     private val apiClient = mockk<ApiClient>()

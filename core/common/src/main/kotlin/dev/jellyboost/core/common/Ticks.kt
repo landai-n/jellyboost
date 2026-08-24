@@ -4,10 +4,9 @@ package dev.jellyboost.core.common
  * Conversions for Jellyfin's tick-based durations — a tick is 100 nanoseconds, the unit every
  * server-side duration and position field (`runTimeTicks`, `positionTicks`, …) uses on the wire.
  *
- * One object rather than the three constants and three converters that used to live one per
- * module (DUP-6): player playback math, the download engine's size projections and the item
- * model's runtime labels were all doing the same millisecond/minute arithmetic under different
- * names.
+ * One shared object rather than one set of constants and converters per module: player playback
+ * math, the download engine's size projections and the item model's runtime labels all do the same
+ * millisecond/minute arithmetic, so they all call through here instead of under their own names.
  */
 object Ticks {
     /** A Jellyfin tick is 100 nanoseconds, so a millisecond is ten thousand of them. */
@@ -31,8 +30,7 @@ object Ticks {
     /**
      * [ticks] converted to milliseconds, or `null` when absent or too small to reach a whole
      * millisecond — the guard the download engine's size-projection call sites need before
-     * dividing a possibly-missing `runTimeTicks` (the `runTimeTicks?.div(PER_MILLISECOND)
-     * ?.takeIf { it > 0L }` idiom, spelled out three times before this existed).
+     * dividing a possibly-missing `runTimeTicks`.
      */
     fun positiveMillisOrNull(ticks: Long?): Long? = ticks?.div(PER_MILLISECOND)?.takeIf { it > 0L }
 }

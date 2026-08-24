@@ -37,16 +37,15 @@ import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 
 /**
- * The cast rail: circular headshots under a section title, the row the refresh adds to the detail
- * screen (spec section 4c).
+ * The cast rail: circular headshots under a section title, below the detail screen's overview.
  *
  * The people were already fetched — `JellyfinItem.people` is populated by the detail screen's full
  * `getItem` re-fetch, and `creditLine` in the header has been naming four of them all along — so
  * this row costs no request. It draws nothing at all when the server credited nobody, rather than
  * leaving an empty shelf (the rule `MediaRow` follows).
  *
- * Not clickable: a person page is not in v1 scope (docs/PLAN.md, "Screens"), and a card that
- * ripples but goes nowhere promises one.
+ * Not clickable: there is no person page to open, and a card that ripples but goes nowhere
+ * promises one.
  */
 @Composable
 internal fun CastRail(
@@ -73,11 +72,11 @@ internal fun CastRail(
 /**
  * One face in the rail — and **one** node for a screen reader.
  *
- * Unmerged it was two stops per person, a name and then a role floating free of whoever plays it
- * ("Dolores Abernathy" is not a fact on its own), so a twelve-strong rail was twenty-four swipes to
- * get past (accessibility audit 2026-08-05, A11Y-21). Merged, each person is one stop that says
- * both, in the words the credit would be written in. The column is not clickable and gains no role:
- * a person page is not in v1 scope, and the rail is a list of facts.
+ * Unmerged it would be two stops per person, a name and then a role floating free of whoever plays
+ * it ("Dolores Abernathy" is not a fact on its own), so a twelve-strong rail would be twenty-four
+ * swipes to get past. Merged, each person is one stop that says both, in the words the credit would
+ * be written in. The column is not clickable and gains no role: there is no person page to open,
+ * and the rail is a list of facts.
  */
 @Composable
 private fun CastMember(

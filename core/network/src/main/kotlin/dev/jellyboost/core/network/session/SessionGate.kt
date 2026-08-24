@@ -16,11 +16,11 @@ import javax.inject.Singleton
  * a worker makes throws the SDK's own `Required value baseUrl is null. Provide it by setting
  * ApiClient.baseUrl.`, which reads as a genuine failure of whatever the worker was doing even though
  * nothing was actually wrong with it — the session just had not been restored yet. This is generic to
- * any worker, not specific to one: it first shipped for `DownloadWorker` (M7), and now also gates
- * `UserDataSyncWorker` (M8), after the same race showed up in the sync drain on the M8 device walk.
+ * any worker, not specific to one: it gates both `DownloadWorker` and `UserDataSyncWorker`, since
+ * the same race can show up in any background work that touches the API client.
  *
  * ### Why it is safe to call from a worker
- * [SessionRepository.restoreSession] is the M1 local-only path: `EncryptedSharedPreferences` plus
+ * [SessionRepository.restoreSession] is a local-only path: `EncryptedSharedPreferences` plus
  * two Room reads, no network. Calling it twice is harmless — it is idempotent, and the second call
  * simply re-points the client at the address it already has.
  */

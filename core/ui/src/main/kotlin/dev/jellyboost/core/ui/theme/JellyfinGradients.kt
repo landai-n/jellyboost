@@ -19,7 +19,7 @@ import androidx.compose.ui.graphics.toArgb
 
 /**
  * The jellyfin-web accent gradient (`#AA5CC3 → #00A4DC`) and the scrims the design system uses to
- * keep text legible on top of artwork (docs/PLAN.md, ":core:ui").
+ * keep text legible on top of artwork.
  */
 object JellyfinGradients {
     /** Left-to-right accent sweep — used for emphasis bars, primary buttons and badges. */
@@ -48,16 +48,14 @@ object JellyfinGradients {
     /**
      * The protective band the app's floating top chrome is read against — background@94% at the very
      * top of the window, fading out by the bottom edge of the bar. Strong on purpose: white section
-     * titles scroll directly behind the brand mark, and at 80%/45% they still read through it
-     * (seen on the tablet walk).
+     * titles scroll directly behind the brand mark, and at 80%/45% they still read through it.
      *
      * [BackdropScrim] runs the other way (transparent at the top, solid at the bottom) because it
      * exists to seat a hero *into* the page below it; that leaves the top of the window — exactly
      * where the brand mark, the tab capsule and the app-wide actions float — the least protected
      * part of a full-bleed backdrop. This brush is the counterpart: it is drawn as a sibling *over*
      * the page and *under* the bars, never inside a `hazeSource` and never inside a `hazeEffect`,
-     * since Haze samples a backdrop rather than another effect
-     * (DECISIONS.md 2026-08-01, chrome readability).
+     * since Haze samples a backdrop rather than another effect.
      */
     val TopChromeScrim: Brush =
         Brush.verticalGradient(
@@ -175,7 +173,7 @@ object JellyfinGradients {
 
 /**
  * The colour a screen with no artwork of its own carries behind its header — the library grid's
- * glow (2026-refresh mocks, "library screen glow").
+ * glow.
  *
  * Ports `radial-gradient(80% 100% at 22% 0%, rgba(170,92,195,.17) 0%, transparent 76%)`. Fainter
  * and further to the *start* than [heroHalo], which sits over a backdrop and has
@@ -186,7 +184,7 @@ object JellyfinGradients {
  * A draw modifier through the framework [android.graphics.Paint] rather than a Compose [Brush],
  * for one reason: **dithering**. A 17%-alpha fade across hundreds of dp quantises on an 8-bit
  * surface into concentric per-channel stepping rings — visible as a pixelated texture on a large
- * dark panel (device walk, 2026-08-16) — and `Paint.isDither` is the switch that trades them for
+ * dark panel — and `Paint.isDither` is the switch that trades them for
  * imperceptible noise, which Compose's gradient brushes do not expose. The shader is rebuilt only
  * when the size changes ([drawWithCache]); the paint is one allocation per size change, not per
  * frame.
@@ -227,9 +225,9 @@ fun Modifier.screenGlow(): Modifier =
  * transparent 72%)` — **as the ellipse it is**. The first port collapsed the two axes to the
  * width-derived one, and on a landscape tablet that radius dwarfs the hero box's height, so the box's
  * bottom edge cut the gradient mid-fade: a hard seam across the page where the backdrop ends —
- * the same clipped-glow bug fixed for [JellyfinGradients.BrandGlow] and (as the tablet seam,
- * `c3153a93`) for [screenGlow]'s callers, recurring here as their missed sibling (device walk,
- * 2026-08-22). With the vertical radius height-derived as the mock wrote it, the fade completes at
+ * the same clipped-glow bug fixed for [JellyfinGradients.BrandGlow] and for [screenGlow]'s
+ * callers, recurring here as their missed sibling. With the vertical radius height-derived as the
+ * mock wrote it, the fade completes at
  * ~83% of the box height and the bottom edge has nothing left to cut. The two edges that do still
  * clip it — top and end — are window edges, where there is no page beyond them to show a seam.
  *

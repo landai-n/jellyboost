@@ -7,7 +7,7 @@
     <string name="search_section_movies">Movies</string>
     <string name="search_section_series">Shows</string>
     <string name="search_section_episodes">Episodes</string>
-    <!-- M13 Phase 2 — music sections -->
+    <!-- Music sections -->
     <string name="search_section_artists">Artists</string>
     <string name="search_section_albums">Albums</string>
     <string name="search_section_songs">Songs</string>
@@ -16,7 +16,7 @@
     <!-- States -->
     <!-- Shown under the field once a search has matched something, and announced when it changes:
          results appear below a field the user is still typing in, so the count is the only thing
-         that says the page filled up (accessibility audit 2026-08-05, A11Y-09). -->
+         that says the page filled up. -->
     <plurals name="search_result_count">
         <item quantity="one">%1$d result</item>
         <item quantity="other">%1$d results</item>

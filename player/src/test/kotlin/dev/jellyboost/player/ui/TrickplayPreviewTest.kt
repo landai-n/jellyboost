@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 
 /**
  * Unit tests for [withoutAccessToken] — the Coil cache key `TrickplayPreview` uses instead of the
- * raw, tokened tile URL (docs/notes/audit-2026-07.md, SEC-02).
+ * raw, tokened tile URL.
  */
 class TrickplayPreviewTest {
     @Test

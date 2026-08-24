@@ -9,11 +9,11 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for the batch dispatch both contextual bars now share (audit DUP-4).
+ * Unit tests for the batch dispatch both contextual bars share.
  *
  * The arithmetic is the point: a summary that says "4 downloaded, 2 skipped" is the only feedback
- * a bulk action gives, and the two hand-written copies this replaces each had to get the skip rule
- * — and the container carve-out under it — right on their own.
+ * a bulk action gives, and getting the skip rule — and the container carve-out under it — right is
+ * the whole value of sharing this one implementation.
  */
 class RunSelectionBatchTest {
     private val enqueued = mutableListOf<String>()
@@ -135,8 +135,8 @@ class RunSelectionBatchTest {
     fun containersAreAlwaysEnqueued() =
         runTest {
             // A series or season has no download row of its own; the pipeline expands it into
-            // episodes and does the per-episode skipping there (DECISIONS.md, 2026-07-29). The
-            // absent id therefore has to read as downloadable, however much of it is on the device.
+            // episodes and does the per-episode skipping there. The absent id therefore has to read
+            // as downloadable, however much of it is on the device.
             val outcome =
                 runSelectionBatch(
                     action = SelectionAction.DOWNLOAD,

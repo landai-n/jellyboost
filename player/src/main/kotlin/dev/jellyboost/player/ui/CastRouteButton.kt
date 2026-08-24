@@ -29,7 +29,7 @@ import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 
 /**
- * The cast button, for any app bar that wants one (docs/notes/chromecast-m12-plan.md, decision 9).
+ * The cast button, for any app bar that wants one.
  *
  * Deliberately self-contained — it sources its own state — so that adding casting to a bar is one
  * line and no screen has to learn what a `CastContext` is. The player's own top bar picks it up the
@@ -74,7 +74,7 @@ fun CastRouteButton(
 
     if (state == CastDeviceState.Unavailable) return
     val hasReceivers = state != CastDeviceState.NoDevices
-    // "Cast to a device" is a lie once a device has it (audit A11Y-P-17): the button's *state* is the
+    // "Cast to a device" is a lie once a device has it: the button's *state* is the
     // one thing a user who cannot see the filled glyph has no other way to learn, and it is also the
     // answer to "why is nothing playing here". The connected name reuses the same sentence the
     // casting backdrop draws, so the screen and the button say the same thing.

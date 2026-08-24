@@ -14,10 +14,10 @@ import javax.inject.Provider
 /**
  * Unit tests for [RoutingPlayerHandle].
  *
- * Two claims, and the first is the one that protects everything M5 through M11 built: **with no
- * cast session this handle is a pass-through**. Every call has to land on the local player, in the
- * same shape, and every answer has to come back untouched — that is what makes "casting changed
- * nothing about playing on your own" a fact rather than a hope.
+ * Two claims, and the first is the foundational one: **with no cast session this handle is a
+ * pass-through**. Every call has to land on the local player, in the same shape, and every answer
+ * has to come back untouched — that is what makes "casting changed nothing about playing on your
+ * own" a fact rather than a hope.
  *
  * The second is that switching is complete: the transport, the answers *and* the event stream all
  * move together, because a collector still hearing from the player that was just stopped would

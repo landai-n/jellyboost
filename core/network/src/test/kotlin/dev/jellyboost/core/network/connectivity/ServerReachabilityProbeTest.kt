@@ -34,7 +34,7 @@ import java.util.UUID
  * The rotation is the reason a user who walks out of the house does not get an offline app: the
  * LAN address stops answering and the remote address takes over without them noticing.
  *
- * The identity check is the reason that rotation is safe (audit NET-01): the shared client keeps
+ * The identity check is the reason that rotation is safe: the shared client keeps
  * its credentials when re-pointed, so an address is only accepted when the server behind it reports
  * the signed-in session's server id — never merely because *something* answered there.
  */
@@ -103,7 +103,7 @@ class ServerReachabilityProbeTest {
     @Test
     fun `never switches to an address that answers as a different server`() =
         runTest {
-            // The attack NET-01 describes: the user's home LAN address is answered, on some other
+            // The attack this guards against: the user's home LAN address is answered, on some other
             // network, by a host that is not their server. It must not receive the client (and its
             // token); the probe must move on as if nothing had answered.
             coEvery { probeApi.reachableServerId(LAN) } returns IMPOSTOR_ID

@@ -8,8 +8,7 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for [resolveBatchMessage] — `:core:ui`'s first (docs/notes/audit-2026-07.md, ARCH-07;
- * this module had none before it).
+ * Unit tests for [resolveBatchMessage].
  *
  * The ladder is pulled out of the `@Composable` `batchOutcomeText` precisely so the six outcomes it
  * has to tell apart can be pinned here, with no Android dependency in the way.

@@ -17,7 +17,7 @@ data class PlaylistDetailUiState(
 )
 
 /**
- * Stamps the app-wide download-state map onto the playlist's tracks (M13 Phase 5).
+ * Stamps the app-wide download-state map onto the playlist's tracks.
  *
  * The badges are honest here even though the playlist itself has no offline model: a track's badge
  * describes *that track's* file on this device, which is exactly what a playlist download produces

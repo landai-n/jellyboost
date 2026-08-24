@@ -29,7 +29,7 @@ class DownloadWorkerResultTest {
 
     @Test
     fun `a transient failure asks WorkManager for another run`() {
-        // The whole of STAB-01's fix depends on this line: the queue left the row QUEUED and
+        // The whole retry policy depends on this line: the queue left the row QUEUED and
         // counted the attempt, and the only thing that can start the next one is WorkManager's own
         // EXPONENTIAL/30 s backoff.
         DrainOutcome.RETRY.toWorkerResult().shouldBeInstanceOf<ListenableWorker.Result.Retry>()

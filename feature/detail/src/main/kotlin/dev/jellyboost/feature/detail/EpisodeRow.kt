@@ -46,7 +46,7 @@ import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.core.ui.R as CoreUiR
 
 /**
- * One episode in a season's list, drawn as the refresh's surface card (spec section 4c): the 16:9
+ * One episode in a season's list, drawn as a surface card: the 16:9
  * [ThumbCard] artwork — with its played tick, progress bar, download badge and selection
  * indicator — beside the episode's number line, title and synopsis.
  *
@@ -191,7 +191,7 @@ private fun EpisodeStripCard(
 }
 
 /**
- * The surface both shapes sit on: a `#202020` panel with the refresh's faint hairline, or an accent
+ * The surface both shapes sit on: a `#202020` panel with the app's faint hairline, or an accent
  * wash and edge while the card is selected.
  *
  * The click handling lives here too so the whole card — not only its artwork — keeps opening the
@@ -231,11 +231,10 @@ private fun Modifier.episodeCard(
  * It mirrors what the row *draws* — the number line, the title, and the state its artwork's
  * overlays carry — and deliberately stops there. The synopsis under the title is two lines of prose
  * that would be read out before the user could reach the next episode, and it is available on the
- * episode's own page; a list is for choosing, not for reading (accessibility audit 2026-08-05,
- * A11Y-05).
+ * episode's own page; a list is for choosing, not for reading.
  *
  * The number line's own text is uppercased for the design; this takes the un-uppercased strings,
- * because "EPISODE 10" spelled out is not how a person says it (audit F16).
+ * because "EPISODE 10" spelled out is not how a person says it.
  */
 @Composable
 private fun episodeDescription(episode: JellyfinItem): String {
@@ -257,7 +256,7 @@ private fun episodeDescription(episode: JellyfinItem): String {
     ).describe()
 }
 
-/** `EPISODE 1 · 62 MIN` — the number line the refresh puts above the episode's title. */
+/** `EPISODE 1 · 62 MIN` — the number line above the episode's title. */
 @Composable
 private fun EpisodeNumberLine(episode: JellyfinItem) {
     val parts =
@@ -315,8 +314,8 @@ private fun EpisodeControl(
     } else {
         // `onCheckedChange = null` on purpose: the whole card is already the click target, and a
         // second one inside it would let a tap land on the box but not on the card it belongs to.
-        // It contributes no semantics either — which used to mean the selection state was drawn
-        // and nowhere spoken; the row itself now carries `selected` (audit A11Y-20).
+        // It contributes no semantics either, so the row itself carries `selected` — without that
+        // the selection state would be drawn and nowhere spoken.
         Checkbox(checked = selected, onCheckedChange = null, modifier = modifier)
     }
 }

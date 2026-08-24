@@ -41,8 +41,7 @@ import dev.jellyboost.core.ui.R as CoreUiR
 
 /**
  * The wide layout's navigation: the brand mark, a glass capsule of four labelled tabs, and the
- * app-wide actions, in one 64dp row over the top of the content
- * (DECISIONS.md 2026-08-01, the 2026-refresh chrome).
+ * app-wide actions, in one 64dp row over the top of the content.
  *
  * ### Why the row itself is not one big pane of glass
  * The bar *is* glass, but as a set of floating pieces rather than a full-width slab: the tab capsule
@@ -58,21 +57,20 @@ import dev.jellyboost.core.ui.R as CoreUiR
  * scrolls under it. What keeps it *readable* over a bright backdrop is not a background on this row
  * — that would be the nested-effect mistake described above — but the `TopChromeScrim` band
  * `AppScaffold` draws as a sibling underneath it, plus the darker [GlassDefaults.ChromeFill] its
- * pieces are tinted with (DECISIONS.md 2026-08-01, chrome readability).
+ * pieces are tinted with.
  *
  * ### Fitting at the breakpoint
  * The row does not scroll and never clips: the tab capsule takes whatever the brand mark and the
  * actions leave (`weight`), and only the *selected* tab carries a label — the other three are
- * icon-only (DECISIONS.md 2026-08-01, "Top-nav tabs: labels only on the selected tab"; labels on
- * all four never fit a portrait tablet in a wordy locale and ellipsised into noise). One label plus
+ * icon-only: labels on all four never fit a portrait tablet in a wordy locale and ellipsise into
+ * noise. One label plus
  * three icons fits every window ≥560dp, and the weights remain as a backstop: a capsule with less
  * room than it wants starves all four tabs equally and the one label ellipsises, rather than the
  * trailing actions running off the end of the window as a collapsed `Spacer(weight)` once let them.
  *
  * @param currentDestination selects the tab; `null` while the graph is still settling.
  * @param chrome what the trailing app-wide actions read — forwarded to [AppActions] unchanged, which
- *   is why it is a bundle rather than six parameters this function does not otherwise touch (audit
- *   2026-08-08, DUP-10).
+ *   is why it is a bundle rather than six parameters this function does not otherwise touch.
  * @param actions what those actions do.
  */
 @Composable
@@ -157,11 +155,11 @@ private fun TopNavTabs(
                 onClick = { onSelectTab(tab.route) },
                 // The selected tab is the only one carrying a label, so it is deliberately NOT
                 // weighted — it hugs its word, exactly as `GlassBottomNav.UNSELECTED_ITEM_WEIGHT`'s
-                // KDoc prescribes for the pill. Weighting all four equally handed the labelled tab
-                // the same slice as an icon-only one, which on a portrait tablet (the one width
-                // where this bar is shown *and* starved) ellipsised the label — the sibling bug of
-                // the one that KDoc records (device walk, 2026-08-21). Unselected tabs keep the
-                // equal weight so starvation, when it truly runs out of room, degrades them evenly.
+                // KDoc prescribes for the pill. Weighting all four equally would hand the labelled
+                // tab the same slice as an icon-only one, which on a portrait tablet (the one width
+                // where this bar is shown *and* starved) ellipsises the label — the sibling of the
+                // bug that KDoc guards against. Unselected tabs keep the equal weight so starvation,
+                // when it truly runs out of room, degrades them evenly.
                 modifier = if (selected) Modifier else Modifier.weight(1f, fill = false),
             )
         }

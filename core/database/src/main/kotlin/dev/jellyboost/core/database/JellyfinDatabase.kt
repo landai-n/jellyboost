@@ -30,8 +30,8 @@ import dev.jellyboost.core.database.entities.UserEntity
 /**
  * The app's single Room database.
  *
- * Entities land incrementally per milestone: session schema at M1; `user_data` at M4; `items` +
- * `library_views` at M6; `downloads` + `download_files` at M7.
+ * Entities land incrementally as features need them: session schema, `user_data`, `items` +
+ * `library_views`, then `downloads` + `download_files`.
  *
  * Schemas are exported to `core/database/schemas/`, which is what lets each version bump be an
  * `@AutoMigration` instead of hand-written SQL: Room derives the migration from the two exported
@@ -61,7 +61,7 @@ import dev.jellyboost.core.database.entities.UserEntity
         // v3 → v4 adds `downloads` and `download_files`; nothing existing is touched.
         AutoMigration(from = 3, to = 4),
         // v4 → v5 adds `downloads.quality`, a NOT NULL column with the SQL default `ORIGINAL`, so
-        // every row an older build wrote reads back as the behaviour that build had (M9).
+        // every row an older build wrote reads back as the behaviour that build had.
         AutoMigration(from = 4, to = 5),
         // v5 → v6 adds `downloads.projectedBytes` (nullable, so it needs no default) and
         // `downloads.sizeIsExact` (NOT NULL, SQL default `0`). Both are additive, and both read
@@ -81,10 +81,10 @@ import dev.jellyboost.core.database.entities.UserEntity
         // this stays automatic: it drops the three `items` indices that measured as dead or
         // subsumed and creates the two composites plus `downloads (seriesName, quality)`. Rows are
         // untouched, so the migration is a rebuild of B-trees the queries were never using
-        // (`ItemEntity`, audit 2026-08-08 PERF-3/4/23/24).
+        // (see `ItemEntity` for the query plans).
         AutoMigration(from = 8, to = 9),
         // v9 → v10 adds `items.albumId` and `items.albumArtistId` (both nullable, so neither needs
-        // a default) plus their indexes — the M13 query-only columns offline album/artist browsing
+        // a default) plus their indexes — the query-only columns offline album/artist browsing
         // reads. An existing cached row reads back as NULL on both, which is honest: nothing wrote
         // them before this build existed, and the row's `dto` blob is unaffected either way.
         AutoMigration(from = 9, to = 10),
@@ -110,12 +110,12 @@ abstract class JellyfinDatabase : RoomDatabase() {
     /** DAO for [UserDataEntity]. */
     abstract fun userDataDao(): UserDataDao
 
-    /** DAO for [ItemEntity] — the browse cache and the offline library (M6). */
+    /** DAO for [ItemEntity] — the browse cache and the offline library. */
     abstract fun itemDao(): ItemDao
 
-    /** DAO for [LibraryViewEntity] — the cached library list (M6). */
+    /** DAO for [LibraryViewEntity] — the cached library list. */
     abstract fun libraryViewDao(): LibraryViewDao
 
-    /** DAO for [DownloadEntity] and [DownloadFileEntity] — the download pipeline (M7). */
+    /** DAO for [DownloadEntity] and [DownloadFileEntity] — the download pipeline. */
     abstract fun downloadDao(): DownloadDao
 }

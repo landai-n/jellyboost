@@ -426,8 +426,8 @@ internal class ItemDetailViewModelTest : ItemDetailViewModelFixture() {
     @Test
     fun `a position written while offline turns the button into Resume, with no refetch`() =
         runTest(dispatcher) {
-            // The offline half of the M8 chain: the player writes the position locally on every
-            // tick and publishes it, and this screen is where the user sees it — a downloaded film
+            // The offline half of the resume chain: the player writes the position locally on
+            // every tick and publishes it, and this screen is where the user sees it — a downloaded film
             // watched in airplane mode offers Resume at the right place with no server involved.
             coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(movie)
             val model = viewModel()
@@ -486,7 +486,7 @@ internal class ItemDetailViewModelTest : ItemDetailViewModelFixture() {
             model.uiState.value.playTarget shouldBe next
         }
 
-    // ---- M9: refresh when connectivity changes ----------------------------------------------------------------
+    // ---- refresh when connectivity changes --------------------------------------------------------------------
 
     @Test
     fun `re-fetches the item it is showing when the server becomes reachable again`() =

@@ -17,7 +17,7 @@ import javax.inject.Singleton
  * the multi-minute media file therefore recreates the directory the cascade has just removed, and
  * writes into it. Nothing points at those bytes afterwards — they are invisible in both Downloads
  * tabs, survive every later delete, and are counted by `usedBytes()`, so the storage header accuses
- * the user of space they cannot find (docs/notes/audit-2026-07.md, STAB-04).
+ * the user of space they cannot find.
  *
  * Awaiting the stop (`DownloadScheduler.stop()`) closes most of that window; this closes the rest,
  * plus every orphan a process death or a crash left behind before it existed.

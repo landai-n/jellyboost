@@ -24,8 +24,7 @@ import java.time.Instant
 import java.time.ZoneOffset
 
 /**
- * Unit tests for [BrowseCacheMaintenance] — the eviction pass docs/PLAN.md always described and
- * nothing had ever called (audit HYG-1).
+ * Unit tests for [BrowseCacheMaintenance] — the eviction pass that reclaims browse-cache rows.
  *
  * The one rule worth more than the rest: **a download is never swept.** Getting that wrong deletes
  * the row an offline detail page is rebuilt from and orphans the files it points at, which is the
@@ -127,7 +126,7 @@ class BrowseCacheMaintenanceTest {
             shouldThrow<CancellationException> { maintenance().evictExpired() }
         }
 
-    // ---- the row cap (audit 2026-08-08, PERF-17) ------------------------------------------------
+    // ---- the row cap ------------------------------------------------------------------------------
 
     @Test
     @DisplayName("the trim only ever targets browse-cache rows, never downloads")

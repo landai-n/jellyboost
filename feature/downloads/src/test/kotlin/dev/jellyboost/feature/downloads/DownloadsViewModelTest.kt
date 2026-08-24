@@ -111,9 +111,9 @@ class DownloadsViewModelTest {
     @Test
     fun `downloaded tracks group under their album, alongside series groups`() =
         runTest(dispatcher) {
-            // M13 Phase 5: `DownloadEnqueuer` writes a track's album into the same column an
-            // episode's series goes in, so albums group with no second grouping rule. Albums are
-            // the top level — artists do not nest above them (DECISIONS.md, 2026-08-06).
+            // `DownloadEnqueuer` writes a track's album into the same column an episode's series
+            // goes in, so albums group with no second grouping rule. Albums are the top level —
+            // artists do not nest above them.
             items.value =
                 listOf(
                     item("1", "Go Your Own Way", series = "Rumours", status = DownloadStatus.DOWNLOADED),
@@ -133,9 +133,9 @@ class DownloadsViewModelTest {
     @Test
     fun `a lone film gets no heading of its own name`() =
         runTest(dispatcher) {
-            // The M9 bug (docs/POLISH.md): every film was drawn under a group header reading its
-            // own title, so the name appeared twice, one line apart. Only films on the tab here —
-            // see the next test for what happens once a series is also present.
+            // Without this, every film is drawn under a group header reading its own title, so the
+            // name appears twice, one line apart. Only films on the tab here — see the next test
+            // for what happens once a series is also present.
             items.value =
                 listOf(
                     item("1", "Dune", status = DownloadStatus.DOWNLOADED),
@@ -264,8 +264,8 @@ class DownloadsViewModelTest {
             advanceUntilIdle()
 
             model.selectTab(DownloadsTab.QUEUE)
-            // The tab is no longer written straight into the state: it rides the same combine as
-            // the projection, so it lands on the next dispatch rather than in the tap itself.
+            // The tab is not written straight into the state: it rides the same combine as the
+            // projection, so it lands on the next dispatch rather than in the tap itself.
             advanceUntilIdle()
 
             model.uiState.value.selectedTab shouldBe DownloadsTab.QUEUE
@@ -522,8 +522,8 @@ class DownloadsViewModelTest {
     @Test
     fun `confirming cancel all empties the queue and never touches a finished download`() =
         runTest(dispatcher) {
-            // The season-cancel rule (DECISIONS.md, 2026-07-29) applied to the whole queue: what is
-            // already on the device survives, whatever state the queue rows are in.
+            // The season-cancel rule applied to the whole queue: what is already on the device
+            // survives, whatever state the queue rows are in.
             items.value =
                 listOf(
                     item("1", "Arrival", status = DownloadStatus.DOWNLOADED),
@@ -631,12 +631,13 @@ class DownloadsViewModelTest {
             coVerify(exactly = 0) { downloads.move(any(), any()) }
         }
 
-    // ---- a collapsed projection (audit STAB-10) --------------------------------------------------
+    // ---- a collapsed projection ------------------------------------------------------------------
 
     /**
-     * The worst failure this screen had: `isLoading` starts `true` and only a first emission clears
-     * it, so a throw upstream — `SQLiteBlobTooBigException` on a corrupt dto blob is the real one —
-     * left a spinner turning forever with nothing to tell the user and no way to retry.
+     * The worst failure this screen can have: `isLoading` starts `true` and only a first emission
+     * clears it, so a throw upstream — `SQLiteBlobTooBigException` on a corrupt dto blob is the
+     * real one — would leave a spinner turning forever with nothing to tell the user and no way to
+     * retry.
      */
     @Test
     fun `an upstream failure leaves an error state, never a spinner`() =
@@ -680,13 +681,12 @@ class DownloadsViewModelTest {
             model.uiState.value.loadFailed shouldBe false
         }
 
-    // ---- what the projection costs while nobody is looking (audit PERF-03) -----------------------
+    // ---- what the projection costs while nobody is looking ---------------------------------------
 
     /**
-     * The projection used to be launched in `init` and never unsubscribed, so from the first visit
-     * until process death it kept pulling the download list (a full metadata join) and the storage
-     * figures — with the screen off, and with a tab switch *saving* this screen rather than popping
-     * it.
+     * Launched in `init` and never unsubscribed, the projection would keep pulling the download
+     * list (a full metadata join) and the storage figures from the first visit until process death
+     * — with the screen off, and with a tab switch *saving* this screen rather than popping it.
      */
     @Test
     fun `the download queries only run while something is collecting the state`() =
@@ -763,8 +763,8 @@ class DownloadsViewModelTest {
      * A ViewModel with a live subscriber on its state.
      *
      * The subscriber is the point: the projection is shared with `WhileSubscribed`, so with nothing
-     * collecting `uiState` there is deliberately no Room query and no state to assert on (audit
-     * PERF-03). `backgroundScope` is what the screen's collection stands in for — it is cancelled
+     * collecting `uiState` there is deliberately no Room query and no state to assert on.
+     * `backgroundScope` is what the screen's collection stands in for — it is cancelled
      * when the test ends, so the never-completing projection cannot hang `runTest`.
      */
     private fun TestScope.viewModel(): DownloadsViewModel =

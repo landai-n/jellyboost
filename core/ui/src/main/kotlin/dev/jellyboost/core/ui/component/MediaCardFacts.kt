@@ -20,12 +20,12 @@ import kotlin.math.roundToInt
 /**
  * How a card says, in one breath, what it is.
  *
- * Before the 2026-08-05 accessibility audit a card was three to six separate stops for a screen
- * reader — the artwork (announcing the title), the title (announcing it again), the subtitle, and
- * every badge floating free of the item it belongs to — and none of them carried the state the
- * badges *drew*: how far in you are, whether it is downloaded, whether it is selected (audit CR-6,
- * A11Y-01…05). The fix is one merged node per card with an authored sentence, which means the
- * sentence has to be assembled somewhere, from facts a card holds in five different places.
+ * A card without this is three to six separate stops for a screen reader — the artwork
+ * (announcing the title), the title (announcing it again), the subtitle, and every badge floating
+ * free of the item it belongs to — none of them carrying the state the badges *draw*: how far in
+ * you are, whether it is downloaded, whether it is selected. The fix is one merged node per card
+ * with an authored sentence, which means the sentence has to be assembled somewhere, from facts a
+ * card holds in five different places.
  *
  * That assembly is here, split in two so the part with the rules in it is a plain function that a
  * JVM test can hold still:
@@ -35,8 +35,9 @@ import kotlin.math.roundToInt
  *   and hands them over.
  *
  * The description deliberately carries the **untruncated** title: the visible one is `maxLines = 1`
- * and ellipsizes after a handful of characters at large font scales, and the artwork description
- * that used to compensate for that is exactly what this replaces (audit SCALE-04).
+ * and ellipsizes after a handful of characters at large font scales, and a separate artwork
+ * description compensating for that is exactly what this replaces — the artwork's own
+ * `contentDescription` should stay `null` on a titled card.
  */
 data class MediaCardFacts(
     /** The item's headline — untruncated, whatever the visible `Text` had room for. */
@@ -61,14 +62,13 @@ private const val DESCRIPTION_SEPARATOR = ", "
  *
  * Three surfaces assembled a spoken sentence from a handful of nullable facts — a card, the detail
  * header's metadata row, and the home hero's meta line — and all three had to know the same three
- * things. They had drifted into three different answers (audit DUP-8), so the rule is stated once,
- * here:
+ * things. They had drifted into three different answers, so the rule is stated once, here:
  *
  * - **A comma and a space between parts.** It is a *pause* in every screen reader, where the row
  *   draws a gap or an interpunct. Neither of those is punctuation a synthesizer honours.
  * - **Blanks are dropped, not spoken.** A fact that is present but empty — a certificate the
- *   server returned as `""` — used to become a bare comma: the home hero announced
- *   "Rated , 22 minutes left", which is the defect this join fixes for it.
+ *   server returned as `""` — would otherwise become a bare comma: the home hero would announce
+ *   "Rated , 22 minutes left" without this join.
  * - **Identical parts collapse.** A card whose subtitle repeats its title says it once.
  */
 fun describeParts(parts: List<String?>): String =
@@ -171,8 +171,8 @@ internal fun mediaCardDescription(
         MediaCardFacts(
             title = item.displayTitle,
             typeLabel = itemTypeLabelRes(item.type)?.let { stringResource(it) },
-            // The localized form, which is the one the card *draws* — before this the card drew
-            // "S1 · E4" and spoke "S1:E4" (audit DUP-7).
+            // The localized form, which is the one the card *draws*: speaking a hardcoded "S1:E4"
+            // while drawing "S1 · E4" would say one thing and show another.
             subtitle = item.subtitleLine(),
             badge = badge,
             progressLabel =
@@ -200,7 +200,7 @@ internal fun mediaCardDescription(
  * authored sentence has to be the only thing left to say.
  *
  * @param selected `null` outside selection mode; otherwise real `selected` semantics plus a spoken
- *   state, so the mode is something a screen-reader user can see themselves in (audit M1/A11Y-20).
+ *   state, so the mode is something a screen-reader user can see themselves in.
  */
 @Composable
 fun mediaCardSemantics(

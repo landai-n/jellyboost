@@ -19,8 +19,7 @@ data class AlbumDetailUiState(
 ) {
     /**
      * `true` once the tracks name more than one disc — the point at which the list needs "Disc N"
-     * headers to make sense of the numbering starting over (docs/notes/music-m13-plan.md, Phase 2:
-     * "track list grouped by disc when parentIndexNumber varies").
+     * headers to make sense of the numbering starting over.
      */
     val isMultiDisc: Boolean
         get() = tracks.mapNotNull { it.parentIndexNumber }.distinct().size > 1
@@ -34,8 +33,7 @@ data class AlbumDetailUiState(
                 .map { (disc, discTracks) -> disc to discTracks }
 
     /**
-     * What the header's Download control shows — the album's state, derived from its **tracks**
-     * (M13 Phase 5).
+     * What the header's Download control shows — the album's state, derived from its **tracks**.
      *
      * There is never a download row keyed on the album itself: an album is a folder, and
      * `DownloadEnqueuer` expands a tap on one into one download per track (the same rule that keeps
@@ -74,6 +72,6 @@ data class AlbumDetailUiState(
                 }.toFloat() / tracks.size
 }
 
-/** Stamps the app-wide download-state map onto every track (M7 badge pattern). */
+/** Stamps the app-wide download-state map onto every track. */
 internal fun AlbumDetailUiState.withDownloadStates(states: Map<String, DownloadState>): AlbumDetailUiState =
     copy(tracks = tracks.map { it.withDownloadState(states) })

@@ -124,12 +124,13 @@ PATTERNS = {
         "path_filter": re.compile(r"build\.gradle\.kts$"),
         "keep_comments": False,
     },
-    # Agent-process voice in code comments. Most of this codebase is written by delegated
-    # agents, and a comment addressed to the reviewer/orchestrator ("as requested", "per the
-    # brief", "this wave", first-person narration) is noise the moment the change lands — it
-    # describes the conversation, not the code. House style still WANTS audit citations
-    # ("audit UI-9") and historical KDoc ("this used to be a runBlocking"); those are about
-    # the code and are deliberately not matched here. Comments only; zero tolerance.
+    # Provenance in code comments. Most of this codebase is written by delegated agents,
+    # and a comment describing where a change came from — the conversation ("as requested",
+    # "per the brief", "this wave", first-person narration), audit/decision citations
+    # ("audit UI-9", "DECISIONS 2026-08-07"), milestone/date provenance, or historical
+    # narration ("this used to be a runBlocking") — is noise the moment the change lands.
+    # House style: comments state present-tense constraints the code can't show; git and
+    # DECISIONS.md hold the history. Comments only; zero tolerance.
 }
 # Comment-voice checking is out of scope for this file: the offending vocabulary
 # ("session", "the user", first person) is also legitimate app-domain vocabulary, so the

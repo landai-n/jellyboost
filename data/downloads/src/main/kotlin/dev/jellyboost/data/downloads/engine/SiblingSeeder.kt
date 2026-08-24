@@ -77,11 +77,10 @@ internal class SiblingSeeder
          * Seeds every row still waiting on the same show at the same quality, now that [completed]
          * has landed.
          *
-         * This is the half the shipped feature was missing. Seeding used to happen only inside the
-         * enqueue transaction, so a season queued in one batch had no finished sibling to learn
-         * from — and nothing ever came back to the rows once one arrived. Every episode after the
-         * first therefore kept its "up to X" wording for the whole of the download, which is
-         * precisely the case the seed exists for.
+         * Seeding inside the enqueue transaction alone is not enough: a season queued in one batch
+         * has no finished sibling to learn from, and nothing would come back to those rows once one
+         * arrived. Every episode after the first would keep its "up to X" wording for the whole of
+         * the download, which is precisely the case the seed exists for.
          *
          * Only `QUEUED` and `PAUSED` rows that still carry no projection and whose size is not
          * already exact are touched, and the write itself re-checks that the projection is still

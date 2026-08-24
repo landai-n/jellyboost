@@ -50,12 +50,13 @@ import dev.jellyboost.core.ui.R as CoreUiR
  * ### What it is given, and what it is not
  * The episode and two callbacks, never [PlayerUiState]: a card that took the whole screen state
  * would recompose on every buffering flicker and every tick that moves the duration, for four
- * strings that change once an episode (the strong-skipping rule in CLAUDE.md's checklist).
+ * strings that change once an episode; a composable is passed what it draws, so that strong
+ * skipping can do its work.
  *
  * Nothing is `remember`ed here. Whether the card is up, and whether it stays up after a dismissal,
  * are the ViewModel's (`UpNextController`) — this composable is conditionally composed by
  * `PlayerScreen` and would take any state parked in it away on the first seek that hides the card,
- * which is the PlayerPanel lesson exactly.
+ * exactly the trap `PlayerPanel` state is hoisted out of.
  *
  * ### Accessibility
  * The card is deliberately **not** one merged node. It carries two different actions — play the
@@ -64,8 +65,8 @@ import dev.jellyboost.core.ui.R as CoreUiR
  * merged into one authored sentence and marked [LiveRegionMode.Polite] so it is announced once when
  * it appears, and the two buttons after it, each named for what it does (WCAG 2.5.3). The polite
  * announcement mirrors the skip pill's, for the same reason: the offer is time-boxed, and a user
- * who is not watching the screen has to be told it exists rather than left to find it by traversal
- * (audit CR-3).
+ * who is not watching the screen has to be told it exists rather than left to find it by
+ * traversal.
  *
  * There is no whole-card click target, though the corner is large enough to invite one: a
  * `clickable` container merges its descendants, which would fold the sentence and the pill back
@@ -193,9 +194,9 @@ private fun UpNextLabel(
  * Composed here rather than through `:core:ui`'s `JellyfinItem.episodeNumberLabel`, whose signature
  * is an extension on `JellyfinItem` and so cannot see an [UpNextEpisode] — the whole point of which
  * is to be four fields rather than forty. What it must not do is spell the label itself: `S` and `E`
- * are the initials of words, a Kotlin literal is invisible to the `MissingTranslation` gate, and the
- * app already had two spellings of an episode number on screen at once (audit DUP-7). So it reads
- * the *same two resources* the shared helper reads, chosen the same way.
+ * are the initials of words, a Kotlin literal is invisible to the `MissingTranslation` gate, and
+ * two spellings of an episode number could otherwise be on screen at once. So it reads the *same
+ * two resources* the shared helper reads, chosen the same way.
  */
 @Composable
 private fun UpNextEpisode.episodeNumberLabel(): String? {
@@ -221,7 +222,7 @@ private const val EYEBROW_ALPHA = 0.85f
  * A comma, not [Separators.DOT]: the pause a comma gives is what makes "Up next, S1 · E5, The
  * Bicameral Mind" a sentence rather than a run of fragments. The same choice `EpisodeRow` makes for
  * its own authored description. The number keeps the dot the shared resource spells it with, since
- * that is the one form the app speaks everywhere else (audit DUP-7).
+ * that is the one form the app speaks everywhere else.
  */
 private const val SPOKEN_SEPARATOR = ", "
 

@@ -39,9 +39,9 @@ import java.util.UUID
  * filter sheet offers offline, and what applying it actually does.
  *
  * Apart from [OfflineJellyfinRepositoryTest] because the two answer different questions: that class
- * pins the *shape* of every offline screen, this one pins one behaviour that was missing altogether
- * — offline, `query.filters` was read by nothing while the grid still drew an active-filter badge
- * (docs/notes/audit-2026-07.md, ARCH-01).
+ * pins the *shape* of every offline screen, this one pins the behaviour that matters most for
+ * filtering — offline, `query.filters` must actually be read and applied, not silently ignored
+ * while the grid still draws an active-filter badge.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class OfflineJellyfinRepositoryFilterTest {
@@ -80,13 +80,13 @@ class OfflineJellyfinRepositoryFilterTest {
         coEvery { userDataDao.getUserDataFor(any(), any()) } returns emptyList()
     }
 
-    // ---- offline filters (audit ARCH-01) ------------------------------------------------------
+    // ---- offline filters -----------------------------------------------------------------------
 
     @Test
     fun `a genre filter narrows the offline grid instead of being ignored`() =
         runTest {
-            // The bug: every filter was dropped on the floor while the grid still drew a
-            // "1 active" badge over the identical unfiltered list.
+            // Regression guard: without this, every filter would be dropped on the floor while
+            // the grid still drew a "1 active" badge over the identical unfiltered list.
             stubGrid(
                 itemDao,
                 listOf(
@@ -251,8 +251,8 @@ class OfflineJellyfinRepositoryFilterTest {
     @Test
     fun `a film library's facets do not offer the genres of downloaded television`() =
         runTest {
-            // The sheet used to ignore its `parentId` entirely, so filtering a film library by a
-            // genre only its downloaded TV carried could only ever empty the grid.
+            // Regression guard: ignoring `parentId` here would let filtering a film library by a
+            // genre only its downloaded TV carried empty the grid instead.
             val types = mutableListOf<List<ItemType>>()
             coEvery { itemDao.facetKeysBySource(ItemSource.DOWNLOAD, capture(types)) } returns emptyList()
 

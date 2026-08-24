@@ -20,12 +20,10 @@ import dev.jellyboost.core.ui.theme.GlassDefaults
  * arguments by hand: a `border` at [GlassDefaults.PanelHairline] on `shapes.extraLarge`, and
  * `containerColor = surface`.
  *
- * Hand-spelled at seven sites and **missing at three** (the detail screen's delete confirmation and
- * the downloads screen's delete and cancel-all confirmations), which is what an idiom kept by
- * convention costs: `SyncPlayLeaveDialog`'s KDoc claimed the hairline "can only ever drift together"
- * while three dialogs elsewhere had already drifted off it entirely (audit 2026-08-08, DUP-2). The
- * three now match the other seven, which is a deliberate visual change — see DECISIONS.md
- * 2026-08-08.
+ * Hand-spelling this border at every dialog site is the kind of idiom kept by convention that
+ * drifts: nothing enforces that a new dialog remembers to add it, or that existing copies stay in
+ * sync as the app changes. Every dialog in the app draws the same hairline through this component
+ * instead, which is a deliberate visual convergence.
  *
  * The signature is `AlertDialog`'s, minus the two parameters this owns, so a caller that needs a
  * styled title or an arbitrary body ([PlayerDisplayDialog], the Quick Connect dialog, the SyncPlay
@@ -72,7 +70,7 @@ fun JellyboostAlertDialog(
  *
  * @param confirmLabel what the *action* is called, never "OK": the button says what it does, which
  *   is the difference between a user reading the sentence and a user reading the buttons.
- * @param dismissLabel defaults to the app-wide [R.string.action_cancel] (audit DUP-6). A caller
+ * @param dismissLabel defaults to the app-wide [R.string.action_cancel]. A caller
  *   passes its own only where "cancel" would be ambiguous — the downloads screen's *Cancel all*
  *   confirmation answers with "Keep", because "Cancel" there could mean either button.
  */

@@ -53,8 +53,7 @@ import dev.jellyboost.core.ui.R as CoreUiR
 
 /**
  * The home screen's immersive *Continue watching* banner: the first resume item's artwork running
- * full-bleed behind the status bar, with the copy and the two actions drawn on it (2026 refresh,
- * spec section 4a).
+ * full-bleed behind the status bar, with the copy and the two actions drawn on it.
  *
  * The hero **is** the first card of the *Continue watching* row rather than an extra row above it —
  * `HomeRows` hands it `state.resume.first()` and draws the row from `drop(1)` — so the screen shows
@@ -122,7 +121,7 @@ internal fun HomeHero(
 }
 
 /**
- * The artwork and everything laid over it: the refresh's accent halo, the vertical scrim every
+ * The artwork and everything laid over it: the app's accent halo, the vertical scrim every
  * backdrop in the app carries, and — on a wide layout, where the copy sits beside the picture rather
  * than under it — a horizontal scrim that darkens the left third.
  *
@@ -155,9 +154,10 @@ private fun HeroBackdrop(
  * down into the rows — but "up" is only available while the banner is taller than the copy. On a
  * phone in landscape the 0.6-viewport cap squeezes the banner to ~216dp while the full lockup
  * wants ~230dp, and the overflow (buttons drawn through the metadata line, or past the banner's
- * bottom edge into the first content row) is exactly the overlap 8ed17933 fixed on the wide shape.
- * Below [compactHeroShowsSecondary]'s threshold the lockup therefore drops its two secondary lines
- * — the eyebrow and the metadata — and keeps what the banner is for: the title and the actions.
+ * bottom edge into the first content row) is the same failure mode the wide shape already guards
+ * against. Below [compactHeroShowsSecondary]'s threshold the lockup therefore drops its two
+ * secondary lines — the eyebrow and the metadata — and keeps what the banner is for: the title and
+ * the actions.
  * Below [compactHeroTitleMaxLines]'s, the title gives up its second line too.
  */
 @Composable
@@ -321,15 +321,15 @@ private fun HeroTitle(
 }
 
 /**
- * `S1:E10 · TV-MA · 22 min left` — what is left of the item, in the shapes the refresh gives each
- * kind of fact: plain muted text, the outlined certificate badge, plain muted text again.
+ * `S1:E10 · TV-MA · 22 min left` — what is left of the item, in the shape given to each kind of
+ * fact: plain muted text, the outlined certificate badge, plain muted text again.
  *
  * A `FlowRow` because a long episode label plus a certificate plus the time left does not fit on one
  * line of a 360dp phone, and a clipped metadata line reads as a bug.
  *
  * To a screen reader it is **one** node, not three: read separately the line was "S1:E10", then
  * "TV-MA" — a bare certificate with nothing saying what it certifies — then "22 min left", three
- * stops before the buttons the banner exists for (accessibility audit 2026-08-05, A11Y-21). Merged,
+ * stops before the buttons the banner exists for. Merged,
  * it is one sentence, and the certificate is qualified in words the way the badge's outline
  * qualifies it visually.
  */
@@ -345,9 +345,9 @@ private fun HeroMeta(
     val certificate = item.officialRating
     val ratedText = certificate?.let { stringResource(R.string.home_hero_rated, it) }
     val remainingText = remaining?.let { pluralStringResource(R.plurals.home_minutes_left, it, it) }
-    // `describeParts` rather than a plain join: this line was the one of the three assemblers
-    // without the blank-trim, so a certificate the server returned as `""` was announced as
-    // "Rated , 22 minutes left" (audit DUP-8).
+    // `describeParts` rather than a plain join: this line is one of three assemblers that need the
+    // blank-trim — without it, a certificate the server returns as `""` would be announced as
+    // "Rated , 22 minutes left".
     val description = describeParts(episodeLabel, ratedText, remainingText)
 
     FlowRow(
@@ -439,17 +439,17 @@ private val CompactCopyPadding = 20.dp
 
 // ---- how much room a lockup needs, and how that changes with the user's font scale -------------
 //
-// Every threshold below was calibrated in dp against a device at font scale 1.0, which made all of
-// them silently wrong for anyone who has turned text up: the banner is a fixed-height box, the copy
-// inside it is `sp`, and the two were being compared as if only one of them existed. At 1.5–2.0×
-// the compact lockup kept its eyebrow and metadata line while no longer fitting, and the wide one
-// drew its buttons straight through `clipToBounds` (accessibility audit 2026-08-05, A11Y-16).
+// Every threshold below is calibrated in dp against a device at font scale 1.0. The banner is a
+// fixed-height box while the copy inside it is `sp`; comparing the two directly, as if only one of
+// them existed, goes silently wrong for anyone who has turned text up. At 1.5–2.0× the compact
+// lockup would keep its eyebrow and metadata line while no longer fitting, and the wide one would
+// draw its buttons straight through `clipToBounds`.
 //
 // Each lockup is therefore modelled as two numbers: the dp that never move (paddings, the gaps
 // between blocks) and the part that is *text*, which is what `fontScale` stretches. The pill
 // buttons count as text — their height is a floor, not a cap, so a label taller than the capsule
-// grows it (DECISIONS.md 2026-08-05, "pill buttons get a minimum height"). Only the growth is
-// applied, so every threshold is unchanged to the pixel at font scale 1.0.
+// grows it. Only the growth is applied, so every threshold is unchanged to the pixel at font
+// scale 1.0.
 
 /** How much taller than its calibrated size text is at [fontScale]; never negative. */
 internal fun textGrowth(fontScale: Float): Float = (fontScale - 1f).coerceAtLeast(0f)
@@ -501,12 +501,11 @@ private val CompactSecondaryMinHeight = 260.dp
 /**
  * Whether the wide banner's copy band has room for the same two secondary lines.
  *
- * The wide lockup had no shedding at all: it is inset from the top and bounded below by the rail
- * the rows overlap into (DECISIONS.md 2026-08-01), with the overview as the only elastic child, so
- * once the overview had given up all of its room the eyebrow, title, metadata and buttons simply
- * overflowed the band and `clipToBounds` cut the buttons off. Shedding the same two lines the
- * compact shape sheds is what keeps the *actions* inside the banner at large font scales — which is
- * the intent that entry recorded, applied to the axis it did not consider.
+ * The wide lockup is inset from the top and bounded below by the rail the rows overlap into, with
+ * the overview as the only elastic child: once the overview has given up all of its room, the
+ * eyebrow, title, metadata and buttons would overflow the band and `clipToBounds` would cut the
+ * buttons off. Shedding the same two lines the compact shape sheds is what keeps the *actions*
+ * inside the banner at large font scales.
  *
  * [WideSecondaryMinBand] is the full lockup at font scale 1.0: three 12dp gaps over the text in
  * [WideLockupText]. The mocks' 400dp banner has a 248dp band and the shortest banner the height cap

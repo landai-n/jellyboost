@@ -25,14 +25,14 @@ import javax.inject.Singleton
  * The Android `Context` gives the SDK the device *name* it derives from `Build`/`device_name`.
  * The device *id* is deliberately NOT the SDK's default — see [deviceId].
  *
- * ### Nothing happens in the constructor (audit PERF-2)
+ * ### Nothing happens in the constructor
  * Both SDK objects are built on first *use*, not on construction. Building them is the most
  * expensive thing in the app's singleton graph — a blocking `SharedPreferences` XML read plus, on
  * the very first run, a synchronous `commit()` fsync (`SharedPreferencesDeviceIdStore`), a
  * `Settings.Global` binder read for the device name, and Ktor/OkHttp/serialization setup — and
- * anything that injects *anything* reaching this class used to pay all of it. Whoever first touches
- * [jellyfin] or [apiClient] pays it instead, off the cold-start path; `by lazy`'s default
- * synchronized mode makes that safe from any thread.
+ * anything that injects *anything* reaching this class would otherwise pay all of it. Whoever
+ * first touches [jellyfin] or [apiClient] pays it instead, off the cold-start path; `by lazy`'s
+ * default synchronized mode makes that safe from any thread.
  */
 @Singleton
 class ApiClientProvider
@@ -119,7 +119,7 @@ class ApiClientProvider
 
             /**
              * Client version reported to the server. Hard-coded for now; wire it to the app's
-             * `versionName` once `:app` publishes one (M10, release hardening).
+             * `versionName` once `:app` publishes one.
              */
             const val CLIENT_VERSION = "0.1.0"
         }

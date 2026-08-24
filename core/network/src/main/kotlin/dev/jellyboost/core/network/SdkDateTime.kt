@@ -17,16 +17,16 @@ import java.time.ZoneId
  * ```
  *
  * So an SDK `LocalDateTime` is always **local wall-clock time**, and handing it UTC wall-clock time
- * makes it stamp the device's offset onto the wrong reading — the M4 bug where a 17:22 UTC event
- * went out as `17:22:57+02:00` and the server stored it two hours early (STATUS.md, "Known
- * issues"). Round-tripping through [ZoneId.systemDefault] is what makes the *instant* survive.
+ * makes it stamp the device's offset onto the wrong reading — a 17:22 UTC event would go out as
+ * `17:22:57+02:00` and the server would store it two hours early. Round-tripping through
+ * [ZoneId.systemDefault] is what makes the *instant* survive.
  *
  * They live in `:core:network` rather than `:data` because two modules read SDK date fields —
- * `:data`'s mappers and `:player`'s SyncPlay DTO mapping — and `:player` was reaching across into
- * `:data` for them (audit ARCH-7). `:core:network` is the module that owns the SDK boundary these
- * conversions describe, and both callers already depend on it. `:core:common` would also have
- * compiled (nothing here names an SDK type) but would have put a rule *about* jellyfin-sdk's
- * serializer into the one module that is deliberately innocent of the SDK.
+ * `:data`'s mappers and `:player`'s SyncPlay DTO mapping. `:core:network` is the module that owns
+ * the SDK boundary these conversions describe, and both callers already depend on it.
+ * `:core:common` would also have compiled (nothing here names an SDK type) but would have put a
+ * rule *about* jellyfin-sdk's serializer into the one module that is deliberately innocent of the
+ * SDK.
  *
  * @param zone the zone the SDK serializer will apply; only tests ever pass it explicitly.
  */

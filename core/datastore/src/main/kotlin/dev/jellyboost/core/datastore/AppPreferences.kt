@@ -5,15 +5,12 @@ import dev.jellyboost.core.common.model.SegmentSkipMode
 import kotlinx.coroutines.flow.Flow
 
 /**
- * The app's persisted user settings (docs/PLAN.md, ":core:datastore").
+ * The app's persisted user settings.
  *
  * Everything here is non-secret and DataStore-backed. Access tokens are deliberately absent —
  * they live only in [SecureCredentialStore], never in DataStore and never in Room.
  *
- * Settings arrive per milestone; M6 adds the one the offline read path needs and M7 the one the
- * download queue needs. The storage-location key joined at M9 polish, when the picker that reads it
- * shipped. Max streaming bitrate joined last, when Auto quality gained a measurement to remember
- * (DECISIONS.md, 2026-08-15) — every key named in [PreferenceKeys] is now consumed.
+ * Every key named in [PreferenceKeys] is consumed here.
  */
 interface AppPreferences {
     /**
@@ -28,15 +25,14 @@ interface AppPreferences {
     /** Turns forced offline mode on or off. */
     suspend fun setForceOffline(enabled: Boolean)
 
-    // ---- M7 — downloads ------------------------------------------------------------------------
+    // ---- downloads ------------------------------------------------------------------------------
 
     /**
      * `true` while downloads are restricted to unmetered networks.
      *
      * Read when the download work is (re-)enqueued and turned into WorkManager's
      * `NetworkType.UNMETERED` constraint, so an in-flight transfer is suspended by the system the
-     * moment the device leaves Wi-Fi and resumes — from its byte offset — when it comes back
-     * (docs/PLAN.md, "Download pipeline" → Enqueue).
+     * moment the device leaves Wi-Fi and resumes — from its byte offset — when it comes back.
      *
      * Defaults to **on**: a multi-gigabyte film pulled over a metered connection is the kind of
      * mistake a user cannot undo, so the safe direction is the one that costs nothing but a toggle.
@@ -47,14 +43,14 @@ interface AppPreferences {
     suspend fun setDownloadOverWifiOnly(enabled: Boolean)
 
     /**
-     * How much of the file a download asks the server for (M9).
+     * How much of the file a download asks the server for.
      *
      * Read **once per enqueue**, by `DownloadEnqueuer`, and stamped onto the download row; the
-     * pipeline never consults it again for an item already in the queue (DECISIONS.md, 2026-07-29).
-     * Changing it therefore affects the next download the user starts, not the one running.
+     * pipeline never consults it again for an item already in the queue. Changing it therefore
+     * affects the next download the user starts, not the one running.
      *
-     * Defaults to [DownloadQuality.ORIGINAL], which is the plan's behaviour: the source file, byte
-     * for byte, with an exact size and byte-level resume.
+     * Defaults to [DownloadQuality.ORIGINAL]: the source file, byte for byte, with an exact size and
+     * byte-level resume.
      */
     val downloadQuality: Flow<DownloadQuality>
 
@@ -79,10 +75,10 @@ interface AppPreferences {
     /** Chooses the volume downloads are written to; `null` restores the default. */
     suspend fun setDownloadStorageVolumeId(volumeId: String?)
 
-    // M9 player -----------------------------------------------------------------------------------
+    // player --------------------------------------------------------------------------------------
 
     /**
-     * What the player does when playback enters an intro (docs/PLAN.md, "M9 Polish" → segment skip).
+     * What the player does when playback enters an intro.
      *
      * Defaults to [SegmentSkipMode.SHOW_BUTTON]: the server's segment data is a guess produced by a
      * plugin, and a wrong guess that offers a button is a button nobody presses, while a wrong guess
@@ -115,9 +111,8 @@ interface AppPreferences {
      *
      * Not a user setting and not surfaced in Settings: the player's bandwidth detector writes it
      * after a successful throughput measurement, and reads it back on a fresh start as a **prior** —
-     * the value Auto quality uses before (or instead of) a measurement of its own
-     * (DECISIONS.md, 2026-08-15). `null` therefore means "nothing learned yet", which degrades to
-     * the uncapped behaviour Auto had before the detector existed.
+     * the value Auto quality uses before (or instead of) a measurement of its own. `null` therefore
+     * means "nothing learned yet", which degrades to uncapped behaviour.
      */
     val maxStreamingBitrate: Flow<Int?>
 

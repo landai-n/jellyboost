@@ -19,11 +19,11 @@ import javax.inject.Singleton
  * The header is rebuilt per request rather than baked into the client because the access token
  * changes over the app's lifetime (sign-in, sign-out, server switch) while this OkHttp client does
  * not. A request is only "ours" when its scheme, host **and** effective port all match the base
- * URL ([isSameOrigin], audit NET-04) — a different port is a different service, and `http://` on an
+ * URL ([isSameOrigin]) — a different port is a different service, and `http://` on an
  * `https://` server would put the token on the wire in clear. Anything else is left untouched so
  * the token never leaks.
  *
- * Registered as a **network** interceptor (audit NET-05), so the check runs once per hop rather
+ * Registered as a **network** interceptor, so the check runs once per hop rather
  * than once per call: a redirect's target goes through it too, and only earns the header if it is
  * still our server. As an application interceptor the origin-URL check would never see redirect
  * targets and the off-server guarantee would rest silently on OkHttp's own header stripping.

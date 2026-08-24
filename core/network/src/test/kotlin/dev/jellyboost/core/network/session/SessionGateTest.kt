@@ -11,8 +11,8 @@ import org.jellyfin.sdk.api.client.ApiClient
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for [SessionGate] — the fix for the cold-start race the M7 device walk found (and M8
- * hit again in the user-data sync drain).
+ * Unit tests for [SessionGate] — the fix for the cold-start race that can hit any background
+ * worker, including the user-data sync drain.
  *
  * The property under test is narrow but load-bearing: a worker that starts before the app has
  * restored its session must restore it itself, and must never turn "the process was cold" into a

@@ -45,11 +45,9 @@ import dev.jellyboost.core.ui.R as CoreUiR
  * A dialog rather than a bottom sheet: the player runs in landscape, where a sheet rising from the
  * bottom edge covers the seek bar the user just came from, and dialogs need no experimental API.
  *
- * They used to be branches of a `PlayerSheetHost` the *control bar* called, which is what audit UI-1
- * was about — the bar disposes itself four seconds after it appears and took the open picker with
- * it. The `when` that chooses between them is now `PlayerScreen`'s `PanelHost`, one exhaustive
- * branch per [PlayerPanel], so every panel on this screen is hosted in the same place and outlives
- * the bar. Nothing about the dialogs themselves changed.
+ * The `when` that chooses between them is `PlayerScreen`'s `PanelHost`, one exhaustive branch per
+ * [PlayerPanel], so every panel on this screen is hosted in the same place and outlives the control
+ * bar — which disposes itself four seconds after it appears and would take an open picker with it.
  */
 @Composable
 internal fun PlayerAudioDialog(
@@ -128,17 +126,16 @@ internal fun PlayerSpeedDialog(
 }
 
 /**
- * Brightness and volume, as controls rather than as gestures (accessibility audit 2026-08-05, CR-8).
+ * Brightness and volume, as controls rather than as gestures.
  *
  * Both were reachable only by a precise vertical drag on the correct third of the video: unusable
  * with a screen reader (touch exploration consumes the drag), with a switch device, with a keyboard,
  * or by anyone whose motor control does not include a measured 200 px swipe. Brightness had no
  * fallback of any kind — unlike the double-tap seek, which at least has buttons.
  *
- * This *adds* a path; the swipes are untouched (docs/PLAN.md M9 lists gestures as a feature, and
- * nothing here removes one). Both sliders drive exactly the plumbing the swipes drive — the window's
- * `screenBrightness` override, restored by `ImmersiveLandscapeEffect` on the way out, and the media
- * stream's volume — so the two ways of asking cannot disagree, and neither touches a device setting.
+ * This *adds* a path; the swipes stay. Both sliders drive exactly the plumbing the swipes drive —
+ * the window's `screenBrightness` override, restored by `ImmersiveLandscapeEffect` on the way out,
+ * and the media stream's volume — so the two ways of asking cannot disagree, and neither touches a device setting.
  *
  * The sheet is hosted by `PlayerScreen`, not by the control bar, so the four-second auto-hide cannot
  * take it away mid-adjustment.
@@ -230,10 +227,9 @@ private fun OptionDialog(
     JellyboostAlertDialog(
         onDismissRequest = onDismiss,
         // The app's own "Cancel" rather than `android.R.string.cancel`: the platform string follows
-        // the *device* locale, so a picker on a French device showed "Annuler" beside this app's
-        // English rows. Every other dialog in the app already used a resource of its own for that
-        // reason (`player/strings.xml`, B10); this one was the last platform string left, and there
-        // is now one app-wide label to point it at (audit 2026-08-08, DUP-6).
+        // the *device* locale, so a picker on a French device would show "Annuler" beside this
+        // app's English rows. Every dialog in the app points at the same app-wide label for that
+        // reason.
         confirmButton = {
             TextButton(onClick = onDismiss) { Text(text = stringResource(CoreUiR.string.action_cancel)) }
         },
@@ -250,7 +246,7 @@ private fun OptionDialog(
                                     // The row *is* the radio button — the control inside it is inert
                                     // (`onClick = null`), so without the role the whole picker
                                     // announces as unlabelled taps rather than as a choice among
-                                    // choices (audit A11Y-P-12).
+                                    // choices.
                                     role = Role.RadioButton,
                                     onClick = {
                                         onSelect(option.key)

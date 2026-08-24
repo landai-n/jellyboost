@@ -32,7 +32,7 @@ import org.junit.jupiter.api.Test
  * What `castTarget` changes about resolving, and it is exactly two things.
  *
  * A new file rather than additions to [PlaybackSourceResolverTest] and [PlaybackInfoResolverTest]:
- * both of those state what the *local* pipeline does, and the M12 regression gate is that they keep
+ * both of those state what the *local* pipeline does, and the regression gate is that they keep
  * saying it word for word.
  */
 class PlaybackResolveCastTargetTest {
@@ -46,7 +46,7 @@ class PlaybackResolveCastTargetTest {
         )
 
     // Never consulted here: none of these requests is an Auto one, and the cast branch would skip
-    // the detector even if one were (DECISIONS.md, 2026-08-15).
+    // the detector even if one were.
     private val autoBitrateDetector = mockk<AutoBitrateDetector>()
 
     /** No session by default, so negotiations describe the conservative legacy receiver. */

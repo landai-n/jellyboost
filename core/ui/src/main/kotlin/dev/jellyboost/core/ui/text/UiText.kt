@@ -11,9 +11,9 @@ import androidx.compose.ui.res.stringResource
  * A sentence a ViewModel can decide on but only a composition can read.
  *
  * A ViewModel has no `Context` and no locale, so state that holds a `String` has already been
- * resolved — in whatever language the *build* was written in. That is exactly how home, detail and
- * playback ended up showing English error copy on 68 translated locales (audit H8): a Kotlin
- * literal is invisible to `MissingTranslation`, so the gate had nothing to catch. A [Res] carries
+ * resolved — in whatever language the *build* was written in. That is exactly how a screen ends up
+ * showing English error copy on a translated locale: a Kotlin literal is invisible to
+ * `MissingTranslation`, so the gate has nothing to catch. A [Res] carries
  * the resource id instead and is resolved at draw time, which puts the decision in the ViewModel
  * (where it is unit-testable) and the language on the device (where it belongs).
  *

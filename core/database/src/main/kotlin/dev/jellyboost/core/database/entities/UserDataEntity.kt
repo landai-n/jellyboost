@@ -7,15 +7,13 @@ import java.util.UUID
 
 /**
  * Per-user playback state for one item, held locally so that every user-data write is
- * **local-first**: the row is updated (and the UI patched) before the server is told anything
- * (docs/PLAN.md, "Data layer" → `UserDataRepositoryImpl`).
+ * **local-first**: the row is updated (and the UI patched) before the server is told anything.
  *
  * The composite primary key `(itemId, userId)` is what makes the table multi-user ready without a
- * separate scoping mechanism — the plan keeps multi-server/multi-user out of v1's UI but not out of
- * its schema.
+ * separate scoping mechanism, even though multi-server/multi-user is not yet exposed in the UI.
  *
  * [toBeSynced] is the whole point of the table: it marks a row the server has not accepted yet.
- * `UserDataSyncWorker` drains those rows (most-recent-wins, M8), and the download-delete cascade
+ * `UserDataSyncWorker` drains those rows (most-recent-wins), and the download-delete cascade
  * keeps a `UserDataEntity` only while this flag is set.
  *
  * Like every other entity in this module, this one carries NO access token — tokens live only in

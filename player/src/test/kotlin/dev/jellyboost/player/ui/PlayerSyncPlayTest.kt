@@ -41,14 +41,14 @@ import java.time.Instant
 import java.util.UUID
 
 /**
- * What the player does while it is part of a SyncPlay group (M11 Phase 3).
+ * What the player does while it is part of a SyncPlay group.
  *
  * One rule carries the whole class and it is a claim about calls that are *never made*: in a group,
- * no user action moves this player (docs/notes/syncplay-m11-plan.md, key decision 11). Every intent
- * test therefore asserts both halves — the request that went to the coordinator, and the fact that
- * `PlayerHandle` was left completely alone. Asserting only the first would pass just as happily for
- * a player that seeks locally *and* tells the group, which is the failure mode: two clients drifting
- * apart while both believe they are in sync.
+ * no user action moves this player. Every intent test therefore asserts both halves — the request
+ * that went to the coordinator, and the fact that `PlayerHandle` was left completely alone.
+ * Asserting only the first would pass just as happily for a player that seeks locally *and* tells
+ * the group, which is the failure mode: two clients drifting apart while both believe they are in
+ * sync.
  *
  * The solo behaviour these branches must not disturb is pinned by [PlayerViewModelTest] and
  * [PlayerTrackPickerTest], which run against the same fixture with no group in it — they are the
@@ -233,10 +233,10 @@ internal class PlayerSyncPlayTest : PlayerViewModelFixture() {
     @Test
     fun `a session opened while in a group starts paused, whoever opened it`() =
         runTest(dispatcher) {
-            // The route a group play takes now that the detail page sends the group a queue rather
-            // than navigating (DECISIONS.md, 2026-07-31): the server's `PlayQueueUpdate` becomes a
-            // launch request and the NavHost opens this screen with the ordinary player arguments,
-            // which say "play". The group decides when playback starts, so this must not.
+            // The route a group play takes since the detail page sends the group a queue rather
+            // than navigating: the server's `PlayQueueUpdate` becomes a launch request and the
+            // NavHost opens this screen with the ordinary player arguments, which say "play". The
+            // group decides when playback starts, so this must not.
             syncPlayState.value = inGroup()
 
             val model = viewModel()
@@ -339,7 +339,7 @@ internal class PlayerSyncPlayTest : PlayerViewModelFixture() {
             model.releaseSession()
 
             // The controller sends `ignoreWait` from its side, so nobody is left waiting on a
-            // player that no longer exists (key decision 5).
+            // player that no longer exists.
             verify(exactly = 1) { syncPlayController.detachHost(model) }
         }
 
@@ -453,7 +453,7 @@ internal class PlayerSyncPlayTest : PlayerViewModelFixture() {
             model.uiState.value.userMessage shouldBe PlayerMessage.SyncPlayConnectionLost
         }
 
-    // ---- the end of an item, in a group (M11 Phase 4) -----------------------------------------------
+    // ---- the end of an item, in a group -------------------------------------------------------------
 
     @Test
     fun `an item ending with more group queue behind it does not close the screen`() =
@@ -470,7 +470,7 @@ internal class PlayerSyncPlayTest : PlayerViewModelFixture() {
             model.uiState.value.hasEnded shouldBe false
             model.uiState.value.isPlaying shouldBe false
             // The outgoing item is still reported, exactly as it is solo — on the detached scope,
-            // which the solo path also uses now that its auto-close cancels viewModelScope (PC-03).
+            // which the solo path also uses since its auto-close cancels viewModelScope.
             coVerify { reporter.reportStopDetached(any(), match { it.hasEnded }) }
         }
 

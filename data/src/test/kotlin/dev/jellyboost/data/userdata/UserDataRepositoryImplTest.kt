@@ -58,9 +58,9 @@ import java.util.UUID
 /**
  * Unit tests for [UserDataRepositoryImpl] — the local-first write path.
  *
- * The plan makes a specific promise here: the Room row and the event bus come first, the server
- * push is best effort, and a failed push leaves `toBeSynced` set and schedules a retry
- * (docs/PLAN.md, "Data layer"). These tests pin exactly that.
+ * The specific promise here: the Room row and the event bus come first, the server push is best
+ * effort, and a failed push leaves `toBeSynced` set and schedules a retry. These tests pin
+ * exactly that.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class UserDataRepositoryImplTest {
@@ -130,16 +130,16 @@ class UserDataRepositoryImplTest {
         TimeZone.setDefault(originalTimeZone)
     }
 
-    // ---- the local write is atomic (audit CORR-2) ---------------------------------------------
+    // ---- the local write is atomic -------------------------------------------------------------
 
     @Test
     fun `the read, the edit and the write of one operation are a single transaction`() =
         runTest {
             // Read-modify-write over a row two callers touch. During playback `PlaybackReporter`
             // calls `setPosition` every five seconds, and each tick reads the whole row and writes
-            // the whole row back; before this, a "mark watched" from another screen landing between
-            // a tick's read and its write was overwritten by the stale snapshot — reverted locally,
-            // and pushed to the server as `played = false`.
+            // the whole row back; without this transaction, a "mark watched" from another screen
+            // landing between a tick's read and its write would be overwritten by the stale
+            // snapshot — reverted locally, and pushed to the server as `played = false`.
             val depths = mutableListOf<Int>()
             coEvery { userDataDao.getUserData(any(), any()) } answers {
                 depths += transactionRunner.depth
@@ -292,10 +292,10 @@ class UserDataRepositoryImplTest {
         }
 
     /**
-     * Regression test for STATUS.md's "Known issues": `datePlayed` used to be built as UTC
-     * wall-clock time, which the SDK then stamped the *device's* offset onto — a 10:00Z event went
-     * out as `10:00+02:00` and the server stored it two hours early. The value on the wire must be
-     * local wall-clock time so that the instant survives the round trip.
+     * Regression test: building `datePlayed` as UTC wall-clock time would let the SDK stamp the
+     * *device's* offset onto it — a 10:00Z event would go out as `10:00+02:00` and the server
+     * would store it two hours early. The value on the wire must be local wall-clock time so that
+     * the instant survives the round trip.
      */
     @Test
     fun `sends the played date so the server receives the correct instant`() =
@@ -430,7 +430,7 @@ class UserDataRepositoryImplTest {
     /**
      * A cancelled write has not written anything, so reporting `AppError.Storage` would tell the
      * caller the disk failed — and would swallow the cancellation the parent job is owed. Both
-     * Room catches on this path rethrow it (audit ARCH-08).
+     * Room catches on this path rethrow it.
      */
     @Test
     fun `a cancelled local write propagates instead of being reported as a storage failure`() =
@@ -469,10 +469,10 @@ class UserDataRepositoryImplTest {
     // ---- offline: the push is not even attempted ----------------------------------------------
 
     /**
-     * `PlaybackReporter` calls `setPosition` every five seconds, so before M9 an offline session
-     * fired one doomed request — and logged one warning stack — per tick (STATUS.md, "Known
-     * issues"). The row is pending either way and `UserDataSyncTrigger` drains it on the next
-     * return to `ONLINE`, so the request buys nothing.
+     * `PlaybackReporter` calls `setPosition` every five seconds, so without this guard an offline
+     * session would fire one doomed request — and log one warning stack — per tick. The row is
+     * pending either way and `UserDataSyncTrigger` drains it on the next return to `ONLINE`, so
+     * the request buys nothing.
      *
      * Every *other* test in this class leaves the fixture at [ConnectionState.ONLINE], which is what
      * pins the online branch as unchanged: it still pushes, still clears the flag on success, and

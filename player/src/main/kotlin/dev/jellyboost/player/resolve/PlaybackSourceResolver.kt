@@ -15,14 +15,13 @@ import javax.inject.Singleton
  *
  * ### The rule
  * 1. **A completed download always wins** — whatever the connection is doing.
- * 2. Otherwise, online: negotiate with the server, exactly as M5 did.
+ * 2. Otherwise, online: negotiate with the server.
  * 3. Otherwise, offline with nothing on disk: fail immediately with a network error.
  *
- * Rule 1 is the milestone's whole point and is recorded in DECISIONS.md (2026-07-29): the plan says
- * "downloaded media visible and playable in the same screens", and a user who deliberately put a
- * film on their device does not expect a full-bandwidth stream of it just because Wi-Fi happens to
- * be up. It also makes the offline behaviour identical to the online one instead of a special mode,
- * so the path the M8 device walk exercises is the path that runs every day.
+ * Rule 1 is what keeps downloaded media playable in the same screens as everything else: a user who
+ * deliberately put a film on their device does not expect a full-bandwidth stream of it just
+ * because Wi-Fi happens to be up. It also makes the offline behaviour identical to the online one
+ * instead of a special mode, so the path an offline session takes is the path that runs every day.
  *
  * Rule 3 is what stops the Play button from hanging when the app already knows it is offline: a
  * `PlaybackInfo` POST fired into a dead network would sit on the SDK's socket timeout behind a
@@ -47,8 +46,8 @@ import javax.inject.Singleton
  *
  * [PlaybackResolveRequest.castTarget] joins it on the same line, for a blunter reason: the file on
  * disk is on *this* device, and the receiver that would have to open it is on the other side of the
- * network. Casting therefore always streams from the server, and serving the download over a local
- * HTTP server is explicitly out of scope (docs/notes/chromecast-m12-plan.md, key decision 3).
+ * network. Casting therefore always streams from the server; serving the download over a local
+ * HTTP server is deliberately not attempted.
  */
 @Singleton
 internal class PlaybackSourceResolver

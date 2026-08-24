@@ -16,12 +16,11 @@ import javax.inject.Singleton
  * The server-visible session of a downloaded file that is being watched with a group.
  *
  * Playing from disk normally tells the server nothing — there is no session, no play session id and
- * no bytes to account for. In a SyncPlay group that is the wrong answer (key decision 9 of
- * docs/notes/syncplay-m11-plan.md): the group is watching together, and a member the dashboard
- * cannot see is a member nobody can tell has stalled. `PlaybackReporter` therefore reports a local
- * file whenever [SyncPlayStatusHolder.inGroup] is set, and this class owns the two facts that makes
- * possible — the play session id those reports are keyed on, and the point at which the session
- * ends.
+ * no bytes to account for. In a SyncPlay group that is the wrong answer: the group is watching
+ * together, and a member the dashboard cannot see is a member nobody can tell has stalled.
+ * `PlaybackReporter` therefore reports a local file whenever [SyncPlayStatusHolder.inGroup] is set,
+ * and this class owns the two facts that makes possible — the play session id those reports are
+ * keyed on, and the point at which the session ends.
  *
  * It is one method because there is one rule, and it is a *reconciliation* rather than a sequence of
  * events: given what is playing and whether there is a group, the server should either know about a

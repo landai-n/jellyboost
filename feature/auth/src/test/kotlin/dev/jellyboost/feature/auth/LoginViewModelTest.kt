@@ -205,7 +205,7 @@ class LoginViewModelTest {
     fun credentialsCannotChangeMidSignIn() =
         runTest {
             // The screen keeps both fields *enabled* through the exchange so a TalkBack user does
-            // not lose accessibility focus the instant they press Sign in (audit 2026-08-05, F17).
+            // not lose accessibility focus the instant they press Sign in.
             // The guard that makes that safe lives here: what is in flight stays what is on screen.
             coEvery { authRepository.loginWithPassword(SERVER, USER_NAME, PASSWORD) } coAnswers {
                 delay(POLL_INTERVAL_MILLIS)

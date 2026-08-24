@@ -18,7 +18,7 @@ import javax.inject.Singleton
 /**
  * Every URL the download pipeline can fetch, behind one seam.
  *
- * The file plan is the piece of this milestone most likely to be wrong in a way that only shows up
+ * The file plan is the piece of the pipeline most likely to be wrong in a way that only shows up
  * as a 404 halfway through a 2 GB transfer, so it is unit-tested — and it can only be unit-tested
  * if the URL builders are injectable. The SDK's builders are ordinary functions on a real
  * `ApiClient` with a real base URL, which a JVM test does not have.
@@ -34,9 +34,8 @@ internal interface DownloadUrlFactory {
 
     /**
      * Fallback for a user whose policy has `enableContentDownloading` off: the static video stream,
-     * which is the same bytes over a different route (docs/PLAN.md, "Download pipeline" → File
-     * plan). Checked once at M1 for this project's server; the fallback exists so the pipeline does
-     * not simply stop working for a differently-configured account.
+     * which is the same bytes over a different route. The fallback exists so the pipeline does not
+     * simply stop working for an account whose policy is configured that way.
      */
     fun videoStreamUrl(
         itemId: UUID,
@@ -44,18 +43,18 @@ internal interface DownloadUrlFactory {
     ): String
 
     /**
-     * [videoStreamUrl]'s audio counterpart: `/Audio/{id}/stream?static=true` (M13 Phase 5).
+     * [videoStreamUrl]'s audio counterpart: `/Audio/{id}/stream?static=true`.
      *
      * Same role and same trigger — a user whose policy has `enableContentDownloading` off — and the
      * queue reaches it the same way, by re-planning the one media file after a `403` from
      * [mediaUrl]. `static=true` is what makes it the original bytes rather than a transcode, so the
-     * file that lands is the file on the server, which is what a music download is
-     * (docs/notes/music-m13-plan.md, key decision 10: originals only).
+     * file that lands is the file on the server, which is what a music download is: originals
+     * only.
      *
-     * Routing through `/Audio` rather than `/Videos` here is safe for the reason
-     * `docs/ARCHITECTURE.md` records: the "/Videos not /Audio" note is about `audioStreamIndex` on
-     * multi-stream video sidecars, and this request names no stream index at all — a music track
-     * has one audio stream and `static=true` copies the whole file regardless.
+     * Routing through `/Audio` rather than `/Videos` here is safe: the "/Videos not /Audio" rule is
+     * about `audioStreamIndex` on multi-stream video sidecars, and this request names no stream
+     * index at all — a music track has one audio stream and `static=true` copies the whole file
+     * regardless.
      */
     fun staticAudioUrl(
         itemId: UUID,
@@ -63,7 +62,7 @@ internal interface DownloadUrlFactory {
     ): String
 
     /**
-     * A server-side transcode of the item, muxed into one progressive `.mkv` (M9 download quality).
+     * A server-side transcode of the item, muxed into one progressive `.mkv`.
      *
      * Every encoding parameter is spelled out rather than left to the server's own negotiation:
      * a download has no `PlaybackInfo` session behind it and no device profile to reason from, so

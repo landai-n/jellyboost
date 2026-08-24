@@ -24,7 +24,7 @@ import javax.inject.Singleton
 /**
  * The real [PlayerHandle]: one process-wide [ExoPlayer], shared with [PlaybackService].
  *
- * Two configuration choices carry the milestone:
+ * Two configuration choices do most of the work:
  *
  * - `EXTENSION_RENDERER_MODE_PREFER` puts the bundled `org.jellyfin.media3:media3-ffmpeg-decoder`
  *   ahead of the platform decoders, which is what lets AC3/DTS/TrueHD audio direct-play instead of
@@ -36,7 +36,7 @@ import javax.inject.Singleton
  *   `DecoderFallbackHandler` fills.
  *
  * The player instance is deliberately singleton and shared rather than reached through a
- * `MediaController`: see DECISIONS.md, 2026-07-28, "player UI drives the shared ExoPlayer".
+ * `MediaController`: the player UI drives this ExoPlayer directly.
  */
 @Singleton
 @UnstableApi
@@ -101,7 +101,7 @@ internal class ExoPlayerHandle
                         true,
                     )
                     // Headphones pulled out, or a Bluetooth speaker walked away from: pause rather
-                    // than blare the film out of the device speaker (M9).
+                    // than blare the film out of the device speaker.
                     setHandleAudioBecomingNoisy(true)
                     // Playback continues once the screen is off or the app is backgrounded, and
                     // both a partial wake lock and a Wi-Fi lock are needed for a *streamed* item to
@@ -118,8 +118,8 @@ internal class ExoPlayerHandle
          * `SubtitleConfiguration`s. `MediaItem` has no audio analogue of that, which is why a
          * downloaded item whose extra languages live in their own files can only be assembled where
          * a `MediaSourceFactory` is in reach: here, rather than in the pure
-         * `ExoMediaSourceFactory` (DECISIONS.md 2026-07-31, "Offline multi-track Phase 2"). Nothing
-         * is *decided* here — the spec already fixes which files and in which order.
+         * `ExoMediaSourceFactory`. Nothing is *decided* here — the spec already fixes which files
+         * and in which order.
          *
          * **The child order is a contract.** Child 0 is always the main source, subtitles included;
          * child `i + 1` is `spec.audioSidecars[i]`. `MergingMediaPeriod` re-ids every child's track
@@ -227,14 +227,14 @@ internal class ExoPlayerHandle
          *
          * The listener is removed explicitly rather than left to `release()`: it is a strong
          * reference from a `@Singleton` to a `MutableSharedFlow` that outlives every session, and
-         * leaving it attached is what turned "one leaked player" into "one leaked player per
-         * process, still emitting".
+         * leaving it attached would turn one leaked player into one leaked player per process,
+         * still emitting.
          *
          * Deliberately does *not* stop the playback service. [stop] owns that, and the service's own
          * teardown is one of the two callers here — asking it to stop itself from inside `onDestroy`
          * would be a no-op at best.
          *
-         * ### Deferred while [PlaybackService] is alive (audit PC-04)
+         * ### Deferred while [PlaybackService] is alive
          * The service's `MediaSession` is built *around* this player, and Media3 requires the
          * session to be released before it. The ViewModel's teardown reaches here synchronously
          * while the `stopService` it just issued is still a pending main-looper message — so for
@@ -263,7 +263,7 @@ internal class ExoPlayerHandle
          *
          * `startService` rather than a bind: Media3 only promotes a *started* service to the
          * foreground, and that promotion is what keeps playback alive once the app is backgrounded
-         * ([PlaybackService], M9).
+         * ([PlaybackService]).
          *
          * It is **not** guaranteed to be called from a foreground activity. [prepare] runs when the
          * resolve completes, and a resolve can take seconds on a slow server, so a user who presses
@@ -280,7 +280,7 @@ internal class ExoPlayerHandle
          * [prepare] — a quality change, a track switch, a fallback retry, or simply the next item —
          * tries again from wherever the app is by then.
          *
-         * `internal` rather than private since M13: the music queue prepares through its own
+         * `internal` rather than private: the music queue prepares through its own
          * `MusicPlayerPort` rather than through [prepare], and it needs the *same* service with the
          * same best-effort start — a second `startService` call site elsewhere would be a copy of
          * everything this method's documentation is about. Reachable only inside `:player`.

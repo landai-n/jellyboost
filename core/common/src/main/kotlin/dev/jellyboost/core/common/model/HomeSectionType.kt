@@ -5,14 +5,13 @@ package dev.jellyboost.core.common.model
  *
  * The list of values is jellyfin-web's `HomeSectionType`, byte for byte: the user's chosen order
  * lives server-side in DisplayPreferences as `homesection0` … `homesection9`, and these are the
- * strings that map may hold (see `docs/notes/home-sections-feasibility.md`). Decoding them is
- * `:data`'s job — this enum is only the vocabulary, so that every layer above the wire format
- * talks about *sections* rather than about strings.
+ * strings that map may hold. Decoding them is `:data`'s job — this enum is only the vocabulary, so
+ * that every layer above the wire format talks about *sections* rather than about strings.
  *
  * Not every value is a row this app draws: [RESUME_BOOK], [LIVE_TV] and [ACTIVE_RECORDINGS] have
  * no app of theirs to belong to (no ebooks, no Live TV) and are decoded and carried faithfully —
  * losing them would silently reorder everything after them — and simply skipped at render time.
- * [RESUME_AUDIO] joined [RESUME] as a rendered row in M13 Phase 4 (*Continue Listening*).
+ * [RESUME_AUDIO] is rendered as a row alongside [RESUME] (*Continue Listening*).
  */
 enum class HomeSectionType(
     /** The literal jellyfin-web/server value. */
@@ -33,7 +32,7 @@ enum class HomeSectionType(
     /** *Continue Watching* — video with playback progress. */
     RESUME("resume"),
 
-    /** *Continue Listening* — audio with playback progress (M13 Phase 4). */
+    /** *Continue Listening* — audio with playback progress. */
     RESUME_AUDIO("resumeaudio"),
 
     /** *Continue Reading*. Out of scope (no books in v1). */

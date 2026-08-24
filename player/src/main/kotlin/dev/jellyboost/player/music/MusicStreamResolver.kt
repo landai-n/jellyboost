@@ -13,7 +13,7 @@ import javax.inject.Singleton
 /**
  * Decides what one track will be played from, and mints the session id it is reported under.
  *
- * The video resolver is deliberately not reused (docs/notes/music-m13-plan.md, key decision 4).
+ * The video resolver is deliberately not reused.
  * Everything here is local: the downloads lookup, and otherwise a URL built from a container list
  * this device can name without asking anyone. There is no `PlaybackInfo` round trip per track,
  * which is the property the whole queue design rests on — a fifty-track album becomes fifty
@@ -23,7 +23,7 @@ import javax.inject.Singleton
  * A completed download wins over the server every time, exactly as [dev.jellyboost.player.resolve.
  * LocalPlaybackResolver] does for video: the `file://` URI the provider hands back, `DIRECT_PLAY`
  * by construction, and **no play session** — nothing was negotiated with the server, so there is
- * nothing for it to key a session on and nothing to report (M8's rule, unchanged).
+ * nothing for it to key a session on and nothing to report.
  *
  * ### The play method is inferred, not told
  * The universal endpoint answers with bytes, not with a description of what it decided, and the
@@ -33,8 +33,7 @@ import javax.inject.Singleton
  * made, and it is only used for reporting — playback itself is unaffected either way. An item
  * whose container is unknown (a lean list response that carried no `container`) is reported as
  * direct play: [DIRECT_CONTAINERS] covers essentially every container a music library holds, so a
- * missing field is far more likely than an exotic codec. The dashboard check in the M13 device DoD
- * is what confirms all of this against a real server.
+ * missing field is far more likely than an exotic codec.
  *
  * The server can still transcode a track in the list for a *different* reason — a source above
  * even [MAX_STREAMING_BITRATE], or more channels than we asked for — and the report would then say
@@ -151,7 +150,7 @@ internal class MusicStreamResolver
  * One track, resolved.
  *
  * @param playSessionId `null` for a downloaded file — there is no server session behind it, so
- *   nothing is reported and there is no encoder to stop (M8's rule).
+ *   nothing is reported and there is no encoder to stop.
  * @param runTimeTicks what a completed track's stop report says it reached; the player's own
  *   duration is not trusted for that, because an HLS transcode's is an estimate until the last
  *   segment.

@@ -14,20 +14,19 @@ import kotlin.coroutines.cancellation.CancellationException
 import kotlin.math.abs
 
 /**
- * Finds the scrubbing thumbnails for whatever is playing (docs/PLAN.md, "M9 Polish" → trickplay
- * scrubber).
+ * Finds the scrubbing thumbnails for whatever is playing.
  *
  * Both halves of the sealed [PlaybackMediaSource] end at the same [TrickplayTiles], so the scrubber
  * neither knows nor cares whether it is drawing sheets off the SD card or off the server:
  *
- * - a **downloaded** item already carries its sheets — M7 fetched them, M8 made them reachable, and
+ * - a **downloaded** item already carries its sheets — the download pipeline fetched them, and
  *   there is nothing to ask anyone;
  * - a **streamed** item has geometry but no URLs, so the item is re-read for its `trickplay` map and
  *   the sheet URLs are derived from it.
  *
  * Absence is a first-class answer. A server that generated no thumbnails, an unreachable one, and an
  * item whose geometry is nonsense all return `null`, and the seek bar simply has no preview above
- * it — the plan's "graceful absence, no placeholder flicker".
+ * it — graceful absence, with no placeholder flicker.
  */
 @Singleton
 internal class TrickplayResolver

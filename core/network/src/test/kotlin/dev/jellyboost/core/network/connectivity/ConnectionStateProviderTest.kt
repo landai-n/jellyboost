@@ -60,7 +60,7 @@ class ConnectionStateProviderTest {
                 forceOfflineFlow.value = enabled
             }
 
-            // M7's download preference is irrelevant to connectivity; it is here only because the
+            // The download preference is irrelevant to connectivity; it is here only because the
             // interface every module sees now declares it.
             override val downloadOverWifiOnly: Flow<Boolean> = MutableStateFlow(true)
 
@@ -74,7 +74,7 @@ class ConnectionStateProviderTest {
 
             override suspend fun setDownloadStorageVolumeId(volumeId: String?) = Unit
 
-            // Likewise M9's player preferences: present so the fake satisfies the interface.
+            // Likewise the player preferences: present so the fake satisfies the interface.
             override val introSkipMode: Flow<SegmentSkipMode> = MutableStateFlow(SegmentSkipMode.SHOW_BUTTON)
 
             override suspend fun setIntroSkipMode(mode: SegmentSkipMode) = Unit
@@ -431,7 +431,7 @@ class ConnectionStateProviderTest {
             coVerify(exactly = 1) { probe.isServerReachable() }
         }
 
-    // ---- a throwing probe must not take the loop with it (STAB-07) --------------------------------
+    // ---- a throwing probe must not take the loop with it -------------------------------------------
 
     /**
      * The probe consumer is the app's only offline detector and it runs for the life of the
@@ -470,7 +470,7 @@ class ConnectionStateProviderTest {
             provider.state.value shouldBe ConnectionState.ONLINE
         }
 
-    /** The state flow itself must stay collectable — a dead loop used to strand every collector. */
+    /** The state flow itself must stay collectable — a dead loop would strand every collector. */
     @Test
     fun `leaves the state flow alive and collectable after a throwing probe`() =
         connectivityTest {

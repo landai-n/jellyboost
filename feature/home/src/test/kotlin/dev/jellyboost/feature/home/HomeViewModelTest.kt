@@ -46,8 +46,8 @@ import dev.jellyboost.core.ui.R as CoreUiR
  * the shared mock setup (`stubEverythingEmpty`, the `sections`/`homeLayout` fixtures every test
  * needs) across files for no real gain — the `SyncPlayControllerTest` precedent, not
  * `ItemDetailViewModelTest`'s split, which separates genuinely distinct *collaborators* (selection,
- * downloads) rather than one ViewModel's own rows. M13 Phase 4's Continue Listening tests pushed
- * this class past the threshold.
+ * downloads) rather than one ViewModel's own rows. The Continue Listening tests pushed this class
+ * past the threshold.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 @Suppress("LargeClass")
@@ -56,10 +56,9 @@ class HomeViewModelTest {
 
     /**
      * `getResumeAudioItems` defaults to empty for every test in this class — `DEFAULT_HOME_SECTIONS`
-     * (the default [sections] below) includes `RESUME_AUDIO` (M13 Phase 4), so every test that loads
-     * the screen now reaches this call whether or not it cares about *Continue Listening*. The tests
-     * that do care override it with their own `coEvery`, set after this one in the test body, which
-     * wins.
+     * (the default [sections] below) includes `RESUME_AUDIO`, so every test that loads the screen
+     * reaches this call whether or not it cares about *Continue Listening*. The tests that do care
+     * override it with their own `coEvery`, set after this one in the test body, which wins.
      */
     private val repository =
         mockk<JellyfinRepository> {
@@ -67,14 +66,14 @@ class HomeViewModelTest {
         }
     private val eventBus = UserDataEventBus()
 
-    /** The badge source (M7). Most tests do not care, so it emits an empty map and stays quiet. */
+    /** The badge source. Most tests do not care, so it emits an empty map and stays quiet. */
     private val downloadStates = MutableStateFlow<Map<String, DownloadState>>(emptyMap())
     private val downloads =
         mockk<DownloadRepository> {
             every { observeStates() } returns downloadStates
         }
 
-    /** The connectivity-change signal (M9); fires only when a test says the server came back. */
+    /** The connectivity-change signal; fires only when a test says the server came back. */
     private val connectivityChanges = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
     /** Online unless a test says otherwise; read by the membership refresh before it fetches. */
@@ -175,7 +174,7 @@ class HomeViewModelTest {
             coVerify(exactly = 1) { repository.getLatestMedia("lib-shows", any()) }
         }
 
-    // ---- Continue Listening (M13 Phase 4) --------------------------------------------------
+    // ---- Continue Listening -----------------------------------------------------------------
 
     @Test
     fun `fetches Continue Listening when RESUME_AUDIO is in the layout`() =
@@ -315,7 +314,7 @@ class HomeViewModelTest {
             coVerify(exactly = 2) { repository.getUserViews() }
         }
 
-    // ---- M9: refresh when connectivity changes --------------------------------------------------
+    // ---- refresh when connectivity changes --------------------------------------------------
 
     @Test
     fun `re-fetches the rows when the server becomes reachable again`() =
@@ -381,7 +380,7 @@ class HomeViewModelTest {
             viewModel.uiState.value.libraries shouldContainExactly listOf(movies)
         }
 
-    // ---- M4: user-data event bus --------------------------------------------------------------
+    // ---- user-data event bus --------------------------------------------------------------
 
     @Test
     fun `patches a loaded row when user data changes elsewhere, without refetching`() =
@@ -668,7 +667,7 @@ class HomeViewModelTest {
             state.isRefreshing shouldBe false
         }
 
-    // ---- M7: download badges -------------------------------------------------------------------
+    // ---- download badges -------------------------------------------------------------------
 
     @Test
     fun `download state reaches every card that shows the item`() =

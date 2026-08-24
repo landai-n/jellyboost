@@ -45,8 +45,7 @@ import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.core.ui.theme.glassSurface
 
-// The two pill buttons and the glass icon button the 2026 refresh uses for every action in the app
-// (DECISIONS.md 2026-08-01, "primary action buttons are white").
+// The two pill buttons and the glass icon button the 2026 refresh uses for every action in the app.
 //
 // The primary pill is white with `#101010` content rather than `colorScheme.primary`: the palette's
 // `#00A4DC` stays the *accent* — progress, selection, links — and a white fill is what makes the one
@@ -89,8 +88,8 @@ private val PrimaryPillDisabledContainer = Color.White.copy(alpha = 0.07f)
  *
  * A disabled control still has to say *what* it is — a busy primary pill is the only thing on an
  * auth screen telling the user what is happening — so its label is text with a 4.5:1 obligation,
- * not decoration. At 0.35 it was 3.20:1 on `#101010`; 0.48 is 5.00:1 there and 4.78:1 on `#202020`
- * (accessibility audit 2026-08-05). Still visibly a disabled label: [PrimaryPillDisabledContainer]
+ * not decoration. At 0.35 it was 3.20:1 on `#101010`; 0.48 is 5.00:1 there and 4.78:1 on `#202020`.
+ * Still visibly a disabled label: [PrimaryPillDisabledContainer]
  * is what says "you cannot press this", and it is untouched.
  */
 private val PrimaryPillDisabledContent = Color.White.copy(alpha = 0.48f)
@@ -185,11 +184,10 @@ fun PrimaryPillButton(
  *   action is in flight (Settings' sign-out, waiting on the server). The caller still disables the
  *   button.
  * @param progress the determinate sibling of [loading]: `0f..1f` draws a progress *ring* in the
- *   leading slot instead of a spinner, `null` leaves the slot to [leadingIcon]. It exists for the
- *   detail screen's wide Download pill, which used to be a static ghost pill while the phone's
- *   circular button showed a live ring — the same transfer, reported on one layout and not the
- *   other (audit 2026-08-08, UI-4). [loading] wins if both are set: an indeterminate wait is a
- *   stronger statement than a stale fraction.
+ *   leading slot instead of a spinner, `null` leaves the slot to [leadingIcon]. It exists so the
+ *   detail screen's wide Download pill can show the same live ring the phone's circular button
+ *   shows for the identical transfer — the two must stay in sync. [loading] wins if both are set:
+ *   an indeterminate wait is a stronger statement than a stale fraction.
  * @param leadingIconTint colours the leading glyph alone, leaving the label at the pill's own
  *   content colour — the `tint` [GlassIconButton] has, for the same reason: a finished download's
  *   glyph goes accent while the word beside it stays plain.
@@ -264,7 +262,7 @@ fun GlassIconButton(
             // `mergeDescendants` is not about this button's own glyph (there is only one): a
             // semantics node that merges its descendants is not itself swallowed by an ancestor
             // that merges, so the Play button inside an episode row — a row that is now one merged
-            // node — survives as its own stop with its own action (audit A11Y-05).
+            // node — survives as its own stop with its own action.
             modifier =
                 Modifier
                     .size(size)
@@ -296,10 +294,10 @@ private const val DISABLED_GLYPH_FACTOR = 0.45f
  * frame; a caller that constrains nothing propagates a zero minimum, and the pill hugs its content
  * as it always did.
  *
- * [height] is a **floor, not a cap** (DECISIONS.md 2026-08-05, accessibility audit SCALE-02). It
- * used to be `requiredHeight`, which pins both ends of the range, and at accessibility font scales
- * ≥1.5 that vertically clipped the label inside every primary and ghost button in the app — a
- * button you cannot read defeats the design the fixed height was protecting (WCAG 1.4.4). At
+ * [height] is a **floor, not a cap**. Using `requiredHeight` instead would pin both ends of the
+ * range, and at accessibility font scales ≥1.5 that vertically clips the label inside every
+ * primary and ghost button in the app — a button you cannot read defeats the design the fixed
+ * height was protecting (WCAG 1.4.4). At
  * fontScale 1.0 nothing moves: the content is shorter than [height], so the pill still draws at
  * exactly the size the design specifies.
  *
@@ -349,8 +347,8 @@ private fun PillFrame(
  * What a pill says about itself while its action is in flight.
  *
  * The busy pill is disabled — that is what stops a second tap — and a disabled control with a
- * spinner in it announced only "disabled", which is the one thing that does not explain the wait
- * (accessibility audit 2026-08-05, M8). "Busy" is a *state*, not a name, so it goes in
+ * spinner in it announced only "disabled", which is the one thing that does not explain the wait.
+ * "Busy" is a *state*, not a name, so it goes in
  * `stateDescription` and leaves the label ("Sign in") intact.
  */
 @Composable

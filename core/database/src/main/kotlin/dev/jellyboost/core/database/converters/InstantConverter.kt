@@ -7,7 +7,7 @@ import java.time.Instant
  * Room [androidx.room.TypeConverter] pair for [Instant] columns.
  *
  * Instants are stored as epoch milliseconds rather than ISO-8601 text on purpose: the user-data
- * sync path compares timestamps *in SQL* (`updatedAt <= :syncedAt`, and most-recent-wins in M8),
+ * sync path compares timestamps *in SQL* (`updatedAt <= :syncedAt`, and most-recent-wins),
  * and `Instant.toString()` is not lexicographically ordered — `…T10:00:00.500Z` sorts *before*
  * `…T10:00:00Z` because `'.' < 'Z'`. Integers compare correctly and index better.
  */

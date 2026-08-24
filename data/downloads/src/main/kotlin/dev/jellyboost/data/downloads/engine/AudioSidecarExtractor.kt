@@ -30,7 +30,7 @@ import kotlin.coroutines.resumeWithException
  * to null for a non-video request, so `/Audio/{id}/stream` always answers with the source's default
  * track whatever index was asked for. `/Videos/{id}/stream.mkv` does honor it, so the track is
  * fetched with the cheapest video the server will make and the video is dropped here, once the whole
- * file is on disk (DECISIONS.md, 2026-07-31, "Offline multi-track Phase 2").
+ * file is on disk.
  */
 internal interface AudioSidecarExtractor {
     /** Transmux the audio track of [source] (mkv, video+audio) into [target] (m4a, audio only). Throws on failure. */
@@ -58,8 +58,8 @@ internal interface AudioSidecarExtractor {
  * posted back rather than called where it lands.
  *
  * That hop is *injected* ([MainDispatcher]) rather than written as `Dispatchers.Main`: the hard-coded
- * form has no main looper in a JVM unit test, so it made the whole transmux path device-only to
- * exercise (audit HYG-11). The `Looper` the cancellation path posts to is still the real one — see
+ * form has no main looper in a JVM unit test, which would make the whole transmux path device-only
+ * to exercise. The `Looper` the cancellation path posts to is still the real one — see
  * [extract] — because that is `Transformer`'s own requirement and not a scheduling choice.
  */
 @Singleton

@@ -9,13 +9,9 @@ import java.util.Locale
  * Deliberately not `android.text.format.Formatter`, which needs a `Context` and would make every
  * caller untestable and unpreviewable for the sake of a string.
  *
- * Lived as three near-identical copies — `:feature:settings`, `:feature:downloads`,
- * `:feature:detail` — each keeping its own on the reasoning that features never depend on each
- * other (docs/PLAN.md, "Project skeleton") and that eight lines did not earn a place in `:core:ui`'s
- * design system. That reasoning was about `:core:ui` specifically; it never applied to
- * `:core:common`, which every one of those modules already depends on for exactly this kind of
- * shared, Android-free logic. Only one of the three copies had a test, and a fix to one would not
- * have reached the other two (docs/notes/audit-2026-07.md, ARCH-11).
+ * Lives in `:core:common` rather than `:core:ui`'s design system: every feature module that formats
+ * a byte count already depends on `:core:common` for exactly this kind of shared, Android-free
+ * logic, and a single tested copy here is what keeps every caller's formatting in sync.
  */
 fun formatBytes(bytes: Long): String {
     if (bytes < BYTE_UNIT) return "$bytes B"

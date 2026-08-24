@@ -62,11 +62,11 @@ import dev.jellyboost.core.ui.R as CoreUiR
  *
  * **Nothing here changes anything locally.** Tapping a row, moving one, removing one and the
  * next/previous buttons are all requests to the server; the list redraws when the group's own
- * `PlayQueueUpdate` comes back (docs/notes/syncplay-m11-plan.md, key decision 11). Reordering is
+ * `PlayQueueUpdate` comes back. Reordering is
  * therefore up/down buttons rather than a drag: a dragged row that snaps back until the server
  * answers reads as a broken gesture, and the round trip is not this device's to skip.
  *
- * The ViewModel is resolved here rather than passed in from `:app` (DECISIONS.md, 2026-07-30): this
+ * The ViewModel is resolved here rather than passed in from `:app`: this
  * is a surface inside the player screen, not a navigation destination, and the solo player's call
  * site has no business knowing about it.
  */
@@ -195,9 +195,8 @@ private fun QueueHeader(
             )
         }
 
-        // Next and previous belong to the *group*: they were deliberately left without a call site in
-        // Phase 3, because the player has no queue of its own to move through (DECISIONS.md,
-        // 2026-07-30, M11 Phase 3 note 4). Here there is one.
+        // Next and previous belong to the *group*: the player screen has no queue of its own to
+        // move through, so they have no call site there. Here there is one.
         IconButton(onClick = onPrevious, enabled = state.hasPrevious) {
             Icon(
                 imageVector = Icons.Outlined.SkipPrevious,
@@ -223,9 +222,8 @@ private fun QueueRow(
     onMoveDown: () -> Unit,
     onRemove: () -> Unit,
 ) {
-    // primary@12% (2026 refresh, Phase 5 sweep) — replaces `colorScheme.secondaryContainer` for
-    // consistency with the rest of the refresh's "primary is the one accent" language; see spec
-    // "Phase 5 sweep notes".
+    // primary@12% rather than `colorScheme.secondaryContainer`, so this row speaks the same
+    // "primary is the one accent" language as the rest of the app.
     val background =
         if (row.isPlaying) {
             MaterialTheme.colorScheme.primary.copy(alpha = NOW_PLAYING_TINT_ALPHA)
@@ -233,9 +231,9 @@ private fun QueueRow(
             Color.Transparent
         }
     val thumbShape = RoundedCornerShape(Dimens.CardCornerRadius)
-    // Every row's three buttons used to announce the same three words, so a queue of ten episodes
-    // was thirty identical "Move up" stops with nothing to tell them apart (audit A11Y-P-18). The
-    // title is what distinguishes them, and it is already here.
+    // Without it, every row's three buttons announce the same three words, so a queue of ten
+    // episodes is thirty identical "Move up" stops with nothing to tell them apart. The title is
+    // what distinguishes them, and it is already here.
     val title = row.title ?: stringResource(R.string.player_syncplay_queue_item_loading)
 
     Row(
@@ -260,8 +258,7 @@ private fun QueueRow(
                     .width(ROW_THUMB_WIDTH)
                     .heightIn(max = ROW_THUMB_HEIGHT)
                     .clip(thumbShape)
-                    // The inner hairline every `MediaCardArtwork` draws on top of its image (spec,
-                    // "Artwork") — restyled container visuals only, per the sweep's own scope note.
+                    // The inner hairline every `MediaCardArtwork` draws on top of its image.
                     .border(GlassDefaults.HairlineWidth, GlassDefaults.ArtworkInnerHairline, thumbShape),
             contentScale = ContentScale.Crop,
         )
@@ -318,8 +315,8 @@ private fun QueueRowLabels(
 /**
  * Reorder and remove.
  *
- * @param title every row's three buttons used to announce the same three words, so a queue of ten
- *   episodes was thirty identical "Move up" stops with nothing to tell them apart (audit A11Y-P-18).
+ * @param title what tells this row's three buttons apart from every other row's: without it a queue
+ *   of ten episodes is thirty identical "Move up" stops with nothing to distinguish them.
  */
 @Composable
 private fun QueueRowActions(
@@ -362,7 +359,7 @@ private const val LIST_MAX_HEIGHT_FRACTION = 0.6f
 private val ROW_THUMB_WIDTH = 96.dp
 private val ROW_THUMB_HEIGHT = 54.dp
 
-/** Now-playing row tint (spec, "Phase 5 sweep notes": "now-playing row tint → primary@12%"). */
+/** Now-playing row tint: primary at 12%. */
 private const val NOW_PLAYING_TINT_ALPHA = 0.12f
 
 @Preview(name = "Queue sheet", showBackground = true, widthDp = 800)

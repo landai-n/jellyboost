@@ -55,7 +55,7 @@ private val FieldFill = Color.White.copy(alpha = 0.04f)
  *
  * This is the app's only focus affordance, which makes it a UI component boundary owing 3:1 under
  * WCAG 1.4.11 (and, on the focused path, 2.4.7). At 0.22 it was 1.97:1 on `#101010` — a border you
- * had to already know was there (accessibility audit 2026-08-05). 0.42 gives 4.09:1 on the
+ * had to already know was there. 0.42 gives 4.09:1 on the
  * background and 3.99:1 on `#202020`, and stays clearly a step under the [FieldFill]'s text.
  */
 private val FieldActiveBorder = Color.White.copy(alpha = 0.42f)
@@ -90,12 +90,11 @@ private val FieldSupportingStyle =
  * Material's colours and text cursor.
  *
  * ### Three values, not nineteen parameters
- * The field's accessibility guarantees used to rest on four pairs of parameters a caller had to
- * keep in agreement by hand — `label`/`labelText`, `isError`/`errorMessage`,
- * `password`/`visualTransformation`, `enabled`/`readOnly` — none of them checked by anything
- * (docs/notes/audit-2026-08-06-quality.md, CPX-8). Each pair is now one value that cannot be
- * half-passed: [FieldLabel], [FieldState], [FieldContent]. What each of them guarantees, and which
- * audit finding it descends from, is documented on the type rather than repeated here.
+ * The field's accessibility guarantees rest on three values rather than four pairs of parameters a
+ * caller would otherwise have to keep in agreement by hand — `label`/`labelText`,
+ * `isError`/`errorMessage`, `password`/`visualTransformation`, `enabled`/`readOnly` — none of them
+ * checked by anything. Each pair is one value that cannot be half-passed: [FieldLabel], [FieldState],
+ * [FieldContent]. What each of them guarantees is documented on the type rather than repeated here.
  *
  * The placeholder and the icons stay `@Composable` lambdas: they are decoration, they carry no
  * semantics of their own, and one of them (the trailing icon) is a real control the caller owns.
@@ -103,16 +102,16 @@ private val FieldSupportingStyle =
  * @param label the field's name, drawn above the well as a caption and spoken by the field node
  *   itself. `null` for a field with no name at all, which every call site in this app avoids.
  * @param leadingIcon drawn before the well's content, in the muted [MaterialTheme.colorScheme]
- *   `onSurfaceVariant` tint — added for `:feature:search`'s field (2026 refresh, Phase 5 sweep),
- *   which wants a search glyph the way every `OutlinedTextField` call site it replaces already had
- *   one. `null` (the default) leaves every existing caller's layout untouched.
+ *   `onSurfaceVariant` tint — added for `:feature:search`'s field, which wants a search glyph the
+ *   way every `OutlinedTextField` call site it replaces already had one. `null` (the default)
+ *   leaves every existing caller's layout untouched.
  * @param supportingText drawn below in [MaterialTheme] error colour while [state] is a
  *   [FieldState.Error], muted otherwise.
  */
 @Suppress(
-    // One Material text field plus the label/error/password wiring its value types resolve. The decomposition the audit
-    // wants here is CPX-8's — `FieldLabel`/`FieldState`/`FieldContent` growing to absorb the remaining correlated
-    // parameters — which shortens this by changing its API, not by moving lines out of it. Tracked, not line-shaved.
+    // One Material text field plus the label/error/password wiring its value types resolve. The decomposition wanted
+    // here is `FieldLabel`/`FieldState`/`FieldContent` growing to absorb the remaining correlated parameters — which
+    // shortens this by changing its API, not by moving lines out of it. Tracked, not line-shaved.
     "LongMethod",
 )
 @Composable
@@ -206,7 +205,7 @@ fun JellyfinTextField(
                         // The slot usually holds a 48dp `IconButton` (password reveal, search
                         // clear), and letting that measure normally inflated the whole field past
                         // [FieldMinHeight] — the password field stood visibly taller than the
-                        // username field one line above it (device walk, 2026-08-21).
+                        // username field one line above it.
                         // `requiredSize` reports the row's own height back to the layout while the
                         // 48dp touch target draws and hit-tests centred over it, the same
                         // visual-inside-a-bigger-invisible-frame trade the chip and pill
@@ -245,9 +244,9 @@ fun JellyfinTextField(
  * Everything a screen reader needs from the field itself.
  *
  * On the field's own node, because that is the node a screen reader lands on: the caption above the
- * well and the sentence below it are separate nodes with no association to it, which is why a field
- * in this app used to announce its value, the word "edit box", and nothing else — no name, no
- * failure (accessibility audit 2026-08-05, CR-2).
+ * well and the sentence below it are separate nodes with no association to it, which is what
+ * prevents a field from announcing only its value and the word "edit box" — no name, no
+ * failure.
  *
  * @param errorMessage already filtered by the caller: pass `null` when the field is not in error.
  */

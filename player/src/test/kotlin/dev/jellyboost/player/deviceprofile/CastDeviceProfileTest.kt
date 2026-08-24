@@ -54,7 +54,7 @@ class CastDeviceProfileTest {
 
         // The default build is the LEGACY_1080P floor — the profile an *unclassified* receiver
         // gets, where claiming HEVC or AV1 the hardware may lack costs the user the film. The
-        // HEVC-capable classes are pinned separately below (M12 phase-2a).
+        // HEVC-capable classes are pinned separately below.
         videoCodecs.joinToString() shouldNotContain "hevc"
         videoCodecs.joinToString() shouldNotContain "av1"
         // mkv is not on the list even though most receivers demux it; the ones that do not fail
@@ -149,7 +149,7 @@ class CastDeviceProfileTest {
         capped.subtitleProfiles shouldBe profile.subtitleProfiles
     }
 
-    // ---- receiver classes (M12 phase-2a) ------------------------------------------------------
+    // ---- receiver classes -----------------------------------------------------------------------
 
     @Test
     fun `an unclassified receiver gets the legacy profile, byte for byte`() {

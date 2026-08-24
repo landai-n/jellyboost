@@ -10,7 +10,7 @@ import org.junit.jupiter.api.assertThrows
 class ArtworkRequestWidthsTest {
     @Test
     fun `rounds up to the next bucket`() {
-        // 128dp at 2.25x (the test tablet test tablet) is 288px, which lands in the 320 bucket.
+        // 128dp at 2.25x (the test tablet) is 288px, which lands in the 320 bucket.
         ArtworkRequestWidths.requestWidth(widthDp = 128, density = 2.25f) shouldBe 320
     }
 

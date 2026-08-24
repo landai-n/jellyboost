@@ -10,7 +10,7 @@ import dev.jellyboost.player.syncplay.SyncPlayState
  * silently dropped while the app is off screen) is not something a device can be asked to reproduce
  * on demand.
  *
- * Two clauses, each carrying one half of DECISIONS.md 2026-07-31:
+ * Two clauses:
  *
  * - **any state but [SyncPlayState.Idle] demands it.** `Joining` and `Rejoining` are included
  *   deliberately: both are moments where the app is talking to the server about a membership it

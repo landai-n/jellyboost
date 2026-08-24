@@ -62,9 +62,9 @@ class MainViewModelTest {
             }
         }
 
-    // Sign-out is no longer this ViewModel's concern: it moved into `:feature:settings`'s Account
-    // section at M9, and `SettingsViewModelTest` covers it (including the delete-then-sign-out
-    // ordering, which is the part worth pinning). The test that lived here went with the method.
+    // Sign-out is not this ViewModel's concern: it belongs to `:feature:settings`'s Account
+    // section, and `SettingsViewModelTest` covers it (including the delete-then-sign-out
+    // ordering, which is the part worth pinning).
 
     private companion object {
         val LOGGED_IN =

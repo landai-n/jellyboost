@@ -23,11 +23,11 @@ import javax.inject.Singleton
 /**
  * [MusicPlayerPort] over the shared `ExoPlayer`, using its **native playlist**.
  *
- * That choice is load-bearing twice (docs/notes/music-m13-plan.md, key decision 1). The media
+ * That choice is load-bearing twice. The media
  * session derives the notification's and the lock screen's previous/next buttons from the wrapped
  * player's playlist commands, so a real `setMediaItems` is the whole of "the notification can skip
- * tracks" — there is no notification code in this milestone. And the session's timeline *is* the
- * queue, which is exactly the shape a `MediaLibraryService`/Android Auto follow-up needs.
+ * tracks" — there is no notification-building code anywhere here. And the session's timeline *is*
+ * the queue, which is exactly the shape a `MediaLibraryService`/Android Auto follow-up needs.
  *
  * ### Claiming and letting go
  * The player is shared with the video path, so this class touches only what it must and puts it
@@ -36,9 +36,7 @@ import javax.inject.Singleton
  * music is playing — and flips the audio attributes to
  * [C.AUDIO_CONTENT_TYPE_MUSIC][androidx.media3.common.C.AUDIO_CONTENT_TYPE_MUSIC]. [release] puts
  * `AUDIO_CONTENT_TYPE_MOVIE` back and detaches the listener. The flip is made on the live player
- * with `handleAudioFocus = true`, which re-requests focus under the new attributes; that it
- * survives on a real device is an M13 DoD check, and the recorded fallback if it does not is a
- * player rebuild at handover.
+ * with `handleAudioFocus = true`, which re-requests focus under the new attributes.
  *
  * ### The service
  * Started through [ExoPlayerHandle]'s own best-effort helper rather than a second `startService`
@@ -272,7 +270,7 @@ internal class ExoMusicPlayerAdapter
  *
  * The metadata is what the media notification and the lock screen draw, and it is the only place
  * they get it from — the session reads `MediaItem.mediaMetadata` off the timeline, so there is no
- * separate notification-building step anywhere in this milestone.
+ * separate notification-building step anywhere.
  *
  * A transcoded entry names its mime type explicitly: the universal URL carries no `.m3u8` path
  * segment for ExoPlayer's inference to read, so without the hint `DefaultMediaSourceFactory`

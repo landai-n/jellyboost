@@ -8,8 +8,7 @@ package dev.jellyboost.player.deviceprofile
  * the receiver — which, with the Default Media Receiver, is Google's code we cannot ask. So this is
  * a **model-name allowlist**, the same trade every model-adaptive sender makes (jellyfin-web's
  * chromecast plugin included), and every name it does not recognise deliberately lands on
- * [LEGACY_1080P] — the profile every Cast receiver since the first dongle satisfies
- * (DECISIONS.md, 2026-08-15, M12 phase-2a).
+ * [LEGACY_1080P] — the profile every Cast receiver since the first dongle satisfies.
  *
  * The ceilings each class stands for are published decoder specs, not guesses; what they buy is
  * decided in `CastDeviceProfile`. `CastSessionCoordinator` logs the raw model name next to the

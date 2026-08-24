@@ -22,8 +22,8 @@ import timber.log.Timber
  * Android offers that keeps a backgrounded process's network alive — and on the test tablet
  * (the OEM ROM, Android 16) a backgrounded app with no foreground service loses its network within
  * about forty seconds, which the controller correctly reads as a lost connection and which costs the
- * user their group (STATUS.md; DECISIONS.md 2026-07-31). The user's own case is precisely this one:
- * this app in a group on one half of the tablet, jellyfin-web driving it on the other.
+ * user their group. The case it exists for is precisely this one: this app in a group on one half
+ * of the tablet, jellyfin-web driving it on the other.
  *
  * [PlaybackService][dev.jellyboost.player.session.PlaybackService] already does the same job
  * while something is playing, so the two never run together — see [syncPlayPresenceDemanded].
@@ -48,9 +48,9 @@ internal class SyncPlayPresenceService : Service() {
      *
      * `startForegroundService` opens a deadline that is only closed by `startForeground`, and a
      * `stopService` arriving *first* does not close it: the platform kills the process with
-     * `ForegroundServiceDidNotStartInTimeException`. That is not hypothetical — it happened on the
-     * device, when a foreground re-check found its group dissolved a quarter of a second after
-     * asking for it and the demand went up and straight back down (2026-07-31 device session).
+     * `ForegroundServiceDidNotStartInTimeException`. That is not hypothetical — it happens on the
+     * device when a foreground re-check finds its group dissolved a quarter of a second after
+     * asking for it and the demand goes up and straight back down.
      * `onCreate` always runs, and always before `onDestroy`, so promoting here means the deadline is
      * met however quickly the demand is withdrawn.
      */
@@ -60,7 +60,7 @@ internal class SyncPlayPresenceService : Service() {
         // The promotion itself can be refused: API 31+ throws
         // `ForegroundServiceStartNotAllowedException` when the process slipped to the background
         // between `startForegroundService` and here, and API 34+ for a type/permission mismatch.
-        // Uncaught, either one kills the whole process for a notification (audit SP-17) — the
+        // Uncaught, either one kills the whole process for a notification — the
         // group costs at most itself, so the service stands down instead.
         runCatching {
             ServiceCompat.startForeground(this, NOTIFICATION_ID, buildNotification(), foregroundServiceType())

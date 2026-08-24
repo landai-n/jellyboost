@@ -8,8 +8,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * The one place that knows whether leaving the app right now should float the video
- * (docs/PLAN.md, "M9 Polish" → PiP).
+ * The one place that knows whether leaving the app right now should float the video.
  *
  * Picture-in-picture is an *activity* capability, but the conditions for it are entirely the
  * player's: the player route has to be on screen, something has to actually be playing, and the user

@@ -22,8 +22,7 @@ import dev.jellyboost.core.ui.theme.screenGlow
  * wash (the glow modifier's own KDoc). The box's height is derived from its width with [aspectRatio],
  * because the brush's radius is width-derived (fade-out at 0.76 × 0.8 ≈ 61% of the width): a fixed
  * height that fits a phone chops the gradient mid-fade on a tablet and draws a hard seam across
- * the page (device walk, 2026-08-15). 10:7 keeps the fade's end comfortably inside the box on any
- * width, and on a phone comes out within a few dp of the 320dp the box used to be.
+ * the page. 10:7 keeps the fade's end comfortably inside the box on any width.
  */
 @Composable
 internal fun MusicScreenGlow(modifier: Modifier = Modifier) {

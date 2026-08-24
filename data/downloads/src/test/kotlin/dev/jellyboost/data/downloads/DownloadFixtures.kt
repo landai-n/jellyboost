@@ -48,8 +48,8 @@ object DownloadFixtures {
      *
      * What lets a test assert that two DAO calls are inside the **same** transaction rather than
      * merely both present — the property behind the download queue's one-write-per-progress-sample
-     * rule (audit 2026-08-08, PERF-7). Nesting is counted the way Room joins it: an inner
-     * `inTransaction` is part of the outer one, not a second.
+     * rule. Nesting is counted the way Room joins it: an inner `inTransaction` is part of the
+     * outer one, not a second.
      */
     class RecordingTransactionRunner : TransactionRunner {
         private var depth = 0
@@ -193,10 +193,10 @@ object DownloadFixtures {
             imageTags = mapOf(ImageType.PRIMARY to "primary-tag"),
         )
 
-    // ---- M13 music ----------------------------------------------------------------------------
+    // ---- music --------------------------------------------------------------------------------
 
     /**
-     * A music track (M13 Phase 5).
+     * A music track.
      *
      * The three ids are what the whole music download path turns on: [albumId] is the folder it was
      * expanded from and the artwork's address, [albumArtistId] is what the offline artist page
@@ -356,9 +356,8 @@ object DownloadFixtures {
      * [external] and [supportsExternalStream] are separate parameters because they answer separate
      * questions, and conflating them is what hid a whole class of downloadable subtitles: the first
      * is *"is this already a file next to the video?"*, the second is the server's *"I will extract
-     * this on demand"*, which it says for embedded SRTs too (the Élémentaire finding in
-     * docs/notes/offline-multitrack-design.md). It defaults to `true` for that reason — a real text
-     * subtitle stream advertises it whether or not it is external.
+     * this on demand"*, which it says for embedded SRTs too. It defaults to `true` for that
+     * reason — a real text subtitle stream advertises it whether or not it is external.
      */
     fun subtitleStream(
         index: Int,
@@ -466,7 +465,7 @@ object DownloadFixtures {
             status = status,
         )
 
-    /** The server's trickplay description for one thumbnail width (M8 offline trickplay). */
+    /** The server's trickplay description for one thumbnail width. */
     fun trickplayInfo(
         width: Int = 320,
         height: Int = 180,

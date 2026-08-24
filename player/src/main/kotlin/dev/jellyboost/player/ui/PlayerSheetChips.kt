@@ -20,11 +20,11 @@ import dev.jellyboost.player.R
  * ### What this file is
  * Which pickers the player's bottom bar offers, and what each of them says.
  *
- * All of it used to live inline in `PlayerControls.BottomBar`: seven `if`s over six different
- * [PlayerUiState] fields, interleaved with the chips they guarded (audit CPX-7). The row could not
- * be reasoned about without reading the layout, and the one number the bar's width threshold is
- * measured against — how many pickers can be up at once — had no answer short of putting a tablet in
- * a group and counting. Split out, the rules are a pure function over the state ([sheetChipSpecs]),
+ * Kept out of `PlayerControls.BottomBar`, where the rules would be seven `if`s over six different
+ * [PlayerUiState] fields interleaved with the chips they guard: the row could not then be reasoned
+ * about without reading the layout, and the one number the bar's width threshold is measured
+ * against — how many pickers can be up at once — would have no answer short of putting a tablet in
+ * a group and counting. Here the rules are a pure function over the state ([sheetChipSpecs]),
  * the drawing is a `forEach`, and the count is arithmetic a unit test performs ([MAX_SHEET_CHIPS]).
  *
  * The split is by *question*, not by size: this file answers "which chips, saying what", and
@@ -59,18 +59,17 @@ internal data class SheetChipSpec(
  * Pure and `internal` so the rules are a unit test rather than a screenshot, and so the question
  * behind `LABELLED_BUTTONS_MIN_WIDTH` becomes arithmetic — see [MAX_SHEET_CHIPS].
  *
- * Each rule, unchanged from the inline version and worth restating because none of them is arbitrary:
+ * Each rule, worth restating because none of them is arbitrary:
  * - **audio** when there is more than one track — a picker with one row picks nothing;
  * - **subtitles** whenever the item has any, because "off" is always one of the choices;
  * - **speed** only outside a group and only where the deciding player has a rate at all. SyncPlay has
- *   no per-member rate (playing faster than the group is drifting from it,
- *   docs/notes/syncplay-m11-plan.md key decision 11), and a receiver publishes whether it takes one
- *   ([PlayerUiState.canSetSpeed]);
- * - **group** while in one — the participants, the shuffle/repeat and the way out (M11 Phase 3);
+ *   no per-member rate (playing faster than the group is drifting from it), and a receiver publishes
+ *   whether it takes one ([PlayerUiState.canSetSpeed]);
+ * - **group** while in one — the participants, the shuffle/repeat and the way out;
  * - **queue** while in a group *that has a queue*: before the first `PlayQueueUpdate` the sheet would
- *   have nothing in it (M11 Phase 4);
+ *   have nothing in it;
  * - **display** unless a television has the film: brightness and volume act on *this* device, which
- *   is exactly the condition the swipes they replace are offered under (audit CR-8);
+ *   is exactly the condition the swipes they replace are offered under;
  * - **quality** unless the bytes are coming off the disk — a downloaded file has no streaming bitrate
  *   to cap, so the picker would be inert.
  */
@@ -92,17 +91,16 @@ internal fun visibleSheetChips(state: PlayerUiState): List<SheetChipSpec> = shee
  * The most pickers the bar can hold at once — the number `PlayerControls.LABELLED_BUTTONS_MIN_WIDTH`
  * is measured against, and the one thing about the row a width sweep cannot be re-run without.
  *
- * Not a comment any more: `SheetChipSpecTest` derives it from [sheetChipSpecs] by sweeping every
+ * Not a comment but a test: `SheetChipSpecTest` derives it from [sheetChipSpecs] by sweeping every
  * combination of the seven state inputs the rules read, and fails if the answer moves. Adding an
- * eighth picker, or loosening a rule so two that used to exclude each other can now both appear,
- * therefore breaks a test rather than silently overflowing a bar somebody measured in 2026.
+ * eighth picker, or loosening a rule so two that exclude each other can both appear, therefore
+ * breaks a test rather than silently overflowing a bar somebody measured once.
  *
  * The worst case is **in a group with a queue**: audio, subtitles, group, queue, display and quality,
  * with speed composed out (there is no per-member rate in SyncPlay). Solo it is five — audio,
  * subtitles, speed, display, quality — which is the case the device sweep behind that threshold
- * actually measured, and the number the bottom bar's comments claimed was the worst case until the
- * accessibility audit's display picker (CR-8) made it six. See `showSheetButtonLabels` for what that
- * means for the threshold.
+ * actually measured; the display picker is what takes the in-a-group case to six. See
+ * `showSheetButtonLabels` for what that means for the threshold.
  */
 internal const val MAX_SHEET_CHIPS = 6
 
@@ -150,11 +148,10 @@ internal fun SheetChipId.value(values: SheetChipValues): String? =
 /**
  * What a tap on this chip opens.
  *
- * One destination for all seven since audit UI-1. It used to be two — four pickers hosted by the
- * control bar itself, three panels hosted by `PlayerScreen` — and the difference was not cosmetic:
- * only the second group survived the bar composing itself out four seconds later, so the first four
- * were disposed mid-selection. Every chip now opens a [PlayerPanel] through [PlayerActions], and the
- * mapping is total, so a chip added without a panel is a compile error rather than a dead tap.
+ * One destination for all seven. A picker hosted by the control bar itself would not survive the
+ * bar composing itself out four seconds later and would be disposed mid-selection, so every chip
+ * opens a [PlayerPanel] through [PlayerActions] and `PlayerScreen` hosts it. The mapping is total,
+ * so a chip added without a panel is a compile error rather than a dead tap.
  */
 internal val SheetChipId.panel: PlayerPanel
     get() =
@@ -169,7 +166,7 @@ internal val SheetChipId.panel: PlayerPanel
         }
 
 /**
- * What each picker is currently set to (audit A11Y-P-09).
+ * What each picker is currently set to.
  *
  * The chips announce "Audio", "Subtitles", "Quality" — which track, which language, which cap? The
  * answer becomes each chip's `stateDescription`, so a picker says what it is doing without anyone

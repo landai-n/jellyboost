@@ -39,23 +39,21 @@ import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.player.ui.CastRouteButton
 
-// The app-wide actions the combined app bar used to carry, unpicked from it so that both of the
-// refresh's navigation layouts can draw the same four: the wide layout's `GlassTopNav` puts them at
-// the end of its row, and the compact one floats them over the top-right corner of the content
-// ([AppActionCluster]) — a phone has no persistent bar to hang them off any more, and every one of
-// them has to stay reachable from every top-level destination.
+// The app-wide actions, common to both of the refresh's navigation layouts: the wide layout's
+// `GlassTopNav` puts them at the end of its row, and the compact one floats them over the
+// top-right corner of the content ([AppActionCluster]) — a phone has no persistent bar to hang
+// them off, and every one of them has to stay reachable from every top-level destination.
 //
-// The behaviour is the old bar's, verbatim; only the containers are new. Each action is a 36dp
-// glass circle instead of a bare `IconButton`, which is what makes them legible over the artwork
-// they now sit on rather than over an opaque surface.
+// Each action is a 36dp glass circle instead of a bare `IconButton`, which is what makes them
+// legible over the artwork they sit on rather than over an opaque surface.
 
 /**
  * What the app-wide actions read.
  *
  * Two values that have travelled together through four signature levels — `AppScaffold` →
  * `GlassTopNav` → [AppActions], and `AppScaffold` → [AppActionCluster] → [AppActions] — spelled out
- * verbatim at each of them, beside the four callbacks in [AppChromeActions] (audit 2026-08-08,
- * DUP-10). Bundled for the same reason `CardOverlayFacts` was: an intermediate composable that
+ * verbatim at each of them, beside the four callbacks in [AppChromeActions]. Bundled for the same
+ * reason `CardOverlayFacts` was: an intermediate composable that
  * forwards a cluster unchanged should not have to name its members, and adding a fifth action
  * should not be a four-file edit.
  *
@@ -66,7 +64,7 @@ import dev.jellyboost.player.ui.CastRouteButton
 internal data class AppChromeState(
     /** Decides whether the offline status icon is drawn, and which one. */
     val connectionState: ConnectionState,
-    /** Lights the Groups action's badge (M11 Phase 5). */
+    /** Lights the Groups action's badge. */
     val hasActiveSyncPlayGroup: Boolean,
 )
 
@@ -110,7 +108,7 @@ internal fun AppActions(
             status = chrome.connectionState.toStatus(),
             onClick = actions.onConnectionStatusClick,
         )
-        // Shows nothing unless the device has a Cast stack and a receiver has been discovered (M12) —
+        // Shows nothing unless the device has a Cast stack and a receiver has been discovered —
         // but its view stays attached even then, because that is what keeps route discovery running;
         // it needs no state from here, and takes none. `glassContainer` draws the same circle its
         // three neighbours have, so whenever the button is visible at all it matches the row.
@@ -137,9 +135,8 @@ internal fun AppActions(
  *
  * Zero on purpose. Each action lays out a [Dimens.MinTouchTarget] frame around the
  * [Dimens.PillHeightSmall] circle it draws, which already leaves 12dp of clear background between
- * two adjacent circles — the gap the mocks show. Any positive arrangement spacing is added *on top*
- * of that, which is how the cluster's `SpaceSmall` used to read as 20dp once the frames were honest
- * about their size.
+ * two adjacent circles — the gap the mocks show. Any positive arrangement spacing would be added
+ * *on top* of that clearance.
  */
 private val ActionGap: Dp = 0.dp
 
@@ -152,11 +149,11 @@ private val BadgeInset: Dp = ActionFrameOverhang
  *
  * The refresh's compact chrome is one floating pill at the *bottom* of the window, which leaves the
  * app-wide actions — the offline status, Cast, SyncPlay, Settings and the offline-mode toggle —
- * without the bar they used to hang off. Pushing each of them into the individual screens' own
- * headers would have meant four screens learning about connection state and SyncPlay membership;
- * one cluster owned by the frame keeps every feature exactly as reachable as it was, on every
- * top-level destination, and needs nothing at all from the screens themselves. It is also what the
- * mocks show — the home screen's floating glass circles over the hero are this cluster.
+ * with no persistent bar to attach to. Pushing each of them into the individual screens' own
+ * headers would mean four screens learning about connection state and SyncPlay membership; one
+ * cluster owned by the frame keeps every feature reachable from every top-level destination, and
+ * needs nothing at all from the screens themselves. It is also what the mocks show — the home
+ * screen's floating glass circles over the hero are this cluster.
  */
 @Composable
 internal fun AppActionCluster(
@@ -178,8 +175,7 @@ internal fun AppActionCluster(
 }
 
 /**
- * The offline notice, shrunk from the full-width banner it was until M9 to one icon
- * (DECISIONS.md 2026-07-29, "the offline banner becomes a status icon").
+ * The offline notice: a single status icon, not a full-width banner.
  *
  * Each reason gets its own icon *and* its own content description, so the three states are told
  * apart without reading any text; tapping spells the reason out in a snackbar.
@@ -206,8 +202,7 @@ private fun ConnectionStatusAction(
 }
 
 /**
- * The way into the dedicated SyncPlay section (M11 Phase 5), badged while this device is a member
- * of a group.
+ * The way into the dedicated SyncPlay section, badged while this device is a member of a group.
  *
  * The badge is a plain [Badge] dot rather than a participant count: what the icon has to say from
  * here is only "you are in a group right now, wherever that happened" — the count, the name and
@@ -245,11 +240,9 @@ private fun SyncPlayGroupsAction(
 }
 
 /**
- * The app-wide overflow: the *Offline mode* quick toggle (M6) and the way into Settings (M9).
+ * The app-wide overflow: the *Offline mode* quick toggle and the way into Settings.
  *
- * It used to hang off the home screen's own top bar; since M9 there has been one place for it, and
- * it is reachable from every top-level destination rather than from Home alone
- * (DECISIONS.md 2026-07-29).
+ * Reachable from every top-level destination rather than from Home alone.
  */
 @Composable
 private fun AppOverflowMenu(
@@ -299,8 +292,7 @@ private fun AppOverflowMenu(
                 text = { Text(text = stringResource(R.string.home_settings)) },
                 // The row above says what it is through the `Role.Switch` its trailing control
                 // carries; this one had nothing at all. `DropdownMenuItem`'s own `clickable` sets no
-                // role, so it is declared here — first in the chain, and therefore the one that wins
-                // (accessibility audit 2026-08-05, ROLE-01).
+                // role, so it is declared here — first in the chain, and therefore the one that wins.
                 modifier = Modifier.semantics { role = Role.Button },
                 leadingIcon = {
                     Icon(imageVector = Icons.Filled.Settings, contentDescription = null)

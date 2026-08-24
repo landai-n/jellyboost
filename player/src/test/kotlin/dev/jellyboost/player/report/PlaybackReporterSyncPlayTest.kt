@@ -32,14 +32,13 @@ import org.junit.jupiter.api.Test
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * The one exception to "a downloaded file tells the server nothing": a SyncPlay group (M11 Phase 6).
+ * The one exception to "a downloaded file tells the server nothing": a SyncPlay group.
  *
- * The rule these tests pin has three terms and every one of them matters (key decision 9 of
- * docs/notes/syncplay-m11-plan.md, DECISIONS.md 2026-07-30). A local file reports **only** while the
- * device is in a group **and** online; alone or offline it is exactly as silent as M8 made it, which
- * [PlaybackReporterTest] pins from the other side and which is why that class is untouched. The
- * fourth term is a call that must never happen: a file on disk started no encoder, so being in a
- * group must not make the reporter ask the server to kill one.
+ * The rule these tests pin has three terms and every one of them matters. A local file reports
+ * **only** while the device is in a group **and** online; alone or offline it is exactly as
+ * silent as [PlaybackReporterTest] pins from the other side, which is why that class is
+ * untouched. The fourth term is a call that must never happen: a file on disk started no
+ * encoder, so being in a group must not make the reporter ask the server to kill one.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class PlaybackReporterSyncPlayTest {
@@ -93,8 +92,9 @@ class PlaybackReporterSyncPlayTest {
 
             info.captured.positionTicks shouldBe 900_000_000L
             info.captured.playSessionId shouldBe MINTED_ID
-            // The M8 guarantee is not traded away for the M11 one: the position is still written
-            // locally, so the download resumes in the right place with or without a server.
+            // The local-resume guarantee is not traded away for the SyncPlay one: the position is
+            // still written locally, so the download resumes in the right place with or without a
+            // server.
             coVerify(exactly = 1) { userDataRepository.setPosition(any(), 900_000_000L) }
         }
 

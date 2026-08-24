@@ -50,9 +50,10 @@ import java.util.UUID
  * Unit tests for the single SDK↔domain boundary, `SyncPlayDtoMapping`.
  *
  * Half of this file is about one hazard. jellyfin-sdk 1.8.12 deserializes every date field into a
- * `LocalDateTime` expressed in **[ZoneId.systemDefault]**, not UTC — the mistake that shifted M4's
- * progress reports by two hours. In SyncPlay the same mistake shifts `SendCommand.when`, so a
- * device in Paris would schedule every group play/pause two hours away from everyone else.
+ * `LocalDateTime` expressed in **[ZoneId.systemDefault]**, not UTC — the mistake that shifts
+ * progress reports by two hours if left uncorrected. In SyncPlay the same mistake shifts
+ * `SendCommand.when`, so a device in Paris would schedule every group play/pause two hours away
+ * from everyone else.
  *
  * So the zone here is always **explicit and never UTC**: `Europe/Paris`, +02:00 on the test date.
  * Any conversion that quietly assumes UTC fails these tests by exactly two hours.

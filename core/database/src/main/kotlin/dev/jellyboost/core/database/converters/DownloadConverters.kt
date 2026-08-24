@@ -6,7 +6,7 @@ import dev.jellyboost.core.common.model.DownloadQuality
 import dev.jellyboost.core.common.model.DownloadStatus
 
 /**
- * Room converters for the enum columns of the M7 download schema.
+ * Room converters for the enum columns of the download schema.
  *
  * Same rule as [ItemTypeConverter]: enums are persisted by **name**, and an unrecognised stored
  * name decodes to a safe default rather than throwing, so a row written by a newer build can never
@@ -23,7 +23,7 @@ class DownloadStatusConverter {
     fun fromDownloadStatus(status: DownloadStatus?): String? = status?.name
 }
 
-/** Room converter pair for [DownloadQuality] — what a download row was fetched at (M9). */
+/** Room converter pair for [DownloadQuality] — what a download row was fetched at. */
 class DownloadQualityConverter {
     /**
      * Reads a stored quality.

@@ -14,7 +14,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 /**
- * What the server is told about a downloaded item that is being watched with a group (M11 Phase 6).
+ * What the server is told about a downloaded item that is being watched with a group.
  *
  * [SyncPlayLocalSession] is a reconciliation, not a sequence of events, and that is what these tests
  * are shaped around: the same call answers "a group joined ten minutes into a film" and "a film
@@ -53,7 +53,7 @@ class SyncPlayLocalSessionTest {
     @Test
     fun `joining a group while a download is already playing mints then`() =
         runTest {
-            // Nothing to report yet: playing a download alone is silent, as it has been since M8.
+            // Nothing to report yet: playing a download alone is silent.
             localSession.reconcile(PlayerFixtures.localSource(), snapshot)
             coVerify(exactly = 0) { resolver.mintPlaySessionId(any(), any()) }
 

@@ -11,11 +11,11 @@ import java.io.File
  *
  * This module had two import cycles — root↔`plan`, and root→`work`→`engine`→root — and nothing in
  * the build could see them: Gradle only knows about *module* dependencies, detekt has no
- * package-cycle rule, and a cycle is invisible in the one diff that closes it (audit ARCH-05).
- * They were closed by moving `isFolderItem` into `.plan`, `SiblingSeeder`/`OrphanSweeper`/
- * `SubtitleSidecarTopUp` into `.engine`, the `DownloadHttpClient` qualifier out of `.di` into
- * `.engine`, and the repository/enqueue/delete implementations into a new `.impl`. This test is
- * what keeps them closed: the next one fails a test instead of surviving a review.
+ * package-cycle rule, and a cycle is invisible in the one diff that closes it. `isFolderItem`
+ * lives in `.plan`, `SiblingSeeder`/`OrphanSweeper`/`SubtitleSidecarTopUp` in `.engine`, the
+ * `DownloadHttpClient` qualifier in `.engine` rather than `.di`, and the repository/enqueue/delete
+ * implementations in `.impl`. This test is what keeps the layering closed: the next cycle fails a
+ * test instead of surviving a review.
  *
  * It scans the module's own `src/main/kotlin` rather than the classpath on purpose. An import is
  * exactly the thing being ruled on, it is present in the source and erased from the bytecode

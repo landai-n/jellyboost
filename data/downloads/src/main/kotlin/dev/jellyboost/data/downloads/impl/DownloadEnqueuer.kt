@@ -30,8 +30,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Turns "the user tapped Download" into rows Room can hand to the queue (docs/PLAN.md, "Download
- * pipeline" → Enqueue).
+ * Turns "the user tapped Download" into rows Room can hand to the queue.
  *
  * Four things happen, in this order, and the order is the point:
  *
@@ -39,10 +38,10 @@ import javax.inject.Singleton
  *    needs `mediaSources`, `mediaStreams`, `trickplay` and the image tags, which only the full
  *    field set carries.
  * 2. **The parents too.** An episode's series and season are fetched and cached alongside it, so
- *    that offline the user can walk *up* from the downloaded episode to its show — the plan's
- *    "cached parents of downloaded items still open".
+ *    that offline the user can walk *up* from the downloaded episode to its show: the cached
+ *    parents of a downloaded item still open.
  * 3. **`ItemEntity(source = DOWNLOAD)`.** This is the row that makes the item appear in the offline
- *    home, library and search (M6's `OfflineJellyfinRepository` reads exactly this), and the row a
+ *    home, library and search (`OfflineJellyfinRepository` reads exactly this), and the row a
  *    later browse write-through is forbidden from demoting.
  * 4. **`DownloadEntity(QUEUED)`** at the end of the queue.
  *
@@ -53,13 +52,13 @@ import javax.inject.Singleton
  * A season and a series are **folders**, and a folder has no file to fetch — asking the server for
  * one answers `400`. So when the item handed in is one, it is replaced by its episodes and every
  * one of them is enqueued exactly as a direct tap on that episode would have been: same re-fetch,
- * same quality preference, same paths (DECISIONS.md, 2026-07-29). That makes this class the one
- * place the rule lives, so no caller can reintroduce the bug by enqueuing a folder.
+ * same quality preference, same paths. That makes this class the one place the rule lives, so no
+ * caller can reintroduce the bug by enqueuing a folder.
  *
- * M13 adds three more container kinds on the same rule — an album expands to its tracks in
- * disc/track order, an artist to every track of theirs album by album, a playlist to its audio
- * members in playlist order — and one exception to the *quality* half of it: audio is downloaded
- * as the original file whatever the preference says (see [planQuality]).
+ * Three music container kinds follow the same rule — an album expands to its tracks in disc/track
+ * order, an artist to every track of theirs album by album, a playlist to its audio members in
+ * playlist order — with one exception to the *quality* half of it: audio is downloaded as the
+ * original file whatever the preference says (see [planQuality]).
  */
 @Singleton
 internal class DownloadEnqueuer
@@ -115,11 +114,10 @@ internal class DownloadEnqueuer
          *
          * Three rules, each with a failure mode behind it:
          *
-         * - **The container's own row is deleted first.** Before this fix a tap on a season wrote a
-         *   download row keyed on the *season*, which could only ever fail; those rows are still on
-         *   users' devices and no retry will ever move them. A row for a folder is doomed by
-         *   definition, so the cascade runs on it (files, rows, orphaned metadata) before the real
-         *   downloads are queued.
+         * - **The container's own row is deleted first.** A download row keyed on the *season* can
+         *   only ever fail, and no retry will ever move one; devices that already carry one are
+         *   stuck with it. A row for a folder is doomed by definition, so the cascade runs on it
+         *   (files, rows, orphaned metadata) before the real downloads are queued.
          * - **Episodes already spoken for are skipped**, so re-tapping Download on a season the user
          *   half-downloaded does not restart it. `ERROR` and `CANCELLED` are the exceptions — see
          *   [isRetryable] for what each of them means.
@@ -146,9 +144,9 @@ internal class DownloadEnqueuer
 
             removeDoomedContainerRow(container)
 
-            // One read for the whole season, not one per episode: a forty-episode series meant
-            // forty statements before the enqueue could even begin (audit 2026-08-08, PERF-25). An
-            // id with no row is absent from the answer, which `isRetryable` already reads as "yes".
+            // One read for the whole season, not one per episode: a forty-episode series would
+            // otherwise mean forty statements before the enqueue can even begin. An id with no row
+            // is absent from the answer, which `isRetryable` already reads as "yes".
             val existing = downloadDao.getAll(episodeIds).associateBy { it.itemId }
             val pending = episodeIds.filter { existing[it].isRetryable() }
             if (pending.isEmpty()) return AppResult.Success(emptyList())
@@ -168,9 +166,8 @@ internal class DownloadEnqueuer
             // A playlist is the one container that is not cached alongside what it expanded to: a
             // `PLAYLIST` row with `source = DOWNLOAD` would appear in the offline library as a
             // playlist whose track list is permanently empty, because Room has no
-            // playlist-membership relation to fill it from (DECISIONS.md, 2026-08-05, "Offline
-            // playlists deferred"). The tracks it queued are reachable offline through their own
-            // albums and artists, which is what the M13 DoD asks for.
+            // playlist-membership relation to fill it from. The tracks it queued stay reachable
+            // offline through their own albums and artists.
             val cached = if (container.type == BaseItemKind.PLAYLIST) emptyList() else listOf(container)
             return write(userId, cache = cached + episodes + parents, targets = episodes)
         }
@@ -186,7 +183,7 @@ internal class DownloadEnqueuer
                     api.getEpisodeIds(seriesId = seriesId, seasonId = container.id)
                 }
 
-                // The M13 music containers. Each answers ids in the order the matching screen shows
+                // The music containers. Each answers ids in the order the matching screen shows
                 // them, so a queue drained top-to-bottom downloads the album, the artist's
                 // discography or the playlist in the order the user is looking at.
                 BaseItemKind.MUSIC_ALBUM -> api.getAlbumTrackIds(container.id)
@@ -194,7 +191,7 @@ internal class DownloadEnqueuer
                 BaseItemKind.PLAYLIST -> api.getPlaylistTrackIds(container.id)
 
                 // A box set or a library folder: the detail screen never offers Download on one, and
-                // guessing what "download this library" means is not this milestone's business.
+                // guessing what "download this library" means is not this pipeline's business.
                 else -> {
                     Timber.w("%s is a folder this pipeline cannot expand", container.type)
                     AppResult.Failure(AppError.Unknown())
@@ -204,8 +201,8 @@ internal class DownloadEnqueuer
         /**
          * Removes a download row keyed on the container itself, whatever state it is in.
          *
-         * Such a row can never finish — that is the bug this fix is for — so leaving it would keep a
-         * permanent failure on the Downloads screen next to the episodes that do work.
+         * Such a row can never finish, so leaving it would keep a permanent failure on the
+         * Downloads screen next to the episodes that do work.
          */
         private suspend fun removeDoomedContainerRow(container: BaseItemDto) {
             if (downloadDao.get(container.id) == null) return
@@ -234,8 +231,8 @@ internal class DownloadEnqueuer
          * without its parents cached, it only means the offline series page is missing until the
          * user next browses to it online.
          *
-         * The music half is what makes the offline walk in the M13 DoD work at all: artist → album
-         * → tracks reads `ItemDao.albumsOfArtist` and `ItemDao.tracksOfAlbum`, both of which filter
+         * The music half is what makes the offline walk work at all: artist → album → tracks reads
+         * `ItemDao.albumsOfArtist` and `ItemDao.tracksOfAlbum`, both of which filter
          * on `source = DOWNLOAD`, so an album row that was never cached is an artist page with
          * nothing on it. [dev.jellyboost.data.cache.ItemEntityMapper] fills the `albumId` /
          * `albumArtistId` query columns from these same DTOs.
@@ -280,26 +277,26 @@ internal class DownloadEnqueuer
          *
          * The quality preference is read once, here, and stamped onto every row: the pipeline must
          * not re-read a preference the user can change while the transfer it describes is
-         * half-written (DECISIONS.md, 2026-07-29). Enqueuing a whole season therefore fixes one
-         * quality for the season, which is also the only answer a user would expect.
+         * half-written. Enqueuing a whole season therefore fixes one quality for the season, which
+         * is also the only answer a user would expect.
          *
          * The one thing decided *per row* is whether that quality is worth asking the server for at
          * all — see [planQuality].
          *
          * ### One transaction
          * The metadata upsert and the queue rows land together or not at all, and the reads that
-         * decide them sit inside the same block. Three things depended on that and had none of it
-         * (audit 2026-08-08, CORR-4 and CORR-6):
+         * decide them sit inside the same block. Three things depend on that:
          *
          * - a concurrent delete's orphan prune (`DownloadDeleter.pruneOrphanedItems`) reads "which
          *   items still have a download row" and deletes every `DOWNLOAD` item row outside that
          *   answer. Landing between this method's `itemDao.upsert` and its `downloadDao.upsert`, it
-         *   deleted the metadata of an item whose row was one statement away — and the drain that
-         *   later picked the row up failed with `MissingMetadataException`, which is *permanent*;
+         *   would delete the metadata of an item whose row is one statement away — and the drain
+         *   that later picks the row up fails with `MissingMetadataException`, which is
+         *   *permanent*;
          * - `maxQueuePosition()` is read once and counted from, which only holds if no other
-         *   enqueue can commit a row in between. Two taps in the same second used to produce two
-         *   downloads at the same queue position;
-         * - the per-row `downloadDao.get` is now the value the write is guarded on rather than a
+         *   enqueue can commit a row in between. Two taps in the same second would otherwise
+         *   produce two downloads at the same queue position;
+         * - the per-row `downloadDao.get` is the value the write is guarded on rather than a
          *   snapshot the write ignores — see [isRetryable].
          */
         private suspend fun write(
@@ -318,8 +315,7 @@ internal class DownloadEnqueuer
                 // The enqueue runs in the caller's coroutine — a ViewModel scope that dies with the
                 // screen. Reporting a cancelled scope as `AppError.Storage` would put a "could not
                 // download" message on a screen the user has already left, and would swallow the
-                // cancellation the structured-concurrency machinery is owed (the audit's ARCH-08
-                // rule).
+                // cancellation the structured-concurrency machinery is owed.
                 throw cancellation
             } catch (error: SQLiteException) {
                 // Narrowed to Room's own failure: the block above is `upsert` calls and arithmetic,
@@ -358,10 +354,9 @@ internal class DownloadEnqueuer
                 val existing = downloadDao.get(dto.id)
                 // The same rule the container path applies before fetching, applied here to every
                 // target and inside the transaction, which is the only place it holds. Without it a
-                // second tap on a *single* item — a badge one tick stale, a double tap — rewrote a
-                // finished or in-flight row's quality, size and `sizeIsExact` from the current
-                // preference, describing a file that had already been fetched under the old plan
-                // (audit CORR-6).
+                // second tap on a *single* item — a badge one tick stale, a double tap — would
+                // rewrite a finished or in-flight row's quality, size and `sizeIsExact` from the
+                // current preference, describing a file already fetched under the old plan.
                 if (!existing.isRetryable()) {
                     Timber.i("%s is already downloaded or in flight; leaving its row alone", dto.name)
                     return@mapNotNull null
@@ -425,7 +420,7 @@ internal class DownloadEnqueuer
                 // so a track files itself under its **album** the way an episode files itself under
                 // its show — three tracks of *Rumours*, not three files. Falling back rather than
                 // adding a column: the column already means "the heading these rows belong under",
-                // and a track has no series to conflict with (M13 Phase 5).
+                // and a track has no series to conflict with.
                 seriesName = seriesName ?: album?.takeIf { it.isNotBlank() },
                 errorMessage = null,
                 createdAt = existing?.createdAt ?: now,
@@ -469,11 +464,10 @@ internal class DownloadEnqueuer
         )
         private fun BaseItemDto.planQuality(preferred: DownloadQuality): PlannedQuality {
             // Music is originals-only, and the row says so rather than the planner quietly ignoring
-            // a quality it was stamped with (docs/notes/music-m13-plan.md, key decision 10). Every
-            // rule downstream keys off this column — the transcode URL, the size projector, the
-            // "a transcode cannot be paused" rule, the *Transcoded* marker on the row — so a track
-            // written as ORIGINAL is a track none of that machinery can reach. Audio download
-            // transcoding is a recorded deferred item.
+            // a quality it was stamped with. Every rule downstream keys off this column — the
+            // transcode URL, the size projector, the "a transcode cannot be paused" rule, the
+            // *Transcoded* marker on the row — so a track written as ORIGINAL is a track none of
+            // that machinery can reach. Audio download transcoding is deferred.
             if (type == BaseItemKind.AUDIO) {
                 return PlannedQuality(DownloadQuality.ORIGINAL, sizeEstimate(DownloadQuality.ORIGINAL))
             }
@@ -507,17 +501,16 @@ internal class DownloadEnqueuer
          *    untouched, so the output is the source's video bytes plus one re-encoded AAC track:
          *    predictable, and marked exact.
          * 3. **A real transcode** — `runtime × min(cap, source bitrate)`, a deterministic upper
-         *    bound and nothing more (DECISIONS.md, 2026-07-29). The bitrate is the *effective* one
+         *    bound and nothing more. The bitrate is the *effective* one
          *    because a transcode can never need more bits per second than the source already
          *    carries; most sources sit well under a tier's cap, and estimating from the cap alone
          *    overstates the download by a large margin (a LOW episode estimated 552 MB and landed
          *    at 232 MB). When the source bitrate is missing or zero, the cap is the only number
          *    left.
          *
-         * Answers 2 and 3 then carry [extraAudioBytes] on top, because a transcoded download is no
-         * longer one file: every audio language the transcode did not bake in is fetched as its own
-         * sidecar (DECISIONS.md, 2026-07-31, "Offline multi-track Phase 2"), and the figure this
-         * returns is what the whole item is promised to weigh.
+         * Answers 2 and 3 then carry [extraAudioBytes] on top, because a transcoded download is not
+         * one file: every audio language the transcode did not bake in is fetched as its own
+         * sidecar, and the figure this returns is what the whole item is promised to weigh.
          *
          * @return `bytes = null` when there is nothing at all to go on — a transcode of an item
          *   with no runtime. Reporting the *source's* size there would promise a number for a file
@@ -581,8 +574,7 @@ internal class DownloadEnqueuer
          * That exactness is this **file's**, and it survives only as far as the item has one audio
          * language. A second language is a second download the server has to re-encode, whose size
          * is a ceiling like any transcode's — so [sizeEstimate] adds [extraAudioBytes] to what this
-         * returns and stops calling the result exact (DECISIONS.md, 2026-07-31, "Offline
-         * multi-track Phase 2"). The arithmetic below is unchanged: it still describes precisely the
+         * returns and stops calling the result exact. The arithmetic below describes precisely the
          * one file the server is about to stream-copy.
          *
          * Naming an `audioStreamIndex` (schema v8) does not disturb this: the request still yields
@@ -686,7 +678,7 @@ internal class DownloadEnqueuer
          *   it to *not downloaded* and offers **Download** again while the cascade behind it is
          *   still waiting out `DownloadScheduler.stop()`, so this is the ordinary re-download and it
          *   has to write: the row goes back to `QUEUED`, and the cascade arriving afterwards finds
-         *   it runnable and leaves it alone (`DownloadDao.deleteUnlessRunnable`, audit CORR-1).
+         *   it runnable and leaves it alone (`DownloadDao.deleteUnlessRunnable`).
          */
         private fun DownloadEntity?.isRetryable(): Boolean =
             this == null || status == DownloadStatus.ERROR || status == DownloadStatus.CANCELLED

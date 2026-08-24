@@ -43,7 +43,7 @@ class PlayerControlsTest {
     @Test
     fun `the tablet bar drops its labels once the text is scaled up`() {
         // Same 1000dp bar, 1.5x text: the words are half again as wide, so the row that fitted them
-        // at 12sp no longer does and the pickers go icon-only rather than clipping (A11Y-P-10).
+        // at 12sp no longer does and the pickers go icon-only rather than clipping.
         showSheetButtonLabels(1000.dp, fontScale = 1.5f) shouldBe false
     }
 
@@ -70,12 +70,12 @@ class PlayerControlsTest {
 
 /**
  * Unit tests for [sheetChipSpecs] — the bottom bar's seven visibility rules, and the width invariant
- * they decide (audit CPX-7).
+ * they decide.
  *
- * The rules used to be seven `if`s inline in `BottomBar`, which meant the only way to answer "how
+ * The rules live in [sheetChipSpecs] rather than as `if`s inline in `BottomBar`, so answering "how
  * many pickers can be up at once" — the question [LABELLED_BUTTONS_MIN_WIDTH] is measured against —
- * was to enumerate the states in your head. These tests enumerate them for real: every rule pinned
- * one at a time, then a sweep of all 128 combinations of the seven inputs that drives
+ * does not require enumerating the states in your head. These tests enumerate them for real: every
+ * rule pinned one at a time, then a sweep of all 128 combinations of the seven inputs that drives
  * [MAX_SHEET_CHIPS] out of the spec function rather than out of a comment.
  */
 class SheetChipSpecTest {
@@ -130,10 +130,10 @@ class SheetChipSpecTest {
 
     @Test
     fun `every chip opens a panel of its own, and every panel is one a chip opens`() {
-        // Audit UI-1: the four pickers the control bar used to host itself are panels now, hosted by
-        // the screen above the auto-hide like the other three always were. A chip whose panel is
-        // shared with another would open the wrong picker; a panel no chip names would be dead code
-        // in an exhaustive `when`. Both are one assertion each, and neither can drift silently.
+        // The four pickers are panels hosted by the screen above the auto-hide, like the other
+        // three. A chip whose panel is shared with another would open the wrong picker; a panel no
+        // chip names would be dead code in an exhaustive `when`. Both are one assertion each, and
+        // neither can drift silently.
         val panels = SheetChipId.entries.map { it.panel }
 
         panels.distinct().size shouldBe SheetChipId.entries.size
@@ -148,9 +148,9 @@ class SheetChipSpecTest {
 
     @Test
     fun `the fullest bar is what the width threshold assumes`() {
-        // This is the assertion CPX-7 exists for: the number behind LABELLED_BUTTONS_MIN_WIDTH is
-        // derived from the rules rather than remembered from a sweep. Adding an eighth picker — or
-        // loosening a rule so two that used to exclude each other can both appear — fails here.
+        // This is the assertion that keeps LABELLED_BUTTONS_MIN_WIDTH derived from the rules rather
+        // than remembered from a sweep. Adding an eighth picker — or loosening a rule so two that
+        // currently exclude each other can both appear — fails here.
         everyState().maxOf { visibleSheetChips(it).size } shouldBe MAX_SHEET_CHIPS
     }
 
@@ -220,9 +220,9 @@ class SheetChipSpecTest {
     /**
      * Every combination of the seven inputs the rules read — 128 states, impossible ones included.
      *
-     * Deliberately unfiltered: casting while in a group cannot happen
-     * (docs/notes/chromecast-m12-plan.md, decision 6), but a maximum taken over a *superset* of the
-     * reachable states can only over-estimate, which is the safe direction for a width invariant.
+     * Deliberately unfiltered: casting while in a group cannot happen, but a maximum taken over a
+     * *superset* of the reachable states can only over-estimate, which is the safe direction for
+     * a width invariant.
      */
     private fun everyState(): List<PlayerUiState> =
         BOOLEANS.flatMap { inGroup ->
@@ -274,8 +274,8 @@ class SheetChipSpecTest {
 }
 
 /**
- * Unit tests for the two pieces of arithmetic behind the seek bar's accessibility (A11Y-P-04/05):
- * where a custom-action seek lands, and how a position is put into words.
+ * Unit tests for the two pieces of arithmetic behind the seek bar's accessibility: where a
+ * custom-action seek lands, and how a position is put into words.
  */
 class ScrubberSemanticsTest {
     @Test

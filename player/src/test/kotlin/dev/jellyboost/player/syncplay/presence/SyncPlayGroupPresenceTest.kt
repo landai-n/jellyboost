@@ -10,10 +10,10 @@ import org.junit.jupiter.api.Test
 /**
  * Unit tests for [syncPlayPresenceDemanded].
  *
- * The rule this pins is the whole of the background fix (DECISIONS.md 2026-07-31), and it is worth
- * a test of its own precisely because its failures are silent in both directions: demand it too
- * rarely and a group is dropped forty seconds after the user presses Home, demand it too eagerly and
- * the app leaves an ongoing notification standing over nothing.
+ * The rule this pins is the whole of the background behavior, and it is worth a test of its own
+ * precisely because its failures are silent in both directions: demand it too rarely and a group
+ * is dropped forty seconds after the user presses Home, demand it too eagerly and the app leaves
+ * an ongoing notification standing over nothing.
  */
 class SyncPlayGroupPresenceTest {
     @Test

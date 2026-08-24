@@ -19,8 +19,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * [ConnectivityMonitor] on `ConnectivityManager.registerDefaultNetworkCallback` (docs/PLAN.md,
- * "Connectivity").
+ * [ConnectivityMonitor] on `ConnectivityManager.registerDefaultNetworkCallback`.
  *
  * The default-network callback is what makes the airplane-mode switch feel instant: the system
  * delivers `onLost` within milliseconds, so the app flips to its offline path without polling and
@@ -41,11 +40,11 @@ class AndroidConnectivityMonitor
         /**
          * The system callback, registered **once** however many collectors there are.
          *
-         * `callbackFlow` is cold, so each collector used to register a `NetworkCallback` of its
-         * own — a binder round trip and a system-side registration per subscriber. There are two,
-         * both for the life of the process (`ConnectionStateProvider` combines this into its state
-         * *and* re-probes the server on every network change), so the app permanently held two
-         * registrations delivering the same edges (audit 2026-08-08, PERF-16).
+         * `callbackFlow` is cold, so without sharing each collector would register its own
+         * `NetworkCallback` — a binder round trip and a system-side registration per subscriber.
+         * There are two, both for the life of the process (`ConnectionStateProvider` combines this
+         * into its state *and* re-probes the server on every network change), so the app would
+         * permanently hold two registrations delivering the same edges.
          *
          * `replay = 1` is what keeps the seed meaningful: the callbacks report only *changes*, so a
          * late subscriber that missed the initial `send` would otherwise sit with no value until

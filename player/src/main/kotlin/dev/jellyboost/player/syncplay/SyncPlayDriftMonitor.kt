@@ -64,9 +64,9 @@ internal class SyncPlayDriftMonitor
                 // reason the protocol owns elsewhere. Seeking it would jump the frozen frame
                 // forward every tick for ever without ever starting playback: a phone call or a
                 // headphone unplug pauses ExoPlayer directly (audio-focus handling), the phase
-                // stays `Playing`, and this monitor used to become a 1 Hz seek loop against the
-                // paused frame (audit SP-04). Once it runs again, the next tick measures the real
-                // gap and closes it.
+                // stays `Playing`, and without this check the monitor would become a 1 Hz seek
+                // loop against the paused frame. Once it runs again, the next tick measures the
+                // real gap and closes it.
                 if (!snapshot.isPlaying) return@withContext null
 
                 val elapsedMillis = Duration.between(anchor.at, timeSync.serverNow()).toMillis()

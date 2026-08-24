@@ -52,8 +52,8 @@ import kotlin.time.Duration.Companion.seconds
 /**
  * [SyncPlaySocket] on a websocket of our own, because the SDK's loses messages.
  *
- * **The defect this exists for** (jellyfin-sdk-kotlin 1.8.12 and master as of 2026-07-31, recorded
- * in DECISIONS.md): `SocketConnection.state` is a **`StateFlow`** whose values include received
+ * **The defect this exists for** (jellyfin-sdk-kotlin 1.8.12 and master):
+ * `SocketConnection.state` is a **`StateFlow`** whose values include received
  * messages — `OkHttpSocketConnection.kt`:39-43 does `onMessage → _state.value = Message(text)` —
  * and `DefaultSocketApi.messages` decodes JSON in a `.map` over it. A `StateFlow` is conflated, so
  * two frames arriving faster than the decode of the first lose the first, and two *identical*
@@ -151,7 +151,7 @@ internal class OkHttpSyncPlaySocket
         private fun connection(opened: AtomicBoolean): Flow<OutboundWebSocketMessage> =
             callbackFlow {
                 val request = socketRequest()
-                // Host only (audit SEC-11): the full URL is the user's server address in a line
+                // Host only: the full URL is the user's server address in a line
                 // that fires on every reconnect, i.e. exactly the log a user pastes when SyncPlay
                 // misbehaves. Through the shared helper so all four address-logging sites in the
                 // app say the same thing. See `hostForLog`.
@@ -160,7 +160,7 @@ internal class OkHttpSyncPlaySocket
                 // Generously bounded: the reader thread must never block or drop under any
                 // *healthy* load — this queue is the whole difference from the SDK's conflated
                 // state flow — but a consumer wedged on network I/O for minutes must not grow the
-                // heap without limit either (audit SP-19). SyncPlay traffic is a few frames a
+                // heap without limit either. SyncPlay traffic is a few frames a
                 // second at its busiest, so the cap is minutes of backlog; hitting it is logged
                 // in [listener] rather than absorbed silently.
                 val raw = Channel<String>(RAW_FRAME_BUFFER)
@@ -354,7 +354,7 @@ internal class OkHttpSyncPlaySocket
              *
              * Far beyond any healthy backlog (SyncPlay is a handful of frames per action), but a
              * ceiling all the same, so a wedged consumer costs bounded memory in this
-             * process-lifetime singleton rather than the heap (audit SP-19).
+             * process-lifetime singleton rather than the heap.
              */
             const val RAW_FRAME_BUFFER = 256
 

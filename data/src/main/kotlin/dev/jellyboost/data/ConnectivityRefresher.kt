@@ -16,8 +16,8 @@ import javax.inject.Singleton
  *
  * `DelegatingJellyfinRepository` picks its source per *call*, which is enough for anything fetched
  * after the change and does nothing for a screen that already fetched: it keeps the answer it got
- * until the user leaves and comes back (STATUS.md, M6 known issues). Screens collect this and re-run
- * whatever load they already have.
+ * until the user leaves and comes back. Screens collect this and re-run whatever load they already
+ * have.
  *
  * The signal is a `Flow<Unit>`, and the state a `Boolean`, on purpose. Feature modules depend on
  * `:data`, not on `:core:network`, so exposing `ConnectionState` here would drag connectivity types
@@ -27,9 +27,8 @@ import javax.inject.Singleton
  * It fires on **both** edges — reachable again, and no longer reachable — and additionally whenever
  * a probe reconfirms the server after a request had already fallen back to offline data
  * ([ConnectionStateProvider.serverReconfirmed]): that fallback leaves a screen showing downloads-only
- * rows while the state still reads online, so no edge would ever come to correct it (DECISIONS.md,
- * 2026-07-31). It still says nothing about the connection state a screen starts with; see
- * [onlineStateChanges].
+ * rows while the state still reads online, so no edge would ever come to correct it. It still says
+ * nothing about the connection state a screen starts with; see [onlineStateChanges].
  */
 @Singleton
 class ConnectivityRefresher
@@ -62,8 +61,8 @@ class ConnectivityRefresher
 /**
  * Re-runs [reload] on every connection change, for as long as [scope] lives.
  *
- * The one line every screen's ViewModel used to spell out for itself (audit 2026-08-08, DUP-8:
- * five copies, three of them byte-identical), and with it the argument they each restated:
+ * Consolidates the reload call every screen's ViewModel would otherwise repeat, along with the
+ * argument for doing it this way:
  *
  * **Both directions matter, and that is the point of collecting this rather than an "online again"
  * signal.** A screen opened in airplane mode keeps showing downloaded media after the server comes

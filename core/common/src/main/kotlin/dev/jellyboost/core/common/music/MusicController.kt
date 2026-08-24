@@ -7,12 +7,11 @@ import kotlinx.coroutines.flow.StateFlow
 /**
  * What the rest of the app may know and ask about the music queue.
  *
- * The `SyncPlaySession` precedent (M11, key decision 2), for the same reason: the queue, the player
+ * Follows the `SyncPlaySession` precedent, for the same reason: the queue, the player
  * and the reporting all live in `:player`, and `:feature:*` modules must not depend on it. This
  * interface is published from `:core:common`, implemented by `MusicPlaybackController` and
  * Hilt-bound in `:player`, so `:feature:music`'s screens and `:app`'s mini-player can drive
- * playback without any feature ever seeing the player module (docs/notes/music-m13-plan.md, key
- * decision 2).
+ * playback without any feature ever seeing the player module.
  *
  * ### Why the transport verbs are not `suspend`
  * Every one of them is a *fire-and-forget intent* handed to the controller's own confined scope —
@@ -24,8 +23,8 @@ import kotlinx.coroutines.flow.StateFlow
  * ### Refusals and failures
  * Neither is an exception and neither is state: they are one-shot facts about an *attempt*, which
  * is what [messages] is for. In a SyncPlay group [play] refuses outright and says so
- * ([MusicMessage.RefusedInSyncPlayGroup]) — SyncPlay ⊕ music are mutually exclusive in M13, the
- * Cast ⊕ SyncPlay precedent from M12.
+ * ([MusicMessage.RefusedInSyncPlayGroup]) — SyncPlay ⊕ music are mutually exclusive, the same shape
+ * as the Cast ⊕ SyncPlay precedent.
  */
 interface MusicController {
     /** The queue and its transport state, or [MusicPlaybackState.Idle] when nothing is loaded. */
@@ -47,8 +46,8 @@ interface MusicController {
      *   as opposed to setting the mode on a queue that is already playing.
      * @param startPositionMs where playback starts within the entry at [startIndex], in
      *   milliseconds. `0` for every ordinary track tap; Home's *Continue Listening* row is the one
-     *   caller that resumes mid-track, from `JellyfinItem.userData.playbackPositionTicks` (M13
-     *   Phase 4). Ignored for every entry but the first — a queue has one start position, not one
+     *   caller that resumes mid-track, from `JellyfinItem.userData.playbackPositionTicks`.
+     *   Ignored for every entry but the first — a queue has one start position, not one
      *   per track.
      * @return `true` when the queue was handed to the player; `false` when the attempt was refused
      *   or nothing in it could be resolved, in which case a [MusicMessage] explains why.
@@ -150,7 +149,7 @@ enum class MusicRepeatMode {
 
 /** A one-shot notice from the controller, for a snackbar. */
 sealed interface MusicMessage {
-    /** SyncPlay ⊕ music are mutually exclusive in M13 (key decision 7). */
+    /** SyncPlay ⊕ music are mutually exclusive. */
     data object RefusedInSyncPlayGroup : MusicMessage
 
     /** One track could not be resolved and was dropped from the queue. */
@@ -167,7 +166,7 @@ sealed interface MusicMessage {
     ) : MusicMessage
 
     /**
-     * "Start radio" (M13 Phase 6) could not build a queue: the Instant Mix fetch failed, or the
+     * "Start radio" could not build a queue: the Instant Mix fetch failed, or the
      * server answered with nothing to play. [itemName] is the seed — the album, artist or track
      * radio was started from — not a track inside the (non-existent) mix.
      */

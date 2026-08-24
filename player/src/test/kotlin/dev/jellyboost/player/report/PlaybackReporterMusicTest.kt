@@ -28,7 +28,7 @@ import org.junit.jupiter.api.Test
 import java.util.UUID
 
 /**
- * The music half of [PlaybackReporter] (M13).
+ * The music half of [PlaybackReporter].
  *
  * The video path's own tests are untouched and still pass unchanged — the point of adding a
  * parallel entry point rather than widening `PlaybackMediaSource`. What is pinned here is the

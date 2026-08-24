@@ -34,7 +34,7 @@ class DemoteRunnableTransactionTest {
     fun `reports the live transfer taken when the DOWNLOADING leg moved a row`() =
         runTest {
             // This answer is what makes the caller stop the worker: the row it took *was* being
-            // transferred, and nothing else will ever recheck the status mid-transfer (DL-03).
+            // transferred, and nothing else will ever recheck the status mid-transfer.
             coEvery { dao.setStatusIfDownloading(ids, DownloadStatus.PAUSED, NOW) } returns 1
             coEvery { dao.setStatusIfQueued(ids, DownloadStatus.PAUSED, NOW) } returns 1
 
@@ -44,8 +44,8 @@ class DemoteRunnableTransactionTest {
     @Test
     fun `reports the live transfer untouched when only queued rows moved`() =
         runTest {
-            // `false` is what spares the running worker — for a transcode, what keeps its bytes
-            // (DL-06) — and it is trustworthy only because it was computed in the same
+            // `false` is what spares the running worker — for a transcode, what keeps its bytes —
+            // and it is trustworthy only because it was computed in the same
             // transaction as the write, where no drain claim can interleave.
             coEvery { dao.setStatusIfDownloading(ids, DownloadStatus.CANCELLED, NOW) } returns 0
             coEvery { dao.setStatusIfQueued(ids, DownloadStatus.CANCELLED, NOW) } returns 2

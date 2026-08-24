@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Pre-Android-12 counterpart to `data_extraction_rules.xml` (audit finding SEC-04).
+    Pre-Android-12 counterpart to `data_extraction_rules.xml`.
 
     On API 26-30 `android:allowBackup="false"` already stops every form of backup, so this file
     changes nothing today. It exists for two reasons: it states the same intent in the form those

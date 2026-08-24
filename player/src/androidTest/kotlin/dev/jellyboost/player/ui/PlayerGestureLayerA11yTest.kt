@@ -16,8 +16,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * The way back to hidden controls (accessibility audit 2026-08-05, CR-1 — the audit's first
- * critical finding).
+ * The way back to hidden controls.
  *
  * The player hides its controls after four seconds and reveals them again on a tap. Touch
  * exploration consumes taps, so a bare `pointerInput` is not a way back for a TalkBack user: the

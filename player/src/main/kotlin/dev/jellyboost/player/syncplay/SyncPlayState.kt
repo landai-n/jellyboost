@@ -61,7 +61,7 @@ internal sealed interface SyncPlayState {
  *
  * Deliberately not the same thing as the group's own `SyncPlayGroupState`: the group can be playing
  * while this client is still loading the file, and that difference is exactly what the WAITING
- * overlay (M11 Phase 3) shows.
+ * overlay shows.
  */
 internal sealed interface SyncPlayPhase {
     /** Prepared, ready reported, waiting for the server to say go. */
@@ -96,15 +96,14 @@ internal data class SyncPlayAnchor(
  * Something the user has to be told about, in the shape the existing player uses
  * (`PlayerUiState.PlayerMessage`): a typed event, with the copy owned by the UI layer.
  *
- * Collected from `SyncPlayController.messages` by the player screen and the groups screen
- * (M11 Phases 3 and 5).
+ * Collected from `SyncPlayController.messages` by the player screen and the groups screen.
  */
 enum class SyncPlayMessage {
     /**
      * The connection was confirmed lost while in a group, so the group was left and playback paused.
      *
-     * The user-visible copy is "Left SyncPlay — connection lost" (docs/notes/syncplay-m11-plan.md,
-     * key decision 10 as amended twice): resuming from here plays solo. It is only reached once an
+     * The user-visible copy is "Left SyncPlay — connection lost": resuming from here plays solo.
+     * It is only reached once an
      * automatic rejoin has been tried and could not get the membership back.
      */
     ConnectionLost,
@@ -113,7 +112,7 @@ enum class SyncPlayMessage {
      * The server had dropped this session from the group and it has been taken back automatically.
      *
      * Low-key on purpose: nothing is asked of the user, and the group's own state has already put
-     * this member back in step (DECISIONS.md 2026-07-31, auto-rejoin).
+     * this member back in step.
      */
     Rejoined,
 
@@ -137,8 +136,8 @@ enum class SyncPlayMessage {
  * "The group moved to an item and there is no player open" — the app should navigate to one.
  *
  * Emitted rather than acted on because the controller has no idea what a screen is; the NavHost
- * collects these (M11 Phase 5). It is the other half of key decision 5: membership survives leaving
- * the player, so the group can move on while nothing is attached, and the app has to catch up.
+ * collects these. Membership survives leaving the player, so the group can move on while nothing
+ * is attached, and the app has to catch up.
  */
 data class SyncPlayLaunchRequest(
     val itemId: UUID,

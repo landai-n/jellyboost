@@ -19,13 +19,12 @@ import org.junit.jupiter.api.Test
 /**
  * Unit tests for [ItemPagingSource]'s page arithmetic.
  *
- * The M3 definition of done — a >500-item library scrolling cleanly with one request per page —
- * lives or dies on these offsets, so every boundary (first page, middle page, last short page,
- * empty library) is pinned here rather than left to a device scroll.
+ * The requirement — a >500-item library scrolling cleanly with one request per page — lives or
+ * dies on these offsets, so every boundary (first page, middle page, last short page, empty
+ * library) is pinned here rather than left to a device scroll.
  *
- * The total-record-count block pins the other half of that promise since the 2026 refresh: the
- * header's "N items" costs exactly one server-side count, on the source's first load, and never
- * one per page (DECISIONS.md 2026-08-01).
+ * The total-record-count block pins the other half of that promise: the header's "N items" costs
+ * exactly one server-side count, on the source's first load, and never one per page.
  */
 class ItemPagingSourceTest {
     private val requestedRanges = mutableListOf<Pair<Int, Int>>()

@@ -34,8 +34,7 @@ internal class CastStatusHolder
          * The connected receiver's capability class; the conservative floor when not casting.
          *
          * Read by `PlaybackInfoResolver` at negotiation time, so a `castTarget` resolve claims
-         * exactly what the receiver on the other side of the room was classified as
-         * (DECISIONS.md, 2026-08-15, M12 phase-2a).
+         * exactly what the receiver on the other side of the room was classified as.
          */
         val receiver: CastReceiverClass
             get() = (_connection.value as? CastConnection.Connected)?.receiver ?: CastReceiverClass.LEGACY_1080P

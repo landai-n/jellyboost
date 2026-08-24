@@ -6,16 +6,15 @@ import dev.jellyboost.data.downloads.model.DownloadItem
 /**
  * Keeps a queue row's displayed percentage from ever going backwards.
  *
- * It exists because the denominator moved. A transcoded download's total used to be one fixed
- * ceiling for the whole transfer, so the percentage could only rise; now the row also carries a
- * *projection* that is re-measured on every throttled write, and a projection that grows — the
- * encoder hitting a busy scene, a seed from the show's easier episodes being corrected upwards —
- * lowers `bytes / total` even though not one byte was lost. A progress bar that retreats reads as a
- * failure, and the user has no way to tell it apart from one.
+ * It exists because the denominator moves. A transcoded download's total is a *projection*,
+ * re-measured on every throttled write, and a projection that grows — the encoder hitting a busy
+ * scene, a seed from the show's easier episodes being corrected upwards — lowers `bytes / total`
+ * even though not one byte was lost. A progress bar that retreats reads as a failure, and the user
+ * has no way to tell it apart from one.
  *
  * So the fraction shown for an item is the **highest** one it has reached this session. The bar
  * stalls instead of reversing, which is honest about the only thing it claims: how much of the item
- * is on the device is monotone, and the bar now is too.
+ * is on the device is monotone, and the bar is too.
  *
  * ### The 99 % hold
  * Nothing but [DownloadStatus.DOWNLOADED] is allowed to draw a full bar. An estimate that undershot
@@ -38,8 +37,8 @@ internal class DownloadProgressRatchet {
     private val shown = mutableMapOf<String, Float>()
 
     /**
-     * @param queue the rows that draw a bar — `toQueue()`'s subset, not the whole table (audit
-     *   2026-08-08, PERF-10). Only queue rows read this map, and building a set and a map over
+     * @param queue the rows that draw a bar — `toQueue()`'s subset, not the whole table.
+     *   Only queue rows read this map, and building a set and a map over
      *   every download ever made, several times a second, to answer for a handful of them is work
      *   that grows with the user's library rather than with the queue. [DownloadSpeedTracker]
      *   filters first for the same reason.

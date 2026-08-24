@@ -9,8 +9,7 @@ import dev.jellyboost.core.common.music.MusicRepeatMode
 
 /**
  * Everything [dev.jellyboost.feature.music.nowplaying.NowPlayingScreen] draws, derived from
- * [MusicController.state][dev.jellyboost.core.common.music.MusicController.state] (M13 Phase 4,
- * docs/notes/music-m13-plan.md).
+ * [MusicController.state][dev.jellyboost.core.common.music.MusicController.state].
  *
  * A plain data class rather than the controller's own [MusicPlaybackState] passed straight through,
  * for one reason: the favourite heart. The controller's queue is a snapshot taken when [play][
@@ -34,7 +33,7 @@ data class NowPlayingUiState(
     val shuffleEnabled: Boolean = false,
     val repeatMode: MusicRepeatMode = MusicRepeatMode.OFF,
     /**
-     * [track]'s lyrics (M13 Phase 6), or `null` while idle, still fetching, or the server has none
+     * [track]'s lyrics, or `null` while idle, still fetching, or the server has none
      * for this track — all three collapse onto the same "hide the affordance" state
      * [dev.jellyboost.feature.music.nowplaying.LyricsPane] draws for.
      */
@@ -60,7 +59,7 @@ data class NowPlayingUiState(
  *   ever grows via [dev.jellyboost.data.userdata.UserDataRepository.changes]; a queue snapshot may
  *   be minutes old by the time a favourite toggled on another screen reaches it.
  * @param lyricsByTrackId itemId → the lyrics [NowPlayingViewModel] fetched for it, or `null` for a
- *   track the server has none for — [NowPlayingViewModel]'s own per-itemId cache (M13 Phase 6).
+ *   track the server has none for — [NowPlayingViewModel]'s own per-itemId cache.
  *   Absent from this map entirely means "not fetched yet", which reads the same as `null` here.
  */
 internal fun MusicPlaybackState.toNowPlayingUiState(

@@ -11,19 +11,19 @@ import org.junit.jupiter.api.Test
 /**
  * Unit tests for what `DownloadsScreen.kt` decides outside of composition.
  *
- * [queueRowCompact] is the breakpoint behind `QueueRow`'s two-tier phone layout (device-verified
- * defect: a 360dp queue row crushed its title to ~4 characters, "Hous…", under four 48dp action
- * buttons). It is extracted from the screen's `BoxWithConstraints` specifically so the breakpoint
+ * [queueRowCompact] is the breakpoint behind `QueueRow`'s two-tier phone layout: a 360dp queue row
+ * crushes its title to ~4 characters, "Hous…", under four 48dp action buttons. It is extracted
+ * from the screen's `BoxWithConstraints` specifically so the breakpoint
  * itself is checkable without a Compose test harness.
  *
  * [chromePinned] is the second decision taken from the same constraints: whether the header,
  * summary and tab row are pinned above an inner-scrolling list, or scroll with it as one page. It
- * needs height as well as width — the two were fused until a landscape phone pinned chrome over a
- * list with no room left to scroll in.
+ * needs height as well as width — fused into one, a landscape phone would pin chrome over a list
+ * with no room left to scroll in.
  *
  * [ChromeAwarePadding] is the third: what the screen hands `Modifier.padding` and its lists'
  * `contentPadding` so that the app chrome's *animating* inset is resolved in the layout phase rather
- * than read in composition (audit 2026-08-08, PERF-20). Its arithmetic is checkable here for the
+ * than read in composition. Its arithmetic is checkable here for the
  * same reason the breakpoints are — no Compose harness needed to state what the numbers should be.
  */
 class DownloadsScreenTest {
@@ -83,7 +83,7 @@ class DownloadsScreenTest {
         chromePinned(maxWidth = 479.dp, maxHeight = 2000.dp) shouldBe false
     }
 
-    // ---- The deferred chrome padding (audit 2026-08-08, PERF-20) --------------------------------
+    // ---- The deferred chrome padding ------------------------------------------------------------
 
     @Test
     fun `the chrome's top edge is taken alone for the outer box`() {

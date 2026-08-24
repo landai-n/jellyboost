@@ -8,7 +8,7 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for the card description builder (accessibility audit 2026-08-05, CR-6).
+ * Unit tests for the card description builder.
  *
  * Every card in the app is now a single semantics node whose whole content is the string
  * [describe] returns — the artwork, the title, the badges and the progress bar are all silent. That
@@ -136,7 +136,7 @@ class MediaCardFactsTest {
         itemTypeLabelRes(ItemType.UNKNOWN).shouldBeNull()
     }
 
-    // ---- the shared join (audit DUP-8) -----------------------------------------------------------
+    // ---- the shared join -----------------------------------------------------------------------
 
     @Test
     fun `parts are joined by a pause, not by the punctuation a row draws`() {

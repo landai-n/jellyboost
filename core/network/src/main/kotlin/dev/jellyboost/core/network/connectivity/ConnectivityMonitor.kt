@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
  *
  * Deliberately answers only the *transport* question. Whether the Jellyfin server is actually
  * reachable over that network is [ServerReachabilityProbe]'s job, and the two are combined by
- * [ConnectionStateProvider] (docs/PLAN.md, "Connectivity").
+ * [ConnectionStateProvider].
  */
 interface ConnectivityMonitor {
     /**

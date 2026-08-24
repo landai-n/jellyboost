@@ -411,12 +411,12 @@ internal class SyncPlayRecoveryNetsTest : SyncPlayControllerTestBase() {
             fixture.player.hadNoTransportCalls shouldBe true
         }
 
-    // The CPX-4 race: a disarm during the armed window must reach the running body ----------------
+    // The disarm-during-armed-window race: a disarm must reach the running body ---------------------
     //
     // These two drive SyncPlayRecoveryNets directly, with the main-thread hop held on its own
-    // scheduler, because the race lives *inside* one net firing: the body used to null its own
-    // handle at wake-up, so a cancel arriving while it was suspended on the player probe (or the
-    // fallback's seek-and-play hop) was a no-op against an orphaned job, and the net acted for a
+    // scheduler, because the race lives *inside* one net firing: if the body nulled its own handle
+    // at wake-up, a cancel arriving while it was suspended on the player probe (or the fallback's
+    // seek-and-play hop) would be a no-op against an orphaned job, and the net would act for a
     // group state that had just changed.
 
     @Test

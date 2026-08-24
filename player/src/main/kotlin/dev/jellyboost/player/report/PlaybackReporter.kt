@@ -33,12 +33,11 @@ import kotlin.time.Duration.Companion.seconds
  * "now playing" in the server dashboard, the resume position on every other client, and — for a
  * transcode — whether an ffmpeg process is still running after we leave.
  *
- * Modelled on jellyfin-android's `PlayerViewModel.kt:410-562`, with one addition the plan
- * requires: every position that goes to the server is **also** written locally through
- * [UserDataRepository], so resume behaves identically whether the item was streamed or played from
- * a download.
+ * Modelled on jellyfin-android's `PlayerViewModel.kt:410-562`, with one addition: every position
+ * that goes to the server is **also** written locally through [UserDataRepository], so resume
+ * behaves identically whether the item was streamed or played from a download.
  *
- * ### The offline half (M8)
+ * ### The offline half
  * The server half of every method is skipped entirely when there is nothing to tell —
  * see [serverTarget]. Two situations qualify, and they are one rule:
  *
@@ -52,12 +51,11 @@ import kotlin.time.Duration.Companion.seconds
  * The **local** write is not conditional. `UserDataRepository.setPosition` stores the row with
  * `toBeSynced = true` regardless of the network (it only clears the flag on a successful push), so
  * an airplane-mode session accumulates exactly the pending rows `UserDataSyncWorker` drains on
- * reconnect. That is the mechanism behind the milestone's definition of done.
+ * reconnect.
  *
- * ### The one exception (M11)
- * A local file **in a SyncPlay group** does report, whenever the server is reachable
- * (docs/notes/syncplay-m11-plan.md, key decision 9; DECISIONS.md 2026-07-30). The others are
- * watching this device's playback whether or not its bytes came from the server, and a member
+ * ### The one exception
+ * A local file **in a SyncPlay group** does report, whenever the server is reachable. The others
+ * are watching this device's playback whether or not its bytes came from the server, and a member
  * missing from the dashboard is a member nobody can see stalling. `SyncPlayLocalSession` mints a
  * play session id for it through one `PlaybackInfo` POST and publishes it on
  * [SyncPlayStatusHolder]; a `null` id still reports, because the server keys the session on the
@@ -79,7 +77,7 @@ internal class PlaybackReporter
          *
          * Defaulted so that constructing a reporter with nothing to do with SyncPlay — which is
          * what every test of the solo paths does — gets a holder that is never in a group, and
-         * therefore exactly the M8 behaviour. Hilt always passes the singleton.
+         * therefore exactly the solo behaviour. Hilt always passes the singleton.
          */
         private val syncPlay: SyncPlayStatusHolder = SyncPlayStatusHolder(),
     ) {
@@ -87,8 +85,7 @@ internal class PlaybackReporter
          * Playback started (or restarted after a re-resolve).
          *
          * [repeatMode] and [playbackOrder] are defaulted to what a film always is, so the video
-         * path and every test of it read exactly as they did before M13; the music queue passes
-         * its own (docs/notes/music-m13-plan.md, key decision 9).
+         * path and every test of it need not name them; the music queue passes its own.
          */
         suspend fun reportStart(
             source: PlaybackMediaSource,
@@ -128,7 +125,7 @@ internal class PlaybackReporter
          * A tick whose snapshot is not [valid][PlaybackSnapshot.isValid] is skipped entirely: the
          * player no longer holds this source (a receiver unloaded from the television, or another
          * sender took it), so its position is some other session's — writing it would reset or
-         * corrupt this item's resume position (audit CAST-01).
+         * corrupt this item's resume position.
          */
         suspend fun reportProgress(
             source: PlaybackMediaSource,
@@ -180,7 +177,7 @@ internal class PlaybackReporter
          * A stop whose snapshot is not [valid][PlaybackSnapshot.isValid] still closes the server
          * session and kills the encoder — both are about the *session* — but carries no position and
          * writes nothing locally: the reading is not this source's, and the resume position the
-         * progress ticker last recorded is the honest one (audit CAST-01).
+         * progress ticker last recorded is the honest one.
          */
         suspend fun reportStop(
             source: PlaybackMediaSource,
@@ -226,7 +223,7 @@ internal class PlaybackReporter
          * Leaving a group mid-film does not stop playback — it continues solo, off the same file —
          * but it does end the session the server was told about, and the reports stop with it. Sent
          * once, on the way out, so the dashboard does not keep showing this device frozen at the
-         * position it left at (DECISIONS.md 2026-07-30).
+         * position it left at.
          *
          * It takes the membership as given rather than reading [SyncPlayStatusHolder]: by the time
          * anything can observe a group ending, `inGroup` is already `false` and every ordinary
@@ -293,7 +290,7 @@ internal class PlaybackReporter
             }
 
         /**
-         * A music track started (M13).
+         * A music track started.
          *
          * A parallel entry point rather than a `PlaybackMediaSource` because a queue entry is a
          * genuinely different thing: it carries no track selections, no live stream and no resume
@@ -405,7 +402,7 @@ internal class PlaybackReporter
          * The same two rules the video path applies, for the same reasons: a downloaded track has
          * no play session (nothing was negotiated, so there is nothing to key one on), and offline
          * every call would burn a connect timeout per tick. A music queue is never in a SyncPlay
-         * group — M13 refuses that combination outright — so the M11 exception has no analogue
+         * group — that combination is refused outright — so the group exception has no analogue
          * here.
          */
         private fun MusicReportTarget.serverTarget(positionTicks: Long): ServerReportTarget? {
@@ -446,7 +443,7 @@ internal class PlaybackReporter
          * The source as a session the server should be told about, or `null` when there is none.
          *
          * Returning a target rather than a boolean is what lets every call site reach the session
-         * id and the stream indices without a cast — and, since M11, what lets the two kinds of
+         * id and the stream indices without a cast — and what lets the two kinds of
          * reportable source (a stream, and a downloaded file being watched with a group) produce
          * the same report from different material.
          *
@@ -464,7 +461,7 @@ internal class PlaybackReporter
                 is LocalPlaybackMediaSource ->
                     if (inGroup) {
                         // Minted by SyncPlayLocalSession; `null` when the mint failed, which still
-                        // reports (key decision 9).
+                        // reports.
                         toTarget(syncPlay.mintedPlaySessionId.value, liveStreamId = null)
                     } else {
                         Timber.d("Playing %s locally and alone; nothing to report to the server", itemId)
@@ -510,14 +507,14 @@ internal class PlaybackReporter
     }
 
 /**
- * One music queue entry, as the server needs to hear about it (M13).
+ * One music queue entry, as the server needs to hear about it.
  *
  * Deliberately not a `PlaybackMediaSource`: that type carries a resolved *film* — track lists,
  * external subtitles, a live stream id, trickplay — none of which a track has, and half of which
  * would have to be filled with lies. This is the eight fields the three music reports need.
  *
  * @param playSessionId `null` for a downloaded track; nothing is reported for it and there is no
- *   encoder to stop, which is exactly M8's rule for a local file played alone.
+ *   encoder to stop, which is the rule for any local file played alone.
  * @param runTimeTicks the position a *completed* track's stop report carries. Taken from the item
  *   rather than from the player, because an HLS transcode's duration is an estimate until its last
  *   segment lands.
@@ -533,10 +530,9 @@ data class MusicReportTarget(
 /**
  * One playback session as the server sees it, whatever the bytes came from.
  *
- * It is what M8's `RemotePlaybackMediaSource?` narrowing became once a *local* source could also be
- * worth reporting (M11, key decision 9): the same six fields fill a start, a progress and a stop
- * report, and building them here is what keeps those three bodies identical for a stream and for a
- * downloaded file being watched with a group. Since M13 a music queue entry maps onto it too.
+ * The same six fields fill a start, a progress and a stop report, and building them here is what
+ * keeps those three bodies identical for a stream, for a downloaded file being watched with a
+ * group, and for a music queue entry.
  *
  * @param playSessionId nullable, which the SDK's DTOs already allow. A stream always has one; a
  *   local file has whatever the mint produced, and `null` when the mint failed — the server keys

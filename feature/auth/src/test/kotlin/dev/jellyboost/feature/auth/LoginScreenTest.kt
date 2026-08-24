@@ -8,9 +8,9 @@ import org.junit.jupiter.api.Test
  * Unit tests for what `LoginScreen.kt` decides outside of composition.
  *
  * [spacedOutCode] is the Quick Connect code as a screen reader has to hear it: the six digit boxes
- * are one semantic node rather than six bare glyphs (accessibility audit 2026-08-05, F3), and the
- * one thing that node must not do is hand TTS a number — "482913" spoken as four hundred and
- * eighty-two thousand nine hundred and thirteen is not a code anybody can type into another device.
+ * are one semantic node rather than six bare glyphs, and the one thing that node must not do is
+ * hand TTS a number — "482913" spoken as four hundred and eighty-two thousand nine hundred and
+ * thirteen is not a code anybody can type into another device.
  */
 class LoginScreenTest {
     @Test

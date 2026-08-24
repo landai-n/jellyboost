@@ -47,9 +47,9 @@ class DataStoreAppPreferences
          * One preference, deduplicated.
          *
          * DataStore re-emits the **whole** `Preferences` snapshot on every `edit`, so without this
-         * a single write fanned a new value out of all seven flows below — including
+         * a single write would fan a new value out of all seven flows below — including
          * [downloadStorageVolumeId], whose collector restarts a full `File.walk` of the downloads
-         * tree, i.e. toggling Wi-Fi-only re-walked the storage root (audit 2026-08-08, PERF-8).
+         * tree, i.e. toggling Wi-Fi-only would re-walk the storage root.
          *
          * A helper rather than seven hand-written `distinctUntilChanged()` calls, and rather than
          * one on [preferences]: deduplicating the snapshot is useless (a write genuinely changes
@@ -98,7 +98,7 @@ class DataStoreAppPreferences
             }
         }
 
-        // M9 player ---------------------------------------------------------------------------
+        // player --------------------------------------------------------------------------------
 
         override val introSkipMode: Flow<SegmentSkipMode> = preference { it.skipMode(SEGMENT_SKIP_INTRO) }
 

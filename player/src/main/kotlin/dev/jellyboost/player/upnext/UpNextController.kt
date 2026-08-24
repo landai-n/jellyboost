@@ -25,7 +25,7 @@ internal class UpNextController {
      * Readable because the natural end asks it too: closing the card is the one gesture that
      * declines the next episode, so it must also decline the automatic advance at the end —
      * a user who chose to watch the credits being yanked out of them by the arithmetic would
-     * make the dismissal a lie (2026-08-24 auto-advance decision).
+     * make the dismissal a lie.
      */
     var dismissed: Boolean = false
         private set
@@ -84,10 +84,9 @@ internal class UpNextController {
         /**
          * How long before the end the card appears when the item has no outro segment.
          *
-         * Sixty seconds, raised from thirty after the first device walk (2026-08-22): on a library
-         * with no segment data at all — the dev server's, measured — every episode takes this
-         * fallback, and a streaming drama's credits run one to two minutes, so thirty seconds put
-         * the card deep inside them. Sixty still trails a short credits roll rather than covering
+         * Sixty seconds rather than thirty: on a library with no segment data at all every episode
+         * takes this fallback, and a streaming drama's credits run one to two minutes, so thirty
+         * seconds puts the card deep inside them. Sixty still trails a short credits roll rather than covering
          * content, and the card is dismissible either way. The *right* trigger stays the outro
          * segment above; this number only carries the library the server has not analysed.
          */

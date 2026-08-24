@@ -6,10 +6,9 @@ import androidx.compose.ui.unit.dp
 /**
  * Shared spacing and card sizing so every screen lines up on the same rhythm.
  *
- * Card footprints and radii follow the 2026-refresh mocks, which supersede the earlier
- * jellyfin-web-parity sizes (`PosterWidth` 120, `ThumbWidth` 210, `CardCornerRadius` 8) that the M2
- * "reads as the same product side-by-side" definition of done was written against — see
- * DECISIONS.md 2026-08-01, "card metrics and radii leave the jellyfin-web footprint".
+ * Card footprints and radii follow the 2026-refresh mocks rather than the earlier
+ * jellyfin-web-parity sizes (`PosterWidth` 120, `ThumbWidth` 210, `CardCornerRadius` 8), which the
+ * card metrics and radii here deliberately leave behind.
  */
 object Dimens {
     val SpaceExtraSmall: Dp = 4.dp
@@ -54,7 +53,7 @@ object Dimens {
      * it: one is the *interior* of a surface, the other the *margin* of a screen's chrome, and the
      * two would move independently the moment either did. It lived as a `private val HeaderPadding
      * = 20.dp` in three separate files, kept in step by three prose comments each saying "the same
-     * 20dp `LibraryGridScreen`'s header uses" (audit 2026-08-08, DUP-4) — which is a synchronisation
+     * 20dp `LibraryGridScreen`'s header uses" — which is a synchronisation
      * mechanism only as long as somebody reads it. Same argument as `GlassDefaults.ChromeFill` and
      * `GlassDefaults.BottomNavFill`, which are equal by reasoning rather than by coincidence.
      */
@@ -111,5 +110,5 @@ const val POSTER_ASPECT_RATIO: Float = 2f / 3f
 /** Thumbnail / backdrop artwork aspect ratio (width / height). */
 const val THUMB_ASPECT_RATIO: Float = 16f / 9f
 
-/** Square artwork aspect ratio — album and artist art (M13), Jellyfin's music image shape. */
+/** Square artwork aspect ratio — album and artist art, Jellyfin's music image shape. */
 const val SQUARE_ASPECT_RATIO: Float = 1f

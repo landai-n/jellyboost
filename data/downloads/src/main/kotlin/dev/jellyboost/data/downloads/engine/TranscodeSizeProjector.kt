@@ -13,8 +13,7 @@ package dev.jellyboost.data.downloads.engine
  *
  * which is the encoder's average output bitrate so far, extended over the whole runtime. It is the
  * same quantity ffmpeg reports about itself, computed on this side from the bytes we already have
- * to copy anyway: no extra request, no session bookkeeping, no server-version assumption
- * (docs/notes/download-size-estimation.md).
+ * to copy anyway: no extra request, no session bookkeeping, no server-version assumption.
  *
  * ### It can only ever be an improvement
  * The result is clamped into `[bytesReceived, ceiling]`. The lower bound is arithmetic honesty —

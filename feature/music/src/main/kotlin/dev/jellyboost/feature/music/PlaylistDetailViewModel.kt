@@ -24,13 +24,13 @@ import timber.log.Timber
 import javax.inject.Inject
 
 /**
- * State holder for [PlaylistDetailScreen] — a **view-only** track list (playlist editing is out of
- * M13's scope; docs/notes/music-m13-plan.md).
+ * State holder for [PlaylistDetailScreen] — a **view-only** track list; playlist editing is not
+ * supported.
  *
  * Offline, [JellyfinRepository.getPlaylistItems] always answers empty — Room has no
- * playlist-membership relation, and M13 Phase 5 deliberately did not add one (the deferred item
- * "offline playlist membership"; DECISIONS.md, 2026-08-05) — so an offline visit to this screen
- * simply shows the empty state; nothing here has to special-case connectivity to be honest about
+ * playlist-membership relation, and offline playlist membership is deliberately not modelled — so
+ * an offline visit to this screen simply shows the empty state; nothing here has to special-case
+ * connectivity to be honest about
  * that. Downloading *from* a playlist works regardless: the tracks land under their own albums.
  */
 @HiltViewModel

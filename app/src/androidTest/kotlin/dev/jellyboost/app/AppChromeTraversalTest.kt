@@ -20,7 +20,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * The reading order of the app's chrome (accessibility audit 2026-08-05, F9 / wave 4b).
+ * The reading order of the app's chrome.
  *
  * `AppScaffold` draws the top nav, the page and the bottom pill as overlapping siblings of a `Box`.
  * Overlapping siblings with no declared order are sorted geometrically, which put the chrome

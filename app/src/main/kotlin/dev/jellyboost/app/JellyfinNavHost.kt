@@ -58,7 +58,7 @@ internal const val NAV_TRANSITION_MILLIS = 300
  *
  * `:app` resolves every `@HiltViewModel` via `hiltViewModel()` here and hands it to the feature
  * screen, which keeps the feature modules themselves free of a dependency on `:core:network`'s
- * Hilt component (docs/PLAN.md, "Project skeleton").
+ * Hilt component.
  *
  * @param startsSignedIn whether the session existed when the graph was first built.
  * @param sessionState live session; a flip to [SessionState.LoggedOut] from outside the auth
@@ -128,9 +128,8 @@ internal fun JellyfinNavHost(
                         // A tab switch, not a push: the Downloads chip lands on the Downloads tab
                         // exactly as its button in the nav bar does, back stack and all.
                         onOpenDownloads = { navController.navigateToTab(Routes.Downloads) },
-                        // Continue Listening (M13 Phase 4): starts the music queue at the saved
-                        // position, rather than navigating anywhere — the mini-player is where the
-                        // result shows up.
+                        // Continue Listening: starts the music queue at the saved position, rather
+                        // than navigating anywhere — the mini-player is where the result shows up.
                         onPlayTrack = music::playResumed,
                     ),
             )
@@ -154,8 +153,8 @@ internal fun JellyfinNavHost(
             DownloadsScreen(
                 viewModel = hiltViewModel(),
                 onPlay = { itemId, startPositionTicks, item ->
-                    // A downloaded track goes to the music queue, not the immersive video screen
-                    // (M13): Routes.Player cannot play audio, and the queue is what gives the tap
+                    // A downloaded track goes to the music queue, not the immersive video screen:
+                    // Routes.Player cannot play audio, and the queue is what gives the tap
                     // its album context, mini-player and notification. Only when the cached item
                     // was wiped (type unknowable) does the video route remain the fallback.
                     if (item != null && item.type == ItemType.AUDIO) {
@@ -202,7 +201,7 @@ internal fun JellyfinNavHost(
             )
         }
 
-        // M13 Phase 2 — music
+        // Music
         composable<Routes.MusicLibrary> {
             MusicLibraryScreen(
                 viewModel = hiltViewModel(),
@@ -286,7 +285,7 @@ internal fun JellyfinNavHost(
  * signed-in destination.
  *
  * Written against the live session rather than hooked onto the sign-out button so that it also
- * covers logouts the UI did not ask for — a rejected token at M6, for instance. Destinations
+ * covers logouts the UI did not ask for — a rejected token, for instance. Destinations
  * inside the auth flow are exempt: being logged out there is the normal state of affairs.
  */
 @Composable
@@ -308,8 +307,8 @@ private fun LogoutRedirectEffect(
 
 /**
  * Collects `SyncPlayController.launchRequests` and opens the player for whatever the group moved
- * on to — the other half of M11 key decision 5: membership survives leaving the player screen, so
- * a `PlayQueueUpdate` can arrive while nobody has one open, and this is what catches up.
+ * on to: membership survives leaving the player screen, so a `PlayQueueUpdate` can arrive while
+ * nobody has one open, and this is what catches up.
  *
  * A global effect at the NavHost's own level, the same way [LogoutRedirectEffect] is: neither is
  * owned by any one destination, both react to state a `@Singleton` holds regardless of what is on
@@ -333,8 +332,8 @@ private fun SyncPlayLaunchEffect(navController: NavHostController) {
     LaunchedEffect(viewModel) {
         viewModel.launchRequests.collect { request ->
             // Consumed first, acted-on or ignored alike: the flow replays its last request to
-            // whichever collector comes next (audit SP-12), and both outcomes below are this
-            // effect *handling* it — a replay after either would navigate twice.
+            // whichever collector comes next, and both outcomes below are this effect *handling*
+            // it — a replay after either would navigate twice.
             viewModel.consume()
             if (currentEntry?.destination?.hasRoute<Routes.Player>() == true) {
                 Timber.d("Ignoring a SyncPlay launch request while already on the player")
@@ -357,8 +356,8 @@ private fun NavController.navigateClearingBackStack(route: Any) {
 }
 
 /**
- * A library tile was tapped — the one fork between the movie/TV library grid and M13's music
- * library screen (docs/notes/music-m13-plan.md, Phase 2 spec item 6).
+ * A library tile was tapped — the one fork between the movie/TV library grid and the music
+ * library screen.
  */
 private fun NavController.navigateToLibrary(library: LibraryView) {
     if (library.collectionType == CollectionKind.MUSIC) {
@@ -369,15 +368,15 @@ private fun NavController.navigateToLibrary(library: LibraryView) {
 }
 
 /**
- * The one place an item click becomes a destination, for every screen that can now hand this a
+ * The one place an item click becomes a destination, for every screen that can hand this a
  * music item as easily as a movie or a series (Home, the library grid, item detail's own related
- * rows, search) — M13 Phase 2 spec item 6: "item clicks branch on type: MUSIC_ALBUM → AlbumDetail,
- * MUSIC_ARTIST → ArtistDetail, PLAYLIST → PlaylistDetail, AUDIO → its album's detail if albumId
- * present else no-op for now."
+ * rows, search): item clicks branch on type — MUSIC_ALBUM → AlbumDetail, MUSIC_ARTIST →
+ * ArtistDetail, PLAYLIST → PlaylistDetail, AUDIO → its album's detail if albumId present else
+ * no-op for now.
  *
  * A track with no `albumId` at all (a lone upload, a malformed server response) does nothing
- * rather than opening a broken album page — there is nowhere useful for a tap on it to go before
- * M13 Phase 3 gives a track its own now-playing destination.
+ * rather than opening a broken album page — there is nowhere useful for a tap on it to go without
+ * a now-playing destination of its own.
  */
 private fun NavController.navigateToItem(item: JellyfinItem) {
     when (item.type) {

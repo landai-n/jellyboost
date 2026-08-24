@@ -95,7 +95,7 @@ class ItemEntityMapperTest {
         row.seriesName shouldBe "Game of Thrones"
     }
 
-    // ---- M13 Phase 1: music query columns --------------------------------------------------------
+    // ---- music query columns ---------------------------------------------------------------------
 
     @Test
     fun `stores a track's album and album-artist ids as query-only columns`() {
@@ -316,8 +316,8 @@ class ItemEntityMapperTest {
 
     @Test
     fun `refuses to cache a library kind the app does not support`() {
-        // Music joined SUPPORTED in M13 Phase 2 (docs/notes/music-m13-plan.md) — photos is what
-        // stays outside it, so this is still a live case for the guard being tested.
+        // Music is part of SUPPORTED — photos is what stays outside it, so this is still a live
+        // case for the guard being tested.
         val dto =
             BaseItemDto(
                 id = uuid(20),

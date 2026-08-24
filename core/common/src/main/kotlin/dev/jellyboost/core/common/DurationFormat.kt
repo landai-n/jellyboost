@@ -9,8 +9,8 @@ package dev.jellyboost.core.common
  * promise the moment it is shown. Ceiling division keeps the number always at least as large as the
  * real remaining time, the same asymmetry a user expects from any "time remaining" figure.
  *
- * Lives in `:core:common` next to [formatBytes] for the same reason ([formatBytes]'s KDoc,
- * ARCH-11): Android-free so every feature module can call it and unit-test it without a `Context`.
+ * Lives in `:core:common` next to [formatBytes] for the same reason: Android-free so every feature
+ * module can call it and unit-test it without a `Context`.
  */
 fun formatDurationSeconds(seconds: Long): String {
     val clamped = seconds.coerceAtLeast(0L)

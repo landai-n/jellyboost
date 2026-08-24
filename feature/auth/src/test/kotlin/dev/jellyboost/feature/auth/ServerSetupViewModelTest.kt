@@ -27,7 +27,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 import java.util.UUID
 
-/** Unit tests for the ServerSetup state holder (docs/PLAN.md, "ServerSetup"). */
+/** Unit tests for the ServerSetup state holder. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class ServerSetupViewModelTest {
     @JvmField
@@ -55,8 +55,8 @@ class ServerSetupViewModelTest {
     @DisplayName("a session lost to an unreadable credential store is said out loud, not implied")
     fun involuntarySignOutIsSurfaced() =
         runTest {
-            // Before: the store wiped itself, the user landed here, and nothing distinguished that
-            // from a first run (audit SEC-03).
+            // Without this state, the store wiping itself and the user landing here would be
+            // indistinguishable from a first run.
             val viewModel = viewModel(sessionWasLost = true)
             advanceUntilIdle()
 
@@ -210,9 +210,8 @@ class ServerSetupViewModelTest {
     fun addressCannotChangeMidProbe() =
         runTest {
             // The screen keeps the field *enabled* through the probe so a TalkBack user does not
-            // lose accessibility focus the instant they press Connect (audit 2026-08-05, F17);
-            // this is what makes "enabled" safe — the state cannot drift away from the address
-            // being resolved.
+            // lose accessibility focus the instant they press Connect; this is what makes
+            // "enabled" safe — the state cannot drift away from the address being resolved.
             coEvery { discoveryRepository.resolveServerAddress(ADDRESS) } coAnswers {
                 delay(PROBE_MILLIS)
                 AppResult.Success(RESOLVED)
@@ -241,7 +240,7 @@ class ServerSetupViewModelTest {
             viewModel.onAddressChange("something.else")
 
             viewModel.uiState.value.address shouldBe "something.else"
-            // Editing after a failure also clears the failure, as it always did.
+            // Editing after a failure also clears the failure.
             viewModel.uiState.value.error shouldBe null
         }
 
@@ -263,8 +262,8 @@ class ServerSetupViewModelTest {
     @DisplayName("a public server that answered over plain http warns instead of moving on")
     fun cleartextPublicServerWarnsBeforeNavigating() =
         runTest {
-            // Audit SEC-10. The address the app is about to send the token to is the *resolved* one,
-            // and here it came back cleartext on a host that is not on this network.
+            // The address the app is about to send the token to is the *resolved* one, and here
+            // it came back cleartext on a host that is not on this network.
             coEvery { discoveryRepository.resolveServerAddress(ADDRESS) } returns
                 AppResult.Success(CLEARTEXT_PUBLIC)
             val viewModel = viewModel()
@@ -380,7 +379,7 @@ class ServerSetupViewModelTest {
                 address = "https://media.example.com",
             )
 
-        /** The SEC-10 case: a port-forwarded server, reached in the clear. */
+        /** The cleartext-warning case: a port-forwarded server, reached in the clear. */
         val CLEARTEXT_PUBLIC = RESOLVED.copy(address = "http://media.example.com:8096")
 
         /** The overwhelmingly common case, which must stay silent. */

@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
  * Type-safe Navigation Compose routes.
  *
  * They live in `:core:common` so that feature modules can navigate to each other without ever
- * depending on each other (see docs/PLAN.md, "Project skeleton").
+ * depending on each other.
  */
 object Routes {
     /** Top-level destinations backing the bottom navigation bar. */
@@ -33,7 +33,7 @@ object Routes {
     data object Login
 
     /**
-     * The dedicated SyncPlay section (M11 Phase 5): the group list, join/create/leave.
+     * The dedicated SyncPlay section: the group list, join/create/leave.
      *
      * Reached from the app chrome's Groups action — see `:app`'s `AppActions` — the same way
      * `Settings` is reached from its overflow menu; both are pushed destinations with no arguments
@@ -53,7 +53,7 @@ object Routes {
     )
 
     /**
-     * The full-screen video player (M5).
+     * The full-screen video player.
      *
      * @param mediaSourceId which of the item's media sources to play; `null` lets the server pick
      *   the default one (see `PlaybackInfoResolver`'s dash-less media-source-id quirk).
@@ -67,7 +67,7 @@ object Routes {
         val startPositionTicks: Long = 0L,
     )
 
-    // M3 — library & search
+    // library & search
     //
     // Search reuses the top-level [Search] destination declared above; only the grid needs a new
     // route, because it carries the library name for its top bar (a second `getUserViews` round
@@ -80,7 +80,7 @@ object Routes {
         val libraryName: String,
     )
 
-    // M13 Phase 2 — music
+    // music
 
     /** A music library's Albums/Artists/Playlists tabs — the destination a `MUSIC` tile opens. */
     @Serializable
@@ -99,14 +99,14 @@ object Routes {
         val artistId: String,
     )
 
-    /** View-only (docs/notes/music-m13-plan.md — playlist *editing* is out of M13's scope). */
+    /** View-only — playlist *editing* is not implemented. */
     @Serializable
     data class PlaylistDetail(
         val playlistId: String,
     )
 
     /**
-     * The full-screen now-playing surface (M13 Phase 4): artwork, transport, seek, queue.
+     * The full-screen now-playing surface: artwork, transport, seek, queue.
      *
      * No arguments — unlike [Player], which names an item and a media source, this destination is
      * a *view* onto the one process-wide [dev.jellyboost.core.common.music.MusicController.state]

@@ -71,8 +71,8 @@ class CastSpecMapperTest {
 
     @Test
     fun `a URL the server already signed is left alone`() {
-        // The dev server (2026-07-31) returns `TranscodingUrl` and every subtitle `DeliveryUrl` with
-        // `ApiKey` already on them; appending a second one would make the query ambiguous.
+        // The server returns `TranscodingUrl` and every subtitle `DeliveryUrl` with `ApiKey`
+        // already on them; appending a second one would make the query ambiguous.
         val signed = "https://server/videos/x/master.m3u8?PlaySessionId=s&ApiKey=$TOKEN"
 
         val spec = mapper.map(itemSpec(uri = signed, mimeType = MimeTypes.APPLICATION_M3U8), transcode())
@@ -213,9 +213,9 @@ class CastSpecMapperTest {
 
     @Test
     fun `the poster is not signed — the token goes only where the fetch needs it`() {
-        // Image endpoints answer without credentials (probed 2026-07-31), and everything handed to
-        // the receiver is republished in its MediaStatus for any sender on the network to read
-        // (audit CAST-06). The words beside it are strings and are not touched.
+        // Image endpoints answer without credentials, and everything handed to the receiver is
+        // republished in its MediaStatus for any sender on the network to read. The words beside
+        // it are strings and are not touched.
         val metadata = CastMetadata(title = "Arrival", subtitle = "2016", posterUrl = "https://server/p.jpg")
 
         val spec = mapper.map(itemSpec(), directPlay(), metadata)

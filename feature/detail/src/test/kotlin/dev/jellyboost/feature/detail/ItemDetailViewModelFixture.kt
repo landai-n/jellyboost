@@ -31,8 +31,8 @@ import org.junit.jupiter.api.extension.RegisterExtension
  * (`player/src/test/.../ui/PlayerViewModelFixture.kt`), which is the in-repo model this one
  * mirrors. The four subclasses ([ItemDetailViewModelTest], [ItemDetailSelectionTest],
  * [ItemDetailDownloadTest], [ItemDetailGroupActionsTest]) exist to stay under detekt's
- * `LargeClass` ceiling; before this fixture they rebuilt the same doubles four times over,
- * drifting a little more each time.
+ * `LargeClass` ceiling; without this fixture they would each rebuild the same doubles, free to
+ * drift apart.
  *
  * The base [setUp] stubs only what every one of the four needs. `getEpisodes` and
  * `getSeriesEpisodes` are deliberately **not** here: [ItemDetailSelectionTest] omits the former
@@ -49,7 +49,7 @@ internal abstract class ItemDetailViewModelFixture {
     protected val changes =
         MutableSharedFlow<UserDataChange>(extraBufferCapacity = 8, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 
-    /** The badge source (M7); emits an empty map unless a test says otherwise. */
+    /** The badge source; emits an empty map unless a test says otherwise. */
     protected val downloadStates = MutableStateFlow<Map<String, DownloadState>>(emptyMap())
 
     /** The on-device footprint of [ITEM_ID]; `null` unless a test says otherwise. */
@@ -60,7 +60,7 @@ internal abstract class ItemDetailViewModelFixture {
             every { observeBytesOnDisk(any()) } returns bytesOnDisk
         }
 
-    /** The connectivity-change signal (M9); fires only when a test says the server came back. */
+    /** The connectivity-change signal; fires only when a test says the server came back. */
     protected val connectivityChanges = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
     protected val connectivityRefresher =
         mockk<ConnectivityRefresher> {
@@ -68,7 +68,7 @@ internal abstract class ItemDetailViewModelFixture {
         }
 
     /**
-     * The group this device is in; `null` until a test joins one (M11 Phase 4).
+     * The group this device is in; `null` until a test joins one.
      *
      * Only [ItemDetailGroupActionsTest] ever writes to this. Everywhere else it stays `null` for
      * the life of the test, which is the point: SyncPlay's arrival must change nothing about an

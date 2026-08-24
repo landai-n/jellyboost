@@ -6,7 +6,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 
 /**
- * The cleartext-warning rule (audit SEC-10), pinned as the pure function it is.
+ * The cleartext-warning rule, pinned as the pure function it is.
  *
  * Two properties are being defended, and they pull in opposite directions: a port-forwarded server
  * reached over `http://` must warn (it is the app's one realistic remote token-theft path), and a

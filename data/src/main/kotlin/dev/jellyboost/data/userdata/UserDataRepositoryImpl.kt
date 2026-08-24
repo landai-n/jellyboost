@@ -24,7 +24,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Local-first [UserDataRepository] (docs/PLAN.md, "Data layer").
+ * Local-first [UserDataRepository].
  *
  * Every write follows the same four steps, in this order:
  *
@@ -142,17 +142,17 @@ internal class UserDataRepositoryImpl
          * Step 1 of the write: read the row, apply [edit] to it, store the result — **as one
          * transaction**.
          *
-         * Read-modify-write over a row two independent callers touch, and until audit CORR-2 the
-         * three steps were three separate DAO calls. The interleaving is not exotic: during
-         * playback `PlaybackReporter` calls [setPosition] every five seconds, and each of those
-         * reads the whole row and writes the whole row back. A "mark watched" from another screen
-         * landing between a tick's read and its write was overwritten by the stale snapshot — the
-         * watched tick flicked back off locally, *and* the tick then pushed `played = false` to the
-         * server, so the mark was lost on both sides.
+         * Read-modify-write over a row two independent callers touch: without one transaction, the
+         * three steps would be three separate DAO calls, and the interleaving is not exotic —
+         * during playback `PlaybackReporter` calls [setPosition] every five seconds, and each of
+         * those reads the whole row and writes the whole row back. A "mark watched" from another
+         * screen landing between a tick's read and its write would be overwritten by the stale
+         * snapshot — the watched tick flicked back off locally, *and* the tick would then push
+         * `played = false` to the server, so the mark would be lost on both sides.
          *
-         * The [TransactionRunner] seam is the same one the browse cache's merge uses (audit H3):
-         * the decision stays a plain Kotlin lambda the tests can drive, and the read that feeds it
-         * plus the write that follows it cannot be stepped into.
+         * The [TransactionRunner] seam is the same one the browse cache's merge uses: the decision
+         * stays a plain Kotlin lambda the tests can drive, and the read that feeds it plus the
+         * write that follows it cannot be stepped into.
          */
         private suspend fun storeLocally(
             id: UUID,
@@ -174,7 +174,7 @@ internal class UserDataRepositoryImpl
                 } catch (cancellation: CancellationException) {
                     // A `withContext` that was cancelled has not written anything; reporting it as
                     // `AppError.Storage` would tell the caller the disk failed and, worse, swallow
-                    // the cancellation this coroutine owes its parent (the audit's ARCH-08 rule).
+                    // the cancellation this coroutine owes its parent.
                     throw cancellation
                 } catch (error: SQLiteException) {
                     // Narrowed to Room's own failure: everything else in the block is a read, a
@@ -189,8 +189,8 @@ internal class UserDataRepositoryImpl
          * Step 3 of the write, guarded on connectivity.
          *
          * While offline the push is not attempted at all. It could only fail, and during playback
-         * `PlaybackReporter` calls [setPosition] every five seconds, so each tick used to cost a
-         * doomed request and a warning stack (STATUS.md, "Known issues"). Nothing is lost by
+         * `PlaybackReporter` calls [setPosition] every five seconds, so without this guard each
+         * tick would cost a doomed request and a warning stack. Nothing is lost by
          * skipping it: [storeLocally] has already set `toBeSynced = true`, and [UserDataSyncTrigger]
          * drains every pending row on the next `OFFLINE → ONLINE` edge and at app start — which is
          * also why the offline path does not bother scheduling the worker per write.
@@ -226,7 +226,7 @@ internal class UserDataRepositoryImpl
                     userDataDao.clearPendingSync(row.itemId, row.userId, row.updatedAt)
                 } catch (cancellation: CancellationException) {
                     // Best effort, but not at the price of a swallowed cancellation: the row simply
-                    // stays pending and `UserDataSyncTrigger` drains it later (ARCH-08).
+                    // stays pending and `UserDataSyncTrigger` drains it later.
                     throw cancellation
                 } catch (error: SQLiteException) {
                     Timber.w(error, "Could not clear the pending flag for %s", row.itemId)

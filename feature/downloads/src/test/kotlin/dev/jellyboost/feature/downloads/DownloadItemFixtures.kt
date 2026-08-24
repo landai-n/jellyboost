@@ -9,9 +9,9 @@ import dev.jellyboost.data.downloads.model.DownloadItem
  * A [DownloadItem] with every field defaulted.
  *
  * [DownloadProgressRatchetTest], [DownloadSpeedTrackerTest], [DownloadGroupCacheTest],
- * [DownloadsUiStateTest], [DownloadRowsTest] and [DownloadsViewModelTest] each hand-rolled their own
- * `DownloadItem(...)` literal, hardcoding a different subset of its dozen fields (audit 2026-08-08,
- * DUP-14). This is their union — every field any of the six needed, defaulted to the plainest value
+ * [DownloadsUiStateTest], [DownloadRowsTest] and [DownloadsViewModelTest] would otherwise each
+ * hand-roll their own `DownloadItem(...)` literal, hardcoding a different subset of its dozen
+ * fields. This is their union — every field any of the six needs, defaulted to the plainest value
  * that type-checks — so each test's own helper can name only the two or three fields it actually
  * varies and delegate the rest here, the way `data/downloads`' `DownloadFixtures` builders do.
  */

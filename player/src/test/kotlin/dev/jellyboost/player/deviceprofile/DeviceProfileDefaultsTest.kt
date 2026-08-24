@@ -6,7 +6,7 @@ import org.jellyfin.sdk.model.api.ProfileConditionValue
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for [DeviceProfileDefaults] (DUP-14) — the ceilings [DeviceProfileBuilder] and
+ * Unit tests for [DeviceProfileDefaults] — the ceilings [DeviceProfileBuilder] and
  * [CastDeviceProfile] both send the server.
  */
 class DeviceProfileDefaultsTest {

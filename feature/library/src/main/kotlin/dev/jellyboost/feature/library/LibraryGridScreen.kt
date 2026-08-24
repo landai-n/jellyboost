@@ -86,14 +86,12 @@ import dev.jellyboost.core.ui.theme.screenGlow
 import dev.jellyboost.core.ui.R as CoreUiR
 
 /**
- * The library grid: every title in one library, paged, sortable and filterable
- * (docs/PLAN.md, "Screens" → LibraryGrid).
+ * The library grid: every title in one library, paged, sortable and filterable.
  *
- * Since the 2026 refresh the screen wears no `TopAppBar`: it opens on its own large-title header of
- * glass buttons over a faint accent glow, with the applied filters spelled out as chips underneath
- * rather than hidden behind a badge (spec 4b). It is a **pushed** destination, so `:app`'s chrome is
- * hidden and `LocalAppChromePadding` is zero — this screen handles its own system-bar insets, as it
- * always did.
+ * The screen wears no `TopAppBar`: it opens on its own large-title header of glass buttons over a
+ * faint accent glow, with the applied filters spelled out as chips underneath rather than hidden
+ * behind a badge. It is a **pushed** destination, so `:app`'s chrome is hidden and
+ * `LocalAppChromePadding` is zero — this screen handles its own system-bar insets.
  *
  * The `Scaffold` that remains is here for the snackbar alone, hence `contentWindowInsets =
  * WindowInsets(0)`: the header pads itself against the status bar and the grid scrolls under it.
@@ -145,7 +143,7 @@ fun LibraryGridScreen(
         // grid's own contentPadding clears the navigation bar.
         contentWindowInsets = WindowInsets(0),
         // A pushed destination, so `LocalAppChromePadding` is zero and the shared host's policy
-        // resolves to the navigation-bar inset this screen used to apply by hand.
+        // resolves to the navigation-bar inset this screen applies by hand.
         snackbarHost = { JellyboostSnackbarHost(hostState = snackbarHostState) },
     ) { innerPadding ->
         // One `BoxWithConstraints` for the whole screen — not per cell (see [ItemGrid]). It buys
@@ -158,7 +156,7 @@ fun LibraryGridScreen(
             // its own, and this is what keeps the header from reading as text on a black rectangle.
             // Height follows width because the brush's radius does (fade-out ≈ 61% of width) — a
             // fixed height that fits a phone chops the gradient mid-fade on a tablet and draws a
-            // hard seam across the page (found on the music screens' copy of this box, 2026-08-15).
+            // hard seam across the page.
             Box(modifier = Modifier.fillMaxWidth().aspectRatio(GLOW_ASPECT).screenGlow())
 
             Column(modifier = Modifier.fillMaxSize()) {
@@ -418,7 +416,8 @@ private fun SortLabelAction(
             modifier =
                 Modifier
                     // A glyph and a word that open a menu: the compact layout's version of this is
-                    // a `GlassIconButton` and has always said so; this one said nothing (ROLE-01).
+                    // a `GlassIconButton`, which says so — without the role, this one would say
+                    // nothing.
                     .clickable(role = Role.Button) { onExpandedChange(true) }
                     .padding(horizontal = Dimens.HeaderPadding, vertical = Dimens.SpaceSmall),
             verticalAlignment = Alignment.CenterVertically,
@@ -650,9 +649,9 @@ private fun AppendError(
 /**
  * Minimum grid column width.
  *
- * docs/PLAN.md, "Screens" → LibraryGrid specifies `Adaptive(110.dp)`, which lets a tablet settle at
- * cells narrower than the [Dimens.PosterWidth] the home rows draw the same 2:3 poster at — an
- * inconsistency between the two screens. Anchoring the floor to [Dimens.PosterWidth] itself keeps
+ * An adaptive grid at 110.dp lets a tablet settle at cells narrower than the [Dimens.PosterWidth]
+ * the home rows draw the same 2:3 poster at — an inconsistency between the two screens. Anchoring
+ * the floor to [Dimens.PosterWidth] itself keeps
  * the test tablet (1600x2560 @ 2.25x) at 4 portrait columns of ~156dp and 7 landscape columns of
  * ~143dp with this screen's 20dp side padding and 16dp gutters, and a 360dp phone at 2 columns of
  * ~152dp — all comfortably at or above the home card width, and none of them narrower than the

@@ -55,13 +55,13 @@ import java.time.ZoneOffset
 import java.util.UUID
 
 /**
- * Unit tests for [DownloadEnqueuer] — docs/PLAN.md's "Enqueue" step.
+ * Unit tests for [DownloadEnqueuer] — the enqueue step.
  *
  * The rule the tests exist for is step 3: the item **and its parents** are cached with
  * `source = DOWNLOAD`. Get that wrong and the download works perfectly while the offline library
  * shows an episode that cannot reach its own series page.
  *
- * The second half of the file pins **container expansion** (DECISIONS.md, 2026-07-29): a season or
+ * The second half of the file pins **container expansion**: a season or
  * a series is a folder, and enqueueing one has to become one download per episode rather than a row
  * for the folder itself — which is the row that produced *"The server couldn't send this download
  * (error 400)"*.
@@ -90,7 +90,7 @@ class DownloadEnqueuerTest {
         coEvery { itemDao.upsert(capture(upserted)) } just Runs
         coEvery { downloadDao.upsert(capture(rows)) } just Runs
         coEvery { downloadDao.get(any()) } returns null
-        // The season path reads its whole batch in one statement (audit PERF-25); routing it
+        // The season path reads its whole batch in one statement; routing it
         // through the per-id stub keeps every test below expressing its rows one at a time.
         coEvery { downloadDao.getAll(any()) } coAnswers {
             firstArg<List<UUID>>().mapNotNull { downloadDao.get(it) }
@@ -233,9 +233,9 @@ class DownloadEnqueuerTest {
     @Test
     fun `a second tap on a single item already downloaded leaves its row exactly as it is`() =
         runTest {
-            // Audit CORR-6. The container path has always filtered these out; the single path wrote
-            // over whatever it found, so a badge one tick stale — or a plain double tap — restamped
-            // a finished row's quality, `bytesTotal` and `sizeIsExact` from the *current*
+            // The container path filters these out, and the single path has to as well: writing
+            // over whatever it finds would let a badge one tick stale — or a plain double tap —
+            // restamp a finished row's quality, `bytesTotal` and `sizeIsExact` from the *current*
             // preference, describing a plan the file on disk was never fetched under.
             coEvery { downloadDao.get(uuid(1)) } returns
                 DownloadFixtures.download(status = DownloadStatus.DOWNLOADED, quality = DownloadQuality.ORIGINAL)
@@ -250,9 +250,9 @@ class DownloadEnqueuerTest {
     @Test
     fun `a cancelled row is re-enqueued, because that is what re-downloading after a cancel is`() =
         runTest {
-            // The other side of the same guard, and the state CORR-1's window leaves behind: the
-            // cascade has not reached the row yet, the UI already offers Download, and the tap has
-            // to write — the fresh QUEUED row is what makes the cascade skip it.
+            // The other side of the same guard, and the state a cancel leaves behind: the cascade
+            // has not reached the row yet, the UI already offers Download, and the tap has to
+            // write — the fresh QUEUED row is what makes the cascade skip it.
             coEvery { downloadDao.get(uuid(1)) } returns
                 DownloadFixtures.download(status = DownloadStatus.CANCELLED)
             coEvery { api.getFullItems(any()) } returns AppResult.Success(listOf(movie()))
@@ -265,8 +265,8 @@ class DownloadEnqueuerTest {
     @Test
     fun `every row of one enqueue gets its own queue position`() =
         runTest {
-            // The `maxQueuePosition()` read and the row writes are one transaction now (CORR-6);
-            // the counter it seeds still has to advance per row within it.
+            // The `maxQueuePosition()` read and the row writes are one transaction; the counter
+            // it seeds still has to advance per row within it.
             givenSeason(episodeIds = listOf(uuid(2), uuid(3), uuid(4)))
             coEvery { downloadDao.maxQueuePosition() } returns 7
             coEvery { api.getFullItems(listOf(uuid(2), uuid(3), uuid(4))) } returns
@@ -315,8 +315,7 @@ class DownloadEnqueuerTest {
     /**
      * The enqueue runs in the caller's scope — a ViewModel's, which dies with the screen. Turning
      * that cancellation into `AppError.Storage` would put a "could not download" message on a
-     * screen the user has already left, and would swallow the cancellation the parent job is owed
-     * (audit ARCH-08).
+     * screen the user has already left, and would swallow the cancellation the parent job is owed.
      */
     @Test
     fun `a cancelled enqueue propagates instead of being reported as a storage failure`() =
@@ -327,7 +326,7 @@ class DownloadEnqueuerTest {
             shouldThrow<CancellationException> { enqueuer().enqueue(uuid(1), USER) }
         }
 
-    // ---- download quality (M9) ------------------------------------------------------------------
+    // ---- download quality ------------------------------------------------------------------------
 
     @Test
     fun `the preference in force when the user taps Download is stamped on the row`() =
@@ -531,7 +530,7 @@ class DownloadEnqueuerTest {
             row.bytesTotal shouldBe 0L
         }
 
-    // ---- containers expand into episodes (docs/POLISH.md: "downloading a season fails") ----------
+    // ---- containers expand into episodes ---------------------------------------------------------
 
     @Test
     fun `a season becomes one download per episode, in the order the server lists them`() =
@@ -649,7 +648,7 @@ class DownloadEnqueuerTest {
             enqueuer().enqueue(uuid(11), USER)
 
             // One tap, one quality: a preference changed while the season drains cannot make half
-            // the episodes a different file (DECISIONS.md, 2026-07-29).
+            // the episodes a different file.
             rows.map { it.quality }.distinct() shouldContainExactly listOf(DownloadQuality.MEDIUM)
         }
 
@@ -717,7 +716,7 @@ class DownloadEnqueuerTest {
             coVerify(exactly = 0) { downloadDao.upsert(any()) }
         }
 
-    // ---- music containers expand too (M13 Phase 5) -----------------------------------------------
+    // ---- music containers expand too -------------------------------------------------------------
 
     @Test
     fun `an album becomes one download per track, in the order the server lists them`() =
@@ -744,7 +743,7 @@ class DownloadEnqueuerTest {
 
             enqueuer().enqueue(uuid(40), USER)
 
-            // artist → album → tracks is the M13 DoD's offline walk, and every hop reads a row with
+            // artist → album → tracks is the offline walk, and every hop reads a row with
             // `source = DOWNLOAD`. A missing artist row is an artist page with nothing on it.
             upserted.captured.map { it.id } shouldContainExactlyInAnyOrder listOf(uuid(40), uuid(30), uuid(50))
             upserted.captured.map { it.source }.distinct() shouldContainExactly listOf(ItemSource.DOWNLOAD)
@@ -788,8 +787,8 @@ class DownloadEnqueuerTest {
 
             rows.map { it.itemId } shouldContainExactly listOf(uuid(30))
             // The playlist row is deliberately absent: offline it could only ever open onto an
-            // empty track list, because Room has no playlist-membership relation (DECISIONS.md,
-            // 2026-08-06). The tracks are reachable through their album and artist instead.
+            // empty track list, because Room has no playlist-membership relation. The tracks are
+            // reachable through their album and artist instead.
             upserted.captured.map { it.id } shouldContainExactlyInAnyOrder listOf(uuid(30), uuid(40), uuid(50))
         }
 

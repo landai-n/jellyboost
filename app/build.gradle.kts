@@ -78,7 +78,7 @@ android {
         release {
             // R8 with the default full mode. The keep rules live in `proguard-rules.pro`, which
             // documents why each one exists and — as importantly — which libraries already ship
-            // their own consumer rules and therefore need nothing from us (M10, docs/PLAN.md).
+            // their own consumer rules and therefore need nothing from us.
             isMinifyEnabled = true
             // Safe because the app has no resource lookup by name (no getIdentifier() anywhere).
             isShrinkResources = true
@@ -120,7 +120,7 @@ android {
 }
 
 /**
- * Report-only Compose compiler metrics/reports, off by default (audit PERF-11).
+ * Report-only Compose compiler metrics/reports, off by default.
  *
  * The same opt-in the Compose convention plugin applies to every other Compose module, repeated
  * here because `:app` applies the Compose plugin directly rather than through that convention — and
@@ -137,7 +137,7 @@ if (providers.gradleProperty("jellyboost.composeCompilerMetrics").getOrElse("fal
 }
 
 /**
- * Consumer side of baseline profile generation (M10). The producer is `:baselineprofile`.
+ * Consumer side of baseline profile generation. The producer is `:baselineprofile`.
  *
  * Nothing here touches a device: generation is an explicit, device-only task run in a device
  * session (`./gradlew :app:generateBaselineProfile`). Until it has been run,
@@ -181,16 +181,16 @@ dependencies {
     implementation(libs.androidx.compose.material.icons.extended)
     debugImplementation(libs.androidx.compose.ui.tooling)
 
-    // The instrumented accessibility suite (accessibility audit 2026-08-05, CR-7). Repeated here
-    // rather than inherited because `:app` applies the Compose plugin directly instead of through
-    // the convention that gives every other Compose module these — same reason the Compose
-    // compiler-metrics block above is duplicated.
+    // The instrumented accessibility suite. Repeated here rather than inherited because `:app`
+    // applies the Compose plugin directly instead of through the convention that gives every
+    // other Compose module these — same reason the Compose compiler-metrics block above is
+    // duplicated.
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.bundles.compose.ui.test)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
     implementation(libs.androidx.activity.compose)
-    // M12 Chromecast, both for the cast button and for it alone (DECISIONS.md 2026-07-31):
+    // Chromecast, both for the cast button and for it alone:
     // MediaRouter's chooser dialog is a DialogFragment hosted by the activity — hence
     // `FragmentActivity` — and it inflates against AppCompat attributes it takes from the
     // activity's own theme, hence `Theme.AppCompat.NoActionBar` in themes.xml. Neither pulls
@@ -209,8 +209,8 @@ dependencies {
     implementation(libs.timber)
 
     // `JellyboostApplication` builds the process-wide `ImageLoader` (memory + disk cache budgets),
-    // so it names `coil3` types directly. Declared here since `:core:ui` stopped exporting Coil as
-    // `api` (audit ARCH-9) — it was always this module's own dependency, just an undeclared one.
+    // so it names `coil3` types directly. Declared here since `:core:ui` does not export Coil as
+    // `api` — it was always this module's own dependency, just an undeclared one.
     implementation(libs.coil.compose)
 
     // Installs the packaged baseline profile into ART on first run. Already arrives transitively

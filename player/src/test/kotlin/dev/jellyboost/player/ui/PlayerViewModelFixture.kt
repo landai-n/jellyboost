@@ -89,7 +89,7 @@ internal abstract class PlayerViewModelFixture {
         }
 
     /**
-     * The group this session is in, writable so a test can put the player in one (M11 Phase 3).
+     * The group this session is in, writable so a test can put the player in one.
      *
      * `Idle` by default, which is what makes every other test in this package a *solo* test: the
      * ViewModel's SyncPlay branches all hang off this flow's current value, so leaving it alone is
@@ -116,7 +116,7 @@ internal abstract class PlayerViewModelFixture {
         }
 
     /**
-     * The server-visible session of a downloaded item in a group (M11 Phase 6).
+     * The server-visible session of a downloaded item in a group.
      *
      * Relaxed and recording: what the ViewModel owes it is *when* it is reconciled — a session
      * opening, and a group being joined or left — and the reconciliation itself is pinned in
@@ -124,7 +124,7 @@ internal abstract class PlayerViewModelFixture {
      */
     protected val syncPlayLocalSession = mockk<SyncPlayLocalSession>(relaxed = true)
 
-    /** The M9 preferences at their defaults; individual tests override what they exercise. */
+    /** The player preferences at their defaults; individual tests override what they exercise. */
     protected val preferences =
         mockk<AppPreferences> {
             every { introSkipMode } returns flowOf(SegmentSkipMode.SHOW_BUTTON)

@@ -28,8 +28,8 @@ import org.junit.jupiter.api.Test
 import java.util.UUID
 
 /**
- * Unit tests for [DownloadFilePlanner] — the piece of M7 most likely to fail as a 404 halfway
- * through a 2 GB transfer, and the reason [DownloadUrlFactory] is a seam at all.
+ * Unit tests for [DownloadFilePlanner] — the piece of the pipeline most likely to fail as a 404
+ * halfway through a 2 GB transfer, and the reason [DownloadUrlFactory] is a seam at all.
  *
  * Two properties matter beyond "the right URLs": the plan's **order** (artwork first so the queue
  * row has a poster, media second because it is the point) and its **essential/optional split**,
@@ -119,7 +119,7 @@ class DownloadFilePlannerTest {
         planner.plan(movie(), DIRECTORY).media().fileName shouldBe "Arrival.2016.mkv"
     }
 
-    // ---- download quality (M9) ------------------------------------------------------------------
+    // ---- download quality -------------------------------------------------------------------------
 
     @Test
     fun `a quality below the original asks for a transcode instead of the download endpoint`() {
@@ -306,7 +306,7 @@ class DownloadFilePlannerTest {
     @Test
     fun `a transcode fetches a sidecar for every embedded text subtitle`() {
         // The transcoder maps at most one subtitle and drops the rest, so on this path the sidecar
-        // is the only copy there will ever be (docs/notes/offline-multitrack-design.md, phase 0).
+        // is the only copy there will ever be.
         val plan =
             planner.plan(
                 movie(
@@ -394,7 +394,7 @@ class DownloadFilePlannerTest {
 
     @Test
     fun `a hostile language tag cannot name a path outside the item directory`() {
-        // DL-15: `MediaStream.language` is the raw container track tag from ffprobe — whoever
+        // `MediaStream.language` is the raw container track tag from ffprobe — whoever
         // supplies media to the library controls it. Interpolated verbatim, `../` reached
         // `File(dir, fileName)` with the downloader running mkdirs() on the parent: a write
         // outside the downloads root that no sweep or delete ever collects.
@@ -448,7 +448,7 @@ class DownloadFilePlannerTest {
         plan.media().url shouldBe "download://${uuid(1)}"
     }
 
-    // ---- audio sidecars (phase 2, docs/notes/offline-multitrack-design.md) -----------------------
+    // ---- audio sidecars ---------------------------------------------------------------------------
 
     @Test
     fun `a transcode fetches a sidecar for every audio stream except the one it baked in`() {
@@ -588,7 +588,7 @@ class DownloadFilePlannerTest {
         thumbnails: Int,
     ) = mapOf("source-1" to mapOf(width.toString() to info(width, thumbnails)))
 
-    // ---- music (M13 Phase 5) --------------------------------------------------------------------
+    // ---- music ------------------------------------------------------------------------------------
 
     @Test
     fun `a track plans exactly two files, artwork then the original`() {

@@ -68,11 +68,11 @@ import kotlinx.coroutines.launch
  * The app's outer frame: the [JellyfinNavHost] with the app's floating chrome drawn *over* it, plus
  * the snackbar that explains the connection status.
  *
- * ### The inset contract (2026 refresh)
+ * ### The inset contract
  * The frame is a plain `Box`, not a `Scaffold`, and it reserves no space for anything. Every piece
  * of chrome — [GlassBottomNav], [GlassTopNav], [AppActionCluster] — is a *sibling* of the nav host
  * that floats on top of it, so the page below always fills the whole window and its content scrolls
- * under the glass, which is the whole point of the refresh's material (DECISIONS.md 2026-08-01).
+ * under the glass, which is the whole point of the chrome's material.
  *
  * - **Pushed destinations get no *navigation* chrome.** Settings, LibraryGrid, ItemDetail, the
  *   player and the auth flow each manage their own system-bar insets and no bar is drawn over them.
@@ -82,7 +82,7 @@ import kotlinx.coroutines.launch
  *   top-level one does (`:feature:music`'s four browse screens are the ones that do).
  * - **Top-level destinations consume [LocalAppChromePadding]** in the `contentPadding` of whatever
  *   they scroll. That is the one thing a top-level screen has to do, and it replaces the
- *   `innerPadding`/bottom-inset the old `Scaffold` used to hand down: padding that scrolls away,
+ *   `innerPadding`/bottom-inset a `Scaffold` normally hands down: padding that scrolls away,
  *   rather than a window that got shorter. See the composition local's own KDoc for the values.
  *
  * ### Which chrome a window gets
@@ -111,9 +111,9 @@ import kotlinx.coroutines.launch
  * ### The order a screen reader reads it in
  * Everything above is a *sibling* of the nav host drawn over it, which is precisely the arrangement
  * accessibility traversal has no way to guess: overlapping siblings with no reading order declared
- * are sorted geometrically, and chrome that covers the page from both ends came out interleaved with
- * — or after — the whole of the page's content (accessibility audit 2026-08-05, F9). Each piece
- * therefore declares itself a traversal group and says where it belongs:
+ * are sorted geometrically, and chrome that covers the page from both ends comes out interleaved
+ * with — or after — the whole of the page's content. Each piece therefore declares itself a
+ * traversal group and says where it belongs:
  *
  * - **top chrome** ([GlassTopNav] on wide, [AppActionCluster] on compact) — [CHROME_TOP_INDEX],
  * - **the page** ([JellyfinNavHost]) — a group of its own at the default index,
@@ -170,11 +170,10 @@ internal fun AppScaffold(
     val musicState by musicViewModel.state.collectAsStateWithLifecycle()
     // Not gated on `isTopLevel`: the bar has to be visible where playback *starts*, which on this
     // app is an album, artist or playlist screen — all of them pushed. Restricting it to the tabs
-    // meant the user tapped Play and saw nothing at all until they navigated back to one (device
-    // walk, 2026-08-15). `showsMiniPlayer` already excludes the two destinations that would
-    // duplicate it, and the clearance argument the restriction rested on is answered by
-    // `chromePadding` below: its bottom already folds the bar in whatever the destination, so a
-    // pushed screen consumes it exactly like a tab does.
+    // would mean the user taps Play and sees nothing at all until navigating back to one.
+    // `showsMiniPlayer` already excludes the two destinations that would duplicate it, and the
+    // clearance concern is answered by `chromePadding` below: its bottom already folds the bar in
+    // whatever the destination, so a pushed screen consumes it exactly like a tab does.
     val showMiniPlayer = showsMiniPlayer(musicState, onPlayer, onNowPlaying)
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -188,8 +187,8 @@ internal fun AppScaffold(
 
     MusicMessageEffect(snackbarHostState = snackbarHostState)
 
-    // Coming back to the app is the other moment the plan wants a reachability probe: the network
-    // may well have changed while we were not listening (docs/PLAN.md, "Connectivity").
+    // Coming back to the app is the other moment that wants a reachability probe: the network
+    // may well have changed while nothing was listening.
     LifecycleResumeEffect(Unit) {
         connectionViewModel.refresh()
         onPauseOrDispose { }
@@ -197,8 +196,8 @@ internal fun AppScaffold(
 
     val hazeState = remember { HazeState() }
 
-    // The six values both bars carry, as the two bundles they have always travelled as (audit
-    // 2026-08-08, DUP-10). The callbacks are `remember`ed on the two things they close over, so a
+    // The six values both bars carry, as the two bundles they have always travelled as. The
+    // callbacks are `remember`ed on the two things they close over, so a
     // connectivity change re-emits the *state* without also handing the bars four fresh lambdas.
     val chrome = AppChromeState(connectionState = connectionState, hasActiveSyncPlayGroup = activeSyncPlayGroup != null)
     val chromeActions =
@@ -368,7 +367,7 @@ internal const val CHROME_BOTTOM_INDEX = 1f
 private const val CHROME_EXIT_DIVISOR = 2
 
 /**
- * Shows the music queue's one-shot notices in the chrome's snackbar (M13 Phase 3).
+ * Shows the music queue's one-shot notices in the chrome's snackbar.
  *
  * At the scaffold's level, alongside [LogoutRedirectEffect] and `SyncPlayLaunchEffect`, and for the
  * same reason: a refusal or an unplayable track is a fact about a `@Singleton` that no destination
@@ -433,7 +432,7 @@ private fun TopChromeScrim(
  * How much of a top-level screen the chrome covers, as the animated value published through
  * [LocalAppChromePadding] — see that composition local for the contract itself.
  *
- * [MiniPlayer] (M13 Phase 4) folds into [bottomTarget][chromePadding] exactly like the floating
+ * [MiniPlayer] folds into [bottomTarget][chromePadding] exactly like the floating
  * bottom pill does: [showMiniPlayer] adds [MiniPlayerHeight] plus [MiniPlayerGap] of clearance
  * whenever the bar is on screen, so a list's last row scrolls clear of it the same way it already
  * scrolls clear of [GlassBottomNav] — no top-level screen has anything else to do.
@@ -459,11 +458,11 @@ private fun TopChromeScrim(
  * *exactly* the bar meant a screen's first row came to rest touching the glass, so any rounding —
  * a shadow, a focus ring, a row whose own top padding was zero — read as an overlap.
  *
- * The animated values are **not read here**. This function used to destructure the two
- * `animateDpAsState`s and rebuild a `PaddingValues` per frame, which invalidated the whole
- * scaffold scope — the nav host, four `AnimatedVisibility` blocks and the snackbar host — on every
- * one of the transition's ~18 frames, and published a fresh object through the composition local
- * on each of them. Instead the two `State`s go into one stable [AnimatedChromePadding], whose
+ * The animated values are **not read here**. Destructuring the two `animateDpAsState`s and
+ * rebuilding a `PaddingValues` per frame would invalidate the whole scaffold scope — the nav
+ * host, four `AnimatedVisibility` blocks and the snackbar host — on every one of the transition's
+ * ~18 frames, publishing a fresh object through the composition local each time. Instead the two
+ * `State`s go into one stable [AnimatedChromePadding], whose
  * `calculate*` methods read them where `contentPadding` is actually consumed: inside a lazy
  * layout's measure pass, which is a snapshot-observing scope of its own. The animation then
  * invalidates layout, not composition.
@@ -534,13 +533,13 @@ internal fun chromeBottomTarget(
         (if (showMiniPlayer) MiniPlayerHeight + MiniPlayerGap else 0.dp)
 
 /**
- * How far above whatever is already at the bottom edge [MiniPlayer] itself docks (M13 Phase 4).
+ * How far above whatever is already at the bottom edge [MiniPlayer] itself docks.
  *
  * The same condition [chromePadding]'s `bottomTarget` gates its own contribution on: stacked above
  * the floating pill when one is showing ([BottomNavMargin] + [BottomNavHeight] plus [MiniPlayerGap]
  * of daylight between the two floating surfaces), flush against the window's bottom edge — just
  * [MiniPlayerGap] above the navigation-bar inset the bar's own `navigationBarsPadding()` already
- * consumes — everywhere else, which is the wide layout's "at the bottom edge" (spec wording).
+ * consumes — everywhere else, i.e. the wide layout, at the bottom edge.
  */
 internal fun miniPlayerBottomOffset(
     isTopLevel: Boolean,
@@ -598,9 +597,9 @@ private fun rememberConnectionStatusExplainer(
         pending.value?.cancel()
         pending.value =
             scope.launch {
-                // `actionLabel` alone would default `duration` to Indefinite (M3's `showSnackbar`)
-                // — the M9 device walk found the offline snackbar sitting over the last list row
-                // for minutes. `Long` still leaves the action tappable, just not forever.
+                // `actionLabel` alone would default `duration` to Indefinite, leaving the offline
+                // snackbar sitting over the last list row for minutes. `Long` still leaves the
+                // action tappable, just not forever.
                 val result =
                     snackbarHostState.showSnackbar(
                         message = message,

@@ -15,8 +15,8 @@ import kotlinx.coroutines.flow.update
 /**
  * Everything the item detail screen draws.
  *
- * One state class covers all three shapes the plan lists for this screen — Movie, Series and
- * Season (docs/PLAN.md, "Screens" → ItemDetail). Which rows appear follows from [item]'s type, so
+ * One state class covers all three shapes this screen takes — Movie, Series and Season. Which
+ * rows appear follows from [item]'s type, so
  * the screen never has to branch on a separate mode flag: a movie simply has no seasons, a season
  * no similar items.
  */
@@ -41,7 +41,7 @@ data class ItemDetailUiState(
     /** Movie / series / episode detail: the *More like this* row. */
     val similar: List<JellyfinItem> = emptyList(),
     /**
-     * Live download state of [item] (M7).
+     * Live download state of [item].
      *
      * Kept next to the item rather than folded into `JellyfinItem.downloadState` because it comes
      * from a *different* Flow — Room's download table — and updates several times a second while a
@@ -66,7 +66,7 @@ data class ItemDetailUiState(
     /** A one-shot message for the snackbar; cleared by `ItemDetailViewModel.consumeMessage`. */
     val userMessage: UserMessage? = null,
     /**
-     * `true` while the delete-download confirmation dialog is up (docs/POLISH.md).
+     * `true` while the delete-download confirmation dialog is up.
      *
      * Set by `ItemDetailViewModel.onDownloadClick` instead of deleting straight away whenever the
      * download button's next tap would remove something already on the device — cleared again by
@@ -98,12 +98,10 @@ data class ItemDetailUiState(
      * What a *group* action on this page acts on, or `null` when there is nothing to offer.
      *
      * The same resolution as [playTarget] — a series plays its next-up episode — narrowed to the
-     * types this app plays at all (`ItemType.isPlayable`: movies and episodes,
-     * docs/notes/syncplay-m11-plan.md). The narrowing is applied here rather than in
-     * `SyncPlaySession` because the contract speaks item ids and has no idea what type one is; this
-     * screen does (DECISIONS.md, 2026-07-30). Non-null is also what tells the header that a tap on
-     * Play will be a *group* play, which is why the button names the group when it is set
-     * (DECISIONS.md, 2026-07-31).
+     * types this app plays at all (`ItemType.isPlayable`: movies and episodes). The narrowing is
+     * applied here rather than in `SyncPlaySession` because the contract speaks item ids and has no
+     * idea what type one is; this screen does. Non-null is also what tells the header that a tap on
+     * Play will be a *group* play, which is why the button names the group when it is set.
      */
     val groupTarget: JellyfinItem?
         get() = playTarget?.takeIf { it.type.isPlayable }
@@ -112,7 +110,7 @@ data class ItemDetailUiState(
      * `true` when Download on this page means "download the episodes under this".
      *
      * A season and a series are folders: the server has no file to send for one, and the pipeline
-     * expands them into episode downloads (DECISIONS.md, 2026-07-29). The button therefore acts on
+     * expands them into episode downloads. The button therefore acts on
      * [downloadTargets], not on the item's own id.
      */
     val isDownloadContainer: Boolean get() = item?.type == ItemType.SERIES || item?.type == ItemType.SEASON
@@ -172,13 +170,13 @@ private val DownloadState.fraction: Float
 /**
  * What this page can ask a SyncPlay group to do with the item on it, *beyond* playing it.
  *
- * Playing it is no longer one of these: in a group the ordinary Play / Resume button **is** the
- * group play (DECISIONS.md, 2026-07-31), so the only group actions left are the two additive queue
- * operations, which have no solo counterpart and so cannot be confused with one.
+ * Playing it is not one of these: in a group the ordinary Play / Resume button **is** the group
+ * play, so the only group actions here are the two additive queue operations, which have no solo
+ * counterpart and so cannot be confused with one.
  *
  * Offered only while `SyncPlaySession.activeGroup` is non-null and [ItemDetailUiState.groupTarget]
  * resolves. Each one is a request to the server: nothing queues on this device until the group's own
- * update comes back (docs/notes/syncplay-m11-plan.md, key decision 11).
+ * update comes back.
  */
 enum class GroupAction {
     /** Put it directly after whatever the group is watching now. */
@@ -225,7 +223,7 @@ sealed interface UserMessage {
 
     /**
      * A container download was cancelled while [keptCount] of its episodes were already finished —
-     * those were left on the device (DECISIONS.md, 2026-07-29).
+     * those were left on the device.
      *
      * Worth saying out loud: afterwards the button simply offers *Download* for the missing
      * episodes, and without this the user cannot tell whether the finished ones survived.
@@ -238,7 +236,7 @@ sealed interface UserMessage {
     data object UserDataWriteFailed : UserMessage
 
     /**
-     * A group action was sent to the server (M11 Phase 4).
+     * A group action was sent to the server.
      *
      * Worth saying out loud precisely because nothing visible happens here: the group's queue
      * changes on the server and the result arrives as a `PlayQueueUpdate`, so without this the tap
@@ -249,10 +247,10 @@ sealed interface UserMessage {
     ) : UserMessage
 
     /**
-     * Play was tapped in a group, so the *group* was asked to play it (DECISIONS.md, 2026-07-31).
+     * Play was tapped in a group, so the *group* was asked to play it.
      *
-     * The most important of these messages, because this is the one tap whose old behaviour was to
-     * open a player immediately: the screen deliberately stays where it is, and the player opens a
+     * The most important of these messages, because this is the one tap a user expects to open a
+     * player immediately: the screen deliberately stays where it is, and the player opens a
      * moment later when the server's `PlayQueueUpdate` comes back through
      * `SyncPlayController.launchRequests`. Without a word, that gap reads as a dead button.
      */

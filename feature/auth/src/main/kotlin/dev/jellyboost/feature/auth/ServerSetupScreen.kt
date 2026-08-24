@@ -118,9 +118,9 @@ private val ServerBadgeSize = 38.dp
 private val AuthTwoPaneMinWidth = 840.dp
 
 /**
- * Heading atop each screen's primary panel ("Connect to server", "Sign in") — 2026 refresh
- * (DECISIONS.md 2026-08-01). Shared between [ServerSetupScreen] and `LoginScreen` because both
- * live in this module and both want the exact same restyle of what used to be `titleLarge`.
+ * Heading atop each screen's primary panel ("Connect to server", "Sign in"). Shared between
+ * [ServerSetupScreen] and `LoginScreen` because both live in this module and both want the exact
+ * same restyle.
  */
 internal val AuthHeadingStyle =
     TextStyle(
@@ -129,7 +129,7 @@ internal val AuthHeadingStyle =
         letterSpacing = (-0.01).em,
     )
 
-/** Inline failure copy below an auth form — the refresh's error-text size, shared by both screens. */
+/** Inline failure copy below an auth form — the shared error-text size, used by both screens. */
 internal val AuthErrorTextStyle = TextStyle(fontSize = 13.sp, lineHeight = 18.sp)
 
 /** The tagline under the ServerSetup wordmark: smaller than any Material body role. */
@@ -147,10 +147,10 @@ private const val SERVER_BADGE_BORDER_ALPHA = 0.30f
 private val ServerBadgeBorderWidth = 1.dp
 private val ServerBadgeIconSize = 18.dp
 
-/** Track colour of an inline spinner or progress bar — white held at the refresh's low alpha. */
+/** Track colour of an inline spinner or progress bar — white held at a low alpha. */
 private val TrackColor = Color.White.copy(alpha = 0.14f)
 
-/** Track colour of the manual-connect progress bar — the refresh calls this one out separately. */
+/** Track colour of the manual-connect progress bar — called out separately from [TrackColor]. */
 private val ProgressTrackColor = Color.White.copy(alpha = 0.12f)
 
 private val ConnectingProgressHeight = 4.dp
@@ -160,7 +160,7 @@ private val AuthPanelInnerGap = 14.dp
 
 /**
  * First screen of the app: pick a Jellyfin server, either from the local-network announcements or
- * by typing an address (docs/PLAN.md, "ServerSetup").
+ * by typing an address.
  *
  * Visually it is a branded landing screen: the Jellyboost mark and wordmark sit in an accent halo
  * at the top, the servers found on the network are offered as tappable cards, and the manual
@@ -243,9 +243,9 @@ private fun BrandHero() {
         JellyboostLogo(size = HeroLogoSize, contentDescription = null)
         Text(
             text = stringResource(R.string.auth_app_name),
-            // Solid white rather than the accent gradient (DECISIONS.md 2026-08-01): the wordmark
-            // is the one piece of brand type the refresh keeps flat, so it reads next to the
-            // gradient fin mark instead of competing with it.
+            // Solid white rather than the accent gradient: the wordmark is the one piece of brand
+            // type kept flat, so it reads next to the gradient fin mark instead of competing with
+            // it.
             style = JellyfinTypeExtras.Wordmark,
             color = Color.White,
         )
@@ -289,7 +289,7 @@ private fun SessionLostBanner() {
 }
 
 /**
- * The server answered, but in the clear and from off the local network (audit SEC-10).
+ * The server answered, but in the clear and from off the local network.
  *
  * Below the form rather than above it, unlike [SessionLostBanner]: this is about the attempt that
  * just succeeded, and the next thing the user does about it is press the Connect button directly
@@ -433,9 +433,9 @@ private fun ManualAddressSection(
 
         if (state.isConnecting) {
             // Bar and caption as one polite live region, so "Contacting the server…" is spoken
-            // when it appears instead of being a line the user has to go looking for
-            // (accessibility audit 2026-08-05, F4). The inner spacing repeats the panel's own
-            // [AuthPanelInnerGap] so grouping the two costs no layout change.
+            // when it appears instead of being a line the user has to go looking for. The inner
+            // spacing repeats the panel's own [AuthPanelInnerGap] so grouping the two costs no
+            // layout change.
             Column(
                 modifier =
                     Modifier
@@ -461,8 +461,8 @@ private fun ManualAddressSection(
 /**
  * The address field itself: its caption, its three states, and the URI keyboard it asks for.
  *
- * It stays *enabled* while the probe runs (accessibility audit 2026-08-05, F17): disabling a focused
- * field drops accessibility focus with no anchor to fall back to, so a TalkBack user pressing Connect
+ * It stays *enabled* while the probe runs: disabling a focused field drops accessibility focus with
+ * no anchor to fall back to, so a TalkBack user pressing Connect
  * was thrown back to the top of the screen. The field cannot be *changed* mid-probe either —
  * `ServerSetupViewModel` ignores edits while `isConnecting`, which is a stronger guarantee than a
  * greyed-out box. [FieldState.InFlight] says the same thing to the platform: keep the node, keep the
@@ -481,8 +481,8 @@ private fun ManualAddressField(
         onValueChange = onAddressChange,
         modifier = Modifier.fillMaxWidth(),
         singleLine = true,
-        // "Server address" — was the panel's own heading; now the field's own caption,
-        // drawn uppercased and *spoken* in sentence case (`FieldLabel.eyebrow`).
+        // "Server address" is the field's own caption, drawn uppercased and *spoken* in
+        // sentence case (`FieldLabel.eyebrow`).
         label = FieldLabel.eyebrow(stringResource(R.string.server_setup_manual_title)),
         state =
             when {
@@ -510,7 +510,7 @@ private fun ManualAddressField(
  * One polite live region covering both states this row has: the discovery caption while the scan
  * runs, and the "nothing announced itself" line that replaces it when the scan ends. That handover
  * is the whole point — it happens seconds after the screen opens, with the user's attention (and
- * accessibility focus) somewhere else entirely, and until the 2026-08-05 audit (F4) it was silent.
+ * accessibility focus) somewhere else entirely, so without the live region nothing would announce it.
  */
 @Composable
 private fun HintRow(
@@ -540,16 +540,14 @@ private fun HintRow(
 
 /**
  * The "m-panel" both auth screens group a form onto: a solid surface, the app's panel hairline, and
- * one interior gutter (claude.ai/design, "Login (landscape tablet)").
+ * one interior gutter.
  *
- * It was written twice — this screen's manual-address panel and `LoginScreen`'s sign-in card — kept
- * in step by a comment on each saying it matched the other, and they had drifted anyway: the inner
- * gap was [AuthPanelInnerGap] here and `Dimens.SpaceLarge` (16dp) there (audit 2026-08-08, DUP-9).
- * The 14dp wins, because it is the number the spec gives and the one the comments claimed both
- * screens were using; the sign-in card therefore tightens by 2dp between its fields.
+ * Both this screen's manual-address panel and `LoginScreen`'s sign-in card go through this single
+ * composable rather than each hand-rolling their own, so the two panels' surface, hairline and
+ * interior gutter cannot drift apart from each other.
  *
- * @param verticalArrangement overridable for a panel whose children space themselves, but the
- *   default is the spec's and is what both current callers want.
+ * @param verticalArrangement overridable for a panel whose children space themselves, but
+ *   [AuthPanelInnerGap] is what both current callers want.
  */
 @Composable
 internal fun AuthPanel(
@@ -655,7 +653,7 @@ internal fun AuthScreenScaffold(
  *
  * Drawn under the insets on purpose: bleeding behind the status bar is what makes it read as part of
  * the background rather than as a banner. Side by side it hangs over the branding pane instead of
- * the empty centre (claude.ai/design, "Login (landscape tablet)").
+ * the empty centre.
  */
 @Composable
 private fun BoxScope.AuthBrandGlow(isTwoPane: Boolean) {
@@ -738,15 +736,15 @@ private fun AuthPane(
  * Multi-line, error-coloured copy shared by both auth screens.
  *
  * It interrupts. This block appears *because* the thing the user just asked for did not happen, and
- * before the 2026-08-05 accessibility audit (F2/CR-3) nothing said so: focus stayed on the button
- * that had apparently done nothing, and the sentence explaining why sat several swipes away.
- * Assertive rather than polite for the same reason `:core:ui`'s `ErrorBanner` is — the user is about
- * to retype a password into a form that has already rejected it.
+ * without an assertive announcement, focus would stay on the button that had apparently done
+ * nothing, with the sentence explaining why several swipes away. Assertive rather than polite for
+ * the same reason `:core:ui`'s `ErrorBanner` is — the user is about to retype a password into a
+ * form that has already rejected it.
  *
- * Kept as plain copy rather than swapped for `ErrorBanner`: the 2026 refresh gives an inline auth
- * failure a bare error-coloured line under the form (DECISIONS.md 2026-08-01), and the banner's
- * washed panel is the treatment reserved for [SessionLostBanner] — the one message that is *not*
- * about the last attempt. The two need to keep looking different; only the announcement was missing.
+ * Kept as plain copy rather than swapped for `ErrorBanner`: an inline auth failure gets a bare
+ * error-coloured line under the form, and the banner's washed panel is the treatment reserved for
+ * [SessionLostBanner] — the one message that is *not* about the last attempt. The two need to keep
+ * looking different.
  */
 @Composable
 internal fun AuthErrorBlock(

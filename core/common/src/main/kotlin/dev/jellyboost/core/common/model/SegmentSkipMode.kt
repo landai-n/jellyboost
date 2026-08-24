@@ -1,9 +1,9 @@
 package dev.jellyboost.core.common.model
 
 /**
- * What the player does when playback enters an intro or an outro (docs/PLAN.md, "M9 Polish" →
- * segment skip; "Playback pipeline" → "Media segments (M9): `getItemSegments(INTRO/OUTRO)` → skip
- * button; per-type pref; server-only").
+ * What the player does when playback enters an intro or an outro. Segments come from
+ * `getItemSegments(INTRO/OUTRO)`, are entirely server-derived, and the skip behavior is
+ * configurable per segment type.
  *
  * It lives in `:core:common` rather than in `:core:datastore` because both ends need it and they do
  * not see each other: the preference store persists it and `:player` acts on it, while the settings
@@ -34,8 +34,8 @@ enum class SegmentSkipMode {
 /**
  * The segment types this client acts on.
  *
- * The server's `MediaSegmentType` also has `COMMERCIAL`, `PREVIEW`, `RECAP` and `UNKNOWN`; the plan
- * scopes M9 to intro and outro, and an enum of exactly what is supported keeps the preference keys
+ * The server's `MediaSegmentType` also has `COMMERCIAL`, `PREVIEW`, `RECAP` and `UNKNOWN`; this app
+ * only acts on intro and outro, and an enum of exactly what is supported keeps the preference keys
  * and the UI copy from having to answer for types with no behaviour behind them.
  */
 enum class MediaSegmentKind {

@@ -240,7 +240,7 @@ class SeasonSeedingScenarioTest {
 
         coEvery { downloadDao.upsert(any()) } answers { downloads[firstArg<DownloadEntity>().itemId] = firstArg() }
         coEvery { downloadDao.get(any()) } answers { downloads[firstArg()] }
-        // The season path reads its whole batch in one statement (audit PERF-25); routing it
+        // The season path reads its whole batch in one statement; routing it
         // through the per-id stub keeps every test below expressing its rows one at a time.
         coEvery { downloadDao.getAll(any()) } coAnswers {
             firstArg<List<UUID>>().mapNotNull { downloadDao.get(it) }

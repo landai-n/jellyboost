@@ -12,9 +12,9 @@ import java.util.UUID
 
 /**
  * One file belonging to a [DownloadEntity] — the media file, a subtitle track, a poster, a
- * trickplay tile sheet (docs/PLAN.md, "Download pipeline" → File plan).
+ * trickplay tile sheet.
  *
- * The foreign key onto `downloads` cascades on delete, which is what makes the plan's delete
+ * The foreign key onto `downloads` cascades on delete, which is what makes the download-delete
  * cascade a single `DELETE FROM downloads` after the files themselves are unlinked.
  *
  * The unique index is what makes re-running the file plan idempotent: re-enqueueing an item, or

@@ -33,13 +33,11 @@ import org.junit.jupiter.api.Test
  *
  * Two properties carry the whole feature and neither is visible from a single call site:
  *
- * 1. **No in-group action moves this player locally** (docs/notes/syncplay-m11-plan.md, key
- *    decision 11). Every intent test therefore asserts what the *player* was not asked to do, which
- *    is the only way to state it.
- * 2. **A confirmed connection loss pauses and leaves; a flap does nothing** (key decision 10 as
- *    amended). Both are exercised, because the failure mode of getting the second one wrong — a
- *    group dropped every time a train goes through a tunnel — is invisible in a test that only
- *    covers the first.
+ * 1. **No in-group action moves this player locally.** Every intent test therefore asserts what
+ *    the *player* was not asked to do, which is the only way to state it.
+ * 2. **A confirmed connection loss pauses and leaves; a flap does nothing.** Both are exercised,
+ *    because the failure mode of getting the second one wrong — a group dropped every time a
+ *    train goes through a tunnel — is invisible in a test that only covers the first.
  *
  * `runCurrent()` rather than `advanceUntilIdle()` throughout: an in-group controller runs a ping
  * loop and a drift monitor for ever, so "advance until nothing is scheduled" never returns.
@@ -206,9 +204,9 @@ internal class SyncPlayControllerTest : SyncPlayControllerTestBase() {
 
             fixture.host.loaded shouldBe emptyList()
             // Buffering *first*: an adopted player has very often only just been handed the item, so
-            // an immediate `ready` claims a readiness nobody has (DECISIONS.md, 2026-07-31). It is
-            // also what puts the group back to waiting on this member, which is what earns the
-            // unpause that clears the WAITING overlay.
+            // an immediate `ready` claims a readiness nobody has. It is also what puts the group
+            // back to waiting on this member, which is what earns the unpause that clears the
+            // WAITING overlay.
             val buffering = fixture.api.callsOf<SyncPlayCall.ReportBuffering>().single()
             buffering.playlistItemId shouldBe playlistItemId
             buffering.positionTicks shouldBe 30_000L.millisToTicks()
@@ -224,7 +222,7 @@ internal class SyncPlayControllerTest : SyncPlayControllerTestBase() {
             ready.positionTicks shouldBe 30_000L.millisToTicks()
             // The adopted player was running, so answering the group's wait parks it first — a
             // `ready` that claims to be playing is answered `AllExceptCurrentSession` and this
-            // member is sent nothing (`WaitingGroupState.cs`:484-498, DECISIONS.md 2026-07-31).
+            // member is sent nothing (`WaitingGroupState.cs`:484-498).
             ready.isPlaying shouldBe false
         }
 
@@ -263,8 +261,8 @@ internal class SyncPlayControllerTest : SyncPlayControllerTestBase() {
         runTest {
             val fixture = fixture()
             // The host runs the load on its own scope; a screen dismissed mid-load cancels it from
-            // under the controller (audit SP-02). A cancelled load says nothing about the item —
-            // treating it as unplayable silently advanced the queue for the whole group.
+            // under the controller. A cancelled load says nothing about the item — treating it as
+            // unplayable would silently advance the queue for the whole group.
             fixture.host.loadError = CancellationException("screen going away")
 
             joinWithQueue(fixture)
@@ -295,7 +293,7 @@ internal class SyncPlayControllerTest : SyncPlayControllerTestBase() {
             fixture.host.loaded shouldBe listOf(itemId to 0L, otherItemId to 0L)
 
             // ...and a straggler published before that move — most concretely the pre-join stash
-            // replayed after a live update (audit SP-03) — must not drag it back.
+            // replayed after a live update — must not drag it back.
             fixture.socket.emit(
                 SyncPlayGroupEvent.QueueChanged(
                     twoItemQueue(playingIndex = 0).copy(lastUpdate = origin.plusSeconds(5)),
@@ -315,8 +313,8 @@ internal class SyncPlayControllerTest : SyncPlayControllerTestBase() {
             fixture.launchRequests shouldBe listOf(SyncPlayLaunchRequest(itemId, 12_000L.millisToTicks()))
 
             // A NavHost composed later — its collector did not exist when the request was raised
-            // (audit SP-12: task swipe or Activity reclaim while the presence service holds the
-            // group), and the request must survive until it does.
+            // (a task swipe or Activity reclaim while the presence service holds the group), and
+            // the request must survive until it does.
             val replayed = mutableListOf<SyncPlayLaunchRequest>()
             backgroundScope.launch { fixture.controller.launchRequests.collect { replayed += it } }
             runCurrent()
@@ -347,8 +345,8 @@ internal class SyncPlayControllerTest : SyncPlayControllerTestBase() {
             advanceTimeBy(SyncPlayController.SETTLED_READY_FALLBACK_MS + 1)
             runCurrent()
 
-            // Both reports carry the player's own reading, not zero (audit SP-13): the server
-            // holds the group and schedules its resume off reported positions.
+            // Both reports carry the player's own reading, not zero: the server holds the group
+            // and schedules its resume off reported positions.
             fixture.api
                 .callsOf<SyncPlayCall.ReportBuffering>()
                 .single()
@@ -458,7 +456,7 @@ internal class SyncPlayControllerTest : SyncPlayControllerTestBase() {
 
             // Giving back the screen is not giving back the player: `PlaybackService` keeps the
             // shared ExoPlayer running, so the phase must go on saying what the group is doing.
-            // Forcing it to `Paused` here is what used to take the drift monitor down with it.
+            // Forcing it to `Paused` here would take the drift monitor down with it.
             (fixture.controller.state.value as SyncPlayState.InGroup)
                 .phase
                 .shouldBeInstanceOf<SyncPlayPhase.Playing>()
@@ -809,9 +807,9 @@ internal class SyncPlayControllerTest : SyncPlayControllerTestBase() {
             fixture.player.resetCalls()
 
             // The server settles the rebuilt member by re-sending the standing command verbatim —
-            // same instant, same position, only `emittedAt` fresh. Remembered as applied, this was
-            // dropped as a repeat and the member never resumed (device, 2026-07-31: the blind
-            // fallback then jumped from 6:35 to 27:27).
+            // same instant, same position, only `emittedAt` fresh. Remembered as applied, this
+            // would be dropped as a repeat and the member would never resume — the blind fallback
+            // would then jump from 6:35 to 27:27.
             fixture.socket.emit(
                 command(SyncPlayCommandType.Unpause, unpause.whenInstant, positionMs = 0, emittedAt = now()),
             )
@@ -987,8 +985,8 @@ internal class SyncPlayControllerTest : SyncPlayControllerTestBase() {
     @Test
     fun `the sign-out hook leaves the group on the server while the token still works`() =
         runTest {
-            // `SyncPlaySignOutHook` runs this *before* SessionRepository revokes the token
-            // (audit NET-03): the server leave has to travel on a credential that still works.
+            // `SyncPlaySignOutHook` runs this *before* SessionRepository revokes the token: the
+            // server leave has to travel on a credential that still works.
             val fixture = fixture()
             joinWithQueue(fixture)
             fixture.api.clearCalls()
@@ -1005,7 +1003,7 @@ internal class SyncPlayControllerTest : SyncPlayControllerTestBase() {
     fun `the LoggedOut transition tears down locally without chasing a revoked token`() =
         runTest {
             // By the time the state flips to LoggedOut the token is revoked; a server leave from
-            // here could only 401 (audit NET-03), so only the local session may be torn down.
+            // here could only 401, so only the local session may be torn down.
             val fixture = fixture()
             joinWithQueue(fixture)
             fixture.api.clearCalls()

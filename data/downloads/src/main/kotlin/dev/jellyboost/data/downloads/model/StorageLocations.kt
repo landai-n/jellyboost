@@ -1,7 +1,7 @@
 package dev.jellyboost.data.downloads.model
 
 /**
- * Everything the storage-location picker in Settings needs (docs/PLAN.md, "Screens" → Settings).
+ * Everything the storage-location picker in Settings needs.
  *
  * @property volumes mounted volumes, primary first. A volume that is not there is simply absent,
  *   which is what makes "no SD card" render as one option instead of a disabled row.
@@ -10,7 +10,7 @@ package dev.jellyboost.data.downloads.model
  * @property selectedVolumeMissing `true` when the chosen volume is unmounted and [activeVolumeId]
  *   is a fallback; the screen says so rather than showing a selection that is not in force.
  * @property downloadCount how many download rows exist, which is what decides whether changing the
- *   location needs the delete-and-switch confirmation (docs/PLAN.md's v1 policy).
+ *   location needs the delete-and-switch confirmation.
  */
 data class StorageLocations(
     val volumes: List<StorageVolumeOption> = emptyList(),

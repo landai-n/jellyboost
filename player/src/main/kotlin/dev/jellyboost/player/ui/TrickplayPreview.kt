@@ -46,7 +46,7 @@ internal fun TrickplayPreview(
     // Remembered per sheet, not rebuilt per composition: the enclosing scrubber recomposes at
     // pointer rate during a drag, and rebuilding the request — re-parsing the URL twice for the
     // cache keys each time — is pure allocation churn on the one interaction where the frame
-    // budget is visibly tight (audit PC-07). Keyed on the sheet URI because every cell of a sheet
+    // budget is visibly tight. Keyed on the sheet URI because every cell of a sheet
     // shares it; a drag only builds a new request when it crosses into the next sheet.
     val request =
         remember(context, thumbnail.uri) {
@@ -56,9 +56,8 @@ internal fun TrickplayPreview(
             // key is the request's data, token and all, which means re-logging in — a fresh token —
             // silently orphans every tile this item had ever cached, and the fact that today's token
             // never reaches disk rests on undocumented internals of how Coil derives a *disk* key
-            // from that default, not on a key this app controls (docs/notes/audit-2026-07.md,
-            // SEC-02). Stripping the token here is a no-op for a downloaded item's `file://` URIs,
-            // which never carried one.
+            // from that default, not on a key this app controls. Stripping the token here is a
+            // no-op for a downloaded item's `file://` URIs, which never carried one.
             val cacheKey = thumbnail.uri.withoutAccessToken()
             ImageRequest
                 .Builder(context)

@@ -8,8 +8,8 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for the two rules [JellyboostSnackbarHost] took over from five hand-written hosts
- * (audit DUP-3 + HYG-8): where the pill sits, and when it fires.
+ * Unit tests for the two rules [JellyboostSnackbarHost] took over from five hand-written hosts:
+ * where the pill sits, and when it fires.
  */
 class JellyboostSnackbarHostTest {
     // ---- where the pill sits ---------------------------------------------------------------------
@@ -71,7 +71,7 @@ class JellyboostSnackbarHostTest {
         inset.calculateRightPadding(LayoutDirection.Rtl) shouldBe 0.dp
     }
 
-    // ---- when the pill fires (HYG-8) -------------------------------------------------------------
+    // ---- when the pill fires -----------------------------------------------------------------------
 
     /**
      * Two distinct messages that happen to share their copy, arriving back to back with no `null`
@@ -101,7 +101,7 @@ class JellyboostSnackbarHostTest {
     @Test
     @DisplayName("keying on the resolved copy wedges the second message — the bug this replaces")
     fun keyingOnCopyWedgesTheSecondMessage() {
-        // The characterization of HYG-8, kept so the fix cannot be quietly undone: the second
+        // The characterization of this bug, kept so the fix cannot be quietly undone: the second
         // message is never shown and — worse — never consumed, so the field stays non-null and the
         // screen can never show another snackbar again.
         val run = replayOneShot(sharedCopyBurst, key = { it?.let(copy) }, text = copy)

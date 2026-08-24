@@ -5,8 +5,7 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for [MkvClusterScanner] — the live size projection's only source of evidence
- * (docs/notes/download-size-estimation.md).
+ * Unit tests for [MkvClusterScanner] — the live size projection's only source of evidence.
  *
  * Everything here is built out of **synthetic EBML bytes** rather than a recorded file, because the
  * cases worth pinning are the ones a recorded file cannot contain on demand: an element cut in half
@@ -108,8 +107,7 @@ class MkvClusterScannerTest {
     fun `a CRC-32 that is not four bytes long is not a CRC-32`() {
         val scanner = MkvClusterScanner()
         // `BF 85 <5>` — a checksum length the spec does not have. Accepting 1..8 the way a general
-        // integer would made one more byte of a random four-byte hit free to be anything
-        // (docs/notes/audit-2026-07.md, MKV-09).
+        // integer would make one more byte of a random four-byte hit free to be anything.
         val wrongCrc =
             Ebml.CLUSTER_ID +
                 byteArrayOf(0x8B.toByte(), 0xBF.toByte(), 0x85.toByte(), 0x01, 0x02, 0x03, 0x04, 0x05) +
@@ -334,8 +332,8 @@ class MkvClusterScannerTest {
         val scanner = MkvClusterScanner()
 
         // `40 04` is a two-byte varint carrying 4 — as legal a spelling of "four bytes follow" as
-        // `84`, and one the scanner used to walk straight past, leaving every later timestamp on
-        // the default scale (docs/notes/audit-2026-07.md, MKV-08).
+        // `84`, and one a scanner reading only the one-byte form walks straight past, leaving
+        // every later timestamp on the default scale.
         scanner.consume(
             Ebml.header() +
                 Ebml.timestampScale(1_000_000_000L, sizeWidth = 2) +

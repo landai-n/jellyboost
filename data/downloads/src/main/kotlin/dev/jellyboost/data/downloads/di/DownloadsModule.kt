@@ -58,7 +58,7 @@ internal interface DownloadsModule {
 
     /**
      * Binds the metered-network question to the platform, for the transfers that run *outside*
-     * the WorkManager constraint (the sidecar top-up — audit DL-04).
+     * the WorkManager constraint (the sidecar top-up).
      */
     @Binds
     @Singleton
@@ -94,11 +94,11 @@ internal object DownloadHttpModule {
      * followed, because `/Items/{id}/Download` can redirect to a storage backend. Sharing the
      * SDK's client would mean either of those settings leaking into every API call.
      *
-     * The read timeout used to be `0` — unbounded — which meant a half-open TCP connection (a
-     * Wi-Fi↔mobile handover, a NAT or reverse proxy dropping an idle-looking long transfer, a
-     * server killed mid-stream) parked the copy loop in `input.read()` forever. The worker then
-     * held the process-wide drain lease with a foreground notification at N % and the whole queue
-     * was dead until the process was (audit DL-01). Two minutes of *total silence* from a server
+     * An unbounded read timeout of `0` would let a half-open TCP connection (a Wi-Fi↔mobile
+     * handover, a NAT or reverse proxy dropping an idle-looking long transfer, a server killed
+     * mid-stream) park the copy loop in `input.read()` forever. The worker would then hold the
+     * process-wide drain lease with a foreground notification at N % and the whole queue would be
+     * dead until the process was. Two minutes of *total silence* from a server
      * that is supposed to be streaming is a dead connection, not a slow one — even a struggling
      * transcode emits bytes continuously.
      */
@@ -120,7 +120,7 @@ internal object DownloadHttpModule {
      * `FileDownloader` depends on the narrower [Call.Factory] rather than on `OkHttpClient`, which
      * is what lets its unit tests hand it a canned response with no server involved.
      *
-     * Qualified for the same reason the client it wraps is (audit ARCH-06): an unqualified
+     * Qualified for the same reason the client it wraps is: an unqualified
      * `Call.Factory` binding would be the *only* one in the graph, so any future unqualified
      * `@Inject` would silently receive this no-timeout download client instead of failing to
      * compile.
@@ -136,7 +136,7 @@ internal object DownloadHttpModule {
 
     /**
      * The longest silence between two bytes a live transfer is allowed. Internal so the test can
-     * pin that the built client actually carries it — an unbounded read is exactly the DL-01 wedge.
+     * pin that the built client actually carries it — an unbounded read is what wedges the queue.
      */
     internal const val READ_TIMEOUT_SECONDS = 120L
 

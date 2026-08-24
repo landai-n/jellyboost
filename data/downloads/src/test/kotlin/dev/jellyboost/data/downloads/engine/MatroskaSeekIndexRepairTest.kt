@@ -166,9 +166,9 @@ class MatroskaSeekIndexRepairTest {
 
     @Test
     fun `the Duration missing from an already-indexed file is filled in on a later play`() {
-        // The MKV-04 shape: a transcode repaired once before its runtime was known keeps its index
-        // for ever and used to keep its unwritten Duration for ever with it, so the media
-        // notification and PiP never learned how long the file was.
+        // A transcode repaired once before its runtime was known keeps its index for ever, and
+        // would keep its unwritten Duration for ever with it — the media notification and PiP never
+        // learning how long the file is.
         val fixture = Mkv.transcode(seekHeadInsteadOfVoid = true)
         val file = write(fixture)
         repair.ensureSeekable(file, runtimeMillis = 0L) shouldBe Outcome.ALREADY_INDEXED
@@ -256,7 +256,7 @@ class MatroskaSeekIndexRepairTest {
     fun `an unknown-size Cluster is refused as a header, not as a foreign file`() {
         // Legal Matroska that a live remux would write, and a header this cannot step through: the
         // element after an unknown-size Cluster cannot be found without parsing the cluster itself.
-        // The veto is the right answer; calling it NOT_MATROSKA was not (audit MKV-01).
+        // The veto is the right answer; calling it NOT_MATROSKA would not be.
         val fixture = Mkv.transcode(unknownSizeCluster = true)
         val file = write(fixture)
 
@@ -281,7 +281,7 @@ class MatroskaSeekIndexRepairTest {
     @Test
     fun `an element id of all ones vetoes the header`() {
         // `0xFF` is the reserved id RFC 8794 gives no element. Stepping over it and writing into the
-        // file anyway meant trusting a header that had already said something impossible (MKV-07).
+        // file anyway would mean trusting a header that has already said something impossible.
         val fixture = Mkv.transcode(forbiddenIdByte = 0xFF.toByte())
         val file = write(fixture)
 
@@ -306,10 +306,10 @@ class MatroskaSeekIndexRepairTest {
 
     @Test
     fun `a Void declaring more than two gigabytes is refused rather than overflowed`() {
-        // The adversarial shape MKV-02 names: a Void whose declared length does not fit an `Int`, in
-        // a file long enough for it to parse. Every byte count in the patch is derived from that
-        // length, so `toInt()` on it used to wrap negative and throw a NegativeArraySizeException out
-        // of the coroutine that was opening the file for playback.
+        // The adversarial shape: a Void whose declared length does not fit an `Int`, in a file long
+        // enough for it to parse. Every byte count in the patch is derived from that length, so
+        // `toInt()` on it wraps negative and throws a NegativeArraySizeException out of the
+        // coroutine that is opening the file for playback.
         val prefix = Mkv.headerWithVoidDeclaring(HUGE_VOID_BYTES)
         val cues = Mkv.cues()
         val voidEnd = prefix.size + HUGE_VOID_BYTES
@@ -356,9 +356,9 @@ class MatroskaSeekIndexRepairTest {
 
     @Test
     fun `Cues further from the end than one window are still found`() {
-        // Two megabytes of `Tags` behind the index — a chapter list, an attachment — used to push
-        // the `Cues` out of the single window the search read, and a perfectly good file was
-        // reported as having no index at all (audit MKV-05).
+        // Two megabytes of `Tags` behind the index — a chapter list, an attachment — push the
+        // `Cues` out of any single window the search reads, and a perfectly good file would be
+        // reported as having no index at all.
         val fixture = Mkv.transcode(tagsAfterCues = true, tagsBytes = 2 * 1024 * 1024)
         val file = write(fixture)
 

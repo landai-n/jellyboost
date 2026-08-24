@@ -33,8 +33,8 @@ import java.io.File
 import java.nio.file.Path
 
 /**
- * Unit tests for [FileDownloader] — the HTTP Range resume engine the milestone's definition of done
- * is measured against ("a 2 GB movie resumes from byte offset after app kill").
+ * Unit tests for [FileDownloader] — the HTTP Range resume engine behind "a 2 GB movie resumes from
+ * byte offset after app kill".
  *
  * No server is involved: an OkHttp `Interceptor` answers every call with a canned response, which
  * makes the four cases that matter (`200`, `206`, `416`, everything else) directly expressible and
@@ -170,8 +170,7 @@ class FileDownloaderTest {
             val target = file("movie.mkv", content = "half of one encode")
             // A server that honours `Range` on a live transcode hands back the *second* encode's
             // bytes labelled as a continuation of the first. Appending them makes a file that still
-            // opens, still ends in Cues, and would earn a SeekHead pointing into the wrong encode
-            // (docs/notes/audit-2026-07.md, MKV-10).
+            // opens, still ends in Cues, and would earn a SeekHead pointing into the wrong encode.
             val downloader =
                 downloader(respondWith = partial("a whole other encode".toByteArray(), from = 18, total = 38))
 
@@ -247,8 +246,8 @@ class FileDownloaderTest {
     fun `the copy loop fills its buffer before writing, so a chunk is a whole buffer or the tail`() =
         runTest {
             // okio hands back one 8 KB segment per read however large the array offered is, and
-            // `RandomAccessFile` is unbuffered — each read used to become its own `pwrite`, eight
-            // per 64 KB (audit 2026-08-08, PERF-12). The tap sees exactly what was written, so the
+            // `RandomAccessFile` is unbuffered — without the buffer each read becomes its own
+            // `pwrite`, eight per 64 KB. The tap sees exactly what was written, so the
             // chunk lengths are the write sizes.
             val bytes = ByteArray(FileDownloader.BUFFER_BYTES * 2 + TAIL_BYTES) { (it % 251).toByte() }
             val downloader = downloader(respondWith = ok(bytes))
@@ -301,7 +300,7 @@ class FileDownloaderTest {
     @Test
     fun `cancelling while a body read is blocked cancels the OkHttp call itself`() =
         runTest {
-            // The DL-01 wedge: once the headers have arrived, the `await()` continuation has
+            // The wedge: once the headers have arrived, the `await()` continuation has
             // resumed and its `invokeOnCancellation` can no longer reach the call. A half-open
             // socket then blocks `input.read()` forever, coroutine cancellation cannot interrupt
             // it, and the drain lease is held for the rest of the process. The fix holds the call

@@ -24,7 +24,7 @@ interface ServerProbeApi {
      * Returning the id rather than a boolean is a security requirement, not a convenience: the
      * probe's caller re-points the **authenticated** client at whichever address answers, so
      * "something answered" must never be conflated with "our server answered" — any host on the
-     * current network could 200 this unauthenticated endpoint (audit NET-01).
+     * current network could 200 this unauthenticated endpoint.
      *
      * Never throws for an unreachable server — an unreachable server is the expected outcome here,
      * not an error.
@@ -42,7 +42,7 @@ interface ServerProbeApi {
  * A **throwaway** `ApiClient` is created per probe rather than reusing the app's one. Two reasons:
  * probing a candidate address must not re-point the live client before we know it works, and this
  * client carries deliberately short timeouts — the whole point of the probe is to fail in seconds
- * where a normal request would sit on a 30-second socket timeout (docs/PLAN.md, "Connectivity").
+ * where a normal request would sit on a 30-second socket timeout.
  */
 @Singleton
 internal class SdkServerProbeApi

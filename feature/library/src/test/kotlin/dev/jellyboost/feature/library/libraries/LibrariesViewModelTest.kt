@@ -31,7 +31,7 @@ class LibrariesViewModelTest {
     private val dispatcher = StandardTestDispatcher()
     private val repository = mockk<JellyfinRepository>()
 
-    /** The connectivity-change signal (M9); fires only when a test says the server came back. */
+    /** The connectivity-change signal; fires only when a test says the server came back. */
     private val connectivityChanges = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
     private val connectivityRefresher =
         mockk<ConnectivityRefresher> {
@@ -131,7 +131,7 @@ class LibrariesViewModelTest {
             coVerify(exactly = 2) { repository.getUserViews() }
         }
 
-    // ---- M9: refresh when connectivity changes ---------------------------------------------------------------
+    // ---- refresh when connectivity changes ---------------------------------------------------------------
 
     @Test
     fun `re-fetches the libraries when the server becomes reachable again`() =

@@ -44,14 +44,14 @@ class SearchViewModelTest {
     private val dispatcher = StandardTestDispatcher()
     private val repository = mockk<JellyfinRepository>()
 
-    /** The badge source (M7); emits an empty map unless a test says otherwise. */
+    /** The badge source; emits an empty map unless a test says otherwise. */
     private val downloadStates = MutableStateFlow<Map<String, DownloadState>>(emptyMap())
     private val downloads =
         mockk<DownloadRepository> {
             every { observeStates() } returns downloadStates
         }
 
-    /** The connectivity-change signal (M9); fires only when a test says the server came back. */
+    /** The connectivity-change signal; fires only when a test says the server came back. */
     private val connectivityChanges = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
     private val connectivityRefresher =
         mockk<ConnectivityRefresher> {
@@ -218,8 +218,7 @@ class SearchViewModelTest {
             state.submittedQuery shouldBe "west"
             state.hasSearched shouldBe true
             state.isSearching shouldBe false
-            // The count the screen announces spans all three sections, not just the biggest one
-            // (accessibility audit 2026-08-05, A11Y-09).
+            // The count the screen announces spans all three sections, not just the biggest one.
             state.resultCount shouldBe 4
         }
 
@@ -339,7 +338,7 @@ class SearchViewModelTest {
             state.movies.map { it.name } shouldContainExactly listOf("Dune")
         }
 
-    // ---- M9: refresh when connectivity changes ---------------------------------------------------------------
+    // ---- refresh when connectivity changes ---------------------------------------------------------------
 
     @Test
     fun `re-runs the current term when the server becomes reachable again`() =
@@ -384,7 +383,7 @@ class SearchViewModelTest {
         return viewModel
     }
 
-    // ---- M7: download badges -------------------------------------------------------------------
+    // ---- download badges -------------------------------------------------------------------
 
     @Test
     fun `download state reaches the result cards`() =
@@ -419,8 +418,8 @@ class SearchViewModelTest {
 
     /**
      * A badge is decoration; the screen behind it is not. Unguarded, a throw from the badge flow
-     * killed the collector and froze every badge at its last value for the life of the screen —
-     * marks the user would read as current (audit STAB-10). All four badge collectors share this
+     * would kill the collector and freeze every badge at its last value for the life of the
+     * screen — marks the user would read as current. All four badge collectors share this
      * shape, so this pins the pattern.
      */
     @Test

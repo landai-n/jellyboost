@@ -13,12 +13,10 @@ import kotlin.coroutines.cancellation.CancellationException
 /**
  * Runs an SDK call and folds every failure mode of the Jellyfin SDK into an [AppError].
  *
- * **The** place transport exceptions are translated (audit DUP-1). It used to be three places —
- * an `internal apiCall` here, a public `runCatchingApi` in `:data`, and a verbatim copy of the
- * former inside `PlaybackInfoResolver` that existed only because `apiCall` could not be seen from
- * `:player` — and the three had drifted apart on exactly the codes that matter: a 403 was a server
- * fault in two of them and an authentication failure in the third. One function, public from the
- * module every caller already depends on, is what stops that happening again.
+ * **The** place transport exceptions are translated. A second copy of this logic would drift apart
+ * on exactly the codes that matter — a 403 read as a server fault by one copy and an authentication
+ * failure by another is exactly the kind of split a duplicated mapper produces. One function,
+ * public from the module every caller already depends on, is what prevents that.
  *
  * [CancellationException] is deliberately rethrown — a cancelled coroutine is not a failure, and
  * swallowing it into an [AppResult.Failure] leaves a dead ViewModel scope rendering a bogus error.
@@ -44,9 +42,9 @@ inline fun <T> runCatchingApi(block: () -> T): AppResult<T> =
  * ### The status answers, and why they are these
  * - **401 and 403 → [AppError.Unauthorized].** `DelegatingJellyfinRepository` documents "401/403
  *   surfaced so the session layer can re-authenticate", and a 403 is precisely the shape a revoked
- *   token or a policy change takes on a Jellyfin server. Calling it [AppError.Server] instead —
- *   which two of the three pre-DUP-1 copies did — meant a 403 from `/PlaybackInfo` was reported as
- *   "the server is broken" and never reached sign-out.
+ *   token or a policy change takes on a Jellyfin server. Calling it [AppError.Server] instead
+ *   would mean a 403 from `/PlaybackInfo` is reported as "the server is broken" and never reaches
+ *   sign-out.
  * - **404 → [AppError.NotFound].** The item is gone, not the server. `DownloadFailure` classifies
  *   it PERMANENT (no retry is going to make it exist) and `UserDataSyncer` abandons the row.
  *   [AppError.NotFound.id] is empty here on purpose: this mapper sees an exception, not a request,

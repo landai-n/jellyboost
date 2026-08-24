@@ -173,10 +173,9 @@ private fun ColumnScope.GroupPlaybackToggles(
     onSetShuffle: (Boolean) -> Unit,
     onSetRepeat: (SyncPlayRepeatMode) -> Unit,
 ) {
-    // The settings rows' pattern, which this row should have used from the start (audit
-    // A11Y-P-19): the whole row is the switch — one node, "Shuffle queue, on", the full width as
-    // its target — and the control inside it is inert so it contributes nothing of its own. An
-    // unlabelled Switch beside a Text is two stops, the second of them nameless.
+    // The settings rows' pattern: the whole row is the switch — one node, "Shuffle queue, on", the
+    // full width as its target — and the control inside it is inert so it contributes nothing of
+    // its own. An unlabelled Switch beside a Text is two stops, the second of them nameless.
     Row(
         modifier =
             Modifier

@@ -66,7 +66,7 @@ internal interface SyncPlayApi {
      * `POST /SyncPlay/SetIgnoreWait` — asks the group to stop waiting on this client.
      *
      * Sent when the player detaches while membership survives, so a backgrounded member never
-     * gates everyone else (DECISIONS.md 2026-07-30, M11 decision 1).
+     * gates everyone else.
      */
     suspend fun setIgnoreWait(ignoreWait: Boolean)
 

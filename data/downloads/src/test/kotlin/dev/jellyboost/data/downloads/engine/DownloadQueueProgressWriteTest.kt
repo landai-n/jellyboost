@@ -39,10 +39,10 @@ import java.time.ZoneOffset
  *
  * The property: the Downloads screen reads `DownloadDao.observeAll()`, a `@Transaction` join across
  * `downloads` and `download_files`, and Room's invalidation tracker fires once per **committed
- * transaction**. Writing the file's counters and the item's as two auto-commit statements therefore
- * re-ran that whole join twice per sample — two to eight times a second for the length of a
- * multi-gigabyte transfer, each re-run probing `items` behind it for the metadata join (audit
- * 2026-08-08, PERF-7). One transaction, one invalidation.
+ * transaction**. Writing the file's counters and the item's as two auto-commit statements would
+ * therefore re-run that whole join twice per sample — two to eight times a second for the length of
+ * a multi-gigabyte transfer, each re-run probing `items` behind it for the metadata join. One
+ * transaction, one invalidation.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class DownloadQueueProgressWriteTest {

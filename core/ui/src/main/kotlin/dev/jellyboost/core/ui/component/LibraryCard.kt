@@ -78,7 +78,7 @@ fun libraryIcon(kind: CollectionKind): ImageVector =
     }
 
 /**
- * Lazy-list `contentType` for every [LibraryCard] (DUP-15) — lets a `LazyRow`/`LazyColumn` reuse a
+ * Lazy-list `contentType` for every [LibraryCard] — lets a `LazyRow`/`LazyColumn` reuse a
  * scrolled-off tile node instead of composing a fresh one when the next item is also a library.
  */
 const val LIBRARY_CARD_CONTENT_TYPE = "card-library"
@@ -88,7 +88,7 @@ const val LIBRARY_CARD_CONTENT_TYPE = "card-library"
  *
  * A wide, short glass tile with a glyph rather than the 16:9 artwork card it replaced: a Jellyfin
  * library's own image is usually a collage of its first few posters, which at tile size is visual
- * noise that says less about the library than its name does (2026-refresh mocks, "Your libraries").
+ * noise that says less about the library than its name does.
  *
  * @param width fixed tile width, as a row of tiles needs; [Dp.Unspecified] fills the available
  *   width instead, which is what an adaptive grid cell wants.
@@ -106,7 +106,7 @@ fun LibraryCard(
 ) {
     // One node, one sentence: "Library, Shows, 412 items". The tile was a glyph, a name and a count
     // as separate stops, with the glyph — the only thing saying what *kind* of library it is —
-    // unlabelled (accessibility audit 2026-08-05, CR-6).
+    // unlabelled.
     val description =
         MediaCardFacts(
             title = library.name,

@@ -5,11 +5,10 @@ plugins {
 
 dependencies {
     // `api` rather than `implementation`: `SyncPlaySession.activeGroup` is a `StateFlow`, so
-    // coroutines are part of this module's own signature and every consumer compiles against them
-    // (M11 Phase 4).
+    // coroutines are part of this module's own signature and every consumer compiles against them.
     api(libs.kotlinx.coroutines.core)
     api(libs.kotlinx.serialization.json)
-    // `api`, not `implementation`: `di/` holds the project's four DI qualifiers (audit ARCH-1) and
+    // `api`, not `implementation`: `di/` holds the project's four DI qualifiers and
     // `@Qualifier` is part of their declaration, so every module that annotates an injection site
     // compiles against it. JSR-330 annotations only — no Dagger, no processor, no Android; this
     // module stays pure JVM and the `@Provides` bindings stay in `:core:network`.

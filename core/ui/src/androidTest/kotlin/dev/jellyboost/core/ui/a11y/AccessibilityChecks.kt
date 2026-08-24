@@ -17,7 +17,7 @@ typealias ComposeRule = AndroidComposeTestRule<ActivityScenarioRule<ComponentAct
  *
  * ATF is a *View* checker: it walks the `AccessibilityNodeInfo` tree an accessibility service would
  * see. In a Compose app that tree is generated from the semantics tree, which is exactly the layer
- * the 2026-08-05 audit's fixes live in — so running ATF over a composed component checks the real
+ * accessibility fixes live in — so running ATF over a composed component checks the real
  * article (unlabelled clickables, duplicate speakable text, touch targets under 48dp, text
  * contrast) rather than a proxy for it. Android Lint cannot see any of this; that is the division of
  * labour recorded in `config/lint/lint.xml`.

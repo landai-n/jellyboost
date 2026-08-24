@@ -22,8 +22,7 @@ import dev.jellyboost.core.common.music.MusicPlaybackState
 import dev.jellyboost.core.ui.theme.Dimens
 
 // The shape of the app's chrome: which of the two navigation layouts a window gets, how tall each
-// one is, and the four destinations both of them switch between (DECISIONS.md 2026-08-01, the
-// 2026-refresh chrome).
+// one is, and the four destinations both of them switch between.
 //
 // The sizes are here rather than inside the two bar composables because `AppScaffold` needs them to
 // build `LocalAppChromePadding`, and a screen's first row coming to rest exactly at the edge of the
@@ -32,12 +31,11 @@ import dev.jellyboost.core.ui.theme.Dimens
 /**
  * Window width at which the chrome moves from the bottom of the screen to the top.
  *
- * This is the very same 560dp breakpoint the combined app bar used to decide whether its four tabs
- * could afford labels: below it the four labels crowded the app actions out, which is exactly the
- * width at which a single horizontal bar stops being the right shape for this navigation. Below it
- * the chrome is therefore the floating bottom pill ([GlassBottomNav]) with the actions as a small
- * floating cluster in the top-right corner; at and above it, the glass top nav ([GlassTopNav])
- * carries tabs and actions in one row, the way the old bar did.
+ * This is the 560dp breakpoint below which four labelled tabs would crowd the app actions out —
+ * the width at which a single horizontal bar stops being the right shape for this navigation.
+ * Below it the chrome is therefore the floating bottom pill ([GlassBottomNav]) with the actions as
+ * a small floating cluster in the top-right corner; at and above it, the glass top nav
+ * ([GlassTopNav]) carries tabs and actions in one row.
  */
 internal val TopNavMinWidth: Dp = 560.dp
 
@@ -58,9 +56,9 @@ internal val ActionClusterTopGap: Dp = 8.dp
  *
  * *Derived*, not a number: the cluster is one row of glass action buttons under an
  * [ActionClusterTopGap] gap, and each of those buttons lays out at [Dimens.MinTouchTarget] however
- * big the circle it draws inside that frame is (see `JellyfinButtons.kt`). It used to be a literal
- * 44dp, which was neither the 36dp circle nor the 48dp row that actually got laid out, and the
- * 12dp shortfall is what let a screen's first row slide under the Cast and overflow buttons.
+ * big the circle it draws inside that frame is (see `JellyfinButtons.kt`). A literal number here
+ * risks drifting from the 36dp circle and 48dp row actually laid out, letting a screen's first row
+ * slide under the Cast and overflow buttons.
  *
  * The cluster floats over the content rather than reserving space; this is only how much of the top
  * of the window `AppScaffold` keeps clear of a screen's *first* row, so that a static header — the
@@ -84,8 +82,8 @@ internal val ActionClusterEndMargin: Dp = 12.dp
 internal val ActionClusterEndPadding: Dp = ActionClusterEndMargin - ActionFrameOverhang
 
 /**
- * The insets every piece of *top* chrome keeps itself clear of: the status bar, and — the part both
- * bars used to miss — the display cutout.
+ * The insets every piece of *top* chrome keeps itself clear of: the status bar and the display
+ * cutout.
  *
  * `statusBarsPadding()` is only correct while the cutout is inside the status bar, which is the
  * portrait case. Rotate a cutout device and the notch becomes a *horizontal* inset: the top nav's
@@ -112,9 +110,8 @@ internal fun useBottomNav(maxWidth: Dp): Boolean = maxWidth < TopNavMinWidth
 /**
  * The four destinations both navigation layouts switch between, in the order they are drawn.
  *
- * One model for the two bars: the icons, the labels and the routes are the ones the combined app
- * bar carried, and having them in a single place is what keeps the phone and tablet chrome from
- * drifting apart as the refresh lands screen by screen.
+ * One model for the two bars: the icons, the labels and the routes live in a single place, which
+ * is what keeps the phone and tablet chrome from drifting apart.
  */
 internal enum class TopLevelTab(
     val route: Any,
@@ -146,22 +143,20 @@ internal fun NavDestination?.isSelected(tab: TopLevelTab): Boolean =
 internal fun NavDestination?.isTopLevel(): Boolean = TopLevelTab.entries.any { isSelected(it) }
 
 /**
- * Whether [MiniPlayer] belongs on screen right now (M13 Phase 4, docs/notes/music-m13-plan.md).
+ * Whether [MiniPlayer] belongs on screen right now.
  *
  * A queue must be loaded, and the user must not already be looking at it: [Routes.Player] shows the
- * mini-player would-be duplicate transport for a *video* session mid-handover (key decision 3 —
- * the queue survives as a paused snapshot while video borrows the player, and a mini-player for it
- * during that window would invite a tap that fights the video controls for the same player), and
- * [Routes.NowPlaying] is this exact bar's own full-screen view, one tap away.
+ * mini-player would-be duplicate transport for a *video* session mid-handover — the queue survives
+ * as a paused snapshot while video borrows the player, and a mini-player for it during that window
+ * would invite a tap that fights the video controls for the same player — and [Routes.NowPlaying]
+ * is this exact bar's own full-screen view, one tap away.
  *
- * **Those two exclusions are the whole rule** — [isTopLevel] is deliberately not part of it. The bar
- * used to be restricted to the four tabs, on the argument that only a top-level screen consumes
- * `LocalAppChromePadding` and so only a tab had clearance for it. That put the bar everywhere
- * *except* the screens playback actually starts from: an album, an artist, a playlist and the music
- * library are all pushed destinations, and tapping Play on one of them showed nothing at all until
- * the user navigated back to a tab (device walk, 2026-08-15). The clearance half of the argument is
- * answered instead — `AppScaffold.chromePadding` folds the bar's height in whatever the destination,
- * and the four music screens consume its bottom (see that function's KDoc).
+ * **Those two exclusions are the whole rule** — [isTopLevel] is deliberately not part of it:
+ * restricting the bar to the four top-level tabs would hide it on every pushed destination
+ * playback actually starts from — an album, an artist, a playlist and the music library — leaving
+ * nothing on screen after tapping Play until the user navigates back to a tab. The clearance
+ * concern is answered instead by `AppScaffold.chromePadding`, which folds the bar's height in for
+ * whatever the destination; the four music screens consume its bottom (see that function's KDoc).
  *
  * A plain function of the two booleans `AppScaffold` already computes for [Routes.Player] rather
  * than of a `NavDestination`, so it is unit-testable without constructing one.

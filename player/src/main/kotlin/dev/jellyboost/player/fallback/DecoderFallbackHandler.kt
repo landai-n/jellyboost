@@ -11,10 +11,9 @@ import javax.inject.Inject
 /**
  * Decides what to do when playback dies mid-stream.
  *
- * This is the mitigation the plan names for risk #5, OEM decoder quirks: a device profile is built
- * from what `MediaCodecList` *claims*, and some decoders accept a format at initialisation and
- * then fail on the first frame. Rather than showing the user an error, we re-negotiate with the
- * server under stricter terms (docs/PLAN.md, "Playback pipeline" → DecoderFallbackHandler):
+ * The mitigation for OEM decoder quirks: a device profile is built from what `MediaCodecList`
+ * *claims*, and some decoders accept a format at initialisation and then fail on the first frame.
+ * Rather than showing the user an error, we re-negotiate with the server under stricter terms:
  *
  * - a **renderer/decoder** failure means this device cannot play the file as delivered, so we
  *   forbid direct play *and* direct stream, forcing a transcode;
@@ -70,7 +69,7 @@ internal class DecoderFallbackHandler
          * is a network or file problem that a lower bitrate would not fix, so that case falls
          * through to forcing a transcode instead.
          *
-         * A local source (M8) can never be transcoding, so a failure to read the downloaded file
+         * A local source can never be transcoding, so a failure to read the downloaded file
          * lands in the same place: ask the server for the item instead. Offline that surfaces as an
          * error rather than looping over bytes that have already failed, which is what
          * `PlaybackSourceResolver` uses `enableDirectPlay = false` to mean.

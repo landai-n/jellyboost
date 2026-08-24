@@ -12,7 +12,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * The delete cascade (docs/PLAN.md, "Download pipeline" → Delete cascade).
+ * The delete cascade.
  *
  * Deleting a download is four steps, and skipping any of them leaves the app lying to the user:
  *
@@ -26,24 +26,23 @@ import javax.inject.Singleton
  * 4. **the files**, for the rows that were actually removed.
  *
  * ### Why the row goes before its bytes, and why all the Room work is one transaction
- * The plan's cascade reads "delete files + dir → DB rows", and until audit CORR-1 that is what this
- * did. What it cost was the ability to *change its mind*: the row was read, the directory was
- * unlinked, and only then was the row deleted — so a download re-enqueued in between (see
- * [DownloadDao.deleteUnlessRunnable] for the five-second window that makes that ordinary) had its
- * files pulled out from under it, or was deleted outright. The guard has to be the **first**
- * destructive act or it guards nothing, and a guard that is a `DELETE` is a guard the database
- * enforces rather than one this class hopes for — the drain's `markDownloadingIfRunnable` pattern.
+ * Unlinking the directory before deleting the row would cost the ability to *change its mind*: the
+ * row is read, the directory unlinked, and only then the row deleted — so a download re-enqueued in
+ * between (see [DownloadDao.deleteUnlessRunnable] for the five-second window that makes that
+ * ordinary) would have its files pulled out from under it, or be deleted outright. The guard has to
+ * be the **first** destructive act or it guards nothing, and a guard that is a `DELETE` is a guard
+ * the database enforces rather than one this class hopes for — the drain's
+ * `markDownloadingIfRunnable` pattern.
  *
- * Turning the order around costs one thing: a process death between the row delete and the unlink
- * leaves an item directory nothing points at. That is precisely what `OrphanSweeper` collects at
- * the head of every drain (audit 2026-07, STAB-04), and it had to exist anyway, because a
- * cancellation landing mid-file used to *recreate* the directory the old order had just removed.
- * So the failure the old order protected against is covered, and the one the new order prevents —
- * a silently vanished download — was not.
+ * This order costs one thing: a process death between the row delete and the unlink leaves an item
+ * directory nothing points at. That is precisely what `OrphanSweeper` collects at the head of every
+ * drain, and it has to exist anyway, because a cancellation landing mid-file can *recreate* a
+ * directory the cascade has just removed. So the failure the other order protects against is
+ * covered, and the one this order prevents — a silently vanished download — is not.
  *
  * The Room half (guarded deletes, prune, user-data sweep) runs inside one
- * [TransactionRunner.inTransaction] block. Beyond making the batch atomic, that is what closes
- * audit CORR-4: [pruneOrphanedItems] reads `allItemIds()` and then deletes every `DOWNLOAD` item
+ * [TransactionRunner.inTransaction] block. Beyond making the batch atomic, that is what keeps the
+ * prune honest: [pruneOrphanedItems] reads `allItemIds()` and then deletes every `DOWNLOAD` item
  * row outside that set, so an enqueue committing between the two would have its freshly written
  * metadata pruned — and the drain that later picks up the row fails with
  * `MissingMetadataException`, permanently. `DownloadEnqueuer` writes its metadata and its rows in
@@ -70,17 +69,17 @@ internal class DownloadDeleter
          * Removes one download completely.
          *
          * @return bytes actually freed on disk — what the Downloads screen reports, and what the
-         *   milestone's "delete frees bytes" check measures.
+         *   "delete frees bytes" check measures.
          */
         suspend fun delete(itemId: UUID): Long = deleteAll(listOf(itemId))
 
         /**
          * Removes several downloads, running the metadata prune **once** for the whole batch.
          *
-         * The batch shape is not a convenience: *Cancel all* used to run the full cascade per row,
-         * and each cascade's prune re-read every surviving download's whole `ItemEntity` — a
-         * multi-tens-of-KB `BaseItemDto` blob apiece — making the operation O(deleted × remaining)
-         * in blob reads, with the UI waiting on it (audit DL-05).
+         * The batch shape is not a convenience: running the full cascade per row makes *Cancel all*
+         * re-read every surviving download's whole `ItemEntity` once per deleted row — a
+         * multi-tens-of-KB `BaseItemDto` blob apiece — which is O(deleted × remaining) in blob
+         * reads, with the UI waiting on it.
          *
          * @return total bytes actually freed on disk — nothing for a row this cascade no longer
          *   owns, since its files are not this cascade's to unlink.
@@ -100,8 +99,8 @@ internal class DownloadDeleter
          */
         private suspend fun removeRows(itemIds: List<UUID>): List<DownloadEntity> {
             // One read for the whole batch, then one guarded delete per row. Reading per row too
-            // made a forty-episode cancel eighty statements where forty-one do (audit PERF-25); the
-            // *deletes* stay per row because each one's return value is this cascade's claim check.
+            // would make a forty-episode cancel eighty statements where forty-one do; the *deletes*
+            // stay per row because each one's return value is this cascade's claim check.
             val targets = downloadDao.getAll(itemIds)
             val removed = targets.filter { removeRow(it) }
 
@@ -138,14 +137,14 @@ internal class DownloadDeleter
          *
          * The surviving set is computed rather than guessed: it is the remaining downloads plus,
          * for each of them, its parents — series and season for an episode, **album and album
-         * artist for a track** (M13). That is exactly the set the offline read path walks: an
+         * artist for a track**. That is exactly the set the offline read path walks: an
          * episode's detail page reaches its season, which reaches its series; an artist page reaches
          * its albums (`ItemDao.albumsOfArtist`), each of which reaches its tracks
          * (`ItemDao.tracksOfAlbum`). The walk reads [ItemDao.getParentRefs], a projection without
-         * the `dto` blob: the prune needs only the links, never the metadata itself (audit DL-05).
+         * the `dto` blob: the prune needs only the links, never the metadata itself.
          *
-         * The music half is what makes the two cases the M13 DoD asks about correct without any
-         * per-kind code: deleting a whole album (its tracks, in one [deleteAll]) leaves no track
+         * The music half is what makes both album cases correct without any per-kind code:
+         * deleting a whole album (its tracks, in one [deleteAll]) leaves no track
          * pointing at that album or that artist, so both parent rows are pruned; deleting one track
          * of an album leaves its siblings pointing at both, so both survive. Deleting the *last*
          * track of an artist's last album takes the album and the artist with it, which is what
@@ -154,7 +153,7 @@ internal class DownloadDeleter
          * Run after every batch rather than only on the last one, so a half-cleaned cache cannot
          * accumulate over a session of deletions — and inside [deleteAll]'s transaction, because
          * the read that computes the surviving set and the delete that acts on it must not have an
-         * enqueue between them (audit CORR-4; see this class's documentation).
+         * enqueue between them (see this class's documentation).
          */
         private suspend fun pruneOrphanedItems() {
             val remaining = downloadDao.allItemIds()

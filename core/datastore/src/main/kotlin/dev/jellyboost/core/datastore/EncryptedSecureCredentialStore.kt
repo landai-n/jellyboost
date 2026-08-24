@@ -18,14 +18,13 @@ import javax.inject.Singleton
  * (AES256_GCM master key, AES256_SIV key encryption, AES256_GCM value encryption).
  *
  * `EncryptedSharedPreferences`/`MasterKey` are deprecated upstream (the whole `security-crypto`
- * artifact is in maintenance mode — docs/PLAN.md risk #3) but remain the simplest correct
- * implementation available; usage is suppressed and confined entirely to this file so a future
- * swap to a hand-rolled Android Keystore AES-GCM implementation only touches this class.
+ * artifact is in maintenance mode) but remain the simplest correct implementation available;
+ * usage is suppressed and confined entirely to this file so a future swap to a hand-rolled Android
+ * Keystore AES-GCM implementation only touches this class.
  *
  * Opening (or first creating) the encrypted preferences does disk I/O and talks to the Android
  * Keystore, so every operation — including the lazy creation itself — runs on the injected
- * [IoDispatcher] (audit QUAL-3; it was a hard-coded `Dispatchers.IO` until the qualifier became
- * visible from this module, and an injected dispatcher is a test seam as much as a policy).
+ * [IoDispatcher]: an injected dispatcher is a test seam as much as a policy.
  *
  * What happens when it will not open is [EncryptedPreferencesOpener]'s decision, and it is not one
  * decision but two: an undecryptable file is deleted and recreated (better than crashing on every

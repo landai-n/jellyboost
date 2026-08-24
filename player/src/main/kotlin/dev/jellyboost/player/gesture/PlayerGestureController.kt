@@ -5,7 +5,7 @@ package dev.jellyboost.player.gesture
  *
  * Modelled on jellyfin-android's `PlayerGestureHelper` — same zones, same swipe range, same
  * exclusion margins — but split so that the decisions are testable and the Compose layer that feeds
- * it coordinates stays a handful of lines (docs/PLAN.md, "M9 Polish" → gestures).
+ * it coordinates stays a handful of lines.
  *
  * Two things here are easy to get wrong and are therefore pinned by tests rather than by eye:
  *

@@ -20,11 +20,11 @@ import javax.inject.Singleton
  * The app's view of [SyncPlayController], for modules that may not see it.
  *
  * A translation layer and nothing else: `:core:common`'s vocabulary in, the controller's intents
- * out (docs/notes/syncplay-m11-plan.md, key decision 2). It holds no state of its own, so there is
+ * out. It holds no state of its own, so there is
  * exactly one answer to "is there a group?" in the app and it is the controller's.
  *
  * Every method here is a *request to the server*, like every other in-group intent — nothing plays,
- * queues or moves on this device until the server broadcasts the result (key decision 11). That is
+ * queues or moves on this device until the server broadcasts the result. That is
  * why "play this for the group" is not a variant of the ordinary Play: the ordinary Play opens a
  * player here, this one changes what everybody is watching and lets the group's own
  * `PlayQueueUpdate` bring the player up.

@@ -211,7 +211,7 @@ class ExoMediaSourceFactoryTest {
         spec.subtitles.shouldBeEmpty()
     }
 
-    // ---- M8, local sources ----------------------------------------------------------------------
+    // ---- local sources --------------------------------------------------------------------------
 
     @Test
     fun `a downloaded item is opened straight off the file, with no URL construction`() {

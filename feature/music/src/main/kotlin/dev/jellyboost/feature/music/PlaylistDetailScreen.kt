@@ -37,11 +37,10 @@ import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
 
 /**
- * A playlist's tracks, **view-only** — playlist editing is out of M13's scope
- * (docs/notes/music-m13-plan.md).
+ * A playlist's tracks, **view-only** — playlist editing is not supported.
  *
- * @param onTrackClick `(tracks, startIndex)` — a track row was tapped. No-op until M13 Phase 3
- *   wires an actual queue, exactly as [AlbumDetailScreen]'s `onPlay` — see that screen's KDoc.
+ * @param onTrackClick `(tracks, startIndex)` — a track row was tapped; wired to the queue exactly
+ *   as [AlbumDetailScreen]'s `onPlay` — see that screen's KDoc.
  */
 @Composable
 fun PlaylistDetailScreen(

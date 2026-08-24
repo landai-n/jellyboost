@@ -24,8 +24,7 @@ import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 
 /**
- * The current track's lyrics — synced (highlighted, auto-scrolling) or static (M13 Phase 6,
- * docs/notes/music-m13-plan.md, key decision 11).
+ * The current track's lyrics — synced (highlighted, auto-scrolling) or static.
  *
  * The caller decides *whether* to show this at all ([dev.jellyboost.feature.music.nowplaying
  * .NowPlayingUiState.lyricsAvailable]) — this composable always renders a list, never the "hide the

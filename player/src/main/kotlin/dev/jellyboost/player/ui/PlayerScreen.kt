@@ -94,17 +94,17 @@ import timber.log.Timber
  * awake — and restores all three on the way out, so leaving it mid-film cannot strand the app in
  * a rotated, chrome-less state.
  *
- * ### What M9 added to the layering
+ * ### The layering
  * The order of the children in the root `Box` is load-bearing. The gesture surface sits *under* the
  * controls, so a tap on a button is consumed by the button and everything else falls through to
- * gestures. The bottom-right corner's offers — the skip-segment button, and since the up-next work
- * the card stacked above it — sit *over* both and are deliberately not tied to the controls'
+ * gestures. The bottom-right corner's offers — the skip-segment button and the up-next card
+ * stacked above it — sit *over* both and are deliberately not tied to the controls'
  * visibility: an intro, or an ending, arrives while the controls are hidden, which is exactly when
  * the offer is worth something. In picture-in-picture none of it is drawn — the window is a few
  * hundred pixels wide and the transport controls that belong there are the media notification's.
  *
- * This is the module's entry point, and it mints its own ViewModel: `PlayerViewModel` is `internal`
- * (audit ARCH-2), so `:app` names the destination and nothing else.
+ * This is the module's entry point, and it mints its own ViewModel: `PlayerViewModel` is
+ * `internal`, so `:app` names the destination and nothing else.
  */
 @Composable
 fun PlayerScreen(
@@ -116,15 +116,16 @@ fun PlayerScreen(
 
 /** The screen proper — see the public overload above. Separate so tests can supply a ViewModel. */
 @Suppress(
-    // Still the longest composable in the app, and now for a reason rather than for a defect (audit UI-10 corrects
-    // what this comment used to claim). CPX-9's shape finding *is* fixed, in this file: one `openPanel: PlayerPanel?`
-    // field instead of independent booleans, and a positive `if (!inPictureInPicture)` instead of the `return@Box`
-    // that silently dropped siblings. What is left is not a function doing several jobs but the one job of wiring a
-    // window, a lifecycle, a keyboard layer, an auto-hide, seven hosted panels and five overlays to a single piece of
-    // screen state — and roughly half of these lines are the comments saying why each of those lives here rather than
-    // one level down. Every candidate split (an overlay block, a `PlayerContent`) was weighed in the UI-1/UI-3 wave:
-    // each needs six to nine parameters to say what the enclosing scope already knows, and moves a hoisting decision
-    // away from the state it exists to protect. Extraction here would buy line count and cost the argument.
+    // The longest composable in the app, and for a reason rather than for a defect. Its shape is
+    // deliberate: one `openPanel: PlayerPanel?` field instead of independent booleans, and a
+    // positive `if (!inPictureInPicture)` instead of a `return@Box` that would silently drop
+    // siblings. What is left is not a function doing several jobs but the one job of wiring a
+    // window, a lifecycle, a keyboard layer, an auto-hide, seven hosted panels and five overlays to
+    // a single piece of screen state — and roughly half of these lines are the comments saying why
+    // each of those lives here rather than one level down. Every candidate split (an overlay block,
+    // a `PlayerContent`) needs six to nine parameters to say what the enclosing scope already
+    // knows, and moves a hoisting decision away from the state it exists to protect. Extraction
+    // here would buy line count and cost the argument.
     "LongMethod",
 )
 @Composable
@@ -137,19 +138,19 @@ internal fun PlayerScreen(
     val player by viewModel.videoPlayer.collectAsStateWithLifecycle()
     val pipState by viewModel.pipState.collectAsStateWithLifecycle()
     // Hoisted above the controls, and above the auto-hide, because a panel must survive the controls
-    // getting out of the way while it is being used: the participant list is read at leisure (M11),
-    // the display sheet is the accessible alternative to the brightness and volume swipes (audit
-    // CR-8), and a track picker is chosen from — which the four pickers held inside the control bar
-    // were not allowed to be, until audit UI-1 moved them here with the rest.
+    // getting out of the way while it is being used: the participant list is read at leisure, the
+    // display sheet is the accessible alternative to the brightness and volume swipes, and a track
+    // picker is chosen from — which a picker held inside the control bar could not be, because the
+    // bar's own `AnimatedVisibility` would dispose it mid-selection.
     //
-    // One field rather than a boolean per panel (audit CPX-9): see [PlayerPanel].
+    // One field rather than a boolean per panel: see [PlayerPanel].
     var openPanel by remember { mutableStateOf<PlayerPanel?>(null) }
-    // Every action the user takes restarts the auto-hide (audit UI-3). Counted rather than
+    // Every action the user takes restarts the auto-hide. Counted rather than
     // time-stamped: the number is only ever compared with itself as a `LaunchedEffect` key, where
     // "different from last time" is the whole question and a clock would answer it no better.
     var interactions by remember { mutableIntStateOf(0) }
     // Rebuilt per composition, these method references are that many new unstable lambdas, and every
-    // control below skips nothing (audit PERF-04/PERF-05). The ViewModel outlives the composition,
+    // control below skips nothing. The ViewModel outlives the composition,
     // so one bundle is all that is ever needed.
     val actions =
         remember(viewModel, onBack) {
@@ -173,8 +174,8 @@ internal fun PlayerScreen(
                 // action added later cannot quietly stop counting as use of the player.
             ).reportingInteraction { interactions++ }
         }
-    // The shared one-shot idiom, keyed on the `PlayerMessage` rather than on its copy (audit
-    // DUP-3/HYG-8) — which matters most here, where the three cast messages resolve through the
+    // The shared one-shot idiom, keyed on the `PlayerMessage` rather than on its copy — which
+    // matters most here, where the three cast messages resolve through the
     // same device name and a `ChangeReverted` chasing a `RestartedForTrackChange` is routine.
     val snackbarHostState =
         rememberOneShotSnackbar(
@@ -189,10 +190,10 @@ internal fun PlayerScreen(
     // The position poll that drives the seek bar only runs while this screen is visible — the
     // lifecycle, not the composition: pressing Home keeps the composable composed for the whole
     // film, and a 500 ms poll behind a backgrounded screen is exactly the battery burn the
-    // UI/reporting split exists to avoid (audit PC-06). Picture-in-picture keeps the activity
+    // UI/reporting split exists to avoid. Picture-in-picture keeps the activity
     // started, so the floating window's position stays live. Playback and progress reporting are
     // deliberately not tied to this — that is what lets the app be backgrounded without the film
-    // stopping (M9).
+    // stopping.
     LifecycleStartEffect(viewModel) {
         viewModel.setScreenVisible(true)
         onStopOrDispose { viewModel.setScreenVisible(false) }
@@ -206,7 +207,7 @@ internal fun PlayerScreen(
         onHide = { controlsVisible = false },
     )
 
-    // Keyboard operation of the player (audit CR-4). The root takes focus on entry so the shortcuts
+    // Keyboard operation of the player. The root takes focus on entry so the shortcuts
     // work before anything has been tabbed to, and gives it up the moment the user tabs into the
     // control bar — see [PlayerKeyScope] for which key wins where.
     val focusRequester = remember { FocusRequester() }
@@ -226,11 +227,10 @@ internal fun PlayerScreen(
                 .background(Color.Black)
                 .focusRequester(focusRequester)
                 .onFocusChanged { rootFocused = it.isFocused }
-                // Claimed at first placement, not from a `LaunchedEffect` (audit UI-12). A
-                // `FocusRequester` throws until the node it is attached to has been placed, and the
-                // effect that used to do this ran once, keyed on the requester, with the failure
-                // swallowed by a bare `runCatching` — so on any composition where the effect won the
-                // race the keyboard shortcuts were simply dead for the rest of the session, silently.
+                // Claimed at first placement, not from a `LaunchedEffect`. A `FocusRequester`
+                // throws until the node it is attached to has been placed, so an effect keyed on
+                // the requester can win the race against placement and leave the keyboard
+                // shortcuts dead for the rest of the session, silently.
                 // `onPlaced` cannot be early by construction, and the latch is a plain state read
                 // nowhere in composition, so writing it during layout invalidates nothing.
                 .onPlaced {
@@ -243,13 +243,13 @@ internal fun PlayerScreen(
                 }
                 // `focusTarget`, not `focusable`: this node exists to receive key events, and
                 // `focusable` would additionally publish a screen-sized semantics node for TalkBack
-                // to stop on — an empty stop over the very surface CR-1 just labelled.
+                // to stop on — an empty stop over the very surface the gesture layer labels.
                 .focusTarget()
                 .onPreviewKeyEvent { event -> handlePlayerKey(event, rootFocused, preview = true, runKeyCommand) }
                 .onKeyEvent { event -> handlePlayerKey(event, rootFocused, preview = false, runKeyCommand) },
     ) {
         // The one branch that decides what this screen *is*: a video player, or the remote control
-        // for one three metres away (docs/notes/chromecast-m12-plan.md, decision 10).
+        // for one three metres away.
         if (state.cast.isCasting) {
             CastingBackdrop(state = state, modifier = Modifier.fillMaxSize())
         } else {
@@ -257,10 +257,10 @@ internal fun PlayerScreen(
         }
 
         // Bare video in the floating window; the notification carries the transport controls. A
-        // positive `if` around the skipped children rather than the `return@Box` this used to be
-        // (audit CPX-9): an early return in a layout scope silently swallows every sibling appended
-        // after it, so the next thing added to this screen would simply never be drawn in
-        // picture-in-picture — and nothing would say so.
+        // positive `if` around the skipped children rather than an early `return@Box`: a return in
+        // a layout scope silently swallows every sibling appended after it, so the next thing added
+        // to this screen would simply never be drawn in picture-in-picture — and nothing would say
+        // so.
         if (!inPictureInPicture) {
             PlayerGestureLayer(
                 onToggleControls = { controlsVisible = !controlsVisible },
@@ -279,8 +279,7 @@ internal fun PlayerScreen(
                     ErrorState(
                         message = requireNotNull(state.errorMessage).resolve(),
                         // Assertive: the film has stopped and the only thing left on the screen is
-                        // this panel, so it is worth interrupting whatever is being read (audit
-                        // CR-3).
+                        // this panel, so it is worth interrupting whatever is being read.
                         modifier =
                             Modifier
                                 .align(Alignment.Center)
@@ -288,8 +287,8 @@ internal fun PlayerScreen(
                         onRetry = onBack,
                         // Named for what it does, not for what an error screen's button usually
                         // does: there is nothing to retry here — the session is gone and the only
-                        // way out is back to where the user came from (WCAG 2.5.3, accessibility
-                        // audit 2026-08-05). `player_back` is the same three words, already
+                        // way out is back to where the user came from (WCAG 2.5.3).
+                        // `player_back` is the same three words, already
                         // translated everywhere, and describes the same action the top-left button
                         // performs.
                         actionLabel = stringResource(R.string.player_back),
@@ -355,7 +354,7 @@ internal fun PlayerScreen(
                         onClick = actions.onSkipSegment,
                         // The offer is time-boxed — it is gone once the segment is — so a user
                         // who is not looking at the screen has to be *told* it exists, not left
-                        // to find it by traversal (audit CR-3). Polite: it is an offer, not an
+                        // to find it by traversal. Polite: it is an offer, not an
                         // emergency.
                         modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
                     )
@@ -364,7 +363,7 @@ internal fun PlayerScreen(
 
             // The player consumes no window insets of its own — it is immersive and full-bleed — so
             // the shared host's chrome/gesture-bar rule resolves to zero here and [SNACKBAR_PADDING]
-            // is what actually applies: the floor exists for exactly this screen (audit DUP-3).
+            // is what actually applies: the floor exists for exactly this screen.
             JellyboostSnackbarHost(
                 hostState = snackbarHostState,
                 modifier = Modifier.align(Alignment.BottomCenter),
@@ -389,10 +388,10 @@ internal fun PlayerScreen(
  * Draws whichever of the screen's seven panels is open, or nothing.
  *
  * One `when` over [PlayerPanel] rather than independently-gated hosts: the exhaustive branch is what
- * makes "one panel at a time" a property of the code instead of a property of the call sites (audit
- * CPX-9). Since audit UI-1 it covers the four track/quality/rate pickers too, which the control bar
- * used to host and dispose along with itself; hosting them here is the whole fix, and the `when`
- * being exhaustive is what will keep the eighth panel from being hosted somewhere that vanishes.
+ * makes "one panel at a time" a property of the code instead of a property of the call sites. It
+ * covers the four track/quality/rate pickers too, which the control bar must not host — the bar
+ * disposes its children along with itself — and the `when` being exhaustive is what will keep the
+ * eighth panel from being hosted somewhere that vanishes.
  *
  * The membership gates the group and queue panels carry are unchanged and stay *inside* their
  * branches, because they answer a different question — not "did the user tap this" but "is the thing
@@ -442,7 +441,7 @@ private fun PanelHost(
 
         // Gated on membership like the group sheet, for the same reason — a group that ends takes its
         // queue with it. The sheet's own ViewModel reads the controller's queue, and a group that has
-        // not been given anything to watch yet has none (M11 Phase 4); the chip that opens this is
+        // not been given anything to watch yet has none; the chip that opens this is
         // only offered once it has (`sheetChipSpecs`).
         PlayerPanel.QUEUE -> if (syncPlay.inGroup) SyncPlayQueueSheet(onDismiss = onDismiss)
     }
@@ -471,7 +470,7 @@ private fun WaitingForGroupOverlay(
             modifier
                 // One node, announced when it appears: "nothing is happening and it is not your
                 // fault" is exactly the sort of thing a user who cannot see the frozen frame needs
-                // said (audit CR-3). Merged so the participant list arrives with the message rather
+                // said. Merged so the participant list arrives with the message rather
                 // than as a second stop.
                 .semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite }
                 .background(color = OVERLAY_SCRIM, shape = RoundedCornerShape(Dimens.PanelRadius))
@@ -500,12 +499,12 @@ private fun WaitingForGroupOverlay(
 }
 
 /**
- * The mid-playback rebuffer spinner — and, until now, the player's biggest silence.
+ * The mid-playback rebuffer spinner.
  *
- * [PlayerUiState.isBuffering] has been computed since M9 and had **no UI consumer at all** (audit
- * CR-3): a stream that stalled mid-film showed a frozen frame, an unchanged clock and no spinner, so
- * the app was indistinguishable from a crash whether or not the user could see it. This draws the
- * missing spinner and announces it politely.
+ * It is the only consumer of [PlayerUiState.isBuffering]. Without it a stream that stalls mid-film
+ * shows a frozen frame, an unchanged clock and nothing else, which is indistinguishable from a
+ * crash whether or not the user can see the screen. This draws the spinner and announces it
+ * politely.
  *
  * The gating is what keeps it honest rather than flickery:
  * - not while the session is still opening ([PlayerUiState.isReady]) — `LoadingState` is already
@@ -577,12 +576,12 @@ private fun SkipSegmentButton(
 }
 
 /**
- * What the player draws instead of video while a television has the film (M12 Phase 4).
+ * What the player draws instead of video while a television has the film.
  *
  * There is nothing to render here — `CastPlayerHandle.player` is permanently `null` — so the
  * surface is replaced rather than left attached to nothing: the item's own artwork, dimmed, with
  * the receiver's name over it. Every control around it keeps working, because none of them ever
- * touched the surface; this screen is the remote control now (decision 10).
+ * touched the surface; while a receiver has the film, this screen is the remote control.
  *
  * Two consequences of *removing* [VideoSurface] rather than hiding it, both wanted: the phone's
  * screen may sleep again (`keepScreenOn` belonged to the `PlayerView`), and picture-in-picture has
@@ -649,12 +648,12 @@ private fun CastingBackdrop(
  * to decide — this composable only reads the two system values that cannot be tested and hands them
  * over, so that "when do the controls go away" is a unit test rather than a stopwatch and a tablet.
  *
- * **While touch exploration is on the controls never hide at all** (audit CR-1): a screen-reader user
- * reads the bar one element at a time, and four seconds is not a traversal — the controls would vanish
- * mid-swipe, every time, and until CR-1's tap action there was no way to ask for them back.
+ * **While touch exploration is on the controls never hide at all**: a screen-reader user
+ * reads the bar one element at a time, and four seconds is not a traversal — the controls would
+ * vanish mid-swipe, every time.
  * Suppressing beats stretching here: no finite timeout is long enough for "read every control".
  *
- * **While a panel is open the timer does not run** (audit UI-1, belt and braces). Hosting the panels
+ * **While a panel is open the timer does not run** (belt and braces). Hosting the panels
  * above the bar is what actually stops a picker being disposed mid-selection; this stops the *bar
  * behind it* going too, so dismissing a picker returns the user to the controls they opened it from
  * rather than to bare video. It is also the honest reading of the timer's own question — a user with a
@@ -662,9 +661,9 @@ private fun CastingBackdrop(
  *
  * **Every interaction restarts it.** [interactions] is a counter the action bundle bumps
  * (`PlayerActions.reportingInteraction`), and it is in the effect key, so a seek, a chip tap or a key
- * press cancels the running timer and starts a fresh one. Before audit UI-3 the key was
- * `(shouldHide, timeoutMs)`, neither of which an interaction changes — the key runner writes `true`
- * over `true` — so the bar hid four seconds after it first appeared no matter what was done with it.
+ * press cancels the running timer and starts a fresh one. A key of `(shouldHide, timeoutMs)` will
+ * not do: neither changes on an interaction — the key runner writes `true` over `true` — so the bar
+ * would hide four seconds after it first appeared no matter what was done with it.
  *
  * When nothing suppresses it, the four seconds still pass through [recommendedControlsTimeoutMs], so
  * the system's "time to take action" preference is honoured.
@@ -786,7 +785,7 @@ private fun rememberTouchExplorationEnabled(): Boolean {
  * for touches. `keepScreenOn` is set here rather than on the window so it follows the surface's
  * lifetime exactly.
  *
- * The semantics are cleared (audit A11Y-P-21): a `PlayerView` with no controller still carries the
+ * The semantics are cleared: a `PlayerView` with no controller still carries the
  * view hierarchy Media3 builds inside it, and whatever of it reaches the accessibility tree would be
  * stray nodes over the video — the surface has nothing to say, and the gesture layer above it is
  * what offers the one action there is.
@@ -819,7 +818,7 @@ private fun VideoSurface(
  * The previous orientation and brightness are captured and restored on dispose; the project's test
  * device is a tablet, where getting the first wrong leaves the whole app sideways. The system bars
  * are shown again on the way out, and the decor-fits flag is deliberately *not* put back — see the
- * comment on it for why a restore there was worse than none (audit UI-2).
+ * comment on it for why a restore there is worse than none.
  *
  * Suspended in picture-in-picture ([enabled] `false`): a floating window has no system bars to hide
  * and no orientation to force, and asking for an orientation while the system is resizing the window
@@ -827,11 +826,10 @@ private fun VideoSurface(
  *
  * ### Why `SCREEN_ORIENTATION_USER` rather than sensor-landscape
  * WCAG 1.3.4 allows a forced orientation only where it is essential, and video playback is not —
- * this player already renders at arbitrary aspect ratios in picture-in-picture (accessibility audit
- * 2026-08-05, MANIFEST-01; DECISIONS.md 2026-08-05). `SCREEN_ORIENTATION_USER` follows the device:
- * with rotation unlocked a turned tablet still plays landscape, exactly as before, but a user whose
- * system rotation is locked — including anyone in a fixed mount — is no longer overridden by the one
- * screen in the app that used to insist.
+ * this player already renders at arbitrary aspect ratios in picture-in-picture.
+ * `SCREEN_ORIENTATION_USER` follows the device: with rotation unlocked a turned tablet plays
+ * landscape, and a user whose system rotation is locked — including anyone in a fixed mount — is
+ * not overridden by this screen.
  */
 @Composable
 private fun ImmersiveLandscapeEffect(enabled: Boolean) {
@@ -846,20 +844,20 @@ private fun ImmersiveLandscapeEffect(enabled: Boolean) {
         val previousOrientation = activity.requestedOrientation
         // The brightness swipe writes a per-window override (`PlayerGestureLayer`), and in a
         // single-activity app the window outlives the player — nothing undoes the override on its
-        // own, so a film dimmed for the night would leave every other screen dimmed too (audit
-        // PC-02). Captured with the rest of the window state; `BRIGHTNESS_OVERRIDE_NONE` is the
+        // own, so a film dimmed for the night would leave every other screen dimmed too.
+        // Captured with the rest of the window state; `BRIGHTNESS_OVERRIDE_NONE` is the
         // usual "no override" starting value, and restoring it hands the backlight back to the
         // system.
         val previousBrightness = window.attributes.screenBrightness
 
-        // Not restored on the way out, and deliberately (audit UI-2). There is no getter for it —
-        // `WindowCompat` only sets — so the "previous value" this used to put back was the literal
-        // `true` somebody wrote next to three genuine captures, and `true` is the one value it is
-        // never allowed to be: `MainActivity.enableEdgeToEdge()` sets it false for the process, and
-        // this is a single-activity app, so leaving the player flipped the *whole app* to
-        // decor-fitting for the rest of its life — status-bar-coloured strips under every screen's
-        // top bar on API 26–34, invisible on the API 35+ test tablet where edge-to-edge is enforced
-        // anyway. The honest restore is none: the app's own value and the player's are both `false`,
+        // Not restored on the way out, and deliberately. There is no getter for it —
+        // `WindowCompat` only sets — so any "previous value" put back here would be a literal, and
+        // `true` is the one value it is never allowed to be: `MainActivity.enableEdgeToEdge()` sets
+        // it false for the process, and this is a single-activity app, so leaving the player would
+        // flip the *whole app* to decor-fitting for the rest of its life — status-bar-coloured
+        // strips under every screen's top bar on API 26–34, invisible on an API 35+ tablet where
+        // edge-to-edge is enforced anyway. The honest restore is none: the app's own value and the
+        // player's are both `false`,
         // and setting it here is belt and braces for a window some future screen has changed.
         WindowCompat.setDecorFitsSystemWindows(window, false)
         controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
@@ -920,11 +918,11 @@ private val OVERLAY_SCRIM = Color.Black.copy(alpha = 0.6f)
  * Dims the casting artwork so it reads as a still, not as a paused frame — and buys the controls
  * over it their contrast.
  *
- * 0.62 rather than the original 0.45 (accessibility audit 2026-08-05): the artwork here is whatever
- * the item's poster happens to be, and against a bright one black@45% composited to rgb(140), where
- * the white "Casting to …" label and the transport over it read 3.35:1 — short of 4.5:1. Black@62%
- * takes the same worst case to rgb(97) and 6.20:1, and is the same number `PlayerControls.SCRIM`
- * now uses, so the two washes the player can draw over a bright image agree.
+ * 0.62 rather than a lighter 0.45: the artwork here is whatever the item's poster happens to be,
+ * and against a bright one black@45% composites to rgb(140), where the white "Casting to …" label
+ * and the transport over it read 3.35:1 — short of 4.5:1. Black@62% takes the same worst case to
+ * rgb(97) and 6.20:1, and is the same number `PlayerControls.SCRIM` uses, so the two washes the
+ * player can draw over a bright image agree.
  */
 private val BACKDROP_SCRIM = Color.Black.copy(alpha = 0.62f)
 

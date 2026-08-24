@@ -140,7 +140,7 @@ internal data class SyncPlayGroupQueue(
      * Either there is another slot after it, or a repeat mode that will bring one back —
      * [SyncPlayRepeatMode.One] replays this very slot, [SyncPlayRepeatMode.All] wraps to the start.
      *
-     * What reads it is the player screen's "the film ended, close me" rule (M11 Phase 4): in a group
+     * What reads it is the player screen's "the film ended, close me" rule: in a group
      * an ended item is a request to the server for the next one, and popping the screen while that
      * request is in flight would close the player the group is about to load into.
      */

@@ -1,7 +1,7 @@
 // One `LazyListScope` extension per home section (`resumeRow`, `nextUpRow`, `latestRows`,
 // `resumeAudioRow`, …) is this screen's whole structure; they are not `@Composable`, so the rule's
 // Composable exemption cannot reach them. Suppressed here rather than raising the global
-// `thresholdInFiles` (PlayerViewModel precedent, DECISIONS 2026-08-03).
+// `thresholdInFiles`.
 @file:Suppress("TooManyFunctions")
 
 package dev.jellyboost.feature.home
@@ -76,12 +76,12 @@ import dev.jellyboost.core.ui.R as CoreUiR
 
 /**
  * The home screen: the app's landing destination, mirroring jellyfin-web's row order so a
- * side-by-side comparison shows the same sections, items and ordering (the M2 definition of done).
+ * side-by-side comparison shows the same sections, items and ordering.
  *
- * Since the 2026 refresh the first *Continue watching* item is promoted out of its row into the
- * full-bleed [HomeHero] at the top of the list, and — on a compact layout — the *My Media* row
- * becomes a row of quick-access chips (DECISIONS.md 2026-08-01, spec section 4a). Both are
- * presentations of rows the screen already had: no item and no destination is added or lost.
+ * The first *Continue watching* item is promoted out of its row into the full-bleed [HomeHero] at
+ * the top of the list, and — on a compact layout — the *My Media* row becomes a row of
+ * quick-access chips. Both are presentations of rows the screen already had: no item and no
+ * destination is added or lost.
  *
  * The [HomeViewModel] is passed in rather than resolved here so that `:app` owns the
  * `hiltViewModel()` call together with the rest of the navigation graph wiring — see
@@ -113,7 +113,7 @@ fun HomeScreen(
  *   navigation. The hero's Resume pill is its only caller.
  * @param onLibraryClick open a library's grid — the *See all* action and the quick-access chips.
  * @param onOpenDownloads switch to the Downloads tab, behind the quick-access row's *Offline* chip.
- * @param onPlayTrack resume a *Continue Listening* track from its saved position (M13 Phase 4) —
+ * @param onPlayTrack resume a *Continue Listening* track from its saved position —
  *   unlike [onPlay], this starts the music queue rather than navigating to `Routes.Player`, so it
  *   is a distinct callback rather than an overload of it.
  */
@@ -140,8 +140,8 @@ fun HomeContent(
         state.isLoading -> LoadingState(modifier = modifier)
 
         // Both states announce themselves: they arrive by *replacing* the rows a user was reading,
-        // or the spinner they were waiting behind, and until now that swap was silent — the node
-        // under the reader's finger simply vanished (accessibility audit 2026-08-05, CR-3).
+        // or the spinner they were waiting behind, and without an announcement that swap would be
+        // silent — the node under the reader's finger would simply vanish.
         state.errorMessage != null ->
             ErrorState(
                 message = state.errorMessage.resolve(),
@@ -349,8 +349,8 @@ private fun LazyListScope.librariesRow(
  * *My Media* as quick-access chips — the compact layout's shape for the same row.
  *
  * A phone has no room for a shelf of 232dp tiles above the artwork the screen is actually about, so
- * the refresh turns the libraries into a single line of glass pills, with the Downloads tab on the
- * end: everything the tile row reached, one tap away, in a sixth of the height.
+ * this row turns the libraries into a single line of glass pills, with the Downloads tab on the
+ * end: everything the tile row reaches, one tap away, in a sixth of the height.
  */
 private fun LazyListScope.quickAccessRow(
     state: HomeUiState,
@@ -410,8 +410,8 @@ private fun QuickAccessChip(
                 .background(color = GlassDefaults.Fill, shape = CircleShape)
                 .border(GlassDefaults.HairlineWidth, GlassDefaults.Hairline, CircleShape)
                 // A chip is a navigation target, and said so to the eye alone: without the role a
-                // screen reader announced the library's name with nothing to say it was tappable
-                // (accessibility audit 2026-08-05, ROLE-01).
+                // screen reader would announce the library's name with nothing to say it was
+                // tappable.
                 .clickable(role = Role.Button, onClick = onClick)
                 .padding(horizontal = QuickAccessChipPadding),
         verticalAlignment = Alignment.CenterVertically,
@@ -482,7 +482,7 @@ private fun LazyListScope.nextUpRow(
 }
 
 /**
- * *Continue Listening* (M13 Phase 4): partially-played tracks, square album-shaped cards like the
+ * *Continue Listening*: partially-played tracks, square album-shaped cards like the
  * browse screens' [AlbumCard] rather than [ThumbCard] — the 16:9 shape has no meaning for a track,
  * which carries square artwork exactly like an album does.
  *
@@ -610,9 +610,9 @@ internal fun isWideHome(
  * Both numbers move with the font scale, and only upwards. The banner grows by exactly what its
  * lockup's *text* grew by ([CompactLockupText] / [WideLockupText]), because the copy inside a
  * fixed-height box is the one thing the mocks' dp figures cannot describe — a 2.0× device asking a
- * 460dp banner to hold 615dp of lockup is how the hero came to clip its own buttons (accessibility
- * audit 2026-08-05, A11Y-16). The ceiling relaxes with it, or the growth would be capped away on
- * exactly the devices that need it; the copy still sheds (`compactHeroShowsSecondary`,
+ * 460dp banner to hold 615dp of lockup would otherwise clip the hero's own buttons. The ceiling
+ * relaxes with it, or the growth would be capped away on exactly the devices that need it; the
+ * copy still sheds (`compactHeroShowsSecondary`,
  * `wideHeroShowsSecondary`) when even the taller banner is not enough.
  */
 internal fun heroHeight(
@@ -667,7 +667,7 @@ private const val SECTION_RESUME_AUDIO = "section-resume-audio"
 
 // Content types: rows of the same shape are interchangeable nodes, whatever section they belong to.
 // The card types themselves (poster/thumb/library) come from `:core:ui`, beside the cards they
-// describe (DUP-15) — these row- and chip-level types don't name a core/ui component, so they stay
+// describe — these row- and chip-level types don't name a core/ui component, so they stay
 // local.
 private const val ROW_HERO = "row-hero"
 private const val ROW_LIBRARIES = "row-libraries"

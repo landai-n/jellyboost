@@ -23,16 +23,16 @@ import java.util.UUID
  * only on a device.
  *
  * Every list query filters on an explicit `source` parameter instead of hard-coding
- * `'DOWNLOAD'`: the offline home/library/search surfaces are downloaded-items-only (docs/PLAN.md,
- * "Confirmed decisions" → offline browse scope) while `getItem` deliberately also serves cached
- * rows, and making the caller say which it wants keeps that distinction visible at the call site.
+ * `'DOWNLOAD'`: the offline home/library/search surfaces are downloaded-items-only while `getItem`
+ * deliberately also serves cached rows, and making the caller say which it wants keeps that
+ * distinction visible at the call site.
  */
 @Dao
 @Suppress(
-    // One member per query, by construction — a DAO is wide by contract, not by neglect (the
-    // same shape `OnlineJellyfinRepository` logs in DECISIONS.md). M13's three music queries
-    // (`tracksOfAlbum`, `albumsOfArtist`, the Continue Listening resume) took it from 18 to 21;
-    // splitting a music DAO out would put one table's queries in two files.
+    // One member per query, by construction — a DAO is wide by contract, not by neglect (the same
+    // shape as `OnlineJellyfinRepository`'s). The three music queries (`tracksOfAlbum`,
+    // `albumsOfArtist`, the Continue Listening resume) take it from 18 to 21; splitting a music
+    // DAO out would put one table's queries in two files.
     "TooManyFunctions",
 )
 interface ItemDao {
@@ -60,8 +60,8 @@ interface ItemDao {
      * The parent links of the given items, without their `dto` blobs.
      *
      * What the delete cascade's orphan prune walks: it needs only each surviving download's
-     * series/season/folder ids, and reading them through [getItems] materialised every survivor's
-     * multi-kilobyte blob once per deleted item (audit DL-05).
+     * series/season/folder ids, and reading them through [getItems] would materialise every
+     * survivor's multi-kilobyte blob once per deleted item.
      */
     @Query("SELECT id, parentId, seriesId, seasonId, albumId, albumArtistId FROM items WHERE id IN (:ids)")
     suspend fun getParentRefs(ids: List<UUID>): List<ItemParentRefs>
@@ -70,13 +70,12 @@ interface ItemDao {
      * The offline library grid's whole result set, in sort order, as the columns a **filter** is
      * decided from — and nothing else.
      *
-     * **There is deliberately no library predicate.** It used to filter on
-     * `parentId = <library id>` (plus `seriesId IN (children of the library)`), and on a real device
-     * that returned nothing: a downloaded row's `parentId` is its *containing folder* — when the
-     * server sends one at all; the M7 walk found both downloaded films stored with `parentId NULL` —
-     * and a folder is not the library-view id the grid filters by. Which library an offline row
-     * belongs to is decided by its **type** instead, in `OfflineJellyfinRepository`, which is exact
-     * for the movie/TV libraries v1 supports (DECISIONS.md 2026-07-28).
+     * **There is deliberately no library predicate.** Filtering on `parentId = <library id>` (plus
+     * `seriesId IN (children of the library)`) does not work: a downloaded row's `parentId` is its
+     * *containing folder* — when the server sends one at all, and downloaded films can have it
+     * stored as `parentId NULL` — and a folder is not the library-view id the grid filters by.
+     * Which library an offline row belongs to is decided by its **type** instead, in
+     * `OfflineJellyfinRepository`, which is exact for the movie/TV libraries this app supports.
      *
      * **No `LIMIT`, and no whole rows.** The filters the grid applies are not all expressible in
      * one statement — `genres` is a newline-joined column, and SQLite has no way to intersect it
@@ -162,13 +161,13 @@ interface ItemDao {
     ): List<ItemEntity>
 
     /**
-     * The offline *Continue Listening* row (M13 Phase 4): [resumeDownloaded]'s audio counterpart.
+     * The offline *Continue Listening* row: [resumeDownloaded]'s audio counterpart.
      *
      * A new query rather than a `types` parameter added to [resumeDownloaded] — that method already
-     * answers *every* resumable downloaded item regardless of kind (there was, until M13, only ever
-     * one kind of resumable download), and widening its signature would be a breaking change to a
-     * query every existing *Continue watching* test pins. `audioType` is passed in rather than
-     * hard-coded, the same style [tracksOfAlbum] and [albumsOfArtist] use for their own type filter.
+     * answers *every* resumable downloaded item regardless of kind, and widening its signature would
+     * be a breaking change to a query every existing *Continue watching* test pins. `audioType` is
+     * passed in rather than hard-coded, the same style [tracksOfAlbum] and [albumsOfArtist] use for
+     * their own type filter.
      */
     @Query(
         """
@@ -305,12 +304,12 @@ interface ItemDao {
         episodeType: ItemType,
     ): List<ItemEntity>
 
-    // ---- M13 Phase 1 — music query columns ------------------------------------------------------
+    // ---- music query columns -----------------------------------------------------------------
 
     /**
      * A downloaded album's tracks, in disc/track order.
      *
-     * Matches [episodesOfSeason]'s shape: `albumId` is the M13 query-only column
+     * Matches [episodesOfSeason]'s shape: `albumId` is a query-only column
      * ([dev.jellyboost.core.database.entities.ItemEntity.albumId]), and disc-then-track is the
      * same `parentIndexNumber`/`indexNumber` pair an episode's season/episode numbers reuse.
      */
@@ -330,7 +329,7 @@ interface ItemDao {
     /**
      * A downloaded artist's albums, newest first.
      *
-     * `albumArtistId` is the M13 query-only column
+     * `albumArtistId` is a query-only column
      * ([dev.jellyboost.core.database.entities.ItemEntity.albumArtistId]).
      */
     @Query(
@@ -354,7 +353,7 @@ interface ItemDao {
      * values across the whole offline library and a page of it would offer the user filters that
      * exclude items they can see. Which makes the projection the point: reading these rows as
      * [ItemEntity] deserialised every downloaded item's multi-kilobyte `dto` blob to answer a
-     * question about three small columns (audit 2026-08-08, PERF-18).
+     * question about three small columns.
      */
     @Query(
         """
@@ -385,8 +384,7 @@ interface ItemDao {
      *
      * The age sweep's companion, and it bounds the thing age cannot: a single session of heavy
      * browsing writes rows far faster than a month passes, so a TTL alone leaves within-session
-     * growth unbounded — and every one of those rows carries a multi-kilobyte `dto` blob (audit
-     * 2026-08-08, PERF-17).
+     * growth unbounded — and every one of those rows carries a multi-kilobyte `dto` blob.
      *
      * The sub-select orders by the same `(source, cachedAt)` index the sweep uses and skips the
      * survivors, so what it visits is only the excess. `LIMIT -1` is SQLite's "no limit", which is
@@ -420,17 +418,17 @@ interface ItemDao {
      *
      * The `items` table is not user-scoped (an item id is the server's, not a person's), so on a
      * shared device one account's cached browsing would otherwise still be serving the next
-     * account's offline read path and search results (audit HYG-2). Downloads are excluded by the
+     * account's offline read path and search results. Downloads are excluded by the
      * same `source` predicate as [evictBrowseCacheOlderThan], and for the same reason: signing out
-     * does not delete anyone's files, and the plan makes deleting downloads a separate, explicit
-     * choice on the sign-out screen (docs/PLAN.md, "Settings").
+     * does not delete anyone's files, and deleting downloads is a separate, explicit
+     * choice on the sign-out screen.
      *
      * @return how many rows were dropped.
      */
     @Query("DELETE FROM items WHERE source = :browseCache")
     suspend fun deleteAllBrowseCache(browseCache: ItemSource): Int
 
-    // ---- M7 — download-delete cascade ----------------------------------------------------------
+    // ---- download-delete cascade ---------------------------------------------------------------
 
     /**
      * Drops the [ItemSource.DOWNLOAD] rows that no download points at any more.

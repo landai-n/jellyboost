@@ -9,8 +9,7 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for [cardWidth] — one of `:core:ui`'s first (docs/notes/audit-2026-07.md, ARCH-07; this
- * module had none before it).
+ * Unit tests for [cardWidth].
  *
  * Every card (`LibraryCard`, `PosterCard`, `ThumbCard`) starts its modifier chain with this, so
  * getting the fixed-vs-adaptive branch backwards would be visible on every grid and every row in the

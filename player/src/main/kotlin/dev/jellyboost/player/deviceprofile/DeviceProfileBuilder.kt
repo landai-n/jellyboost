@@ -22,10 +22,10 @@ import javax.inject.Singleton
  * server answer "direct play" instead of spinning up ffmpeg. Reimplemented from jellyfin-android's
  * `player/deviceprofile/DeviceProfileBuilder.kt` — a hardware probe crossed with a hand-maintained
  * container/codec matrix — and deliberately **not** Findroid's permissive "direct play everything"
- * profile, which pushes decode failures onto the device (docs/PLAN.md, "Playback pipeline" [D]).
+ * profile, which pushes decode failures onto the device.
  *
- * Per the same [D] note, the external-player and web-codec-capabilities outputs of the original are
- * dropped: this app has no external player hand-off and no WebView to feed.
+ * The external-player and web-codec-capabilities outputs of the original are dropped: this app has
+ * no external player hand-off and no WebView to feed.
  *
  * The expensive part — the `MediaCodecList` probe and the container/codec cross-product — happens
  * once, lazily, and is then reused; [getDeviceProfile] only re-derives when a caller asks for
@@ -66,8 +66,7 @@ internal class DeviceProfileBuilder
          * The profile to send with a `PlaybackInfo` request.
          *
          * @param maxStreamingBitrate cap from the quality picker. Lowering it below a file's
-         *   bitrate is what forces the server to transcode, which is how the milestone's
-         *   forced-transcode check is driven from the UI. `null` keeps the profile's own
+         *   bitrate is what forces the server to transcode. `null` keeps the profile's own
          *   120 Mbps ceiling.
          * @param directPlayAss whether ASS/SSA subtitles are claimed as directly renderable.
          *   Advertising them avoids a full transcode of subtitled content, at the cost of
@@ -75,8 +74,7 @@ internal class DeviceProfileBuilder
          * @param hlsTextSubtitles whether text subtitles should be asked for as **in-manifest HLS
          *   renditions** instead of side-loaded files. Only meaningful for a negotiation that is
          *   already known to end in a transcode — see [subtitleProfiles] for why the two shapes
-         *   cannot be advertised together, and `PlaybackInfoResolver` for who asks for which
-         *   (DECISIONS.md, 2026-08-21).
+         *   cannot be advertised together, and `PlaybackInfoResolver` for who asks for which.
          */
         fun getDeviceProfile(
             maxStreamingBitrate: Int? = null,
@@ -157,7 +155,7 @@ internal class DeviceProfileBuilder
          * convenience: the server was measured (10.11.11) dropping container-bound codec profiles
          * when sizing a Dolby Vision transcode — the same conditions bound to `mkv` produced a
          * 3840-wide stream where the containerless shape produced 2560 — and a decoder's limits do
-         * not depend on the container anyway (DECISIONS.md, 2026-08-16).
+         * not depend on the container anyway.
          *
          * Either half may be unknown; `null` only when both are.
          */
@@ -209,7 +207,7 @@ internal class DeviceProfileBuilder
          * is ExoPlayer's to demux and nothing about it drifts.
          *
          * The other half is exclusive, and that is a fact about the *server*, not a design choice
-         * (measured against 10.11.11, 2026-08-21): offered both an `External` and an `Hls` profile
+         * (measured against 10.11.11): offered both an `External` and an `Hls` profile
          * for the same format, `StreamBuilder.GetExternalSubtitleProfile` returns the first match in
          * profile order and that is always External. Asking for HLS renditions therefore means
          * advertising **no** text External profile at all — which is exactly why this variant is
@@ -219,7 +217,7 @@ internal class DeviceProfileBuilder
          *
          * ASS/SSA drop out of the external half too when [hlsTextSubtitles] is set: the server
          * converts them to WebVTT for the rendition, which loses positioning and styling ExoPlayer's
-         * SSA renderer largely ignores anyway (DECISIONS.md, 2026-08-21).
+         * SSA renderer largely ignores anyway.
          */
         private fun subtitleProfiles(
             directPlayAss: Boolean,

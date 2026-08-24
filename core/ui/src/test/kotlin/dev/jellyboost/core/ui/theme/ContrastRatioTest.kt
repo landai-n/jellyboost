@@ -13,42 +13,41 @@ import kotlin.math.abs
 import kotlin.math.pow
 
 /**
- * The colour half of the 2026-08-05 accessibility audit, frozen.
+ * This app's colour contrast guarantees, frozen in a table.
  *
- * The audit computed WCAG 2.x ratios for every alpha-derived token the app draws and found nine
- * families failing; the remediation raised each one and wrote the arithmetic into the token's KDoc
- * ("black@62% composites a white frame to rgb(97), where full-white text is 6.20:1"). What it never
- * built — and named as the missing guardrail — is this: *a test over the token table that computes
- * the ratios*. Without one, every one of those numbers is a comment, and a comment does not fail
- * when someone nudges an alpha back down to taste. Every token the remediation raised is one float
- * (bar a single hex value), and nothing else in the gate can see them: Android Lint's contrast check
- * reads static `@color` resources, and ATF reads a *rendered* screen at run time on a device this
- * gate does not have. Neither has an opinion about `Color.Black.copy(alpha = 0.62f)` composited over
- * a hypothetical white film frame.
+ * Every alpha-derived token the app draws has a WCAG 2.x ratio computed for it, with the
+ * arithmetic written into the token's own KDoc ("black@62% composites a white frame to rgb(97),
+ * where full-white text is 6.20:1"). The missing guardrail is this: *a test over the token table
+ * that computes the ratios*. Without one, every one of those numbers is a comment, and a comment
+ * does not fail when someone nudges an alpha back down to taste. Every one of these tokens is one
+ * float (bar a single hex value), and nothing else in the gate can see them: Android Lint's
+ * contrast check reads static `@color` resources, and ATF reads a *rendered* screen at run time on
+ * a device this gate does not have. Neither has an opinion about `Color.Black.copy(alpha = 0.62f)`
+ * composited over a hypothetical white film frame.
  *
  * Three things are pinned here, and it is worth being precise about which is which:
  *
- *  1. **Floors** — the pairs the remediation committed to: 4.5:1 for normal text (WCAG 1.4.3),
+ *  1. **Floors** — the pairs this table commits to: 4.5:1 for normal text (WCAG 1.4.3),
  *     3:1 for large text, UI-component boundaries and the focus indicator (1.4.11, 2.4.7).
- *  2. **Documented exceptions** — the hairlines the remediation deliberately left below 3:1, having
- *     argued them through in `GlassDefaults.GhostBorder`'s KDoc: they draw a seam on a surface that
+ *  2. **Documented exceptions** — the hairlines deliberately left below 3:1, argued through in
+ *     `GlassDefaults.GhostBorder`'s KDoc: they draw a seam on a surface that
  *     already has a fill, and are never the only thing saying where a control is. Asserting 3:1 of
  *     those would be asserting a promise the codebase never made, so instead their ratio is frozen
  *     to two decimal places: raising *or* lowering one fails, and the fix is to change this table on
  *     purpose rather than to discover the change on a device.
- *  3. **Known violations** — two pairs that measure below the floor their own siblings hold, found
- *     while building this test (2026-08-21) and deliberately *not* fixed here, because a guardrail
+ *  3. **Known violations** — two pairs that measure below the floor their own siblings hold,
+ *     deliberately *not* fixed here, because a guardrail
  *     commit that also changes what the app looks like is two commits. Each carries a `TODO` and the
  *     measured number; the gate stays green and the debt has an address.
  *
  * ## Method
  *
  * WCAG 2.x relative luminance (`c/12.92` below 0.03928, `((c+0.055)/1.055)^2.4` above) and
- * `(L1+0.05)/(L2+0.05)`. The part that actually matters is **alpha compositing**: every failure the
- * audit found was a translucent token, and a translucent token has no ratio of its own — white@70%
+ * `(L1+0.05)/(L2+0.05)`. The part that actually matters is **alpha compositing**: every token
+ * pinned here is translucent, and a translucent token has no ratio of its own — white@70%
  * is 21:1 against nothing and 2.29:1 against a top-nav capsule over a bright poster. So a case here
  * names the opaque stack it is drawn on, worst case first, and [over] flattens it before any
- * luminance is taken. "Worst case" is the audit's own assumption, reused deliberately: a **white**
+ * luminance is taken. "Worst case" is a deliberate assumption, reused throughout: a **white**
  * video frame or poster, which is what a scrim over arbitrary artwork has to survive.
  *
  * Tokens private to another module (the player's `SCRIM`, downloads' `QUEUE_TRACK_ALPHA`) cannot be
@@ -238,10 +237,10 @@ private class ContrastCase(
 // --- The stacks the app actually draws on --------------------------------------------------------
 
 /**
- * The audit's worst case for anything over artwork or video: a fully white frame.
+ * The worst case for anything over artwork or video: a fully white frame.
  *
  * Not pessimism for its own sake — a poster grid, a hero backdrop and a film are all things the app
- * has no control over, and the remediation sized every scrim against exactly this proxy. Reusing it
+ * has no control over, and every scrim in the app is sized against exactly this proxy. Reusing it
  * is what makes the numbers here comparable to the ones in the KDocs.
  */
 private val BrightArtwork = Color.White.flat
@@ -288,7 +287,7 @@ private val SeekTrackBand = Color.White.copy(alpha = 0.55f) over ControlsScrim
 private val TagFill = JellyfinColors.Primary.copy(alpha = 0.18f) over ControlsScrim
 
 /**
- * Every token pair the app draws, with the floor its remediation committed to.
+ * Every token pair the app draws, with the floor this table commits to.
  *
  * Ordered by the surface it belongs to rather than by severity, so a person changing one component
  * finds its neighbours next to it. The `source` string names the file the *tokens* live in; where
@@ -296,7 +295,7 @@ private val TagFill = JellyfinColors.Primary.copy(alpha = 0.18f) over ControlsSc
  */
 private val CASES =
     listOf(
-        // --- Base palette on opaque surfaces (audit: "passing, no action" — pinned so it stays so)
+        // --- Base palette on opaque surfaces (passing, no action needed — pinned so it stays so)
         ContrastCase(
             name = "onSurface body text on surface",
             foreground = JellyfinColors.OnSurface over Surface,
@@ -490,9 +489,8 @@ private val CASES =
         ),
         ContrastCase(
             // TODO(a11y): the fourth progress track, and the one the remediation missed. Its three
-            //  siblings above were all raised 0.22 -> 0.40 by the audit's wave 1 ("progress
-            //  tracks -> 0.40"); this one kept white@12% and nothing documents the difference.
-            //  Reported 2026-08-21 with the contrast-guardrail work. The fix is the same one
+            //  siblings above were all raised 0.22 -> 0.40 for the same reason; this one kept
+            //  white@12% and nothing documents the difference. The fix is the same one
             //  literal, plus the KDoc sentence its siblings carry.
             name = "storage usage bar's unfilled track on its stat panel [KNOWN VIOLATION]",
             foreground = Color.White.copy(alpha = 0.12f) over Surface,
@@ -627,10 +625,8 @@ private val CASES =
             //  4.5:1 of it, and over a white frame it lands at 3.44:1. Its KDoc reasons about the
             //  colour — `primary` itself would be 1.94:1 on the same fill — but stops at "the mocks
             //  specify this exact value" and records no ratio, so this is not a documented
-            //  exception, it is an unmeasured token. The audit missed it too (it read the tag as one
-            //  of the places contrast *had* been reasoned). Reported 2026-08-21 with the
-            //  contrast-guardrail work. Lightening TAG_TEXT to roughly #A8E4F7 clears 4.5:1 over the
-            //  same fill without touching the fill or the mocks' shape.
+            //  exception, it is an unmeasured token. Lightening TAG_TEXT to roughly #A8E4F7 clears
+            //  4.5:1 over the same fill without touching the fill or the mocks' shape.
             name = "player's transcoding tag label over a bright frame [KNOWN VIOLATION]",
             foreground = Color(0xFF7FD8F5) over TagFill,
             background = TagFill,

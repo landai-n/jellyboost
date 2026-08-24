@@ -20,8 +20,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Keeps a group alive across the app being backgrounded — the two halves of DECISIONS.md
- * 2026-07-31.
+ * Keeps a group alive across the app being backgrounded, in two halves.
  *
  * 1. **The service.** While the controller is in a group and nothing is playing, it holds
  *    [SyncPlayPresenceService] so the process keeps its network. [syncPlayPresenceDemanded] is the

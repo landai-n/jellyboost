@@ -94,8 +94,7 @@ private fun FilterSheetContent(
         verticalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
     ) {
         // The sheet's own title, and each section below it, are headings: a sheet of a hundred
-        // genre chips is exactly the list a heading-jump exists to get past (accessibility audit
-        // 2026-08-05, A11Y-10).
+        // genre chips is exactly the list a heading-jump exists to get past.
         Text(
             text = stringResource(R.string.library_filters_title),
             style = MaterialTheme.typography.titleLarge,

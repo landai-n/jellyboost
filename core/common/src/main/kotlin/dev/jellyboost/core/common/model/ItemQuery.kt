@@ -4,9 +4,7 @@ package dev.jellyboost.core.common.model
  * A request for a page of items, expressed in domain terms.
  *
  * The online repository translates this into the SDK's `getItems` parameters and the offline
- * repository into a Room query, so paging behaves identically in both modes (docs/PLAN.md,
- * "Screens" → LibraryGrid). M2 only needs the home rows; the paged library grid consumes this
- * in M3.
+ * repository into a Room query, so paging behaves identically in both modes.
  */
 data class ItemQuery(
     val parentId: String? = null,
@@ -24,8 +22,7 @@ data class ItemQuery(
      *
      * Off by default, and set by the paging source on the **first** page of a grid only: the total
      * costs the server a `COUNT` over the whole query, and nothing else in the app needs it (the
-     * end of a paged list is detected by a short page, not by a total). See DECISIONS.md
-     * 2026-08-01, "the library grid's first page asks for the total record count".
+     * end of a paged list is detected by a short page, not by a total).
      */
     val includeTotalCount: Boolean = false,
 ) {

@@ -58,8 +58,7 @@ import dev.jellyboost.core.ui.theme.popShadow
 /**
  * The docked bar the app chrome shows whenever music is loaded and the user is not already looking
  * at it — artwork, title/artist, previous, play/pause, next, a thin progress line, and a
- * tap-through to [dev.jellyboost.core.common.Routes.NowPlaying] (M13 Phase 4,
- * docs/notes/music-m13-plan.md).
+ * tap-through to [dev.jellyboost.core.common.Routes.NowPlaying].
  *
  * Visual language matches [GlassBottomNav]: a floating glass bar, [popShadow] under it,
  * [GlassDefaults.BottomNavFill] rather than the lighter in-content [GlassDefaults.Fill] — the same
@@ -92,9 +91,9 @@ internal fun MiniPlayer(
                 .popShadow(shape)
                 .glassSurface(shape = shape, tint = GlassDefaults.BottomNavFill),
     ) {
-        // The nice-to-have progress line (spec item 2): a track this thin reads as decoration, not
-        // as a second, less precise seek bar, so it carries no semantics of its own — the full
-        // scrubber lives on `NowPlayingScreen`, one tap away.
+        // The nice-to-have progress line: a track this thin reads as decoration, not as a second,
+        // less precise seek bar, so it carries no semantics of its own — the full scrubber lives
+        // on `NowPlayingScreen`, one tap away.
         Box(modifier = Modifier.fillMaxWidth().height(ProgressLineHeight).background(ProgressTrackColor)) {
             Box(
                 modifier =
@@ -118,8 +117,7 @@ internal fun MiniPlayer(
 
 /**
  * [MiniPlayer] with the swipe that ends the session — the repo's first gesture-driven interaction,
- * and deliberately M3's stock [SwipeToDismissBox] rather than a hand-rolled drag
- * (DECISIONS.md 2026-08-21).
+ * and deliberately M3's stock [SwipeToDismissBox] rather than a hand-rolled drag.
  *
  * Both directions are enabled (the component's own default): `start`/`end` are layout-direction
  * relative, so allowing one would mean an RTL reader swiping the opposite way from an LTR one for
@@ -242,15 +240,15 @@ private fun MiniPlayerRow(
 /**
  * Previous / play-pause / next.
  *
- * Previous is here because the bar is very often the only transport on screen: it now shows on the
- * pushed music screens too ([showsMiniPlayer]), and going back a track meant opening the full
- * now-playing view to reach the one button (device walk, 2026-08-15). It sits *before* play/pause,
- * the order every transport row in the app draws (`NowPlayingTransportRow`, `PlayerControls`), so
- * the glyphs read left-to-right as the timeline does.
+ * Previous is here because the bar is very often the only transport on screen: it shows on the
+ * pushed music screens too ([showsMiniPlayer]), and without it, going back a track would mean
+ * opening the full now-playing view to reach the one button. It sits *before* play/pause, the
+ * order every transport row in the app draws (`NowPlayingTransportRow`, `PlayerControls`), so the
+ * glyphs read left-to-right as the timeline does.
  *
- * The tints are `onSurface` — the theme token, not the raw `Color.White` they used to be. Identical
- * pixels on this dark-only scheme (`JellyfinColors.OnSurface` *is* white), stated as the role so the
- * bar's glyphs move with the palette rather than being pinned outside it.
+ * The tints are `onSurface` — the theme token, not a raw `Color.White`. Identical pixels on this
+ * dark-only scheme (`JellyfinColors.OnSurface` *is* white), stated as the role so the bar's
+ * glyphs move with the palette rather than being pinned outside it.
  */
 @Composable
 private fun MiniPlayerTransport(

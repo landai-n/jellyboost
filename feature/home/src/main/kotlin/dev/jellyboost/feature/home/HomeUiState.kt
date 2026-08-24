@@ -11,8 +11,7 @@ import dev.jellyboost.data.homelayout.DEFAULT_HOME_SECTIONS
 
 /**
  * Everything the home screen draws, in the order jellyfin-web draws it: by default *My Media*,
- * *Continue Watching*, *Next Up*, then one *Latest …* row per library (docs/PLAN.md, "Screens" →
- * Home). Matching that order is the M2 definition of done.
+ * *Continue Watching*, *Next Up*, then one *Latest …* row per library.
  *
  * Since the layout became server-configurable, [sections] — not this class's field order — decides
  * what is drawn and in which order; the default value of [sections] is exactly the order above.
@@ -32,7 +31,7 @@ data class HomeUiState(
     val resume: List<JellyfinItem> = emptyList(),
     val nextUp: List<JellyfinItem> = emptyList(),
     val latest: List<LatestSection> = emptyList(),
-    /** *Continue Listening* — [resume]'s audio counterpart (M13 Phase 4). */
+    /** *Continue Listening* — [resume]'s audio counterpart. */
     val resumeAudio: List<JellyfinItem> = emptyList(),
     /**
      * Set only when the screen has nothing to show. A row that fails on its own is left empty
@@ -59,9 +58,9 @@ data class LatestSection(
 /**
  * Applies a local user-data change to every row that happens to contain the item.
  *
- * This is the mechanism behind M4's "home row patches without refetch": marking an episode watched
- * on its detail page publishes on `UserDataEventBus`, and the home rows behind it redraw from the
- * patched state without a single request (docs/PLAN.md, "Data layer").
+ * This mechanism is what lets marking an episode watched on its detail page publish on
+ * `UserDataEventBus`, with the home rows behind it redrawing from the patched state without a
+ * single request.
  *
  * *Continue watching* and *Next up* hold, by definition, items that are **not** finished, so a
  * change that says the item is played does not patch it there — it removes it. That is the
@@ -127,7 +126,7 @@ internal fun List<JellyfinItem>.mergeLocalUserData(known: Map<String, UserData>)
     }
 
 /**
- * Stamps the app-wide download-state map onto every card the home screen holds (M7).
+ * Stamps the app-wide download-state map onto every card the home screen holds.
  *
  * The per-list work — and the identity-preserving trick the rows depend on — is
  * `:data:downloads`' shared [withDownloadStates]; this is only the map over *this* screen's shape.

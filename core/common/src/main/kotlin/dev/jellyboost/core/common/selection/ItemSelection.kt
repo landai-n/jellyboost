@@ -149,8 +149,8 @@ suspend fun runBatch(
  * shows.
  *
  * Both surfaces that offer the contextual bar — the library grid and a series' or season's episode
- * list — used to carry their own copy of this `when`, including the carve-out below, which is the
- * kind of rule that is wrong in one copy long before anyone notices (audit DUP-4).
+ * list — share this `when`, including the carve-out below, instead of each carrying its own copy —
+ * the kind of rule that is wrong in one copy long before anyone notices.
  *
  * *Mark watched / unwatched* is the plain case: every id is attempted, and the batch never stops at
  * the first failure (see [runBatch]).
@@ -161,9 +161,9 @@ suspend fun runBatch(
  * carve-out is what happens to a **series or season**: a container has no download row of its own,
  * because the pipeline expands it into episodes, so [downloadStates] never mentions it, the
  * `?: NotDownloaded` default makes it look downloadable, and it is always handed to [enqueue] —
- * which does the per-episode skipping itself (DECISIONS.md, 2026-07-29). Selecting a
- * fully-downloaded series therefore reports "0 skipped" here and no new work downstream, which is
- * the honest answer from a surface that cannot see inside the container.
+ * which does the per-episode skipping itself. Selecting a fully-downloaded series therefore reports
+ * "0 skipped" here and no new work downstream, which is the honest answer from a surface that
+ * cannot see inside the container.
  *
  * The two writes arrive as lambdas because this module cannot see either repository — inverting
  * the dependency is what lets the rule live next to [runBatch] rather than beside one of its two

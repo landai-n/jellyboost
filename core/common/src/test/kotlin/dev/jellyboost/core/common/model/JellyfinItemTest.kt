@@ -126,7 +126,7 @@ class JellyfinItemTest {
         DownloadState.Downloading(0.5f).isActive shouldBe true
     }
 
-    // ---- M4: detail metadata ------------------------------------------------------------------
+    // ---- detail metadata ------------------------------------------------------------------------
 
     @Test
     fun `converts a tick runtime into whole minutes`() {

@@ -66,10 +66,10 @@ data class LibraryUiState(
      * ([LibraryViewModel.openFilterSheet] fetches them), and a row that silently grew a dozen
      * genres after an unrelated interaction reads as a bug. The sheet remains the full editor.
      *
-     * Built once, in the constructor body, rather than on each read (audit 2026-08-08, PERF-21 — the
-     * same fix `DownloadsUiState` took for PERF-06): a `get()` handed the `LazyRow` that draws these
-     * a *fresh* list on every read, and a list that is never equal to the last one is a list whose
-     * row can never skip — for a value that changes only when the user applies a filter.
+     * Built once, in the constructor body, rather than on each read: a `get()` handed the `LazyRow`
+     * that draws these a *fresh* list on every read, and a list that is never equal to the last one
+     * is a list whose row can never skip — for a value that changes only when the user applies a
+     * filter.
      */
     val filterChips: List<LibraryFilterChip> =
         buildList {
@@ -96,7 +96,7 @@ data class LibraryUiState(
          * with movies and a TV library with series, so one type list serves both and the route does
          * not have to carry the collection kind.
          *
-         * [ItemType.LIBRARY_TILE_TYPES] (DUP-11): shared with `:data`'s tile-count query, which
+         * [ItemType.LIBRARY_TILE_TYPES] is shared with `:data`'s tile-count query, which
          * projects the same list onto `BaseItemKind` (`OnlineJellyfinRepository.LIBRARY_COUNT_TYPES`)
          * since `:data` cannot depend on this feature module.
          */

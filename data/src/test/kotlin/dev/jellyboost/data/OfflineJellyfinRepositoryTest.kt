@@ -55,14 +55,12 @@ import java.util.UUID
 /**
  * Unit tests for [OfflineJellyfinRepository] — the shape of every screen with no server.
  *
- * The download pipeline is M7, so nothing writes `source = DOWNLOAD` rows on a real device yet.
- * These tests seed them directly, which is the only thing that can pin the offline behaviour
- * before the pipeline exists.
+ * These tests seed `source = DOWNLOAD` rows directly, which is what lets them pin the offline
+ * behaviour independently of anything a real device has actually downloaded.
  *
  * One class rather than one per member (`@Suppress("LargeClass")` below): the `HomeViewModelTest`/
  * `SyncPlayControllerTest` precedent — splitting it would scatter the shared mock setup across
- * files for one repository's own members, not distinct collaborators. M13 Phase 6's
- * `getInstantMix`/`getLyrics` tests pushed this class past the threshold.
+ * files for one repository's own members, not distinct collaborators.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 @Suppress("LargeClass")
@@ -134,9 +132,9 @@ class OfflineJellyfinRepositoryTest {
      * The home hero's online/offline parity, from the offline side.
      *
      * A download's cached blob is the **whole** item — the enqueue fetch asks for
-     * `OVERVIEW, GENRES, PEOPLE, …` so the detail page works with no server (docs/PLAN.md,
-     * "Downloads engine") — while the online home rows are fetched with `CARD_FIELDS`, which asks
-     * for no overview at all (pinned by `OnlineJellyfinRepositoryTest`: *getResumeItems asks the
+     * `OVERVIEW, GENRES, PEOPLE, …` so the detail page works with no server — while the online
+     * home rows are fetched with `CARD_FIELDS`, which asks for no overview at all (pinned by
+     * `OnlineJellyfinRepositoryTest`: *getResumeItems asks the
      * server for the requested number of lean cards*). Read back raw, the same wide *Continue
      * watching* hero therefore drew a synopsis offline that an online user never sees, and the
      * extra paragraph pushed the resume button down over the row below the banner.
@@ -266,9 +264,9 @@ class OfflineJellyfinRepositoryTest {
     @Test
     fun `latest shows a downloaded film that has no parent linkage at all`() =
         runTest {
-            // The M7 device bug: both downloaded films were stored with `parentId NULL`, and the
-            // row's library was decided by a `parentId = <library>` predicate, so the offline home
-            // had no Latest row at all.
+            // Regression guard: a downloaded film may be stored with `parentId NULL`; scoping a
+            // library's row by a `parentId = <library>` predicate instead of by kind would leave
+            // the offline home with no Latest row for it at all.
             val types = seedLatest(listOf(entity(movieDto(uuid(1), "The Body", parentId = null))))
 
             repository.getLatestMedia(MOVIES_LIBRARY.toString(), limit = 16).getOrNull()!! shouldHaveNames
@@ -520,7 +518,7 @@ class OfflineJellyfinRepositoryTest {
     fun `filter facets are computed from what is actually downloaded`() =
         runTest {
             // A three-column projection, not whole rows: a facet list has no LIMIT, so reading it
-            // as entities deserialised every downloaded item's `dto` blob (audit PERF-18).
+            // as entities would deserialise every downloaded item's `dto` blob.
             coEvery { itemDao.facetKeysBySource(ItemSource.DOWNLOAD, any()) } returns
                 listOf(
                     FacetKey(genres = listOf("Drama"), productionYear = 2016, officialRating = null),
@@ -649,7 +647,7 @@ class OfflineJellyfinRepositoryTest {
             repository.getSimilarItems(uuid(1).toString(), limit = 12).getOrNull()!!.shouldBeEmpty()
         }
 
-    // ---- M13 Phase 2 — music --------------------------------------------------------------------
+    // ---- music -----------------------------------------------------------------------------------
 
     @Test
     fun `getAlbumTracks reads the downloaded tracks of that album`() =
@@ -718,7 +716,7 @@ class OfflineJellyfinRepositoryTest {
             coVerify(exactly = 0) { itemDao.getItem(any()) }
         }
 
-    // ---- M13 Phase 4 — Continue Listening ---------------------------------------------------------
+    // ---- Continue Listening -------------------------------------------------------------------
 
     @Test
     fun `getResumeAudioItems lists downloaded tracks this device has a resume position for`() =
@@ -745,7 +743,7 @@ class OfflineJellyfinRepositoryTest {
             coVerify(exactly = 0) { itemDao.resumeDownloadedAudio(any(), any(), any(), any()) }
         }
 
-    // ---- M13 Phase 6 — Instant Mix & lyrics -------------------------------------------------------
+    // ---- Instant Mix & lyrics -----------------------------------------------------------------
 
     @Test
     fun `getInstantMix always refuses offline`() =
@@ -848,7 +846,7 @@ class OfflineJellyfinRepositoryTest {
         val THRONES: UUID = uuid(10)
         val DRAGON: UUID = uuid(20)
 
-        /** A synopsis long enough to be the paragraph that used to unbalance the home hero. */
+        /** A synopsis long enough to unbalance the home hero if it were not stripped. */
         const val SYNOPSIS =
             "A linguist is recruited by the military to communicate with alien lifeforms after " +
                 "twelve mysterious spacecraft appear around the world."

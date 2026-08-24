@@ -5,8 +5,7 @@
 
   The project runs lint with `abortOnError = true`, which means *this file decides what fails the
   build*: an issue at `error` (or `fatal`) stops it, an issue at `warning` or below is reported and
-  ignored. The split it draws is deliberate — accessibility regressions fail, the rest is advisory
-  (accessibility audit 2026-08-05, CR-7 / A11Y-LINT-01).
+  ignored. The split it draws is deliberate — accessibility regressions fail, the rest is advisory.
 -->
 <lint>
 
@@ -34,19 +33,19 @@
     -->
     <!-- android:clickable without android:focusable — unreachable by keyboard or d-pad. -->
     <issue id="KeyboardInaccessibleWidget" severity="error" />
-    <!-- An EditText with no labelFor: a field that announces its value and nothing else (CR-2). -->
+    <!-- An EditText with no labelFor: a field that announces its value and nothing else. -->
     <issue id="LabelFor" severity="error" />
 
     <!--
       ## Also a gate: a user-facing string exists in every locale or not at all.
 
-      Not an accessibility check by lint's taxonomy, but it is one in practice — most of what the
-      accessibility waves added is *only* ever heard, never seen, so an untranslated one is a
+      Not an accessibility check by lint's taxonomy, but it is one in practice — most of what
+      accessibility work adds is *only* ever heard, never seen, so an untranslated one is a
       screen reader speaking English into a French device with nothing on screen to fall back on.
-      The 45 strings those waves added were localized into all 69 locales on 2026-08-05, which is
-      what lets this be an error rather than the debt note it replaced. A string that genuinely has
-      no translation (a proper noun, a pure format) is marked `translatable="false"` at its
-      definition — see `auth_logo_description` — rather than copied 69 times.
+      Accessibility-related strings are localized into all 69 locales, which is what lets this be
+      an error. A string that genuinely has no translation (a proper noun, a pure format) is
+      marked `translatable="false"` at its definition — see `auth_logo_description` — rather than
+      copied 69 times.
     -->
     <issue id="MissingTranslation" severity="error" />
 
@@ -59,11 +58,10 @@
     <!--
       ## Advisory: the families that already fail today, demoted so the gate stays a11y-shaped.
 
-      Before this file, lint ran with `abortOnError = false` and *nothing* it found could fail the
-      build. Turning that on to make the accessibility checks bite would also have made these
-      pre-existing findings fatal, which is a different project's worth of work. Demoting them to
-      `warning` leaves their enforcement exactly where it has always been — visible in the report,
-      not blocking — while everything else lint calls an error now blocks.
+      With `abortOnError = true`, every issue lint calls an error would block the build — and
+      clearing this backlog of findings is a different project's worth of work from the
+      accessibility checks this file exists to enforce. Demoting them to `warning` keeps them
+      visible in the report without blocking, while everything else lint calls an error blocks.
 
       A baseline file was the alternative and was rejected: it would freeze the findings into a
       generated XML blob that has to be regenerated every time a string is added, and it would hide

@@ -25,17 +25,14 @@ data class LibraryView(
 /**
  * Library kinds this client supports.
  *
- * v1 is movies and TV shows only, so `getUserViews` results are filtered down to [MOVIES] and
- * [TVSHOWS] (docs/PLAN.md, "Screens" → Home).
+ * Movies and TV shows are the core kinds, so `getUserViews` results are filtered down to [MOVIES]
+ * and [TVSHOWS].
  */
 enum class CollectionKind {
     MOVIES,
     TVSHOWS,
 
-    /**
-     * A music library. Joined [SUPPORTED] in M13 Phase 2, alongside `:feature:music` — the UI it
-     * opens onto (docs/notes/music-m13-plan.md).
-     */
+    /** A music library, alongside `:feature:music` — the UI it opens onto. */
     MUSIC,
 
     /** Live TV, photos, … — recognised but not shown in v1. */

@@ -12,8 +12,8 @@ import org.junit.jupiter.api.Test
  * The tracker exists because the pipeline deliberately stores no speed column; it derives one from
  * two samples of `bytesDownloaded`. That makes three edge cases worth pinning: a *first* sample has
  * nothing to compare against, a resumed transfer whose server ignored the `Range` header can
- * produce a negative delta, and — the M9 bug — Room emits the same throttled progress update two or
- * three times milliseconds apart, which must not be read as bytes moving that fast.
+ * produce a negative delta, and Room emits the same throttled progress update two or three times
+ * milliseconds apart, which must not be read as bytes moving that fast.
  */
 class DownloadSpeedTrackerTest {
     /** Smoothing of 1 makes each sample the whole answer, so the arithmetic is checkable. */
@@ -50,10 +50,10 @@ class DownloadSpeedTrackerTest {
 
     @Test
     fun `a burst of emissions milliseconds apart cannot inflate the speed`() {
-        // The M9 bug (docs/POLISH.md): `DownloadDao.observeAll` is a transaction over `downloads`
-        // and `download_files`, and the queue writes the file's bytes then the item's back to back.
-        // Dividing a 500 ms window's bytes by the 1 ms between those two writes reported 100–180
-        // MB/s for a transfer running at 8.
+        // `DownloadDao.observeAll` is a transaction over `downloads` and `download_files`, and the
+        // queue writes the file's bytes then the item's back to back. Dividing a 500 ms window's
+        // bytes by the 1 ms between those two writes reports 100–180 MB/s for a transfer running
+        // at 8.
         tracker.update(listOf(downloading("1", bytes = 0L)), nowMillis = 0L)
         tracker.update(listOf(downloading("1", bytes = 8_000_000L)), nowMillis = 1_000L)["1"] shouldBe 8_000_000L
 

@@ -16,7 +16,7 @@ import javax.inject.Singleton
  *
  * The metadata is not decoration: `MediaItem.mediaMetadata` is where the media notification and
  * the lock screen get their title, artist and artwork, so this class is the whole of "the
- * notification shows the right thing" (docs/notes/music-m13-plan.md, key decision 7).
+ * notification shows the right thing".
  */
 @Singleton
 internal class MusicQueueSpecFactory

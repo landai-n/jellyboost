@@ -50,19 +50,18 @@ private val WaitingGlyphTint = Color.White.copy(alpha = 0.75f)
 /**
  * The one visual marker that distinguishes downloaded media from streamed media.
  *
- * Rendered in the corner of every item card (docs/PLAN.md, "Screens"). [DownloadState.NotDownloaded]
+ * Rendered in the corner of every item card. [DownloadState.NotDownloaded]
  * renders nothing at all, so callers can pass the state unconditionally.
  *
  * The finished state keeps the `DownloadForOffline` glyph rather than becoming the mocks' solid disc
  * with a tick: on a card that tick is already taken — it is what "watched" means — and two identical
  * marks in the same corner meaning two different things is worse than one mark that differs from a
- * mock (design spec, "Download badge component states").
+ * mock.
  *
  * @param decorative `true` when the badge sits inside a node that already says what it means — an
  *   item card, whose merged description names the download state along with everything else. It
  *   then draws exactly the same thing and contributes nothing to speak. Standalone badges keep
- *   their labels, including the in-flight ring, which was the one state with no words at all
- *   (accessibility audit 2026-08-05, m3).
+ *   their labels, including the in-flight ring, which is the one state with no words at all.
  */
 @Composable
 fun DownloadBadge(

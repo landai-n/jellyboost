@@ -58,14 +58,14 @@ import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
 
 /**
  * An album's header (art, title, artist, year, favourite) and its tracks, disc-grouped when the
- * album has more than one (M13 Phase 2, docs/notes/music-m13-plan.md).
+ * album has more than one.
  *
  * Play and Shuffle hand the album's tracks straight to [onPlay]/[onShuffle], which
- * `JellyfinNavHost` wires to `MusicPlaybackViewModel` (M13 Phase 3's queue).
+ * `JellyfinNavHost` wires to `MusicPlaybackViewModel`'s queue.
  *
  * @param onPlay `(tracks, startIndex)` — a track row was tapped, or the Play button at index 0.
  * @param onShuffle `(tracks)` — the Shuffle button; starts the queue shuffled from the top.
- * @param onStartRadio the album itself — "Start radio" (M13 Phase 6); resolves an Instant Mix
+ * @param onStartRadio the album itself — "Start radio"; resolves an Instant Mix
  *   seeded from the album and hands it to the queue. `JellyfinNavHost` wires it straight to
  *   `MusicPlaybackViewModel.startRadio`, the same indirection [onPlay]/[onShuffle] go through.
  */
@@ -361,7 +361,7 @@ private fun AlbumDownloadButton(
 
 /**
  * Play / Shuffle — hands the album straight to [MusicPlaybackViewModel][onPlay]'s queue — plus a
- * "Start radio" affordance (M13 Phase 6) that hands `MusicPlaybackViewModel.startRadio` the album
+ * "Start radio" affordance that hands `MusicPlaybackViewModel.startRadio` the album
  * itself rather than its tracks.
  */
 @Composable

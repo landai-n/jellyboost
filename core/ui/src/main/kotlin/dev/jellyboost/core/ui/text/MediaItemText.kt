@@ -11,11 +11,10 @@ import dev.jellyboost.core.ui.R
  * How an item's short facts are worded — the one implementation, in the one layer that can read a
  * resource.
  *
- * The app used to spell an episode number two ways. `JellyfinItem.episodeLabel` built "S1:E4" from
- * Kotlin string templates for cards and their accessibility descriptions;
- * `ItemDetailHeader.episodeNumberLabel` read a string resource for "S1 · E4" on the detail
- * header's Play button. Both were on screen at once, and TalkBack read the first while the eye
- * read the second (audit DUP-7). The resource form wins because it is the one a translator can
+ * Hand-spelling an episode number in more than one place risks two different answers on screen at
+ * once — a Kotlin string template built for cards and their accessibility descriptions, and a
+ * string resource read elsewhere for the detail header's Play button, with TalkBack speaking one
+ * and the eye reading the other. The resource form wins because it is the one a translator can
  * reach: `S` and `E` are initials of words, and a Kotlin literal is invisible to the
  * `MissingTranslation` gate.
  *
@@ -47,7 +46,7 @@ fun JellyfinItem.episodeNumberLabel(): String? {
  * The second line under a title: `S1 · E4 · Trompe L'Oeil` for an episode, the series name for a
  * season, the production year for everything else.
  *
- * The **movie-year fallback is deliberate**, and is the audit's second DUP-7 finding.
+ * The **movie-year fallback is deliberate**.
  * `JellyfinItem.displaySubtitle` had it and the detail header's own `subtitleLine` did not, so the
  * same movie showed its year on a card and nothing under its detail title. Nothing in either
  * screen asked for the difference — no comment, no test — so it is drift, and the richer behaviour

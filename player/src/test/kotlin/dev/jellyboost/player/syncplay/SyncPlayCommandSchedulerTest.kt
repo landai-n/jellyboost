@@ -153,9 +153,9 @@ class SyncPlayCommandSchedulerTest {
     @Test
     fun `a command pending after an earlier one applied is still replaceable`() =
         runTest {
-            // Pins the pending bookkeeping (audit SP-01): a completed apply must clear only its
-            // *own* handle — clearing unconditionally orphaned the next pending command's
-            // cancellation, and the superseded command survived to fire at its instant.
+            // Pins the pending bookkeeping: a completed apply must clear only its *own* handle —
+            // clearing unconditionally would orphan the next pending command's cancellation, and
+            // the superseded command would survive to fire at its instant.
             val fixture = fixture()
             fixture.scheduler.schedule(command(SyncPlayCommandType.Unpause, atMillis = 500, positionMs = 0))
             advanceTimeBy(500)
@@ -220,7 +220,7 @@ class SyncPlayCommandSchedulerTest {
             applied.single().anchor shouldBe null
         }
 
-    // Applied exactly once (M11 fix batch, B1/B2) ---------------------------------------------------
+    // Applied exactly once -----------------------------------------------------------------------
 
     @Test
     fun `the same command sent again is applied once`() =
@@ -296,7 +296,7 @@ class SyncPlayCommandSchedulerTest {
             fixture.player.seekedToMs shouldBe listOf(30_000L)
         }
 
-    // Only what was *applied* is remembered (M11 fix batch, the lost pause/resume echo) -------------
+    // Only what was *applied* is remembered ---------------------------------------------------------
 
     @Test
     fun `a command superseded before it applied is not remembered, so it can still arrive`() =
@@ -382,8 +382,8 @@ class SyncPlayCommandSchedulerTest {
             // The player is rebuilt (a track change): what was applied no longer describes it. The
             // controller forgets on the rebuild, and the server answers the rebuild's `ready` with
             // the standing command verbatim — same instant, same position, fresh `emittedAt`.
-            // Without the forget this was "Ignoring a repeated SyncPlay Unpause" on device
-            // (2026-07-31), and the member never resumed.
+            // Without the forget this reads as "Ignoring a repeated SyncPlay Unpause" on device,
+            // and the member never resumes.
             fixture.scheduler.forgetApplied()
             advanceTimeBy(2_000)
             fixture.scheduler.schedule(

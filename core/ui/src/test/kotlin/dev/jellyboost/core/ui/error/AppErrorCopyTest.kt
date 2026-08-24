@@ -8,7 +8,7 @@ import io.kotest.matchers.shouldNotBe
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for [toUiText] — the one mapping that replaced five (audit H8, DUP-1 = CPX-13).
+ * Unit tests for [toUiText] — the one mapping that replaced five.
  *
  * The point of these is not that a branch produces *some* copy; it is that the branches a screen
  * may override are exactly the three [AppErrorCopy] exposes, and that the rest are pinned to

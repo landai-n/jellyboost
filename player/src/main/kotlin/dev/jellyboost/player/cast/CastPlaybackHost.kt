@@ -12,7 +12,7 @@ import dev.jellyboost.player.model.PlaybackSnapshot
  * receiver went away.
  *
  * Both callbacks carry a [PlaybackSnapshot] rather than leaving the host to take one, and that is
- * the whole reason they exist (M12 Phase 3). A session start flips
+ * the whole reason they exist. A session start flips
  * [RoutingPlayerHandle][dev.jellyboost.player.session.RoutingPlayerHandle] to the cast player and
  * stops the local one, so by the time any collector of
  * [CastStatusHolder.connection][CastStatusHolder.connection] runs, the position the film had
@@ -21,7 +21,7 @@ import dev.jellyboost.player.model.PlaybackSnapshot
  * on both edges, so it reads the outgoing player and hands the reading over.
  *
  * Default no-op bodies because the two are genuinely optional: a host that only wants to be
- * reported for while it is away — which is all Phase 2 needed — implements neither.
+ * reported for while it is away implements neither.
  */
 interface CastPlaybackHost {
     /** What the receiver is playing, or `null` when the host has nothing open. */
@@ -56,9 +56,9 @@ interface CastPlaybackHost {
  * Where a screen hands its cast session over, and takes it back.
  *
  * An interface over [CastSessionCoordinator] rather than the coordinator itself, for one reason:
- * `PlayerViewModel` has to be constructible without one — in a test, and as the default that keeps
- * every pre-M12 fixture compiling — and the coordinator cannot be built without the Cast
- * framework's session manager behind it. [NoCastPlaybackCoordinator] is that default, and it says
+ * `PlayerViewModel` has to be constructible without one — in a test, and as the default for any
+ * caller that never casts — and the coordinator cannot be built without the Cast framework's
+ * session manager behind it. [NoCastPlaybackCoordinator] is that default, and it says
  * exactly what a build with no cast session has: nothing to hand anything to.
  */
 interface CastPlaybackCoordinator {

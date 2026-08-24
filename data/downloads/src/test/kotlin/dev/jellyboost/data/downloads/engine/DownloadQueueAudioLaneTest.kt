@@ -46,8 +46,8 @@ import java.time.Clock
 import java.time.ZoneOffset
 
 /**
- * Unit tests for the second lane [DownloadQueue] drains an item's audio sidecars on
- * (DECISIONS.md, 2026-07-31, "Audio sidecars fetch concurrently with the media file").
+ * Unit tests for the second lane [DownloadQueue] drains an item's audio sidecars on, concurrently
+ * with the media file.
  *
  * Separate from [DownloadQueueTest], which owns the transfer itself and already owns what a sidecar
  * *is* — the un-resumable fetch, the strip, the row's bytes. What lives here is only what having

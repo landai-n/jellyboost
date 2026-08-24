@@ -27,8 +27,8 @@ import javax.inject.Inject
  * State holder for the search screen.
  *
  * Typing feeds a [MutableStateFlow] that is debounced by [DEBOUNCE_MILLIS] before it reaches the
- * server (docs/PLAN.md, "Screens" → Search): a user typing "westworld" must cost one request, not
- * nine. `collectLatest` additionally cancels a search that is still in flight when the term
+ * server: a user typing "westworld" must cost one request, not nine. `collectLatest` additionally
+ * cancels a search that is still in flight when the term
  * changes again, so a slow response can never overwrite the results of a newer term.
  *
  * Clearing the field bypasses the debounce — an empty screen should appear the moment the text
@@ -76,7 +76,7 @@ class SearchViewModel
         }
 
         /**
-         * Re-runs the current term whenever the connection changes (M9): a search made offline only
+         * Re-runs the current term whenever the connection changes: a search made offline only
          * looked at downloaded items and one made online at everything, and the field keeps its text
          * either way — so the results have to follow the connection, in both directions.
          *
@@ -127,15 +127,13 @@ class SearchViewModel
         }
 
         companion object {
-            /** Debounce from docs/PLAN.md, "Screens" → Search. */
             const val DEBOUNCE_MILLIS = 500L
 
-            /** Result cap from docs/PLAN.md, "Screens" → Search. */
             const val SEARCH_LIMIT = 50
 
             /**
-             * Every type this client can open from a search result: movies, shows and episodes
-             * (v1), plus M13 Phase 2's four music kinds (docs/notes/music-m13-plan.md).
+             * Every type this client can open from a search result: movies, shows and episodes,
+             * plus four music kinds.
              */
             val SEARCH_ITEM_TYPES =
                 listOf(

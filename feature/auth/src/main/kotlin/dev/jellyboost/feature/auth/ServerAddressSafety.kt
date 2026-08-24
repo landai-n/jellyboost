@@ -2,7 +2,7 @@ package dev.jellyboost.feature.auth
 
 /**
  * Whether [address] is a server the app would talk to **in the clear, across a network it has no
- * reason to trust** (audit SEC-10).
+ * reason to trust**.
  *
  * `network_security_config.xml` permits cleartext globally and has to: the user types an arbitrary
  * address and a great many Jellyfin servers are plain `http://` boxes on a home LAN. That is a

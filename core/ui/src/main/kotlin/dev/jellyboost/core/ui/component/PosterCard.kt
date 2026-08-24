@@ -12,7 +12,7 @@ import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 
 /**
- * Lazy-list `contentType` for every [PosterCard] (DUP-15) — lets a `LazyRow`/`LazyColumn` reuse a
+ * Lazy-list `contentType` for every [PosterCard] — lets a `LazyRow`/`LazyColumn` reuse a
  * scrolled-off poster node instead of composing a fresh one when the next item is also a poster.
  */
 const val POSTER_CARD_CONTENT_TYPE = "card-poster"

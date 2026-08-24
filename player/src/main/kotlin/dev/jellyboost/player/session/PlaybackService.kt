@@ -31,26 +31,26 @@ import javax.inject.Inject
  * `MediaSessionService` provides for free.
  *
  * It deliberately does *not* own the player — the same instance is driven directly by
- * `PlayerViewModel` (DECISIONS.md, 2026-07-28). Consequently the session is a thin wrapper and
- * this class has no playback logic of its own.
+ * `PlayerViewModel`. Consequently the session is a thin wrapper and this class has no playback
+ * logic of its own.
  *
- * ### Why the session does not get the player itself (M11)
+ * ### Why the session does not get the player itself
  * The notification, headset buttons and every other media-button surface dispatch through the
  * session, which is a transport path that never touches `PlayerViewModel` — so in a SyncPlay group
- * they moved this member's player alone and broke the group. The session is therefore built on
+ * they would move this member's player alone and break the group. The session is therefore built on
  * [SyncPlayAwareForwardingPlayer], which turns in-group transport into requests to the server and is
  * a plain pass-through otherwise.
  *
- * ### Why [addSession] is called explicitly (M9)
+ * ### Why [addSession] is called explicitly
  * Media3 only starts managing a session — posting the notification, promoting the service to the
  * foreground — once the session has been *added* to the service. In the canonical sample that
  * happens implicitly, because the UI reaches the player through a `MediaController` and connecting
  * one is what triggers [onGetSession] and the add. This app deliberately drives the shared
- * `ExoPlayer` directly instead, so no controller ever connects, so nothing ever added the session:
- * the service stayed an ordinary background service with no notification, and the first time the
- * app left the foreground the platform stopped it and playback with it. That is the root cause of
- * the "backgrounding the app pauses playback" issue carried since M5 — not the notification
- * permission, which only decides whether the notification is *visible*.
+ * `ExoPlayer` directly instead, so no controller ever connects and nothing else would ever add the
+ * session: the service would stay an ordinary background service with no notification, and the
+ * first time the app left the foreground the platform would stop it and playback with it. The
+ * notification permission is a separate matter — it only decides whether the notification is
+ * *visible*.
  */
 @UnstableApi
 @AndroidEntryPoint
@@ -62,7 +62,7 @@ internal class PlaybackService :
 
     /**
      * Published so the SyncPlay presence service knows to stand aside while this one is up — one
-     * foreground service holding the process's network is enough (DECISIONS.md 2026-07-31).
+     * foreground service holding the process's network is enough.
      */
     @Inject
     internal lateinit var serviceState: PlaybackServiceState
@@ -75,11 +75,11 @@ internal class PlaybackService :
     internal lateinit var syncPlayController: SyncPlayController
 
     /**
-     * The shuffle/repeat buttons and the commands behind them (M13).
+     * The shuffle/repeat buttons and the commands behind them.
      *
      * Given to the session unconditionally, video sessions included: with nothing musical loaded
      * it contributes an empty button list and two commands nobody sends, so the film's
-     * notification is byte-for-byte what it was.
+     * notification is unaffected.
      */
     @Inject
     internal lateinit var musicSessionCallback: MusicSessionCallback
@@ -141,7 +141,7 @@ internal class PlaybackService :
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = mediaSession
 
     /**
-     * The system restarting this service after the process was killed (audit STAB-11).
+     * The system restarting this service after the process was killed.
      *
      * A `null` intent means exactly that — a `START_STICKY` restart with nothing to resume, not a
      * real caller — so promoting to the foreground here would build an ExoPlayer and a
@@ -203,7 +203,7 @@ internal class PlaybackService :
     }
 
     /**
-     * Service teardown, and the second of the two paths that release the shared player (STAB-05).
+     * Service teardown, and the second of the two paths that release the shared player.
      *
      * The session goes first: it was built around the player, and Media3 unwinds its own listeners
      * through it. Releasing the player is then safe and, unlike the ViewModel's own teardown, always
@@ -211,9 +211,9 @@ internal class PlaybackService :
      * the cases where no player screen is left to clear.
      *
      * The running flag is cleared *before* the player release, not after: while it is set,
-     * `ExoPlayerHandle.release()` defers to this teardown (audit PC-04 — the ViewModel must not
-     * release a player the live session still wraps), so clearing it last would make this very
-     * call the one that gets deferred.
+     * `ExoPlayerHandle.release()` defers to this teardown (the ViewModel must not release a player
+     * the live session still wraps), so clearing it last would make this very call the one that
+     * gets deferred.
      */
     override fun onDestroy() {
         Timber.d("Releasing the playback media session")

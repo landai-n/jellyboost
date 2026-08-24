@@ -53,7 +53,7 @@ private val SelectionCountLabel =
 
 /**
  * The contextual action bar a list shows **instead of** its normal top bar while items are
- * selected (docs/features/batch-selection.md).
+ * selected.
  *
  * A floating glass pill rather than a `TopAppBar`: the refresh has no opaque bars left for a
  * contextual one to imitate, so the mode announces itself by *shape* — a bar that hovers over the
@@ -62,7 +62,7 @@ private val SelectionCountLabel =
  * top-left corner always means "get out of here" — the count is the title, and the batch actions
  * take the trailing slot the screen's own actions were in.
  *
- * It carries its own status-bar inset, because the `TopAppBar` that used to supply one is gone and
+ * It carries its own status-bar inset, because there is no `TopAppBar` to supply one and
  * both call sites (a `Scaffold` top bar, and an overlay on the detail screen) draw at the very top
  * of the window.
  *
@@ -71,7 +71,7 @@ private val SelectionCountLabel =
  * different actions in different orders.
  *
  * @param showSelectAll offered only by surfaces where "all" is a definite set. The library grid
- *   pages its content and therefore omits it; see docs/features/batch-selection.md.
+ *   pages its content and therefore omits it.
  */
 @Composable
 fun SelectionAppBar(
@@ -110,9 +110,8 @@ fun SelectionAppBar(
             overflow = TextOverflow.Ellipsis,
             // The count is the one thing this bar exists to report, and every tap on a card
             // changes it. A polite live region is what turns "4 selected" from something you have
-            // to go and look for into something you are told (audit M5/A11Y-16); the description
-            // is the untruncated string, because at narrow widths the visible one ellipsizes to
-            // "4 sel…".
+            // to go and look for into something you are told; the description is the untruncated
+            // string, because at narrow widths the visible one ellipsizes to "4 sel…".
             modifier =
                 Modifier
                     .weight(1f)

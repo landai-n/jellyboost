@@ -5,7 +5,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Leaves any SyncPlay group before sign-out revokes the access token (audit NET-03).
+ * Leaves any SyncPlay group before sign-out revokes the access token.
  *
  * `SessionRepository.signOut` awaits this hook first; the `SessionState.LoggedOut` transition it
  * ends with then only triggers the controller's local teardown. Without the hook the leave would

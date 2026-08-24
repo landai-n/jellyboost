@@ -12,8 +12,8 @@ import java.util.UUID
 
 /**
  * Unit tests for [decideReconcile] — the four outcomes and the adoption-only-before-first-load
- * rule (audit CPX-15). The behaviour around each outcome (handshakes, launch requests, skip
- * guards) stays pinned through the controller in [SyncPlayControllerTest].
+ * rule. The behaviour around each outcome (handshakes, launch requests, skip guards) stays
+ * pinned through the controller in [SyncPlayControllerTest].
  */
 internal class SyncPlayReconcilePlanTest {
     private val itemId = UUID.fromString("00000000-0000-0000-0000-0000000000c1")

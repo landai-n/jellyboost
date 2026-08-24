@@ -10,10 +10,9 @@ import java.util.UUID
  * One reachable URL for a [ServerEntity].
  *
  * A server may be reachable via several addresses (local network, remote/tunnel, manually
- * added candidates) discovered during setup or rotated through by `ServerReachabilityProbe`
- * (docs/PLAN.md, "Connectivity"). Modeling this as its own table — rather than a single column
- * on [ServerEntity] — keeps the schema ready for multi-server support later without a
- * migration.
+ * added candidates) discovered during setup or rotated through by `ServerReachabilityProbe`.
+ * Modeling this as its own table — rather than a single column on [ServerEntity] — keeps the
+ * schema ready for multi-server support later without a migration.
  *
  * Rows are deleted automatically (`CASCADE`) when their owning [ServerEntity] is removed.
  */

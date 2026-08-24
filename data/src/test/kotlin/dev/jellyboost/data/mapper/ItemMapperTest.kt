@@ -43,7 +43,7 @@ class ItemMapperTest {
     /**
      * The SDK's date serializer reads and writes `LocalDateTime` in the *device's* zone, so every
      * date assertion here is only meaningful under a zone that is not UTC — pinning one is what
-     * makes the M4 timezone regression (dates off by the local offset) visible to these tests.
+     * makes the timezone regression (dates off by the local offset) visible to these tests.
      */
     @BeforeEach
     fun pinTimeZone() {
@@ -103,16 +103,16 @@ class ItemMapperTest {
         typeOf(BaseItemKind.COLLECTION_FOLDER) shouldBe ItemType.COLLECTION_FOLDER
         typeOf(BaseItemKind.USER_VIEW) shouldBe ItemType.COLLECTION_FOLDER
         typeOf(BaseItemKind.FOLDER) shouldBe ItemType.FOLDER
-        // M13: the four music kinds get real mappings instead of collapsing into UNKNOWN.
+        // The four music kinds get real mappings instead of collapsing into UNKNOWN.
         typeOf(BaseItemKind.AUDIO) shouldBe ItemType.AUDIO
         typeOf(BaseItemKind.MUSIC_ALBUM) shouldBe ItemType.MUSIC_ALBUM
         typeOf(BaseItemKind.MUSIC_ARTIST) shouldBe ItemType.MUSIC_ARTIST
         typeOf(BaseItemKind.PLAYLIST) shouldBe ItemType.PLAYLIST
-        // Audiobooks are out of M13's scope and still fold into UNKNOWN.
+        // Audiobooks are out of scope and still fold into UNKNOWN.
         typeOf(BaseItemKind.AUDIO_BOOK) shouldBe ItemType.UNKNOWN
     }
 
-    // ---- M13 Phase 1: music fields -------------------------------------------------------------
+    // ---- music fields -------------------------------------------------------------------------
 
     @Test
     fun `maps a track's album and artist fields`() {
@@ -191,7 +191,7 @@ class ItemMapperTest {
     @Test
     fun `maps CollectionType MUSIC onto CollectionKind MUSIC, now inside what a library query keeps`() {
         CollectionType.MUSIC.toCollectionKind() shouldBe CollectionKind.MUSIC
-        // Joined SUPPORTED in M13 Phase 2, alongside :feature:music (docs/notes/music-m13-plan.md).
+        // Part of SUPPORTED, alongside :feature:music.
         (CollectionKind.MUSIC in CollectionKind.SUPPORTED) shouldBe true
     }
 
@@ -386,7 +386,7 @@ class ItemMapperTest {
         mapper.toDomain(dtos).map { it.id } shouldContainExactly ids.map { it.toString() }
     }
 
-    // ---- M4: detail-only fields ---------------------------------------------------------------
+    // ---- detail-only fields ---------------------------------------------------------------------
 
     @Test
     fun `maps the detail-only fields a full item carries`() {
@@ -523,12 +523,12 @@ class ItemMapperTest {
             .shouldBeNull()
     }
 
-    // ---- M6: timezone regression --------------------------------------------------------------
+    // ---- timezone regression --------------------------------------------------------------------
 
     /**
-     * Regression test for the M4 bug in STATUS.md's "Known issues": SDK date fields are *local*
-     * wall-clock time (its serializer applies `ZoneId.systemDefault()`), so reading one as UTC
-     * shifted every timestamp by the device's offset — two hours on the test device.
+     * Regression test: SDK date fields are *local* wall-clock time (its serializer applies
+     * `ZoneId.systemDefault()`), so reading one as UTC would shift every timestamp by the device's
+     * offset — two hours on the test device.
      */
     @Test
     fun `reads an SDK date field as local wall-clock time, not as UTC`() {

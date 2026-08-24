@@ -158,16 +158,16 @@ class StorageLocationManagerTest {
             manager.activeRoot() shouldBe File(card.directory, "downloads")
         }
 
-    // ---- the seeding window (audit 2026-08-08, PERF-19) -----------------------------------------
+    // ---- the seeding window ---------------------------------------------------------------------
 
     @Test
     fun `a read before the stored choice has been loaded resolves the primary volume`() =
         runTest {
-            // The cache used to be filled by a `runBlocking` under the non-suspending
-            // `DownloadStorage.rootPath`, i.e. a DataStore read charged to whatever thread got
-            // there first. It is seeded from the app scope instead, and this is the window that
-            // opens: `null` is not a failure but the documented default — "no volume chosen" — and
-            // it resolves to the path every download before the picker existed was written to.
+            // Filling the cache with a `runBlocking` under the non-suspending
+            // `DownloadStorage.rootPath` would charge a DataStore read to whatever thread got there
+            // first. It is seeded from the app scope instead, and this is the window that opens:
+            // `null` is not a failure but the documented default — "no volume chosen" — and it
+            // resolves to the path every download before the picker existed was written to.
             // A scope that has not run yet: the seed is queued, exactly as it is in the moment
             // between the graph being built and the app scope getting a turn.
             val unstarted = TestScope()

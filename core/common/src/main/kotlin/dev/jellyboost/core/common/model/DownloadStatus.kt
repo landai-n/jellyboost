@@ -2,20 +2,19 @@ package dev.jellyboost.core.common.model
 
 /**
  * Lifecycle of a single queued download, mirrored 1:1 by `DownloadEntity.status` and by
- * `DownloadFileEntity.status` (docs/PLAN.md, "Data layer").
+ * `DownloadFileEntity.status`.
  *
  * Lives in `:core:common` rather than in `:data:downloads` because `:core:database` persists it and
- * cannot depend on a module that sits above it (DECISIONS.md 2026-07-28, "M7: `DownloadStatus` and
- * `DownloadFileType` moved to `:core:common`").
+ * cannot depend on a module that sits above it.
  *
- * The six states are exactly the ones the plan names. Two distinctions are worth spelling out:
+ * Two distinctions are worth spelling out:
  *
  * - [PAUSED] is a *user* decision that survives a process death; a download stopped because the
  *   device left Wi-Fi goes back to [QUEUED] instead, so WorkManager's constraint resumes it by
  *   itself when the network comes back.
  * - [ERROR] means an **essential** file failed. An optional file (artwork, a subtitle track) that
  *   fails leaves the item [DOWNLOADED] and marks only its own row [ERROR] — the item is still
- *   playable offline, which is the property the plan's "essential/optional" split protects.
+ *   playable offline, which is exactly what the essential/optional split protects.
  */
 enum class DownloadStatus {
     /** Accepted into the queue, waiting for its turn. */

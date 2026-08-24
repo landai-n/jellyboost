@@ -11,7 +11,7 @@ import org.jellyfin.sdk.model.DeviceInfo
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 
-/** Unit tests for the shared `Authorization` header builder (DUP-5) and its same-origin guard. */
+/** Unit tests for the shared `Authorization` header builder and its same-origin guard. */
 class JellyfinAuthorizationHeaderTest {
     private val apiClient =
         mockk<ApiClient>(relaxed = true) {

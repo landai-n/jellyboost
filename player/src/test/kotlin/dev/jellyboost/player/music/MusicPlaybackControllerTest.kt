@@ -408,7 +408,7 @@ class MusicPlaybackControllerTest {
             handover.currentOwner shouldBe PlaybackKind.MUSIC
         }
 
-    // ---- review-fix regressions (2026-08-09 wave) -----------------------------------------
+    // ---- regression pins --------------------------------------------------------------------
 
     @Test
     fun `a transition echo arriving after the handover parked the queue is ignored`() =

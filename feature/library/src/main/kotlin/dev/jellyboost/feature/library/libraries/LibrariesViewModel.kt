@@ -38,7 +38,7 @@ class LibrariesViewModel
         }
 
         /**
-         * Re-loads the list whenever the connection changes (M9) — the offline list only contains
+         * Re-loads the list whenever the connection changes — the offline list only contains
          * libraries this device has already seen. See [reloadOnChange].
          */
         private fun observeConnectivityChanges() {

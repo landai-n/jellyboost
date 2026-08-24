@@ -19,8 +19,16 @@ import dev.jellyboost.player.segments.MediaSegment
  * class's own lifetime, and a Hilt scope would only be a longer way to say so.
  */
 internal class UpNextController {
-    /** `true` once the user has closed the card for this session. */
-    private var dismissed = false
+    /**
+     * `true` once the user has closed the card for this session.
+     *
+     * Readable because the natural end asks it too: closing the card is the one gesture that
+     * declines the next episode, so it must also decline the automatic advance at the end —
+     * a user who chose to watch the credits being yanked out of them by the arithmetic would
+     * make the dismissal a lie (2026-08-24 auto-advance decision).
+     */
+    var dismissed: Boolean = false
+        private set
 
     /** Forgets the dismissal — called when a new item, or a new source, is opened. */
     fun reset() {

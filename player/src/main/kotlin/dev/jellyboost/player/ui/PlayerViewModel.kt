@@ -996,7 +996,12 @@ internal class PlayerViewModel
             }
         }
 
-        /** Closes the up-next card; nothing offers it again for this episode. */
+        /**
+         * Closes the up-next card; nothing offers it again for this episode, **and the natural end
+         * does not advance past it** — "watch credits" is the user declining the next episode, and
+         * an automatic advance overriding it would make the dismissal a lie ([onEnded] reads the
+         * same flag).
+         */
         internal fun dismissUpNext() {
             upNext.dismiss()
             _uiState.update { if (it.upNext == null) it else it.copy(upNext = null) }
@@ -1529,27 +1534,44 @@ internal class PlayerViewModel
          *
          * **Solo, an up-next tap is the same shape of exception** ([advancing]): the episode really
          * has ended and a replacement is already being negotiated into this very session, so popping
-         * the route would close the player the swap is about to fill. An episode that simply plays
-         * out, with nobody touching the card, still pops exactly as it always has.
+         * the route would close the player the swap is about to fill.
+         *
+         * **And since the 2026-08-24 decision, so is the natural end itself:** an episode that plays
+         * out solo with a successor prefetched advances to it here, through the same
+         * [playNextEpisode] path a tap takes — including from the background, where the tick-driven
+         * card may never have shown at all. The one opt-out is the card's dismissal: "watch credits"
+         * is the user declining the next episode, and it holds through to the end. The last episode
+         * of a series, a non-episode, and a group member all pop or defer exactly as before.
          *
          * The stop report is unconditional either way: the outgoing item has to be recorded and its
-         * encoder killed whether or not something follows it.
+         * encoder killed whether or not something follows it — and it runs *before* the advance is
+         * triggered, so the outgoing source's report is on its way regardless of what the open does.
          */
         private fun onEnded() {
             val active = session ?: return
             val current = active.source
             val groupContinues = syncPlay.isInGroup && syncPlay.hasNextInQueue
-            _uiState.update { it.copy(hasEnded = !groupContinues && !advancing, isPlaying = false) }
+            val autoAdvance =
+                !syncPlay.isInGroup && !advancing && active.upNext != null && !upNext.dismissed
+            _uiState.update {
+                it.copy(hasEnded = !groupContinues && !advancing && !autoAdvance, isPlaying = false)
+            }
             setReportingActive(false)
-            if (active.stopReported) return
-            updateSession { it.copy(stopReported = true) }
-            // The detached scope, not `viewModelScope`: publishing `hasEnded` above is what makes
-            // `PlayerScreen` pop the route on the next frame, which clears this ViewModel and
-            // cancels its scope — a report launched there dies at its first server call, and with
-            // `stopReported` already true the `releaseSession` fallback would never resend it. The
-            // commonest exit path of all, an episode watched to its end, must survive its own
-            // auto-close exactly like a teardown does.
-            reporter.reportStopDetached(current, playerHandle.snapshot().copy(hasEnded = true))
+            if (!active.stopReported) {
+                updateSession { it.copy(stopReported = true) }
+                // The detached scope, not `viewModelScope`: publishing `hasEnded` above is what makes
+                // `PlayerScreen` pop the route on the next frame, which clears this ViewModel and
+                // cancels its scope — a report launched there dies at its first server call, and with
+                // `stopReported` already true the `releaseSession` fallback would never resend it. The
+                // commonest exit path of all, an episode watched to its end, must survive its own
+                // auto-close exactly like a teardown does.
+                reporter.reportStopDetached(current, playerHandle.snapshot().copy(hasEnded = true))
+            }
+            // After the report block, never before it: `viewModelScope` is `Main.immediate`, so the
+            // launch inside [playNextEpisode] starts `replaceItem` synchronously right here — an
+            // advance triggered earlier would race `endCurrentSource` against a `stopReported` this
+            // method had not yet armed, and the outgoing episode would be reported twice.
+            if (autoAdvance) playNextEpisode()
         }
 
         /**

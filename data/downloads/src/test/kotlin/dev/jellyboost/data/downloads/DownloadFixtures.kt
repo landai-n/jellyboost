@@ -20,23 +20,13 @@ import org.jellyfin.sdk.model.api.TrickplayInfoDto
 import java.time.Instant
 import java.util.UUID
 
-/**
- * Shared fixtures for the download pipeline's unit tests.
- *
- * The builders take a lot of defaulted parameters on purpose: every test then names only the two or
- * three fields it actually asserts on, which is what keeps the assertions readable.
- */
 @Suppress("LongParameterList")
 object DownloadFixtures {
     val NOW: Instant = Instant.parse("2026-07-28T12:00:00Z")
 
     /**
-     * A [TransactionRunner] that just runs the block — the stand-in for every test that is *not*
-     * about atomicity itself. Room's real transaction is a device concern; what a JVM test can
-     * assert is the decision it wraps, and which statements are inside it.
-     *
-     * The same shape `:data`'s `CacheFixtures` carries for the browse cache; it cannot be shared,
-     * since a test source set only sees its own module's.
+     * A [TransactionRunner] that just runs the block — the stand-in for every test that is *not* about
+     * atomicity itself.
      */
     val directTransactionRunner =
         object : TransactionRunner {
@@ -44,12 +34,9 @@ object DownloadFixtures {
         }
 
     /**
-     * [directTransactionRunner] that also reports whether a transaction is open *right now*.
-     *
-     * What lets a test assert that two DAO calls are inside the **same** transaction rather than
-     * merely both present — the property behind the download queue's one-write-per-progress-sample
-     * rule. Nesting is counted the way Room joins it: an inner `inTransaction` is part of the
-     * outer one, not a second.
+     * [directTransactionRunner] that also reports whether a transaction is open *right now*, which is
+     * what lets a test assert that two DAO calls are inside the **same** transaction rather than merely
+     * both present. Nesting is counted the way Room joins it: an inner `inTransaction` is not a second.
      */
     class RecordingTransactionRunner : TransactionRunner {
         private var depth = 0
@@ -158,10 +145,7 @@ object DownloadFixtures {
                 ),
         )
 
-    /**
-     * A season — a **folder**, which is the whole point of the fixture: it has no `mediaSources`,
-     * and `isFolder` is what the server sends for one.
-     */
+    /** A season — a **folder**: it has no `mediaSources`, and `isFolder` is what the server sends. */
     fun season(
         id: UUID = uuid(11),
         seriesId: UUID? = uuid(10),
@@ -196,11 +180,9 @@ object DownloadFixtures {
     // ---- music --------------------------------------------------------------------------------
 
     /**
-     * A music track.
-     *
-     * The three ids are what the whole music download path turns on: [albumId] is the folder it was
-     * expanded from and the artwork's address, [albumArtistId] is what the offline artist page
-     * queries, and [albumPrimaryImageTag] is the cover the plan fetches.
+     * A music track. The three ids are what the whole music download path turns on: [albumId] is the
+     * folder it was expanded from and the artwork's address, [albumArtistId] is what the offline artist
+     * page queries, and [albumPrimaryImageTag] is the cover the plan fetches.
      */
     fun track(
         id: UUID = uuid(30),
@@ -282,10 +264,6 @@ object DownloadFixtures {
             imageTags = mapOf(ImageType.PRIMARY to "playlist-tag"),
         )
 
-    /**
-     * `MediaSourceInfo` has no defaulted constructor, so every fixture goes through this one
-     * builder rather than repeating twenty irrelevant flags.
-     */
     fun mediaSource(
         id: String,
         size: Long?,
@@ -322,10 +300,9 @@ object DownloadFixtures {
         )
 
     /**
-     * A source video track — what the remux check reads (`DownloadEnqueuer.remuxBytes`).
-     *
-     * The three fields that matter each default to a value that *passes* the check at `HIGH`, so a
-     * test that wants a condition to fail names only the one field it is failing.
+     * A source video track — what the remux check reads. The three fields that matter each default to a
+     * value that *passes* the check at `HIGH`, so a test that wants a condition to fail names only the
+     * one field it is failing.
      */
     fun videoStream(
         index: Int = 0,
@@ -351,13 +328,10 @@ object DownloadFixtures {
         )
 
     /**
-     * A subtitle stream.
-     *
-     * [external] and [supportsExternalStream] are separate parameters because they answer separate
-     * questions, and conflating them is what hid a whole class of downloadable subtitles: the first
-     * is *"is this already a file next to the video?"*, the second is the server's *"I will extract
-     * this on demand"*, which it says for embedded SRTs too. It defaults to `true` for that
-     * reason — a real text subtitle stream advertises it whether or not it is external.
+     * A subtitle stream. [external] and [supportsExternalStream] are separate parameters because they
+     * answer separate questions, and conflating them hid a whole class of downloadable subtitles: the
+     * first is *"is this already a file next to the video?"*, the second is the server's *"I will
+     * extract this on demand"*, which it says for embedded SRTs too — hence the `true` default.
      */
     fun subtitleStream(
         index: Int,
@@ -380,7 +354,7 @@ object DownloadFixtures {
             supportsExternalStream = supportsExternalStream,
         )
 
-    /** A source audio track — what the baked-audio pin is chosen from (schema v8). */
+    /** A source audio track — what the baked-audio pin is chosen from. */
     fun audioStream(
         index: Int,
         language: String? = "eng",

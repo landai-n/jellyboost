@@ -12,29 +12,12 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * How far this device's clock is from the server's, estimated NTP-style from `GET /GetUtcTime`
- * exchanges.
+ * SyncPlay schedules everything on the *server's* clock, so every conversion between the two clocks must go
+ * through [toLocalTime] / [toServerTime] rather than assuming they agree.
  *
- * SyncPlay schedules everything on the *server's* clock: a `SendCommand` says "unpause at
- * 20:41:03.250" and every member is expected to act at that instant. A device clock that is two
- * seconds fast plays two seconds early, which is exactly the kind of drift the group cannot see and
- * the user immediately can. So the offset is measured rather than assumed, and every conversion
- * between server time and device time goes through [toLocalTime] / [toServerTime].
- *
- * The estimator is deliberately boring:
- *
- * - keep the last [WINDOW_SIZE] samples, oldest evicted;
- * - drop samples whose round-trip exceeds `max(1 s, 3 × median RTT)` — one stalled request on a
- *   congested network otherwise poisons the estimate for the next 8 samples;
- * - the estimate is the mean offset of what survives.
- *
- * The median (not the mean) sets the outlier threshold precisely because a single huge RTT would
- * drag a mean-based threshold up far enough to admit itself. With a single sample nothing can be
- * an outlier, so the first exchange takes effect immediately — a group joined on a bad connection
- * still starts in sync rather than starting at zero offset.
- *
- * Pure Kotlin and injected with [Clock], so all of it is unit-testable with a fixed clock; the
- * class is `@Singleton` because the offset belongs to the connection, not to a screen.
+ * The estimator keeps the last [WINDOW_SIZE] samples, drops those whose round-trip exceeds
+ * `max(1 s, 3 × median RTT)`, and means what survives. The threshold uses the **median**, not the mean: a
+ * single huge RTT would drag a mean-based threshold up far enough to admit itself.
  */
 @Singleton
 internal class SyncPlayTimeSync
@@ -45,28 +28,19 @@ internal class SyncPlayTimeSync
         private val samples = ArrayDeque<TimeSyncSample>(WINDOW_SIZE)
         private val _offset = MutableStateFlow(Duration.ZERO)
 
-        /**
-         * Current estimate of `serverClock − deviceClock`.
-         *
-         * [Duration.ZERO] until the first sample is recorded, which is the honest default: with no
-         * measurement the best guess is that the two clocks agree.
-         */
+        /** `serverClock − deviceClock`; [Duration.ZERO] until the first sample is recorded. */
         val offset: StateFlow<Duration> = _offset.asStateFlow()
 
-        /** Number of samples currently in the window, including ones the outlier filter rejects. */
+        /** Includes samples the outlier filter rejects. */
         val sampleCount: Int
             @Synchronized get() = samples.size
 
-        /** Adds [sample] to the rolling window and returns the re-computed [offset]. */
         @Synchronized
         fun record(sample: TimeSyncSample): Duration {
             samples.addLast(sample)
             while (samples.size > WINDOW_SIZE) samples.removeFirst()
             return estimate().also { estimate ->
                 _offset.value = estimate
-                // Every desync argument starts with "whose clock was wrong": one line per sample is
-                // what makes the estimate, its inputs, and an outlier being rejected all readable
-                // from a device log alone.
                 Timber.d(
                     "SyncPlay clock sample: offset %d ms rtt %d ms → estimate %d ms",
                     sample.offset.toMillis(),
@@ -76,20 +50,17 @@ internal class SyncPlayTimeSync
             }
         }
 
-        /** Forgets every sample — on sign-out, or when the group (and so the server) changes. */
+        /** Must be called when the server changes: on sign-out, and on a group change. */
         @Synchronized
         fun reset() {
             samples.clear()
             _offset.value = Duration.ZERO
         }
 
-        /** Now, on the server's clock. */
         fun serverNow(): Instant = clock.instant().plus(offset.value)
 
-        /** The device-clock instant matching a server-clock one — how a `SendCommand.when` is scheduled. */
         fun toLocalTime(serverTime: Instant): Instant = serverTime.minus(offset.value)
 
-        /** The server-clock instant matching a device-clock one — how buffering/ready are stamped. */
         fun toServerTime(localTime: Instant): Instant = localTime.plus(offset.value)
 
         private fun estimate(): Duration {
@@ -97,8 +68,7 @@ internal class SyncPlayTimeSync
 
             val threshold = outlierThreshold()
             val retained = samples.filter { it.roundTrip <= threshold }
-            // Can only happen if every retained duration is negative-median nonsense; keep the
-            // window rather than reporting a zero offset we know to be wrong.
+            // Keep the window rather than report a zero offset known to be wrong.
             val used = retained.ifEmpty { samples }
 
             val totalNanos = used.fold(0L) { acc, sample -> acc + sample.offset.toNanos() }
@@ -118,15 +88,13 @@ internal class SyncPlayTimeSync
         }
 
         companion object {
-            /** Samples kept. Eight covers ~40 s at the plan's 5 s ping cadence — long enough to smooth
-             * a burst of jitter, short enough to follow a clock that is genuinely being adjusted. */
+            /** ~40 s at the 5 s ping cadence: smooths a burst of jitter, still follows a clock being adjusted. */
             const val WINDOW_SIZE = 8
 
-            /** Floor on the outlier threshold: on a fast LAN the median RTT is a few ms, and 3× that
-             * would reject perfectly ordinary samples. */
+            /** Floor: on a LAN the median RTT is a few ms, and 3× that would reject ordinary samples. */
             val MIN_OUTLIER_THRESHOLD: Duration = Duration.ofSeconds(1)
 
-            /** A round-trip more than this many times the median is treated as a stalled request. */
+            /** A round-trip this many times the median is treated as a stalled request. */
             const val OUTLIER_MEDIAN_FACTOR = 3L
         }
     }

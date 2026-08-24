@@ -3,23 +3,15 @@ package dev.jellyboost.data.mapper
 import kotlin.math.ceil
 
 /**
- * The pixel widths this device asks the server to scale artwork to.
+ * Jellyfin resizes server-side, so the width in the URL decides the bytes on the wire, the bytes
+ * Coil caches, and the JPEG decoded on every memory-cache miss while a grid is flung.
  *
- * Jellyfin resizes server-side, so the width in the URL decides three things at once: the bytes on
- * the wire, the bytes Coil's disk cache holds, and the size of the JPEG that has to be decoded
- * again on every memory-cache miss while a grid is flung. Requesting artwork at the size it is
- * actually drawn at means the cached bytes *are* the display-resolution thumbnail — nothing is
- * downscaled on the way to the screen.
+ * Widths are the largest **dp** a surface draws at (the `*_DP` constants) times device density,
+ * snapped to [BUCKETS] so densities do not each carve out an entry in the server's resized-image
+ * cache and so a URL stays stable across app versions, keeping Coil's disk cache warm.
  *
- * The widths are derived from one knob per surface: the largest **dp** width that surface ever
- * draws the artwork at (see the `*_DP` constants), scaled by the device's density. Values are
- * snapped to [BUCKETS] so a handful of densities do not each carve out their own entry in the
- * server's resized-image cache — and so that the URL for a given item is stable across app
- * versions, which is what keeps Coil's disk cache warm across an upgrade.
- *
- * Not to be confused with the widths `:data:downloads` requests: artwork saved next to a download
- * is written once and has to survive being moved to another device, so it is deliberately sized
- * generously and independently of whatever screen happens to be attached today.
+ * Not the widths `:data:downloads` requests: artwork saved beside a download is written once and
+ * must survive being moved to another device, so it is sized generously and independently.
  */
 internal data class ArtworkRequestWidths(
     val poster: Int,
@@ -28,10 +20,8 @@ internal data class ArtworkRequestWidths(
 ) {
     companion object {
         /**
-         * Widest a 2:3 poster is ever drawn: the home rows pin cards at
-         * `Dimens.PosterWidth` (120dp) and the library grid's `Adaptive(110.dp)` columns settle at
-         * ~126dp on a tablet in portrait — narrower on a phone and in landscape, where more
-         * columns fit.
+         * Widest a 2:3 poster is drawn: `Dimens.PosterWidth` is 120dp and the grid's
+         * `Adaptive(110.dp)` columns settle at ~126dp on a tablet in portrait.
          */
         const val POSTER_DP = 128
 
@@ -39,26 +29,15 @@ internal data class ArtworkRequestWidths(
         const val THUMB_DP = 224
 
         /**
-         * Detail-header backdrops are drawn full-width, but they sit behind a scrim, are cropped to
-         * a 220dp band and never carry detail the eye tracks. Three quarters of a large tablet's
-         * width is indistinguishable there and costs a third fewer pixels than matching it exactly.
+         * Backdrops are full-width but sit behind a scrim, cropped to a 220dp band. Three quarters of
+         * a large tablet's width is indistinguishable there and costs a third fewer pixels.
          */
         const val BACKDROP_DP = 512
 
-        /**
-         * Request widths are snapped up to one of these.
-         *
-         * Coarse at the top (nobody can tell 1600 from 1750 behind a scrim), fine in the range
-         * posters and thumbs land in, where a bucket too wide is a bucket of wasted decode.
-         */
+        /** Coarse at the top; fine where posters and thumbs land, since a wide bucket is wasted decode. */
         private val BUCKETS = intArrayOf(160, 240, 320, 400, 480, 560, 640, 800, 960, 1280, 1600, 1920)
 
-        /**
-         * @param widthDp largest width, in dp, that the surface draws this artwork at.
-         * @param density the device's display density (`DisplayMetrics.density`).
-         * @return the pixel width to put in the image URL: [widthDp] in pixels, rounded up to the
-         *   next [BUCKETS] entry, and capped at the largest bucket.
-         */
+        /** @return [widthDp] in pixels, rounded up to a [BUCKETS] entry and capped at the largest. */
         fun requestWidth(
             widthDp: Int,
             density: Float,
@@ -69,7 +48,6 @@ internal data class ArtworkRequestWidths(
             return BUCKETS.firstOrNull { it >= needed } ?: BUCKETS.last()
         }
 
-        /** The widths to use on a display of the given [density]. */
         fun forDensity(density: Float): ArtworkRequestWidths =
             ArtworkRequestWidths(
                 poster = requestWidth(POSTER_DP, density),
@@ -77,10 +55,7 @@ internal data class ArtworkRequestWidths(
                 backdrop = requestWidth(BACKDROP_DP, density),
             )
 
-        /**
-         * Fallback for callers with no display to measure — unit tests, and the mappers'
-         * constructor default. `2.0` is the xhdpi baseline, mid-range of the densities v1 targets.
-         */
+        /** For callers with no display to measure. `2.0` is the xhdpi baseline. */
         val Default: ArtworkRequestWidths = forDensity(density = 2f)
     }
 }

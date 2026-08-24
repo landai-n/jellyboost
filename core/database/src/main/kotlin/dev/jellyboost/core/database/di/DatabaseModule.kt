@@ -19,11 +19,9 @@ import dev.jellyboost.core.database.dao.UserDao
 import dev.jellyboost.core.database.dao.UserDataDao
 import javax.inject.Singleton
 
-/** Provides the singleton [JellyfinDatabase] and its DAOs to the rest of the app. */
 @Module
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
-    /** Builds the single [JellyfinDatabase] instance used across the app's lifetime. */
     @Provides
     @Singleton
     fun provideJellyfinDatabase(
@@ -36,34 +34,25 @@ object DatabaseModule {
                 DatabaseConstants.DATABASE_NAME,
             ).build()
 
-    /** Exposes [JellyfinDatabase.serverDao] for injection. */
     @Provides
     fun provideServerDao(database: JellyfinDatabase): ServerDao = database.serverDao()
 
-    /** Exposes [JellyfinDatabase.userDao] for injection. */
     @Provides
     fun provideUserDao(database: JellyfinDatabase): UserDao = database.userDao()
 
-    /** Exposes [JellyfinDatabase.userDataDao] for injection. */
     @Provides
     fun provideUserDataDao(database: JellyfinDatabase): UserDataDao = database.userDataDao()
 
-    /** Exposes [JellyfinDatabase.itemDao] for injection. */
     @Provides
     fun provideItemDao(database: JellyfinDatabase): ItemDao = database.itemDao()
 
-    /** Exposes [JellyfinDatabase.libraryViewDao] for injection. */
     @Provides
     fun provideLibraryViewDao(database: JellyfinDatabase): LibraryViewDao = database.libraryViewDao()
 
-    /** Exposes [JellyfinDatabase.downloadDao] for injection. */
     @Provides
     fun provideDownloadDao(database: JellyfinDatabase): DownloadDao = database.downloadDao()
 
-    /**
-     * The seam `:data` uses to make a read-decide-write sequence atomic without seeing the database
-     * itself — see [TransactionRunner].
-     */
+    /** The seam `:data` uses to make a read-decide-write sequence atomic without seeing the database itself. */
     @Provides
     @Singleton
     fun provideTransactionRunner(database: JellyfinDatabase): TransactionRunner = RoomTransactionRunner(database)

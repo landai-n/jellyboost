@@ -4,15 +4,6 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 
-/**
- * Unit tests for what `SettingsRows.kt` decides outside of composition.
- *
- * [choiceRowDescription] is what keeps a choice row from announcing only its own two or three
- * words: without it, the two skip-mode groups would be six rows reading "Off / Show button /
- * Auto" twice over, with the words that tell them apart sitting in a caption that belongs to
- * nothing. Folding the group name into every row is the only association a screen reader can
- * rely on, and this is where the wording is settled.
- */
 class SettingsRowsTest {
     @Test
     @DisplayName("a plain option leads with the group it belongs to")
@@ -39,8 +30,6 @@ class SettingsRowsTest {
     @Test
     @DisplayName("the recovery hint comes last, after everything describing the row")
     fun actionHintComesLast() {
-        // The storage picker's F13 case: the row is already selected, so what a tap *does* is the
-        // one thing nothing on screen says.
         choiceRowDescription(
             groupLabel = "Storage location",
             label = "Internal storage",

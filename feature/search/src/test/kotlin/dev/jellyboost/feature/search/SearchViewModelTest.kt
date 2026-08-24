@@ -33,25 +33,18 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 
-/**
- * Unit tests for [SearchViewModel].
- *
- * The debounce is exercised on virtual time, which is the only way to assert "one request per
- * pause in typing" rather than "a request eventually happens".
- */
+/** The debounce is exercised on virtual time: "one request per pause in typing", not "eventually". */
 @OptIn(ExperimentalCoroutinesApi::class)
 class SearchViewModelTest {
     private val dispatcher = StandardTestDispatcher()
     private val repository = mockk<JellyfinRepository>()
 
-    /** The badge source; emits an empty map unless a test says otherwise. */
     private val downloadStates = MutableStateFlow<Map<String, DownloadState>>(emptyMap())
     private val downloads =
         mockk<DownloadRepository> {
             every { observeStates() } returns downloadStates
         }
 
-    /** The connectivity-change signal; fires only when a test says the server came back. */
     private val connectivityChanges = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
     private val connectivityRefresher =
         mockk<ConnectivityRefresher> {
@@ -67,8 +60,6 @@ class SearchViewModelTest {
     fun setUp() {
         coEvery { repository.getItems(capture(queries)) } returns AppResult.Success(emptyList())
     }
-
-    // ---- debounce ---------------------------------------------------------------------------
 
     @Test
     fun `does not search before the debounce elapses`() =
@@ -156,8 +147,6 @@ class SearchViewModelTest {
             state.hasSearched shouldBe false
         }
 
-    // ---- the request ------------------------------------------------------------------------
-
     @Test
     fun `asks for the video and M13 music types, capped at fifty`() =
         runTest(dispatcher) {
@@ -192,8 +181,6 @@ class SearchViewModelTest {
             queries.single().searchTerm shouldBe "dune"
         }
 
-    // ---- results ----------------------------------------------------------------------------
-
     @Test
     fun `splits one response into the three sections the screen draws`() =
         runTest(dispatcher) {
@@ -218,7 +205,6 @@ class SearchViewModelTest {
             state.submittedQuery shouldBe "west"
             state.hasSearched shouldBe true
             state.isSearching shouldBe false
-            // The count the screen announces spans all three sections, not just the biggest one.
             state.resultCount shouldBe 4
         }
 
@@ -276,8 +262,6 @@ class SearchViewModelTest {
             viewModel.clearQuery()
             advanceUntilIdle()
 
-            // Nothing to announce, and `hasSearched` back to false so the screen shows its prompt
-            // rather than a "0 results" line over an empty page.
             viewModel.uiState.value.resultCount shouldBe 0
             viewModel.uiState.value.hasSearched shouldBe false
         }
@@ -300,8 +284,6 @@ class SearchViewModelTest {
             }
         }
 
-    // ---- failures ---------------------------------------------------------------------------
-
     @Test
     fun `surfaces a failure and drops stale results`() =
         runTest(dispatcher) {
@@ -315,7 +297,6 @@ class SearchViewModelTest {
             state.error.shouldBeInstanceOf<AppError.Network>()
             state.isSearching shouldBe false
             state.hasNoResults shouldBe true
-            // A failure announces the failure, never a stale count from the search before it.
             state.resultCount shouldBe 0
         }
 
@@ -338,8 +319,6 @@ class SearchViewModelTest {
             state.movies.map { it.name } shouldContainExactly listOf("Dune")
         }
 
-    // ---- refresh when connectivity changes ---------------------------------------------------------------
-
     @Test
     fun `re-runs the current term when the server becomes reachable again`() =
         runTest(dispatcher) {
@@ -348,13 +327,11 @@ class SearchViewModelTest {
             advanceUntilIdle()
             coVerify(exactly = 1) { repository.getItems(any()) }
 
-            // Still capturing: the term the reconnect re-runs is half of what this test asserts.
             coEvery { repository.getItems(capture(queries)) } returns
                 AppResult.Success(listOf(movie("m1", "Dune")))
             connectivityChanges.emit(Unit)
             advanceUntilIdle()
 
-            // The field keeps its text and the results are the server's, not the downloaded subset.
             coVerify(exactly = 2) { repository.getItems(any()) }
             queries.last().searchTerm shouldBe "dune"
             viewModel.uiState.value.query shouldBe "dune"
@@ -374,16 +351,12 @@ class SearchViewModelTest {
             coVerify(exactly = 0) { repository.getItems(any()) }
         }
 
-    // ---- helpers ----------------------------------------------------------------------------
-
     /** Builds the ViewModel and lets its debounce collector start before the test types. */
     private fun TestScope.startedViewModel(): SearchViewModel {
         val viewModel = SearchViewModel(repository, downloads, connectivityRefresher)
         runCurrent()
         return viewModel
     }
-
-    // ---- download badges -------------------------------------------------------------------
 
     @Test
     fun `download state reaches the result cards`() =
@@ -417,10 +390,8 @@ class SearchViewModelTest {
         }
 
     /**
-     * A badge is decoration; the screen behind it is not. Unguarded, a throw from the badge flow
-     * would kill the collector and freeze every badge at its last value for the life of the
-     * screen — marks the user would read as current. All four badge collectors share this
-     * shape, so this pins the pattern.
+     * A badge is decoration; the screen behind it is not. Unguarded, a throw would kill the collector
+     * and freeze every badge at its last value — marks the user would read as current.
      */
     @Test
     fun `a failing download-state flow degrades to no badges and leaves the results intact`() =
@@ -436,7 +407,6 @@ class SearchViewModelTest {
             viewModel.onQueryChange("dune")
             advanceUntilIdle()
 
-            // The result row is still there and still rendered; only its badge fell back.
             viewModel.uiState.value.movies
                 .single()
                 .downloadState shouldBe DownloadState.NotDownloaded

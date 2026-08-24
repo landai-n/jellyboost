@@ -56,17 +56,9 @@ import dev.jellyboost.core.ui.theme.glassSurface
 import dev.jellyboost.core.ui.theme.popShadow
 
 /**
- * The docked bar the app chrome shows whenever music is loaded and the user is not already looking
- * at it — artwork, title/artist, previous, play/pause, next, a thin progress line, and a
- * tap-through to [dev.jellyboost.core.common.Routes.NowPlaying].
- *
- * Visual language matches [GlassBottomNav]: a floating glass bar, [popShadow] under it,
- * [GlassDefaults.BottomNavFill] rather than the lighter in-content [GlassDefaults.Fill] — the same
- * reasoning applies here, since this bar floats over full-bleed artwork just as often as the nav
- * pill does.
- *
- * @param state the loaded queue; this composable is never asked to draw [MusicPlaybackState.Idle] —
- *   [AppScaffold] only shows it while [showsMiniPlayer] says so.
+ * The docked bar the chrome shows whenever music is loaded and the user is not already looking at it.
+ * Tinted [GlassDefaults.BottomNavFill] rather than the lighter in-content fill, because it floats
+ * over full-bleed artwork as often as the nav pill does.
  */
 @Composable
 internal fun MiniPlayer(
@@ -91,9 +83,8 @@ internal fun MiniPlayer(
                 .popShadow(shape)
                 .glassSurface(shape = shape, tint = GlassDefaults.BottomNavFill),
     ) {
-        // The nice-to-have progress line: a track this thin reads as decoration, not as a second,
-        // less precise seek bar, so it carries no semantics of its own — the full scrubber lives
-        // on `NowPlayingScreen`, one tap away.
+        // Decoration, not a second seek bar: no semantics of its own, and the real scrubber is on
+        // `NowPlayingScreen`.
         Box(modifier = Modifier.fillMaxWidth().height(ProgressLineHeight).background(ProgressTrackColor)) {
             Box(
                 modifier =
@@ -116,16 +107,8 @@ internal fun MiniPlayer(
 }
 
 /**
- * [MiniPlayer] with the swipe that ends the session — the repo's first gesture-driven interaction,
- * and deliberately M3's stock [SwipeToDismissBox] rather than a hand-rolled drag.
- *
- * Both directions are enabled (the component's own default): `start`/`end` are layout-direction
- * relative, so allowing one would mean an RTL reader swiping the opposite way from an LTR one for
- * no reason the gesture itself expresses.
- *
- * @param onDismiss ends the session — a *stop*, not a hide, so the bar does not come back the
- *   moment anything recomposes. [AppScaffold] shows this bar off the queue's own state, so nothing
- *   here hides anything itself.
+ * [MiniPlayer] with the swipe that ends the session. `onDismiss` must *stop* rather than hide: the
+ * bar is shown off the queue's own state, so a hide would come back on the next recomposition.
  */
 @Composable
 internal fun DismissableMiniPlayer(
@@ -140,27 +123,22 @@ internal fun DismissableMiniPlayer(
     val dismissState = rememberSwipeToDismissBoxState()
     val dismissLabel = stringResource(R.string.mini_player_dismiss)
 
-    // Once per transition out of `Settled`, and the key *is* the guard against re-firing: an effect
-    // keyed on the value restarts only when that value changes, so the recompositions the settle
+    // The key *is* the guard against re-firing: keyed on the value, the recompositions the settle
     // animation drives cannot re-enter it.
     LaunchedEffect(dismissState.currentValue) {
         if (dismissState.currentValue != SwipeToDismissBoxValue.Settled) onDismiss()
     }
 
-    // Deliberately *not* snapped back after `onDismiss`: the bar is already on its way out through
-    // `AppScaffold`'s `AnimatedVisibility`, and resetting the offset mid-exit reads as a bounce.
-    // What resets it for the next session is disposal — the exit empties that `AnimatedVisibility`
-    // and takes `dismissState` with it, so the next queue composes a fresh one. That is the
-    // load-bearing mechanism. This effect only covers what disposal misses: a new queue starting
-    // while this bar is still composed (a dismiss racing a `play()` elsewhere), which swaps the
-    // session without the state ever passing through Idle.
+    // Not snapped back after `onDismiss` — resetting the offset mid-exit reads as a bounce; disposal
+    // of the `AnimatedVisibility` is what resets it. This only covers what disposal misses: a new
+    // queue starting while this bar is still composed, without the state passing through Idle.
     val sessionKey = state.queue.firstOrNull()?.id to state.queue.size
     LaunchedEffect(sessionKey) { dismissState.snapTo(SwipeToDismissBoxValue.Settled) }
 
     SwipeToDismissBox(
         state = dismissState,
-        // A gesture no screen reader can perform is a control only some users have, so the same
-        // verb is published as a custom action; `SwipeToDismissBox` adds none of its own.
+        // `SwipeToDismissBox` publishes no accessibility action of its own, and a gesture no screen
+        // reader can perform is a control only some users have.
         backgroundContent = {},
         modifier =
             modifier.semantics {
@@ -183,7 +161,6 @@ internal fun DismissableMiniPlayer(
     }
 }
 
-/** The bar's one content row: artwork, title/artist, [MiniPlayerTransport] — the tap target. */
 @Composable
 private fun MiniPlayerRow(
     track: JellyfinItem,
@@ -237,19 +214,7 @@ private fun MiniPlayerRow(
     }
 }
 
-/**
- * Previous / play-pause / next.
- *
- * Previous is here because the bar is very often the only transport on screen: it shows on the
- * pushed music screens too ([showsMiniPlayer]), and without it, going back a track would mean
- * opening the full now-playing view to reach the one button. It sits *before* play/pause, the
- * order every transport row in the app draws (`NowPlayingTransportRow`, `PlayerControls`), so the
- * glyphs read left-to-right as the timeline does.
- *
- * The tints are `onSurface` — the theme token, not a raw `Color.White`. Identical pixels on this
- * dark-only scheme (`JellyfinColors.OnSurface` *is* white), stated as the role so the bar's
- * glyphs move with the palette rather than being pinned outside it.
- */
+/** Previous / play-pause / next — the bar is very often the only transport on screen. */
 @Composable
 private fun MiniPlayerTransport(
     isPlaying: Boolean,
@@ -282,13 +247,12 @@ private fun MiniPlayerTransport(
     }
 }
 
-/** Height of the docked bar, above its own top progress line — comparable to [BottomNavHeight]. */
+/** Above its own top progress line. */
 internal val MiniPlayerHeight = 64.dp
 
-/** The gap left between the mini-player and whatever floats below it (the pill, or the window edge). */
+/** Between the bar and whatever floats below it — the pill, or the window edge. */
 internal val MiniPlayerGap = 12.dp
 
-/** Caps the bar's width on a wide tablet, matching the queue sheet's own [SHEET_MAX_WIDTH]-style cap. */
 private val MiniPlayerMaxWidth = 640.dp
 
 private val ArtSize = 44.dp

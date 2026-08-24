@@ -8,23 +8,18 @@ import dev.jellyboost.core.database.entities.ItemSource
 import io.mockk.coEvery
 import java.util.UUID
 
-/** What the grid stub captured of the arguments the repository handed the DAO. */
 internal class GridStubs(
     val types: MutableList<List<ItemType>> = mutableListOf(),
     val descending: MutableList<Boolean> = mutableListOf(),
 )
 
 /**
- * Stands the offline grid's two reads up over [rows]: the ordered key projection, then the page's
- * blobs.
+ * Keys are answered **in the order given**, never re-sorted: ordering is the statement's job, and a
+ * fake re-implementing `COLLATE NOCASE` would only pin itself.
  *
- * The keys are answered **in the order given** rather than re-sorted here — ordering is the
- * statement's job, and a fake that re-implemented `COLLATE NOCASE` would only be pinning itself.
- *
- * @param played the ids this user has watched; everything else is unwatched, which is what the
- *   query's `LEFT JOIN`/`COALESCE` produces for an item with no `user_data` row.
- * @param readIds collects the id lists the page read asked for, for the test that pins that the grid
- *   reads one page of blobs and not the whole library.
+ * @param played watched ids; everything else is unwatched, as the query's `LEFT JOIN`/`COALESCE`
+ *   produces for an item with no `user_data` row.
+ * @param readIds collects the id lists the page read asked for.
  */
 internal fun stubGrid(
     itemDao: ItemDao,

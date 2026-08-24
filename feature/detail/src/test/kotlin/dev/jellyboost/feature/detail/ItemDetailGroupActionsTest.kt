@@ -20,17 +20,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 /**
- * What the detail page offers, and sends, while a SyncPlay group is active.
- *
- * Its own class rather than more of [ItemDetailViewModelTest], which is at detekt's `LargeClass`
- * ceiling — the same split [ItemDetailSelectionTest] already makes for batch selection.
- *
- * The claim underneath every test here is that in a group **everything this page starts is started
- * for the group**: Play is a `SetNewQueue` and not a navigation, the two queue actions are
- * requests, nothing on this page changes locally, and the snackbar says only that the ask went out.
- * The control is the whole of the rest of this package, which runs with no group and must be
- * untouched by any of it — plus the solo tests below, which pin that a play with no group is still
- * a navigation.
+ * The claim under every test: in a group **everything this page starts is started for the group** —
+ * Play is a `SetNewQueue` and not a navigation, nothing changes locally, and the snackbar says only
+ * that the ask went out. The rest of the package is the control, running with no group.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class ItemDetailGroupActionsTest : ItemDetailViewModelFixture() {
@@ -53,7 +45,6 @@ internal class ItemDetailGroupActionsTest : ItemDetailViewModelFixture() {
                 model.onPlay(model.uiState.value.playTarget!!)
                 advanceUntilIdle()
 
-                // The resume position travels with it, exactly as the header button sends it.
                 navigations shouldBe listOf(PlayRequest(ITEM_ID, RESUME_TICKS))
                 coVerify(exactly = 0) { syncPlaySession.playForGroup(any(), any()) }
             }
@@ -84,13 +75,12 @@ internal class ItemDetailGroupActionsTest : ItemDetailViewModelFixture() {
                 model.onPlay(model.uiState.value.playTarget!!)
                 advanceUntilIdle()
 
-                // Exactly one id, and no series lookup: web accepts a one-item movie queue as it is,
-                // and the episode expansion below must not leak into anything that is not an episode.
+                // No series lookup: web accepts a one-item movie queue as it is, and the episode
+                // expansion must not leak into anything that is not an episode.
                 coVerify(exactly = 1) { syncPlaySession.playForGroup(listOf(ITEM_ID), RESUME_TICKS) }
                 coVerify(exactly = 0) { repository.getSeriesEpisodes(any()) }
-                // The bug this fixes, in one assertion: navigating here opens a local player the
-                // group knows nothing about, which is what sat under "Waiting for group" for ever.
-                // The player is opened by the server's own `PlayQueueUpdate` instead.
+                // Navigating here would open a local player the group knows nothing about, which
+                // sits under "Waiting for group" for ever.
                 navigations.shouldBeEmpty()
                 model.uiState.value.userMessage shouldBe UserMessage.GroupPlayRequested
             }
@@ -146,8 +136,7 @@ internal class ItemDetailGroupActionsTest : ItemDetailViewModelFixture() {
             model.onPlay(model.uiState.value.playTarget!!)
             advanceUntilIdle()
 
-            // From the chosen episode to the end of the series, in server order, and nothing before
-            // it: that is the list web rebuilds locally and then indexes the server's playlist by.
+            // The exact list web rebuilds locally and then indexes the server's playlist by.
             coVerify(exactly = 1) {
                 syncPlaySession.playForGroup(listOf(EPISODE_2, EPISODE_3, EPISODE_4), RESUME_TICKS)
             }
@@ -156,8 +145,7 @@ internal class ItemDetailGroupActionsTest : ItemDetailViewModelFixture() {
     @Test
     fun `an episode row's own play button goes to the group, expanded and from its own position`() =
         runTest {
-            // A season page: the row a user taps is not what the header would have resolved to, and
-            // it is the second entry point, and it must not navigate straight past the group.
+            // The second entry point: an episode row is not what the header would have resolved to.
             coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(season)
             coEvery { repository.getEpisodes(SERIES_ID, ITEM_ID) } returns
                 AppResult.Success(listOf(episode(EPISODE_1), episode(EPISODE_2)))
@@ -182,8 +170,7 @@ internal class ItemDetailGroupActionsTest : ItemDetailViewModelFixture() {
     fun `an episode the series listing cannot account for is sent on its own`() =
         runTest {
             coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(episode(EPISODE_2))
-            // The failure mode and the absent-from-the-listing mode are the same fallback: whatever
-            // the lookup came back with, the target itself is still worth sending.
+            // A failed lookup and an absent-from-the-listing one share the same fallback.
             coEvery { repository.getSeriesEpisodes(SERIES_ID) } returns AppResult.Failure(AppError.Network())
             inAGroup()
             val model = viewModel()
@@ -214,8 +201,6 @@ internal class ItemDetailGroupActionsTest : ItemDetailViewModelFixture() {
     @Test
     fun `a page with nothing a group can play offers no group target`() =
         runTest(dispatcher) {
-            // A series with no next-up and no episodes resolves to nothing; only movies and
-            // episodes are in this app's scope at all.
             coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(series)
             inAGroup()
             val model = viewModel()
@@ -232,9 +217,8 @@ internal class ItemDetailGroupActionsTest : ItemDetailViewModelFixture() {
     @Test
     fun `in a group, something the group cannot play still opens here rather than nowhere`() =
         runTest(dispatcher) {
-            // A folder page resolves its Play button to the folder itself, which no group queue can
-            // hold. Sending it would be refused server-side and swallow the tap; playing it locally
-            // is what the user asked for and costs the group nothing.
+            // A folder resolves Play to itself, which no group queue can hold — sending it would be
+            // refused server-side and swallow the tap.
             val folder = JellyfinItem(id = ITEM_ID, name = "Extras", type = ItemType.FOLDER)
             coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(folder)
             inAGroup()
@@ -250,7 +234,7 @@ internal class ItemDetailGroupActionsTest : ItemDetailViewModelFixture() {
             }
         }
 
-    /** An episode of [SERIES_ID] — the type and the series link are what drive the expansion. */
+    /** The type and the series link are what drive the expansion. */
     private fun episode(
         id: String,
         positionTicks: Long = 0L,
@@ -267,15 +251,10 @@ internal class ItemDetailGroupActionsTest : ItemDetailViewModelFixture() {
     }
 
     /**
-     * Runs [block] with every solo play this page resolves, oldest first — the list that must stay
-     * **empty** in a group.
-     *
-     * A plain list rather than Turbine because most of these tests are about the *absence* of an
-     * event, and "nothing was emitted by the time everything else had run" is exactly what an empty
-     * list after `advanceUntilIdle()` states. The collector is a foreground coroutine, cancelled
-     * when the block ends: `advanceUntilIdle()` runs the test's own work and not `backgroundScope`'s,
-     * so a collector launched there would never be resumed and every assertion here would read an
-     * empty list whatever the ViewModel did.
+     * A plain list, not Turbine: most tests here assert the *absence* of an event, which an empty
+     * list after `advanceUntilIdle()` states exactly. The collector must stay a **foreground**
+     * coroutine — `advanceUntilIdle()` never resumes `backgroundScope`, so a collector launched
+     * there would read empty whatever the ViewModel did.
      */
     private suspend fun TestScope.withNavigations(
         model: ItemDetailViewModel,
@@ -291,7 +270,7 @@ internal class ItemDetailGroupActionsTest : ItemDetailViewModelFixture() {
         const val EPISODE_3 = "episode-3"
         const val EPISODE_4 = "episode-4"
 
-        /** A resume position in Jellyfin ticks — 90 seconds in. */
+        /** Jellyfin ticks — 90 seconds in. */
         const val RESUME_TICKS = 900_000_000L
     }
 }

@@ -15,25 +15,16 @@ import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 
 /**
- * Runs [DownloadQueue] as foreground work.
+ * Runs [DownloadQueue] as foreground work: WorkManager decides *when* it may run, the queue decides
+ * *what* runs, and this keeps a foreground notification current so Android lets the transfer take as
+ * long as it takes.
  *
- * The worker owns almost nothing: WorkManager decides *when* it may run (the Wi-Fi-only and
- * storage constraints `WorkManagerDownloadScheduler` attaches), the queue decides *what* runs, and
- * this class is the bit in between that keeps a foreground notification current so Android lets the
- * transfer take as long as it takes.
+ * A *permanent* failure inside the queue is not a worker failure — the item is already
+ * `DownloadStatus.ERROR` in Room, and retrying the whole job on a permanently broken item would loop
+ * forever. A failure of the *machinery* is retried, and so is a transient one; see [toWorkerResult].
  *
- * A *permanent* failure inside the queue is not a worker failure: the item is already marked
- * `DownloadStatus.ERROR` in Room and shown as such in the Queue tab, and retrying the whole job on
- * a permanently broken item (deleted on the server, unreadable file) would loop forever. A failure
- * of the *machinery* — storage vanishing, a Room error — is retried, and so is a **transient**
- * one: see [toWorkerResult].
- *
- * The one other retry is [DrainOutcome.NO_SESSION]: on a cold start WorkManager can run this before
- * anything has restored the session, and `SessionGate` could not restore one either (the
- * user is signed out, or the credential store was unreadable). Nothing was attempted, so nothing is
- * reported; WorkManager's exponential backoff re-runs the job, and the next attempt after a sign-in
- * picks the queue up exactly where it was. The rows stay `QUEUED` — "Waiting" in the Queue tab —
- * throughout.
+ * [DrainOutcome.NO_SESSION] is retried too: nothing was attempted, so nothing is reported, the rows
+ * stay `QUEUED`, and the next attempt after a sign-in picks the queue up exactly where it was.
  */
 @HiltWorker
 internal class DownloadWorker
@@ -56,8 +47,7 @@ internal class DownloadWorker
                 queue.drain(listener).toWorkerResult()
             } catch (cancellation: CancellationException) {
                 // Every Pause cancels this worker, and a cancelled worker is not a failed one:
-                // WorkManager already decides what happens next. Logging it at ERROR and asking for
-                // a retry misreported the app's most ordinary download action as machinery failure.
+                // WorkManager already decides what happens next.
                 throw cancellation
             } catch (
                 @Suppress("TooGenericExceptionCaught") error: Exception,
@@ -74,9 +64,7 @@ internal class DownloadWorker
                     bytesDownloaded: Long,
                     bytesTotal: Long,
                 ) {
-                    // `null` means nothing the user would see changed since the last post — the
-                    // throttle calls this at up to six times a second, and the whole percent it
-                    // renders moves far less often than that.
+                    // `null` means nothing the user would see changed since the last post.
                     val info =
                         notifier.foregroundInfoIfChanged(
                             itemId = download.itemId,
@@ -93,16 +81,11 @@ internal class DownloadWorker
             }
 
         /**
-         * Posts a foreground update, swallowing the refusal.
-         *
-         * `setForeground` throws when the process is not allowed to start a foreground service —
-         * a short window on some OEM builds, and after the user revokes the notification
-         * permission. Losing the *notification* is survivable; losing the download because of it is
-         * not.
-         *
-         * A cancellation is not a refusal: swallowing the one every Pause produces here would turn
-         * a stop into "could not show the notification" and let the worker carry on inside a
-         * cancelled coroutine.
+         * Posts a foreground update, swallowing the refusal: `setForeground` throws when the process is
+         * not allowed to start a foreground service — a short window on some OEM builds, and after the
+         * user revokes the notification permission — and losing the download over that is not
+         * survivable. A cancellation is not a refusal: swallowing the one every Pause produces would
+         * let the worker carry on inside a cancelled coroutine.
          */
         private suspend fun promote(info: () -> androidx.work.ForegroundInfo) {
             try {
@@ -118,20 +101,13 @@ internal class DownloadWorker
     }
 
 /**
- * How a drain outcome reaches WorkManager.
+ * How a drain outcome reaches WorkManager. `Result.retry()` re-runs the job on the `EXPONENTIAL`/30 s
+ * backoff, deliberately the only retry mechanism in the pipeline: [DrainOutcome.RETRY] means the queue
+ * kept the row `QUEUED` and counted the attempt, so WorkManager owns *when* the next try happens and
+ * `DownloadQueue.MAX_ATTEMPTS` owns *whether* there is one.
  *
- * A top-level function so the ladder can be exercised on the JVM: constructing a `CoroutineWorker`
- * needs a `Context` and a live `WorkerParameters`, and the decision worth pinning is which outcomes
- * come back for another run.
- *
- * `Result.retry()` re-runs the job on the `EXPONENTIAL`/30 s backoff
- * `WorkManagerDownloadScheduler` attaches, which is deliberately the only retry mechanism in the
- * pipeline: [DrainOutcome.RETRY] means the queue kept the row `QUEUED` and counted the attempt, so
- * WorkManager owns *when* the next try happens and `DownloadQueue.MAX_ATTEMPTS` owns *whether*
- * there is one.
- *
- * [DrainOutcome.INCOMPLETE] is a success on purpose: the item is already `ERROR` in Room and shown
- * as such, and re-running the job over a permanently broken item would loop forever.
+ * [DrainOutcome.INCOMPLETE] is a success on purpose: the item is already `ERROR` in Room, and
+ * re-running the job over a permanently broken item would loop forever.
  */
 internal fun DrainOutcome.toWorkerResult(): ListenableWorker.Result =
     when (this) {

@@ -5,13 +5,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 
-/**
- * Unit tests for [hostForLog].
- *
- * The property under test is not "parses URLs" — it is "whatever a user typed, the log line gets a
- * host and only a host". So the cases are the shapes the server-setup field actually accepts,
- * plus the ones that must not throw.
- */
 class HostForLogTest {
     @ParameterizedTest
     @CsvSource(

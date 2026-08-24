@@ -3,12 +3,6 @@ package dev.jellyboost.core.common
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
-/**
- * Unit tests for [formatDurationSeconds].
- *
- * The rounding is always up, never to the nearest unit — see the function's KDoc — so most of these
- * pin a ceiling-division boundary rather than a plain conversion.
- */
 class DurationFormatTest {
     @Test
     fun `zero seconds is stated as zero, not left blank`() {
@@ -32,15 +26,13 @@ class DurationFormatTest {
 
     @Test
     fun `one second past a minute rounds up to the next minute`() {
-        // 61 s is 1.0166... min, which must never read as "1 min" — that would understate how much
-        // longer it actually takes.
+        // 61 s is 1.0166... min, which must never read as "1 min" — that would understate the wait.
         formatDurationSeconds(61L) shouldBe "2 min"
     }
 
     @Test
     fun `just under an hour still rounds up to a whole number of minutes`() {
-        // 3599 s is 59.983... min; the ceiling is 60, and the value is still under the 3600 s
-        // threshold that would switch it into the hours branch.
+        // 3599 s is 59.983... min: ceils to 60, still under the 3600 s threshold for the hours branch.
         formatDurationSeconds(3599L) shouldBe "60 min"
     }
 
@@ -56,8 +48,7 @@ class DurationFormatTest {
 
     @Test
     fun `a leftover that ceils to a sixtieth minute carries into the next hour`() {
-        // 7141 s is 1 h plus 3541 s of remainder; 3541 s is 59.0166... min, which ceils to 60 — a
-        // sixtieth minute does not exist, so it becomes the next hour instead.
+        // 3541 s of remainder is 59.0166... min, which ceils to 60 — that is the next hour, not a 60th minute.
         formatDurationSeconds(7_141L) shouldBe "2 h"
     }
 

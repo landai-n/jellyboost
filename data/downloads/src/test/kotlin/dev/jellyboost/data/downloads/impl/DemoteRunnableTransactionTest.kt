@@ -14,10 +14,7 @@ import org.junit.jupiter.api.Test
 
 /**
  * The one rule `DownloadDao` carries in Kotlin: `demoteRunnable`'s body — the `DOWNLOADING` leg's
- * count is the "was the live transfer taken?" answer, and the `QUEUED` leg always runs too. The
- * SQL guards and the `@Transaction` wrapper are Room's side of the contract (exercised on a
- * device); the body is plain Kotlin, so it is pinned on the JVM like every other queue rule — the
- * DAO's own KDoc sends rules here on purpose.
+ * count is the "was the live transfer taken?" answer, and the `QUEUED` leg always runs too.
  *
  * `callOriginal()` is what lets the interface's default body run against stubbed legs.
  */
@@ -33,8 +30,8 @@ class DemoteRunnableTransactionTest {
     @Test
     fun `reports the live transfer taken when the DOWNLOADING leg moved a row`() =
         runTest {
-            // This answer is what makes the caller stop the worker: the row it took *was* being
-            // transferred, and nothing else will ever recheck the status mid-transfer.
+            // This answer is what makes the caller stop the worker, and nothing else will ever
+            // recheck the status mid-transfer.
             coEvery { dao.setStatusIfDownloading(ids, DownloadStatus.PAUSED, NOW) } returns 1
             coEvery { dao.setStatusIfQueued(ids, DownloadStatus.PAUSED, NOW) } returns 1
 
@@ -44,9 +41,8 @@ class DemoteRunnableTransactionTest {
     @Test
     fun `reports the live transfer untouched when only queued rows moved`() =
         runTest {
-            // `false` is what spares the running worker — for a transcode, what keeps its bytes —
-            // and it is trustworthy only because it was computed in the same
-            // transaction as the write, where no drain claim can interleave.
+            // `false` is what spares the running worker, and it is trustworthy only because it was
+            // computed in the same transaction as the write, where no drain claim can interleave.
             coEvery { dao.setStatusIfDownloading(ids, DownloadStatus.CANCELLED, NOW) } returns 0
             coEvery { dao.setStatusIfQueued(ids, DownloadStatus.CANCELLED, NOW) } returns 2
 
@@ -56,8 +52,8 @@ class DemoteRunnableTransactionTest {
     @Test
     fun `runs both legs even when the transfer was taken`() =
         runTest {
-            // Taking the live row must not short-circuit the queued ones: a "Pause all" batch
-            // usually holds both kinds, and a queued row left QUEUED would download anyway.
+            // Taking the live row must not short-circuit the queued ones: a "Pause all" batch usually
+            // holds both kinds, and a queued row left QUEUED would download anyway.
             coEvery { dao.setStatusIfDownloading(ids, DownloadStatus.PAUSED, NOW) } returns 1
             coEvery { dao.setStatusIfQueued(ids, DownloadStatus.PAUSED, NOW) } returns 0
 

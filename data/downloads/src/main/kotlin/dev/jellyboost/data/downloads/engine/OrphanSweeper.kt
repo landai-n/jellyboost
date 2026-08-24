@@ -10,22 +10,17 @@ import javax.inject.Singleton
 /**
  * Removes item directories that no download row claims.
  *
- * ### Why files can outlive their row
- * Deleting a download stops the queue and then unlinks the directory, but WorkManager's
- * cancellation is asynchronous: the transfer keeps running until its next `ensureActive()`, and
- * `FileDownloader` re-creates the item directory for *every* file it opens. A cancel landing inside
- * the multi-minute media file therefore recreates the directory the cascade has just removed, and
- * writes into it. Nothing points at those bytes afterwards — they are invisible in both Downloads
- * tabs, survive every later delete, and are counted by `usedBytes()`, so the storage header accuses
- * the user of space they cannot find.
+ * Files outlive their row because WorkManager's cancellation is asynchronous: the transfer keeps
+ * running until its next `ensureActive()`, and `FileDownloader` re-creates the item directory for
+ * *every* file it opens, so a cancel landing inside the multi-minute media file recreates the
+ * directory the cascade has just removed. Nothing points at those bytes afterwards — invisible in both
+ * Downloads tabs, surviving every later delete, and counted by `usedBytes()`. Awaiting
+ * `DownloadScheduler.stop()` closes most of that window; this closes the rest, plus every orphan a
+ * process death left behind.
  *
- * Awaiting the stop (`DownloadScheduler.stop()`) closes most of that window; this closes the rest,
- * plus every orphan a process death or a crash left behind before it existed.
- *
- * ### Why it is safe to delete what it finds
- * The root is app-private (`<volume>/downloads`), written by this pipeline and nothing else, and
- * the *names* are compared rather than the ids, because the row that could resolve an id is exactly
- * what is missing. An unmounted volume lists nothing, so the sweep is a no-op instead of a wipe.
+ * Safe to delete what it finds because the root is app-private and written by this pipeline alone, and
+ * the *names* are compared rather than the ids — the row that could resolve an id is exactly what is
+ * missing. An unmounted volume lists nothing, so the sweep is a no-op instead of a wipe.
  */
 @Singleton
 internal class OrphanSweeper
@@ -35,11 +30,8 @@ internal class OrphanSweeper
         private val storage: DownloadStorage,
     ) {
         /**
-         * Deletes every item directory with no row behind it.
-         *
-         * Best effort by construction: this runs at the head of a drain, and a queue that refuses
-         * to download because a stale directory could not be removed would be a worse bug than the
-         * one it is cleaning up after.
+         * Best effort by construction: this runs at the head of a drain, and a queue that refuses to
+         * download because a stale directory could not be removed would be the worse bug.
          *
          * @return bytes freed.
          */

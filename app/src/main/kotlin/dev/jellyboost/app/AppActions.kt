@@ -39,42 +39,15 @@ import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.player.ui.CastRouteButton
 
-// The app-wide actions, common to both of the refresh's navigation layouts: the wide layout's
-// `GlassTopNav` puts them at the end of its row, and the compact one floats them over the
-// top-right corner of the content ([AppActionCluster]) — a phone has no persistent bar to hang
-// them off, and every one of them has to stay reachable from every top-level destination.
-//
-// Each action is a 36dp glass circle instead of a bare `IconButton`, which is what makes them
-// legible over the artwork they sit on rather than over an opaque surface.
-
-/**
- * What the app-wide actions read.
- *
- * Two values that have travelled together through four signature levels — `AppScaffold` →
- * `GlassTopNav` → [AppActions], and `AppScaffold` → [AppActionCluster] → [AppActions] — spelled out
- * verbatim at each of them, beside the four callbacks in [AppChromeActions]. Bundled for the same
- * reason `CardOverlayFacts` was: an intermediate composable that
- * forwards a cluster unchanged should not have to name its members, and adding a fifth action
- * should not be a four-file edit.
- *
- * A `data class` of two stable types, so it compares by value and the bars still skip
- * recomposition when neither has moved.
- */
 @Immutable
 internal data class AppChromeState(
-    /** Decides whether the offline status icon is drawn, and which one. */
     val connectionState: ConnectionState,
-    /** Lights the Groups action's badge. */
     val hasActiveSyncPlayGroup: Boolean,
 )
 
 /**
- * What the app-wide actions do — the other half of [AppChromeState].
- *
- * Separate from the state rather than one six-field bundle because the two have different
- * lifetimes: the state changes as connectivity and group membership move, the callbacks are fixed
- * for the life of the scaffold. Keeping them apart is what lets the callbacks be `remember`ed once
- * while the state flows.
+ * Kept separate from [AppChromeState] because the two have different lifetimes: that is what lets
+ * these callbacks be `remember`ed once while the state flows.
  */
 @Immutable
 internal data class AppChromeActions(
@@ -84,15 +57,7 @@ internal data class AppChromeActions(
     val onSetForceOffline: (Boolean) -> Unit,
 )
 
-/**
- * The four app-wide actions, in bar order: connection status, Cast, SyncPlay groups, overflow.
- *
- * A row of its own rather than a `RowScope` extension, because the spacing between these four is a
- * property of *them* and not of whichever bar is drawing them: each action reserves
- * [Dimens.MinTouchTarget] around a [Dimens.PillHeightSmall] circle, so the arrangement gap that
- * produces the mocks' 12dp between two circles is [ActionGap] — a value neither the top nav's
- * between-groups gap nor the cluster's old `SpaceSmall` would have got right on its own.
- */
+/** The four app-wide actions, in bar order: connection status, Cast, SyncPlay groups, overflow. */
 @Composable
 internal fun AppActions(
     chrome: AppChromeState,
@@ -108,10 +73,8 @@ internal fun AppActions(
             status = chrome.connectionState.toStatus(),
             onClick = actions.onConnectionStatusClick,
         )
-        // Shows nothing unless the device has a Cast stack and a receiver has been discovered —
-        // but its view stays attached even then, because that is what keeps route discovery running;
-        // it needs no state from here, and takes none. `glassContainer` draws the same circle its
-        // three neighbours have, so whenever the button is visible at all it matches the row.
+        // Draws nothing until a receiver is discovered, but the view stays attached regardless —
+        // that is what keeps route discovery running.
         CastRouteButton(
             modifier = Modifier.size(Dimens.MinTouchTarget),
             glassContainer = true,
@@ -131,12 +94,8 @@ internal fun AppActions(
 }
 
 /**
- * Arrangement gap between two app actions.
- *
- * Zero on purpose. Each action lays out a [Dimens.MinTouchTarget] frame around the
- * [Dimens.PillHeightSmall] circle it draws, which already leaves 12dp of clear background between
- * two adjacent circles — the gap the mocks show. Any positive arrangement spacing would be added
- * *on top* of that clearance.
+ * Zero on purpose: each action's [Dimens.MinTouchTarget] frame around a [Dimens.PillHeightSmall]
+ * circle already leaves the 12dp the mocks show, and positive spacing would be added on top of it.
  */
 private val ActionGap: Dp = 0.dp
 
@@ -144,16 +103,9 @@ private val ActionGap: Dp = 0.dp
 private val BadgeInset: Dp = ActionFrameOverhang
 
 /**
- * [AppActions] as the compact layout draws them: a small right-aligned cluster of glass circles
- * floating in the top-right corner of a top-level screen, with the content passing under it.
- *
- * The refresh's compact chrome is one floating pill at the *bottom* of the window, which leaves the
- * app-wide actions — the offline status, Cast, SyncPlay, Settings and the offline-mode toggle —
- * with no persistent bar to attach to. Pushing each of them into the individual screens' own
- * headers would mean four screens learning about connection state and SyncPlay membership; one
- * cluster owned by the frame keeps every feature reachable from every top-level destination, and
- * needs nothing at all from the screens themselves. It is also what the mocks show — the home
- * screen's floating glass circles over the hero are this cluster.
+ * [AppActions] as the compact layout draws them. The compact chrome's only bar is at the bottom of
+ * the window, so the frame floats these over the top-right corner instead of the screens carrying
+ * them — which would mean four screens learning about connection state and SyncPlay membership.
  */
 @Composable
 internal fun AppActionCluster(
@@ -164,9 +116,8 @@ internal fun AppActionCluster(
     AppActions(
         chrome = chrome,
         actions = actions,
-        // `safeDrawing` rather than `statusBars`: in landscape on a device with a display cutout the
-        // notch is a *horizontal* inset, and a cluster padded only for the status bar put its first
-        // circle underneath it.
+        // `safeDrawing` rather than `statusBars`: in landscape a display cutout is a *horizontal*
+        // inset, and status-bar padding alone put the first circle underneath the notch.
         modifier =
             modifier
                 .windowInsetsPadding(TopChromeInsets)
@@ -174,12 +125,7 @@ internal fun AppActionCluster(
     )
 }
 
-/**
- * The offline notice: a single status icon, not a full-width banner.
- *
- * Each reason gets its own icon *and* its own content description, so the three states are told
- * apart without reading any text; tapping spells the reason out in a snackbar.
- */
+/** Each reason gets its own icon *and* content description, so the three states are told apart without text. */
 @Composable
 private fun ConnectionStatusAction(
     status: ConnectionStatus?,
@@ -202,16 +148,9 @@ private fun ConnectionStatusAction(
 }
 
 /**
- * The way into the dedicated SyncPlay section, badged while this device is a member of a group.
- *
- * The badge is a plain [Badge] dot rather than a participant count: what the icon has to say from
- * here is only "you are in a group right now, wherever that happened" — the count, the name and
- * everything else about it belongs to the section itself once opened.
- *
- * It is placed by hand rather than by `BadgedBox`, which anchors to the corner of its *anchor's*
- * bounds — that is now the button's invisible 48dp frame, and the dot floated a clear [BadgeInset]
- * away from the circle it belongs to. Nothing is lost in semantics: the dot carries no text of its
- * own, and the state it stands for is already in the button's content description.
+ * The badge is placed by hand rather than by `BadgedBox`, which anchors to its anchor's bounds — the
+ * button's invisible 48dp frame — and so floated the dot clear of the circle it belongs to. The
+ * state it stands for is already in the button's content description.
  */
 @Composable
 private fun SyncPlayGroupsAction(
@@ -239,11 +178,6 @@ private fun SyncPlayGroupsAction(
     }
 }
 
-/**
- * The app-wide overflow: the *Offline mode* quick toggle and the way into Settings.
- *
- * Reachable from every top-level destination rather than from Home alone.
- */
 @Composable
 private fun AppOverflowMenu(
     forceOffline: Boolean,
@@ -254,9 +188,8 @@ private fun AppOverflowMenu(
     val offlineStateDescription =
         stringResource(if (forceOffline) R.string.state_on else R.string.state_off)
 
-    // The menu must be a direct sibling of the button *inside the same Box*: a DropdownMenu anchors
-    // to its layout parent, and without this wrapper the parent was the whole chrome `Row`, which
-    // anchored the menu to the bar's left edge instead of dropping from this button.
+    // A DropdownMenu anchors to its layout parent, so without this Box it dropped from the chrome
+    // `Row`'s left edge instead of from this button.
     Box {
         GlassIconButton(
             icon = Icons.Filled.MoreVert,
@@ -269,13 +202,10 @@ private fun AppOverflowMenu(
             DropdownMenuItem(
                 text = { Text(text = stringResource(R.string.settings_offline_mode)) },
                 trailingIcon = {
-                    // Not clickable itself — the item's own `onClick` already covers the whole row, and
-                    // a second handler here would toggle twice on a tap that landed on the switch.
-                    //
-                    // The switch role and its on/off state are declared on *this* node rather than on
-                    // the item's `modifier`: `clickable` merges the semantics of its descendants, so an
-                    // ancestor `Modifier.semantics {}` would sit on a node TalkBack never focuses,
-                    // leaving the row announced as a plain menu entry with no state.
+                    // Not clickable itself: the item's `onClick` covers the row, and a second handler
+                    // would toggle twice. The role and state go on *this* node because `clickable`
+                    // merges its descendants' semantics — declared on the item they would sit on a
+                    // node TalkBack never focuses.
                     Switch(
                         checked = forceOffline,
                         onCheckedChange = null,
@@ -290,9 +220,8 @@ private fun AppOverflowMenu(
             )
             DropdownMenuItem(
                 text = { Text(text = stringResource(R.string.home_settings)) },
-                // The row above says what it is through the `Role.Switch` its trailing control
-                // carries; this one had nothing at all. `DropdownMenuItem`'s own `clickable` sets no
-                // role, so it is declared here — first in the chain, and therefore the one that wins.
+                // `DropdownMenuItem`'s own `clickable` sets no role, so this row would announce without
+                // one; declared here it is first in the chain and therefore wins.
                 modifier = Modifier.semantics { role = Role.Button },
                 leadingIcon = {
                     Icon(imageVector = Icons.Filled.Settings, contentDescription = null)

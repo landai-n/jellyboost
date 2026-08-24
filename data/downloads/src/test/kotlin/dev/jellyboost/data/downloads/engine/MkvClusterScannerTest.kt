@@ -5,13 +5,10 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for [MkvClusterScanner] — the live size projection's only source of evidence.
- *
- * Everything here is built out of **synthetic EBML bytes** rather than a recorded file, because the
- * cases worth pinning are the ones a recorded file cannot contain on demand: an element cut in half
- * by a chunk boundary, a four-byte cluster id occurring by chance inside frame data, a timestamp
- * that goes backwards. [Ebml] below builds exactly the shapes Matroska defines, so a test that says
- * "this is a valid cluster" is asserting against the format and not against the parser's habits.
+ * Built out of **synthetic EBML bytes** rather than a recorded file, because the cases worth pinning
+ * are the ones a recorded file cannot contain on demand: an element cut in half by a chunk boundary, a
+ * four-byte cluster id occurring by chance inside frame data, a timestamp that goes backwards. [Ebml]
+ * builds exactly the shapes Matroska defines, so the assertions are against the format.
  */
 class MkvClusterScannerTest {
     // ---- the ordinary case -----------------------------------------------------------------------
@@ -65,9 +62,9 @@ class MkvClusterScannerTest {
     fun `a cluster whose first child is a CRC-32 is read, because that is what ffmpeg writes`() {
         val scanner = MkvClusterScanner()
 
-        // The shape of a real transcode off the server: every cluster opens with `BF 84 <crc>` and
-        // only then the timestamp. Requiring `0xE7` to come first made this read zero clusters and
-        // left every transcoded row stuck on "up to X" for its whole download.
+        // The shape of a real transcode off the server: every cluster opens with `BF 84 <crc>` and only
+        // then the timestamp. Requiring `0xE7` first read zero clusters and left every transcoded row
+        // stuck on "up to X" for its whole download.
         scanner.consume(Ebml.header() + Ebml.cluster(ticks = 4_864L, crc = true))
 
         scanner.mediaMillisReceived shouldBe 4_864L
@@ -91,8 +88,6 @@ class MkvClusterScannerTest {
         val scanner = MkvClusterScanner()
         // Allowing `CRC-32` through must not become "allow anything through": `0xA3` is SimpleBlock,
         // and a cluster that opens with a CRC and then a block is not one we can time.
-        // Size `0x8C`, then `BF 84 <4>` — a well-formed CRC — and then a SimpleBlock where the
-        // timestamp should be.
         val notTimestamp =
             Ebml.CLUSTER_ID +
                 byteArrayOf(0x8C.toByte(), 0xBF.toByte(), 0x84.toByte(), 0x01, 0x02, 0x03, 0x04) +
@@ -106,8 +101,8 @@ class MkvClusterScannerTest {
     @Test
     fun `a CRC-32 that is not four bytes long is not a CRC-32`() {
         val scanner = MkvClusterScanner()
-        // `BF 85 <5>` — a checksum length the spec does not have. Accepting 1..8 the way a general
-        // integer would make one more byte of a random four-byte hit free to be anything.
+        // `BF 85 <5>` — a checksum length the spec does not have. Accepting 1..8 makes one more byte
+        // of a random four-byte hit free to be anything.
         val wrongCrc =
             Ebml.CLUSTER_ID +
                 byteArrayOf(0x8B.toByte(), 0xBF.toByte(), 0x85.toByte(), 0x01, 0x02, 0x03, 0x04, 0x05) +
@@ -166,8 +161,8 @@ class MkvClusterScannerTest {
             Ebml.header() + Ebml.timestampScale(1_000_000L) +
                 Ebml.cluster(ticks = 9_000L, ticksWidth = 4, crc = true)
 
-        // The CRC pushes the timestamp four bytes further into the element, so the carry buffer has
-        // to cover a longer candidate than it did before it was allowed for.
+        // The CRC pushes the timestamp four bytes further into the element, so the carry buffer has to
+        // cover a longer candidate.
         for (cut in 1 until stream.size) {
             val scanner = MkvClusterScanner()
             scanner.consume(stream, 0, cut)
@@ -192,8 +187,8 @@ class MkvClusterScannerTest {
     @Test
     fun `the cluster id occurring inside payload data is rejected`() {
         val scanner = MkvClusterScanner()
-        // A real cluster, then the same four bytes buried in frame data followed by nothing that
-        // parses. Four bytes recur by chance about every 4 GB; the download must survive it.
+        // A real cluster, then the same four bytes buried in frame data followed by nothing that parses.
+        // Four bytes recur by chance about every 4 GB.
         val garbage =
             Ebml.CLUSTER_ID + byteArrayOf(0x3C, 0x7F, 0x11, 0x02, 0x49.toByte(), 0x00, 0x00, 0x00)
 
@@ -216,8 +211,8 @@ class MkvClusterScannerTest {
     @Test
     fun `a cluster whose first child is not the timestamp is rejected`() {
         val scanner = MkvClusterScanner()
-        // `0xA3` is SimpleBlock — a legal cluster child, just not the first one, and a shape a
-        // random four-byte hit is far more likely to produce than a well-formed timestamp.
+        // `0xA3` is SimpleBlock — a legal cluster child, just not the first one, and a shape a random
+        // four-byte hit is far likelier to produce than a well-formed timestamp.
         val notFirst =
             Ebml.CLUSTER_ID + byteArrayOf(0x88.toByte(), 0xA3.toByte(), 0x84.toByte(), 0x01, 0x02, 0x03, 0x04)
 
@@ -268,8 +263,8 @@ class MkvClusterScannerTest {
         scanner.consume(Ebml.cluster(ticks = 20_000L))
         scanner.consume(Ebml.cluster(ticks = 3_000L))
 
-        // ffmpeg writes the file forwards, so a lower timestamp is a false positive — and letting
-        // it through would make the projection jump upwards and the progress bar retreat.
+        // ffmpeg writes the file forwards, so a lower timestamp is a false positive — and letting it
+        // through would make the projection jump upwards and the progress bar retreat.
         scanner.mediaMillisReceived shouldBe 20_000L
     }
 
@@ -331,9 +326,8 @@ class MkvClusterScannerTest {
     fun `a scale whose own size is a wider varint is read just the same`() {
         val scanner = MkvClusterScanner()
 
-        // `40 04` is a two-byte varint carrying 4 — as legal a spelling of "four bytes follow" as
-        // `84`, and one a scanner reading only the one-byte form walks straight past, leaving
-        // every later timestamp on the default scale.
+        // `40 04` is a two-byte varint carrying 4 — as legal a spelling as `84`, and one a scanner
+        // reading only the one-byte form walks straight past, leaving every timestamp on the default.
         scanner.consume(
             Ebml.header() +
                 Ebml.timestampScale(1_000_000_000L, sizeWidth = 2) +
@@ -372,8 +366,8 @@ class MkvClusterScannerTest {
         /**
          * `TimestampScale` carrying [nanos] nanoseconds per tick.
          *
-         * @param sizeWidth how many bytes to spell the element's own length in. One is what every
-         *   muxer writes; anything up to eight is equally legal EBML, which is the point of asking.
+         * @param sizeWidth how many bytes to spell the element's own length in. One is what every muxer
+         *   writes; anything up to eight is equally legal EBML, which is the point of asking.
          */
         fun timestampScale(
             nanos: Long,
@@ -398,8 +392,8 @@ class MkvClusterScannerTest {
          * One cluster: the id, its size, and a `Timestamp` child of [ticks].
          *
          * @param unknownSize writes the all-ones size a stream being muxed live uses.
-         * @param crc writes the four-byte `CRC-32` in front of the timestamp that ffmpeg's muxer
-         *   emits by default — the real shape, which the synthetic default here is not.
+         * @param crc writes the four-byte `CRC-32` in front of the timestamp that ffmpeg's muxer emits
+         *   by default — the real shape, which the synthetic default here is not.
          */
         fun cluster(
             ticks: Long,

@@ -26,13 +26,9 @@ import java.time.ZoneId
 import java.time.ZoneOffset
 import java.util.UUID
 
-// The doubles the SyncPlay coordinator tests are built on.
-//
-// All of them record rather than stub, because most of what Phase 2 has to be pinned on is *which
-// call was made* — an in-group pause must reach the server and must not reach the player, and no
-// assertion about a returned value can say that.
+// These doubles record rather than stub: most assertions here are about *which call was made*
+// (e.g. an in-group pause must reach the server and not the player), not a returned value.
 
-/** One call made on [SyncPlayApi], recorded in order. */
 internal sealed interface SyncPlayCall {
     data object GetGroups : SyncPlayCall
 
@@ -121,17 +117,14 @@ internal sealed interface SyncPlayCall {
     data object SampleServerTime : SyncPlayCall
 }
 
-/** A recording [SyncPlayApi]. */
 @Suppress("TooManyFunctions") // Implements the 21-operation facade.
 internal class FakeSyncPlayApi(
     private val clock: Clock = Clock.systemUTC(),
 ) : SyncPlayApi {
     val calls = mutableListOf<SyncPlayCall>()
 
-    /** Groups [getGroups] answers with. */
     var groups: List<SyncPlayGroupSummary> = emptyList()
 
-    /** The group [createGroup] answers with. */
     var createdGroup: SyncPlayGroupSummary = group()
 
     /** Thrown by [joinGroup] and [createGroup] when set — the failed-join path. */
@@ -140,16 +133,14 @@ internal class FakeSyncPlayApi(
     /** Thrown by every [getGroups] while set — a rejoin that cannot even see the group list. */
     var getGroupsError: Throwable? = null
 
-    /** Thrown by the next [reportBuffering] and then cleared — one refused call. */
+    /** Thrown by the next [reportBuffering], then cleared — a one-shot refusal. */
     var failNextBuffering: Throwable? = null
 
-    /** How far the fake server's clock runs ahead of the test clock, in milliseconds. */
     var serverOffsetMillis = 0L
 
-    /** Round-trip the fake exchange reports, in milliseconds. */
     var roundTripMillis = 0L
 
-    /** Thrown by the next [sampleServerTime] and then cleared — one failed exchange. */
+    /** Thrown by the next [sampleServerTime], then cleared — a one-shot failure. */
     var failNextSample: Throwable? = null
 
     /** Thrown by every [sampleServerTime] while set — the REST API having stopped answering. */
@@ -157,7 +148,6 @@ internal class FakeSyncPlayApi(
 
     fun clearCalls() = calls.clear()
 
-    /** Every call of type [T], oldest first. */
     inline fun <reified T : SyncPlayCall> callsOf(): List<T> = calls.filterIsInstance<T>()
 
     override suspend fun getGroups(): List<SyncPlayGroupSummary> {
@@ -292,14 +282,9 @@ internal class FakeSyncPlayApi(
     }
 }
 
-/**
- * A [SyncPlaySocket] whose two streams are driven by the test.
- *
- * The streams are cold and hand-built rather than plain `MutableSharedFlow`s because the controller's
- * loss detection is defined in terms of the *collection* ending: [endStreams] completes them and
- * [failStreams] throws inside them, which is what the SDK's socket does when its own reconnection
- * gives up.
- */
+// Streams are cold and hand-built rather than plain `MutableSharedFlow`s because the controller's
+// loss detection is defined in terms of the *collection* ending: [endStreams] completes it and
+// [failStreams] throws inside it, matching what the SDK's socket does when reconnection gives up.
 internal class FakeSyncPlaySocket : SyncPlaySocket {
     private val groupEvents = MutableSharedFlow<SyncPlayGroupEvent>(extraBufferCapacity = 32)
     private val commandEvents = MutableSharedFlow<SyncPlayCommand>(extraBufferCapacity = 32)
@@ -331,7 +316,6 @@ internal class FakeSyncPlaySocket : SyncPlaySocket {
         streamEnd.complete(null)
     }
 
-    /** Ends both collections with [error]. */
     fun failStreams(error: Throwable) {
         streamEnd.complete(error)
     }
@@ -346,7 +330,6 @@ internal class FakeSyncPlaySocket : SyncPlaySocket {
         }.onCompletion { collectors-- }
 }
 
-/** A [SyncPlayPlaybackHost] that records what it was asked to open. */
 internal class FakeSyncPlayPlaybackHost : SyncPlayPlaybackHost {
     val loaded = mutableListOf<Pair<UUID, Long>>()
 
@@ -371,12 +354,8 @@ internal class FakeSyncPlayPlaybackHost : SyncPlayPlaybackHost {
     override fun snapshot(): SyncPlayHostSnapshot = snapshot
 }
 
-/**
- * A [Clock] that reads the coroutine test scheduler's virtual time.
- *
- * Everything SyncPlay schedules is "wait until this instant", so a wall-clock reading and a
- * `delay()` have to agree exactly or the tests measure nothing.
- */
+// A wall-clock reading and a `delay()` must agree exactly, or the "wait until this instant"
+// scheduling SyncPlay relies on measures nothing.
 internal class VirtualClock(
     private val scheduler: TestCoroutineScheduler,
     private val origin: Instant,
@@ -388,12 +367,8 @@ internal class VirtualClock(
     override fun instant(): Instant = origin.plusMillis(scheduler.currentTime)
 }
 
-/**
- * A [SyncPlayTimeSync] that already believes the server clock runs [offsetMillis] ahead of [clock].
- *
- * Built from a real sample rather than by poking the estimator, so the tests exercise the same path
- * the pinger does.
- */
+// Built from a real sample rather than by poking the estimator, so tests exercise the same path
+// the pinger does.
 internal fun timeSyncWithOffset(
     clock: Clock,
     offsetMillis: Long,
@@ -411,7 +386,6 @@ internal fun timeSyncWithOffset(
         )
     }
 
-/** A group summary with sensible defaults. */
 internal fun group(
     id: UUID = UUID.fromString("00000000-0000-0000-0000-0000000000a1"),
     name: String = "Film night",

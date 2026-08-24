@@ -22,10 +22,8 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * [JellyfinApiFacade] backed by the real SDK, reading the currently configured client from
- * [ApiClientProvider] on every call so that re-pointing the client takes effect immediately.
- *
- * Every call hops to [ioDispatcher]; callers therefore never need their own `withContext`.
+ * Reads the currently configured client from [ApiClientProvider] on every call, so re-pointing the client
+ * takes effect immediately. Every call hops to [ioDispatcher]; callers need no `withContext` of their own.
  */
 @Singleton
 internal class SdkJellyfinApiFacade

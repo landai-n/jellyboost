@@ -4,7 +4,6 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
-/** Unit tests for the forgiving decode of jellyfin-web's `homesectionN` values. */
 class HomeSectionTypeTest {
     @Test
     fun `decodes every value jellyfin-web can write`() {
@@ -26,8 +25,7 @@ class HomeSectionTypeTest {
 
     @Test
     fun `a missing value is not an error`() {
-        // The normal case: a user who never opened Settings → Home has no keys at all, and the
-        // caller answers `null` with that slot's default.
+        // The normal case: no keys at all, and the caller answers `null` with that slot's default.
         HomeSectionType.fromServerValue(null).shouldBeNull()
         HomeSectionType.fromServerValue("").shouldBeNull()
         HomeSectionType.fromServerValue("   ").shouldBeNull()
@@ -35,8 +33,7 @@ class HomeSectionTypeTest {
 
     @Test
     fun `an unknown value decodes to null rather than throwing`() {
-        // A newer server, or a hand-written value: fall back to the default, never crash the home
-        // screen over a string.
+        // A newer server, or a hand-written value: fall back to the default, never crash over a string.
         HomeSectionType.fromServerValue("holographicsuite").shouldBeNull()
     }
 }

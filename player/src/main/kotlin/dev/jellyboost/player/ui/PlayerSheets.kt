@@ -40,14 +40,10 @@ import kotlin.math.roundToInt
 import dev.jellyboost.core.ui.R as CoreUiR
 
 /**
- * The four track/quality/rate pickers, one composable each.
+ * Dialogs, not bottom sheets: the player runs in landscape, where a sheet covers the seek bar the user came from.
  *
- * A dialog rather than a bottom sheet: the player runs in landscape, where a sheet rising from the
- * bottom edge covers the seek bar the user just came from, and dialogs need no experimental API.
- *
- * The `when` that chooses between them is `PlayerScreen`'s `PanelHost`, one exhaustive branch per
- * [PlayerPanel], so every panel on this screen is hosted in the same place and outlives the control
- * bar — which disposes itself four seconds after it appears and would take an open picker with it.
+ * All of them are hosted by `PlayerScreen`'s `PanelHost`, never by the control bar, which disposes itself four
+ * seconds after it appears and would take an open picker with it.
  */
 @Composable
 internal fun PlayerAudioDialog(
@@ -63,7 +59,7 @@ internal fun PlayerAudioDialog(
     )
 }
 
-/** The subtitle picker — "off" is the first row, because it is a real choice, not an absence. */
+/** "Off" is the first row: a real choice, not an absence. */
 @Composable
 internal fun PlayerSubtitleDialog(
     state: PlayerUiState,
@@ -85,7 +81,7 @@ internal fun PlayerSubtitleDialog(
     )
 }
 
-/** The streaming bitrate cap; never offered while the bytes come off the disk (`sheetChipSpecs`). */
+/** Never offered while the bytes come off the disk (`sheetChipSpecs`). */
 @Composable
 internal fun PlayerQualityDialog(
     state: PlayerUiState,
@@ -107,7 +103,7 @@ internal fun PlayerQualityDialog(
     )
 }
 
-/** The playback rate; never offered in a SyncPlay group, which has no per-member rate. */
+/** Never offered in a SyncPlay group, which has no per-member rate. */
 @Composable
 internal fun PlayerSpeedDialog(
     state: PlayerUiState,
@@ -126,19 +122,9 @@ internal fun PlayerSpeedDialog(
 }
 
 /**
- * Brightness and volume, as controls rather than as gestures.
- *
- * Both were reachable only by a precise vertical drag on the correct third of the video: unusable
- * with a screen reader (touch exploration consumes the drag), with a switch device, with a keyboard,
- * or by anyone whose motor control does not include a measured 200 px swipe. Brightness had no
- * fallback of any kind — unlike the double-tap seek, which at least has buttons.
- *
- * This *adds* a path; the swipes stay. Both sliders drive exactly the plumbing the swipes drive —
- * the window's `screenBrightness` override, restored by `ImmersiveLandscapeEffect` on the way out,
- * and the media stream's volume — so the two ways of asking cannot disagree, and neither touches a device setting.
- *
- * The sheet is hosted by `PlayerScreen`, not by the control bar, so the four-second auto-hide cannot
- * take it away mid-adjustment.
+ * The accessible path to brightness and volume, which are otherwise only a vertical drag — unreachable with a
+ * screen reader, a switch device or a keyboard. The sliders drive the same plumbing as the swipes (the window's
+ * `screenBrightness` override and the media stream volume), so the two cannot disagree.
  */
 @Composable
 internal fun PlayerDisplayDialog(onDismiss: () -> Unit) {
@@ -146,8 +132,7 @@ internal fun PlayerDisplayDialog(onDismiss: () -> Unit) {
     val activity = context as? Activity
     val audioManager = remember(context) { context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager }
 
-    // Seeded from what is in force right now, then owned by the sliders: the window override and the
-    // stream volume are both write-through, so the state and the device stay in step without a poll.
+    // Write-through on both sides, so state and device stay in step without a poll.
     var brightness by remember { mutableFloatStateOf(activity.brightnessFraction()) }
     var volume by remember { mutableFloatStateOf(audioManager.volumeFraction()) }
 
@@ -181,12 +166,8 @@ internal fun PlayerDisplayDialog(onDismiss: () -> Unit) {
 }
 
 /**
- * One labelled level, `0f..1f`.
- *
- * A plain M3 `Slider` — its range semantics and its `setProgress` action are exactly what a screen
- * reader, a keyboard and Switch Access all need — with the two things it cannot know: what it
- * controls ([label]) and what "0.7" means out loud. The percentage is a `stateDescription` rather
- * than a visible readout because the slider's own fill already shows it to anyone who can see it.
+ * One labelled level, `0f..1f`. Plain M3 `Slider` on purpose — its range semantics and `setProgress` action are
+ * what a screen reader, a keyboard and Switch Access need; only the label and the spoken percentage are added.
  */
 @Composable
 private fun LevelSlider(
@@ -210,7 +191,7 @@ private fun LevelSlider(
     }
 }
 
-/** One row in a picker. [key] is `null` for the "off" entry, which is a real choice, not an absence. */
+/** [key] is `null` for the "off" entry. */
 private data class Option(
     val key: Int?,
     val label: String,
@@ -226,10 +207,8 @@ private fun OptionDialog(
 ) {
     JellyboostAlertDialog(
         onDismissRequest = onDismiss,
-        // The app's own "Cancel" rather than `android.R.string.cancel`: the platform string follows
-        // the *device* locale, so a picker on a French device would show "Annuler" beside this
-        // app's English rows. Every dialog in the app points at the same app-wide label for that
-        // reason.
+        // The app's own "Cancel", never `android.R.string.cancel`: the platform string follows the *device*
+        // locale and would show "Annuler" beside this app's English rows.
         confirmButton = {
             TextButton(onClick = onDismiss) { Text(text = stringResource(CoreUiR.string.action_cancel)) }
         },
@@ -243,10 +222,8 @@ private fun OptionDialog(
                                 .fillMaxWidth()
                                 .selectable(
                                     selected = option.selected,
-                                    // The row *is* the radio button — the control inside it is inert
-                                    // (`onClick = null`), so without the role the whole picker
-                                    // announces as unlabelled taps rather than as a choice among
-                                    // choices.
+                                    // The row *is* the radio button: the control inside it is inert
+                                    // (`onClick = null`), so without the role the picker announces as bare taps.
                                     role = Role.RadioButton,
                                     onClick = {
                                         onSelect(option.key)
@@ -271,7 +248,7 @@ private fun OptionDialog(
 private fun PlaybackTrack.asOption(selected: Boolean): Option =
     Option(key = index, label = label.ifBlank { language.orEmpty() }, selected = selected)
 
-/** Shared with the bottom bar's quality chip, which speaks the current cap as its state. */
+/** Shared with the bottom bar's quality chip. */
 internal fun PlaybackQuality.labelRes(): Int =
     when (this) {
         PlaybackQuality.AUTO -> R.string.player_quality_auto

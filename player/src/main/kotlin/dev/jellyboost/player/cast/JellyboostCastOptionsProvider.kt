@@ -9,15 +9,8 @@ import com.google.android.gms.cast.framework.media.CastMediaOptions
 import com.google.android.gms.cast.framework.media.NotificationOptions
 
 /**
- * How the Cast framework is configured for this app.
- *
- * The framework instantiates this itself, reflectively, from the `OPTIONS_PROVIDER_CLASS_NAME`
- * meta-data in the manifest — so it is never referenced from Kotlin, and its fully-qualified name is
- * part of the manifest's contract. Renaming or moving the class means editing the manifest too.
- *
- * The receiver is Google's **default** media receiver, not the Jellyfin web receiver: casting is
- * phone-orchestrated, and the phone negotiates the stream with the server itself and hands
- * the receiver a plain URL. Pointing at a styled receiver later is a one-line change here.
+ * Instantiated reflectively from the manifest's `OPTIONS_PROVIDER_CLASS_NAME` meta-data — never
+ * referenced from Kotlin, so renaming or moving it means editing the manifest too.
  */
 internal class JellyboostCastOptionsProvider : OptionsProvider {
     override fun getCastOptions(context: Context): CastOptions {
@@ -25,11 +18,8 @@ internal class JellyboostCastOptionsProvider : OptionsProvider {
             NotificationOptions
                 .Builder()
                 .apply {
-                    // The Cast notification has to lead back into the app, but `:player` must not
-                    // depend on `:app` to name the activity — the launcher intent answers it at
-                    // runtime, exactly as `PlaybackService.launchIntent()` does for the media
-                    // session. Left unset if the package somehow has no launcher entry, which only
-                    // costs the notification its tap target.
+                    // Resolved at runtime because `:player` must not depend on `:app` to name the
+                    // activity; unset costs the notification only its tap target.
                     launchActivityClassName(context)?.let(::setTargetActivityClassName)
                 }.build()
 
@@ -37,22 +27,18 @@ internal class JellyboostCastOptionsProvider : OptionsProvider {
             CastMediaOptions
                 .Builder()
                 .setNotificationOptions(notificationOptions)
-                // No `setExpandedControllerActivityClassName`: the app's own PlayerScreen is the
-                // remote control while casting, so there is no ExpandedControllerActivity to open
-                // and the framework must not synthesise one.
+                // No `setExpandedControllerActivityClassName`: PlayerScreen is the remote control,
+                // and the framework must not synthesise an ExpandedControllerActivity.
                 .build()
 
         return CastOptions
             .Builder()
             .setReceiverApplicationId(CastMediaControlIntent.DEFAULT_MEDIA_RECEIVER_APPLICATION_ID)
             .setCastMediaOptions(mediaOptions)
-            // Coming back to a session this app started (app switched away and back) reattaches to
-            // it instead of leaving the receiver orphaned.
             .setResumeSavedSession(true)
             .build()
     }
 
-    /** No custom session providers — the built-in Cast session is the only one this app speaks. */
     override fun getAdditionalSessionProviders(context: Context): List<SessionProvider> = emptyList()
 
     private fun launchActivityClassName(context: Context): String? =

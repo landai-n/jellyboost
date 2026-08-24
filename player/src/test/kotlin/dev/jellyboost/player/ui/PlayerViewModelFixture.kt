@@ -46,10 +46,8 @@ import org.junit.jupiter.api.extension.RegisterExtension
 /**
  * The collaborators a [PlayerViewModel] needs, and the two builders that assemble one.
  *
- * A base class rather than a helper object because every test reaches the same doubles by name and
- * overrides one or two of them; splitting it out is what keeps the test class itself down to the
- * behaviour it pins, now that the ViewModel's own collaborators are tested next door
- * ([PlaybackSessionController], [PlayerSessionStore], [PlaybackPositionTracker]).
+ * A base class, not a helper object, so every test reaches the same doubles by name and
+ * overrides only what it exercises.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 internal abstract class PlayerViewModelFixture {
@@ -63,13 +61,8 @@ internal abstract class PlayerViewModelFixture {
     protected val segmentLoader = mockk<MediaSegmentLoader>()
 
     /**
-     * The up-next lookup, mocked rather than assembled over [repository].
-     *
-     * "Which episode follows this one" is pinned next door in `UpNextResolverTest` against the real
-     * repository doubles; what the ViewModel owes it is *when* it is asked and what it does with the
-     * answer, and a recording double states that without every player test having to stub a series
-     * listing. `null` by default, which is what makes every other test in this package an item with
-     * no successor — i.e. exactly the behaviour they were written against.
+     * The up-next lookup; "which episode follows" is pinned in `UpNextResolverTest`, this only
+     * records *when* it's asked. `null` by default, so every other test here has no successor.
      */
     protected val upNextResolver = mockk<UpNextResolver>()
 
@@ -77,9 +70,8 @@ internal abstract class PlayerViewModelFixture {
 
     /**
      * The app's online/offline verdict, writable so a test can drop the network mid-session.
-     *
-     * Online by default: that is the everyday state, and it is the one under which a downloaded
-     * item's pickers offer the source's full track list.
+     * Online by default — the everyday state under which a downloaded item's pickers offer the
+     * full track list.
      */
     protected val connection = MutableStateFlow(ConnectionState.ONLINE)
 
@@ -89,11 +81,8 @@ internal abstract class PlayerViewModelFixture {
         }
 
     /**
-     * The group this session is in, writable so a test can put the player in one.
-     *
-     * `Idle` by default, which is what makes every other test in this package a *solo* test: the
-     * ViewModel's SyncPlay branches all hang off this flow's current value, so leaving it alone is
-     * the assertion that group support changed nothing about playing something on your own.
+     * The group this session is in, writable so a test can put the player in one. `Idle` by
+     * default, so every other test in this package is implicitly a solo test.
      */
     protected val syncPlayState = MutableStateFlow<SyncPlayState>(SyncPlayState.Idle)
 
@@ -101,13 +90,9 @@ internal abstract class PlayerViewModelFixture {
         MutableSharedFlow<SyncPlayMessage>(extraBufferCapacity = 8, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 
     /**
-     * The coordinator, mocked rather than assembled.
-     *
-     * A real one runs a ping loop and a drift monitor for as long as it is in a group, and
-     * `advanceUntilIdle()` — which every test in this package relies on — never returns while
-     * something is scheduled for ever. What these tests are about is which *intent* a user action
-     * produces, and a recording double states that directly; the controller's own behaviour is
-     * pinned next door in `SyncPlayControllerTest`.
+     * The coordinator, mocked rather than assembled: a real one runs a ping loop and drift
+     * monitor forever, which would hang every test's `advanceUntilIdle()`. Its own behaviour is
+     * pinned in `SyncPlayControllerTest`.
      */
     protected val syncPlayController =
         mockk<SyncPlayController>(relaxed = true) {
@@ -116,11 +101,8 @@ internal abstract class PlayerViewModelFixture {
         }
 
     /**
-     * The server-visible session of a downloaded item in a group.
-     *
-     * Relaxed and recording: what the ViewModel owes it is *when* it is reconciled — a session
-     * opening, and a group being joined or left — and the reconciliation itself is pinned in
-     * `SyncPlayLocalSessionTest` against a real resolver double.
+     * The server-visible session of a downloaded item in a group; reconciliation itself is
+     * pinned in `SyncPlayLocalSessionTest`.
      */
     protected val syncPlayLocalSession = mockk<SyncPlayLocalSession>(relaxed = true)
 

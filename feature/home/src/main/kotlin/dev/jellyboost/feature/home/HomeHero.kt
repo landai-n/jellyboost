@@ -52,29 +52,8 @@ import dev.jellyboost.core.ui.theme.heroHalo
 import dev.jellyboost.core.ui.R as CoreUiR
 
 /**
- * The home screen's immersive *Continue watching* banner: the first resume item's artwork running
- * full-bleed behind the status bar, with the copy and the two actions drawn on it.
- *
- * The hero **is** the first card of the *Continue watching* row rather than an extra row above it —
- * `HomeRows` hands it `state.resume.first()` and draws the row from `drop(1)` — so the screen shows
- * the same items it always did, with the first one promoted instead of duplicated.
- *
- * ### Two shapes
- * [wide] picks between them, and `HomeRows` decides what "wide" means (see `isWideHome`). Compact is
- * the phone/portrait banner: copy in the bottom-left, the two pills sharing the width. Wide is the
- * landscape/tablet one: the copy block sits in the *left* third at [WideCopyTopPadding], over an
- * extra horizontal scrim, with room for the item's overview and content-width buttons.
- *
- * ### What this composable deliberately does not draw
- * The mock's search and avatar buttons in the top-right corner are the app frame's, not the hero's:
- * on a compact layout `AppActionCluster` floats its glass circles exactly there, over this banner
- * (see `AppScaffold`'s KDoc). The copy therefore always stays bottom-left or left, and nothing here
- * competes for that corner.
- *
- * @param height the banner's own height — not derived here, because `HomeRows` measures the viewport
- *   once for the whole screen and the same `BoxWithConstraints` decides [wide].
- * @param onResume the primary pill: play this item where it was left off.
- * @param onDetails the ghost pill: open the item's detail page, exactly as tapping its card does.
+ * The copy stays bottom-left (compact) or left (wide): `AppActionCluster` floats its glass circles
+ * over this banner's top-right corner, so nothing here may compete for it.
  */
 @Composable
 internal fun HomeHero(
@@ -85,14 +64,10 @@ internal fun HomeHero(
     onDetails: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // The user's font scale is read once, here, and handed to whichever lockup is drawn: how much
-    // copy fits in a fixed-height banner is a question about text, and every threshold below
-    // answers it in dp (see "how much room a lockup needs" at the bottom of this file).
     val fontScale = LocalDensity.current.fontScale
 
-    // Clipped so nothing the banner draws can ever land on the rows below it: the copy blocks are
-    // height-bounded (each in its own way, see their KDocs), and this is the backstop that turns
-    // that arithmetic into a guarantee at layouts the bounds were not computed for.
+    // `clipToBounds` is the backstop: nothing the banner draws may land on the rows below it, at
+    // layouts the copy blocks' height bounds were not computed for.
     Box(modifier = modifier.fillMaxWidth().height(height).clipToBounds()) {
         HeroBackdrop(item = item, wide = wide)
 
@@ -120,14 +95,7 @@ internal fun HomeHero(
     }
 }
 
-/**
- * The artwork and everything laid over it: the app's accent halo, the vertical scrim every
- * backdrop in the app carries, and — on a wide layout, where the copy sits beside the picture rather
- * than under it — a horizontal scrim that darkens the left third.
- *
- * `backdrop → thumb → primary` is `ThumbCard`'s fallback order, so the hero shows the same picture
- * the card it replaces would have shown when the server has no backdrop for the item.
- */
+/** `backdrop → thumb → primary` is `ThumbCard`'s fallback order — keep them in step. */
 @Composable
 private fun HeroBackdrop(
     item: JellyfinItem,
@@ -148,17 +116,9 @@ private fun HeroBackdrop(
 }
 
 /**
- * Bottom-left lockup: eyebrow, 34sp title, metadata, and two pills that split the width.
- *
- * Anchored to the banner's *bottom* edge, so taller copy grows up over the artwork rather than
- * down into the rows — but "up" is only available while the banner is taller than the copy. On a
- * phone in landscape the 0.6-viewport cap squeezes the banner to ~216dp while the full lockup
- * wants ~230dp, and the overflow (buttons drawn through the metadata line, or past the banner's
- * bottom edge into the first content row) is the same failure mode the wide shape already guards
- * against. Below [compactHeroShowsSecondary]'s threshold the lockup therefore drops its two
- * secondary lines — the eyebrow and the metadata — and keeps what the banner is for: the title and
- * the actions.
- * Below [compactHeroTitleMaxLines]'s, the title gives up its second line too.
+ * Anchored to the banner's bottom edge so taller copy grows up over the artwork. When even that is
+ * not enough it sheds the eyebrow and metadata ([compactHeroShowsSecondary]), then the title's
+ * second line ([compactHeroTitleMaxLines]) — never the actions.
  */
 @Composable
 private fun CompactHeroCopy(
@@ -202,23 +162,9 @@ private fun CompactHeroCopy(
 }
 
 /**
- * Left-hand lockup for a landscape or tablet window: the same block plus the overview, capped at
- * [WideCopyMaxWidth] so a paragraph never spans a 1200dp tablet, with buttons at their own width.
- *
- * ### Why this block is height-bounded
- * The banner is a *fixed-height* box and the rows below it come to rest [HeroRailOverlap] inside its
- * bottom edge, so copy that grows past that edge does not push anything — it draws straight over the
- * next section. A synopsis is exactly the block that can grow (an item with an overview is two to
- * three lines taller than one without), which is how the offline hero came to overlap the row under
- * it. So the column takes the whole banner, insets itself by [wideHeroCopyTopInset] above and the
- * rail below, and the overview alone is weighted: it is handed whatever is left once the eyebrow,
- * title, metadata and buttons have measured, and ellipsizes into it. The buttons therefore stay
- * inside the banner whatever the copy says, and `clipToBounds` makes that a guarantee rather than an
- * arithmetic argument.
- *
- * The compact lockup handles the same squeeze differently: it is anchored to the *bottom* edge, so
- * taller copy grows up over the artwork rather than down into the rows — and when the banner is too
- * short even for that, it sheds its secondary lines instead ([CompactHeroCopy]).
+ * Height-bounded on purpose: the banner is fixed-height and copy that grows past its bottom edge
+ * draws straight over the next section (an overview is two to three lines taller than none). The
+ * overview is the one weighted child, so it absorbs the squeeze and the buttons stay inside.
  */
 @Composable
 private fun WideHeroCopy(
@@ -255,9 +201,8 @@ private fun WideHeroCopy(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = OVERVIEW_MAX_LINES,
                 overflow = TextOverflow.Ellipsis,
-                // `fill = false`: the synopsis may take what is left, never demand it — a short
-                // overview keeps its own height and the buttons stay under it instead of being
-                // pushed to the bottom of the banner.
+                // `fill = false`: a short overview keeps its own height instead of pushing the
+                // buttons to the bottom of the banner.
                 modifier = Modifier.weight(1f, fill = false),
             )
         }
@@ -272,7 +217,6 @@ private fun WideHeroCopy(
     }
 }
 
-/** `● CONTINUE WATCHING` — the row's own title, reused as the banner's caption. */
 @Composable
 private fun HeroEyebrow(modifier: Modifier = Modifier) {
     Row(
@@ -296,12 +240,7 @@ private fun HeroEyebrow(modifier: Modifier = Modifier) {
     }
 }
 
-/**
- * The series a resume episode belongs to, or the item's own name — `JellyfinItem.displayTitle`.
- *
- * @param maxLines normally [TITLE_MAX_LINES]; one on a banner too short for two at the user's font
- *   scale (see [compactHeroTitleMaxLines]). The full title is spoken whatever is drawn.
- */
+/** The full title is spoken whatever [maxLines] draws. */
 @Composable
 private fun HeroTitle(
     item: JellyfinItem,
@@ -321,17 +260,8 @@ private fun HeroTitle(
 }
 
 /**
- * `S1:E10 · TV-MA · 22 min left` — what is left of the item, in the shape given to each kind of
- * fact: plain muted text, the outlined certificate badge, plain muted text again.
- *
- * A `FlowRow` because a long episode label plus a certificate plus the time left does not fit on one
- * line of a 360dp phone, and a clipped metadata line reads as a bug.
- *
- * To a screen reader it is **one** node, not three: read separately the line was "S1:E10", then
- * "TV-MA" — a bare certificate with nothing saying what it certifies — then "22 min left", three
- * stops before the buttons the banner exists for. Merged,
- * it is one sentence, and the certificate is qualified in words the way the badge's outline
- * qualifies it visually.
+ * Merged into one spoken sentence: read separately, the bare certificate has nothing saying what it
+ * certifies, and the reader takes three stops before the buttons the banner exists for.
  */
 @Composable
 private fun HeroMeta(
@@ -345,9 +275,8 @@ private fun HeroMeta(
     val certificate = item.officialRating
     val ratedText = certificate?.let { stringResource(R.string.home_hero_rated, it) }
     val remainingText = remaining?.let { pluralStringResource(R.plurals.home_minutes_left, it, it) }
-    // `describeParts` rather than a plain join: this line is one of three assemblers that need the
-    // blank-trim — without it, a certificate the server returns as `""` would be announced as
-    // "Rated , 22 minutes left".
+    // `describeParts`, not a join: the server can return a certificate as `""`, which a join would
+    // announce as "Rated , 22 minutes left".
     val description = describeParts(episodeLabel, ratedText, remainingText)
 
     FlowRow(
@@ -382,14 +311,7 @@ private fun HeroMetaText(
     )
 }
 
-/**
- * The wide banner's bottom fade.
- *
- * The rows below the hero come to rest [HeroRailOverlap] *inside* it (see `HomeRows`), which is the
- * mocks' `margin-top: -48px` rail. This gradient is what makes that land softly: by the height the
- * first row starts at, the artwork has already dissolved into the app background, so the row reads
- * as rising into the banner rather than as a card dropped on a picture.
- */
+/** What makes [HeroRailOverlap] safe: the artwork has dissolved into the background by then. */
 @Composable
 private fun HeroRailFade(modifier: Modifier = Modifier) {
     val background = MaterialTheme.colorScheme.background
@@ -397,19 +319,13 @@ private fun HeroRailFade(modifier: Modifier = Modifier) {
     Box(modifier = modifier.fillMaxWidth().height(RailFadeHeight).background(fade))
 }
 
-/** *Resume* once there is a position to resume from, *Play* otherwise. */
 @Composable
 private fun resumeLabel(item: JellyfinItem): String =
     stringResource(if (item.userData.isResumable) R.string.home_hero_resume else CoreUiR.string.action_play)
 
 /**
- * The mocks' landscape hero scrim: near-opaque background at the leading edge, gone by 70% across.
- *
- * Laid over `JellyfinGradients.BackdropScrim` rather than instead of it — the vertical scrim keeps
- * the banner's bottom edge blending into the page, this one buys the left-hand copy its contrast on
- * a picture that is now beside the text instead of behind it. Local to the home screen because it is
- * the only layout in the app that puts a title block *next* to a backdrop, and built here rather
- * than in `JellyfinGradients` because it is a function of the theme's background colour.
+ * Laid over `JellyfinGradients.BackdropScrim`, not instead of it; local to this file because it is a
+ * function of the theme's background colour.
  */
 @Composable
 private fun wideHeroScrim(): Brush {
@@ -434,101 +350,50 @@ private const val WIDE_SCRIM_MID_ALPHA = 0.72f
 
 private const val WIDE_SCRIM_END_STOP = 0.70f
 
-/** Gutter of the compact banner's copy — the mocks' 20dp hero padding. */
 private val CompactCopyPadding = 20.dp
 
-// ---- how much room a lockup needs, and how that changes with the user's font scale -------------
-//
-// Every threshold below is calibrated in dp against a device at font scale 1.0. The banner is a
-// fixed-height box while the copy inside it is `sp`; comparing the two directly, as if only one of
-// them existed, goes silently wrong for anyone who has turned text up. At 1.5–2.0× the compact
-// lockup would keep its eyebrow and metadata line while no longer fitting, and the wide one would
-// draw its buttons straight through `clipToBounds`.
-//
-// Each lockup is therefore modelled as two numbers: the dp that never move (paddings, the gaps
-// between blocks) and the part that is *text*, which is what `fontScale` stretches. The pill
-// buttons count as text — their height is a floor, not a cap, so a label taller than the capsule
-// grows it. Only the growth is applied, so every threshold is unchanged to the pixel at font
-// scale 1.0.
+// Every threshold below is calibrated in dp at font scale 1.0. The banner is fixed-height dp while
+// the copy is `sp`, so each lockup is modelled as fixed dp (paddings, gaps) plus the part that is
+// *text* and stretches with `fontScale`. Pill buttons count as text: their height is a floor, not a
+// cap. Only the growth is applied, so nothing moves at scale 1.0.
 
-/** How much taller than its calibrated size text is at [fontScale]; never negative. */
 internal fun textGrowth(fontScale: Float): Float = (fontScale - 1f).coerceAtLeast(0f)
 
-/**
- * The text in the compact lockup: a two-line 34sp title (38sp of line height each), the eyebrow,
- * the metadata line and the 48dp button frame.
- */
+/** Two-line 34sp title, eyebrow, metadata line, 48dp button frame. */
 internal val CompactLockupText = 155.dp
 
-/** The same, once the eyebrow and the metadata line have been shed — title plus buttons. */
+/** The same once the eyebrow and metadata line are shed. */
 private val CompactCondensedLockupText = 124.dp
 
-/**
- * The text in the wide lockup: a two-line 44sp title (48sp of line height each), the eyebrow, the
- * metadata line and the button frame. The overview is not in here — it is the one weighted child,
- * and it gives up its room before anything else does ([WideHeroCopy]).
- */
+/** Two-line 44sp title, eyebrow, metadata line, button frame; the weighted overview is excluded. */
 internal val WideLockupText = 175.dp
 
-/** The same, condensed to the title and the buttons. */
 private val WideCondensedLockupText = 144.dp
 
 /**
- * Whether a [heroHeight]-tall compact banner has room for the lockup's eyebrow and metadata lines.
- *
- * The full lockup's natural height is roughly 230dp — the two 20dp paddings, a two-line 34sp
- * title, the eyebrow, the metadata line, the 48dp button frame and three 12dp gaps — so a banner
- * under [CompactSecondaryMinHeight] cannot hold it: a phone in landscape (~360dp of viewport, so a
- * 216dp banner after [heroHeight]'s cap) is the everyday case. Without the two secondary lines the
- * lockup needs ~176dp and fits. The threshold carries a little slack over the 230dp so a banner
- * that would fit only at exactly font scale 1.0 does not thrash at the boundary.
- *
- * [fontScale] moves the threshold by exactly what the lockup's *text* grew by, so the calibrated
- * 260dp is what a default-scale device still sees, and a 2.0× device — whose lockup really is
- * ~155dp taller — sheds the two lines rather than drawing them over the title.
- *
- * A plain function of the height so the breakpoint is unit-testable without a device, like
- * [heroHeight] and [isWideHome].
+ * The full lockup is ~230dp against a landscape phone's ~216dp banner; without the two secondary
+ * lines it needs ~176dp. The threshold carries slack over 230dp so the boundary does not thrash.
  */
 internal fun compactHeroShowsSecondary(
     heroHeight: Dp,
     fontScale: Float = 1f,
 ): Boolean = heroHeight >= CompactSecondaryMinHeight + CompactLockupText * textGrowth(fontScale)
 
-/** See [compactHeroShowsSecondary]. */
 private val CompactSecondaryMinHeight = 260.dp
 
 /**
- * Whether the wide banner's copy band has room for the same two secondary lines.
- *
- * The wide lockup is inset from the top and bounded below by the rail the rows overlap into, with
- * the overview as the only elastic child: once the overview has given up all of its room, the
- * eyebrow, title, metadata and buttons would overflow the band and `clipToBounds` would cut the
- * buttons off. Shedding the same two lines the compact shape sheds is what keeps the *actions*
- * inside the banner at large font scales.
- *
- * [WideSecondaryMinBand] is the full lockup at font scale 1.0: three 12dp gaps over the text in
- * [WideLockupText]. The mocks' 400dp banner has a 248dp band and the shortest banner the height cap
- * produces has 218dp, so at default scale nothing sheds — this is a large-font path only.
+ * A large-font path only: nothing sheds at default scale. Once the overview has given up all its
+ * room, shedding these two lines is what keeps the buttons from being cut by `clipToBounds`.
  */
 internal fun wideHeroShowsSecondary(
     heroHeight: Dp,
     fontScale: Float = 1f,
 ): Boolean = wideHeroCopyHeight(heroHeight) >= WideSecondaryMinBand + WideLockupText * textGrowth(fontScale)
 
-/** See [wideHeroShowsSecondary]: the three inter-block gaps plus [WideLockupText]. */
+/** The three inter-block gaps plus [WideLockupText]. */
 private val WideSecondaryMinBand = 36.dp + WideLockupText
 
-/**
- * How many lines the compact banner's title may take.
- *
- * The last resort, below shedding: when even the condensed lockup — title plus buttons, the two
- * things the banner exists for — cannot fit at this font scale, the title gives up its second line
- * rather than the buttons being clipped. A phone in landscape at 2.0× is the shape that gets here.
- *
- * [CompactCondensedMinHeight] is that lockup at font scale 1.0: two 20dp paddings, one 12dp gap and
- * [CompactCondensedLockupText].
- */
+/** The last resort below shedding: the title loses its second line rather than the buttons clipping. */
 internal fun compactHeroTitleMaxLines(
     heroHeight: Dp,
     fontScale: Float = 1f,
@@ -539,10 +404,9 @@ internal fun compactHeroTitleMaxLines(
         1
     }
 
-/** See [compactHeroTitleMaxLines]. */
+/** Two 20dp paddings and one 12dp gap over [CompactCondensedLockupText]. */
 private val CompactCondensedMinHeight = 52.dp + CompactCondensedLockupText
 
-/** [compactHeroTitleMaxLines] for the wide shape, measured against the copy band. */
 internal fun wideHeroTitleMaxLines(
     heroHeight: Dp,
     fontScale: Float = 1f,
@@ -553,50 +417,37 @@ internal fun wideHeroTitleMaxLines(
         1
     }
 
-/** See [wideHeroTitleMaxLines]: one 12dp gap over [WideCondensedLockupText]. */
+/** One 12dp gap over [WideCondensedLockupText]. */
 private val WideCondensedMinBand = 12.dp + WideCondensedLockupText
 
-/**
- * Where the wide copy block starts on the 400dp banner it was drawn for, clear of the 64dp glass top
- * nav and the status bar above it. [wideHeroCopyTopInset] is what the layout actually uses.
- */
+/** Ceiling only; clears the 64dp glass top nav and the status bar on the 400dp banner. */
 private val WideCopyTopPadding = 104.dp
 
 /**
- * How far down a [heroHeight]-tall wide banner the copy block starts.
- *
- * [WideCopyTopPadding] as a flat literal is a quarter of the mocks' 400dp banner, but `heroHeight`
- * caps the banner at three fifths of a short window: at 600dp of viewport the banner is 360dp and
- * the same 104dp would spend nearly a third of it on empty space above copy that then has nowhere
- * to end but over the rows below. Scaling it keeps the nav clear (the nav does not shrink, but at
- * 360dp of banner 94dp still clears its 64dp plus a status bar) and gives the block back the room
- * it needs. The fraction is calibrated so the mocks' banner is unchanged: 400 × 0.26 = 104.
+ * Scaled rather than flat: on a short window the banner is capped at 360dp, where a fixed 104dp
+ * would spend a third of it on empty space and push the copy over the rows. 400 × 0.26 = 104, so
+ * the full-height banner is unchanged, and 94dp still clears the nav at 360dp.
  */
 internal fun wideHeroCopyTopInset(heroHeight: Dp): Dp =
     (heroHeight * WIDE_COPY_TOP_FRACTION).coerceAtMost(WideCopyTopPadding)
 
 /**
- * The vertical band the wide copy block has to itself: the banner minus the inset above it and the
- * rail the rows below overlap into ([HeroRailOverlap]).
- *
- * Not read by the layout — the column derives it from the same two insets — but it is the number
- * that decides whether the resume button clears the next section, so `HomeSizingTest` pins it.
+ * Not read by the layout, which derives it from the same two insets — but it decides whether the
+ * resume button clears the next section, so `HomeSizingTest` pins it.
  */
 internal fun wideHeroCopyHeight(heroHeight: Dp): Dp =
     (heroHeight - wideHeroCopyTopInset(heroHeight) - HeroRailOverlap).coerceAtLeast(0.dp)
 
 private const val WIDE_COPY_TOP_FRACTION = 0.26f
 
-/** Width cap of that block: about a third of a tablet, and never a full-width paragraph. */
 private val WideCopyMaxWidth = 420.dp
 
-/** How far the content rows overlap the wide banner — the mocks' negative rail margin. */
+/** How far the content rows overlap the wide banner. */
 internal val HeroRailOverlap = 48.dp
 
-/** Height of the fade that overlap lands in; deeper than the overlap so it is never a hard edge. */
+/** Deeper than [HeroRailOverlap], so the overlap never lands on a hard edge. */
 private val RailFadeHeight = 96.dp
 
-/** Diameter of the accent dot before the eyebrow, matching `MediaRow`'s section eyebrow. */
 private val EyebrowDotSize = 6.dp
 
 private val MetaGap = 10.dp

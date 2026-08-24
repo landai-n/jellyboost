@@ -10,14 +10,9 @@ import io.kotest.matchers.types.shouldNotBeSameInstanceAs
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for [DownloadGroupCache] — the memoisation over the finished half of the table.
- *
- * Two properties, and the second is the one that makes it safe. **Identity**: while the finished
- * half of the table is unchanged, the *same* `List<DownloadGroup>` comes back, which is what lets
- * every visible finished row skip recomposition through a transfer that re-emits several times a
- * second. **Exactness**: anything a row draws from — its title, its size, the metadata behind its
- * artwork and its resume position — invalidates the answer, because the groups hold the very
- * `DownloadItem`s the rows read.
+ * Two properties. **Identity**: an unchanged finished half returns the *same* list instance, which
+ * is what lets visible rows skip recomposition. **Exactness**: anything a row draws from — title,
+ * size, artwork metadata, resume position — invalidates the answer.
  */
 class DownloadGroupCacheTest {
     private val cache = DownloadGroupCache()
@@ -27,8 +22,7 @@ class DownloadGroupCacheTest {
         val items = listOf(finished("1"), finished("2"))
 
         val first = cache.groups(items)
-        // A fresh list of fresh-but-equal rows, which is exactly what Room hands the projection on
-        // every emission — nothing about it is the same instance as the last one.
+        // Fresh-but-equal rows, which is what Room hands the projection on every emission.
         val second = cache.groups(listOf(finished("1"), finished("2")))
 
         second shouldBeSameInstanceAs first
@@ -71,9 +65,8 @@ class DownloadGroupCacheTest {
 
     @Test
     fun `metadata arriving regroups, even though nothing about the grouping changed`() {
-        // The reason the cache compares whole rows rather than a key of ids and byte counts: the
-        // groups hold the items the rows draw *from*, so artwork that arrives with a metadata
-        // refresh (or a resume position written by another screen) would otherwise never show.
+        // Why whole rows are compared rather than a key of ids and byte counts: artwork arriving
+        // with a metadata refresh would otherwise never show.
         val withoutArtwork = finished("1")
         val first = cache.groups(listOf(withoutArtwork))
 

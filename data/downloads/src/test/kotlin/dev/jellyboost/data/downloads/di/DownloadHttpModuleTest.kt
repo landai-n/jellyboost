@@ -5,12 +5,9 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
 /**
- * Pins the one property of the download client a code review cannot see at a glance: its timeouts.
- *
- * `readTimeout(0)` is the wedge: a half-open TCP connection blocks the copy loop's `read` forever,
- * and the worker holds the process-wide drain lease (with a live foreground notification) until the
- * process dies. OkHttp's read timeout bounds the *silence between two bytes*, not the
- * call's total duration, so a bounded value costs a healthy hour-long transfer nothing.
+ * Pins the download client's timeouts. `readTimeout(0)` is the wedge: a half-open TCP connection
+ * blocks the copy loop's `read` forever, and the worker holds the process-wide drain lease until the
+ * process dies. OkHttp's read timeout bounds the *silence between two bytes*, not the call's duration.
  */
 class DownloadHttpModuleTest {
     @Test

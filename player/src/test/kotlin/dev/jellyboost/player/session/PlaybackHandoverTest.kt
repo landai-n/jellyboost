@@ -107,7 +107,6 @@ class PlaybackHandoverTest {
             val handover = PlaybackHandover()
             handover.claim(PlaybackKind.MUSIC) { transcript += "music stop report" }
 
-            // The video screen tearing down long after music took the player over.
             handover.release(PlaybackKind.VIDEO)
             handover.claim(PlaybackKind.VIDEO) { transcript += "video relinquished" }
 

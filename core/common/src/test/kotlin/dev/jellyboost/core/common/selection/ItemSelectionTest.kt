@@ -7,7 +7,6 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
-/** Unit tests for the shared batch-selection model (docs/features/batch-selection.md). */
 class ItemSelectionTest {
     @Test
     fun `an empty selection is not in selection mode`() {

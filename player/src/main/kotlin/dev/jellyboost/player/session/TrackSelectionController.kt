@@ -9,53 +9,27 @@ import dev.jellyboost.player.model.jellyfinIndexOfTrackId
 import timber.log.Timber
 
 /**
- * Maps Jellyfin stream indices onto ExoPlayer tracks.
+ * Maps Jellyfin stream indices onto ExoPlayer tracks. The schemes do not line up: Jellyfin numbers
+ * *all* streams of a file in one sequence, ExoPlayer numbers per type and only the streams it got.
  *
- * The two numbering schemes do not line up, and that mismatch is the classic source of "the
- * subtitle picker selects the wrong language" bugs:
+ * Three bridges: side-loaded subtitles carry an `external:<jellyfinIndex>` track id; side-loaded
+ * audio has no id (`MediaItem` cannot name an audio source's tracks) and is matched by merge-child
+ * position; embedded streams — a transcode's HLS renditions included — by position among embedded
+ * streams of the same type.
  *
- * - Jellyfin numbers **all** streams of a file in one sequence — video, audio, subtitles, external
- *   subtitle files — and its API parameters use those absolute indices.
- * - ExoPlayer sees one track group per stream it was actually given, numbered per type, and knows
- *   nothing about streams the server withheld.
- *
- * Three bridges close the gap:
- *
- * - **side-loaded subtitles** carry an `external:<jellyfinIndex>` track id, set by
- *   `ExoMediaSourceFactory` and read back through [jellyfinIndexOfTrackId];
- * - **side-loaded audio** — a downloaded item's per-language sidecar files — has no id to carry:
- *   `MediaItem` cannot name an audio source's tracks the way `SubtitleConfiguration` names a
- *   subtitle's. It is matched by **merge-child position** instead, the k-th external audio track of
- *   the source being merge child `k + 1` because `ExoPlayerHandle.prepare` builds them in exactly
- *   that order;
- * - **embedded streams** are matched by their position among the *embedded* streams of the same
- *   type, which is the order ExoPlayer exposes them in. A transcode's subtitles
- *   are in that third group too: they arrive as `#EXT-X-MEDIA` renditions of the transcoding
- *   master playlist, one per text stream, in Jellyfin stream order — the very order
- *   `PlaybackMediaSource.subtitleTracks` is in — and Media3 publishes them as ordinary text groups
- *   with a manifest id, so the same positional count finds them.
- *
- * The id the player hands back is not the id that went in — merging a side-loaded source prefixes
- * every format and group with the child's index — which is why the subtitle read goes through
- * [jellyfinIndexOfTrackId] and never compares strings here, and why the audio read has anything to
- * navigate by at all. Every branch depends on it: a prefix misread is not merely a missed match, it
- * also makes a side-loaded group indistinguishable from a container one and so shifts the
- * positional count for everything else.
+ * The id the player hands back is not the id that went in: merging prefixes every format and group
+ * with the child index. Never compare track-id strings here — a prefix misread also makes a
+ * side-loaded group look like a container one and shifts every positional count.
  */
 internal class TrackSelectionController(
     private val player: Player,
 ) {
     /**
-     * Returns the process-wide player's selection parameters to a clean slate for a new media item.
+     * `TrackSelectionParameters` belong to the [Player], which here is a singleton shared with
+     * `PlaybackService`: overrides and a disabled text renderer outlive the item that set them.
      *
-     * `TrackSelectionParameters` belong to the [Player], not to the item it is playing, and the
-     * player here is a singleton shared with `PlaybackService` — so an override left by the last
-     * item, or the disabled text renderer that "subtitles off" leaves behind, silently governs
-     * whatever is prepared next. One film watched without subtitles would keep every later one from
-     * ever showing any, and an audio override would name a track group the new stream does not have.
-     *
-     * Called from `PlayerHandle.prepare`, before the item is set. What *this* session wants is
-     * applied afterwards, once the player reports the tracks it actually got.
+     * Must be called before the new item is set; this session's own selection is applied after the
+     * player reports the tracks it actually got.
      */
     fun reset() {
         player.trackSelectionParameters =
@@ -68,24 +42,11 @@ internal class TrackSelectionController(
     }
 
     /**
-     * Selects the audio stream [jellyfinIndex].
+     * Side-loaded audio is matched by merge-child position: [ExoPlayerHandle.prepare] makes sidecar
+     * file `i` merge child `i + 1`, so the k-th external track's group id begins `"${k + 1}:"`.
+     * Container audio is matched positionally *after* excluding those sidecar groups.
      *
-     * Two kinds of track, and which one this is decides how it is found:
-     *
-     * - **side-loaded** (a downloaded item's audio sidecars): matched by *merge-child position*.
-     *   The source's external audio tracks are in the same ascending-index order the spec listed
-     *   the sidecar files in, and [ExoPlayerHandle.prepare] made file `i` merge child `i + 1`, so
-     *   the k-th external track is the group whose id begins `"${k + 1}:"`. There is no id to match
-     *   on the way subtitles have one — `MediaItem` cannot name an audio source's tracks.
-     * - **in the container** (everything streamed, and an original download): matched by position
-     *   among the *container's* audio groups. The sidecar groups share the list and are
-     *   excluded first by the same prefix; a group with no prefix, prefix 0, or a prefix past the
-     *   last sidecar is the primary source's.
-     *
-     * With no sidecars the exclusion is empty and this is a plain positional match.
-     *
-     * @return `false` when the requested audio stream is not in the current ExoPlayer track list,
-     *   meaning the caller has to ask the server for it instead.
+     * @return `false` when the stream is not in the current track list and the caller must re-resolve.
      */
     fun selectAudio(
         source: PlaybackMediaSource,
@@ -120,16 +81,9 @@ internal class TrackSelectionController(
     }
 
     /**
-     * Selects the subtitle stream [jellyfinIndex], or turns subtitles off when it is `null`.
-     *
-     * Side-loaded subtitles are found by track id, which is exact. Embedded ones — and a
-     * transcode's HLS renditions — fall back to positional matching; a subtitle the server burned
-     * into the video has neither and forces a re-resolve.
-     *
-     * "Off" disables the whole text renderer rather than merely clearing the override, and that is
-     * load-bearing on a transcode: every rendition is advertised `AUTOSELECT=YES` and one of them
-     * `DEFAULT=YES`, so a cleared selector picks one on its own. A `SubtitleConfiguration` never
-     * carries `SELECTION_FLAG_DEFAULT`, which is why side-loading made "off" look passive.
+     * `null` [jellyfinIndex] turns subtitles off — by disabling the whole text renderer, not merely
+     * clearing the override: on a transcode every rendition is `AUTOSELECT=YES` with one
+     * `DEFAULT=YES`, so a cleared selector picks one on its own.
      */
     @Suppress(
         // Mirrors `CastPlayerHandle.selectSubtitleTrack` deliberately — the two must pick the same track.
@@ -180,18 +134,9 @@ internal class TrackSelectionController(
         player.currentTracks.groups.filter { it.type == trackType }
 
     /**
-     * Which merge child published this track group, or `null` when nothing merged it.
-     *
-     * `MergingMediaPeriod.onPrepared` republishes each child's groups as
-     * `new TrackGroup(childIndex + ":" + trackGroup.id, …)` (Media3 1.9.0), so the **leading** run
-     * of digits before the first `:` is the child index. Only the leading one is read: a doubly
-     * merged group — the main source of a downloaded item that has audio sidecars *and* subtitles
-     * is merged once by `DefaultMediaSourceFactory` and again by `ExoPlayerHandle` — reads `0:0:1`
-     * and is child 0 of the outer merge, which is what matters here.
-     *
-     * A group whose own id merely starts with digits and a colon cannot be told apart from a merged
-     * one, and is not meant to be: unmerged, nothing else claims a child index, and merged, the
-     * prefix in front of it is the answer.
+     * `MergingMediaPeriod.onPrepared` republishes child groups as `childIndex + ":" + id`
+     * (Media3 1.9.0), so only the **leading** digit run counts: a doubly merged group reads `0:0:1`
+     * and is child 0 of the outer merge, which is the one that matters here.
      */
     private fun mergeChildIndex(id: String?): Int? {
         val separator = id?.indexOf(':') ?: return null

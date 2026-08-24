@@ -6,22 +6,13 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 
 /**
- * What a [JellyfinTextField] is called, in the two spellings a screen has for it.
+ * One type rather than a `label` composable plus a `labelText` string, which a caller could spell
+ * two different ways.
  *
- * The field takes these as one type rather than two independent parameters — a `label` composable
- * and a `labelText` string, which a caller could otherwise say twice by hand with nothing to check
- * it. A field given a caption and no [text] is exactly as unlabelled to a screen reader as a field
- * with no caption at all, and a field whose two spellings drift apart says one word and draws
- * another.
- *
- * @param text the field's name, as a *person* hears it. It becomes the field node's
- *   `contentDescription`, which is what an editable node uses as its name (its value stays the
- *   text it holds) — see [fieldNodeSemantics].
- * @param caption the same name as it is *drawn*, above the well, in the tracked-out eyebrow style.
- *   `null` for a field whose name is never drawn — a search box named by its placeholder, a
- *   dialog's single input. When it is drawn it is muted for the screen reader, so the caption and
- *   the field are not two stops saying the same word, the first of them spelled out letter by
- *   letter.
+ * @param text becomes the field node's `contentDescription` — an editable node's name, its value
+ *   staying the text it holds (see [fieldNodeSemantics]).
+ * @param caption the drawn spelling, muted for the screen reader so the caption and the field are
+ *   not two stops saying the same word, the first spelled out letter by letter.
  */
 @Immutable
 data class FieldLabel(
@@ -30,109 +21,64 @@ data class FieldLabel(
 ) {
     companion object {
         /**
-         * The form the mocks' labelled fields take: the name spoken in sentence case, drawn
-         * uppercased. `uppercase()` with no locale is `Locale.ROOT`'s, which is what a caption
-         * drawn from an already-localized resource wants.
+         * Spoken in sentence case, drawn uppercased. The locale-less `uppercase()` is `Locale.ROOT`'s,
+         * which is what a caption drawn from an already-localized resource wants.
          */
         fun eyebrow(text: String): FieldLabel = FieldLabel(text = text, caption = text.uppercase())
     }
 }
 
 /**
- * What the field is *doing*, as the three states a screen can put it in.
- *
- * This replaces four booleans-and-a-string that had to agree — `enabled`, `readOnly`, `isError`,
- * `errorMessage`. Two of those pairs were traps rather than combinations:
- *
- * - `isError = true` with no `errorMessage` is a field that announces "invalid" and nothing else,
- *   which is worse for a screen-reader user than saying nothing at all. [Error]
- *   carries its sentence, so there is no way to raise one without the other.
- * - `enabled = false` for an in-flight request destroys the node the user is standing on at the
- *   exact moment they pressed the button, and a screen reader dropped mid-form has nowhere to land.
- *   [InFlight] is `readOnly`: the field keeps its focus, its name and its value and
- *   refuses to be typed into. There is no disabled state, because no screen in this app wants one
- *   and its only use here was that mistake.
+ * Three states rather than `enabled`/`readOnly`/`isError`/`errorMessage`, two of whose combinations
+ * were traps: an error with no message announces "invalid" and nothing else, and `enabled = false`
+ * destroys the node a screen-reader user is standing on at the moment they press the button.
  */
 @Immutable
 sealed interface FieldState {
-    /** The ordinary state: the field takes keystrokes. */
     data object Editable : FieldState
 
-    /**
-     * A request is in flight over what the field holds.
-     *
-     * The screens guard the edit in their state holders as well — belt and braces, and the guard
-     * is the part a JVM test can hold still: an in-flight auth field stays enabled.
-     * `readOnly` says the same thing to the platform, so the IME does not offer a
-     * keyboard for a field whose contents cannot move.
-     */
+    /** `readOnly`, not disabled: the field keeps its focus, name and value and refuses keystrokes. */
     data object InFlight : FieldState
 
     /**
-     * Something is wrong with what the field holds, and [message] is what.
-     *
-     * The message draws nothing — the supporting text and the screens' own error blocks own the
-     * visuals — but it is attached to the field node as `error(…)` semantics, so TalkBack says
-     * *what* is wrong rather than only that something is. Pass the same sentence the screen shows.
+     * [message] draws nothing but is attached as `error(…)` semantics, so TalkBack says *what* is
+     * wrong. Pass the same sentence the screen shows.
      */
     data class Error(
         val message: String,
     ) : FieldState
 }
 
-/** `true` while the field refuses keystrokes but keeps its node — see [FieldState.InFlight]. */
 internal val FieldState.isReadOnly: Boolean get() = this == FieldState.InFlight
 
-/** `true` while the field draws its error border and colours its supporting text. */
 internal val FieldState.isError: Boolean get() = this is FieldState.Error
 
-/** The sentence for the node's `error(…)` semantics, or `null` when nothing is wrong. */
 internal val FieldState.errorMessage: String? get() = (this as? FieldState.Error)?.message
 
 /**
- * What the field *holds*, which is what decides both how it is masked and how it is spoken.
- *
- * Marking a node as holding a secret ([androidx.compose.ui.semantics.password]) and masking the
- * characters on screen (a [VisualTransformation]) are two different mechanisms, and they were two
- * independent parameters: a field could be masked without being announced as a password, or
- * announced as one while showing its characters. Both are wrong, and both were one keystroke away.
- * Here they are the same choice made once.
+ * Marking a node as a secret ([androidx.compose.ui.semantics.password]) and masking its characters
+ * (a [VisualTransformation]) are two mechanisms; as one choice a field can no longer be masked
+ * without being announced as a password, or announced as one while showing its characters.
  */
 @Immutable
 sealed interface FieldContent {
-    /**
-     * Ordinary text: never masked, never announced as a secret.
-     *
-     * @param autofill what the platform's autofill service should offer here — a username, an
-     *   email. `null` (the default) leaves the field out of autofill entirely, which is right for
-     *   a search box and wrong for a credential.
-     */
+    /** @param autofill `null` leaves the field out of autofill entirely — right for a search box. */
     data class Plain(
         val autofill: ContentType? = null,
     ) : FieldContent
 
     /**
-     * A secret. Always announced as one, and masked unless the caller's reveal toggle says
-     * otherwise.
-     *
-     * @param revealed the eye button's state. It shows the characters on *screen*; the node stays
-     *   marked as holding a password either way, so a screen reader keeps speaking it the way the
-     *   platform speaks passwords rather than reading a revealed value out loud.
+     * @param revealed shows the characters on *screen* only; the node stays marked as a password, so
+     *   a screen reader never reads a revealed value out loud.
      */
     data class Password(
         val revealed: Boolean = false,
     ) : FieldContent
 }
 
-/** `true` when the node must be marked as holding a secret. */
 internal val FieldContent.isSecret: Boolean get() = this is FieldContent.Password
 
-/**
- * What autofill is offered here.
- *
- * A [FieldContent.Password] is not asked: there is exactly one honest answer for a field that
- * announces itself as a password, and making it a parameter only allows the dishonest ones.
- */
+/** A password's answer is not a parameter: there is exactly one honest one. */
 internal val FieldContent.autofillContentType: ContentType?
     get() =
         when (this) {
@@ -140,7 +86,6 @@ internal val FieldContent.autofillContentType: ContentType?
             is FieldContent.Password -> ContentType.Password
         }
 
-/** How the characters are drawn — the half of "is this a secret" the eye can see. */
 internal val FieldContent.visualTransformation: VisualTransformation
     get() =
         when (this) {

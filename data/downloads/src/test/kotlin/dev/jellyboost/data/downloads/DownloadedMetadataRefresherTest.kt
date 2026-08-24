@@ -50,16 +50,11 @@ import java.time.ZoneOffset
 import java.util.UUID
 
 /**
- * Unit tests for [DownloadedMetadataRefresher].
- *
- * The class is an **ongoing** sync — a download's metadata is written once at enqueue time and would
- * otherwise never track the server's copy again, so a retitled film or new artwork stays wrong
- * offline forever — and its first pass on a device that upgraded across the lean-write bug also
- * happens to heal a whole table of gutted rows at once. Both readings want the same two things
- * pinned above all: that it fires at the moments nothing else would (app start online, and the
- * return of the connection), and that what it writes is what `DownloadEnqueuer` writes for a fresh
- * download — `source = DOWNLOAD`, parents included — **except** for `cachedAt`, which a bulk pass
- * must leave alone or every sync reshuffles the offline "recently downloaded" rows.
+ * The class is an **ongoing** sync — a download's metadata is written once at enqueue and would
+ * otherwise never track the server's copy again — and its first pass on a device that upgraded across
+ * the lean-write bug also heals a table of gutted rows. Both readings want the same two things pinned:
+ * that it fires at the moments nothing else would, and that what it writes is what `DownloadEnqueuer`
+ * writes for a fresh download **except** `cachedAt`, which a bulk pass must leave alone.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class DownloadedMetadataRefresherTest {
@@ -102,7 +97,7 @@ class DownloadedMetadataRefresherTest {
             runCurrent()
 
             // The state flow replays its current value, so the first collection *is* the app-start
-            // check — the same one-code-path shape UserDataSyncTrigger uses.
+            // check.
             coVerify(exactly = 1) { api.getFullItems(listOf(uuid(1))) }
         }
 
@@ -173,8 +168,7 @@ class DownloadedMetadataRefresherTest {
             state.value = ConnectionState.ONLINE
             runCurrent()
 
-            // Cheap enough to repeat, and the only way a pass that failed while the server was
-            // half-reachable ever gets a second chance.
+            // The only way a pass that failed while the server was half-reachable gets a second chance.
             coVerify(exactly = 2) { api.getFullItems(listOf(uuid(1))) }
         }
 
@@ -214,8 +208,7 @@ class DownloadedMetadataRefresherTest {
 
             refresher().refresh()
 
-            // The same bug gutted the parents, and they are what the offline "walk up to the show"
-            // path reads.
+            // The same bug gutted the parents, and they are what the offline walk-up-to-the-show reads.
             upserted.captured.map { it.id } shouldContainExactlyInAnyOrder listOf(uuid(2), uuid(10), uuid(11))
         }
 
@@ -229,9 +222,8 @@ class DownloadedMetadataRefresherTest {
 
             refresher().refresh()
 
-            // The music parents matter more than the video ones: an album and an artist are pure
-            // metadata with no file of their own, so nothing but this pass ever brings a re-tagged
-            // album or a renamed artist up to date on the device.
+            // An album and an artist are pure metadata with no file of their own, so nothing but this
+            // pass ever brings a re-tagged album or a renamed artist up to date on the device.
             upserted.captured.map { it.id } shouldContainExactlyInAnyOrder listOf(uuid(30), uuid(40), uuid(50))
         }
 
@@ -343,8 +335,8 @@ class DownloadedMetadataRefresherTest {
 
             refresher().refresh()
 
-            // The write already happened; a small optional file failing must not undo it, and the
-            // next connectivity edge tries the top-up again anyway.
+            // The write already happened; a small optional file failing must not undo it, and the next
+            // connectivity edge tries the top-up again anyway.
             coVerify(exactly = 1) { itemDao.upsert(any()) }
         }
 
@@ -379,8 +371,8 @@ class DownloadedMetadataRefresherTest {
     fun `an item the server no longer knows about leaves its local row alone`() =
         runTest {
             coEvery { downloadDao.allItemIds() } returns listOf(uuid(1), uuid(2))
-            // `getItems(ids = …)` simply omits ids it does not recognise, so a remotely deleted item
-            // is absent rather than an error — and deleting the download is not this class's call.
+            // `getItems(ids = …)` omits ids it does not recognise, so a remotely deleted item is absent
+            // rather than an error — and deleting the download is not this class's call.
             coEvery { api.getFullItems(listOf(uuid(1), uuid(2))) } returns AppResult.Success(listOf(movie()))
 
             refresher().refresh()
@@ -434,9 +426,8 @@ class DownloadedMetadataRefresherTest {
         }
 
     /**
-     * The two guards above tolerate everything a disk or a server can do, and must keep tolerating
-     * it — but not a cancellation, which is the scope shutting the refresher down rather than a
-     * failure to work around.
+     * The two guards above tolerate everything a disk or a server can do, but not a cancellation, which
+     * is the scope shutting the refresher down rather than a failure to work around.
      */
     @Test
     fun `a cancelled table read propagates instead of degrading to an empty list`() =
@@ -466,9 +457,8 @@ class DownloadedMetadataRefresherTest {
     }
 
     /**
-     * The refresher collects a never-completing `StateFlow`, so it is given `runTest`'s
-     * [TestScope.backgroundScope] — the application scope's stand-in, cancelled when the test ends
-     * instead of keeping the test coroutine alive forever.
+     * The refresher collects a never-completing `StateFlow`, so it is given [TestScope.backgroundScope]
+     * — the application scope's stand-in, cancelled when the test ends.
      */
     private fun TestScope.refresher() =
         DownloadedMetadataRefresher(

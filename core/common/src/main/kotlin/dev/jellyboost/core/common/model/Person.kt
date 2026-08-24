@@ -1,11 +1,6 @@
 package dev.jellyboost.core.common.model
 
-/**
- * One credited person on an item — an actor, a director, a writer …
- *
- * Only fetched on the detail path (the `PEOPLE` item field); list requests stay lean, so cards
- * never carry this.
- */
+/** Only fetched on the detail path (the `PEOPLE` item field); list requests stay lean, so cards never carry this. */
 data class Person(
     val id: String,
     val name: String,
@@ -16,10 +11,8 @@ data class Person(
 )
 
 /**
- * The credit kinds the detail screen distinguishes.
- *
- * Everything the Jellyfin server can return that v1 has no use for (composer, lyricist, the whole
- * music and comic-book set) collapses into [OTHER] rather than leaking an SDK enum into the UI.
+ * Everything the server can return that this app has no use for collapses into [OTHER] rather than leaking an
+ * SDK enum into the UI.
  */
 enum class PersonKind {
     ACTOR,

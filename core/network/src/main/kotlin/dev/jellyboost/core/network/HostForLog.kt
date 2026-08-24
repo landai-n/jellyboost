@@ -1,22 +1,12 @@
 package dev.jellyboost.core.network
 
 /**
- * The host part of [address], for a log line.
+ * The host part of [address], for a log line: discovery, reachability, sign-in and the SyncPlay socket all
+ * hold a user's server address, and their logs are the ones pasted into bug reports. Scheme and port are
+ * dropped — a host alone says which candidate this was, without spelling out a ready-to-use address.
  *
- * Discovery, reachability, sign-in and the SyncPlay socket are the paths that hold a user's server
- * address, and they are also the ones whose logs get pasted into a bug report. What a maintainer
- * needs from those lines is *which candidate this was*, and a host alone answers that; the scheme
- * says nothing and the port is the remaining half of a ready-to-use address. So the port and scheme
- * are dropped, consistent with logging the shape of a value elsewhere in this codebase rather than
- * the value itself.
- *
- * This is a log helper and nothing more — never route, connect or compare on its output. It accepts
- * anything a user might have typed (a bare hostname, `host:port`, a full URL, an IPv6 literal), so
- * it cannot be strict, and it answers `<none>` rather than throwing for input it cannot read.
- *
- * Public rather than module-internal: `:player`'s SyncPlay socket logs the websocket URL it is
- * opening, and a second copy of this in that module is exactly the kind of drift a shared helper
- * prevents.
+ * A log helper and nothing more: never route, connect or compare on its output. It accepts anything a user
+ * might type and answers `<none>` rather than throwing. Public so `:player`'s SyncPlay socket shares it.
  */
 fun hostForLog(address: String?): String {
     val trimmed = address?.trim().orEmpty()
@@ -37,5 +27,4 @@ fun hostForLog(address: String?): String {
     return host.ifBlank { NO_HOST }
 }
 
-/** What an unusable or absent address reads as, so a log line never says "null". */
 private const val NO_HOST = "<none>"

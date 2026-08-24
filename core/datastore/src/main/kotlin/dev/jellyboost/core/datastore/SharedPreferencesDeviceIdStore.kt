@@ -7,13 +7,8 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * [DeviceIdStore] backed by a small plain `SharedPreferences` file of its own
- * ([PreferenceKeys.DEVICE_IDENTITY_STORE_NAME]).
- *
- * Plain (not encrypted) because the device id is public by construction, and a separate file from
- * the settings DataStore because it must be readable synchronously on the very first access — see
- * [DeviceIdStore]. That first access is a single small-file read; every later one is served from
- * the in-memory `SharedPreferences` cache.
+ * Plain, not encrypted, because the device id is public by construction; a separate file from the settings
+ * DataStore because it must be readable synchronously on the very first access — see [DeviceIdStore].
  */
 @Singleton
 class SharedPreferencesDeviceIdStore
@@ -28,8 +23,8 @@ class SharedPreferencesDeviceIdStore
         override fun read(): String? = preferences.getString(PreferenceKeys.DEVICE_ID, null)
 
         override fun write(id: String) {
-            // commit(), not apply(): this runs exactly once per installation and losing the write
-            // to a crash would silently hand the server a different device on the next launch.
+            // commit(), not apply(): this runs once per installation, and losing the write to a crash would
+            // silently hand the server a different device on the next launch.
             preferences.edit().putString(PreferenceKeys.DEVICE_ID, id).commit()
         }
     }

@@ -8,12 +8,6 @@ import org.junit.jupiter.api.Test
 import java.io.IOException
 import java.security.GeneralSecurityException
 
-/**
- * Unit tests for [EncryptedPreferencesOpener] — which failures cost the user their session.
- *
- * The class exists so that this decision can be pinned without an Android Keystore; everything
- * around it in [EncryptedSecureCredentialStore] is Jetpack plumbing.
- */
 class EncryptedPreferencesOpenerTest {
     private val prefs = mockk<SharedPreferences>()
     private var deletes = 0
@@ -31,8 +25,8 @@ class EncryptedPreferencesOpenerTest {
 
     @Test
     fun `a store that cannot be decrypted is recreated, and the loss is recorded`() {
-        // A Keystore key the OS cleared, or a backup restored onto another device: nothing will
-        // ever read this file again, so recreating it beats crashing on every app start.
+        // A Keystore key the OS cleared, or a backup restored onto another device: nothing will ever read
+        // this file again, so recreating it beats crashing on every app start.
         val opener = opener(failures = ArrayDeque(listOf(GeneralSecurityException("bad key"))))
 
         opener.open() shouldBe prefs
@@ -43,8 +37,8 @@ class EncryptedPreferencesOpenerTest {
 
     @Test
     fun `a transient read failure never deletes the stored session`() {
-        // Treating an IOException exactly like a decryption failure would throw away a session
-        // that was perfectly intact just because a volume was busy or unmounted.
+        // Treating an IOException like a decryption failure would throw away a session that was intact,
+        // just because a volume was busy or unmounted.
         val opener = opener(failures = ArrayDeque(listOf(IOException("volume busy"))))
 
         shouldThrow<IOException> { opener.open() }
@@ -55,8 +49,7 @@ class EncryptedPreferencesOpenerTest {
 
     @Test
     fun `a recreation that fails in turn still reports the session as lost`() {
-        // The file is already gone by then; a caller that learned nothing would sign the user out
-        // in silence.
+        // The file is already gone by then; a caller that learned nothing would sign the user out in silence.
         val opener =
             opener(
                 failures =

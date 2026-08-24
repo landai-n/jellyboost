@@ -6,12 +6,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 
 /**
- * A [MusicPlayerPort] that records what it was told and emits what a test wants it to.
- *
- * The whole reason the port exists: everything below it is Media3, which cannot be constructed off
- * a device, while everything the controller does — the ordering of stop and start reports around a
- * transition, the shuffle and repeat vocabulary, the handover snapshot — is plain sequencing that
- * deserves a plain test.
+ * Records what it was told and emits what a test wants it to. Everything below the real port is
+ * Media3, which cannot be constructed off a device — this stands in so the controller's plain
+ * sequencing logic can still get a plain test.
  */
 internal class FakeMusicPlayerPort : MusicPlayerPort {
     private val _events =
@@ -22,7 +19,6 @@ internal class FakeMusicPlayerPort : MusicPlayerPort {
 
     override val events: Flow<MusicPlayerEvent> = _events
 
-    /** Every call, in order, as a readable transcript. */
     val calls = mutableListOf<String>()
 
     var queue: List<MusicQueueEntry> = emptyList()

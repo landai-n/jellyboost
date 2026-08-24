@@ -33,7 +33,6 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-/** Unit tests for [AlbumDetailViewModel]. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class AlbumDetailViewModelTest {
     private val dispatcher = StandardTestDispatcher()
@@ -204,8 +203,7 @@ class AlbumDetailViewModelTest {
             viewModel.downloadAlbum()
             advanceUntilIdle()
 
-            // `DownloadEnqueuer` is the one place that knows a music container expands into its
-            // tracks, in the album's own disc/track order, skipping what is already downloaded.
+            // `DownloadEnqueuer` is the one place that knows a container expands into its tracks.
             coVerify(exactly = 1) { downloads.enqueue(ALBUM_ID) }
             coVerify(exactly = 0) { downloads.enqueue("t1") }
         }
@@ -251,8 +249,8 @@ class AlbumDetailViewModelTest {
             val viewModel = viewModel()
             advanceUntilIdle()
 
-            // A finished track counts as one and a transferring one as its fraction, so the control
-            // reads "half the album" rather than the progress of whichever file is moving.
+            // A finished track counts 1, so this reads "half the album" rather than the progress of
+            // whichever file is moving.
             viewModel.uiState.value.albumDownloadState shouldBe DownloadState.NotDownloaded
 
             downloadStates.value =

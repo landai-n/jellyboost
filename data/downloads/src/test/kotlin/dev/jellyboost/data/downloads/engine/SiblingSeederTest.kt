@@ -23,13 +23,9 @@ import java.time.ZoneOffset
 import java.util.UUID
 
 /**
- * Unit tests for [SiblingSeeder] — what finished episodes of a show say the next one will weigh.
- *
- * Two questions, and the second is the one the shipped feature was missing: the size for *one* item
- * (what `DownloadEnqueuer` asks, and what `DownloadQueue` asks again when it starts a row), and the
- * pass over every row still waiting once a sibling lands. A season enqueued in one tap has no
- * finished sibling at enqueue time, so without the second question every episode after the first
- * keeps its "up to X" wording for the whole download.
+ * Two questions, and the second is the one the shipped feature was missing: the size for *one* item,
+ * and the pass over every row still waiting once a sibling lands. A season enqueued in one tap has no
+ * finished sibling at enqueue, so without the second every episode after the first keeps "up to X".
  */
 class SiblingSeederTest {
     private val downloadDao = mockk<DownloadDao>(relaxUnitFun = true)
@@ -164,8 +160,8 @@ class SiblingSeederTest {
 
             seeder().seedPendingSiblingsOf(finishedEpisode())
 
-            // The filtering is the query's — another show's rows, another quality's rows, the
-            // finished and the failed, and anything that already has a projection never come back.
+            // The filtering is the query's — another show's rows, another quality's, the finished and
+            // the failed, and anything that already has a projection.
             coVerify { downloadDao.unseededSiblings("Westworld", DownloadQuality.LOW) }
         }
 
@@ -219,7 +215,7 @@ class SiblingSeederTest {
     fun `a finished original download seeds nothing`() =
         runTest {
             // Its own size says nothing about what a transcode of the next episode will weigh, and
-            // the rows waiting at another quality are not its business either.
+            // rows waiting at another quality are not its business either.
             seeder().seedPendingSiblingsOf(
                 download(itemId = uuid(31), quality = DownloadQuality.ORIGINAL, seriesName = "Westworld"),
             )

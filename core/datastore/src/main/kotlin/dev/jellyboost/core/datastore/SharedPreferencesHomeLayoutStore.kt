@@ -8,16 +8,11 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * [HomeLayoutStore] backed by a plain `SharedPreferences` file of its own (`home_layout`).
+ * A file of its own rather than the settings DataStore, because this is a disposable server-derived cache:
+ * clearing it costs one request, and the user's actual settings stay free of values they never chose.
  *
- * A file of its own, and not the settings DataStore, because this is a disposable server-derived
- * cache: clearing it costs one request, and keeping it out of `app_preferences` keeps the user's
- * actual settings free of values the user never chose here.
- *
- * The layout is stored as a comma-separated list of enum *names* — a short, human-readable value
- * that survives reordering the enum. An entry that no longer decodes (an older build's name) is
- * dropped rather than failing the read; a layout that decodes to nothing is treated as absent, so
- * the caller falls back to the defaults.
+ * Stored as a comma-separated list of enum *names*, which survives reordering the enum. An entry that no
+ * longer decodes is dropped rather than failing the read; a layout that decodes to nothing reads as absent.
  */
 @Singleton
 class SharedPreferencesHomeLayoutStore
@@ -37,8 +32,7 @@ class SharedPreferencesHomeLayoutStore
                 ?.takeIf { it.isNotEmpty() }
 
         override fun write(sections: List<HomeSectionType>) {
-            // apply(), not commit(): the next load re-fetches anyway, so a write lost to a crash
-            // costs nothing and is not worth blocking the IO dispatcher for.
+            // apply(), not commit(): the next load re-fetches anyway, so a write lost to a crash costs nothing.
             preferences
                 .edit()
                 .putString(KEY_SECTIONS, sections.joinToString(SEPARATOR.toString()) { it.name })

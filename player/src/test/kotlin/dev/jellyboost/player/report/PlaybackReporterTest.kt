@@ -138,7 +138,7 @@ class PlaybackReporterTest {
     @Test
     fun `every progress report also writes the position locally`() =
         runTest {
-            // This is what makes resume identical online and offline.
+            // Makes resume identical online and offline.
             reporter().reportProgress(
                 PlayerFixtures.remoteSource(),
                 PlaybackSnapshot(positionMs = 90_000L, isPlaying = true),
@@ -159,7 +159,7 @@ class PlaybackReporterTest {
                 PlaybackSnapshot(positionMs = 90_000L, isPlaying = true),
             )
 
-            // An unreachable server must not cost the user their place in the film.
+            // An unreachable server must not cost the user their place.
             coVerify(exactly = 1) { userDataRepository.setPosition(any(), 900_000_000L) }
         }
 
@@ -178,8 +178,8 @@ class PlaybackReporterTest {
     @Test
     fun `an invalid snapshot's position reaches neither the server nor the local store`() =
         runTest {
-            // A cast player whose receiver was stopped from the television answers position zero for
-            // a session that is still alive; writing it would wipe the resume position everywhere.
+            // A cast receiver stopped from the television answers position zero for a session
+            // still alive; writing it would wipe the resume position everywhere.
             reporter().reportProgress(
                 PlayerFixtures.remoteSource(),
                 PlaybackSnapshot(positionMs = 0L, isPlaying = false, isValid = false),
@@ -220,7 +220,7 @@ class PlaybackReporterTest {
             )
 
             info.captured.positionTicks shouldBe PlayerFixtures.RUN_TIME_TICKS
-            // Through the repository, not a bare markPlayedItem: this also clears the local resume
+            // Through the repository, not a bare markPlayedItem: also clears the local resume
             // position and publishes on the user-data event bus.
             coVerify(exactly = 1) {
                 userDataRepository.setPlayed(PlayerFixtures.ITEM_ID.toString(), played = true)
@@ -258,9 +258,8 @@ class PlaybackReporterTest {
     @Test
     fun `an invalid final snapshot closes the session without touching the position`() =
         runTest {
-            // The receiver no longer held the item when the session ended: the stop still lands (and
-            // the encoder still dies), but positionless — the ticker's last valid write is the
-            // honest resume position.
+            // The receiver no longer held the item when the session ended: the stop still lands
+            // (and the encoder dies) but positionless — the ticker's last valid write stands.
             val info = slot<PlaybackStopInfo>()
             coEvery { api.reportPlaybackStopped(capture(info)) } just Runs
 
@@ -292,7 +291,7 @@ class PlaybackReporterTest {
     @Test
     fun `the detached stop report runs on the scope that outlives the screen`() =
         runTest {
-            // The whole point: viewModelScope is already cancelled when this is called.
+            // viewModelScope is already cancelled when this is called.
             val reporter = reporter()
 
             reporter.reportStopDetached(PlayerFixtures.remoteSource(), PlaybackSnapshot(positionMs = 1_000L))
@@ -333,8 +332,8 @@ class PlaybackReporterTest {
     @Test
     fun `a locally played download still records every position locally`() =
         runTest {
-            // This is the mechanism behind the offline definition of done: the rows it writes are
-            // the ones `UserDataSyncWorker` pushes when the network comes back.
+            // The rows this writes are the ones `UserDataSyncWorker` pushes when the network
+            // comes back.
             val reporter = reporter()
             val source = PlayerFixtures.localSource()
 
@@ -388,8 +387,7 @@ class PlaybackReporterTest {
     @Test
     fun `a stream that loses the network stops reporting rather than burning timeouts`() =
         runTest {
-            // Every skipped call is a connect timeout not spent, and a log line not written, per
-            // five-second tick. The position still lands in Room with `toBeSynced = true`.
+            // The position still lands in Room with `toBeSynced = true`.
             state.value = ConnectionState.OFFLINE_NO_NETWORK
 
             reporter().reportProgress(

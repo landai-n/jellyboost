@@ -38,17 +38,14 @@ import dev.jellyboost.core.ui.R
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 
-/** Diameter and stroke of the spinner a whole screen waits behind. */
 private val SpinnerSize = 36.dp
 
 private val SpinnerStroke = 3.dp
 
-/** Track behind the spinner's head — visible enough to read as a ring, faint enough to recede. */
 private val SpinnerTrack = Color.White.copy(alpha = 0.14f)
 
 private val StateGlyphSize = 36.dp
 
-/** Tint of a state view's glyph: present, but subordinate to the message under it. */
 private val StateGlyphTint = Color.White.copy(alpha = 0.45f)
 
 private val StateMessage =
@@ -57,7 +54,6 @@ private val StateMessage =
         lineHeight = 19.sp,
     )
 
-/** Widest a state message gets before it wraps — a full-width line of 13sp text is hard to scan. */
 private val StatePanelMaxWidth = 420.dp
 
 private val DashedPanelPadding = 28.dp
@@ -69,12 +65,8 @@ private val DashLength = 6.dp
 private val DashGap = 5.dp
 
 /**
- * Centred spinner shown while a screen loads its first page of data.
- *
- * It says so: a spinning ring is a picture of waiting, and a screen that replaces its content with
- * one and no label announces nothing at all — the previous screen's node vanishes and TalkBack
- * lands on an empty page. The label makes the spinner a stop with words, and the polite live
- * region announces it when it appears without interrupting whatever is being read.
+ * The spinner keeps its label and polite live region: an unlabelled one replaces the previous
+ * screen's node with nothing, and TalkBack lands on an empty page.
  */
 @Composable
 fun LoadingState(modifier: Modifier = Modifier) {
@@ -100,24 +92,12 @@ fun LoadingState(modifier: Modifier = Modifier) {
 }
 
 /**
- * Full-screen failure state with an optional retry.
- *
- * Callers pass a resolved sentence. Screens showing a domain failure get theirs from
- * `AppError.toUiText` (`error/AppErrorCopy.kt`), resolved at draw time — this composable stays
- * ignorant of the taxonomy so it can equally state a failure that has nothing to do with it.
- *
- * @param actionLabel what the button says. Defaults to "Retry", which is what [onRetry] means
- *   almost everywhere — but not everywhere: a screen whose only recovery is to leave (the player's
- *   error state closes the player) has to say so, because a control has to be named for what it
- *   does (WCAG 2.5.3). Ignored when [onRetry] is `null`, since
- *   there is no button to label.
- * @param dashedPanel draws the message inside a dashed outline. Off by default: a state view that
- *   fills a screen needs no container, but one that sits *inside* other content (an empty tab under
- *   a header, a failed section of a populated screen) does, or it reads as content that is missing
- *   rather than as a place where content will appear.
- * @param announce see [EmptyState]. `Assertive` is the right default *choice* for a failure that
- *   has just replaced a screen's content — but it stays opt-in, because a screen that draws its own
- *   announcement (search does) would otherwise say it twice.
+ * @param actionLabel defaults to "Retry"; a screen whose only recovery is to leave must say so,
+ *   since a control is named for what it does (WCAG 2.5.3).
+ * @param dashedPanel for a state view sitting *inside* other content, which otherwise reads as
+ *   missing content rather than as a place content will appear.
+ * @param announce see [EmptyState]; opt-in so a screen that draws its own announcement (search
+ *   does) does not say it twice.
  */
 @Composable
 fun ErrorState(
@@ -141,14 +121,9 @@ fun ErrorState(
 }
 
 /**
- * Full-screen "nothing here yet" state.
- *
- * @param announce makes the message a live region, so it is read out when it appears rather than
- *   only when someone swipes onto it. Opt-in and `null` by default: these views also appear on a
- *   first composition, where the screen reader is about to read the message anyway and an
- *   announcement would be a stutter. Pass it where the view *replaces* content the user was
- *   already in — a failed refresh, a filter that matched nothing. `Polite` waits its turn;
- *   `Assertive` interrupts and belongs to failures.
+ * @param announce `null` by default because these views also appear on a first composition, where
+ *   the reader is about to read the message anyway and announcing stutters. Pass it where the view
+ *   *replaces* content the user was already in.
  */
 @Composable
 fun EmptyState(
@@ -205,10 +180,8 @@ private fun MessageState(
                 style = StateMessage,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
-                // The live region goes on the message and not on the panel: the panel would drag
-                // the action button's label into the announcement, and "Could not reach the
-                // server. Retry" read as one sentence is a worse thing to hear than the two nodes
-                // it actually is.
+                // The live region belongs on the message, not the panel: the panel would drag the
+                // action button's label into the announcement as one sentence.
                 modifier =
                     Modifier
                         .padding(top = Dimens.SpaceMedium)
@@ -232,12 +205,7 @@ private fun MessageState(
     }
 }
 
-/**
- * The dashed outline of an empty container.
- *
- * Drawn rather than composed: Compose has no dashed `BorderStroke`, and `drawBehind` with a
- * `PathEffect` is both the shortest way to say it and the one that costs no extra layout node.
- */
+/** Drawn, not composed: Compose has no dashed `BorderStroke`. */
 private fun Modifier.dashedPanel(): Modifier =
     this.drawBehind {
         val stroke = Stroke(width = 1.dp.toPx(), pathEffect = dashEffect(DashLength.toPx(), DashGap.toPx()))

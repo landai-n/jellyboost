@@ -16,13 +16,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * The way back to hidden controls.
- *
- * The player hides its controls after four seconds and reveals them again on a tap. Touch
- * exploration consumes taps, so a bare `pointerInput` is not a way back for a TalkBack user: the
- * film plays on with no reachable transport at all. The fix is an `onClick` *action* on the gesture
- * surface, which is a thing a service can invoke rather than a gesture a service swallows — and it
- * is exactly the kind of modifier that a later refactor of a gesture layer deletes without noticing.
+ * The player hides its controls after four seconds and reveals them on tap. Touch exploration
+ * consumes taps, so a bare `pointerInput` gives a TalkBack user no way back — the fix is an
+ * `onClick` semantics action, exactly the kind of modifier a gesture-layer refactor deletes
+ * without noticing.
  */
 @RunWith(AndroidJUnit4::class)
 class PlayerGestureLayerA11yTest {

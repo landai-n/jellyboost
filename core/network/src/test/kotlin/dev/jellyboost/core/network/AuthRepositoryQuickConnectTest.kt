@@ -25,10 +25,6 @@ import java.io.IOException
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
-/**
- * Unit tests for the Quick Connect polling loop, run on virtual time so the 5-second interval
- * and the 5-minute cap can be asserted exactly.
- */
 @OptIn(ExperimentalCoroutinesApi::class)
 class AuthRepositoryQuickConnectTest {
     private val apiFacade = mockk<JellyfinApiFacade>()

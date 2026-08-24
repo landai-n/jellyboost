@@ -41,8 +41,8 @@ class ExoMediaSourceFactoryTest {
 
             override fun absoluteUrl(path: String) = "https://server$path"
 
-            // Trickplay is the scrubber's business, not this factory's; present so the fake still
-            // satisfies the interface.
+            // Trickplay is the scrubber's business, not this factory's; present only to satisfy
+            // the interface.
             override fun trickplayTileUrl(
                 itemId: UUID,
                 width: Int,
@@ -219,8 +219,7 @@ class ExoMediaSourceFactoryTest {
 
         spec.shouldNotBeNull()
         spec.uri shouldBe PlayerFixtures.LOCAL_MEDIA_URI
-        // Left unset: ExoPlayer sniffs a local container far more reliably than a guess from the
-        // filename the download pipeline copied off the server.
+        // Left unset: ExoPlayer sniffs a local container more reliably than a filename guess.
         spec.mimeType.shouldBeNull()
         spec.mediaId shouldBe PlayerFixtures.ITEM_ID.toString()
     }
@@ -268,8 +267,8 @@ class ExoMediaSourceFactoryTest {
             )
 
         spec.shouldNotBeNull()
-        // Element i becomes merge child i+1; the order is the whole of the mapping back to Jellyfin
-        // stream indices, so nothing between here and `ExoPlayerHandle` may re-sort it.
+        // Element i becomes merge child i+1; this order is the only mapping back to Jellyfin
+        // stream indices, so nothing downstream may re-sort it.
         spec.audioSidecars.map { it.streamIndex } shouldBe listOf(4, 5)
         spec.audioSidecars.map { it.uri } shouldBe
             listOf("file:///downloads/Arrival/audio.4.fra.m4a", "file:///downloads/Arrival/audio.5.eng.m4a")

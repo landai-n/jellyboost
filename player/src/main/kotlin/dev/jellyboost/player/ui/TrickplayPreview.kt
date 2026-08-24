@@ -21,18 +21,9 @@ import dev.jellyboost.player.model.TrickplayTiles
 import org.jellyfin.sdk.api.client.ApiClient
 
 /**
- * One scrubbing thumbnail, cropped out of the sprite sheet it lives on.
- *
- * Jellyfin serves trickplay as sheets of `columns × rows` thumbnails, so there is no URL for "the
- * frame at 23 minutes" — there is a URL for the sheet that contains it and a cell to cut out. This
- * draws the *whole* sheet at `columns × rows` preview-sized cells and slides it under a
- * preview-sized clipping window, which puts the wanted cell in view. Compare a bitmap transformation
- * (jellyfin-android's `SubsetTransformation`): the same picture reaches the screen, but the sheet
- * stays in Coil's cache as one entry that every neighbouring thumbnail hits, so dragging along the
- * seek bar decodes nothing until the drag crosses into the next sheet.
- *
- * The arithmetic that picks the cell is [TrickplayTiles.tileFor] and is unit-tested there; this
- * composable only turns a column and a row into an offset.
+ * Jellyfin serves trickplay as sheets of `columns × rows` thumbnails, so one cell is reached by drawing the
+ * whole sheet and sliding it under a clipping window. Deliberately not a bitmap transformation: the sheet then
+ * stays one cache entry every neighbouring thumbnail hits, so a drag decodes nothing until the next sheet.
  */
 @Composable
 internal fun TrickplayPreview(
@@ -43,21 +34,13 @@ internal fun TrickplayPreview(
 ) {
     val width = height * tiles.aspectRatio
     val context = LocalPlatformContext.current
-    // Remembered per sheet, not rebuilt per composition: the enclosing scrubber recomposes at
-    // pointer rate during a drag, and rebuilding the request — re-parsing the URL twice for the
-    // cache keys each time — is pure allocation churn on the one interaction where the frame
-    // budget is visibly tight. Keyed on the sheet URI because every cell of a sheet
-    // shares it; a drag only builds a new request when it crosses into the next sheet.
+    // Keyed on the sheet URI, which every cell of a sheet shares: the scrubber recomposes at pointer rate
+    // during a drag, and rebuilding the request re-parses the URL twice for the cache keys each time.
     val request =
         remember(context, thumbnail.uri) {
-            // The cache keys are set explicitly, token-stripped: `thumbnail.uri` carries the access
-            // token as a query parameter (the only URL in the app that does — trickplay is fetched
-            // by Coil, which cannot ride `JellyfinAuthInterceptor`'s header). Coil's default cache
-            // key is the request's data, token and all, which means re-logging in — a fresh token —
-            // silently orphans every tile this item had ever cached, and the fact that today's token
-            // never reaches disk rests on undocumented internals of how Coil derives a *disk* key
-            // from that default, not on a key this app controls. Stripping the token here is a
-            // no-op for a downloaded item's `file://` URIs, which never carried one.
+            // Cache keys must be set explicitly and token-stripped: Coil's default key is the request data,
+            // and `thumbnail.uri` carries the access token, so a fresh token would orphan every cached tile —
+            // and keeping the token off disk would rest on Coil internals rather than on a key we control.
             val cacheKey = thumbnail.uri.withoutAccessToken()
             ImageRequest
                 .Builder(context)
@@ -75,8 +58,6 @@ internal fun TrickplayPreview(
                 .background(Color.Black),
     ) {
         AsyncImage(
-            // Every cell of a sheet resolves to the same URL, so this is a cache hit for all but
-            // the first thumbnail of each sheet — no request, no decode, no flicker.
             model = request,
             contentDescription = null,
             contentScale = ContentScale.FillBounds,
@@ -88,13 +69,7 @@ internal fun TrickplayPreview(
     }
 }
 
-/**
- * [uri] with the trickplay access-token query parameter removed.
- *
- * A no-op for a URL with no query string at all (a downloaded item's `file://` tile) and for any
- * URL that never carried the token to begin with; the one caller that matters is the server-built
- * sheet URL `TrickplayResolver`/`SdkStreamUrlFactory` appends [ApiClient.QUERY_ACCESS_TOKEN] to.
- */
+/** Strips [ApiClient.QUERY_ACCESS_TOKEN]; a no-op for a downloaded item's `file://` tile, which never had one. */
 internal fun String.withoutAccessToken(): String {
     val queryStart = indexOf('?')
     if (queryStart < 0) return this
@@ -108,12 +83,7 @@ internal fun String.withoutAccessToken(): String {
     return if (kept.isEmpty()) base else "$base?${kept.joinToString("&")}"
 }
 
-/**
- * Preview height.
- *
- * Fixed in dp rather than derived from the window: the sheets are generated at a fixed pixel size
- * (320 px wide by default), and drawing them much larger on a tablet only magnifies the blur.
- */
+/** Fixed, not derived from the window: sheets are generated at 320 px wide, and drawing larger magnifies blur. */
 internal val TRICKPLAY_PREVIEW_HEIGHT = 84.dp
 
 private val PREVIEW_CORNER = 6.dp

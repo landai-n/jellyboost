@@ -58,17 +58,8 @@ import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
 
 /**
- * A music library's Albums / Artists / Playlists tabs.
- *
- * A pushed destination, styled like `LibraryGridScreen`: its own back/home header rather than
- * `:app`'s floating chrome, and `contentWindowInsets = WindowInsets(0)` because the header carries
- * the status-bar inset itself.
- *
- * @param viewModel passed in rather than resolved here so `:app` owns the `hiltViewModel()` call,
- *   as it does for every other pushed screen.
- * @param onAlbumClick a [dev.jellyboost.core.common.model.ItemType.MUSIC_ALBUM] card was tapped.
- * @param onArtistClick a [dev.jellyboost.core.common.model.ItemType.MUSIC_ARTIST] card was tapped.
- * @param onPlaylistClick a [dev.jellyboost.core.common.model.ItemType.PLAYLIST] card was tapped.
+ * `contentWindowInsets = WindowInsets(0)` because this screen's own header carries the status-bar
+ * inset, as on every pushed destination.
  */
 @Composable
 fun MusicLibraryScreen(
@@ -87,7 +78,6 @@ fun MusicLibraryScreen(
 
     Scaffold(modifier = modifier, contentWindowInsets = WindowInsets(0)) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
-            // Behind everything, anchored to the top of the window — see [MusicScreenGlow].
             MusicScreenGlow()
 
             Column(modifier = Modifier.fillMaxSize()) {
@@ -146,11 +136,7 @@ private fun MusicLibraryHeader(
     }
 }
 
-/**
- * A three-way segmented control, the same shape `:feature:downloads`' `DownloadsTabRow` draws
- * (rebuilt locally rather than shared across a `:feature` → `:feature` dependency neither module
- * has, matching that file's own precedent for reusing `:app`'s `GlassTopNav` shape).
- */
+/** Rebuilt from `DownloadsTabRow`'s shape: no `:feature` → `:feature` dependency exists to share it. */
 @Composable
 private fun MusicLibraryTabRow(
     selectedTab: MusicLibraryTab,
@@ -185,10 +171,8 @@ private fun MusicLibrarySegment(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // The app background, not `Color.Black`: the selected capsule is the same solid white pill
-    // `GlassBottomNav` and `DownloadsTabRow` draw, and both put the *page* colour on it rather than
-    // true black (`SegmentedSelectedContent`, `#101010`). Black on white was a half-step darker than
-    // every other selected control in the app.
+    // The app background `#101010`, not `Color.Black`: `GlassBottomNav` and `DownloadsTabRow` both
+    // put the page colour on the selected white pill.
     val contentColor =
         if (selected) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.onSurfaceVariant
     Box(
@@ -250,10 +234,6 @@ private fun PlaylistGrid(
     ) { item -> PosterCard(item = item, onClick = { onItemClick(item) }, width = Dp.Unspecified, showTitle = true) }
 }
 
-/**
- * The shape every tab's grid shares: first-page loading, first-page failure, empty, or loaded —
- * the same three-state split `LibraryGridContent` draws for the main library grid.
- */
 @Composable
 private fun MusicGrid(
     items: LazyPagingItems<JellyfinItem>,

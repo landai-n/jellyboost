@@ -10,16 +10,8 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for what `DownloadRows.kt` draws.
- *
- * Two things live here. The row-title rules: a row drawn under its series' own group header must
- * not repeat the series name the header already shows.
- *
- * The rest pin **which size a queue row shows, and how it is worded**. `statusLine` and
- * `expectedSizeText` are `@Composable`, so what is asserted here is the pair of values they branch
- * on: `DownloadItem.sizeCertainty` picks one of three strings (`"X"` / `"~X"` / `"up to X"`) and
- * `DownloadItem.displayTotalBytes` is the figure that goes in it. Every wording the screen can
- * produce is one of these tests.
+ * `statusLine` and `expectedSizeText` are `@Composable`, so what is asserted here is the pair they
+ * branch on: `sizeCertainty` picks the wording, `displayTotalBytes` is the figure in it.
  */
 class DownloadRowsTest {
     // ---- which size is shown (schema v6) ---------------------------------------------------------
@@ -36,7 +28,6 @@ class DownloadRowsTest {
         val item =
             film(bytesDownloaded = 100L, bytesTotal = 552L, projected = 301L, quality = DownloadQuality.LOW)
 
-        // The whole point of the feature: 552 MB was never going to be the answer.
         item.displayTotalBytes shouldBe 301L
     }
 
@@ -45,7 +36,7 @@ class DownloadRowsTest {
         val item =
             film(bytesDownloaded = 400L, bytesTotal = 552L, projected = 301L, quality = DownloadQuality.LOW)
 
-        // A denominator under the numerator would draw a bar past its own end.
+        // A denominator under the numerator draws a bar past its own end.
         item.displayTotalBytes shouldBe 400L
         item.progress shouldBe 1f
     }
@@ -63,7 +54,6 @@ class DownloadRowsTest {
         val item =
             film(bytesDownloaded = 150L, bytesTotal = 600L, projected = 300L, quality = DownloadQuality.LOW)
 
-        // 25 % against the ceiling, 50 % against what the file is actually going to be.
         item.progress shouldBe 0.5f
     }
 
@@ -80,8 +70,7 @@ class DownloadRowsTest {
     fun `a transcode the server will stream-copy also states its size plainly`() {
         val item = film(quality = DownloadQuality.HIGH, sizeIsExact = true)
 
-        // `allowVideoStreamCopy=true` matched: the output is the source's video plus one AAC track,
-        // which is arithmetic rather than a guess (`DownloadEnqueuer.remuxBytes`).
+        // `allowVideoStreamCopy=true` matched, so the size is arithmetic rather than a guess.
         item.sizeCertainty shouldBe SizeCertainty.EXACT
     }
 
@@ -89,7 +78,6 @@ class DownloadRowsTest {
     fun `a transcode with a projection hedges the figure rather than promising it`() {
         val item = film(quality = DownloadQuality.LOW, projected = 301L)
 
-        // "~301 MB": measured from the stream, and still moving.
         item.sizeCertainty shouldBe SizeCertainty.APPROXIMATE
     }
 
@@ -97,7 +85,6 @@ class DownloadRowsTest {
     fun `a transcode with nothing but its bound can only state a ceiling`() {
         val item = film(quality = DownloadQuality.LOW)
 
-        // Today's behaviour, unchanged, for the opening moments of every re-encode: "up to 552 MB".
         item.sizeCertainty shouldBe SizeCertainty.CEILING
     }
 
@@ -105,8 +92,7 @@ class DownloadRowsTest {
     fun `a projection on an exact row cannot downgrade it to an approximation`() {
         val item = film(quality = DownloadQuality.HIGH, sizeIsExact = true, projected = 301L)
 
-        // The queue does not project an exact row, but the precedence has to be stated somewhere:
-        // an arithmetic answer outranks a measured one.
+        // Precedence: an arithmetic answer outranks a measured one.
         item.sizeCertainty shouldBe SizeCertainty.EXACT
     }
 
@@ -142,10 +128,8 @@ class DownloadRowsTest {
 
     @Test
     fun `a projection clamped up to bytes already on disk leaves nothing remaining`() {
-        // displayTotalBytes clamps the projection into [bytesDownloaded, ceiling] (see its own doc),
-        // so a row where the projection undershot what has already landed reports zero remaining —
-        // the same clamp that stops the progress bar running past its own end also has to stop the
-        // ETA going negative.
+        // `displayTotalBytes` clamps into [bytesDownloaded, ceiling], which is what stops an
+        // undershooting projection producing a negative ETA.
         val item = film(bytesDownloaded = 400L, bytesTotal = 552L, projected = 301L, quality = DownloadQuality.LOW)
 
         item.etaSeconds(10L) shouldBe null
@@ -162,8 +146,7 @@ class DownloadRowsTest {
     fun `a division with a remainder rounds up, never short`() {
         val item = film(bytesDownloaded = 451L, bytesTotal = 552L) // 101 remaining
 
-        // 101 / 10 = 10.1 s, which must read as 11 s, not 10 s: an ETA that undershoots is the one
-        // shape of wrong a "time remaining" figure cannot afford.
+        // 101 / 10 = 10.1 s must read as 11 s: a "time remaining" figure must never undershoot.
         item.etaSeconds(10L) shouldBe 11L
     }
 
@@ -191,15 +174,14 @@ class DownloadRowsTest {
     @Test
     fun `a transcoded download offers no Pause, because pausing one throws the transfer away`() {
         // `/Videos/{id}/stream.mkv?static=false` ignores `Range`, so there is no resume to pause
-        // into: the next attempt restarts from zero. Cancel remains, and is honest about it.
+        // into: the next attempt restarts from zero.
         for (quality in listOf(DownloadQuality.LOW, DownloadQuality.MEDIUM, DownloadQuality.HIGH)) {
             film(quality = quality).isPausable shouldBe false
         }
     }
 
     // ---- which of Pause / Resume a queue row offers ----------------------------------------------
-    // The same two predicates decide the row's buttons and the queue tab's *Pause all* / *Resume
-    // all* targets, so a bulk action can never act on something its own row refuses to.
+    // The same predicates decide the row's buttons and *Pause all* / *Resume all*'s targets.
 
     @Test
     fun `a transferring original row is a pause target and not a resume target`() {
@@ -211,7 +193,6 @@ class DownloadRowsTest {
 
     @Test
     fun `a waiting original row is a pause target too`() {
-        // Pausing a queued row is a real operation: it takes the row out of the worker's way.
         film(quality = DownloadQuality.ORIGINAL, status = DownloadStatus.QUEUED).isPauseTarget shouldBe true
     }
 
@@ -226,21 +207,14 @@ class DownloadRowsTest {
             for (quality in listOf(DownloadQuality.ORIGINAL, DownloadQuality.LOW)) {
                 val row = film(quality = quality, status = status)
                 row.isResumeTarget shouldBe true
-                // Resume, never pause: a paused row has nothing left to pause.
                 row.isPauseTarget shouldBe false
             }
         }
     }
 
     // ---- where a tap on the row starts playback --------------------------------------------------
-    //
-    // A completed row is clickable to play (see `DownloadedRow`'s `onPlay`), which the screen
-    // wires as `onPlay(item.itemId, item.playbackStartTicks)`. There is no Compose click-simulation
-    // harness in this repo (no Robolectric / androidTest here — every other screen's click wiring is
-    // pinned the same way, at the pure function feeding the callback's arguments; see
-    // `:feature:detail`'s `ItemDetailViewModelTest`'s "what Play actually plays" block for the
-    // precedent this mirrors). What is pinned here is that function, `DownloadItem.playbackStartTicks`,
-    // which is the only thing that decides *where* the play the row triggers actually starts.
+    // No Compose click-simulation harness exists in this repo, so the row's wiring is pinned at the
+    // pure function feeding the callback's arguments.
 
     @Test
     fun `a row partway through resumes exactly where it left off`() {
@@ -251,9 +225,7 @@ class DownloadRowsTest {
 
     @Test
     fun `a fully watched row restarts from the beginning, not its old position`() {
-        // Mutation check: if `playbackStartTicks` used `playbackPositionTicks > 0L` alone (dropping
-        // the `!played` half of `isResumable`), this would wrongly resume a finished film instead of
-        // restarting it.
+        // Mutation check: dropping the `!played` half of `isResumable` resumes a finished film.
         val item = film(playbackPositionTicks = 36_000_000_000L, played = true)
 
         item.playbackStartTicks shouldBe 0L
@@ -268,8 +240,7 @@ class DownloadRowsTest {
 
     @Test
     fun `a row whose cached item was wiped still plays, from the beginning`() {
-        // The cache row and the item row are written together at enqueue time (DownloadItem's own
-        // class doc), but a wiped cache must degrade to "plays from zero", not to a crash.
+        // A wiped cache must degrade to "plays from zero", never to a crash.
         val item = film(playbackPositionTicks = 36_000_000_000L, played = false).copy(item = null)
 
         item.playbackStartTicks shouldBe 0L
@@ -310,15 +281,15 @@ class DownloadRowsTest {
 
     @Test
     fun `the percentage rounds rather than truncating`() {
-        // 0.455 is 45.5%, which is nearer 46 than 45 — a truncating cast would say 45 all the way
-        // to 46%, so a row would sit on the same number for twice as long as any other.
+        // 0.455 is 45.5 %: a truncating cast says 45 all the way to 46 %, so the row sits on one
+        // number for twice as long as any other.
         percentOf(0.455f) shouldBe 46
     }
 
     @Test
     fun `a fraction past its own total is clamped, never announced above a hundred`() {
-        // Reachable: the ratcheted fraction is computed against a *projected* total, and a
-        // projection that comes in low leaves bytes-on-disk over it for a frame.
+        // Reachable: the ratcheted fraction runs against a *projected* total, and a low projection
+        // leaves bytes-on-disk over it for a frame.
         percentOf(1.4f) shouldBe 100
         percentOf(-0.2f) shouldBe 0
     }

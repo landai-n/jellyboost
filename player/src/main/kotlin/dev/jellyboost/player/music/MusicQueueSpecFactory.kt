@@ -7,16 +7,8 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Turns a resolved track into the plain description the player is handed.
- *
- * Pure, and it produces a [MusicQueueEntry] rather than a Media3 `MediaItem` — the same split
- * `PlaybackMediaItemSpec` and `session/MediaItems.kt` already make on the video side. The Android
- * types are confined to one conversion inside [ExoMusicPlayerAdapter], which is what lets the
- * queue's metadata be asserted in a plain JVM unit test instead of on a device.
- *
- * The metadata is not decoration: `MediaItem.mediaMetadata` is where the media notification and
- * the lock screen get their title, artist and artwork, so this class is the whole of "the
- * notification shows the right thing".
+ * The metadata here becomes `MediaItem.mediaMetadata`, which is where the media notification and the
+ * lock screen read their title, artist and artwork.
  */
 @Singleton
 internal class MusicQueueSpecFactory
@@ -28,14 +20,13 @@ internal class MusicQueueSpecFactory
         ): MusicQueueEntry =
             MusicQueueEntry(
                 itemId = stream.itemId,
-                // The item id, so a media-item transition names the track the reports are keyed
-                // on without an index lookup — the timeline is the queue, but a queue can be
-                // reordered underneath a transition that is already in flight.
+                // The item id, not a queue index: a queue can be reordered underneath a transition
+                // that is already in flight.
                 mediaId = item.id,
                 uri = stream.uri,
                 title = item.name,
-                // Every credited performer, which is what a track's card already shows; the album
-                // artist alone would drop the featured names a listener is looking for.
+                // Every credited performer, matching the track card; the album artist alone would
+                // drop featured names.
                 artist = item.artists.joinToString(", ").ifEmpty { item.albumArtist },
                 albumTitle = item.album,
                 artworkUri = item.primaryImageUrl,
@@ -48,12 +39,7 @@ internal class MusicQueueSpecFactory
             )
     }
 
-/**
- * One queue entry: what to play, what to draw for it, and what to report it under.
- *
- * Deliberately flat and free of Android and SDK types — it crosses from the pure resolve/spec side
- * into the adapter, and it is what the controller's unit tests build by hand.
- */
+/** Deliberately free of Android and SDK types: the controller's unit tests build these by hand. */
 internal data class MusicQueueEntry(
     val itemId: UUID,
     val mediaId: String,

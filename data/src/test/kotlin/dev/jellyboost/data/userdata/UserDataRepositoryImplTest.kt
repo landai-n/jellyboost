@@ -56,11 +56,8 @@ import java.util.TimeZone
 import java.util.UUID
 
 /**
- * Unit tests for [UserDataRepositoryImpl] — the local-first write path.
- *
- * The specific promise here: the Room row and the event bus come first, the server push is best
- * effort, and a failed push leaves `toBeSynced` set and schedules a retry. These tests pin
- * exactly that.
+ * The promise pinned here: the Room row and the event bus come first, the push is best effort, and a
+ * failed push leaves `toBeSynced` set and schedules a retry.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class UserDataRepositoryImplTest {
@@ -102,8 +99,8 @@ class UserDataRepositoryImplTest {
 
     @BeforeEach
     fun setUp() {
-        // The SDK serialises its date fields as `value.atZone(systemDefault())`, so a non-UTC
-        // default zone is what makes a wrong conversion visible (see `SdkDateTime.kt`).
+        // The SDK serialises dates as `value.atZone(systemDefault())`, so only a non-UTC default
+        // zone makes a wrong conversion visible.
         TimeZone.setDefault(TimeZone.getTimeZone(TEST_ZONE))
         mockkStatic("org.jellyfin.sdk.api.client.extensions.ApiClientExtensionsKt")
         every { apiClient.playStateApi } returns playStateApi
@@ -135,11 +132,9 @@ class UserDataRepositoryImplTest {
     @Test
     fun `the read, the edit and the write of one operation are a single transaction`() =
         runTest {
-            // Read-modify-write over a row two callers touch. During playback `PlaybackReporter`
-            // calls `setPosition` every five seconds, and each tick reads the whole row and writes
-            // the whole row back; without this transaction, a "mark watched" from another screen
-            // landing between a tick's read and its write would be overwritten by the stale
-            // snapshot — reverted locally, and pushed to the server as `played = false`.
+            // `PlaybackReporter` rewrites the whole row every five seconds; without one
+            // transaction a "mark watched" landing mid-tick is reverted locally *and* pushed to the
+            // server as `played = false`.
             val depths = mutableListOf<Int>()
             coEvery { userDataDao.getUserData(any(), any()) } answers {
                 depths += transactionRunner.depth
@@ -157,10 +152,8 @@ class UserDataRepositoryImplTest {
     @Test
     fun `a mark-watched committed just before a position tick is not reverted by it`() =
         runTest {
-            // The interleaving itself, made deterministic: the competing write commits while the
-            // tick is still waiting for the transaction, so the tick's *read* has to be the one
-            // inside the block. A read taken before it would edit — and store — a row that says
-            // `played = false`, which is the bug both locally and on the wire.
+            // The competing write commits while the tick still waits for the transaction, so the
+            // tick's *read* must be the one inside the block.
             var stored = UserDataEntity(itemId = itemUuid, userId = userId, updatedAt = now)
             coEvery { userDataDao.getUserData(itemUuid, userId) } answers { stored }
             coEvery { userDataDao.upsert(any()) } answers { stored = firstArg() }
@@ -178,11 +171,9 @@ class UserDataRepositoryImplTest {
             result.shouldBeInstanceOf<AppResult.Success<UserData>>().value.played shouldBe true
             stored.played shouldBe true
             stored.playbackPositionTicks shouldBe 5L
-            // …and the state that reaches the server is the merged one, not the stale snapshot.
             pushedState().played shouldBe true
         }
 
-    /** The full desired state `setPosition` put on the wire. */
     private fun pushedState(): UpdateUserItemDataDto {
         val pushed = slot<UpdateUserItemDataDto>()
         coVerify { itemsApi.updateItemUserData(any(), any(), capture(pushed)) }
@@ -292,10 +283,8 @@ class UserDataRepositoryImplTest {
         }
 
     /**
-     * Regression test: building `datePlayed` as UTC wall-clock time would let the SDK stamp the
-     * *device's* offset onto it — a 10:00Z event would go out as `10:00+02:00` and the server
-     * would store it two hours early. The value on the wire must be local wall-clock time so that
-     * the instant survives the round trip.
+     * `datePlayed` as UTC wall-clock time would let the SDK stamp the *device's* offset onto it —
+     * 10:00Z goes out as `10:00+02:00` and is stored two hours early.
      */
     @Test
     fun `sends the played date so the server receives the correct instant`() =
@@ -428,9 +417,8 @@ class UserDataRepositoryImplTest {
         }
 
     /**
-     * A cancelled write has not written anything, so reporting `AppError.Storage` would tell the
-     * caller the disk failed — and would swallow the cancellation the parent job is owed. Both
-     * Room catches on this path rethrow it.
+     * A cancelled write has written nothing, so `AppError.Storage` would claim the disk failed — and
+     * swallow the cancellation the parent job is owed.
      */
     @Test
     fun `a cancelled local write propagates instead of being reported as a storage failure`() =
@@ -443,8 +431,7 @@ class UserDataRepositoryImplTest {
     @Test
     fun `a cancelled pending-flag clear propagates instead of being swallowed as best effort`() =
         runTest {
-            // This one really is best effort — the row simply stays pending and the sync trigger
-            // drains it later — but "best effort" must not extend to eating a cancellation.
+            // Best effort — the row stays pending — but not to the point of eating a cancellation.
             coEvery { userDataDao.clearPendingSync(any(), any(), any()) } throws
                 CancellationException("scope cancelled")
 
@@ -469,14 +456,11 @@ class UserDataRepositoryImplTest {
     // ---- offline: the push is not even attempted ----------------------------------------------
 
     /**
-     * `PlaybackReporter` calls `setPosition` every five seconds, so without this guard an offline
-     * session would fire one doomed request — and log one warning stack — per tick. The row is
-     * pending either way and `UserDataSyncTrigger` drains it on the next return to `ONLINE`, so
-     * the request buys nothing.
+     * Without the guard an offline session fires one doomed request and one warning stack per
+     * five-second `setPosition` tick, buying nothing the trigger's next drain would not.
      *
-     * Every *other* test in this class leaves the fixture at [ConnectionState.ONLINE], which is what
-     * pins the online branch as unchanged: it still pushes, still clears the flag on success, and
-     * still warns plus enqueues on failure.
+     * Every *other* test here leaves the fixture at [ConnectionState.ONLINE], which pins the online
+     * branch as unchanged.
      */
     @Test
     fun `an offline write never touches the network`() =
@@ -495,8 +479,7 @@ class UserDataRepositoryImplTest {
 
             repository.setPosition(itemId, positionTicks = 5L)
 
-            // Redundant work: UserDataSyncTrigger drains every pending row on the OFFLINE -> ONLINE
-            // edge and at app start.
+            // Redundant: the trigger drains on the OFFLINE -> ONLINE edge and at app start.
             verify(exactly = 0) { syncScheduler.enqueue() }
             coVerify(exactly = 0) { userDataDao.clearPendingSync(any(), any(), any()) }
         }

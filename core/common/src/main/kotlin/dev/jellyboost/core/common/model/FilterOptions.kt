@@ -1,11 +1,6 @@
 package dev.jellyboost.core.common.model
 
-/**
- * User-selected filters for a library grid or a search.
- *
- * Consumed by the paged library query; kept here so that the online and offline query
- * paths take the exact same filter description.
- */
+/** Kept here so the online and offline query paths take the exact same filter description. */
 data class FilterOptions(
     val genres: List<String> = emptyList(),
     val years: List<Int> = emptyList(),
@@ -15,7 +10,6 @@ data class FilterOptions(
     /** `true` = favourites only, `null` = no filter. */
     val isFavorite: Boolean? = null,
 ) {
-    /** `true` when nothing is filtered — lets callers skip the filter round-trip entirely. */
     val isEmpty: Boolean
         get() =
             genres.isEmpty() &&
@@ -24,7 +18,6 @@ data class FilterOptions(
                 isPlayed == null &&
                 isFavorite == null
 
-    /** Number of active filter facets, for the "Filters (2)" chip. */
     val activeCount: Int
         get() =
             listOf(

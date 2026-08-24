@@ -48,15 +48,7 @@ import dev.jellyboost.core.ui.component.MediaRow
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
 
-/**
- * An artist's header (circular art, name, favourite), their albums and their top tracks.
- *
- * @param onAlbumClick an album card in the "Albums" row was tapped.
- * @param onTrackClick `(tracks, startIndex)` — a top-track row was tapped; wired to the queue
- *   exactly as [AlbumDetailScreen]'s `onPlay` — see that screen's KDoc.
- * @param onStartRadio the artist itself — "Start radio", the header action next to
- *   the favourite heart; see [AlbumDetailScreen]'s `onStartRadio` for the wiring this mirrors.
- */
+/** @param onStartRadio takes the **artist**, not their tracks — see [AlbumDetailScreen]. */
 @Composable
 fun ArtistDetailScreen(
     viewModel: ArtistDetailViewModel,
@@ -71,7 +63,6 @@ fun ArtistDetailScreen(
     val errorMessage = state.errorMessage?.toMessage()
 
     Box(modifier = modifier.fillMaxSize()) {
-        // Behind everything, anchored to the top of the window — see [MusicScreenGlow].
         MusicScreenGlow()
 
         when {
@@ -180,7 +171,6 @@ private fun ArtistDetailContent(
     }
 }
 
-/** `LazyColumn.items` with an index, matching the shape every other section on this screen uses. */
 private fun LazyListScope.itemsIndexed(
     items: List<JellyfinItem>,
     itemContent: @Composable (index: Int, item: JellyfinItem) -> Unit,

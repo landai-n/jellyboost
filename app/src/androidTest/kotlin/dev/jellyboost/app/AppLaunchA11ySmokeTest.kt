@@ -14,23 +14,12 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * One real screen, swept by the Accessibility Test Framework.
+ * One real screen, swept by the Accessibility Test Framework — whichever screen the app lands on.
+ * Asserting *which* would make it a test about the device's session.
  *
- * Everything else in the instrumented suite composes a component in isolation, which is what makes
- * those tests fast and precise — and also what makes them blind to the things that only exist once
- * a whole screen is on a real display: a touch target the layout squeezed, two nodes that ended up
- * speaking the same words. This launches the app as the launcher does and runs ATF over whatever it
- * lands on — the server-setup screen on a signed-out device, home on a signed-in one.
- *
- * It deliberately asserts nothing about *which* screen: the app is device-state-dependent, and a
- * test that demanded one of them would be a test about the tablet's session rather than about
- * accessibility.
- *
- * No Compose test rule here, on purpose. `MainActivity` holds the splash screen until session
- * restore answers, so the Compose hierarchy is not registered when the test body starts and
- * `ComposeTestRule` fails outright with "no compose hierarchies found". ATF works on the `View`
- * tree and the `AccessibilityNodeInfo` tree underneath it, neither of which needs that rule — so
- * the test waits for the content view to be laid out and sweeps it directly.
+ * No Compose test rule, on purpose: `MainActivity` holds the splash screen until session restore
+ * answers, so the Compose hierarchy is not registered when the test body starts and `ComposeTestRule`
+ * fails with "no compose hierarchies found". ATF needs only the `View` tree.
  */
 @RunWith(AndroidJUnit4::class)
 class AppLaunchA11ySmokeTest {
@@ -59,7 +48,6 @@ class AppLaunchA11ySmokeTest {
         }
     }
 
-    /** Polls until the Compose host has actually been laid out, or the timeout runs out. */
     private fun awaitComposedScreen(): Boolean {
         val deadline = SystemClock.uptimeMillis() + LAUNCH_TIMEOUT_MS
         while (SystemClock.uptimeMillis() < deadline) {
@@ -80,11 +68,9 @@ class AppLaunchA11ySmokeTest {
     }
 
     /**
-     * ATF's one structural false positive on Compose — see `core/ui`'s `AccessibilityChecks` for
-     * the full reasoning. `AndroidComposeView` is the single real `View` hosting the whole
-     * hierarchy: focusable, textless, and reported as unlabelled in every sweep of any Compose
-     * content. Everything a screen reader lands on inside it is a virtual node. Matched on the view
-     * class *and* the check, so a real unlabelled control still fails this test.
+     * ATF's one structural false positive on Compose: `AndroidComposeView` is focusable, textless and
+     * reported unlabelled in every sweep, while everything inside it is a virtual node. Matched on the
+     * view class *and* the check, so a real unlabelled control still fails.
      */
     private fun isComposeHostFalsePositive(result: AccessibilityViewCheckResult): Boolean =
         result.view?.javaClass?.name == COMPOSE_HOST_VIEW &&

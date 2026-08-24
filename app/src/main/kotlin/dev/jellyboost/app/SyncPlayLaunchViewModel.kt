@@ -8,14 +8,9 @@ import kotlinx.coroutines.flow.SharedFlow
 import javax.inject.Inject
 
 /**
- * Exposes [SyncPlayController.launchRequests] to [JellyfinNavHost], which is the app's one
- * collector for "the group moved on and no player is open".
- *
- * A ViewModel rather than an injection straight into the NavHost composable because Compose has no
- * `@Inject` of its own — `hiltViewModel()` is the seam every other screen already uses to reach a
- * `@Singleton` from composition, and the controller itself is `:player`-only (`SyncPlayController`
- * is not part of the `:core:common` cross-feature contract; nothing outside `:player` and `:app`
- * needs it, and `:app` already depends on `:player` directly).
+ * Exposes [SyncPlayController.launchRequests] to [JellyfinNavHost], the app's one collector for "the
+ * group moved on and no player is open". A ViewModel because `hiltViewModel()` is the only seam
+ * composition has for reaching a `@Singleton`.
  */
 @HiltViewModel
 class SyncPlayLaunchViewModel
@@ -26,11 +21,8 @@ class SyncPlayLaunchViewModel
         val launchRequests: SharedFlow<SyncPlayLaunchRequest> = controller.launchRequests
 
         /**
-         * Tells the controller its replayed request has been handled.
-         *
-         * The flow replays its last request so one raised with no Activity composed survives until
-         * the next composition; consuming it is what stops a *handled* request from re-opening the
-         * player on every later recomposition.
+         * The flow replays its last request so one raised with no Activity composed survives; without
+         * this a *handled* request re-opens the player on every later recomposition.
          */
         fun consume() {
             controller.consumeLaunchRequest()

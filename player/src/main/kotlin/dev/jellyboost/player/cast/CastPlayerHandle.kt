@@ -24,28 +24,12 @@ import javax.inject.Singleton
 /**
  * The [PlayerHandle] that drives a Cast receiver, over media3-cast's `CastPlayer`.
  *
- * `CastPlayer` is an `androidx.media3.common.Player`, so the seam the ViewModel already talks to
- * fits it exactly — including the contract that carries casting: **a track selection that
- * returns `false` makes the caller re-negotiate with the server**. That is not a workaround here,
- * it is the correct behaviour twice over. A receiver has whatever single audio track the server
- * encoded for it, and a subtitle it cannot render has to be burned in — both of which only the
- * server can do, and both of which `PlayerViewModel` already knows how to ask for.
+ * A track selection returning `false` sends the caller back to the server to re-negotiate; on a
+ * receiver that is the normal answer, not a failure — only the server can change the audio track
+ * or burn in a subtitle the receiver cannot render.
  *
- * ### What this handle deliberately does not do
- * - **No video surface.** [player] is always `null`. There is nothing to render on the phone while
- *   a television is rendering it, and handing `PlayerView` a `CastPlayer` would draw a black
- *   rectangle over the poster the screen shows instead. It is the one place where returning `null`
- *   from that property is not a "before the first prepare" state but the permanent, correct answer.
- * - **No playback service.** [ExoPlayerHandle][dev.jellyboost.player.session.ExoPlayerHandle]
- *   starts `PlaybackService` so a backgrounded session keeps its notification. While casting the
- *   local player is stopped, so that notification would be for a player that is not playing; the
- *   Cast framework publishes its own media session and notification (`CastMediaOptions`'
- *   `setMediaSessionEnabled` defaults to `true`, and `JellyboostCastOptionsProvider` configures the
- *   notification), and one of the two is exactly the right number.
- *
- * The `CastPlayer` is built lazily and only when a `CastContext` exists. Null-safety costs nothing
- * here: there is no way to reach this handle without a live cast session, because only
- * [CastSessionCoordinator] routes to it and only a started session makes it do so.
+ * Deliberately no video surface ([player] is permanently `null`) and no `PlaybackService`: the Cast
+ * framework publishes its own media session and notification.
  */
 @Singleton
 @UnstableApi
@@ -66,20 +50,12 @@ internal class CastPlayerHandle
         /** The load currently on the receiver; its tracks are what a subtitle selection matches. */
         private var loaded: CastMediaSpec? = null
 
-        /** Always `null`, and permanently so — see the class docs. */
+        /** Permanently `null`, not a "before the first prepare" state — see the class docs. */
         override val player: Player? = null
 
         /**
-         * The same events the local handle publishes, minus one.
-         *
-         * `VideoSizeChanged` has no meaning while casting: it exists for picture-in-picture, which
-         * needs the *decoded* size, and the decoder is in the television. `CastPlayer` reports
-         * `VideoSize.UNKNOWN` throughout, so forwarding it would only overwrite a good aspect ratio
-         * with nothing.
-         *
-         * Stated as `forwardVideoSize = false` on the shared bridge rather than as a hand-written
-         * listener of this handle's own: an argument the bridge has to honour cannot drift from the
-         * local handle's copy the way two byte-identical listeners would.
+         * `forwardVideoSize = false`: `CastPlayer` reports `VideoSize.UNKNOWN` throughout, so
+         * forwarding it would overwrite a good aspect ratio with nothing.
          */
         private val listener =
             playerEventListener(
@@ -89,16 +65,9 @@ internal class CastPlayerHandle
             )
 
         /**
-         * The cast player, created on first use, or `null` when there is no Cast stack at all.
-         *
-         * Lazy for the same reason the local player is — Hilt may construct this off the main
-         * thread, and `CastPlayer` binds to the calling thread's looper — and additionally because
-         * *constructing* it is the first thing in this app that touches a `com.google.android.gms`
-         * class. On a device without Play services nothing ever gets this far.
-         *
-         * The two-argument constructor is media3-cast 1.9.0's, and it fixes the seek increments at
-         * 5 s back / 15 s forward. That only matters for `seekBack`/`seekForward`, which nothing in
-         * this app calls — the controls seek to absolute positions.
+         * Built lazily and on the main thread: `CastPlayer` binds to the calling thread's looper,
+         * and Hilt may construct this handle off it. Constructing it is also the first touch of a
+         * `com.google.android.gms` class, so a device without Play services never gets this far.
          */
         private fun requirePlayer(): CastPlayer? {
             castPlayer?.let { return it }
@@ -113,13 +82,7 @@ internal class CastPlayerHandle
             }
         }
 
-        /**
-         * Loading without the negotiated source is not something this handle can do.
-         *
-         * The URL alone does not say what the receiver has to be told, and inventing the rest would
-         * put a stream on the television that nothing could then switch tracks on. It surfaces as an
-         * ordinary player error, which the ViewModel already knows how to end a session with.
-         */
+        /** Casting needs the negotiated source; this overload can only fail, as a player error. */
         override fun prepare(
             spec: PlaybackMediaItemSpec,
             startPositionMs: Long,
@@ -135,8 +98,6 @@ internal class CastPlayerHandle
             startPositionMs: Long,
             playWhenReady: Boolean,
         ) {
-            // Casting always streams: `PlaybackResolveRequest.castTarget` skips the copy on disk,
-            // because a `file://` URI means nothing on the other side of the network.
             val remote = source as? RemotePlaybackMediaSource
             if (remote == null) {
                 Timber.w("Refusing to cast a local source for %s", source.itemId)
@@ -149,10 +110,8 @@ internal class CastPlayerHandle
                 return
             }
 
-            // The one thing the negotiation cannot supply: what the television should say this is.
-            // `PlayerViewModel` publishes it under the item's id when the item arrives, and a cast
-            // open waits for that before it opens — a receiver is loaded once, and metadata that
-            // arrived afterwards could only be applied by loading it a second time.
+            // The metadata must be published before the open: a receiver is loaded once, and
+            // metadata arriving afterwards could only be applied by loading it a second time.
             val castSpec = specMapper.map(spec, remote, metadata.metadataFor(spec.mediaId))
             loaded = castSpec
             Timber.d("Casting %s as %s", castSpec.mediaId, castSpec.contentType)
@@ -176,17 +135,11 @@ internal class CastPlayerHandle
         }
 
         /**
-         * A reading of the receiver, **only while the receiver still holds our item**.
-         *
-         * A cast player mirrors whatever the receiver has: a Stop from the television or the Google
-         * Home app unloads the media without ending the session, and another sender can replace it
-         * outright. In both cases `CastPlayer` keeps answering — at position zero, or at the *other
-         * app's* position — and a ticker that believed it would overwrite this item's resume
-         * position with either. The identity check is against the `mediaId` the
-         * outbound converter stamps and, because the framework's round-trip rebuilds items with the
-         * content URL as their id, against [CastMediaSpec.contentId] too. A natural finish is exempt:
-         * the receiver unloads on its own at the end, and that reading is the one that marks the
-         * item watched.
+         * Valid **only while the receiver still holds our item**: after a Stop from the television
+         * or a takeover by another sender, `CastPlayer` keeps answering — at zero, or at the other
+         * app's position — and a ticker would write that over this item's resume position. The
+         * `contentId` arm exists because the framework's round-trip rebuilds items with the content
+         * URL as their id. A natural finish is exempt: that reading marks the item watched.
          */
         override fun snapshot(): PlaybackSnapshot {
             val current = castPlayer ?: return PlaybackSnapshot(isValid = false)
@@ -207,41 +160,20 @@ internal class CastPlayerHandle
             return currentId == spec.mediaId || currentId == spec.contentId
         }
 
-        /**
-         * Never satisfied locally, by design.
-         *
-         * The stream on the receiver holds the one audio track the server was asked for — a
-         * transcode encodes nothing else, and a direct play of an `mp4` the cast profile accepts has
-         * at most the one the picker is already on. `false` sends the caller to the server with an
-         * `audioStreamIndex`, which is the only thing that can actually change the language.
-         */
+        /** Always `false`: only a server re-negotiation with an `audioStreamIndex` changes this. */
         override fun selectAudioTrack(
             source: PlaybackMediaSource,
             jellyfinIndex: Int,
         ): Boolean = false
 
         /**
-         * Turns a side-loaded subtitle on, off, or refuses.
-         *
-         * Goes through `RemoteMediaClient.setActiveMediaTracks` rather than
-         * `TrackSelectionParameters`: media3-cast 1.9.0's `RemoteCastPlayer.setTrackSelectionParameters`
-         * is an empty method, so the Player-level API would silently do nothing.
-         *
-         * The track ids the receiver knows are the Jellyfin stream indices `CastSpecMapper` gave it,
-         * which is why the index arrives here needing no translation. An index that is not among
-         * them is one the server did not deliver as a file — an image subtitle, or a stream the
-         * profile refused — and `false` is what sends the caller back to re-negotiate for a burned-in
-         * one.
-         *
-         * `true` is only claimed against what the receiver **reports** holding, not against what
-         * [loaded] remembers: the media on the other end can have been unloaded, replaced by another
-         * sender, or not finished loading, and `setActiveMediaTracks` against any of those is a
-         * silent no-op — the picker would show the track selected while the television draws
-         * nothing. A rejection the receiver only announces asynchronously is logged; the cases it
-         * adds beyond this check are the ones a re-negotiation could not fix either.
+         * Goes through `RemoteMediaClient.setActiveMediaTracks` because media3-cast 1.9.0's
+         * `RemoteCastPlayer.setTrackSelectionParameters` is an empty method — the Player-level API
+         * would silently do nothing. The receiver's track ids *are* the Jellyfin stream indices, so
+         * no translation is needed. `true` is claimed only against what the receiver reports
+         * holding: `setActiveMediaTracks` against unloaded or replaced media is a silent no-op.
          */
         @Suppress(
-            // Track selection tries the explicit index, then the language match, then off; order is the rule.
             "ReturnCount",
         )
         override fun selectSubtitleTrack(
@@ -270,7 +202,6 @@ internal class CastPlayerHandle
             return true
         }
 
-        /** Failures of a fire-and-forget receiver command are at least worth a line in the log. */
         private fun PendingResult<RemoteMediaClient.MediaChannelResult>.logRejection(what: String) {
             setResultCallback { result ->
                 if (!result.status.isSuccess) {
@@ -279,13 +210,7 @@ internal class CastPlayerHandle
             }
         }
 
-        /**
-         * Applies a rate, if the receiver has one.
-         *
-         * Guarded rather than attempted: the available commands depend on what the receiver reports,
-         * and calling an unavailable one on a `BasePlayer` is at best ignored and at worst logged as
-         * an error on every session that never wanted a rate in the first place.
-         */
+        /** Guarded, not attempted: an unavailable command on a `BasePlayer` logs an error per call. */
         override fun setPlaybackSpeed(speed: Float) {
             val player = castPlayer ?: return
             if (!player.isCommandAvailable(Player.COMMAND_SET_SPEED_AND_PITCH)) {
@@ -295,13 +220,6 @@ internal class CastPlayerHandle
             player.setPlaybackSpeed(speed)
         }
 
-        /**
-         * The same question [setPlaybackSpeed] asks, asked before the user is offered the control.
-         *
-         * `false` with no player yet, which is the honest answer at that moment: a rate cannot be
-         * applied to a receiver that has not been reached, and the screen re-reads this at every
-         * open — by which time the session exists and the receiver has published its commands.
-         */
         override val supportsPlaybackSpeed: Boolean
             get() = castPlayer?.isCommandAvailable(Player.COMMAND_SET_SPEED_AND_PITCH) == true
 
@@ -314,16 +232,9 @@ internal class CastPlayerHandle
         }
 
         /**
-         * Gives the cast player back, idempotently, and leaves the handle reusable.
-         *
-         * Same shape as the local handle's, for the same reasons: the field is cleared first so the
-         * second caller finds nothing to do, the listener is removed explicitly because it is a
-         * strong reference from a `@Singleton` to a flow that outlives every session, and
-         * [requirePlayer] builds a fresh player for whatever comes next.
-         *
-         * Releasing does **not** end the cast session. The receiver keeps whatever it is playing and
-         * the framework keeps the session; ending it is the user's business, through the route
-         * button or the television.
+         * Idempotent: the field is cleared first, so a second caller finds nothing to do. The
+         * listener must be removed explicitly — it is a strong reference from a `@Singleton` to a
+         * flow that outlives every session. Releasing does **not** end the cast session.
          */
         override fun release() {
             val player = castPlayer ?: return

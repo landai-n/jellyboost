@@ -36,16 +36,12 @@ import org.junit.jupiter.api.Test
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Unit tests for [MusicPlaybackController], against a fake [MusicPlayerPort].
+ * Reports are captured as an ordered transcript, not a count: a transition must close the
+ * outgoing track's server session before opening the incoming one, or the dashboard shows this
+ * device twice, and only a sequence proves the ordering.
  *
- * What is worth pinning here is **ordering** — a queue is one server session per track, and a
- * transition has to close the outgoing one before it opens the incoming one, or the dashboard
- * shows this device twice. Reports are therefore captured as a transcript rather than counted:
- * "stop 1 then start 2" is the property, and only a sequence shows it.
- *
- * The controller's own scope is deliberately *not* the test scope: it runs a one-second ticker for
- * as long as anything is playing, which a scope the test framework waits on would never let
- * complete.
+ * [sessionScope] is deliberately not the test scope: the controller's one-second ticker runs for
+ * as long as anything is playing, and a scope the test framework waits on would never go idle.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class MusicPlaybackControllerTest {
@@ -59,7 +55,6 @@ class MusicPlaybackControllerTest {
     private val handover = PlaybackHandover()
     private val syncPlay = SyncPlayStatusHolder()
 
-    /** Every report the controller issued, in order. */
     private val reports = mutableListOf<String>()
 
     @AfterEach
@@ -68,11 +63,9 @@ class MusicPlaybackControllerTest {
     }
 
     /**
-     * `runTest`, with the controller's scope torn down inside the test body.
-     *
-     * Not in an `@AfterEach`: `runTest` drains the shared scheduler when the body returns, and the
-     * controller's one-second ticker is registered on it — a scheduler with a repeating task on it
-     * never goes idle, so the drain runs until the heap does.
+     * Tears down [sessionScope] inside the test body, not `@AfterEach`: `runTest` drains the
+     * shared scheduler when the body returns, and the controller's ticker (still registered on
+     * it) would keep that drain from ever going idle.
      */
     private fun musicTest(body: suspend kotlinx.coroutines.test.TestScope.() -> Unit) =
         runTest(dispatcher) {
@@ -166,8 +159,7 @@ class MusicPlaybackControllerTest {
             runCurrent()
             reports.clear()
 
-            // Media3 fires a transition for the playlist change itself, at the index we just asked
-            // for; the session for it is already open.
+            // Media3 fires a transition for the playlist change itself; the session is already open.
             port.emit(MusicPlayerEvent.ItemTransition(index = 1, mediaId = null, automatic = false))
             runCurrent()
 
@@ -201,7 +193,7 @@ class MusicPlaybackControllerTest {
 
             controller.stop()
             runCurrent()
-            // A second stop must not reach the player: `stopAndRelease` takes down the *shared*
+            // A second stop must not reach the player: `stopAndRelease` takes down the shared
             // media session service, which a film may by then be using.
             port.calls.clear()
             controller.stop()
@@ -477,8 +469,7 @@ class MusicPlaybackControllerTest {
             claim.join()
             runCurrent()
 
-            // No bare "next" ever reached the player mid-handover; the queued command became a
-            // reclaim of the parked queue instead.
+            // No bare "next" reached the player mid-handover: the queued command reclaimed instead.
             port.calls shouldContainExactly
                 listOf("release", "setShuffleEnabled(false)", "setRepeatMode(OFF)", "setQueue(3, 1, 0, true)")
             handover.currentOwner shouldBe PlaybackKind.MUSIC
@@ -728,7 +719,6 @@ class MusicPlaybackControllerTest {
         ).also { scheduler.runCurrent() }
     }
 
-    /** Records every report as one readable line, in the order the controller issued them. */
     private fun stubReporter() {
         coEvery {
             reporter.reportMusicStart(any(), any(), any(), any(), any())
@@ -760,7 +750,6 @@ private fun MusicPlaybackState.currentIndexOrNull(): Int? = (this as? MusicPlayb
 private infix fun List<JellyfinItem>.shouldHaveSameIdsAs(expected: List<JellyfinItem>) =
     map { it.id } shouldContainExactly expected.map { it.id }
 
-/** Collects [flow] into [into] for the duration of a test; the caller cancels the job. */
 private fun <T> CoroutineScope.launchCollecting(
     flow: Flow<T>,
     into: MutableList<T>,

@@ -9,8 +9,6 @@ import java.time.Instant
 import java.time.ZoneOffset
 
 /**
- * Unit tests for [SyncPlayTimeSync].
- *
  * This is the piece nothing else can compensate for: SyncPlay schedules commands on the *server's*
  * clock, so a wrong offset does not degrade sync, it destroys it — the group plays and this device
  * plays at some other moment entirely. Every test here builds its samples from an explicit "true"

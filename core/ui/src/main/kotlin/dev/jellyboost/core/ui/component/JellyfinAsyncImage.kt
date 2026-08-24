@@ -20,30 +20,18 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import dev.jellyboost.core.ui.theme.JellyfinGradients
 
-/** Size of the glyph on the placeholder gradient — one size everywhere, from card to backdrop. */
+/** One size everywhere, from card to backdrop. */
 private val PlaceholderGlyphSize = 30.dp
 
-/**
- * Its tint: quieter than `onSurfaceVariant`, because a placeholder should read as *absence* rather
- * than as a picture of a film reel.
- */
+/** Quieter than `onSurfaceVariant`: a placeholder reads as absence, not as a picture. */
 private val PlaceholderGlyphTint = Color.White.copy(alpha = 0.35f)
 
 /**
- * Every remote image in the app goes through this composable.
+ * Takes an already-built URL: assembling them is the data layer's job, so `:core:ui` stays free of
+ * Jellyfin API knowledge. A `null` or blank [url] draws the gradient placeholder.
  *
- * It takes an already-built URL string: assembling image URLs (server base URL, image tags,
- * requested size) is the data layer's job, so `:core:ui` stays free of any Jellyfin API knowledge.
- *
- * When [url] is `null` or blank — the server has no artwork for the item — a gradient placeholder
- * with [placeholderIcon] is drawn instead, so rows never collapse into empty holes.
- *
- * @param url fully-qualified image URL, or `null` when the item has no artwork.
- * @param contentDescription accessibility label; `null` for purely decorative artwork.
- * @param placeholderIcon icon drawn on the placeholder gradient; `null` draws the bare gradient.
- * @param alignment where Coil anchors the source image inside the box before [contentScale] is
- *   applied — matters once the box's aspect ratio differs from the artwork's, e.g. a 2:3 poster
- *   landing in a wide backdrop slot.
+ * @param alignment where Coil anchors the source image before [contentScale] applies — matters once
+ *   the box's aspect ratio differs from the artwork's (a 2:3 poster in a wide backdrop slot).
  */
 @Composable
 fun JellyfinAsyncImage(
@@ -59,9 +47,8 @@ fun JellyfinAsyncImage(
         modifier =
             modifier
                 .background(JellyfinGradients.ImagePlaceholder)
-                // The label belongs to the *slot*, not to the bitmap that may or may not fill it:
-                // without it, anywhere no text follows the image — a cast rail, a queue row — the
-                // person would simply not be there.
+                // The label belongs to the *slot*, not the bitmap: without it a cast rail or queue
+                // row with no following text has nothing at all to announce.
                 .then(
                     if (url.isNullOrBlank() && contentDescription != null) {
                         Modifier.semantics { this.contentDescription = contentDescription }

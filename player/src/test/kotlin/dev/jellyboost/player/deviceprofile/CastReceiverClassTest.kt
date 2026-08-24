@@ -4,8 +4,6 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for [CastReceiverClass].
- *
  * The table is the contract: model names are the only capability signal a sender has, so which
  * name lands in which class is exactly the behaviour worth pinning — above all that a stranger
  * lands on the floor, because "unknown receiver keeps today's behaviour" is what makes shipping

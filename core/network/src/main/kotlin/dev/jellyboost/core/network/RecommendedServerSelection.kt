@@ -6,19 +6,12 @@ import org.jellyfin.sdk.discovery.RecommendedServerInfo
 import org.jellyfin.sdk.discovery.RecommendedServerInfoScore
 
 /**
- * Picks the address candidate to connect to, following jellyfin-android's
- * `setup/ConnectionHelper.kt` scoring rules:
+ * Follows jellyfin-android's `setup/ConnectionHelper.kt` scoring rules: the first `GREAT` candidate wins
+ * outright, otherwise the first `GOOD` one is accepted, otherwise nothing is usable and the rejects are split
+ * into *unreachable* (`systemInfo` failed — never answered) and *incompatible* (answered, wrong product or
+ * unsupported version) so the setup screen can say which is which.
  *
- * * the first `GREAT` candidate wins outright;
- * * otherwise the first `GOOD` candidate is accepted;
- * * otherwise nothing is usable, and the rejected candidates are split into *unreachable*
- *   (`systemInfo` failed — the address never answered) and *incompatible* (it answered, but
- *   with the wrong product or an unsupported version) so the setup screen can say which is
- *   which.
- *
- * Kept pure and free of SDK I/O precisely so this branching can be unit-tested; an empty
- * [servers] list yields an [AppError.ServerResolution] with two empty lists, which the UI
- * renders as the generic "no server found" message.
+ * Pure and free of SDK I/O so the branching can be unit-tested.
  */
 internal fun selectRecommendedServer(servers: List<RecommendedServerInfo>): AppResult<RecommendedServerInfo> {
     val winner =

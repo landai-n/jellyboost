@@ -35,13 +35,8 @@ import org.junit.jupiter.api.Test
 import java.util.UUID
 
 /**
- * Unit tests for the **filters** half of [OfflineJellyfinRepository] — what the library grid's
- * filter sheet offers offline, and what applying it actually does.
- *
- * Apart from [OfflineJellyfinRepositoryTest] because the two answer different questions: that class
- * pins the *shape* of every offline screen, this one pins the behaviour that matters most for
- * filtering — offline, `query.filters` must actually be read and applied, not silently ignored
- * while the grid still draws an active-filter badge.
+ * Offline, `query.filters` must actually be read and applied — not silently ignored while the grid
+ * still draws an active-filter badge.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class OfflineJellyfinRepositoryFilterTest {
@@ -85,8 +80,7 @@ class OfflineJellyfinRepositoryFilterTest {
     @Test
     fun `a genre filter narrows the offline grid instead of being ignored`() =
         runTest {
-            // Regression guard: without this, every filter would be dropped on the floor while
-            // the grid still drew a "1 active" badge over the identical unfiltered list.
+            // Without this every filter is dropped while the badge still reads "1 active".
             stubGrid(
                 itemDao,
                 listOf(
@@ -200,8 +194,8 @@ class OfflineJellyfinRepositoryFilterTest {
     @Test
     fun `paging counts the rows a filter kept, not the rows the table holds`() =
         runTest {
-            // Filtering after the page had been cut would return a short page, and a short page is
-            // how `ItemPagingSource` recognises the end of the library — the grid would stop early.
+            // Filtering after the cut returns a short page, and a short page is how
+            // `ItemPagingSource` recognises the end of the library.
             stubGrid(
                 itemDao,
                 (1..10).map { index ->
@@ -251,8 +245,8 @@ class OfflineJellyfinRepositoryFilterTest {
     @Test
     fun `a film library's facets do not offer the genres of downloaded television`() =
         runTest {
-            // Regression guard: ignoring `parentId` here would let filtering a film library by a
-            // genre only its downloaded TV carried empty the grid instead.
+            // Ignoring `parentId` lets a film library be filtered by a genre only its downloaded TV
+            // carried, emptying the grid.
             val types = mutableListOf<List<ItemType>>()
             coEvery { itemDao.facetKeysBySource(ItemSource.DOWNLOAD, capture(types)) } returns emptyList()
 

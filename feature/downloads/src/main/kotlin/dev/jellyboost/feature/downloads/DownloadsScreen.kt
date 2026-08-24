@@ -91,30 +91,12 @@ import dev.jellyboost.data.downloads.model.DownloadItem
 import dev.jellyboost.data.downloads.model.StorageUsage
 
 /**
- * The Downloads screen: a *Downloaded* tab grouped by show or film with sizes and delete, a
- * *Queue* tab with progress, speed and pause/resume/cancel/reorder, and a storage header.
+ * Room-only by construction — never touches the network, so it behaves identically online and
+ * offline. `contentWindowInsets = WindowInsets(0)`: `:app`'s chrome floats over this screen rather
+ * than shrinking it, and how much of the window it covers arrives via `LocalAppChromePadding`.
  *
- * Room-only by construction — it never touches the network, so it is the one screen that behaves
- * identically online and offline.
- *
- * The Wi-Fi-only toggle lives on this screen rather than in the app overflow menu that holds
- * *Offline mode*: it is a download setting, this is the download screen, and the effect of flipping
- * it (the queue stopping or starting) is visible right underneath. This screen has no top bar of
- * its own — `:app`'s chrome carries the navigation for every top-level destination — so the toggle
- * sits next to the storage header at the top of the content instead.
- *
- * The `Scaffold` that remains is here for the snackbar alone, hence `contentWindowInsets =
- * WindowInsets(0)`: the app's chrome floats over this screen rather than shrinking it, and how much
- * of the window it covers arrives through `LocalAppChromePadding` instead — consumed by the outer
- * column, by both tabs' lists and by the snackbar host.
- *
- * @param onPlay play was requested for a finished download, at its resume position in Jellyfin
- *   ticks — for video the caller pushes `Routes.Player`, the same destination `:feature:detail`'s
- *   Play button navigates to; a completed download always resolves locally
- *   (`PlaybackSourceResolver`), so the player needs nothing from this screen but the id and the
- *   start position. The cached [dev.jellyboost.core.common.model.JellyfinItem] rides along so the
- *   caller can route a downloaded *track* to the music queue instead of the video screen; `null`
- *   when the item cache was wiped, in which case the caller falls back to the video route.
+ * @param onPlay start position is in Jellyfin ticks. The cached item is `null` once the item cache
+ *   has been wiped, in which case the caller falls back to the video route.
  */
 @Composable
 fun DownloadsScreen(
@@ -129,21 +111,16 @@ fun DownloadsScreen(
             onShown = viewModel::consumeMessage,
         ) { downloadsMessageText(it) }
 
-    // Remembered, not rebuilt per composition. These bundles are `equals`-compared by Compose to
-    // decide whether a row can skip, and a fresh instance every time is never equal to the last —
-    // so a queue that writes progress two to six times a second would recompose *every* visible
-    // row on every write, however little that row changed.
+    // Must stay remembered: a fresh bundle is never `equals` to the last, so every visible row
+    // would recompose on each of the queue's two-to-six progress writes per second.
     val actions = remember(viewModel) { downloadsActions(viewModel) }
     val bulk = remember(viewModel) { queueBulkActions(viewModel) }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        // Clear of the floating navigation pill, which this screen's own frame knows nothing about
-        // — the pill is drawn by `:app` over the top of this whole `Scaffold`. That is the shared
-        // host's default policy, and taking it also covers the wide-window case: with the chrome
-        // all at the top its bottom padding is zero, so reading only that would put the snackbar
-        // under the tablet's gesture bar.
+        // The host's own policy clears the floating nav pill. Do not substitute the chrome's bottom
+        // padding: on a wide window that is zero, which would put the snackbar under the gesture bar.
         snackbarHost = { JellyboostSnackbarHost(hostState = snackbarHostState) },
     ) { innerPadding ->
         DownloadsContent(
@@ -158,12 +135,8 @@ fun DownloadsScreen(
 }
 
 /**
- * The four row actions, bundled so the list composables stay under the parameter limit.
- *
- * Each takes an item **id**, not the row: the ViewModel behind every one of them only ever needs
- * the id, and taking the whole `DownloadItem` would force [QueueRowActions] to take one as well —
- * an unstable parameter, freshly built on every progress tick, where the id and two booleans are
- * the entire input.
+ * Each action takes an item **id**, not the row: a `DownloadItem` parameter is unstable and rebuilt
+ * on every progress tick, which would stop [QueueRowActions] from ever skipping.
  */
 data class DownloadsActions(
     val onPause: (itemId: String) -> Unit,
@@ -174,10 +147,6 @@ data class DownloadsActions(
     val onSelectTab: (DownloadsTab) -> Unit,
 )
 
-/**
- * The queue-wide actions, kept apart from [DownloadsActions] rather than swelling it: these take no
- * row, they belong to one tab, and the *Downloaded* half of the screen has no use for them.
- */
 data class QueueBulkActions(
     val onPauseAll: () -> Unit,
     val onResumeAll: () -> Unit,
@@ -186,7 +155,6 @@ data class QueueBulkActions(
     val onDismissCancelAll: () -> Unit,
 )
 
-/** Binds the row actions to the ViewModel; a function so the screen stays one expression. */
 private fun downloadsActions(viewModel: DownloadsViewModel) =
     DownloadsActions(
         onPause = viewModel::pause,
@@ -197,7 +165,6 @@ private fun downloadsActions(viewModel: DownloadsViewModel) =
         onSelectTab = viewModel::selectTab,
     )
 
-/** Binds the queue-wide actions to the ViewModel. */
 private fun queueBulkActions(viewModel: DownloadsViewModel) =
     QueueBulkActions(
         onPauseAll = viewModel::pauseAll,
@@ -208,25 +175,9 @@ private fun queueBulkActions(viewModel: DownloadsViewModel) =
     )
 
 /**
- * Stateless rendering — a pure function of [state], so it previews without a ViewModel.
- *
- * Two *independent* layout decisions are taken here, in the one `BoxWithConstraints` the whole
- * screen needs:
- *
- * - **`wide`** — the *style* every piece is drawn in: [queueRowCompact]'s complement, with no
- *   second width breakpoint invented for it. It picks the
- *   storage card vs. the three-panel tablet summary, the tab row's flex-fill vs. content-hug
- *   segments, where the bulk-action pills live, and — handed down as `compact = !wide` —
- *   [QueueRow]'s own two-tier/one-tier split.
- * - **[chromePinned]** — whether those pieces are *pinned* above an inner-scrolling list at all.
- *   That needs height as well as width: fused into `wide`, a landscape phone (wide enough for the
- *   tablet summary, ~360dp tall) would pin chrome over a list with no room left to scroll in. When
- *   chrome is not pinned the screen is a single [LazyColumn] and scrolls as one
- *   page — the header, summary and tab row are simply its first item.
- *
- * Both layouts emit their rows through the same [downloadedRows]/[queueRows] `LazyListScope`
- * extensions and the same [DownloadsChrome], so nothing about how a row or the header looks can
- * depend on which of the two is in play.
+ * Two *independent* layout decisions: `wide` (the style everything is drawn in) is width alone,
+ * while [chromePinned] also needs height — fused into one, a landscape phone would pin chrome over
+ * a list with no room left to scroll in.
  */
 @Composable
 fun DownloadsContent(
@@ -237,29 +188,16 @@ fun DownloadsContent(
     onWifiOnlyChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // The chrome's TOP padding goes on the outer content in both layouts: pinned, the header is
-    // exactly what would sit under the top nav (or under the compact layout's floating action
-    // cluster) otherwise; unified, it is the first thing that scrolls up under it. The BOTTOM half
-    // stays on whichever list is drawn (listContentPadding), so rows still scroll out from under
-    // the floating nav pill.
-    //
-    // Passed as an object rather than read here: the value animates every frame of a navigation,
-    // and `Modifier.padding(PaddingValues)` resolves it in the layout phase — reading
-    // `calculateTopPadding()` in composition would invalidate this scope instead, which
-    // for a `BoxWithConstraints` means a whole subcomposition pass per transition frame.
+    // Chrome TOP padding here, BOTTOM on whichever list is drawn (listContentPadding).
+    // Must stay a `PaddingValues` object resolved in the layout phase: the value animates every
+    // frame of a navigation, and reading `calculateTopPadding()` in composition would cost this
+    // `BoxWithConstraints` a whole subcomposition pass per transition frame.
     BoxWithConstraints(modifier = modifier.fillMaxSize().padding(chromeTopPadding())) {
         val wide = !queueRowCompact(maxWidth)
 
-        // Which delete the user has asked for but not yet confirmed. Local to the screen on
-        // purpose: it is a question the UI is asking, not something the ViewModel or Room knows
-        // about. It is hoisted this far up because the unified layout has no *Downloaded tab*
-        // composable left to hold it; keying it on the selected tab is what drops the pending
-        // question when the user switches tabs.
-        //
-        // The *id* is saved, not the row: a plain `remember` would lose the dialog to a rotation,
-        // and a `DownloadItem` is not `Parcelable`. The row it names is looked
-        // up from the state that is on screen anyway, which also means the dialog can never outlive
-        // the download it is asking about.
+        // Keyed on the selected tab: that is what drops a pending confirmation on a tab switch.
+        // The *id* is saved, not the row — `DownloadItem` is not `Parcelable`, and looking the row
+        // up from on-screen state is what stops the dialog outliving the download it asks about.
         var pendingDeleteId by rememberSaveable(state.selectedTab) { mutableStateOf<String?>(null) }
         val pendingDelete =
             remember(pendingDeleteId, state.downloaded) {
@@ -298,8 +236,6 @@ fun DownloadsContent(
             )
         }
 
-        // Still guarded on a non-empty queue, as it was when this dialog lived inside a queue tab
-        // that returned early on an empty one: a confirmation counting zero downloads asks nothing.
         if (state.showCancelAllConfirmation && state.queue.isNotEmpty()) {
             CancelAllDialog(
                 count = state.queue.size,
@@ -310,14 +246,7 @@ fun DownloadsContent(
     }
 }
 
-/**
- * The pinned layout (tablets, and anything else with both the width and the height for it): chrome
- * fixed at the top, the selected tab's list scrolling underneath in what is left.
- *
- * [chromePinned] is only ever true where `wide` is, so every piece is drawn in its wide form: the
- * three-panel summary, content-hug tabs, and the bulk-action pills inline in [DownloadsTabRow]
- * rather than as a bar of their own.
- */
+/** [chromePinned] is only ever true where `wide` is, hence the hardcoded `wide = true` below. */
 @Composable
 private fun PinnedChromeLayout(
     state: DownloadsUiState,
@@ -338,11 +267,9 @@ private fun PinnedChromeLayout(
 
         val body = state.body()
         when (body) {
-            // **One** list for both tabs, with the branch inside its content. Two byte-identical
-            // `LazyColumn`s in two `when` branches are two list nodes with two scroll states, so
-            // switching tabs would jump back to the top here while the same switch under
-            // `UnifiedScrollLayout` — which has one list — would not. One list makes the two
-            // layouts agree.
+            // **One** list for both tabs, branch inside its content. Two `LazyColumn`s in two
+            // branches are two scroll states, so a tab switch would jump to the top here but not
+            // under `UnifiedScrollLayout`, which has one list.
             DownloadsBody.DOWNLOADS, DownloadsBody.QUEUE ->
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
@@ -360,22 +287,11 @@ private fun PinnedChromeLayout(
                     }
                 }
 
-            // Full-height, vertically centred in the space the chrome left — these states have
-            // nothing to scroll, so there is no list under the chrome to put them in.
             else -> DownloadsStateView(body = body)
         }
     }
 }
 
-/**
- * The unified layout (every phone, portrait and landscape): one list for the whole screen, with the
- * chrome as its leading item.
- *
- * Fixes two halves of one user-reported defect. In landscape the chrome alone is taller than the
- * window, so pinning it left the queue unreachable — nothing on the screen scrolled. In portrait it
- * pinned roughly half the screen, so a short list moved inside the bottom half while the page
- * itself sat still. Both become ordinary page scrolling here.
- */
 @Composable
 private fun UnifiedScrollLayout(
     state: DownloadsUiState,
@@ -388,8 +304,8 @@ private fun UnifiedScrollLayout(
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        // No top padding of its own: the chrome is inside this list now and brings the spacing it
-        // always had, and the window's top inset is already on the outer box.
+        // No top padding: the chrome is inside this list and brings its own, and the window's top
+        // inset is already on the outer box.
         contentPadding = listContentPadding(top = 0.dp),
     ) {
         item(key = CHROME_ITEM_KEY, contentType = DownloadsContentType.CHROME) {
@@ -413,8 +329,8 @@ private fun UnifiedScrollLayout(
 
             DownloadsBody.QUEUE -> queueRows(state = state, actions = actions, bulk = bulk, wide = wide)
 
-            // An item rather than a sibling of the list: the chrome above it must still scroll,
-            // because on a landscape phone the chrome on its own overflows the window.
+            // An item, not a sibling of the list: on a landscape phone the chrome alone overflows
+            // the window, so it must still scroll even with no rows under it.
             else ->
                 item(key = STATE_ITEM_KEY, contentType = DownloadsContentType.STATE) {
                     DownloadsStateView(body = body)
@@ -424,14 +340,9 @@ private fun UnifiedScrollLayout(
 }
 
 /**
- * The header, storage/queue summary and tab row: the three pieces that are either pinned above the
- * list ([PinnedChromeLayout]) or scroll away as its first item ([UnifiedScrollLayout]). One
- * composable, so the two layouts cannot drift apart in anything but where it is put.
- *
- * @param chrome exactly the numbers drawn here, and no more. Taking the whole `DownloadsUiState`
- *   — an unstable type, rebuilt several times a second during a transfer — would stop anything
- *   under it from ever skipping, and would re-sum every finished download's `bytesOnDisk` on each
- *   of those recompositions. See [DownloadsUiState.chrome].
+ * @param chrome exactly the numbers drawn here, and no more. The whole `DownloadsUiState` is
+ *   unstable and rebuilt several times a second during a transfer: passing it would stop everything
+ *   under this from skipping and re-sum every download's `bytesOnDisk` each time.
  */
 @Composable
 private fun DownloadsChrome(
@@ -483,11 +394,6 @@ private fun DownloadsChrome(
     }
 }
 
-/**
- * What the area under the chrome is showing, named once so the two layouts can differ in *how* they
- * draw it (a full-height state in a column, or an item in a list) without ever drifting apart on
- * *what* they draw.
- */
 private enum class DownloadsBody {
     LOADING,
     LOAD_FAILED,
@@ -501,22 +407,17 @@ private fun DownloadsUiState.body(): DownloadsBody =
     when {
         isLoading -> DownloadsBody.LOADING
 
-        // Ahead of the tabs: the projection both of them read is the thing that failed, so neither
-        // has anything trustworthy to draw.
+        // Must stay ahead of the tab branches: the projection both read is what failed.
         loadFailed -> DownloadsBody.LOAD_FAILED
 
         selectedTab == DownloadsTab.DOWNLOADED ->
             if (downloaded.isEmpty()) DownloadsBody.NO_DOWNLOADS else DownloadsBody.DOWNLOADS
 
-        // No bulk-action bar on an empty queue either: with nothing queued there is nothing for any
-        // of the three to act on, and a row of dead buttons over an empty state says less than the
-        // empty state alone (see queueRows, which draws the bar only alongside rows).
         queue.isEmpty() -> DownloadsBody.NO_QUEUE
 
         else -> DownloadsBody.QUEUE
     }
 
-/** The rowless bodies. [DownloadsBody.DOWNLOADS] and [DownloadsBody.QUEUE] draw nothing here. */
 @Composable
 private fun DownloadsStateView(
     body: DownloadsBody,
@@ -537,13 +438,7 @@ private fun DownloadsStateView(
     }
 }
 
-/**
- * A list's content padding: [top] as the caller wants it, and a bottom that clears `:app`'s
- * floating navigation pill — the chrome floats over this screen rather than shrinking it
- * (`LocalAppChromePadding`), so the last row would otherwise end underneath it.
- *
- * The chrome's own half is *not* read here. See [ChromeAwarePadding].
- */
+/** Bottom clears `:app`'s floating nav pill, which floats over this screen rather than shrinking it. */
 @Composable
 private fun listContentPadding(top: Dp): PaddingValues {
     val chrome = LocalAppChromePadding.current
@@ -552,14 +447,12 @@ private fun listContentPadding(top: Dp): PaddingValues {
     }
 }
 
-/** Just the chrome's top edge, resolved in the layout phase — see [ChromeAwarePadding]. */
 @Composable
 private fun chromeTopPadding(): PaddingValues {
     val chrome = LocalAppChromePadding.current
     return remember(chrome) { ChromeAwarePadding(chrome = chrome, takeChromeTop = true) }
 }
 
-/** The screen's own title row — a top-level tab, so unlike a pushed screen it draws no back button. */
 @Composable
 private fun DownloadsHeader(
     wide: Boolean,
@@ -580,15 +473,8 @@ private fun DownloadsHeader(
 }
 
 /**
- * The *Downloaded* tab's rows, emitted into whichever list is drawing the screen.
- *
- * A `LazyListScope` extension rather than a composable of its own: [PinnedChromeLayout] gives these
- * rows a list under the pinned chrome, [UnifiedScrollLayout] appends them to the one list that
- * carries the chrome as well, and neither can end up rendering a row differently from the other.
- *
- * @param onDelete asks for a delete rather than performing one — the confirmation state it feeds
- *   lives in [DownloadsContent], since a `LazyListScope` extension is not a composition and cannot
- *   `remember` anything.
+ * @param onDelete *asks* for a delete rather than performing one: a `LazyListScope` extension is not
+ *   a composition, so the confirmation state it feeds lives in [DownloadsContent].
  */
 private fun LazyListScope.downloadedRows(
     groups: List<DownloadGroup>,
@@ -597,10 +483,8 @@ private fun LazyListScope.downloadedRows(
     compact: Boolean,
 ) {
     groups.forEach { group ->
-        // A film's heading would only repeat the title of the single row under it, so a lone film
-        // group draws no header. A series always gets one, and so does the shared Movies group once
-        // one exists — otherwise a film row right after a series' last episode reads as one more
-        // row of that series.
+        // A lone film's heading would repeat its one row's title; the shared Movies group still
+        // needs one, or a film after a series' last episode reads as another of its episodes.
         if (group.isSeries || group.isMoviesSection) {
             item(
                 key = "header-${if (group.isMoviesSection) "movies-section" else group.title}",
@@ -626,15 +510,8 @@ private fun LazyListScope.downloadedRows(
 }
 
 /**
- * Confirms a delete from the *Downloaded* tab.
- *
- * Only here, and deliberately not on the queue tab's *Cancel*: this button destroys a finished
- * transfer — a film that may have taken an hour of a metered connection — and its icon sits one
- * row away from the next item's. Cancelling something still downloading costs the bytes not yet
- * spent, and is undone by pressing Download again.
- *
- * `:core:ui`'s [ConfirmDialog] owns the dressing, so this dialog carries the app's hairline idiom
- * rather than default M3 chrome.
+ * Deliberately not mirrored on the queue tab's *Cancel*: this destroys a finished transfer, whereas
+ * cancelling costs only the bytes not yet spent and is undone by pressing Download again.
  */
 @Composable
 private fun DeleteDownloadDialog(
@@ -652,13 +529,8 @@ private fun DeleteDownloadDialog(
 }
 
 /**
- * The *Queue* tab's rows — and, on a compact layout only, the bulk-action bar above them.
- *
- * The bar belongs to this function rather than to either layout because *where* it goes is settled
- * by [wide] alone: wide draws it inline in [DownloadsTabRow], to the right of the segmented
- * control, so a second copy here would duplicate every button; compact gives it its
- * own full-width row at the head of the rows it acts on. Emitting it as the list's own item is what
- * lets it scroll away with them in [UnifiedScrollLayout].
+ * The bulk-action bar is emitted here **only** when compact — wide draws it inline in
+ * [DownloadsTabRow], so an unguarded copy here would duplicate every button.
  */
 private fun LazyListScope.queueRows(
     state: DownloadsUiState,
@@ -683,8 +555,8 @@ private fun LazyListScope.queueRows(
     ) { item ->
         QueueRow(
             item = item,
-            // The ratcheted fraction, falling back to the row's own only for an item the ratchet
-            // has not seen yet (the very first frame after an enqueue).
+            // The ratcheted fraction; the row's own is a fallback only for an item the ratchet has
+            // not seen yet (the first frame after an enqueue).
             progress = state.progress[item.itemId] ?: item.progress,
             speedBytesPerSecond = state.speeds[item.itemId],
             actions = actions,
@@ -694,65 +566,36 @@ private fun LazyListScope.queueRows(
 }
 
 /**
- * Below this width, [QueueRow]'s single-row layout — a 48dp thumbnail, a weighted text column, and
- * up to four 48dp `QueueRowActions` buttons (≈192dp) inside `Dimens.ScreenPadding` — leaves the
- * title under ~90dp, which crushes a queue row's title to ~4 characters ("Hous…") on a 360dp
- * phone. `QueueRow(compact = true)` moves the actions to their own row below
- * the title/progress instead, so every action keeps its full 48dp touch target rather than
- * shrinking to fit. Tablet widths (≥600dp) are always well above this, so their layout is
- * unaffected.
+ * Below this, [QueueRow]'s one-row layout — 48dp thumbnail + up to four 48dp action buttons (≈192dp)
+ * inside `Dimens.ScreenPadding` — leaves under ~90dp for the title, ~4 characters on a 360dp phone.
  *
- * Also the screen's one and only wide/compact breakpoint — [DownloadsContent] reads its
- * complement, `!queueRowCompact(maxWidth)`, to decide the storage card vs. the tablet stat summary
- * and the tab row's shape, rather than inventing a second breakpoint.
+ * The screen's *only* wide/compact breakpoint: [DownloadsContent] reads its complement rather than
+ * inventing a second one.
  */
 private val COMPACT_MAX_WIDTH = 480.dp
 
-/** Extracted so the breakpoint is unit-testable without a Compose test harness. */
+/** `internal` so the breakpoint is testable without a Compose harness. */
 internal fun queueRowCompact(maxWidth: Dp): Boolean = maxWidth < COMPACT_MAX_WIDTH
 
 /**
- * How tall a window has to be before pinning the chrome above an inner-scrolling list is worth
- * doing at all.
+ * The wide chrome (title, three stat panels, tab row) measures ~260–300dp; a landscape phone is
+ * ~360–400dp tall but wide enough that [queueRowCompact] answers `false`, so pinning there would
+ * leave the queue unreachable — nothing on the screen would scroll.
  *
- * The wide chrome — screen title, three stat panels, tab row — comes to roughly 260–300dp. Pin that
- * in a window shorter than this and the list underneath gets less than half the screen; pin it in a
- * landscape phone (~360–400dp of height, but wide enough that [queueRowCompact] answers `false`)
- * and the list gets nothing at all: the queue cannot be reached on a phone held sideways because
- * nothing on the screen scrolls.
- *
- * 480dp is deliberately the *same figure* as [COMPACT_MAX_WIDTH] applied to the other axis, so the
- * screen still carries one number rather than two. It separates the two cases cleanly with room
- * to spare: a test tablet in landscape
- * (~1000dp tall) and every tablet in portrait stay pinned; no phone in landscape does.
+ * Deliberately the same figure as [COMPACT_MAX_WIDTH] on the other axis, so the screen carries one
+ * number rather than two.
  */
 private val PINNED_CHROME_MIN_HEIGHT = 480.dp
 
-/**
- * Whether the header, summary and tab row are pinned above a list that scrolls inside them (`true`)
- * or ride along as that list's first item, so the page scrolls as one (`false`).
- *
- * Pinning takes *both* axes. Width, because a compact layout has never had the room for it — the
- * storage card and full-width tabs are the whole top half of a phone. Height, because chrome pinned
- * in a window shorter than [PINNED_CHROME_MIN_HEIGHT] leaves the list too little to scroll in, or
- * none. Extracted alongside [queueRowCompact] so both breakpoints stay checkable without a Compose
- * test harness.
- */
 internal fun chromePinned(
     maxWidth: Dp,
     maxHeight: Dp,
 ): Boolean = !queueRowCompact(maxWidth) && maxHeight >= PINNED_CHROME_MIN_HEIGHT
 
 /**
- * The queue-wide actions.
- *
- * Compact: [QueueTab] draws this as its own full-width row above the list. Wide: [DownloadsContent]
- * draws it inline inside [DownloadsTabRow], trailing the segmented control, via [horizontalPadding]
- * `= 0.dp` — the row that hosts it already carries the screen's side margin.
- *
- * *Pause all* and *Resume all* are disabled, not hidden, when they have nothing to act on: a queue
- * of transcodes has nothing pausable in it, and a button that vanishes as the queue changes shape
- * under the finger is worse than one that visibly cannot be pressed.
+ * [horizontalPadding] is `0.dp` when drawn inline in [DownloadsTabRow] — that row already carries
+ * the screen's side margin. *Pause/Resume all* are disabled rather than hidden, so the buttons do
+ * not vanish under the finger as the queue changes shape.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -787,13 +630,11 @@ private fun QueueActionsBar(
             labelRes = R.string.downloads_action_cancel_all,
             enabled = true,
             onClick = bulk.onCancelAll,
-            // The one destructive action on the bar, coloured like one.
             contentColor = MaterialTheme.colorScheme.error,
         )
     }
 }
 
-/** A glass pill bulk-action button — 8×14dp padding, a 12sp/500 label and a 15dp icon. */
 @Composable
 private fun QueueBulkButton(
     icon: ImageVector,
@@ -831,16 +672,8 @@ private fun QueueBulkButton(
 }
 
 /**
- * Confirms emptying the queue.
- *
- * Confirmed although a single row's *Cancel* is not: one tap here can throw away every partly
- * transferred file on the device, and the button sits a few millimetres from *Pause all*. The copy
- * says out loud what the action does **not** touch — finished downloads are on the other tab and
- * are never in this list (`toQueue()`), and that is exactly the question a user asks before
- * pressing something called "cancel all".
- *
- * Dressed by `:core:ui`'s `ConfirmDialog` in the app's hairline idiom rather than default M3
- * chrome — see [DeleteDownloadDialog].
+ * The message copy promises that finished downloads are untouched — true because `toQueue()` never
+ * puts them in this list. Keep the two in step.
  */
 @Composable
 private fun CancelAllDialog(
@@ -854,9 +687,7 @@ private fun CancelAllDialog(
         confirmLabel = stringResource(R.string.downloads_cancel_all_dialog_confirm),
         onConfirm = onConfirm,
         onDismiss = onDismiss,
-        // Not the shared "Cancel": this dialog *is* a cancel confirmation, so a button labelled
-        // "Cancel" beside one labelled "Cancel all" would be a coin toss. "Keep" says which way it
-        // goes.
+        // Not the shared "Cancel": beside "Cancel all" that would be a coin toss. "Keep" is not.
         dismissLabel = stringResource(R.string.downloads_cancel_all_dialog_dismiss),
     )
 }
@@ -871,16 +702,14 @@ private fun GroupHeader(
             modifier
                 .fillMaxWidth()
                 .padding(horizontal = Dimens.PanelPadding, vertical = Dimens.SpaceSmall)
-                // One node, and a heading: the show's name and the room it takes are two halves of
-                // one fact, and a *Downloaded* tab holding six series is six headings to jump
-                // between rather than a wall of rows.
+                // One spoken node, and a heading so TalkBack can jump series to series.
                 .semantics(mergeDescendants = true) { heading() },
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            // The Movies group carries no title of its own (DownloadGroup.isMoviesSection) — its
-            // heading is a string resource, resolved here, not baked into the ViewModel's state.
+            // The Movies group carries no title of its own; its heading is a string resource,
+            // resolved here rather than baked into the ViewModel's state.
             text = if (group.isMoviesSection) stringResource(R.string.downloads_group_movies) else group.title,
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onBackground,
@@ -893,10 +722,7 @@ private fun GroupHeader(
     }
 }
 
-/**
- * The compact storage summary — an "m-surface panel": the used/free figures,
- * a usage bar, and the Wi-Fi-only toggle. Replaced by [WideSummary] on a wide layout.
- */
+/** Replaced by [WideSummary] on a wide layout; keep the two in step. */
 @Composable
 private fun StorageCard(
     storage: StorageSummary,
@@ -939,16 +765,9 @@ private fun StorageCard(
 }
 
 /**
- * The *Download over Wi-Fi only* switch row, in one place rather than two: the compact
- * [StorageCard] and the wide [NetworkStatPanel] would otherwise each carry their own copy, free to
- * drift on the label's colour.
- *
- * The colour is `onBackground`. The label names the one control on the row, at 16sp/W600 it is not
- * a caption, and `onSurfaceVariant` (white at 70 %) on the `#202020` m-surface these panels are
- * drawn on is the dimmer of the two answers, so `onBackground` is also the contrast-preserving one.
- *
- * The whole row is the toggle's target, [Dimens.MinTouchTarget] tall — the `Dimens` token rather
- * than a hardcoded `48.dp`.
+ * Shared by the compact [StorageCard] and the wide [NetworkStatPanel]. The label is `onBackground`,
+ * not `onSurfaceVariant`: white at 70 % on the `#202020` m-surface is the lower-contrast answer.
+ * The whole row is the toggle's target, [Dimens.MinTouchTarget] tall.
  */
 @Composable
 private fun WifiOnlyToggle(
@@ -976,14 +795,9 @@ private fun WifiOnlyToggle(
 }
 
 /**
- * The wide-layout replacement for [StorageCard]: three equal-weight "m-surface" stat panels —
- * storage, the queue's own numbers, and the network toggle — rather than one strip, backed by
- * [DownloadsUiState.queueStats].
+ * The wide-layout replacement for [StorageCard]; keep the two in step.
  *
- * The queue panel's own progress bar is *not* one of [QueueStats]' fields — it is derived from bytes
- * the queue already carries (`bytesDownloaded` against `bytesDownloaded + remainingBytes`), so
- * [QueueStats] stays a narrow set of fields rather than growing one only this bar needs. That
- * derivation lives on [DownloadsChromeState.queueProgress] rather than here: computed inline it
+ * [queueProgress] must stay derived on [DownloadsChromeState], not inline here: computed inline it
  * would re-sum the whole queue on every recomposition of a panel that recomposes several times a
  * second.
  */
@@ -1001,9 +815,7 @@ private fun WideSummary(
             modifier
                 .fillMaxWidth()
                 .padding(horizontal = Dimens.PanelPadding, vertical = Dimens.SpaceSmall)
-                // Equal heights as well as equal widths: the three panels carry different amounts
-                // of content (the network one grows a helper line while Wi-Fi-only is on), and
-                // three same-width cards of three different heights read as misaligned.
+                // Equal heights: the network panel grows a helper line while Wi-Fi-only is on.
                 .height(IntrinsicSize.Max),
         horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceLarge),
     ) {
@@ -1073,8 +885,7 @@ private fun QueueStatPanel(
             color = MaterialTheme.colorScheme.onBackground,
         )
         UsageBar(fraction = progress, label = stringResource(R.string.downloads_usage_queue_label))
-        // Hidden while idle: a speed/ETA line reading "0 B/s" would look like a stall rather than
-        // the truth, which is that nothing is asking the network for anything right now.
+        // Hidden while idle: "0 B/s" reads as a stall rather than as nothing being asked for.
         if (!stats.isIdle) {
             val etaSeconds = stats.etaSeconds
             Text(
@@ -1101,7 +912,6 @@ private fun NetworkStatPanel(
     StatPanel(modifier = modifier) {
         StatEyebrow(text = stringResource(R.string.downloads_stat_network))
         WifiOnlyToggle(wifiOnly = wifiOnly, onWifiOnlyChange = onWifiOnlyChange)
-        // Shown only while the toggle is on — the moment cellular would actually pause anything.
         if (wifiOnly) {
             Text(
                 text = stringResource(R.string.downloads_stat_network_helper),
@@ -1112,7 +922,6 @@ private fun NetworkStatPanel(
     }
 }
 
-/** The "m-surface" wrapper every wide stat panel shares. */
 @Composable
 private fun StatPanel(
     modifier: Modifier = Modifier,
@@ -1129,18 +938,9 @@ private fun StatPanel(
 }
 
 /**
- * A stat panel's small shouted label ("ON DEVICE", "QUEUE", "NETWORK").
- *
- * The uppercasing is this composable's, and stops here — the same rule `:player`'s `TagPill`
- * documents, in both of its halves:
- *
- * - **the locale.** `String.uppercase()` with no locale uses the JVM default, read once and never
- *   observed; `LocalConfiguration`'s is the app's current one, which for Turkish is the difference
- *   between "TITLE" and "TİTLE". Lint calls this `NonObservableLocale`; it cannot see through the
- *   parameterless overload, which is why the rule is written down rather than gated.
- * - **the screen reader.** An uppercased *string* reaches text-to-speech as one, and some engines
- *   spell it out letter by letter. The pill draws the shouted form and describes the sentence-case
- *   one it was given.
+ * Uppercasing stops here (as in `:player`'s `TagPill`), on both counts: the locale must be
+ * `LocalConfiguration`'s, not the JVM default lint cannot see through — Turkish "TITLE" vs "TİTLE";
+ * and the contentDescription keeps the sentence-case form, since some TTS engines spell out caps.
  */
 @Composable
 private fun StatEyebrow(text: String) {
@@ -1154,19 +954,9 @@ private fun StatEyebrow(text: String) {
 }
 
 /**
- * The 6dp usage bar every stat panel on this screen draws — a white@12% track, a primary fill and
- * a 3dp radius. Hand-rolled rather than a stock `LinearProgressIndicator`, the same reasoning
- * `core/ui`'s `MediaCardArtwork.InsetProgressBar` states for its own bar: at this height and radius
- * nothing the stock component provides (stop indicator, gap, stroke-cap rounding) survives being
- * configured away.
- *
- * Hand-rolled, it carries no semantics of its own — a `Box` inside a `Box` is invisible to a screen
- * reader — so it reports [ProgressBarRangeInfo] explicitly, which is what makes a screen reader say
- * a percentage, and takes a [label] because that percentage is unusable
- * without one: the three panels on a wide layout each draw one of these, and "23 percent" of
- * *what* is the whole question. Labelled rather than cleared as decoration — the two storage bars
- * sit beside a used figure and a free figure, but the fraction between them is the thing the bar
- * exists to show, and the queue's bar shows a fraction stated nowhere else on the panel.
+ * Hand-rolled `Box`es carry no semantics, so the explicit [ProgressBarRangeInfo] is what makes a
+ * screen reader say a percentage at all — and [label] is mandatory, since a wide layout draws three
+ * of these and "23 percent" of *what* is the whole question.
  */
 @Composable
 private fun UsageBar(
@@ -1197,16 +987,6 @@ private fun UsageBar(
     }
 }
 
-/**
- * The Downloaded/Queue glass segmented control: a pill container with 4dp
- * inner padding, each segment a smaller pill that goes solid white when selected — the same shape
- * `:app`'s `GlassTopNav` uses for its own tab bar, rebuilt here rather than shared across a
- * `:feature` → `:app` dependency neither module has.
- *
- * @param wide compact flex-fills the container's segments across the full row width (20dp side
- *   margins); wide instead lets the segments hug their own label width and, when [trailing] is
- *   given, draws it after them on the same row.
- */
 @Composable
 private fun DownloadsTabRow(
     selectedTab: DownloadsTab,
@@ -1259,9 +1039,8 @@ private fun SegmentedTab(
     Box(
         modifier =
             modifier
-                // Minimum, not fixed (see `GlassBottomNav`): 36dp around a 13sp label leaves under
-                // 4dp of slack, so at accessibility font scales a hard `height` clipped the tab's
-                // own word. The segmented control sizes to its tabs, so growing is free.
+                // Minimum, never a fixed `height` (see `GlassBottomNav`): 36dp around a 13sp label
+                // leaves under 4dp of slack, and large font scales clipped the tab's own word.
                 .heightIn(min = Dimens.PillHeightSmall)
                 .clip(CircleShape)
                 .selectable(selected = selected, onClick = onClick, role = Role.Tab)
@@ -1281,15 +1060,6 @@ private fun SegmentedTab(
     }
 }
 
-/**
- * Every node shape this screen's lists draw.
- *
- * Without a `contentType`, Compose's default (every item shares one type) means scrolling a header
- * into a slot the last recycled node held a row in — or the reverse — cannot reuse the composition
- * at all; it has to throw it away and start over. [UnifiedScrollLayout] puts the chrome, the
- * bulk-action bar and *either* tab's rows in one list, and switching tabs swaps one row shape for
- * the other in place, so every shape is named here.
- */
 private enum class DownloadsContentType {
     CHROME,
     HEADER,
@@ -1300,9 +1070,8 @@ private enum class DownloadsContentType {
 }
 
 /**
- * Keys for the items that are not rows. Constants because they must stay stable across a tab switch
- * within one [UnifiedScrollLayout] list — the chrome in particular, which is the same item before
- * and after and must not be torn down and rebuilt (and scrolled back to the top) by the change.
+ * Must stay stable across a tab switch within one [UnifiedScrollLayout] list — the chrome above all,
+ * which is the same item before and after and would otherwise be rebuilt and scrolled to the top.
  */
 private const val CHROME_ITEM_KEY = "downloads-chrome"
 private const val QUEUE_ACTIONS_ITEM_KEY = "downloads-queue-actions"
@@ -1314,7 +1083,6 @@ private fun DownloadsTab.titleRes(): Int =
         DownloadsTab.QUEUE -> R.string.downloads_tab_queue
     }
 
-/** Renders a one-shot [message] as snackbar copy (precedent: `:feature:detail`'s `userMessageText`). */
 @Composable
 private fun downloadsMessageText(message: DownloadsMessage): String =
     when (message) {
@@ -1328,8 +1096,6 @@ private fun downloadsMessageText(message: DownloadsMessage): String =
                 message.transcodingCount,
             )
     }
-
-// ---- Geometry local to this screen, not shared `Dimens` tokens ----------------------------------
 
 private val StatPanelVerticalPadding = 18.dp
 private val StatPanelInnerGap = 6.dp
@@ -1348,9 +1114,8 @@ private val BulkButtonIconSize = 15.dp
 private val BulkButtonLabel = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.W500)
 
 /**
- * A disabled bulk button's content. 0.48, not 0.35: the label still has to name the action it is
- * refusing, so it is text with a 4.5:1 obligation — 3.20:1 at 0.35, 4.78:1 at 0.48 on `#202020`.
- * Matches `JellyfinButtons`' disabled pill content.
+ * 0.48, not 0.35: the label is text with a 4.5:1 obligation — 3.20:1 at 0.35, 4.78:1 at 0.48 on
+ * `#202020`. Matches `JellyfinButtons`' disabled pill content.
  */
 private const val BULK_BUTTON_DISABLED_ALPHA = 0.48f
 private val StatValue = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.W600)
@@ -1364,13 +1129,6 @@ private fun DownloadsPreview() {
     QueuePreview()
 }
 
-/**
- * A phone in portrait: the compact two-tier layout ([queueRowCompact]) at the width the one-tier
- * form fails on — `widthDp = 360` is a common phone's shortest dimension, below
- * `COMPACT_MAX_WIDTH`, so [QueueRow] renders its compact variant. Tall enough to clear
- * `PINNED_CHROME_MIN_HEIGHT` but not wide enough, so [chromePinned] is `false`: storage card, tab
- * row and rows are one scrolling page.
- */
 @Preview(
     name = "Downloads — queue (phone portrait, 360×740)",
     showBackground = true,
@@ -1383,12 +1141,7 @@ private fun DownloadsPreviewCompact() {
     QueuePreview()
 }
 
-/**
- * A phone in landscape — the reported defect's own window. Wide enough for the tablet treatment
- * (the three-panel [WideSummary], one-tier rows, bulk pills inline), but 360dp of height is well
- * under `PINNED_CHROME_MIN_HEIGHT`, so the chrome is *not* pinned and the summary scrolls up out of
- * the way to reveal the queue. Pinned, this window showed nothing but chrome.
- */
+/** Wide enough for the tablet treatment but under `PINNED_CHROME_MIN_HEIGHT`: unpinned chrome. */
 @Preview(
     name = "Downloads — queue (phone landscape, 800×360)",
     showBackground = true,
@@ -1401,12 +1154,6 @@ private fun DownloadsPreviewPhoneLandscape() {
     QueuePreview()
 }
 
-/**
- * The wide *and* tall layout: the three-panel [WideSummary] in place of
- * [StorageCard], the content-hug segmented tabs with the bulk-action pills inline, and [QueueRow]'s
- * one-tier form, with all of it pinned above a list that scrolls underneath. `900 × 700` clears
- * both `COMPACT_MAX_WIDTH` and `PINNED_CHROME_MIN_HEIGHT`, so [chromePinned] answers `true` here.
- */
 @Preview(
     name = "Downloads — queue (wide, 900dp)",
     showBackground = true,
@@ -1419,11 +1166,7 @@ private fun DownloadsPreviewWide() {
     QueuePreview()
 }
 
-/**
- * Shared by every queue preview above. The title is long enough to visibly truncate at 360dp
- * before the compact fix, and to show it fixed after — a short one like the tab bar's own
- * "Chestnut" example would not exercise the defect either way.
- */
+/** Keep the fixture title long: a short one does not truncate at 360dp, so it shows nothing. */
 @Composable
 private fun QueuePreview() {
     val queued =

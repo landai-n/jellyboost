@@ -4,13 +4,9 @@ import dev.jellyboost.player.PlayMethod
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
-/**
- * Unit tests for [MusicQueueSpecFactory].
- *
- * The metadata built here is the *only* source the media notification and the lock screen have —
- * the session reads it straight off the timeline — so getting it wrong is a wrong lock screen, and
- * nothing in the app would say so.
- */
+// The metadata built here is the *only* source the media notification and lock screen have (the
+// session reads it straight off the timeline), so getting it wrong is a wrong lock screen and
+// nothing else in the app would say so.
 class MusicQueueSpecFactoryTest {
     private val factory = MusicQueueSpecFactory()
 

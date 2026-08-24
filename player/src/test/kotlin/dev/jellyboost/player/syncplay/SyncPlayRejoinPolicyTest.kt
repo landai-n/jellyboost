@@ -16,10 +16,8 @@ import org.junit.jupiter.api.Test
 import java.net.HttpURLConnection.HTTP_FORBIDDEN
 
 /**
- * The connection-loss and rejoin scenarios — the behaviour `SyncPlayRejoinPolicy` owns.
- *
- * Exercised through the real controller (see [SyncPlayControllerTestBase]): every scenario here
- * predates the extraction and pins the same observable protocol behaviour it always did.
+ * Exercised through the real controller (see [SyncPlayControllerTestBase]): these scenarios
+ * predate the `SyncPlayRejoinPolicy` extraction and pin the protocol behaviour it always had.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class SyncPlayRejoinPolicyTest : SyncPlayControllerTestBase() {
@@ -39,11 +37,9 @@ internal class SyncPlayRejoinPolicyTest : SyncPlayControllerTestBase() {
             fixture.controller.leaveGroup()
             runCurrent()
 
-            // The leave reached the server even though the rejoin owned the session...
             fixture.api.callsOf<SyncPlayCall.LeaveGroup>() shouldBe listOf(SyncPlayCall.LeaveGroup)
             fixture.controller.state.value shouldBe SyncPlayState.Idle
 
-            // ...and the loop the leave cancelled cannot re-enter the group behind the user's back.
             fixture.api.getGroupsError = null
             advanceTimeBy(SyncPlayRejoinPolicy.REJOIN_RETRY_DELAY_MS * SyncPlayRejoinPolicy.REJOIN_MAX_ATTEMPTS * 2)
             runCurrent()
@@ -55,14 +51,12 @@ internal class SyncPlayRejoinPolicyTest : SyncPlayControllerTestBase() {
     fun `a confirmed connection loss pauses the player at once, and leaves once the rejoin has failed`() =
         runTest {
             val fixture = fixture()
-            // The connection really is gone, so the group list cannot be read either.
             fixture.api.getGroupsError = java.io.IOException("socket closed")
             joinPlaying(fixture)
 
             fixture.socket.failStreams(java.io.IOException("socket closed"))
             runCurrent()
 
-            // Frozen immediately — the rejoin never lets playback run on out of step.
             fixture.player.pauseCount shouldBe 1
             fixture.status.inGroup.value shouldBe false
             fixture.messages shouldBe emptyList()
@@ -73,7 +67,6 @@ internal class SyncPlayRejoinPolicyTest : SyncPlayControllerTestBase() {
             fixture.controller.state.value shouldBe SyncPlayState.Idle
             fixture.messages shouldBe listOf(SyncPlayMessage.ConnectionLost)
 
-            // Nothing keeps running: no drift correction, no ping, no scheduled command.
             fixture.player.resetCalls()
             fixture.api.clearCalls()
             advanceTimeBy(30_000)
@@ -91,16 +84,14 @@ internal class SyncPlayRejoinPolicyTest : SyncPlayControllerTestBase() {
             fixture.player.resetCalls()
             fixture.api.clearCalls()
 
-            // The device case exactly: three seconds of Wi-Fi off costs more than the grace window
-            // once association and the reachability probe are counted, so the loss is confirmed
-            // before anything has heard a `NotInGroup`.
+            // Device case: 3s of Wi-Fi off costs more than the grace window once association and
+            // the reachability probe are counted, so loss is confirmed before any `NotInGroup`.
             fixture.connection.value = ConnectionState.OFFLINE_NO_NETWORK
             runCurrent()
             advanceTimeBy(SyncPlayController.CONNECTIVITY_GRACE_MS + 1)
             runCurrent()
             fixture.controller.state.value
                 .shouldBeInstanceOf<SyncPlayState.Rejoining>()
-            // Not a single call spent on a network that is known to be down.
             fixture.api.callsOf<SyncPlayCall.GetGroups>() shouldBe emptyList()
 
             fixture.connection.value = ConnectionState.ONLINE
@@ -123,8 +114,6 @@ internal class SyncPlayRejoinPolicyTest : SyncPlayControllerTestBase() {
             fixture.connection.value = ConnectionState.OFFLINE_NO_NETWORK
             runCurrent()
 
-            // Frozen immediately, so a hard Wi-Fi kill still stops within the window rather than at
-            // the end of it — but the group is not given up on yet.
             fixture.player.pauseCount shouldBe 1
             fixture.controller.state.value
                 .shouldBeInstanceOf<SyncPlayState.InGroup>()
@@ -133,8 +122,6 @@ internal class SyncPlayRejoinPolicyTest : SyncPlayControllerTestBase() {
             advanceTimeBy(SyncPlayController.CONNECTIVITY_GRACE_MS + 1)
             runCurrent()
 
-            // Still not given up on: the rejoin gets its attempts first, all of them spent waiting
-            // for a network that never comes back.
             fixture.controller.state.value
                 .shouldBeInstanceOf<SyncPlayState.Rejoining>()
             advanceTimeBy(SyncPlayRejoinPolicy.REJOIN_RETRY_DELAY_MS * SyncPlayRejoinPolicy.REJOIN_MAX_ATTEMPTS * 2)
@@ -148,7 +135,7 @@ internal class SyncPlayRejoinPolicyTest : SyncPlayControllerTestBase() {
     fun `a streak of failed ping cycles is a confirmed loss, once`() =
         runTest {
             val fixture = fixture()
-            // The device case: the OS still says "online" while the platform has cut this app's
+            // Device case: OS still reports "online" while the platform has cut this app's
             // network, so every REST call times out and the socket never comes back.
             fixture.api.failEverySample = java.io.IOException("timeout")
             fixture.api.getGroupsError = java.io.IOException("timeout")
@@ -158,7 +145,6 @@ internal class SyncPlayRejoinPolicyTest : SyncPlayControllerTestBase() {
             advanceTimeBy(SyncPlayPinger.FAST_INTERVAL_MS * SyncPlayController.PING_FAILURE_STREAK)
             runCurrent()
 
-            // Frozen at once, and given up on only after the rejoin attempts have failed too.
             fixture.player.pauseCount shouldBe 1
             advanceTimeBy(SyncPlayRejoinPolicy.REJOIN_RETRY_DELAY_MS * SyncPlayRejoinPolicy.REJOIN_MAX_ATTEMPTS)
             runCurrent()
@@ -187,8 +173,6 @@ internal class SyncPlayRejoinPolicyTest : SyncPlayControllerTestBase() {
             fixture.controller.state.value shouldBe SyncPlayState.Idle
             fixture.messages shouldBe listOf(SyncPlayMessage.RemovedFromGroup)
             fixture.player.pauseCount shouldBe 0
-            // Nothing was wrong with the connection, so the removal was somebody's decision: obeyed,
-            // not undone. Not even the group list is asked for.
             fixture.api.calls shouldBe emptyList()
         }
 
@@ -212,11 +196,10 @@ internal class SyncPlayRejoinPolicyTest : SyncPlayControllerTestBase() {
                 .shouldBeInstanceOf<SyncPlayState.InGroup>()
             fixture.status.inGroup.value shouldBe true
             fixture.messages shouldBe listOf(SyncPlayMessage.Rejoined)
-            // Frozen throughout: the group's own answer to the handshake is what resumes anyone.
             fixture.player.playCount shouldBe 0
 
-            // The server's post-join queue re-enters the handshake on the item already open, rather
-            // than reloading it — which is what keeps "rejoin" from looking like "start again".
+            // The post-join queue re-enters the handshake on the already-open item rather than
+            // reloading it, so "rejoin" never looks like "start again".
             fixture.socket.emit(SyncPlayGroupEvent.QueueChanged(queue()))
             runCurrent()
 
@@ -226,8 +209,8 @@ internal class SyncPlayRejoinPolicyTest : SyncPlayControllerTestBase() {
                 .last()
                 .playlistItemId shouldBe playlistItemId
 
-            // The adopted player is prepared already and may never re-buffer, so the owed `ready`
-            // is the fallback's — but it is still owed and still sent.
+            // The adopted player is already prepared and may never re-buffer, but the owed `ready`
+            // (the fallback's) is still sent.
             advanceTimeBy(SyncPlayController.SETTLED_READY_FALLBACK_MS + 1)
             runCurrent()
 
@@ -247,8 +230,7 @@ internal class SyncPlayRejoinPolicyTest : SyncPlayControllerTestBase() {
 
             blipThenDropped(fixture)
 
-            // Idle, in the group, out of it while the server did not have us, in it again. The middle
-            // `false` is the whole point: `SyncPlayLocalSession` mints on the way back up.
+            // The middle `false` is the whole point: `SyncPlayLocalSession` mints on the way back up.
             fixture.membershipEdges shouldBe listOf(false, true, false, true)
         }
 
@@ -259,7 +241,6 @@ internal class SyncPlayRejoinPolicyTest : SyncPlayControllerTestBase() {
             fixture.api.groups = listOf(group())
             joinPlaying(fixture)
             fixture.api.clearCalls()
-            // The re-negotiation that follows the blip is the first call to find out.
             fixture.api.failNextBuffering = InvalidStatusException(HTTP_FORBIDDEN)
 
             blip(fixture)
@@ -274,7 +255,6 @@ internal class SyncPlayRejoinPolicyTest : SyncPlayControllerTestBase() {
     fun `a group that has dissolved is asked after once, and then given up on`() =
         runTest {
             val fixture = fixture()
-            // Nobody else was in it, so the server removed the group along with this session.
             fixture.api.groups = emptyList()
             joinPlaying(fixture)
             fixture.api.clearCalls()
@@ -286,7 +266,6 @@ internal class SyncPlayRejoinPolicyTest : SyncPlayControllerTestBase() {
             fixture.controller.state.value shouldBe SyncPlayState.Idle
             fixture.messages shouldBe listOf(SyncPlayMessage.GroupEnded)
 
-            // And no attempt keeps running behind the teardown.
             advanceTimeBy(SyncPlayRejoinPolicy.REJOIN_RETRY_DELAY_MS * 4)
             runCurrent()
             fixture.api.callsOf<SyncPlayCall.GetGroups>().size shouldBe 1
@@ -320,7 +299,6 @@ internal class SyncPlayRejoinPolicyTest : SyncPlayControllerTestBase() {
             fixture.controller.state.value shouldBe SyncPlayState.Idle
             fixture.messages shouldBe listOf(SyncPlayMessage.ConnectionLost)
 
-            // Once out, we stay out: no background loop keeps asking.
             advanceTimeBy(60_000)
             runCurrent()
             fixture.api.callsOf<SyncPlayCall.GetGroups>().size shouldBe SyncPlayRejoinPolicy.REJOIN_MAX_ATTEMPTS
@@ -394,7 +372,7 @@ internal class SyncPlayRejoinPolicyTest : SyncPlayControllerTestBase() {
             blip(fixture)
             fixture.api.clearCalls()
 
-            // The blip is ancient history by the time this arrives, so it explains nothing.
+            // Past REJOIN_TROUBLE_WINDOW_MS, the blip is stale and no longer excuses a removal.
             advanceTimeBy(SyncPlayRejoinPolicy.REJOIN_TROUBLE_WINDOW_MS + 1)
             runCurrent()
             fixture.socket.emit(SyncPlayGroupEvent.NotInGroup)
@@ -412,7 +390,6 @@ internal class SyncPlayRejoinPolicyTest : SyncPlayControllerTestBase() {
             fixture.api.groups = listOf(group())
             val lost = backgroundedUntilLost(fixture)
 
-            // The network is back long before the user is, and nothing is running to notice it.
             fixture.connection.value = ConnectionState.ONLINE
             runCurrent()
             fixture.controller.state.value shouldBe SyncPlayState.Idle
@@ -439,7 +416,6 @@ internal class SyncPlayRejoinPolicyTest : SyncPlayControllerTestBase() {
             fixture.api.groups = listOf(group())
             val lost = backgroundedUntilLost(fixture)
 
-            // Everyone else left too, so the server disposed of it.
             fixture.api.groups = emptyList()
             fixture.connection.value = ConnectionState.ONLINE
             runCurrent()
@@ -450,10 +426,8 @@ internal class SyncPlayRejoinPolicyTest : SyncPlayControllerTestBase() {
 
             fixture.api.callsOf<SyncPlayCall.GetGroups>().size shouldBe 1
             fixture.controller.state.value shouldBe SyncPlayState.Idle
-            // Silent: a re-check that finds nothing must not announce itself on every foreground.
             fixture.messages shouldBe lost
 
-            // And forgotten, so the next foreground spends nothing on it.
             fixture.api.clearCalls()
             fixture.controller.onAppForegrounded()
             runCurrent()
@@ -467,8 +441,8 @@ internal class SyncPlayRejoinPolicyTest : SyncPlayControllerTestBase() {
             fixture.api.groups = listOf(group())
             val lost = backgroundedUntilLost(fixture)
 
-            // Online as far as the OS is concerned, but the server is still not answering — the
-            // device's own failure mode (B8), and the reason a re-check cannot assume it will work.
+            // OS reports online but the server still doesn't answer — the device's own failure
+            // mode (B8): a re-check cannot assume it will work.
             fixture.connection.value = ConnectionState.ONLINE
             fixture.api.getGroupsError = java.io.IOException("no route to host")
             runCurrent()
@@ -483,13 +457,11 @@ internal class SyncPlayRejoinPolicyTest : SyncPlayControllerTestBase() {
             fixture.controller.state.value shouldBe SyncPlayState.Idle
             fixture.messages shouldBe lost
 
-            // Nothing keeps trying in the background...
             fixture.api.clearCalls()
             advanceTimeBy(60_000)
             runCurrent()
             fixture.api.calls shouldBe emptyList()
 
-            // ...and the memory survived the failure, so the next foreground gets it back.
             fixture.api.getGroupsError = null
             fixture.controller.onAppForegrounded()
             runCurrent()

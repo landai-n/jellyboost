@@ -42,22 +42,11 @@ import org.junit.jupiter.api.Test
 import javax.inject.Provider
 
 /**
- * What the player does when a television takes the film, and when it gives it back.
- *
- * Assembled from the real pieces wherever they are ours: a genuine [RoutingPlayerHandle] over two
- * [FakePlayerHandle]s and a genuine [CastSessionCoordinator] behind a fake [CastSessionMonitor], so
- * that "the screen reports the stop, the coordinator does not" is tested as the *system* property it
- * is rather than as two halves that were never in the same room. No `com.google.android.gms` type
- * appears anywhere: the monitor is the seam that keeps the Cast framework out.
- *
- * The claim the whole class is built around is a counting one — **exactly one stop report per
- * source**. A transfer that reported twice would kill the incoming encoder along with the outgoing
- * one and race itself for the resume position; a transfer that reported neither would leave the
- * server showing a session that is not there.
+ * Uses real [RoutingPlayerHandle]/[CastSessionCoordinator] over fakes so "exactly one stop report
+ * per source" is verified as a system property, not two independently-mocked halves.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class PlayerViewModelCastTest : PlayerViewModelFixture() {
-    /** The fixture's handle is this device's; the receiver gets its own. */
     private val local get() = playerHandle
 
     private val castHandle = FakePlayerHandle()
@@ -92,13 +81,7 @@ internal class PlayerViewModelCastTest : PlayerViewModelFixture() {
 
     private val framework get() = requireNotNull(monitor.listener) { "The coordinator never started watching" }
 
-    /**
-     * A ViewModel wired for casting.
-     *
-     * Its own builder rather than the fixture's, because two of its collaborators have to be the
-     * routing ones — the handle it holds *and* the one the session controller prepares through —
-     * and the fixture's builder is what every non-casting test uses unchanged.
-     */
+    /** Own builder, not the fixture's: the handle and the session controller both need the routing one. */
     private fun castViewModel(): PlayerViewModel =
         PlayerViewModel(
             repository = repository,
@@ -108,9 +91,8 @@ internal class PlayerViewModelCastTest : PlayerViewModelFixture() {
                     mediaSourceFactory = mediaSourceFactory,
                     playerHandle = routing,
                     reporter = reporter,
-                    // The same holder the coordinator writes and the ViewModel reads: the controller
-                    // re-checks it at prepare time, and a private never-casting default would make
-                    // it re-resolve every cast open.
+                    // Must be the same holder the coordinator writes: the controller re-checks it at
+                    // prepare time, and a private never-casting default would re-resolve every open.
                     castStatus = castStatus,
                 ),
             playerHandle = routing,
@@ -130,7 +112,6 @@ internal class PlayerViewModelCastTest : PlayerViewModelFixture() {
             castCoordinator = coordinator,
         )
 
-    /** Records every request that reaches the resolver from here on. */
     private fun recordResolves(): List<PlaybackResolveRequest> {
         val requests = mutableListOf<PlaybackResolveRequest>()
         coEvery { resolver.resolve(capture(requests)) } returns AppResult.Success(source)
@@ -150,15 +131,14 @@ internal class PlayerViewModelCastTest : PlayerViewModelFixture() {
             framework.onSessionStarted("Living Room TV")
             advanceUntilIdle()
 
-            // The outgoing session is closed *before* the next one is negotiated: `reportStop` kills
-            // its encoder on the way past, and a `PlaybackInfo` that overtook it would strand one.
+            // Must close the outgoing session before negotiating the next: `reportStop` kills its
+            // encoder, and a `PlaybackInfo` that overtook it would strand one.
             coVerifyOrder {
                 reporter.reportStop(source, ON_THE_PHONE)
                 resolver.resolve(any())
             }
             requests.last().castTarget shouldBe true
             requests.last().startPositionTicks shouldBe ON_THE_PHONE.positionMs.millisToTicks()
-            // And it is the receiver that was prepared, not this device.
             castHandle.prepared.size shouldBe 1
             local.prepared.size shouldBe 1
         }
@@ -186,8 +166,7 @@ internal class PlayerViewModelCastTest : PlayerViewModelFixture() {
             framework.onSessionStarted("Living Room TV")
             advanceUntilIdle()
 
-            // Two players sounding at once is the everyday consequence of forgetting this, and it
-            // takes the local media notification down with it (decision 1).
+            // Forgetting this leaves two players sounding at once (decision 1).
             local.stopped shouldBe true
         }
 
@@ -223,7 +202,6 @@ internal class PlayerViewModelCastTest : PlayerViewModelFixture() {
     @Test
     fun `nothing is transferred when there is nothing open`() =
         runTest(dispatcher) {
-            // A session that never resolved has nothing to move, and nothing to report about it.
             coEvery { resolver.resolve(any()) } returns AppResult.Failure(AppError.Network())
             castViewModel()
             advanceUntilIdle()
@@ -254,7 +232,7 @@ internal class PlayerViewModelCastTest : PlayerViewModelFixture() {
 
             requests.last().castTarget shouldBe false
             requests.last().startPositionTicks shouldBe ON_THE_TELEVISION.positionMs.millisToTicks()
-            // Paused: a disconnect is not a request to watch. The user presses play.
+            // A disconnect is not a request to watch; the user presses play.
             local.prepared.single().playWhenReady shouldBe false
         }
 
@@ -289,9 +267,8 @@ internal class PlayerViewModelCastTest : PlayerViewModelFixture() {
             model.releaseSession()
             advanceUntilIdle()
 
-            // Stopping or releasing here would be stopping a television, and the stop report is the
-            // coordinator's from now on — it is the only one that will still be there when the
-            // session ends.
+            // Stopping/releasing here would stop a real television; the stop report is the
+            // coordinator's from now on.
             castHandle.stopped shouldBe false
             castHandle.releaseCount shouldBe 0
             verify(exactly = 0) { reporter.reportStopDetached(any(), any()) }
@@ -313,19 +290,14 @@ internal class PlayerViewModelCastTest : PlayerViewModelFixture() {
             advanceUntilIdle()
 
             verify(exactly = 1) { reporter.reportStopDetached(source, ON_THE_TELEVISION) }
-            // And the screen that is no longer attached transfers nothing back to a device nobody
-            // is looking at.
             requests.shouldBeEmpty()
         }
 
     @Test
     fun `a download being streamed for a track keeps streaming it on the television`() =
         runTest(dispatcher) {
-            // The one fact a transfer must carry across an *open* rather than reset with the
-            // session (`ActiveSession.forcedRemote`): this item is on disk, but it is
-            // deliberately coming off the server for a track the file does not hold. A transfer that
-            // dropped the flag would negotiate the receiver's stream against the download again and
-            // silently lose the very track the user went to the server for.
+            // `ActiveSession.forcedRemote` must carry across the transfer: dropping it would
+            // renegotiate the receiver's stream against the download and lose the server-only track.
             local.trackSelectionSucceeds = false
             coEvery { resolver.resolve(any()) } returns AppResult.Success(PlayerFixtures.downloadedFilm())
             val model = castViewModel()
@@ -353,8 +325,7 @@ internal class PlayerViewModelCastTest : PlayerViewModelFixture() {
             advanceUntilIdle()
             framework.onSessionStarted("Living Room TV")
             advanceUntilIdle()
-            // The receiver has whatever single audio track the server encoded for it, so the handle
-            // refuses the switch — which is the contract that sends this back to `PlaybackInfo`.
+            // The handle refusing the switch is the contract that routes it back to `PlaybackInfo`.
             castHandle.trackSelectionSucceeds = false
             val requests = recordResolves()
 
@@ -428,8 +399,7 @@ internal class PlayerViewModelCastTest : PlayerViewModelFixture() {
             castHandle.emit(PlayerEvent.Error(PlaybackException.ERROR_CODE_DECODING_FAILED, "boom"))
             advanceUntilIdle()
 
-            // Every rung of the ladder diagnoses *this device's* decoders, and the decoder is three
-            // metres away in a television (decision 8).
+            // The ladder diagnoses this device's decoders; the receiver's are elsewhere (decision 8).
             requests.shouldBeEmpty()
             model.uiState.value.errorMessage shouldBe UiText.Raw("boom")
             model.uiState.value.userMessage shouldBe PlayerMessage.CastPlaybackFailed
@@ -479,8 +449,7 @@ internal class PlayerViewModelCastTest : PlayerViewModelFixture() {
             framework.onSessionStarted("Living Room TV")
             advanceUntilIdle()
 
-            // Nothing to float: the cast handle has no surface, so leaving the app would ask the
-            // system for a floating window over a black rectangle while the television plays on.
+            // Nothing to float: the cast handle has no surface, so PiP would be a black rectangle.
             pipController.state.value.canEnter shouldBe false
         }
 
@@ -501,7 +470,6 @@ internal class PlayerViewModelCastTest : PlayerViewModelFixture() {
             framework.onSessionEnded()
             advanceUntilIdle()
 
-            // And comes back with the film.
             model.uiState.value.canSetSpeed shouldBe true
         }
 
@@ -521,8 +489,7 @@ internal class PlayerViewModelCastTest : PlayerViewModelFixture() {
     @Test
     fun `a rate the receiver only admits to once it has loaded something is picked up at ready`() =
         runTest(dispatcher) {
-            // The pessimistic reading first — a `CastPlayer` publishes its receiver's commands only
-            // after a load — and the true one when the receiver says it is ready.
+            // A `CastPlayer` only publishes its receiver's commands after a load.
             castHandle.supportsPlaybackSpeed = false
             val model = castViewModel()
             advanceUntilIdle()
@@ -545,8 +512,7 @@ internal class PlayerViewModelCastTest : PlayerViewModelFixture() {
             val model = castViewModel()
             advanceUntilIdle()
 
-            // Fetched with the title rather than when a receiver connects: it is needed the instant
-            // the surface goes, and a round trip later would leave the screen black.
+            // Fetched with the title, not on connect: needed the instant the surface goes.
             model.uiState.value.artworkUrl shouldBe BACKDROP
         }
 
@@ -571,8 +537,7 @@ internal class PlayerViewModelCastTest : PlayerViewModelFixture() {
             castViewModel()
             advanceUntilIdle()
 
-            // A `PlaybackInfo` response names nothing, so without this the Cast notification and the
-            // television both show an unlabelled stream.
+            // `PlaybackInfo` responses name nothing; without this the receiver shows an unlabelled stream.
             castMetadata.metadataFor(PlayerFixtures.ITEM_ID.toString()) shouldBe
                 CastMetadata(title = "Arrival", subtitle = null, posterUrl = BACKDROP)
         }
@@ -591,8 +556,7 @@ internal class PlayerViewModelCastTest : PlayerViewModelFixture() {
             castViewModel()
             advanceUntilIdle()
 
-            // Nothing has been negotiated yet: loading the receiver now would put a nameless film on
-            // the television for the rest of the session.
+            // Loading the receiver now would put a nameless film on it for the rest of the session.
             requests.shouldBeEmpty()
 
             named.complete(Unit)

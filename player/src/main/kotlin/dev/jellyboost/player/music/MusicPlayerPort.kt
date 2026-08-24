@@ -3,35 +3,11 @@ package dev.jellyboost.player.music
 import dev.jellyboost.core.common.music.MusicRepeatMode
 import kotlinx.coroutines.flow.Flow
 
-/**
- * The seam between the music queue's orchestration and the player it runs on.
- *
- * `PlayerHandle` is deliberately **not** widened to carry any of this: a queue on that interface
- * would have to be implemented three times — Exo, Cast, Routing — and would drag casting in for a
- * feature that does not cast. This is a second, narrower seam over the same shared
- * `ExoPlayer`, used only by [MusicPlaybackController], and the reason that controller can be unit
- * tested at all: everything below here is Media3, everything above is plain data.
- *
- * Every call must be made on the main thread — Media3 throws otherwise — which the controller
- * arranges by hopping onto `@MainDispatcher`, exactly as `SyncPlayController` does.
- */
+/** Every call must be made on the main thread; Media3 throws otherwise. */
 internal interface MusicPlayerPort {
-    /**
-     * Events the queue's orchestration reacts to.
-     *
-     * The one that does not exist on `PlayerEvent` is [MusicPlayerEvent.ItemTransition], and it is
-     * the reason this flow exists rather than reusing the shared handle's: a track ending and the
-     * next one starting is *two server sessions*, and nothing in the video path ever needed to
-     * know about it.
-     */
     val events: Flow<MusicPlayerEvent>
 
-    /**
-     * Replaces the playlist and prepares it.
-     *
-     * Implicitly claims the player: the listener is attached, the audio attributes become music's,
-     * and the media session service is started, all idempotently.
-     */
+    /** Also claims the shared player: attaches the listener, swaps audio attributes, starts the session service. */
     fun setQueue(
         entries: List<MusicQueueEntry>,
         startIndex: Int,
@@ -49,7 +25,6 @@ internal interface MusicPlayerPort {
 
     fun previous()
 
-    /** Jumps to a queue position — a tap in the queue sheet. */
     fun seekToItem(index: Int)
 
     fun removeItem(index: Int)
@@ -63,38 +38,24 @@ internal interface MusicPlayerPort {
 
     fun setRepeatMode(mode: MusicRepeatMode)
 
-    /** Where the player is right now; cheap enough for a one-second ticker. */
     fun snapshot(): MusicPortSnapshot
 
     /**
-     * Re-prepares the playlist the player already holds, at its current position.
-     *
-     * The recovery verb for a player error: ExoPlayer parks in `IDLE` after `onPlayerError`, and
-     * in that state `play()` is a no-op — `prepare()` is Media3's own documented retry, keeping
-     * playlist and position. Distinct from [setQueue], which *replaces* the playlist and would
-     * reset the shuffle order.
+     * After `onPlayerError` the player parks in `IDLE`, where `play()` is a no-op; only `prepare()` recovers.
+     * Not [setQueue], which replaces the playlist and resets the shuffle order.
      */
     fun retryPrepare()
 
-    /**
-     * Lets the player go: the playlist is cleared, the listener detached and the video path's
-     * audio attributes restored, but the shared player itself is **not** released — whoever is
-     * claiming it next is about to prepare on it.
-     */
+    /** Clears and detaches, but does **not** release the shared player — the next claimant prepares on it. */
     fun release()
 
-    /** [release], plus stopping the media session service. Ends the session outright. */
+    /** [release], plus stopping the media session service. */
     fun stopAndRelease()
 }
 
 /**
- * The player's position, as the controller's state and its progress reports need it.
- *
- * @param mediaItemCount how many entries the player's own playlist holds right now. Zero while
- *   the controller's state says `Active` is the signature of a player that was released and
- *   rebuilt underneath the queue (the shared handle does that whenever the playback service is
- *   torn down) — the controller re-prepares from its own state instead of issuing transport
- *   calls into an empty player.
+ * @param mediaItemCount zero while the controller's state is `Active` means the shared player was released and
+ *   rebuilt underneath the queue; re-prepare instead of issuing transport calls into it.
  */
 internal data class MusicPortSnapshot(
     val currentItemIndex: Int = 0,
@@ -105,14 +66,10 @@ internal data class MusicPortSnapshot(
     val mediaItemCount: Int = 0,
 )
 
-/** What the player tells the queue's orchestration. */
 internal sealed interface MusicPlayerEvent {
     /**
-     * The player moved to another entry.
-     *
-     * @param automatic `true` when the previous track *finished* — the distinction the stop report
-     *   needs, because a track played to the end is marked played and one skipped away from keeps
-     *   its position.
+     * @param automatic `true` when the previous track finished: the stop report marks it played rather than
+     *   saving a position.
      */
     data class ItemTransition(
         val index: Int,
@@ -124,7 +81,6 @@ internal sealed interface MusicPlayerEvent {
         val isPlaying: Boolean,
     ) : MusicPlayerEvent
 
-    /** The queue ran out. */
     data object Ended : MusicPlayerEvent
 
     data class Error(

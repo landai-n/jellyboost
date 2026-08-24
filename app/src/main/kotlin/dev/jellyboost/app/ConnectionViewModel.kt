@@ -12,12 +12,8 @@ import timber.log.Timber
 import javax.inject.Inject
 
 /**
- * Exposes the app-wide connection state to Compose, and the two things the user can do about it.
- *
- * Deliberately a *thin* view over the `@Singleton` [ConnectionStateProvider] rather than an owner
- * of state: several composables (the offline banner in `AppScaffold`, the offline-mode toggle in
- * the home top bar) instantiate their own copy of this ViewModel, and they all observe and mutate
- * the same underlying singleton — so no wiring has to be threaded through the NavHost.
+ * A *thin* view over the `@Singleton` [ConnectionStateProvider], never an owner of state: several
+ * composables instantiate their own copy and all of them observe and mutate the same singleton.
  */
 @HiltViewModel
 class ConnectionViewModel
@@ -26,10 +22,9 @@ class ConnectionViewModel
         private val connectionStateProvider: ConnectionStateProvider,
         private val appPreferences: AppPreferences,
     ) : ViewModel() {
-        /** The current connection state; drives the banner and every repository call. */
         val connectionState: StateFlow<ConnectionState> = connectionStateProvider.state
 
-        /** Turns forced offline mode on or off (persisted; survives a restart). */
+        /** Persisted; survives a restart. */
         fun setForceOffline(enabled: Boolean) {
             Timber.i("Force-offline toggled to %s", enabled)
             viewModelScope.launch {
@@ -38,11 +33,7 @@ class ConnectionViewModel
             }
         }
 
-        /**
-         * Re-probes the server — on app resume, and when the user taps *Retry* on the banner.
-         *
-         * Cheap to call repeatedly: the provider debounces probes.
-         */
+        /** Cheap to call repeatedly: the provider debounces probes. */
         fun refresh() {
             connectionStateProvider.refresh()
         }

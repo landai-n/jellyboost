@@ -4,13 +4,6 @@ import dev.jellyboost.core.common.Separators
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
-/**
- * Unit tests for [metaRowDescription] — the one sentence the detail header's metadata row says to a
- * screen reader.
- *
- * The row itself needs a device; what it *says* does not, which is why the ordering, the dropping
- * and the punctuation live in a plain function.
- */
 class MetaRowDescriptionTest {
     @Test
     fun `a fully-described series reads as one qualified sentence`() {
@@ -42,8 +35,7 @@ class MetaRowDescriptionTest {
 
     @Test
     fun `a blank answer from the server is dropped like a missing one`() {
-        // Jellyfin happily returns "" for a certificate it has no value for; a dangling "rated" or
-        // a doubled separator is the kind of thing only a screen-reader user would ever hear.
+        // Jellyfin returns "" for a certificate it has no value for.
         metaRowDescription(
             rating = "  ",
             year = "2016",
@@ -60,10 +52,7 @@ class MetaRowDescriptionTest {
     @Test
     fun `the parts are separated by a pause, not by the interpunct the row draws`() {
         // `·` is read out as "dot" by some engines and swallowed by others; a comma is a pause in
-        // all of them. The row keeps drawing Separators.DOT.
-        //
-        // Asserted through the sentence rather than against a local constant: the join lives in
-        // `:core:ui`'s `describeParts`, and what this test pins is this row's own output.
+        // all of them. The row itself keeps drawing Separators.DOT.
         metaRowDescription(
             rating = "Rating 8.6",
             year = "2016",
@@ -75,8 +64,6 @@ class MetaRowDescriptionTest {
 
     @Test
     fun `a fact that repeats an earlier one is said once`() {
-        // The shared join drops duplicates, so a row whose runtime and time-left resolve to the
-        // same words says them once.
         metaRowDescription(
             rating = null,
             year = "2016",

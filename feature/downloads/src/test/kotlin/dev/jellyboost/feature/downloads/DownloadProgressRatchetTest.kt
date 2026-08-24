@@ -8,13 +8,6 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
-/**
- * Unit tests for [DownloadProgressRatchet].
- *
- * Every case is a shape the live projection can produce and the old fixed-ceiling denominator could
- * not: a total that *grows* mid-transfer, and therefore a raw percentage that falls while the bytes
- * on disk only ever rise.
- */
 class DownloadProgressRatchetTest {
     private val ratchet = DownloadProgressRatchet()
 
@@ -27,11 +20,10 @@ class DownloadProgressRatchetTest {
 
     @Test
     fun `a growing projection cannot make the bar retreat`() {
-        // 50 % against a 300 MB projection…
         ratchet.update(listOf(downloading(bytes = 150L, total = 300L)))["1"] shouldBe 0.5f
 
-        // …and then the encoder hits a busy stretch and the projection is corrected to 600 MB.
-        // The raw fraction is now 25 %, and no byte was lost.
+        // The projection is corrected to 600 MB, so the raw fraction falls to 25 % with no byte
+        // lost.
         ratchet.update(listOf(downloading(bytes = 150L, total = 600L)))["1"] shouldBe 0.5f
     }
 
@@ -40,14 +32,13 @@ class DownloadProgressRatchetTest {
         ratchet.update(listOf(downloading(bytes = 800L, total = 1_000L)))
         ratchet.update(listOf(downloading(bytes = 800L, total = 4_000L)))
 
-        // Not 20 %, and not an average of the two — the highest, because the bytes on disk are the
-        // only monotone thing here and the bar claims to be about them.
+        // The highest, not the latest and not an average: bytes on disk are the only monotone
+        // quantity here.
         ratchet.update(listOf(downloading(bytes = 810L, total = 4_000L)))["1"] shouldBe 0.8f
     }
 
     @Test
     fun `a transferring item is held at ninety-nine percent however far it has run`() {
-        // An estimate that undershot: more bytes have landed than the denominator expected.
         val progress = ratchet.update(listOf(downloading(bytes = 1_000L, total = 1_000L)))["1"]!!
 
         progress shouldBe 0.99f
@@ -69,12 +60,11 @@ class DownloadProgressRatchetTest {
 
     @Test
     fun `a restarted transcode holds its bar instead of falling back to zero`() {
-        // The server ignores `Range` on a transcode, so an interrupted one rewrites from byte zero.
         ratchet.update(listOf(downloading(bytes = 700L, total = 1_000L)))
 
         val afterRestart = ratchet.update(listOf(downloading(bytes = 0L, total = 1_000L)))["1"]!!
 
-        // Deliberate: a stalled bar beats a retreating one, and the byte figure beside it is honest.
+        // Deliberate: a stalled bar beats a retreating one; the byte figure beside it is honest.
         afterRestart shouldBe 0.7f
         afterRestart shouldBeGreaterThan 0f
     }
@@ -83,10 +73,8 @@ class DownloadProgressRatchetTest {
     fun `an item that leaves the list is forgotten, so a re-download starts over`() {
         ratchet.update(listOf(downloading(bytes = 900L, total = 1_000L)))
 
-        // Deleted…
         ratchet.update(emptyList())["1"].shouldBeNull()
 
-        // …and downloaded again: a fresh item, not the ghost of the old one.
         ratchet.update(listOf(downloading(bytes = 50L, total = 1_000L)))["1"] shouldBe 0.05f
     }
 
@@ -108,8 +96,6 @@ class DownloadProgressRatchetTest {
 
     @Test
     fun `only the rows it was given are answered for`() {
-        // The ViewModel passes `toQueue()`'s subset rather than the whole table, so the map is the
-        // size of the queue and not of everything ever downloaded.
         val answers =
             ratchet.update(
                 listOf(
@@ -125,8 +111,8 @@ class DownloadProgressRatchetTest {
     fun `a row that leaves the queue by finishing is forgotten, like one that is deleted`() {
         ratchet.update(listOf(downloading(bytes = 900L, total = 1_000L)))["1"] shouldBe 0.9f
 
-        // `toQueue()` excludes DOWNLOADED rows, so a completed download simply stops being passed —
-        // and must not leave its 90 % behind for whatever is enqueued next under the same id.
+        // A completed download stops being passed, and must not leave its 90 % behind for whatever
+        // is enqueued next under the same id.
         ratchet.update(emptyList())["1"].shouldBeNull()
 
         ratchet.update(listOf(downloading(bytes = 10L, total = 1_000L)))["1"] shouldBe 0.01f

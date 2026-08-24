@@ -25,17 +25,10 @@ import java.util.UUID
 import javax.inject.Inject
 
 /**
- * What the group has queued, with names and pictures on it.
+ * Names and pictures for the ids `SyncPlayController`'s queue carries.
  *
- * The queue itself is `SyncPlayController`'s — it arrives as playlist-item ids and library item ids
- * and nothing else, because that is all the protocol carries. This class is the half that makes it
- * readable: it fetches each item once, keeps what it fetched, and re-projects the rows whenever the
- * server re-sends the queue. A reorder or a removal therefore redraws without a single request.
- *
- * Every edit below is a **request to the server** and changes nothing here: the row does not move,
- * the item is not removed and playback does not jump until the server's own `PlayQueueUpdate` comes
- * back with the new queue. That is what
- * makes the sheet show the same order to everyone in the group rather than an optimistic local one.
+ * Every edit here is a **request to the server** and must change nothing locally: rows move only
+ * when the server's `PlayQueueUpdate` comes back, which is what keeps every member's order identical.
  */
 @HiltViewModel
 internal class SyncPlayQueueViewModel
@@ -44,25 +37,16 @@ internal class SyncPlayQueueViewModel
         private val controller: SyncPlayController,
         private val repository: JellyfinRepository,
     ) : ViewModel() {
-        /** Everything fetched so far, keyed by library item id — never invalidated while open. */
+        /** Keyed by library item id; never invalidated while open. */
         private val items = MutableStateFlow<Map<UUID, JellyfinItem>>(emptyMap())
 
         /**
-         * Ids the repository has already refused, so that a queue entry nobody can describe is asked
-         * about **once** rather than once per emission.
+         * Ids the repository refused. Needed because the server re-sends the whole `PlayQueueUpdate`
+         * on every play, pause and seek: without this, an undescribable item re-fires `getItem` for
+         * as long as the sheet is open.
          *
-         * Remembering only successes is not enough: the queue re-arrives on every transport action
-         * — the server re-sends the whole `PlayQueueUpdate` when the group merely plays or pauses.
-         * An item the server will not describe (deleted from the library, or not visible to this
-         * user) would then re-fire `getItem` on every play, pause and seek for as long as the sheet
-         * is open, forever, for a row that can never fill in.
-         *
-         * [unresolvedFor] is what keeps that from being permanent: it holds the queue's *membership*
-         * — its set of library item ids, order and playback state excluded — at the moment those
-         * refusals were collected. When membership changes, the group has queued or unqueued
-         * something and the server's answer may genuinely have changed, so the refusals are dropped
-         * and every unknown id gets one more attempt. A reorder, a play or a pause changes neither
-         * set and re-fetches nothing, which is the case this exists for.
+         * [unresolvedFor] holds the queue *membership* those refusals were collected under, so a
+         * genuine queue/unqueue drops them and retries while a reorder or transport action does not.
          */
         private var unresolved = emptySet<UUID>()
 
@@ -74,7 +58,6 @@ internal class SyncPlayQueueViewModel
                 .distinctUntilChanged()
                 .stateIn(viewModelScope, SharingStarted.Eagerly, initialValue = null)
 
-        /** The rows to draw, in the group's order. */
         val uiState: StateFlow<SyncPlayQueueUiState> =
             combine(queue, items) { current, known -> current.toUiState(known) }
                 .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), SyncPlayQueueUiState())
@@ -90,7 +73,6 @@ internal class SyncPlayQueueViewModel
             controller.requestSetPlaylistItem(playlistItemId)
         }
 
-        /** The group's next / previous; the player screen has no call site for either. */
         fun next() {
             controller.requestNext()
         }
@@ -99,12 +81,7 @@ internal class SyncPlayQueueViewModel
             controller.requestPrevious()
         }
 
-        /**
-         * Moves a slot by one place.
-         *
-         * Buttons rather than a drag: the row cannot follow a finger, because where it ends up is
-         * the server's answer and not this device's.
-         */
+        /** Buttons, never a drag: the row cannot follow a finger when the server decides where it lands. */
         fun move(
             playlistItemId: UUID,
             newIndex: Int,
@@ -119,21 +96,13 @@ internal class SyncPlayQueueViewModel
         }
 
         /**
-         * Fetches the entries not fetched yet, a few at a time.
-         *
-         * One call per item rather than one call for the queue: the repository has no fetch-by-ids,
-         * and `getItem` is also the call that answers from the Room cache
-         * with no server — which is what a group watching something this device has downloaded needs.
-         * Bounded because a long queue would otherwise open a request per row at once.
-         *
-         * Both outcomes are remembered: what was fetched in [items], what was refused in
-         * [unresolved]. Asking again costs a round trip and buys the same `null` title.
+         * One call per item: the repository has no fetch-by-ids, and `getItem` is also the call that
+         * answers from the Room cache with no server, which a group watching a downloaded item needs.
          */
         private suspend fun hydrate(itemIds: List<UUID>) {
             val queued = itemIds.toSet()
             if (queued != unresolvedFor) {
-                // The group added or dropped something, so this is a different question from the
-                // one that was refused. See [unresolved].
+                // Membership changed, so this is a different question from the one that was refused.
                 unresolved = emptySet()
                 unresolvedFor = queued
             }
@@ -155,41 +124,27 @@ internal class SyncPlayQueueViewModel
         }
 
         private companion object {
-            /**
-             * How many item lookups are in flight at once.
-             *
-             * Small on purpose: the sheet is readable as soon as the first rows arrive, and a queue of
-             * fifty would otherwise open fifty connections for something the user is scrolling past.
-             */
+            /** Item lookups in flight at once: small so a fifty-row queue does not open fifty. */
             const val FETCH_CONCURRENCY = 6
 
-            /** Keeps the projection alive across a configuration change, as every screen here does. */
+            /** Keeps the projection alive across a configuration change. */
             const val STOP_TIMEOUT_MS = 5_000L
         }
     }
 
-/** The queue sheet's state: the rows, and whether there is anything to draw at all. */
 internal data class SyncPlayQueueUiState(
     val rows: List<SyncPlayQueueRow> = emptyList(),
-    /** Index of the row playing now, or `-1` when the group is on nothing. */
+    /** `-1` when the group is on nothing. */
     val playingIndex: Int = -1,
 ) {
     val isEmpty: Boolean get() = rows.isEmpty()
 
-    /** `true` when the group has a slot after the one playing — what enables *Next*. */
     val hasNext: Boolean get() = playingIndex in 0 until rows.lastIndex
 
-    /** `true` when the group has a slot before the one playing — what enables *Previous*. */
     val hasPrevious: Boolean get() = playingIndex > 0
 }
 
-/**
- * One slot, drawn.
- *
- * [playlistItemId] is what every edit names — the *slot*, not the item, since the same episode can
- * be queued twice. [title] falls back to a placeholder until the item is fetched, so the queue's
- * shape is visible immediately rather than after the last round trip.
- */
+/** [playlistItemId] is what every edit names — the *slot*, since the same episode can be queued twice. */
 internal data class SyncPlayQueueRow(
     val playlistItemId: UUID,
     val itemId: UUID,

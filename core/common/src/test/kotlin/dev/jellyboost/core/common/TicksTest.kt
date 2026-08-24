@@ -4,7 +4,6 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
-/** Unit tests for [Ticks] — the tick/millisecond/minute conversions every module shares. */
 class TicksTest {
     @Test
     fun `ticksToMillis divides by ten thousand`() {
@@ -52,9 +51,8 @@ class TicksTest {
 
     @Test
     fun `positiveMillisOrNull is null when the ticks divide down to a non-positive millisecond count`() {
-        // Fewer than 10,000 ticks (one millisecond) is a positive tick count that still divides to
-        // zero milliseconds — the exact edge the guard exists for (division happens before the
-        // positivity check).
+        // Fewer than 10,000 ticks (one millisecond) is a positive tick count that still divides to zero
+        // milliseconds — the edge the guard exists for, since division happens before the positivity check.
         Ticks.positiveMillisOrNull(9_999L).shouldBeNull()
     }
 

@@ -18,13 +18,6 @@ import kotlinx.coroutines.SupervisorJob
 import timber.log.Timber
 import javax.inject.Singleton
 
-/**
- * Wires the music queue's implementations to the seams above them, modelled on `SyncPlayModule`.
- *
- * [MusicController] is the one binding that leaves `:player`: it is declared in `:core:common`, so
- * binding it here — where the implementation is — makes it available to `:app`'s mini-player and
- * to `:feature:music` without either module ever depending on the player.
- */
 @Module
 @InstallIn(SingletonComponent::class)
 internal interface MusicModule {
@@ -41,10 +34,10 @@ internal interface MusicModule {
     fun bindAudioStreamUrlFactory(impl: SdkAudioStreamUrlFactory): AudioStreamUrlFactory
 }
 
-/** The scope the music queue is orchestrated on; see [MusicSessionScope]. */
 @Module
 @InstallIn(SingletonComponent::class)
 internal object MusicScopeModule {
+    // `limitedParallelism(1)` is MusicPlaybackController's only synchronization; do not widen it.
     @Provides
     @Singleton
     @MusicSessionScope

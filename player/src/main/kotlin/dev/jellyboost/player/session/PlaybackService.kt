@@ -23,34 +23,17 @@ import timber.log.Timber
 import javax.inject.Inject
 
 /**
- * Hosts the media session for the shared [ExoPlayerHandle] player.
+ * Hosts the media session for the shared [ExoPlayerHandle] player, which it does *not* own —
+ * `PlayerViewModel` drives the same instance directly.
  *
- * Its job is everything that has to keep happening once the player screen is no longer on top:
- * the foreground-service promotion that stops Android from killing playback, the media
- * notification with its transport controls, and the media button / audio-focus plumbing that
- * `MediaSessionService` provides for free.
+ * The session is built on [SyncPlayAwareForwardingPlayer], never on the raw player: the
+ * notification and headset buttons dispatch through the session without passing `PlayerViewModel`,
+ * and in a SyncPlay group that would move this member alone and break the group.
  *
- * It deliberately does *not* own the player — the same instance is driven directly by
- * `PlayerViewModel`. Consequently the session is a thin wrapper and this class has no playback
- * logic of its own.
- *
- * ### Why the session does not get the player itself
- * The notification, headset buttons and every other media-button surface dispatch through the
- * session, which is a transport path that never touches `PlayerViewModel` — so in a SyncPlay group
- * they would move this member's player alone and break the group. The session is therefore built on
- * [SyncPlayAwareForwardingPlayer], which turns in-group transport into requests to the server and is
- * a plain pass-through otherwise.
- *
- * ### Why [addSession] is called explicitly
- * Media3 only starts managing a session — posting the notification, promoting the service to the
- * foreground — once the session has been *added* to the service. In the canonical sample that
- * happens implicitly, because the UI reaches the player through a `MediaController` and connecting
- * one is what triggers [onGetSession] and the add. This app deliberately drives the shared
- * `ExoPlayer` directly instead, so no controller ever connects and nothing else would ever add the
- * session: the service would stay an ordinary background service with no notification, and the
- * first time the app left the foreground the platform would stop it and playback with it. The
- * notification permission is a separate matter — it only decides whether the notification is
- * *visible*.
+ * [addSession] must be called explicitly. Media3 only starts managing a session — notification,
+ * foreground promotion — once it has been added, and normally connecting a `MediaController` does
+ * that; no controller ever connects here, so without the call the service stays an ordinary
+ * background service the platform stops as soon as the app leaves the foreground.
  */
 @UnstableApi
 @AndroidEntryPoint
@@ -60,39 +43,26 @@ internal class PlaybackService :
     @Inject
     internal lateinit var playerHandle: ExoPlayerHandle
 
-    /**
-     * Published so the SyncPlay presence service knows to stand aside while this one is up — one
-     * foreground service holding the process's network is enough.
-     */
+    /** Published so the SyncPlay presence service stands aside while this service is up. */
     @Inject
     internal lateinit var serviceState: PlaybackServiceState
 
-    /**
-     * Only ever consulted through [SyncPlayAwareForwardingPlayer] — the session is the one transport
-     * surface that does not go through `PlayerViewModel`, and a group's transport is requests.
-     */
     @Inject
     internal lateinit var syncPlayController: SyncPlayController
 
     /**
-     * The shuffle/repeat buttons and the commands behind them.
-     *
-     * Given to the session unconditionally, video sessions included: with nothing musical loaded
-     * it contributes an empty button list and two commands nobody sends, so the film's
-     * notification is unaffected.
+     * Given to the session unconditionally, video sessions included: with nothing musical loaded it
+     * contributes an empty button list and two commands nobody sends.
      */
     @Inject
     internal lateinit var musicSessionCallback: MusicSessionCallback
 
-    /** The music queue's state, which is what those buttons are drawn from. */
     @Inject
     internal lateinit var musicController: MusicController
 
     private var mediaSession: MediaSession? = null
 
     /**
-     * Follows [musicController] for as long as the service is up.
-     *
      * `Main` because `setMediaButtonPreferences` is a session call and Media3 requires the
      * session's own thread; cancelled in [onDestroy] before the session is released.
      */
@@ -101,8 +71,6 @@ internal class PlaybackService :
     override fun onCreate() {
         super.onCreate()
         serviceState.setRunning(true)
-        // The session gets the group-aware wrapper; everything else in the app keeps driving the
-        // shared player directly. See [SyncPlayAwareForwardingPlayer].
         val sessionPlayer = SyncPlayAwareForwardingPlayer(playerHandle.requirePlayer(), syncPlayController)
         val session =
             MediaSession
@@ -111,11 +79,9 @@ internal class PlaybackService :
                 .apply { launchIntent()?.let(::setSessionActivity) }
                 .build()
         mediaSession = session
-        // The mode buttons follow the queue rather than being set once: the icons *are* the state
-        // (shuffle on/off, the three repeat icons), so every change has to reach the notification.
         // Distinct on the *derived button list*, not the state: the state ticks every second with
-        // the playback position, and re-stamping identical buttons onto the session per tick is
-        // sixty pointless notification updates a minute (`CommandButton` has value equality).
+        // the playback position, and identical buttons re-stamped per tick are sixty pointless
+        // notification updates a minute (`CommandButton` has value equality).
         serviceScope.launch {
             musicController.state
                 .map(musicSessionCallback::buttonsFor)
@@ -124,16 +90,14 @@ internal class PlaybackService :
                     session.setMediaButtonPreferences(buttons)
                 }
         }
-        // Media3's default provider ships its own generic small icon; the status bar shows only that
-        // icon, so without this the media notification is the one surface that does not identify the
-        // app. Everything else about the default notification is what this service wants.
+        // Without the small icon the status bar shows Media3's generic one.
         setMediaNotificationProvider(
             DefaultMediaNotificationProvider
                 .Builder(this)
                 .build()
                 .apply { setSmallIcon(R.drawable.ic_stat_fin) },
         )
-        // The line that keeps playback alive in the background — see the class documentation.
+        // Required: nothing else adds the session — see the class documentation.
         addSession(session)
         setListener(this)
     }
@@ -141,12 +105,8 @@ internal class PlaybackService :
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = mediaSession
 
     /**
-     * The system restarting this service after the process was killed.
-     *
-     * A `null` intent means exactly that — a `START_STICKY` restart with nothing to resume, not a
-     * real caller — so promoting to the foreground here would build an ExoPlayer and a
-     * `MediaSession` with nothing to play. Stopping immediately and asking not to be restarted
-     * again is cheaper than a notification for a session nobody asked to resume.
+     * A `null` intent is a `START_STICKY` restart after a process kill, with nothing to resume:
+     * carrying on would build an ExoPlayer and a `MediaSession` for no media.
      */
     override fun onStartCommand(
         intent: Intent?,
@@ -161,11 +121,8 @@ internal class PlaybackService :
     }
 
     /**
-     * Tapping the media notification comes back to the app.
-     *
-     * Built from the launcher intent rather than from a direct `MainActivity` reference so that
-     * `:player` keeps no dependency on `:app`; the activity is `singleTop`, so this re-uses the
-     * running task and the player screen is still on it, at the position playback has reached.
+     * Built from the launcher intent rather than a `MainActivity` reference so `:player` keeps no
+     * dependency on `:app`; the activity is `singleTop`, so this re-uses the running task.
      */
     private fun launchIntent(): PendingIntent? =
         packageManager.getLaunchIntentForPackage(packageName)?.let { intent ->
@@ -177,23 +134,15 @@ internal class PlaybackService :
             )
         }
 
-    /**
-     * The system refused the foreground promotion (API 31+).
-     *
-     * Rare — it needs the app to have been backgrounded before playback was ever started — but the
-     * default behaviour is an uncaught exception, and a crash is a far worse outcome than a session
-     * that plays without a notification.
-     */
+    /** Overridden because the default behaviour on a refused foreground promotion is a crash. */
     @RequiresApi(android.os.Build.VERSION_CODES.S)
     override fun onForegroundServiceStartNotAllowedException() {
         Timber.w("Android refused to promote the playback service to the foreground")
     }
 
     /**
-     * The user swiped the app away while nothing was playing.
-     *
-     * Media3's default is to keep the service alive so a paused session can be resumed from the
-     * notification; with nothing playing that is just a stuck notification, so the service stops.
+     * Media3's default keeps the service alive so a paused session can be resumed from the
+     * notification; with nothing playing that is a stuck notification.
      */
     override fun onTaskRemoved(rootIntent: Intent?) {
         val player = mediaSession?.player
@@ -203,17 +152,9 @@ internal class PlaybackService :
     }
 
     /**
-     * Service teardown, and the second of the two paths that release the shared player.
-     *
-     * The session goes first: it was built around the player, and Media3 unwinds its own listeners
-     * through it. Releasing the player is then safe and, unlike the ViewModel's own teardown, always
-     * reached — the service is stopped from `ExoPlayerHandle.stop()` and by a swipe-away, including
-     * the cases where no player screen is left to clear.
-     *
-     * The running flag is cleared *before* the player release, not after: while it is set,
-     * `ExoPlayerHandle.release()` defers to this teardown (the ViewModel must not release a player
-     * the live session still wraps), so clearing it last would make this very call the one that
-     * gets deferred.
+     * Order matters throughout. The session is released before the player it was built around;
+     * the running flag is cleared *before* [ExoPlayerHandle.release], because while it is set that
+     * call defers back to this teardown and would no-op.
      */
     override fun onDestroy() {
         Timber.d("Releasing the playback media session")

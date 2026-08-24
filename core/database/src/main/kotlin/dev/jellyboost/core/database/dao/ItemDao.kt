@@ -14,84 +14,38 @@ import dev.jellyboost.core.database.entities.LatestDownloadKey
 import java.time.Instant
 import java.util.UUID
 
-/**
- * Data access for [ItemEntity] — the browse cache and the offline library.
- *
- * This DAO is deliberately **dumb**: it holds queries and nothing else. In particular the rule
- * that a browse write-through may never downgrade a [ItemSource.DOWNLOAD] row lives in
- * `:data`'s `BrowseCacheWriter`, not here, so that it can be unit-tested on the JVM rather than
- * only on a device.
- *
- * Every list query filters on an explicit `source` parameter instead of hard-coding
- * `'DOWNLOAD'`: the offline home/library/search surfaces are downloaded-items-only while `getItem`
- * deliberately also serves cached rows, and making the caller say which it wants keeps that
- * distinction visible at the call site.
- */
 @Dao
 @Suppress(
-    // One member per query, by construction — a DAO is wide by contract, not by neglect (the same
-    // shape as `OnlineJellyfinRepository`'s). The three music queries (`tracksOfAlbum`,
-    // `albumsOfArtist`, the Continue Listening resume) take it from 18 to 21; splitting a music
-    // DAO out would put one table's queries in two files.
+    // One member per query — a DAO is wide by contract.
     "TooManyFunctions",
 )
 interface ItemDao {
-    /** Inserts the rows, replacing any existing row with the same id. */
     @Upsert
     suspend fun upsert(items: List<ItemEntity>)
 
-    /**
-     * Reads the source and cache timestamp of the given ids, without their `dto` blobs.
-     *
-     * This is what the write-through merge consults before overwriting anything.
-     */
     @Query("SELECT id, source, cachedAt FROM items WHERE id IN (:ids)")
     suspend fun getCacheKeys(ids: List<UUID>): List<ItemCacheKey>
 
-    /** One item regardless of source — cached parents of downloads must open offline. */
+    /** Deliberately unfiltered by source: cached parents of downloads must open offline. */
     @Query("SELECT * FROM items WHERE id = :id")
     suspend fun getItem(id: UUID): ItemEntity?
 
-    /** Several items regardless of source, in no particular order. */
     @Query("SELECT * FROM items WHERE id IN (:ids)")
     suspend fun getItems(ids: List<UUID>): List<ItemEntity>
 
-    /**
-     * The parent links of the given items, without their `dto` blobs.
-     *
-     * What the delete cascade's orphan prune walks: it needs only each surviving download's
-     * series/season/folder ids, and reading them through [getItems] would materialise every
-     * survivor's multi-kilobyte blob once per deleted item.
-     */
+    /** A projection, not [getItems]: the orphan prune must not materialise every survivor's `dto` blob. */
     @Query("SELECT id, parentId, seriesId, seasonId, albumId, albumArtistId FROM items WHERE id IN (:ids)")
     suspend fun getParentRefs(ids: List<UUID>): List<ItemParentRefs>
 
     /**
-     * The offline library grid's whole result set, in sort order, as the columns a **filter** is
-     * decided from — and nothing else.
+     * **There is deliberately no library predicate.** A downloaded row's `parentId` is its containing folder
+     * (when the server sends one at all — downloaded films can have it `NULL`), never the library-view id;
+     * `OfflineJellyfinRepository` decides library membership by **type** instead.
      *
-     * **There is deliberately no library predicate.** Filtering on `parentId = <library id>` (plus
-     * `seriesId IN (children of the library)`) does not work: a downloaded row's `parentId` is its
-     * *containing folder* — when the server sends one at all, and downloaded films can have it
-     * stored as `parentId NULL` — and a folder is not the library-view id the grid filters by.
-     * Which library an offline row belongs to is decided by its **type** instead, in
-     * `OfflineJellyfinRepository`, which is exact for the movie/TV libraries this app supports.
-     *
-     * **No `LIMIT`, and no whole rows.** The filters the grid applies are not all expressible in
-     * one statement — `genres` is a newline-joined column, and SQLite has no way to intersect it
-     * with a bound list — so the predicate is applied in Kotlin, and a `LIMIT` here would page over
-     * the *unfiltered* set: a page could come back short and Paging would read that as the end of
-     * the library (`ItemPagingSource`). Reading the whole set is affordable precisely because this
-     * projection leaves out the multi-kilobyte `dto` blob; the page's blobs are then read by
-     * [getItems], the same shape [latestDownloadedKeys] uses.
-     *
-     * The `user_data` join is a `LEFT JOIN` with `COALESCE`, so an item this user has never played
-     * is *unwatched* rather than missing — which is what the watched/unwatched filter has to mean.
-     *
-     * @param userId whose playback state the watched/favourite columns describe; `null` (nobody
-     *   signed in) leaves every row unwatched and unfavourited.
-     * @param descending `true` sorts Z→A; the two `CASE` arms are how one statement serves both
-     *   directions (SQLite cannot bind a sort direction).
+     * **No `LIMIT`, and no whole rows.** `genres` is a newline-joined column SQLite cannot intersect with a
+     * bound list, so the filter runs in Kotlin; a `LIMIT` here would page the *unfiltered* set and a short
+     * page reads as the end of the library in `ItemPagingSource`. Affordable only because the `dto` blob is
+     * left out. The `LEFT JOIN`/`COALESCE` makes a never-played item *unwatched* rather than missing.
      */
     @Query(
         """
@@ -118,10 +72,6 @@ interface ItemDao {
         descending: Boolean,
     ): List<DownloadedItemKey>
 
-    /**
-     * Offline search. Matches the item's own name and — so that typing a show's title finds its
-     * downloaded episodes — the series name.
-     */
     @Query(
         """
         SELECT * FROM items
@@ -139,10 +89,6 @@ interface ItemDao {
         limit: Int,
     ): List<ItemEntity>
 
-    /**
-     * The offline *Continue watching* row: downloaded items this device has a resume position for,
-     * most recently played first.
-     */
     @Query(
         """
         SELECT i.* FROM items AS i
@@ -160,15 +106,6 @@ interface ItemDao {
         limit: Int,
     ): List<ItemEntity>
 
-    /**
-     * The offline *Continue Listening* row: [resumeDownloaded]'s audio counterpart.
-     *
-     * A new query rather than a `types` parameter added to [resumeDownloaded] — that method already
-     * answers *every* resumable downloaded item regardless of kind, and widening its signature would
-     * be a breaking change to a query every existing *Continue watching* test pins. `audioType` is
-     * passed in rather than hard-coded, the same style [tracksOfAlbum] and [albumsOfArtist] use for
-     * their own type filter.
-     */
     @Query(
         """
         SELECT i.* FROM items AS i
@@ -189,11 +126,8 @@ interface ItemDao {
     ): List<ItemEntity>
 
     /**
-     * Every downloaded episode this device has neither played nor started, in broadcast order.
-     *
-     * The "one per series" reduction that produces the *Next up* row is done in Kotlin: SQLite's
-     * grouped-aggregate row selection is implementation-defined for the non-aggregated columns,
-     * and picking the first of an ordered list is trivially testable.
+     * The "one per series" reduction behind *Next up* is done in Kotlin: SQLite's grouped-aggregate row
+     * selection is implementation-defined for the non-aggregated columns.
      */
     @Query(
         """
@@ -215,16 +149,9 @@ interface ItemDao {
     ): List<ItemEntity>
 
     /**
-     * The ordering keys of the offline *Latest* row: every downloaded item of the given kinds,
-     * newest first, each carrying the id of the card it belongs to.
-     *
-     * Scoped by type rather than by library id, for the reason [pagingDownloaded] documents.
-     *
-     * **No `LIMIT`, and no whole rows.** Episodes collapse into their series before the row limit
-     * applies (see [LatestDownloadKey]), so the statement cannot stop at sixteen rows and the
-     * caller cannot afford to read sixteen — let alone every — `dto` blob to find that out. The
-     * "one row per series" reduction itself is done in Kotlin, for the reason
-     * [unwatchedDownloadedEpisodes] gives.
+     * **No `LIMIT`, and no whole rows.** Episodes collapse into their series before the row limit applies
+     * (see [LatestDownloadKey]), so the statement cannot stop at sixteen rows and the caller must not read
+     * sixteen `dto` blobs to discover that.
      */
     @Query(
         """
@@ -247,12 +174,8 @@ interface ItemDao {
     ): List<LatestDownloadKey>
 
     /**
-     * A downloaded series' seasons, in server order.
-     *
-     * Matches on `seriesId` **or** `parentId` because only the first is reliable: a season's
-     * `ParentId` is not always present on the cached DTO (the same gap that made the library grid
-     * empty — see [pagingDownloaded]), while `SeriesId` is what identifies a season's show and is
-     * what the episode rows already join on.
+     * Matches `seriesId` **or** `parentId` because only the first is reliable: a season's `ParentId` is not
+     * always present on the cached DTO.
      */
     @Query(
         """
@@ -269,7 +192,6 @@ interface ItemDao {
         seasonType: ItemType,
     ): List<ItemEntity>
 
-    /** A season's downloaded episodes, in broadcast order. */
     @Query(
         """
         SELECT * FROM items
@@ -284,12 +206,8 @@ interface ItemDao {
     ): List<ItemEntity>
 
     /**
-     * A series' downloaded episodes, in broadcast order across seasons.
-     *
-     * The season-spanning sibling of [episodesOfSeason]: ordering by `parentIndexNumber` first puts
-     * season 1 before season 2 before the specials the server numbers 0, which is what "everything
-     * after this episode" means to a viewer — and to jellyfin-web, whose expansion of a one-episode
-     * SyncPlay queue this has to match entry for entry.
+     * `parentIndexNumber` first puts season 1 before season 2 before the specials the server numbers 0 — this
+     * ordering has to match jellyfin-web's expansion of a one-episode SyncPlay queue entry for entry.
      */
     @Query(
         """
@@ -304,15 +222,6 @@ interface ItemDao {
         episodeType: ItemType,
     ): List<ItemEntity>
 
-    // ---- music query columns -----------------------------------------------------------------
-
-    /**
-     * A downloaded album's tracks, in disc/track order.
-     *
-     * Matches [episodesOfSeason]'s shape: `albumId` is a query-only column
-     * ([dev.jellyboost.core.database.entities.ItemEntity.albumId]), and disc-then-track is the
-     * same `parentIndexNumber`/`indexNumber` pair an episode's season/episode numbers reuse.
-     */
     @Query(
         """
         SELECT * FROM items
@@ -326,12 +235,6 @@ interface ItemDao {
         audioType: ItemType,
     ): List<ItemEntity>
 
-    /**
-     * A downloaded artist's albums, newest first.
-     *
-     * `albumArtistId` is a query-only column
-     * ([dev.jellyboost.core.database.entities.ItemEntity.albumArtistId]).
-     */
     @Query(
         """
         SELECT * FROM items
@@ -346,14 +249,8 @@ interface ItemDao {
     ): List<ItemEntity>
 
     /**
-     * Every downloaded row of the given types, as the three columns the offline filter sheet's
-     * facets are built from — and nothing else.
-     *
-     * No `WHERE` beyond source and type and no `LIMIT`, because a facet list is the *distinct*
-     * values across the whole offline library and a page of it would offer the user filters that
-     * exclude items they can see. Which makes the projection the point: reading these rows as
-     * [ItemEntity] deserialised every downloaded item's multi-kilobyte `dto` blob to answer a
-     * question about three small columns.
+     * No `LIMIT`: a facet list is the *distinct* values across the whole offline library, and a page of it
+     * would offer filters that exclude items the user can see. Three columns, so no `dto` blob is deserialised.
      */
     @Query(
         """
@@ -367,12 +264,7 @@ interface ItemDao {
         types: List<ItemType>,
     ): List<FacetKey>
 
-    /**
-     * Drops browse-cache rows older than [cutoff].
-     *
-     * Downloads are excluded by the `source` predicate rather than by the timestamp: a
-     * [ItemSource.DOWNLOAD] row is never evicted, however stale it looks.
-     */
+    /** A [ItemSource.DOWNLOAD] row is never evicted, however stale it looks — hence the `source` predicate. */
     @Query("DELETE FROM items WHERE source = :browseCache AND cachedAt < :cutoff")
     suspend fun evictBrowseCacheOlderThan(
         cutoff: Instant,
@@ -380,21 +272,9 @@ interface ItemDao {
     ): Int
 
     /**
-     * Drops the browse-cache rows beyond the [keep] most recently written ones.
-     *
-     * The age sweep's companion, and it bounds the thing age cannot: a single session of heavy
-     * browsing writes rows far faster than a month passes, so a TTL alone leaves within-session
-     * growth unbounded — and every one of those rows carries a multi-kilobyte `dto` blob.
-     *
-     * The sub-select orders by the same `(source, cachedAt)` index the sweep uses and skips the
-     * survivors, so what it visits is only the excess. `LIMIT -1` is SQLite's "no limit", which is
-     * how an `OFFSET` is expressed without one.
-     *
-     * Downloads are excluded by the `source` predicate, in both halves, for
-     * [evictBrowseCacheOlderThan]'s reason: a [ItemSource.DOWNLOAD] row is never evicted, however
-     * far down the list it sorts.
-     *
-     * @return how many rows were dropped.
+     * Bounds what age cannot: one session of heavy browsing writes rows far faster than a month passes, and
+     * every row carries a multi-kilobyte `dto` blob. `LIMIT -1` is SQLite's "no limit", the only way to
+     * express an `OFFSET` without one. Downloads are excluded in both halves and are never evicted.
      */
     @Query(
         """
@@ -414,35 +294,16 @@ interface ItemDao {
     ): Int
 
     /**
-     * Drops **every** browse-cache row, whatever its age — what sign-out uses.
-     *
-     * The `items` table is not user-scoped (an item id is the server's, not a person's), so on a
-     * shared device one account's cached browsing would otherwise still be serving the next
-     * account's offline read path and search results. Downloads are excluded by the
-     * same `source` predicate as [evictBrowseCacheOlderThan], and for the same reason: signing out
-     * does not delete anyone's files, and deleting downloads is a separate, explicit
-     * choice on the sign-out screen.
-     *
-     * @return how many rows were dropped.
+     * Sign-out must clear this: the `items` table is not user-scoped, so on a shared device one account's
+     * cached browsing would keep serving the next account. Downloads are excluded — signing out deletes
+     * nobody's files.
      */
     @Query("DELETE FROM items WHERE source = :browseCache")
     suspend fun deleteAllBrowseCache(browseCache: ItemSource): Int
 
-    // ---- download-delete cascade ---------------------------------------------------------------
-
     /**
-     * Drops the [ItemSource.DOWNLOAD] rows that no download points at any more.
-     *
-     * [keep] is the whole reason this takes a list rather than a single id: deleting one episode
-     * must not remove the series and season rows its *siblings* still need in order to open
-     * offline. `:data:downloads`' `DownloadDeleter` computes the surviving set (every remaining
-     * download plus each one's series and season) and hands it in.
-     *
-     * A row that is still worth caching is not lost by this — it is simply no longer *guaranteed*:
-     * the browse cache re-creates it as [ItemSource.BROWSE_CACHE] the next time the user browses
-     * past it.
-     *
-     * @return how many rows were dropped.
+     * [keep] is a list, not one id: deleting one episode must not remove the series and season rows its
+     * *siblings* still need in order to open offline. `DownloadDeleter` computes the surviving set.
      */
     @Query("DELETE FROM items WHERE source = :download AND id NOT IN (:keep)")
     suspend fun deleteDownloadsNotIn(

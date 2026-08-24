@@ -21,27 +21,13 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * [MusicPlayerPort] over the shared `ExoPlayer`, using its **native playlist**.
+ * [MusicPlayerPort] over the shared `ExoPlayer`, using its **native playlist**: the media session
+ * derives the notification's previous/next buttons from the wrapped player's playlist commands, so a
+ * real `setMediaItems` is the whole of "the notification can skip tracks".
  *
- * That choice is load-bearing twice. The media
- * session derives the notification's and the lock screen's previous/next buttons from the wrapped
- * player's playlist commands, so a real `setMediaItems` is the whole of "the notification can skip
- * tracks" — there is no notification-building code anywhere here. And the session's timeline *is*
- * the queue, which is exactly the shape a `MediaLibraryService`/Android Auto follow-up needs.
- *
- * ### Claiming and letting go
- * The player is shared with the video path, so this class touches only what it must and puts it
- * back. [claim] attaches this adapter's own `Player.Listener` — the shared handle's listener stays
- * attached and keeps feeding `PlayerEvent`, which is harmless because nothing collects it while
- * music is playing — and flips the audio attributes to
- * [C.AUDIO_CONTENT_TYPE_MUSIC][androidx.media3.common.C.AUDIO_CONTENT_TYPE_MUSIC]. [release] puts
- * `AUDIO_CONTENT_TYPE_MOVIE` back and detaches the listener. The flip is made on the live player
- * with `handleAudioFocus = true`, which re-requests focus under the new attributes.
- *
- * ### The service
- * Started through [ExoPlayerHandle]'s own best-effort helper rather than a second `startService`
- * here: that method already carries the API 26 background-start handling that a music queue
- * started from a widget or a headset button needs just as much as video does.
+ * The player is shared with the video path, so [claim] must put back everything it changes: its own
+ * listener, and `AUDIO_CONTENT_TYPE_MUSIC` in place of `MOVIE`. The attribute flip passes
+ * `handleAudioFocus = true` so focus is re-requested under the new attributes.
  */
 @UnstableApi
 @Singleton
@@ -61,15 +47,9 @@ internal class ExoMusicPlayerAdapter
         private var claimed = false
 
         /**
-         * The exact instance [claim] configured.
-         *
-         * `ExoPlayerHandle.release()` (the playback service's teardown, a video session's own
-         * teardown) destroys the player and `requirePlayer()` silently builds a fresh one — with
-         * no listener of ours, movie audio attributes, and an empty playlist. A boolean alone
-         * cannot see that: `claimed` would stay `true` against a player the claim never touched,
-         * and every transport call would land in a configured-looking void. Identity is checked
-         * on every [player] resolution; a mismatch resets the claim so the next [setQueue] runs
-         * the full claim again (listener, attributes, service start).
+         * The exact instance [claim] configured. `ExoPlayerHandle.release()` destroys the player and
+         * `requirePlayer()` silently builds a fresh one, so `claimed` alone would stay `true` against
+         * a player the claim never touched. Identity is checked on every [player] resolution.
          */
         private var claimedPlayer: Player? = null
 
@@ -83,8 +63,7 @@ internal class ExoMusicPlayerAdapter
                         MusicPlayerEvent.ItemTransition(
                             index = player().currentMediaItemIndex,
                             mediaId = mediaItem?.mediaId,
-                            // Only an *automatic* transition means the previous track finished.
-                            // A seek, a queue edit or a fresh `setMediaItems` did not.
+                            // Only an automatic transition means the previous track finished.
                             automatic = reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO,
                         ),
                     )
@@ -139,9 +118,8 @@ internal class ExoMusicPlayerAdapter
         }
 
         /**
-         * `seekToPrevious`, not `seekToPreviousMediaItem`: the first restarts a track that is more
-         * than a few seconds in and steps back otherwise, which is what a previous button means
-         * everywhere in music and what the notification's own button already does.
+         * `seekToPrevious`, not `seekToPreviousMediaItem`: it restarts a track that is a few seconds
+         * in, which is what the notification's own previous button does.
          */
         override fun previous() {
             player().seekToPrevious()
@@ -207,10 +185,8 @@ internal class ExoMusicPlayerAdapter
             claimed = false
             claimedPlayer = null
             with(player) {
-                // The listener goes *first*: `stop()`/`clearMediaItems()` fire it synchronously
-                // (a playlist change is a media-item transition), and that echo arriving after
-                // the controller considers itself relinquished would reset state the new owner
-                // is about to build on.
+                // The listener goes *first*: `stop()`/`clearMediaItems()` fire it synchronously, and
+                // that echo would reset state the new owner is about to build on.
                 removeListener(listener)
                 stop()
                 clearMediaItems()
@@ -238,11 +214,7 @@ internal class ExoMusicPlayerAdapter
             Timber.d("Music claimed the shared player")
         }
 
-        /**
-         * The shared player, with the claim's identity check (see [claimedPlayer]): a rebuilt
-         * instance is treated as unclaimed, so nothing here ever operates on a player believing
-         * it configured it when it configured its predecessor.
-         */
+        /** Identity-checked (see [claimedPlayer]): a rebuilt instance is treated as unclaimed. */
         private fun player(): Player {
             val current = playerHandle.requirePlayer()
             if (claimed && current !== claimedPlayer) {
@@ -266,17 +238,12 @@ internal class ExoMusicPlayerAdapter
     }
 
 /**
- * One queue entry as ExoPlayer sees it.
+ * The metadata here is the only source the notification and lock screen have — the session reads
+ * `MediaItem.mediaMetadata` off the timeline.
  *
- * The metadata is what the media notification and the lock screen draw, and it is the only place
- * they get it from — the session reads `MediaItem.mediaMetadata` off the timeline, so there is no
- * separate notification-building step anywhere.
- *
- * A transcoded entry names its mime type explicitly: the universal URL carries no `.m3u8` path
- * segment for ExoPlayer's inference to read, so without the hint `DefaultMediaSourceFactory`
- * builds a `ProgressiveMediaSource` and hands an HLS playlist to the progressive extractors —
- * unplayable. Direct-play URLs and `file://` downloads are left to content sniffing, which
- * handles every container in [MusicStreamResolver.DIRECT_CONTAINERS].
+ * A transcoded entry must name its mime type: the universal URL has no `.m3u8` segment to infer
+ * from, so without the hint `DefaultMediaSourceFactory` hands an HLS playlist to the progressive
+ * extractors. Direct play and `file://` are left to content sniffing.
  */
 private fun MusicQueueEntry.toMediaItem(): MediaItem =
     MediaItem

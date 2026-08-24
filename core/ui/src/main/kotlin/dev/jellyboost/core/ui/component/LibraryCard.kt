@@ -41,12 +41,10 @@ import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.core.ui.theme.glassSurface
 
-/** The rounded square the library's glyph sits in. */
 private val GlyphWellSize = 36.dp
 
 private val GlyphWellRadius = 10.dp
 
-/** Fill of that well — a step fainter than a glass surface, since it sits *on* one. */
 private val GlyphWellFill = Color.White.copy(alpha = 0.06f)
 
 private val GlyphSize = 18.dp
@@ -63,13 +61,7 @@ private val TileSubtitle =
         lineHeight = 14.sp,
     )
 
-/**
- * The glyph that stands for a library of [kind], wherever a library is drawn without its artwork.
- *
- * Shared rather than repeated because the tile is no longer the only place a library appears as an
- * icon and a name: the home screen's quick-access chips draw the same pairing at chip size, and two
- * copies of the mapping are two chances for the Shows library to be a film reel on one screen.
- */
+/** Shared with the home screen's quick-access chips: two copies drift into two glyphs per kind. */
 fun libraryIcon(kind: CollectionKind): ImageVector =
     when (kind) {
         CollectionKind.TVSHOWS -> Icons.Outlined.Tv
@@ -77,24 +69,12 @@ fun libraryIcon(kind: CollectionKind): ImageVector =
         else -> Icons.Outlined.Movie
     }
 
-/**
- * Lazy-list `contentType` for every [LibraryCard] — lets a `LazyRow`/`LazyColumn` reuse a
- * scrolled-off tile node instead of composing a fresh one when the next item is also a library.
- */
+/** Lazy-list `contentType`: without one a lazy layout reuses no scrolled-off node. */
 const val LIBRARY_CARD_CONTENT_TYPE = "card-library"
 
 /**
- * A user library tile — the home screen's library row and the Libraries tab.
- *
- * A wide, short glass tile with a glyph rather than the 16:9 artwork card it replaced: a Jellyfin
- * library's own image is usually a collage of its first few posters, which at tile size is visual
- * noise that says less about the library than its name does.
- *
- * @param width fixed tile width, as a row of tiles needs; [Dp.Unspecified] fills the available
- *   width instead, which is what an adaptive grid cell wants.
- * @param subtitle optional second line — the library's item count ("412 items"). Formatted by the
- *   caller, since the plural belongs to the screen's string resources. Hidden when `null`, which is
- *   what every caller passes until the counts are wired up.
+ * @param width [Dp.Unspecified] fills the parent, which is what an adaptive grid cell wants.
+ * @param subtitle formatted by the caller, since the plural belongs to its string resources.
  */
 @Composable
 fun LibraryCard(
@@ -104,9 +84,8 @@ fun LibraryCard(
     width: Dp = Dimens.LibraryTileWidth,
     subtitle: String? = null,
 ) {
-    // One node, one sentence: "Library, Shows, 412 items". The tile was a glyph, a name and a count
-    // as separate stops, with the glyph — the only thing saying what *kind* of library it is —
-    // unlabelled.
+    // One node, one sentence: "Library, Shows, 412 items" — the glyph is what says the kind, and
+    // it has no label of its own.
     val description =
         MediaCardFacts(
             title = library.name,
@@ -121,9 +100,8 @@ fun LibraryCard(
                     contentDescription = description
                     role = Role.Button
                 }
-                // A minimum rather than a fixed height: the title-over-count column outgrows 64dp
-                // somewhere around font scale 1.7, and a hard `height` clipped the subtitle — the
-                // item count — to nothing. Rows and adaptive grid cells both absorb the growth.
+                // A minimum, not a fixed height: the column outgrows 64dp around font scale 1.7 and
+                // a hard `height` clipped the item count to nothing.
                 .heightIn(min = Dimens.LibraryTileHeight)
                 .glassSurface(RoundedCornerShape(Dimens.CardCornerRadius))
                 .clickable(role = Role.Button, onClick = onClick)

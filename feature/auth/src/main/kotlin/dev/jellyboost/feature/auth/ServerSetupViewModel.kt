@@ -22,46 +22,29 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
-/** Everything the server-setup screen renders. */
 internal data class ServerSetupUiState(
-    /** Contents of the manual address field. */
     val address: String = "",
-    /** Servers that announced themselves on the local network, in arrival order. */
     val discoveredServers: List<DiscoveredServer> = emptyList(),
-    /** True while the UDP discovery flow is still running. */
     val isDiscovering: Boolean = true,
-    /** True while an address is being probed. */
     val isConnecting: Boolean = false,
     val error: AuthErrorMessage? = null,
     /**
-     * True when this screen is being shown because a stored session was lost, rather than because
-     * the user has never signed in.
-     *
-     * Without it the two are indistinguishable: an unreadable credential store is wiped and
-     * recreated in silence, and the user simply finds themselves at server setup.
+     * Distinguishes a lost session from a first sign-in: an unreadable credential store is wiped and
+     * recreated in silence, so without this the user simply finds themselves back at server setup.
      */
     val sessionWasLost: Boolean = false,
     /**
-     * Host of a server that resolved to a plain `http://` address outside the local network, or
-     * `null` when there is nothing to warn about.
-     *
-     * Set instead of navigating: the flow stops here, says what is about to happen to the access
-     * token, and the next press of Connect goes through. Non-null only between the resolve that
-     * raised it and the press that acknowledges it.
+     * Set instead of navigating: the flow stops here and the next press of Connect goes through.
+     * Non-null only between the resolve that raised it and the press that acknowledges it.
      */
     val cleartextWarningHost: String? = null,
 ) {
-    /** The Connect button is only live for a non-blank address outside an in-flight probe. */
     val canConnect: Boolean get() = address.isNotBlank() && !isConnecting
 }
 
 /**
- * Backs the ServerSetup screen: local-network discovery plus manual address resolution.
- *
- * Resolving an address is where this screen's job ends — the resolved server is handed to the
- * Login screen through [PendingServerStore] and a one-shot [navigateToLogin] event. Fetching the
- * login context deliberately stays on the Login screen so a slow branding/Quick-Connect probe
- * cannot make the Connect button look stuck.
+ * Fetching the login context deliberately stays on the Login screen, so a slow branding or
+ * Quick-Connect probe cannot make the Connect button look stuck.
  */
 @HiltViewModel
 internal class ServerSetupViewModel
@@ -73,26 +56,20 @@ internal class ServerSetupViewModel
     ) : ViewModel() {
         private val mutableUiState =
             MutableStateFlow(
-                // Read once, here: the splash is held until the session restore has answered, so by
-                // the time this screen exists the answer is settled. It is consumed rather than
-                // observed so that signing out and coming back does not replay it.
+                // Consumed rather than observed, so signing out and coming back does not replay it. The splash
+                // holds until session restore has answered, so the answer is settled by the time this exists.
                 ServerSetupUiState(sessionWasLost = sessionRepository.consumeInvoluntarySignOut()),
             )
 
-        /** State of the server-setup screen. */
         val uiState: StateFlow<ServerSetupUiState> = mutableUiState.asStateFlow()
 
         private val navigationChannel = Channel<Unit>(Channel.BUFFERED)
 
-        /** Emits once per successfully resolved server; collect it to navigate to Login. */
         val navigateToLogin: Flow<Unit> = navigationChannel.receiveAsFlow()
 
         private var connectJob: Job? = null
 
-        /**
-         * The server behind [ServerSetupUiState.cleartextWarningHost], kept so that acknowledging
-         * the warning costs no second round-trip to a server that has already answered.
-         */
+        /** Kept so acknowledging the warning costs no second round-trip to a server that already answered. */
         private var warnedServer: ResolvedServer? = null
 
         init {
@@ -100,27 +77,18 @@ internal class ServerSetupViewModel
         }
 
         /**
-         * Records what the user typed into the address field.
-         *
-         * Ignored while a probe is in flight. The field stays enabled throughout — a disabled field
-         * destroys its accessibility node and drops focus — so this guard is what keeps it from
-         * being edited mid-probe: [connectTo] captured the address it is resolving, and letting the
-         * field drift away from it would leave the screen showing one address while reporting the
-         * outcome of another.
+         * Ignored while a probe is in flight: the field stays enabled for accessibility, and letting
+         * it drift from the address [connectTo] captured would report one address under another.
          */
         fun onAddressChange(value: String) {
             if (mutableUiState.value.isConnecting) return
-            // A new address is a new question: the standing cleartext warning was about the old one
-            // and must not be acknowledgeable by a Connect aimed somewhere else.
+            // A new address is a new question: the standing warning must not be acknowledgeable by a
+            // Connect aimed somewhere else.
             warnedServer = null
             mutableUiState.update { it.copy(address = value, error = null, cleartextWarningHost = null) }
         }
 
-        /**
-         * Probes whatever is currently in the address field — or, when a cleartext warning is
-         * standing for the server this field already resolved to, takes the press as the
-         * acknowledgement of it and goes on to Login.
-         */
+        /** A press with a cleartext warning standing is the acknowledgement of it, not a new probe. */
         fun connect() {
             val acknowledged = warnedServer
             if (acknowledged != null && mutableUiState.value.cleartextWarningHost != null) {
@@ -130,10 +98,6 @@ internal class ServerSetupViewModel
             connectTo(mutableUiState.value.address)
         }
 
-        /**
-         * Probes [input] — a discovered server's address or free text the user typed — and, when
-         * it turns out to be a usable Jellyfin server, moves the flow on to Login.
-         */
         fun connectTo(input: String) {
             val trimmed = input.trim()
             if (trimmed.isEmpty() || connectJob?.isActive == true) return
@@ -153,9 +117,7 @@ internal class ServerSetupViewModel
                     when (val result = serverDiscoveryRepository.resolveServerAddress(trimmed)) {
                         is AppResult.Success -> {
                             val server = result.value
-                            // The *resolved* address, not what was typed: a bare hostname can
-                            // resolve to https just as easily as to http, and only the answer says
-                            // which one this app is actually going to use.
+                            // The *resolved* address, not what was typed: a bare hostname can resolve to either scheme.
                             val warnAbout =
                                 hostOf(server.address).takeIf { isCleartextPublicAddress(server.address) }
                             if (warnAbout == null) {
@@ -181,7 +143,6 @@ internal class ServerSetupViewModel
                 }
         }
 
-        /** Hands [server] to the Login screen and moves the flow on. */
         private suspend fun proceedTo(server: ResolvedServer) {
             warnedServer = null
             pendingServerStore.set(server)
@@ -189,10 +150,7 @@ internal class ServerSetupViewModel
             navigationChannel.send(Unit)
         }
 
-        /**
-         * Collects the (finite) discovery flow once, accumulating announcements and dropping
-         * repeats — servers broadcast several times per discovery window.
-         */
+        /** Dedupes: servers broadcast several times per discovery window. */
         private fun observeLocalServers() {
             viewModelScope.launch {
                 serverDiscoveryRepository

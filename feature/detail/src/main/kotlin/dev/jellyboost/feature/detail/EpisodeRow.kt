@@ -46,26 +46,12 @@ import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.core.ui.R as CoreUiR
 
 /**
- * One episode in a season's list, drawn as a surface card: the 16:9
- * [ThumbCard] artwork — with its played tick, progress bar, download badge and selection
- * indicator — beside the episode's number line, title and synopsis.
+ * The artwork must stay [ThumbCard]: an episode's watched indicator and download badge have to be
+ * the exact ones the home rows draw.
  *
- * Reusing `ThumbCard` for the artwork is deliberate — the watched indicator and download badge an
- * episode shows here have to be the exact same ones the home rows show.
- *
- * @param onClick opens the episode's own detail page — or, while the list is in batch-selection
- *   mode, toggles this row (the caller decides; see `ItemDetailScreen`).
- * @param onPlay starts playback directly. Worth its own button: from a season page the thing a
- *   user wants is almost always "play this one", and making them go through the episode page
- *   first adds a screen and a request for nothing. Replaced by the selection checkbox while the
- *   mode is on: play is a one-item action, and the mode is about many.
- * @param onLongClick enters batch-selection mode; `null` on lists that do not offer it.
- * @param selected `null` outside selection mode. A selected card takes an accent wash and edge —
- *   a list row's identity is its text, and dimming the thumbnail alone would not read at a glance
- *   down a column of forty.
- * @param strip the wide layout's card: a fixed-width tile for the horizontal episode strip a
- *   tablet shows, instead of the full-width stacked card a phone scrolls through. Defaults to
- *   `false`, which is the phone shape.
+ * @param onLongClick `null` on lists that do not offer batch selection.
+ * @param selected `null` outside selection mode. The whole card takes an accent wash — dimming the
+ *   thumbnail alone does not read down a column of forty, whose identity is its text.
  */
 @Composable
 internal fun EpisodeRow(
@@ -98,7 +84,6 @@ internal fun EpisodeRow(
     }
 }
 
-/** The phone shape: a full-width card, artwork at the start, text filling the rest. */
 @Composable
 private fun EpisodeStackedCard(
     episode: JellyfinItem,
@@ -142,7 +127,6 @@ private fun EpisodeStackedCard(
     }
 }
 
-/** The tablet shape: a fixed-width tile the wide layout scrolls horizontally. */
 @Composable
 private fun EpisodeStripCard(
     episode: JellyfinItem,
@@ -190,13 +174,7 @@ private fun EpisodeStripCard(
     }
 }
 
-/**
- * The surface both shapes sit on: a `#202020` panel with the app's faint hairline, or an accent
- * wash and edge while the card is selected.
- *
- * The click handling lives here too so the whole card — not only its artwork — keeps opening the
- * episode and long-pressing into selection mode, exactly as the pre-refresh row did.
- */
+/** Click handling belongs here so the whole card, not only its artwork, is the target. */
 @Composable
 private fun Modifier.episodeCard(
     selected: Boolean?,
@@ -226,15 +204,9 @@ private fun Modifier.episodeCard(
 }
 
 /**
- * The one sentence an episode row announces: `Episode 10, The Bicameral Mind, 54 min, 50% watched`.
- *
- * It mirrors what the row *draws* — the number line, the title, and the state its artwork's
- * overlays carry — and deliberately stops there. The synopsis under the title is two lines of prose
- * that would be read out before the user could reach the next episode, and it is available on the
- * episode's own page; a list is for choosing, not for reading.
- *
- * The number line's own text is uppercased for the design; this takes the un-uppercased strings,
- * because "EPISODE 10" spelled out is not how a person says it.
+ * `Episode 10, The Bicameral Mind, 54 min, 50% watched`. Deliberately excludes the synopsis: two
+ * lines of prose read out before the user can reach the next episode, and it is on the episode's own
+ * page. Takes the **un-uppercased** strings — TalkBack spells "EPISODE 10" out letter by letter.
  */
 @Composable
 private fun episodeDescription(episode: JellyfinItem): String {
@@ -256,7 +228,6 @@ private fun episodeDescription(episode: JellyfinItem): String {
     ).describe()
 }
 
-/** `EPISODE 1 · 62 MIN` — the number line above the episode's title. */
 @Composable
 private fun EpisodeNumberLine(episode: JellyfinItem) {
     val parts =
@@ -297,7 +268,6 @@ private fun EpisodeOverview(episode: JellyfinItem) {
     )
 }
 
-/** Play, or — while the list is in selection mode — this card's checkbox. */
 @Composable
 private fun EpisodeControl(
     onPlay: () -> Unit,
@@ -312,26 +282,24 @@ private fun EpisodeControl(
             modifier = modifier,
         )
     } else {
-        // `onCheckedChange = null` on purpose: the whole card is already the click target, and a
-        // second one inside it would let a tap land on the box but not on the card it belongs to.
-        // It contributes no semantics either, so the row itself carries `selected` — without that
-        // the selection state would be drawn and nowhere spoken.
+        // `onCheckedChange = null` on purpose: the whole card is the click target, and a second one
+        // inside it would swallow taps. It contributes no semantics either, so the *row* must carry
+        // `selected` — otherwise the selection is drawn and nowhere spoken.
         Checkbox(checked = selected, onCheckedChange = null, modifier = modifier)
     }
 }
 
-/** Artwork width in the stacked card — the mocks' 120×68 thumbnail. */
+/** The mocks' 120×68 thumbnail. */
 private val STACKED_ART_WIDTH: Dp = 120.dp
 
-/** Artwork width in a strip tile — the mocks' 150×84. */
+/** The mocks' 150×84. */
 private val STRIP_ART_WIDTH: Dp = 150.dp
 
-/** Width of one strip tile on a wide layout. */
 private val STRIP_CARD_WIDTH: Dp = 300.dp
 
 private val EpisodeCardPadding = 12.dp
 
-/** How much accent a selected card takes — enough to read down a list, not enough to hide text. */
+/** Enough accent to read down a list, not enough to hide the text over it. */
 private const val SELECTED_FILL_ALPHA = 0.14f
 
 private const val OVERVIEW_LINES = 2

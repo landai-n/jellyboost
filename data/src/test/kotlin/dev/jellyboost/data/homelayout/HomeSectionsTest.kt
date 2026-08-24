@@ -7,12 +7,10 @@ import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
-/** Unit tests for the DisplayPreferences → ordered-rows resolver. */
 class HomeSectionsTest {
     @Test
     fun `an empty map resolves to jellyfin-web's defaults`() {
-        // The single most common case: a user who never opened Settings → Home has no
-        // `homesectionN` keys at all, and must still get the standard home screen.
+        // A user who never opened Settings → Home has no `homesectionN` keys at all.
         resolveHomeSections(emptyMap()) shouldContainExactly
             listOf(
                 HomeSectionType.SMALL_LIBRARY_TILES,
@@ -63,7 +61,7 @@ class HomeSectionsTest {
         val sections = resolveHomeSections(prefs)
 
         sections shouldNotContain HomeSectionType.NONE
-        // Slots 2-9 keep their own defaults: hiding the first two rows does not hide the rest.
+        // Hiding the first two rows must not hide the rest.
         sections.first() shouldBe HomeSectionType.RESUME_AUDIO
     }
 
@@ -80,8 +78,7 @@ class HomeSectionsTest {
 
         val sections = resolveHomeSections(prefs)
 
-        // Slot 1 defaults to resume and slot 5 to nextup — one unreadable value costs one row,
-        // never the whole screen.
+        // One unreadable value costs one row, never the whole screen.
         sections shouldContainExactly resolveHomeSections(emptyMap())
     }
 

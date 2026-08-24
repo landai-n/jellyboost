@@ -10,14 +10,6 @@ import io.mockk.verify
 import org.junit.jupiter.api.Test
 import java.util.UUID
 
-/**
- * Unit tests for [DeviceIdProvider].
- *
- * What is actually being defended here: a Jellyfin server keeps one access token per
- * (user, device id), so an id that is not stable across restarts logs the user out, and an id
- * that is not unique per installation makes two installs revoke each other's session — the bug
- * that motivated this class.
- */
 class DeviceIdProviderTest {
     /** In-memory [DeviceIdStore]; a second provider over the same instance models a restart. */
     private class FakeDeviceIdStore(

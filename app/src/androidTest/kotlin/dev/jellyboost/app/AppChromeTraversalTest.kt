@@ -20,18 +20,12 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * The reading order of the app's chrome.
+ * The reading order of the app's chrome. The failure this guards against — a dropped traversal
+ * modifier or a drifting index — leaves no visible trace at all.
  *
- * `AppScaffold` draws the top nav, the page and the bottom pill as overlapping siblings of a `Box`.
- * Overlapping siblings with no declared order are sorted geometrically, which put the chrome
- * *through* or *after* the whole of the page. The fix is three traversal groups with explicit
- * indices, and the failure mode it guards against — someone dropping one of the three modifiers, or
- * an index drifting — leaves no visible trace at all.
- *
- * The scaffold itself is not composed here: it resolves two `hiltViewModel()`s and a `NavHost`, so
- * standing it up on a device would mean a signed-in session and a reachable server for a test about
- * three floats. What is composed instead is the same arrangement — page first, chrome drawn over
- * it — wearing the same three modifiers, which is what the scaffold's call sites use.
+ * The scaffold itself is not composed: it resolves two `hiltViewModel()`s and a `NavHost`, so it
+ * would need a signed-in session and a reachable server. The arrangement below wears the same three
+ * modifiers its call sites use.
  */
 @RunWith(AndroidJUnit4::class)
 class AppChromeTraversalTest {
@@ -42,8 +36,7 @@ class AppChromeTraversalTest {
     fun composeTheChromeArrangement() {
         rule.setContent {
             Box(modifier = Modifier.fillMaxSize()) {
-                // Drawing order, which is the order that used to decide traversal: the page is
-                // first and the chrome is painted on top of it.
+                // Drawing order, which is what decides traversal without the modifiers below.
                 Box(
                     modifier = Modifier.fillMaxSize().testTag(PAGE).pageTraversal(),
                 ) { Text(text = PAGE) }
@@ -72,9 +65,8 @@ class AppChromeTraversalTest {
 
     @Test
     fun eachOfTheThreeIsOneBlockRatherThanLooseButtons() {
-        // Without `isTraversalGroup` a `traversalIndex` orders a node against its peers only, so
-        // the chrome's individual buttons would be sorted against the page's rows one by one and
-        // the indices above would buy nothing.
+        // A `traversalIndex` orders a node against its peers only, so without the group the chrome's
+        // buttons would be sorted against the page's rows one by one and the indices buy nothing.
         listOf(TOP, PAGE, BOTTOM).forEach { tag ->
             val config = rule.onNodeWithTag(tag).fetchSemanticsNode().config
             val group = config.getOrNull(SemanticsProperties.IsTraversalGroup)

@@ -11,35 +11,13 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Decides what one track will be played from, and mints the session id it is reported under.
+ * Resolves one track. Deliberately **no** `PlaybackInfo` round trip per track — the queue design
+ * rests on it: a fifty-track album becomes fifty strings and one `setMediaItems`.
  *
- * The video resolver is deliberately not reused.
- * Everything here is local: the downloads lookup, and otherwise a URL built from a container list
- * this device can name without asking anyone. There is no `PlaybackInfo` round trip per track,
- * which is the property the whole queue design rests on — a fifty-track album becomes fifty
- * strings and one `setMediaItems`.
- *
- * ### Offline first
- * A completed download wins over the server every time, exactly as [dev.jellyboost.player.resolve.
- * LocalPlaybackResolver] does for video: the `file://` URI the provider hands back, `DIRECT_PLAY`
- * by construction, and **no play session** — nothing was negotiated with the server, so there is
- * nothing for it to key a session on and nothing to report.
- *
- * ### The play method is inferred, not told
- * The universal endpoint answers with bytes, not with a description of what it decided, and the
- * queue cannot afford a round trip per track to find out. So the inference is made from the same
- * fact the server is deciding on: **we send the container list, so a track whose container is in
- * it direct-plays and anything else is transcoded.** It is the honest reading of the request we
- * made, and it is only used for reporting — playback itself is unaffected either way. An item
- * whose container is unknown (a lean list response that carried no `container`) is reported as
- * direct play: [DIRECT_CONTAINERS] covers essentially every container a music library holds, so a
- * missing field is far more likely than an exotic codec.
- *
- * The server can still transcode a track in the list for a *different* reason — a source above
- * even [MAX_STREAMING_BITRATE], or more channels than we asked for — and the report would then say
- * direct play for a transcode. It costs an inaccurate dashboard row and nothing else: the
- * transcode is torn down by `stopEncodingProcess`, which keys on the play session id rather than
- * on the method.
+ * The universal endpoint never says what it decided, so [PlayMethod] is *inferred* from the
+ * container list we sent, and is used for reporting only. A track in the list can still be
+ * transcoded for another reason (bitrate, channels); that costs an inaccurate dashboard row and
+ * nothing else, since `stopEncodingProcess` keys on the play session id.
  */
 @Singleton
 internal class MusicStreamResolver
@@ -48,10 +26,7 @@ internal class MusicStreamResolver
         private val downloads: DownloadedMediaProvider,
         private val urls: AudioStreamUrlFactory,
     ) {
-        /**
-         * @return how to play [item], or `null` when it does not have a usable id — the caller
-         *   drops it from the queue and says so.
-         */
+        /** @return `null` when [item] has no usable id; the caller drops it from the queue. */
         suspend fun resolve(item: JellyfinItem): MusicStream? {
             val itemId = runCatching { UUID.fromString(item.id) }.getOrNull()
             if (itemId == null) {
@@ -71,8 +46,8 @@ internal class MusicStreamResolver
                 )
             }
 
-            // One per queue entry, not one per queue: the server keys a session on it, and two
-            // tracks sharing one would make the second's start report close the first's session.
+            // One per queue entry: two tracks sharing a session id would have the second's start
+            // report close the first's session.
             val playSessionId = UUID.randomUUID().toString().replace("-", "")
             return MusicStream(
                 itemId = itemId,
@@ -81,8 +56,7 @@ internal class MusicStreamResolver
                         AudioStreamRequest(
                             itemId = itemId,
                             containers = DIRECT_CONTAINERS,
-                            // The server picks the source; naming one would only pin the wrong one
-                            // on a track that has more than one.
+                            // Naming a source would pin the wrong one on a track that has several.
                             mediaSourceId = null,
                             playSessionId = playSessionId,
                             audioCodec = TRANSCODE_AUDIO_CODEC,
@@ -93,8 +67,7 @@ internal class MusicStreamResolver
                     ),
                 playSessionId = playSessionId,
                 playMethod = item.container.toPlayMethod(),
-                // The reports carry the item's own id as the media source, which is what
-                // jellyfin-web sends when it did not pin one either.
+                // The item's own id, which is what jellyfin-web sends when it did not pin a source.
                 mediaSourceId = item.id,
                 runTimeTicks = item.runTimeTicks ?: 0L,
             )
@@ -108,52 +81,35 @@ internal class MusicStreamResolver
             }
 
         companion object {
-            /**
-             * What this device plays without the server's help.
-             *
-             * ExoPlayer with the bundled ffmpeg decoder handles all of them; `flac` is on the list
-             * on purpose, because a lossless library transcoded to AAC would be the single most
-             * visible way to get music wrong.
-             */
+            /** ExoPlayer plus the bundled ffmpeg decoder handles all of these; keep `flac` on it. */
             val DIRECT_CONTAINERS =
                 listOf("opus", "mp3", "aac", "m4a", "flac", "webma", "webm", "wav", "ogg")
 
-            /** What a transcode is re-encoded to — universally decodable, and small. */
             const val TRANSCODE_AUDIO_CODEC = "aac"
 
             /** Delivered as an HLS `ts` segment stream; see [AudioStreamUrlFactory]. */
             const val TRANSCODE_CONTAINER = "ts"
 
             /**
-             * The **direct-play** ceiling — `maxStreamingBitrate` is the threshold above which the
-             * server refuses to direct-play at all, not the transcode's quality. It mirrors the
-             * video path's `DeviceProfileBuilder.MAX_STREAMING_BITRATE` (the jellyfin-web/Finamp
-             * arrangement): set generously so that every listed container — a high-rate flac
-             * included — actually direct-plays, which is also what keeps the container-based
-             * [toPlayMethod] inference honest. The old value here (384 kbps, the *transcode*
-             * bitrate) forced even direct-capable lossless tracks through the encoder.
+             * The **direct-play** ceiling, not the transcode's quality: above it the server refuses
+             * to direct-play. Kept generous so high-rate flac direct-plays and the [toPlayMethod]
+             * inference stays honest — the transcode bitrate here once forced lossless through the
+             * encoder.
              */
             const val MAX_STREAMING_BITRATE = 120_000_000
 
             /**
-             * What a transcode is encoded at — the separate `audioBitRate` parameter, the same
-             * number `DeviceProfileBuilder` advertises as `MAX_MUSIC_TRANSCODING_BITRATE`.
-             * Restated rather than imported: that one is a private detail of the device profile,
-             * and coupling the two would make a profile change silently re-negotiate every queue
-             * URL.
+             * The separate `audioBitRate` parameter. Restated rather than imported from
+             * `DeviceProfileBuilder`: coupling them would let a profile change re-negotiate every URL.
              */
             const val TRANSCODE_AUDIO_BITRATE = 384_000
         }
     }
 
 /**
- * One track, resolved.
- *
- * @param playSessionId `null` for a downloaded file — there is no server session behind it, so
- *   nothing is reported and there is no encoder to stop.
- * @param runTimeTicks what a completed track's stop report says it reached; the player's own
- *   duration is not trusted for that, because an HLS transcode's is an estimate until the last
- *   segment.
+ * @param playSessionId `null` for a downloaded file: nothing to report, no encoder to stop.
+ * @param runTimeTicks what a completed track's stop report says it reached — the player's own
+ *   duration is an estimate until an HLS transcode's last segment, so it is not used.
  */
 internal data class MusicStream(
     val itemId: UUID,

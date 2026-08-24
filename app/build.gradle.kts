@@ -9,14 +9,9 @@ plugins {
 }
 
 /**
- * Release signing material, read from `local.properties` first and the environment second.
- *
- * Nothing secret ever lives in the repository: `local.properties` is gitignored and no keystore is
- * generated into the tree. CI supplies the same four values as environment variables. When none of
- * them is present — which is the normal case for a local `assembleRelease` and for the CI job,
- * neither of which has the release key — the release variant falls back to the debug key and is
- * marked as such in its version name (see `release` below), so an unsigned-for-distribution build
- * can never be mistaken for a real one.
+ * Release signing material, read from `local.properties` (gitignored) first and the environment
+ * second. With none of the four present the release variant falls back to the debug key and says so
+ * in its version name, so a build that cannot be distributed is never mistaken for one that can.
  */
 val releaseSigningKeys =
     listOf(
@@ -42,8 +37,8 @@ val releaseSigning: Map<String, String>? =
         }
 
         val resolved = releaseSigningKeys.associateWith(::value)
-        // All four or none: a half-configured keystore would fail late, inside the signing task,
-        // with a message that says nothing about which value is missing.
+        // All four or none: a half-configured keystore fails late, inside the signing task, with a
+        // message that names no missing value.
         if (resolved.values.any { it == null }) null else resolved.mapValues { it.value!! }
     }
 
@@ -76,9 +71,6 @@ android {
             isDebuggable = true
         }
         release {
-            // R8 with the default full mode. The keep rules live in `proguard-rules.pro`, which
-            // documents why each one exists and — as importantly — which libraries already ship
-            // their own consumer rules and therefore need nothing from us.
             isMinifyEnabled = true
             // Safe because the app has no resource lookup by name (no getIdentifier() anywhere).
             isShrinkResources = true
@@ -92,9 +84,8 @@ android {
                 } else {
                     signingConfigs.getByName("debug")
                 }
-            // A debug-signed release build is a development artefact: installable on the test
-            // tablet for minified-build verification and profiling, never distributable. Marking
-            // the version name is what keeps the two apart at a glance in Settings > Apps.
+            // A debug-signed release build is a development artefact, never distributable; the
+            // suffix is what keeps the two apart at a glance in Settings > Apps.
             if (releaseSigning == null) {
                 versionNameSuffix = "-debugsigned"
             }
@@ -106,9 +97,8 @@ android {
     }
 
     androidResources {
-        // Generates the API 33+ LocaleConfig from the values-* folders so the OS offers
-        // Jellyboost in Settings > System > Languages > App languages. The default locale
-        // comes from res/resources.properties (unqualifiedResLocale).
+        // The API 33+ LocaleConfig, generated from the values-* folders; the default locale comes
+        // from res/resources.properties (unqualifiedResLocale).
         generateLocaleConfig = true
     }
 
@@ -120,14 +110,9 @@ android {
 }
 
 /**
- * Report-only Compose compiler metrics/reports, off by default.
- *
- * The same opt-in the Compose convention plugin applies to every other Compose module, repeated
- * here because `:app` applies the Compose plugin directly rather than through that convention — and
- * `:app` is where the screens the reports are wanted for actually live, so leaving it out would
- * have made the flag report on everything except the interesting half. Opt in with
- * `./gradlew assembleDebug -Pjellyboost.composeCompilerMetrics=true`; output lands under
- * `app/build/compose-metrics` and `app/build/compose-reports`.
+ * Repeated from the Compose convention plugin because `:app` applies the Compose plugin directly
+ * rather than through that convention — without this the flag would report on every module but this
+ * one. Opt in with `-Pjellyboost.composeCompilerMetrics=true`.
  */
 if (providers.gradleProperty("jellyboost.composeCompilerMetrics").getOrElse("false").toBoolean()) {
     composeCompiler {
@@ -137,22 +122,17 @@ if (providers.gradleProperty("jellyboost.composeCompilerMetrics").getOrElse("fal
 }
 
 /**
- * Consumer side of baseline profile generation. The producer is `:baselineprofile`.
- *
- * Nothing here touches a device: generation is an explicit, device-only task run in a device
- * session (`./gradlew :app:generateBaselineProfile`). Until it has been run,
- * `app/src/main/generated/baselineProfiles/` does not exist and the release build simply
- * packages no profile — `assembleDebug` and `assembleRelease` stay green either way.
+ * Consumer side of baseline profile generation; the producer is `:baselineprofile`. Nothing here
+ * touches a device — until `:app:generateBaselineProfile` has been run the generated directory does
+ * not exist and the release build simply packages no profile.
  */
 baselineProfile {
-    // Never generate as a side effect of assembling; that would make every release build require a
-    // connected device, including CI's.
+    // Never as a side effect of assembling: that would make every release build, CI's included,
+    // require a connected device.
     automaticGenerationDuringBuild = false
-    // Write the recording into the source tree so it is reviewed, checked in, and available to
-    // machines with no device (CI).
+    // Into the source tree, so the recording is reviewed, checked in, and usable without a device.
     saveInSrc = true
-    // One profile for the whole app rather than a file per flow — the release variant is the only
-    // consumer and a single file keeps the diff reviewable.
+    // One profile rather than a file per flow — the release variant is the only consumer.
     mergeIntoMain = true
 }
 
@@ -176,25 +156,21 @@ dependencies {
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.bundles.compose)
-    // Icons.Filled.VideoLibrary (the Libraries tab) lives only in the extended icon set, not in
-    // the material3 core the `compose` bundle already pulls in.
+    // Icons.Filled.VideoLibrary (the Libraries tab) is in the extended set only, not in the
+    // material3 core the `compose` bundle pulls in.
     implementation(libs.androidx.compose.material.icons.extended)
     debugImplementation(libs.androidx.compose.ui.tooling)
 
-    // The instrumented accessibility suite. Repeated here rather than inherited because `:app`
-    // applies the Compose plugin directly instead of through the convention that gives every
-    // other Compose module these — same reason the Compose compiler-metrics block above is
-    // duplicated.
+    // Repeated rather than inherited: `:app` applies the Compose plugin directly instead of through
+    // the convention that gives every other Compose module these.
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.bundles.compose.ui.test)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
     implementation(libs.androidx.activity.compose)
-    // Chromecast, both for the cast button and for it alone:
-    // MediaRouter's chooser dialog is a DialogFragment hosted by the activity — hence
-    // `FragmentActivity` — and it inflates against AppCompat attributes it takes from the
-    // activity's own theme, hence `Theme.AppCompat.NoActionBar` in themes.xml. Neither pulls
-    // AppCompat *views* into the app; every screen is still pure Compose.
+    // For the cast button alone: MediaRouter's chooser is a DialogFragment (hence
+    // `FragmentActivity`) inflating against AppCompat attributes it takes from the activity's theme
+    // (hence `Theme.AppCompat.NoActionBar` in themes.xml). No AppCompat *views* enter the app.
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.fragment)
     implementation(libs.androidx.core.ktx)
@@ -208,17 +184,14 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.timber)
 
-    // `JellyboostApplication` builds the process-wide `ImageLoader` (memory + disk cache budgets),
-    // so it names `coil3` types directly. Declared here since `:core:ui` does not export Coil as
-    // `api` — it was always this module's own dependency, just an undeclared one.
+    // `JellyboostApplication` names `coil3` types directly and `:core:ui` does not export Coil as
+    // `api`.
     implementation(libs.coil.compose)
 
-    // Installs the packaged baseline profile into ART on first run. Already arrives transitively
-    // via Compose, but the profile is useless without it, so the dependency is declared where the
-    // reason for it lives.
+    // Installs the packaged baseline profile into ART on first run. Arrives transitively via
+    // Compose, but the profile is useless without it, so it is declared where the reason lives.
     implementation(libs.androidx.profileinstaller)
-    // Points the baseline-profile plugin at the generator module; it is what creates
-    // `:app:generateBaselineProfile` and what copies the recording into the release variant.
+    // Creates `:app:generateBaselineProfile` and copies the recording into the release variant.
     baselineProfile(projects.baselineprofile)
 
     ksp(libs.androidx.hilt.compiler)

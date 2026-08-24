@@ -19,114 +19,51 @@ import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
 import dev.chrisbanes.haze.hazeEffect
 
-/**
- * The glass language the 2026 refresh uses for every floating surface: navigation chrome, icon
- * buttons, metadata pills, and the panels that sit over artwork.
- *
- * All of it is white at a very low alpha over the `#101010` background rather than an opaque grey,
- * because the point of the material is that whatever is behind it stays *slightly* visible. The
- * alphas are deliberately small — at these values the fill alone is nearly invisible and the
- * hairline is what actually draws the surface's edge, which is why both are always applied
- * together.
- */
 object GlassDefaults {
-    /** The surface's own fill, sitting on top of the blurred backdrop (or standing in for it). */
     val Fill: Color = Color.White.copy(alpha = 0.06f)
 
-    /** The 1dp edge that separates a glass surface from the content behind it. */
     val Hairline: Color = Color.White.copy(alpha = 0.09f)
 
-    /** Width of that edge — one device-independent pixel, not one physical one. */
     val HairlineWidth: Dp = 1.dp
 
-    /** Backdrop blur radius, matching the mocks' CSS `backdrop-filter: blur(18px)`. */
     val BlurRadius: Dp = 18.dp
 
-    /** Inner edge drawn *inside* card artwork, lifting the image off a same-coloured background. */
     val ArtworkInnerHairline: Color = Color.White.copy(alpha = 0.07f)
 
-    /** Edge of a form / feedback panel — a touch fainter than [Hairline], as panels are large. */
     val PanelHairline: Color = Color.White.copy(alpha = 0.06f)
 
     /**
-     * Border of a ghost (outlined, unfilled) button, which has no fill to define its shape.
-     *
-     * The one hairline in the set that is not decoration: it is the *entire* visual boundary of a
-     * control the user is meant to press, so WCAG 1.4.11 asks 3:1 of it against the page. On
-     * `#101010` white needs α ≥ 0.333 for that; at the original 0.12 the edge was 1.38:1 — visible
-     * on an OLED in a dark room and nowhere else. 0.40 gives
-     * 3.82:1, keeping a little margin for the ghost pills that sit on `#202020` (3.75:1) rather
-     * than on the background. [Hairline] and the rest stay where they are: those draw seams on
-     * surfaces that already have a fill, and are not the only thing saying where a control is.
+     * A ghost button's whole visual boundary, so WCAG 1.4.11 asks 3:1 of it: on `#101010` white
+     * needs α ≥ 0.333 (0.12 measured 1.38:1). 0.40 is 3.82:1, and 3.75:1 for ghost pills on
+     * `#202020`. The other hairlines are seams on surfaces that already have a fill, hence lower.
      */
     val GhostBorder: Color = Color.White.copy(alpha = 0.40f)
 
     /**
-     * The fill of a *chrome* surface — the top nav's tab capsule, the app-wide action circles, the
-     * floating bottom pill — as opposed to a card-level one.
-     *
-     * Chrome floats over whatever the user is looking at, which on this app's screens is very often
-     * a bright frame of artwork, and [Fill]'s white@6% over a blurred bright backdrop leaves a white
-     * glyph sitting on a near-white surface. A *dark* tint is the only thing that makes the blur
-     * subtractive: the backdrop still shows through, but it is pulled far enough down that white
-     * content on top of it keeps its contrast whatever is behind. In-content glass — overlay badges
-     * on card artwork, metadata pills — keeps [Fill], because those already sit on artwork the card
-     * itself has scrimmed.
-     *
-     * The alpha is [BottomNavFill]'s, and for the identical reason:
-     * at 45% a worst-case backdrop — a white frame — composited to rgb(147), where a white top-nav
-     * label is 3.05:1, short of the 4.5:1 body text owes. At 72% the same backdrop composites to
-     * rgb(83) and the label reads 7.70:1. The bottom pill had that arithmetic in its KDoc since the
-     * refresh; the top chrome, which carries an unselected tab's `onSurfaceVariant` label — white at
-     * 70%, dimmer still, and 2.29:1 at the old value — never got the same fix. That label is now
-     * 4.77:1. Both bars darken by the same amount, which is also what keeps them one system.
+     * Chrome floats over arbitrary artwork, so its tint must be *dark* enough to be subtractive:
+     * at 45% a white frame composites to rgb(147) and a white label is 3.05:1, under the 4.5:1 body
+     * text owes; at 72% it composites to rgb(83), 7.70:1 white and 4.77:1 for `onSurfaceVariant`.
+     * In-content glass keeps [Fill] — it sits on artwork the card already scrimmed.
      */
     val ChromeFill: Color = JellyfinColors.Background.copy(alpha = 0.72f)
 
     /**
-     * The floating bottom pill's fill.
-     *
-     * The pill carries the smallest text in the app's chrome (10sp unselected tab labels) and,
-     * unlike the top bars, it parks permanently over the brightest part of every screen: Home's
-     * full-bleed hero and the poster grids. The top chrome's scrim cannot help it — a scrim behind
-     * a glass surface is not part of the sampled backdrop (see `TopChromeScrim`'s KDoc), so the
-     * only lever that darkens what the labels sit on is the tint itself. At 45% a bright frame of
-     * artwork still composited the labels to roughly 2.5:1; 72% (the mid stop of the top scrim,
-     * for coherence) pulls a worst-case backdrop down far enough that full-white labels read
-     * (7.70:1 over a white one).
-     *
-     * This was the first token in the set sized by that arithmetic; [ChromeFill] has since been
-     * brought to the same value for the same reason, so the two are now equal by argument rather
-     * than by coincidence. Kept as a
-     * separate token because they are separate design decisions: if the top bars ever gain a real
-     * scrim of their own, this one still cannot have it.
+     * Same value and same arithmetic as [ChromeFill], kept separate: a scrim behind a glass surface
+     * is not part of the sampled backdrop, so if the top bars ever gain a real scrim the bottom
+     * pill still cannot have one and this tint stays its only contrast lever.
      */
     val BottomNavFill: Color = JellyfinColors.Background.copy(alpha = 0.72f)
 
     /**
-     * The input scale every glass surface blurs its backdrop at: full resolution, Haze's own
-     * default.
-     *
-     * The history is a retreat in two steps. Setting [HazeInputScale.Auto] app-wide, on an
-     * unmeasured "an 18dp blur discards the detail anyway" argument, turned out wrong: at
-     * [BlurRadius] `Auto` picks aggressively enough that the downscaled backdrop survives as
-     * visible structure — an ~8–24px checkerboard on the wide chrome bars, then the same texture
-     * on the small icon circles. The first retreat pinned `Fixed(0.5f)`, the one factor that maps
-     * whole source pixels onto whole destination ones; screenshot analysis measured it clean
-     * (high-pass p99 ≈ 4/255), but it was still visible on the physical panel — including on the
-     * mini-player the measurement had cleared. Screenshot amplitude evidently under-represents
-     * what a large dark panel makes visible, so the eye, not the scan, is the acceptance test, and
-     * full resolution is what passes it. Any downscaling re-attempt must be judged on the panel,
-     * not on a screenshot diff, and its saving has never been measured against that bar.
+     * Downscaled blur is visible as texture on the physical panel even when screenshot analysis
+     * measures it clean (`Fixed(0.5f)`: high-pass p99 ≈ 4/255, still visible). Judge any re-attempt
+     * on the panel, not on a screenshot diff.
      */
     val DefaultInputScale: HazeInputScale = HazeInputScale.None
 
     /**
-     * The Haze style every glass surface blurs with.
-     *
-     * `backgroundColor` is the app background rather than transparent: Haze composites the blurred
-     * backdrop over it, and naming the real background is what keeps a surface over an empty
-     * region of the screen the same colour as that region instead of washing out towards black.
+     * `backgroundColor` must name the real app background, not transparent: Haze composites the
+     * blurred backdrop over it, and transparent washes a surface over empty screen towards black.
      */
     fun style(
         tint: Color = Fill,
@@ -140,44 +77,23 @@ object GlassDefaults {
 }
 
 /**
- * The backdrop a glass surface samples, provided by `AppScaffold` around the scrolling content.
- *
- * `null` means "no backdrop source in this composition" — a preview, a test, or a screen drawn
- * outside the scaffold — and [glassSurface] then falls back to a static [GlassDefaults.Fill]. That
- * is also, incidentally, the story below API 31, where real blur is unavailable; Haze handles that
- * case internally by degrading to a scrim, so callers never branch on the SDK level themselves.
+ * `null` means no backdrop source in this composition (preview, test, screen outside the scaffold);
+ * [glassSurface] then falls back to a flat fill. Haze degrades to a scrim below API 31 by itself,
+ * so callers never branch on the SDK level.
  */
 val LocalHazeState = compositionLocalOf<HazeState?> { null }
 
 /**
- * Makes [this] a glass surface in [shape]: blurred backdrop where one is available, a flat fill
- * where it is not, and in both cases the hairline that gives the surface its edge.
+ * Chain order is load-bearing: clip first so the blur is sampled only inside the shape, border last
+ * so the hairline draws *over* the fill — at 9% alpha that is the difference between an edge and
+ * none.
  *
- * The order of the chain is load-bearing. The clip comes first so the blur is sampled and drawn
- * only inside the shape; the border comes last so the hairline is drawn *over* the fill rather
- * than under it, which at a 9% alpha is the difference between a visible edge and none.
+ * A `@Composable` factory rather than `composed {}`: composed modifiers compare equal to nothing,
+ * so every caller recomposition would re-materialise the chain and lazy layouts could never reuse
+ * the node — this is applied to every library tile and the player controls.
  *
- * A `@Composable` modifier factory rather than `composed {}`, which would only be needed to
- * read [LocalHazeState]: `composed` modifiers compare equal to nothing, so every recomposition of
- * a caller would re-materialise the whole chain and lazy layouts could never reuse the node — a
- * real cost on the hot paths this is applied to (every library tile, the downloads bulk bar, the
- * player controls). The factory reads the composition local at the call site and returns plain
- * node-backed elements (`clip`/`hazeEffect`/`background`/`border`), which diff and reuse normally.
- *
- * @param borderColor the edge to draw. Defaults to [GlassDefaults.Hairline], which is what every
- *   floating surface uses; a ghost *button* is the exception and passes
- *   [GlassDefaults.GhostBorder], because a control the user is meant to press has to read as an
- *   edge rather than as a seam. Stacking a second `border` on top of the default would composite
- *   the two alphas instead of replacing one with the other, hence a parameter.
- * @param tint what the blurred backdrop is composited under (and, where no backdrop is available,
- *   the flat fill that stands in for it). [GlassDefaults.Fill] — white@6% — for anything sitting
- *   inside a screen's own content; chrome that floats over arbitrary artwork passes
- *   [GlassDefaults.ChromeFill] instead, for the reason spelled out there.
- * @param inputScale the resolution the backdrop is sampled and blurred at. Defaults to
- *   [GlassDefaults.DefaultInputScale] — full resolution — because `Auto`'s aggressive factor at
- *   this blur radius shows as visible texture on every surface size it was checked on (that
- *   token's KDoc has the history). The parameter survives for the day a surface measurably wants
- *   something else; no caller passes it today.
+ * @param borderColor pass a different edge rather than stacking a second `border`, which would
+ *   composite the two alphas instead of replacing one.
  */
 @Composable
 fun Modifier.glassSurface(
@@ -187,17 +103,8 @@ fun Modifier.glassSurface(
     inputScale: HazeInputScale = GlassDefaults.DefaultInputScale,
 ): Modifier {
     val hazeState = LocalHazeState.current
-    // The backdrop blurs at the resolution [inputScale] picks — full by default; the visible-mush
-    // trade-off behind that default is documented on [GlassDefaults.DefaultInputScale]. Dropping
-    // `hazeSource` where the glass could be flat `mSurface` instead is deliberately left until a
-    // systrace fling measures it.
-    //
-    // The block is remembered on [inputScale] rather than written inline: it now *captures* that
-    // parameter, so a fresh lambda per recomposition would make the `hazeEffect` element compare
-    // unequal to its predecessor every time and defeat the node reuse this factory exists for (see
-    // above). `remember` gives back the same instance while the caller passes the same scale — and
-    // both scales callers pass are stable values ([HazeInputScale.Auto] an object,
-    // [HazeInputScale.Fixed] a value class over its float), so the key compares by value.
+    // Remembered on inputScale: a fresh lambda per recomposition makes the hazeEffect element
+    // compare unequal every time and defeats the node reuse this factory exists for.
     val effect: HazeEffectScope.() -> Unit =
         remember(inputScale) {
             { this.inputScale = inputScale }
@@ -213,19 +120,7 @@ fun Modifier.glassSurface(
         .border(width = GlassDefaults.HairlineWidth, color = borderColor, shape = shape)
 }
 
-/**
- * The restyled 2026 "m-surface" card fill: a solid [surfaceColor] fill, set apart from the page by
- * the same white@6% hairline glass surfaces use rather than by blur — `glassSurface` without the
- * translucency, for cards and stat panels that sit over other cards rather than over a backdrop
- * image.
- *
- * Hoisted from `:feature:downloads`' own private copy: SyncPlay's group/queue rows want the
- * identical fill, and a second private copy in `:player` would drift the moment either screen's
- * card language moved half a step.
- *
- * @param radius [Dimens.CardCornerRadius] by default; callers that need a different rounding — a
- *   screen's own spec calls for something else — pass their own.
- */
+/** [glassSurface] without the blur, for cards and panels that sit over other cards. */
 fun Modifier.mSurface(
     surfaceColor: Color,
     radius: Dp = Dimens.CardCornerRadius,

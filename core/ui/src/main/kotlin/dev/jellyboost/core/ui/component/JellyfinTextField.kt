@@ -47,16 +47,11 @@ import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
 
-/** Fill of the field's well — barely there, so the border does the work of drawing the box. */
 private val FieldFill = Color.White.copy(alpha = 0.04f)
 
 /**
- * The border once the field has the user's attention (focused) or their data (non-empty).
- *
- * This is the app's only focus affordance, which makes it a UI component boundary owing 3:1 under
- * WCAG 1.4.11 (and, on the focused path, 2.4.7). At 0.22 it was 1.97:1 on `#101010` — a border you
- * had to already know was there. 0.42 gives 4.09:1 on the
- * background and 3.99:1 on `#202020`, and stays clearly a step under the [FieldFill]'s text.
+ * The app's only focus affordance, so it owes 3:1 (WCAG 1.4.11, and 2.4.7 while focused). 0.22
+ * measured 1.97:1 on `#101010`; 0.42 is 4.09:1 there and 3.99:1 on `#202020`.
  */
 private val FieldActiveBorder = Color.White.copy(alpha = 0.42f)
 
@@ -64,7 +59,6 @@ private val FieldPlaceholder = Color.White.copy(alpha = 0.48f)
 
 private val FieldPadding = 14.dp
 
-/** Floor on the well's height, so an empty field is not shorter than one holding a line of text. */
 private val FieldMinHeight = 50.dp
 
 private val FieldTextStyle =
@@ -81,32 +75,12 @@ private val FieldSupportingStyle =
     )
 
 /**
- * The refresh's text field: a filled well with a hairline that brightens as the field fills.
+ * [BasicTextField], not M3's `TextField`: Material floats its label inside the well and reserves
+ * 56dp for that animation, where this field draws a caption above a 14dp-padded box. Only the
+ * colours and the cursor are borrowed.
  *
- * Built on [BasicTextField] rather than M3's `TextField` for the label. Material's filled field
- * floats its label *inside* the well and reserves 56dp of height for the animation; the mocks put a
- * small tracked-out caption above the box and give the box itself 14dp of padding. Those are
- * different components wearing the same name, so this one owns its layout and only borrows
- * Material's colours and text cursor.
- *
- * ### Three values, not nineteen parameters
- * The field's accessibility guarantees rest on three values rather than four pairs of parameters a
- * caller would otherwise have to keep in agreement by hand — `label`/`labelText`,
- * `isError`/`errorMessage`, `password`/`visualTransformation`, `enabled`/`readOnly` — none of them
- * checked by anything. Each pair is one value that cannot be half-passed: [FieldLabel], [FieldState],
- * [FieldContent]. What each of them guarantees is documented on the type rather than repeated here.
- *
- * The placeholder and the icons stay `@Composable` lambdas: they are decoration, they carry no
- * semantics of their own, and one of them (the trailing icon) is a real control the caller owns.
- *
- * @param label the field's name, drawn above the well as a caption and spoken by the field node
- *   itself. `null` for a field with no name at all, which every call site in this app avoids.
- * @param leadingIcon drawn before the well's content, in the muted [MaterialTheme.colorScheme]
- *   `onSurfaceVariant` tint — added for `:feature:search`'s field, which wants a search glyph the
- *   way every `OutlinedTextField` call site it replaces already had one. `null` (the default)
- *   leaves every existing caller's layout untouched.
- * @param supportingText drawn below in [MaterialTheme] error colour while [state] is a
- *   [FieldState.Error], muted otherwise.
+ * The a11y guarantees rest on [FieldLabel], [FieldState] and [FieldContent] rather than on four
+ * pairs of parameters a caller had to keep in agreement by hand; each type documents its own.
  */
 @Suppress(
     // One Material text field plus the label/error/password wiring its value types resolve. The decomposition wanted
@@ -146,15 +120,12 @@ fun JellyfinTextField(
     ) {
         val caption = label?.caption
         if (caption != null) {
-            // The caption is the shared eyebrow style: the mocks' field labels and their section
-            // eyebrows are the same tracked-out 11dp caption, and callers uppercase the text.
             Text(
                 text = caption,
                 style = JellyfinTypeExtras.Eyebrow,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                // Muted for the screen reader, because the field itself carries the name: the
-                // caption and the field would otherwise be two stops saying the same word, the
-                // first of them spelled out letter by letter.
+                // Muted: the field node carries the name, so this would be a second stop saying
+                // the same word, spelled out letter by letter.
                 modifier = Modifier.clearAndSetSemantics {},
             )
         }
@@ -202,15 +173,10 @@ fun JellyfinTextField(
                         innerTextField()
                     }
                     if (trailingIcon != null) {
-                        // The slot usually holds a 48dp `IconButton` (password reveal, search
-                        // clear), and letting that measure normally inflated the whole field past
-                        // [FieldMinHeight] — the password field stood visibly taller than the
-                        // username field one line above it.
-                        // `requiredSize` reports the row's own height back to the layout while the
-                        // 48dp touch target draws and hit-tests centred over it, the same
-                        // visual-inside-a-bigger-invisible-frame trade the chip and pill
-                        // components already make; nothing in the field's modifier chain clips,
-                        // so the overflowing target stays tappable.
+                        // A 48dp `IconButton` measured normally inflates the whole field past
+                        // [FieldMinHeight]. `requiredSize` reports the row's own height back while
+                        // the touch target draws and hit-tests centred over it; nothing in the
+                        // chain clips, so the overflowing target stays tappable.
                         Box(
                             modifier = Modifier.requiredSize(Dimens.MinTouchTarget),
                             contentAlignment = Alignment.Center,
@@ -241,14 +207,11 @@ fun JellyfinTextField(
 }
 
 /**
- * Everything a screen reader needs from the field itself.
+ * Must sit on the field's own node: the caption above the well and the sentence below it are
+ * separate nodes with no association to it, so without this the field announces only its value and
+ * "edit box".
  *
- * On the field's own node, because that is the node a screen reader lands on: the caption above the
- * well and the sentence below it are separate nodes with no association to it, which is what
- * prevents a field from announcing only its value and the word "edit box" — no name, no
- * failure.
- *
- * @param errorMessage already filtered by the caller: pass `null` when the field is not in error.
+ * @param errorMessage already filtered by the caller: `null` when the field is not in error.
  */
 private fun Modifier.fieldNodeSemantics(
     labelText: String?,

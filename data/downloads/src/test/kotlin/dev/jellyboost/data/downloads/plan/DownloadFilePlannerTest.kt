@@ -28,12 +28,10 @@ import org.junit.jupiter.api.Test
 import java.util.UUID
 
 /**
- * Unit tests for [DownloadFilePlanner] — the piece of the pipeline most likely to fail as a 404
- * halfway through a 2 GB transfer, and the reason [DownloadUrlFactory] is a seam at all.
- *
- * Two properties matter beyond "the right URLs": the plan's **order** (artwork first so the queue
- * row has a poster, media second because it is the point) and its **essential/optional split**,
- * which is what decides whether a failure loses the item or just its backdrop.
+ * The piece of the pipeline most likely to fail as a 404 halfway through a 2 GB transfer, and the
+ * reason [DownloadUrlFactory] is a seam at all. Two properties matter beyond "the right URLs": the
+ * plan's **order** and its **essential/optional split**, which decides whether a failure loses the item
+ * or just its backdrop.
  */
 class DownloadFilePlannerTest {
     private val urls = FakeDownloadUrlFactory()
@@ -45,8 +43,8 @@ class DownloadFilePlannerTest {
     fun `the primary image comes before the media file`() {
         val plan = planner.plan(movie(), DIRECTORY)
 
-        // Artwork first is deliberate: the queue row and the notification get a poster within a
-        // second instead of after the two gigabytes.
+        // Artwork first is deliberate: the queue row and the notification get a poster within a second
+        // instead of after the two gigabytes.
         plan.map { it.type }.take(2) shouldContainExactly
             listOf(DownloadFileType.IMAGE_PRIMARY, DownloadFileType.MEDIA)
     }
@@ -73,9 +71,8 @@ class DownloadFilePlannerTest {
 
     @Test
     fun `a season is refused before a URL is ever built`() {
-        // `/Items/{seasonId}/Download` answers 400, which reached the user as "The server couldn't
-        // send this download (error 400)". Callers expand a container into its episodes; this is
-        // the guard that makes forgetting fail here, with a reason, instead of there.
+        // `/Items/{seasonId}/Download` answers 400. Callers expand a container into its episodes; this
+        // is the guard that makes forgetting fail here, with a reason, instead of there.
         shouldThrow<NotDownloadableException> { planner.plan(season(), DIRECTORY) }
     }
 
@@ -141,8 +138,8 @@ class DownloadFilePlannerTest {
 
     @Test
     fun `a denied download policy does not downgrade a transcode to the static stream`() {
-        // The static stream *is* the original file; falling back to it would silently hand the user
-        // the 25 Mbps remux they asked the server to shrink.
+        // The static stream *is* the original file; falling back to it would silently hand the user the
+        // 25 Mbps remux they asked the server to shrink.
         val plan = planner.plan(movie(), DIRECTORY, downloadAllowed = false, quality = DownloadQuality.LOW)
 
         plan.media().url shouldContain "transcode://"
@@ -150,10 +147,9 @@ class DownloadFilePlannerTest {
 
     @Test
     fun `a transcoded media file is named for the container the server actually sends`() {
-        // What arrives is a Matroska mux of a fresh H.264/AAC encode, not the source file, and the
-        // name says so — along with the quality, so a re-download at another quality cannot land on
-        // top of this file. `mp4` was tried first and produced a file Media3 refuses to open; see
-        // `DownloadQuality.CONTAINER`.
+        // What arrives is a Matroska mux of a fresh H.264/AAC encode, not the source file, and the name
+        // says so — along with the quality, so a re-download at another quality cannot land on top of
+        // this file. `mp4` produced a file Media3 refuses to open; see `DownloadQuality.CONTAINER`.
         planner.plan(movie(), DIRECTORY, quality = DownloadQuality.LOW).media().fileName shouldBe
             "$DIRECTORY (low).${DownloadQuality.CONTAINER}"
         DownloadQuality.CONTAINER shouldBe "mkv"
@@ -167,7 +163,7 @@ class DownloadFilePlannerTest {
         val transcoded = planner.plan(item, DIRECTORY, quality = DownloadQuality.HIGH)
 
         // The item's one subtitle here is genuinely external, so it is fetched at either quality —
-        // artwork and tiles are quality-independent, and this pins that they stay so.
+        // artwork and tiles are quality-independent.
         original.filterNot { it.type == DownloadFileType.MEDIA } shouldContainExactly
             transcoded.filterNot { it.type == DownloadFileType.MEDIA }
     }
@@ -176,8 +172,8 @@ class DownloadFilePlannerTest {
 
     @Test
     fun `a transcode names the audio track it wants baked in`() {
-        // `/Videos/{id}/stream.mkv` takes exactly one audioStreamIndex and drops every other track.
-        // Naming it is what lets the download row record which one survived.
+        // `/Videos/{id}/stream.mkv` takes exactly one audioStreamIndex and drops every other track;
+        // naming it is what lets the download row record which one survived.
         val plan =
             planner.plan(
                 movie(streams = listOf(audioStream(index = 1), audioStream(index = 2)), defaultAudioStreamIndex = 2),
@@ -262,7 +258,7 @@ class DownloadFilePlannerTest {
 
         val series = plan.of(DownloadFileType.IMAGE_SERIES_PRIMARY).shouldNotBeNull()
         // Requested for the *series* id, not the episode's — that is what makes the offline library
-        // able to render the show for an episode that was downloaded on its own.
+        // able to render the show for an episode downloaded on its own.
         series.url shouldContain uuid(10).toString()
         series.fileName shouldBe "series-primary.webp"
     }
@@ -296,8 +292,8 @@ class DownloadFilePlannerTest {
 
     @Test
     fun `an original download skips embedded subtitle streams`() {
-        // The file it is about to fetch *is* the source, embedded track and all; a sidecar would be
-        // a second copy of bytes we already have — and a second route to one picker entry.
+        // The file it is about to fetch *is* the source, embedded track and all; a sidecar would be a
+        // second copy of bytes we already have, and a second route to one picker entry.
         val plan = planner.plan(movie(streams = listOf(subtitleStream(index = 3, external = false))), DIRECTORY)
 
         plan.filter { it.type == DownloadFileType.SUBTITLE }.shouldBeEmpty()
@@ -305,8 +301,8 @@ class DownloadFilePlannerTest {
 
     @Test
     fun `a transcode fetches a sidecar for every embedded text subtitle`() {
-        // The transcoder maps at most one subtitle and drops the rest, so on this path the sidecar
-        // is the only copy there will ever be.
+        // The transcoder maps at most one subtitle and drops the rest, so on this path the sidecar is
+        // the only copy there will ever be.
         val plan =
             planner.plan(
                 movie(
@@ -327,7 +323,7 @@ class DownloadFilePlannerTest {
     @Test
     fun `a stream the server will not hand over separately is never asked for`() {
         // `supportsExternalStream = false` is the server saying it cannot extract this one; asking
-        // anyway is a 404 the queue would log for every optional file of every download.
+        // anyway is a 404 for every optional file of every download.
         val plan =
             planner.plan(
                 movie(
@@ -343,8 +339,8 @@ class DownloadFilePlannerTest {
 
     @Test
     fun `bitmap subtitle formats are skipped`() {
-        // ExoPlayer cannot play PGS or VobSub from a standalone sidecar file, so downloading one
-        // would produce a track that exists and never renders.
+        // ExoPlayer cannot play PGS or VobSub from a standalone sidecar file, so downloading one would
+        // produce a track that exists and never renders.
         val plan = planner.plan(movie(streams = listOf(subtitleStream(index = 3, codec = "pgssub"))), DIRECTORY)
 
         plan.filter { it.type == DownloadFileType.SUBTITLE }.shouldBeEmpty()
@@ -352,8 +348,7 @@ class DownloadFilePlannerTest {
 
     @Test
     fun `a bitmap subtitle stays skipped at a transcoded quality, embedded or not`() {
-        // The one genuine casualty of a transcode: no OCR, and no side-loading a `.sup`. It survives
-        // in an ORIGINAL download and nowhere else.
+        // The one genuine casualty of a transcode: no OCR, and no side-loading a `.sup`.
         val plan =
             planner.plan(
                 movie(
@@ -394,10 +389,9 @@ class DownloadFilePlannerTest {
 
     @Test
     fun `a hostile language tag cannot name a path outside the item directory`() {
-        // `MediaStream.language` is the raw container track tag from ffprobe — whoever
-        // supplies media to the library controls it. Interpolated verbatim, `../` reached
-        // `File(dir, fileName)` with the downloader running mkdirs() on the parent: a write
-        // outside the downloads root that no sweep or delete ever collects.
+        // `MediaStream.language` is the raw container track tag from ffprobe — whoever supplies media to
+        // the library controls it. Interpolated verbatim, `../` reached `File(dir, fileName)` with the
+        // downloader running mkdirs() on the parent: a write outside the root no sweep ever collects.
         val plan =
             planner.plan(
                 movie(
@@ -504,7 +498,7 @@ class DownloadFilePlannerTest {
     @Test
     fun `an original download plans no audio sidecars, because it keeps them all`() {
         // Same reasoning as the embedded-subtitle guard: the file being fetched already holds every
-        // track, so a sidecar would be a duplicate download and a second route to one picker entry.
+        // track, so a sidecar would be a duplicate and a second route to one picker entry.
         val plan =
             planner.plan(
                 movie(streams = listOf(audioStream(index = 1), audioStream(index = 2)), defaultAudioStreamIndex = 1),
@@ -594,8 +588,8 @@ class DownloadFilePlannerTest {
     fun `a track plans exactly two files, artwork then the original`() {
         val plan = planner.plan(track(), TRACK_DIRECTORY)
 
-        // The whole audio branch in one assertion: no backdrop, no series poster, no subtitles, no
-        // audio sidecars, no trickplay — and the same artwork-first order the video plan promises.
+        // The whole audio branch in one assertion: no backdrop, no series poster, no subtitles, no audio
+        // sidecars, no trickplay — and the same artwork-first order the video plan promises.
         plan.map { it.type } shouldContainExactly
             listOf(DownloadFileType.IMAGE_PRIMARY, DownloadFileType.MEDIA)
     }
@@ -605,8 +599,8 @@ class DownloadFilePlannerTest {
         val plan = planner.plan(track(), TRACK_DIRECTORY)
 
         val art = plan.of(DownloadFileType.IMAGE_PRIMARY).shouldNotBeNull()
-        // Addressed on the album id and the album's tag: every track of the album then holds the
-        // same cover, which is the image the offline card draws.
+        // Addressed on the album id and the album's tag: every track of the album then holds the same
+        // cover, which is the image the offline card draws.
         art.url shouldContain uuid(40).toString()
         art.url shouldContain "tag=album-tag"
         art.fileName shouldBe "primary.webp"
@@ -638,8 +632,8 @@ class DownloadFilePlannerTest {
     fun `a track falls back to the static audio stream when downloading is not allowed`() {
         val plan = planner.plan(track(), TRACK_DIRECTORY, downloadAllowed = false)
 
-        // `/Audio/{id}/stream?static=true`, not the video route: the same bytes over a route the
-        // server does not gate on `enableContentDownloading`.
+        // `/Audio/{id}/stream?static=true`, not the video route: the same bytes over a route the server
+        // does not gate on `enableContentDownloading`.
         plan.media().url shouldContain "audio-static://${uuid(30)}"
         plan.media().url shouldContain "mediaSourceId=source-${uuid(30)}"
     }
@@ -648,9 +642,9 @@ class DownloadFilePlannerTest {
     fun `a quality stamped on a track is ignored — music downloads are originals only`() {
         val plan = planner.plan(track(), TRACK_DIRECTORY, quality = DownloadQuality.LOW)
 
-        // Key decision 10. `DownloadEnqueuer` never writes a transcoded audio row, and the planner
-        // does not honour one either: a transcode URL here would produce a file the offline player
-        // and the size machinery both describe wrongly.
+        // Music is originals-only and the planner does not honour a transcoded audio row either: a
+        // transcode URL here would produce a file the offline player and the size machinery both
+        // describe wrongly.
         plan.media().url shouldBe "download://${uuid(30)}"
         plan.media().fileName shouldNotContain "low"
         plan.map { it.type } shouldContainExactly
@@ -672,8 +666,8 @@ class DownloadFilePlannerTest {
 
     @Test
     fun `an album is refused before a URL is ever built`() {
-        // Same guard a season gets: the caller expands containers, and one that forgot must fail
-        // here rather than as an unexplained 400 halfway down the queue.
+        // Same guard a season gets: the caller expands containers, and one that forgot must fail here
+        // rather than as an unexplained 400 halfway down the queue.
         shouldThrow<NotDownloadableException> { planner.plan(album(), TRACK_DIRECTORY) }
         shouldThrow<NotDownloadableException> { planner.plan(artist(), TRACK_DIRECTORY) }
         shouldThrow<NotDownloadableException> { planner.plan(playlist(), TRACK_DIRECTORY) }

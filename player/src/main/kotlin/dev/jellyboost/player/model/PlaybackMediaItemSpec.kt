@@ -1,19 +1,12 @@
 package dev.jellyboost.player.model
 
 /**
- * A pure description of what to hand ExoPlayer: one stream URL plus any side-loaded tracks.
+ * Must stay free of `MediaItem`/`Uri`: `android.net.Uri` is a throwing stub in local unit tests, and
+ * that is what keeps `ExoMediaSourceFactory`'s decision table testable without an emulator.
  *
- * Deliberately free of `MediaItem`/`Uri`: `android.net.Uri` is a throwing stub in local unit
- * tests, so keeping URL selection in plain data is what makes `ExoMediaSourceFactory`'s decision
- * table — the riskiest logic in the playback path — testable without an emulator. The conversion to
- * a real `MediaItem` is a single mechanical step performed on-device.
- *
- * @property audioSidecars audio tracks that live in their own files and have to be merged alongside
- *   the main one. `MediaItem` has no audio analogue of `SubtitleConfiguration`, so unlike
- *   [subtitles] these cannot ride along on the item: `ExoPlayerHandle.prepare` turns each into its
- *   own `MediaSource` and builds a `MergingMediaSource`. **Element `i` becomes merge child `i + 1`**
- *   — child 0 is always the main source — and that positional contract is the whole of the mapping
- *   `TrackSelectionController` navigates back by. Only a transcoded download has any.
+ * @property audioSidecars merged as their own sources, since `MediaItem` has no audio analogue of
+ *   `SubtitleConfiguration`. **Element `i` becomes merge child `i + 1`** (child 0 is the main
+ *   source) — the positional contract `TrackSelectionController` navigates back by.
  */
 internal data class PlaybackMediaItemSpec(
     /** `MediaItem.mediaId`; the Jellyfin item id, used to correlate player callbacks. */
@@ -26,15 +19,11 @@ internal data class PlaybackMediaItemSpec(
 )
 
 /**
- * One audio track ExoPlayer loads as its own source and plays merged with the main one.
+ * Carries no id, unlike [SubtitleSpec]: a merge cannot name a child's tracks, so the bridge back to
+ * Jellyfin is the child's *position* (`TrackSelectionController.selectAudio`).
  *
- * It carries no id, unlike [SubtitleSpec]: the merge does not let us name a child's tracks, so the
- * bridge back to Jellyfin is the child's *position* rather than a string
- * (`TrackSelectionController.selectAudio`). Nor does it carry a label or a language — the picker
- * draws `PlaybackTrack`s built from the cached `BaseItemDto`, never ExoPlayer's own metadata.
- *
- * @property streamIndex the absolute Jellyfin `MediaStream.index` this file holds, kept so the
- *   merge order can be checked against the track list it was built from.
+ * @property streamIndex the absolute Jellyfin `MediaStream.index`, so merge order can be checked
+ *   against the track list it was built from.
  */
 internal data class AudioSidecarSpec(
     val streamIndex: Int,
@@ -42,10 +31,8 @@ internal data class AudioSidecarSpec(
 )
 
 /**
- * One side-loaded subtitle track.
- *
- * [id] carries the [EXTERNAL_SUBTITLE_ID_PREFIX] convention so that `TrackSelectionController`
- * can map an ExoPlayer text track back onto the Jellyfin stream index it came from.
+ * [id] must carry the [EXTERNAL_SUBTITLE_ID_PREFIX] convention: it is how `TrackSelectionController`
+ * maps an ExoPlayer text track back onto its Jellyfin stream index.
  */
 internal data class SubtitleSpec(
     val id: String,
@@ -55,28 +42,15 @@ internal data class SubtitleSpec(
     val language: String,
 )
 
-/** Prefix of the ExoPlayer track id given to a side-loaded Jellyfin subtitle stream. */
 internal const val EXTERNAL_SUBTITLE_ID_PREFIX: String = "external:"
 
-/** The ExoPlayer track id for the Jellyfin subtitle stream at [index]. */
 internal fun externalSubtitleTrackId(index: Int): String = "$EXTERNAL_SUBTITLE_ID_PREFIX$index"
 
 /**
- * The Jellyfin stream index behind an ExoPlayer track id, or `null` if it is not one of ours.
- *
- * The id given to a `MediaItem.SubtitleConfiguration` is **not** the id the player reports back.
- * Side-loading even one subtitle makes the player a `MergingMediaSource`, and
- * `MergingMediaPeriod.onPrepared` rebuilds every format of every child as
- * `setId(childIndex + ":" + format.id)` before publishing the merged track groups — so
- * `external:2` comes back as `1:external:2`. Reading the id without allowing for that prefix
- * matched nothing, which is how a downloaded sidecar ended up refused as "not in the downloaded
- * file".
- *
- * There can be **two** such prefixes. A downloaded item with both audio sidecars and
- * subtitles is merged twice: `ExoPlayerHandle` builds the outer merge over the audio files, and
- * `DefaultMediaSourceFactory` has already wrapped the main item in its own merge for the subtitles.
- * The same `external:2` then arrives as `0:1:external:2`, so the strip is a loop rather than one
- * step.
+ * The id given to a `SubtitleConfiguration` is **not** the id the player reports back:
+ * `MergingMediaPeriod.onPrepared` rebuilds each child format as `childIndex + ":" + format.id`, so
+ * `external:2` arrives as `1:external:2`. An item merged twice (audio sidecars *and* subtitles)
+ * arrives as `0:1:external:2`, which is why the strip is a loop rather than one step.
  */
 internal fun jellyfinIndexOfTrackId(trackId: String?): Int? {
     val id = trackId?.withoutMergePrefixes() ?: return null
@@ -85,12 +59,8 @@ internal fun jellyfinIndexOfTrackId(trackId: String?): Int? {
 }
 
 /**
- * The id as its own source published it, with every `MergingMediaPeriod` child prefix removed.
- *
- * Only leading runs of digits followed by `:` are stripped, which is exactly the shape a merge adds
- * and cannot be confused with our own prefix, which is not numeric. Stripping them all is safe for
- * a container track whose own id looks like one — Matroska names its tracks `1`, `2`, … so `0:0:2`
- * reduces to `2`, which is not an `external:` id and is still read as "none of ours".
+ * Strips only leading digit runs followed by `:` — the shape a merge adds, never our own non-numeric
+ * prefix. Safe for Matroska's numeric track ids: `0:0:2` reduces to `2`, still "none of ours".
  */
 private fun String.withoutMergePrefixes(): String {
     var id = this

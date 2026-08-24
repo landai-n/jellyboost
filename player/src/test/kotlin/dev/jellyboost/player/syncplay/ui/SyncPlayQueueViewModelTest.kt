@@ -35,13 +35,9 @@ import java.time.Instant
 import java.util.UUID
 
 /**
- * Unit tests for [SyncPlayQueueViewModel].
- *
- * Two claims carry the sheet. The first is that the rows are the *group's* queue with names hung on
- * it — the protocol carries ids and nothing else, so a row is only readable once the repository has
- * been asked, and it must be asked once per item however often the queue is re-sent. The second is
- * key decision 11 again: every edit is a request, and this class must therefore change nothing
- * locally when one is made.
+ * Rows are the group's queue with names hung on it — the protocol carries only ids, so each item
+ * is fetched once from the repository however often the queue is re-sent. Per key decision 11,
+ * every edit is a request to the group; this class changes nothing locally when one is made.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class SyncPlayQueueViewModelTest {
@@ -141,11 +137,7 @@ class SyncPlayQueueViewModelTest {
             }
         }
 
-    /**
-     * If only *successes* were memoized, and the server re-sends the whole queue on every
-     * transport action, an item it will not describe would be re-asked about on every play,
-     * pause and seek, for a row that can never fill in.
-     */
+    // Memoizing only successes would re-ask about an undescribable item on every play, pause, seek.
     @Test
     fun `an entry the server will not describe is asked about once, not once per queue update`() =
         runTest(dispatcher) {
@@ -183,8 +175,7 @@ class SyncPlayQueueViewModelTest {
                 controllerState.value = inGroup(queue(playingIndex = 0))
                 awaitUntil { it.rows.size == 2 }
 
-                // Membership changed twice — dropped, then re-queued. The second one is a genuinely
-                // different question: whatever made the item unavailable may have been fixed.
+                // Dropped, then re-queued: the second attempt is a genuinely different question.
                 controllerState.value =
                     inGroup(queue(playingIndex = 0, entries = listOf(SyncPlayQueueEntry(firstItemId, firstSlot))))
                 awaitUntil { it.rows.size == 1 }
@@ -263,7 +254,7 @@ class SyncPlayQueueViewModelTest {
 
     private fun viewModel() = SyncPlayQueueViewModel(controller, repository)
 
-    /** Awaits the first emission satisfying [predicate] — hydration lands over several of them. */
+    // Hydration lands over several emissions, so this waits for the one matching predicate.
     private suspend fun app.cash.turbine.ReceiveTurbine<SyncPlayQueueUiState>.awaitUntil(
         predicate: (SyncPlayQueueUiState) -> Boolean,
     ): SyncPlayQueueUiState {

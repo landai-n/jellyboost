@@ -12,78 +12,42 @@ import dev.jellyboost.data.downloads.withDownloadStates
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 
-/**
- * Everything the item detail screen draws.
- *
- * One state class covers all three shapes this screen takes — Movie, Series and Season. Which
- * rows appear follows from [item]'s type, so
- * the screen never has to branch on a separate mode flag: a movie simply has no seasons, a season
- * no similar items.
- */
+/** One state class for all three shapes; which rows appear follows from [item]'s type. */
 data class ItemDetailUiState(
     val isLoading: Boolean = true,
     val isRefreshing: Boolean = false,
     val item: JellyfinItem? = null,
-    /** Series detail: the show's seasons. */
     val seasons: List<JellyfinItem> = emptyList(),
-    /** Season detail: the season's episodes. */
+    /** Season detail only. Drives batch-selection/download/play semantics; empty on episode pages. */
     val episodes: List<JellyfinItem> = emptyList(),
-    /** Series detail: the next episode to watch, if any. */
     val nextUp: JellyfinItem? = null,
-    /** Episode detail: the episode that follows this one in series order, if any. */
     val nextEpisode: JellyfinItem? = null,
-    /**
-     * Episode detail: the parent season's episodes. Deliberately separate from [episodes], which
-     * drives the season page's batch-selection/download/play semantics and stays empty on episode
-     * pages.
-     */
+    /** Episode detail: the parent season's episodes. Deliberately separate from [episodes]. */
     val seasonEpisodes: List<JellyfinItem> = emptyList(),
-    /** Movie / series / episode detail: the *More like this* row. */
     val similar: List<JellyfinItem> = emptyList(),
     /**
-     * Live download state of [item].
-     *
-     * Kept next to the item rather than folded into `JellyfinItem.downloadState` because it comes
-     * from a *different* Flow — Room's download table — and updates several times a second while a
-     * transfer runs, whereas the item itself is fetched once.
-     *
-     * For a season it is not this item's own state at all but the *aggregate* of its episodes',
-     * because a season is downloaded by downloading its episodes ([aggregateDownloadState]).
+     * Separate from `JellyfinItem.downloadState` because it comes from a different Flow — Room's
+     * download table, updating several times a second — while the item is fetched once. For a season
+     * this is the *aggregate* of its episodes' states ([aggregateDownloadState]).
      */
     val downloadState: DownloadState = DownloadState.NotDownloaded,
     /**
-     * Bytes the downloaded copy of [item] occupies on disk, or `null` when nothing of it is on the
-     * device.
-     *
-     * Fed from `DownloadRepository.observeBytesOnDisk`, a different Room projection than
-     * [downloadState]: this is a footprint, not a status, and the header only reads it once it
-     * already knows the item is [DownloadState.Downloaded] — a partly-downloaded container's SUM
-     * would otherwise read as a (wrong) whole-item size.
+     * `null` when nothing of [item] is on the device. Read only once [downloadState] is
+     * [DownloadState.Downloaded] — a partly-downloaded container's SUM would read as a whole-item
+     * size.
      */
     val downloadedBytes: Long? = null,
-    /** Set only when the item itself could not be loaded — a related row failing is silent. */
+    /** Set only when the *item* could not be loaded — a related row failing is silent. */
     val errorMessage: UiText? = null,
-    /** A one-shot message for the snackbar; cleared by `ItemDetailViewModel.consumeMessage`. */
+    /** One-shot; cleared by `ItemDetailViewModel.consumeMessage`. */
     val userMessage: UserMessage? = null,
-    /**
-     * `true` while the delete-download confirmation dialog is up.
-     *
-     * Set by `ItemDetailViewModel.onDownloadClick` instead of deleting straight away whenever the
-     * download button's next tap would remove something already on the device — cleared again by
-     * either `confirmDeleteDownload` or `dismissDeleteConfirmation`.
-     */
     val showDeleteConfirmation: Boolean = false,
 ) {
-    /** `true` once the item is loaded and can be rendered. */
     val isLoaded: Boolean get() = !isLoading && item != null
 
     /**
-     * What the Play / Resume button actually plays.
-     *
-     * A movie or episode plays itself, but a series or season is a container: tapping Play on
-     * *Westworld* has to resolve to an episode, and the one the user expects is the one the server
-     * already calls "next up". A season falls back to its first unfinished episode, then to its
-     * first episode — the same order jellyfin-web uses.
+     * A series or season is a container: Play must resolve to an episode. A season falls back to its
+     * first unfinished episode, then its first — the same order jellyfin-web uses.
      */
     val playTarget: JellyfinItem?
         get() =
@@ -95,32 +59,22 @@ data class ItemDetailUiState(
             }
 
     /**
-     * What a *group* action on this page acts on, or `null` when there is nothing to offer.
-     *
-     * The same resolution as [playTarget] — a series plays its next-up episode — narrowed to the
-     * types this app plays at all (`ItemType.isPlayable`: movies and episodes). The narrowing is
-     * applied here rather than in `SyncPlaySession` because the contract speaks item ids and has no
-     * idea what type one is; this screen does. Non-null is also what tells the header that a tap on
-     * Play will be a *group* play, which is why the button names the group when it is set.
+     * [playTarget] narrowed to what this app plays. The narrowing is here, not in `SyncPlaySession`,
+     * whose contract speaks item ids and cannot know a type. Non-null also tells the header a tap on
+     * Play will be a *group* play.
      */
     val groupTarget: JellyfinItem?
         get() = playTarget?.takeIf { it.type.isPlayable }
 
     /**
-     * `true` when Download on this page means "download the episodes under this".
-     *
-     * A season and a series are folders: the server has no file to send for one, and the pipeline
-     * expands them into episode downloads. The button therefore acts on
-     * [downloadTargets], not on the item's own id.
+     * Series and seasons are folders with no file to send: the pipeline expands them, so the button
+     * acts on [downloadTargets] rather than the item's own id.
      */
     val isDownloadContainer: Boolean get() = item?.type == ItemType.SERIES || item?.type == ItemType.SEASON
 
     /**
-     * The ids a *delete* or *cancel* from the Download button acts on.
-     *
-     * For a movie or an episode that is the item itself; for a season it is its episodes, since
-     * those are the rows that exist. A season page that has not loaded its episodes yields nothing,
-     * which is correct — there is nothing on the device to remove that this page knows about.
+     * A season page that has not loaded its episodes yields **nothing**, which is correct: there is
+     * nothing on the device this page knows to remove.
      */
     val downloadTargets: List<String>
         get() =
@@ -132,19 +86,10 @@ data class ItemDetailUiState(
 }
 
 /**
- * One download state for a container, from the states of the episodes under it.
- *
- * The order of the cases is the order of what the user would want the button to do next: finish
- * what is running, retry what failed, and only then offer to remove what is complete.
- *
- * - **everything downloaded** → *Downloaded*, and the button offers to remove it;
- * - **anything transferring** → *Downloading*, with the progress of the whole container: episodes
- *   already done count as one, ones not started as zero, so a season at "3 of 10" reads ~30 % and
- *   not 100 % of whichever episode happens to be moving;
- * - **anything waiting or paused** → *Queued*;
- * - **anything failed**, with nothing left running → *Failed*, and the button retries;
- * - **anything else**, including a container only partly downloaded with nothing in the queue →
- *   *NotDownloaded*, so the next tap enqueues the episodes that are still missing.
+ * Case order is load-bearing — it is what the button should offer next. The *Downloading* progress
+ * is over the whole container (done episodes count 1, unstarted 0), so a season at 3 of 10 reads
+ * ~30 %, not 100 % of whichever episode is moving. A partly-downloaded container with an empty queue
+ * falls through to *NotDownloaded*, so the next tap enqueues what is missing.
  */
 internal fun aggregateDownloadState(states: List<DownloadState>): DownloadState =
     when {
@@ -158,7 +103,6 @@ internal fun aggregateDownloadState(states: List<DownloadState>): DownloadState 
         else -> DownloadState.NotDownloaded
     }
 
-/** How much of one item is on the device, `0f..1f` — the term each episode contributes above. */
 private val DownloadState.fraction: Float
     get() =
         when (this) {
@@ -168,115 +112,72 @@ private val DownloadState.fraction: Float
         }
 
 /**
- * What this page can ask a SyncPlay group to do with the item on it, *beyond* playing it.
- *
- * Playing it is not one of these: in a group the ordinary Play / Resume button **is** the group
- * play, so the only group actions here are the two additive queue operations, which have no solo
- * counterpart and so cannot be confused with one.
- *
- * Offered only while `SyncPlaySession.activeGroup` is non-null and [ItemDetailUiState.groupTarget]
- * resolves. Each one is a request to the server: nothing queues on this device until the group's own
- * update comes back.
+ * Playing is deliberately *not* one of these: in a group the ordinary Play button already is the
+ * group play. Each is a request to the server — nothing queues locally until the group's own update
+ * comes back.
  */
 enum class GroupAction {
-    /** Put it directly after whatever the group is watching now. */
     PLAY_NEXT,
-
-    /** Append it to the end of the group's queue. */
     ADD_TO_QUEUE,
 }
 
 /**
- * Where playback should start, and for whom — what [ItemDetailViewModel.onPlay] resolves a tap to.
- *
- * A one-shot event rather than a field on [ItemDetailUiState]: navigation happens once, and a state
- * flag saying "navigate" would fire again on every recomposition that re-read it.
+ * A one-shot event, never a field on [ItemDetailUiState]: a state flag saying "navigate" would fire
+ * again on every recomposition that re-read it.
  */
 data class PlayRequest(
     val itemId: String,
     val startPositionTicks: Long,
 )
 
-/** Where playback should start for [item]: its resume position, or the beginning. */
 fun playbackStartTicks(item: JellyfinItem): Long =
     if (item.userData.isResumable) item.userData.playbackPositionTicks else 0L
 
-/**
- * The one-shot messages the detail screen can raise.
- *
- * A type rather than a string so the ViewModel stays free of resources and the copy lives in
- * `strings.xml` where it can be translated — a sealed interface rather than an enum because one of
- * the messages carries a count (precedent: `:feature:auth`'s `AuthErrorMessage`).
- */
+/** A type, not a string, so the ViewModel stays free of resources and the copy lives in strings.xml. */
 sealed interface UserMessage {
-    /** The item was accepted into the download queue. */
     data object DownloadQueued : UserMessage
 
-    /** The enqueue failed — usually because the server could not be reached. */
     data object DownloadFailed : UserMessage
 
-    /** The item and its files were removed from the device. */
     data object DownloadDeleted : UserMessage
 
-    /** Deleting the download failed. */
     data object DownloadDeleteFailed : UserMessage
 
     /**
-     * A container download was cancelled while [keptCount] of its episodes were already finished —
-     * those were left on the device.
-     *
-     * Worth saying out loud: afterwards the button simply offers *Download* for the missing
-     * episodes, and without this the user cannot tell whether the finished ones survived.
+     * A container cancel left [keptCount] finished episodes on the device. Worth saying: the button
+     * then simply offers *Download* again, so nothing else tells the user they survived.
      */
     data class DownloadCancelledKeepingFinished(
         val keptCount: Int,
     ) : UserMessage
 
-    /** A watched / favourite toggle could not even be written locally. */
+    /** The toggle could not even be written locally. */
     data object UserDataWriteFailed : UserMessage
 
     /**
-     * A group action was sent to the server.
-     *
-     * Worth saying out loud precisely because nothing visible happens here: the group's queue
-     * changes on the server and the result arrives as a `PlayQueueUpdate`, so without this the tap
-     * would look like it did nothing at all.
+     * Worth saying precisely because nothing visible happens here: the queue changes on the server
+     * and the result arrives later as a `PlayQueueUpdate`.
      */
     data class GroupActionSent(
         val action: GroupAction,
     ) : UserMessage
 
     /**
-     * Play was tapped in a group, so the *group* was asked to play it.
-     *
-     * The most important of these messages, because this is the one tap a user expects to open a
-     * player immediately: the screen deliberately stays where it is, and the player opens a
-     * moment later when the server's `PlayQueueUpdate` comes back through
-     * `SyncPlayController.launchRequests`. Without a word, that gap reads as a dead button.
+     * The one tap a user expects to open a player immediately. The screen deliberately stays put and
+     * the player opens when the server's `PlayQueueUpdate` returns; unsaid, the gap reads as a dead
+     * button.
      */
     data object GroupPlayRequested : UserMessage
 
-    /**
-     * A batch action over the selected episodes finished (docs/features/batch-selection.md).
-     *
-     * The counts travel resource-free and the copy is chosen in Compose by `batchOutcomeText`,
-     * which the library grid shares — the two screens report a mixed result in the same words.
-     */
+    /** Counts travel resource-free; `batchOutcomeText` — shared with the library grid — words them. */
     data class BatchFinished(
         val report: BatchReport,
     ) : UserMessage
 }
 
 /**
- * Turns one repository result into this state's one-shot message, or into silence.
- *
- * An operation on the state rather than a method on either half that raises one: both
- * [ItemDetailViewModel] (the watched / favourite toggles) and [DetailDownloadsDelegate] (enqueue
- * and resume) turn an [AppResult] into a snackbar by exactly this rule, and the rule is about what
- * a [UserMessage] means, not about who happened to call.
- *
- * A `null` [success] is what the watched / favourite toggles want: they are already visible on the
- * page from the local write, so saying so again would be noise — only a failure is news.
+ * A `null` [success] means silence on success — what the watched / favourite toggles want, since the
+ * local write is already visible on the page.
  */
 internal fun MutableStateFlow<ItemDetailUiState>.report(
     result: AppResult<*>,
@@ -288,10 +189,8 @@ internal fun MutableStateFlow<ItemDetailUiState>.report(
 }
 
 /**
- * Patches every item this state holds whose id matches [itemId].
- *
- * The detail page collects the same `UserDataEventBus` the home rows do, so a toggle is reflected
- * optimistically from the local write — no re-fetch, and no separate "pending" flag in the UI.
+ * Every list holding the id must be patched, or the same item shows two states on one page. Fed by
+ * `UserDataEventBus`, so a toggle is optimistic — no re-fetch and no "pending" flag.
  */
 internal fun ItemDetailUiState.withUserData(
     itemId: String,
@@ -308,13 +207,8 @@ internal fun ItemDetailUiState.withUserData(
     )
 
 /**
- * Applies the app-wide download-state map to the header and to every card this screen draws.
- *
- * `JellyfinItem.downloadState` is what `:core:ui`'s cards render their badge from, so patching the
- * items is what makes a season poster show a tick the moment its episodes finish downloading —
- * without the detail screen knowing anything about badges. The per-item and per-list patching is
- * `:data:downloads`' shared [withDownloadStates]; only [resolveDownloadState] below is this
- * screen's own, because only this screen has a header button to answer for.
+ * Patching the items is what makes `:core:ui`'s cards draw their badges — the detail screen knows
+ * nothing about badges itself.
  */
 internal fun ItemDetailUiState.withDownloadStates(states: Map<String, DownloadState>): ItemDetailUiState =
     copy(
@@ -329,11 +223,8 @@ internal fun ItemDetailUiState.withDownloadStates(states: Map<String, DownloadSt
     )
 
 /**
- * What the header's Download button reads.
- *
- * A season has no download row of its own — the pipeline expands it into its episodes — so its
- * state is theirs, aggregated. Everything else, including a season page whose episodes have not
- * arrived yet, reads its own row.
+ * A season has no download row of its own, so its state is its episodes', aggregated. Everything
+ * else — including a season page whose episodes have not arrived yet — reads its own row.
  */
 private fun ItemDetailUiState.resolveDownloadState(states: Map<String, DownloadState>): DownloadState {
     val current = item ?: return DownloadState.NotDownloaded

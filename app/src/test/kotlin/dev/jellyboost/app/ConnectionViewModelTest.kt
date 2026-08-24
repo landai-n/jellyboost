@@ -18,11 +18,6 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 
-/**
- * Unit tests for [ConnectionViewModel] — a deliberately thin view over the singleton
- * [ConnectionStateProvider], so what is pinned is exactly the delegation: state passes through
- * untouched, and the two user actions land on the right collaborator.
- */
 @OptIn(ExperimentalCoroutinesApi::class)
 class ConnectionViewModelTest {
     @JvmField

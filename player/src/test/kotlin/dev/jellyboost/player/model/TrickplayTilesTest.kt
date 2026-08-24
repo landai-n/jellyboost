@@ -9,9 +9,9 @@ import org.junit.jupiter.api.Test
 /**
  * Unit tests for [TrickplayTiles].
  *
- * The scrubber is a composable and untestable off a device; the part that decides *what* it draws
- * is this arithmetic, and it is the part that is easy to get wrong — a transposed column and row
- * gives a preview that is plausible, off by a few seconds, and impossible to spot by eye.
+ * The scrubber itself is untestable off a device; this arithmetic decides *what* it draws, and a
+ * transposed column and row gives a preview that is plausible, off by a few seconds, and
+ * impossible to spot by eye.
  */
 class TrickplayTilesTest {
     private val tiles =

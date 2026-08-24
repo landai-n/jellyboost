@@ -6,9 +6,6 @@ import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import org.junit.jupiter.api.Test
 
-/**
- * Unit tests for [seasonSiblings] — the episode page's "More from this season" row.
- */
 class SeasonSiblingsTest {
     @Test
     fun `the current episode is excluded from its own siblings row`() {

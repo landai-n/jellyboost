@@ -43,30 +43,12 @@ import javax.inject.Singleton
 /**
  * [JellyfinRepository] served entirely from Room — no network, ever.
  *
- * ### What it shows
- * The offline browse scope is **downloaded items only**, with one deliberate exception:
- * "cached parents of downloaded items still open, e.g. series page of a downloaded episode".
- * So every *list* here filters on [ItemSource.DOWNLOAD] while [getItem] serves any cached row.
- *
- * The home rows are reconstructed from local state rather than fetched:
- *
- * | row | offline definition |
- * |---|---|
- * | Continue watching | downloads this device has a resume position for |
- * | Next up | the first unwatched downloaded episode of each series |
- * | Latest *library* | the most recently downloaded items of that library, episodes grouped into their series |
- *
- * ### What it never does
- * It never throws for a missing item and never reports one as an error: [getItem] answers with a
- * placeholder carrying `available = false`, which is the flag `JellyfinItem` already defines for
- * "known, but not openable right now". A repository that failed here would turn every stale
- * deep-link into a crash-shaped error screen.
- *
+ * Scope is [ItemSource.DOWNLOAD] for every *list*; [getItem] serves any cached row, because cached
+ * parents of downloaded items must still open. A missing item is never an error — [getItem] answers
+ * with an `available = false` placeholder, so a stale deep-link is not a crash-shaped error screen.
  */
 @Singleton
 @Suppress(
-    // One member per [JellyfinRepository] method, by construction — same rationale as
-    // `OnlineJellyfinRepository`'s identical suppression.
     "TooManyFunctions",
 )
 internal class OfflineJellyfinRepository
@@ -103,8 +85,7 @@ internal class OfflineJellyfinRepository
                         episodeType = ItemType.EPISODE,
                         seriesId = null,
                     )
-                    // The query is already ordered by series then season then episode, so the first
-                    // row of each series *is* its next episode.
+                    // Ordered series/season/episode, so each series' first row *is* its next episode.
                     .distinctBy { it.seriesId }
                     .take(limit)
                     .withLocalUserData(userId)
@@ -112,15 +93,8 @@ internal class OfflineJellyfinRepository
             }
 
         /**
-         * The offline *Latest* shelf — **one card per series**, exactly like the online row.
-         *
-         * The server groups a TV library's new episodes into their show (`GroupItems`), so online
-         * the shelf shows one poster per series however many episodes arrived. Offline the
-         * reduction happens here: downloads are read newest-first as
-         * [dev.jellyboost.core.database.entities.LatestDownloadKey]s, the first row of each
-         * group wins, and only then does [limit] apply — a series with twenty episodes takes one
-         * slot, not twenty, rather than filling the shelf with its own downloaded episodes. Movies
-         * group onto themselves and are unaffected.
+         * One card per series, matching the online row's `GroupItems=true`: group first, *then*
+         * [limit], or a twenty-episode download fills the whole shelf.
          */
         override suspend fun getLatestMedia(
             parentId: String,
@@ -134,30 +108,16 @@ internal class OfflineJellyfinRepository
                         types = typesOf(library, LIST_ITEM_TYPES),
                         episodeType = ItemType.EPISODE,
                     )
-                    // Newest first already, so the surviving row of a group is that show's most
-                    // recent download — the position `GroupItems=true` gives it online.
+                    // Newest first already, so a group's surviving row is that show's latest download.
                     .distinctBy { it.groupId }
                     .take(limit)
                     .let { groups -> latestCards(groups).asHomeCards() }
             }
 
-        /**
-         * Turns grouped [LatestDownloadKey]s into the cards the shelf draws, in the order given.
-         *
-         * A group's card is, in order of preference:
-         * 1. the **series' own cached row** — the download pipeline caches an episode's series and
-         *    season alongside it, so this is the normal case and the card is a real item with a
-         *    working detail page;
-         * 2. a card **synthesised from the episode** when that parent fetch failed (it is best
-         *    effort), so the shelf still shows one poster per show;
-         * 3. the episode itself, for the pathological row that names no series at all — a card
-         *    that is slightly wrong beats a download that vanished from the shelf.
-         */
         private suspend fun latestCards(groups: List<LatestDownloadKey>): List<JellyfinItem> {
             if (groups.isEmpty()) return emptyList()
             val ids = (groups.map { it.groupId } + groups.map { it.id }).distinct()
-            // Deliberately *not* filtered to downloads: the card a group collapses into is the
-            // parent series, and "cached parents of downloaded items still open" is the one
+            // Not filtered to downloads: a group collapses into its parent series, the one
             // exception to the downloads-only rule.
             val rows = itemDao.getItems(ids).associateBy { it.id }
             val userData: Map<UUID, UserDataEntity> =
@@ -182,9 +142,8 @@ internal class OfflineJellyfinRepository
         // ---- library grid & search ---------------------------------------------------------
 
         /**
-         * @param onTotalCount never called: Room holds the *downloaded* items, so the only count
-         *   this source could report is the number of items on the device — which is not the
-         *   number of items in the library the header would be labelling (see [ItemPage]).
+         * @param onTotalCount never called: the count Room could report is what is on the device,
+         *   not the library size the header labels (see [ItemPage]).
          */
         override fun getItemsPaged(
             query: ItemQuery,
@@ -197,9 +156,6 @@ internal class OfflineJellyfinRepository
                         initialLoadSize = ItemQuery.DEFAULT_PAGE_SIZE,
                         enablePlaceholders = false,
                     ),
-                // Deliberately the same `ItemPagingSource` the online grid uses rather than a
-                // Room-generated `PagingSource`: the offset/limit contract is identical, and one
-                // paging implementation means one set of edge cases.
                 pagingSourceFactory = {
                     ItemPagingSource(pageSize = ItemQuery.DEFAULT_PAGE_SIZE) { startIndex, limit, _ ->
                         getItems(query.copy(startIndex = startIndex, limit = limit))
@@ -214,10 +170,9 @@ internal class OfflineJellyfinRepository
                 val term = query.searchTerm?.trim()
                 val rows =
                     if (!term.isNullOrEmpty()) {
-                        // Search is deliberately library-wide: offline there are a handful of items
-                        // and finding one you downloaded matters more than which grid you were in.
-                        // It carries no filters because no surface sets both — the filter sheet
-                        // belongs to the library grid, and the search screen has none.
+                        // Deliberately library-wide and unfiltered: no surface sets both a search
+                        // term and filters, and offline the item you downloaded matters more than
+                        // which grid you were in.
                         itemDao.searchDownloaded(ItemSource.DOWNLOAD, requested, term, query.limit)
                     } else {
                         gridPage(query, requested)
@@ -226,20 +181,10 @@ internal class OfflineJellyfinRepository
             }
 
         /**
-         * One page of the offline library grid, filters and all.
-         *
-         * Filter, *then* page — not the other way round. Ignoring `query.filters` here would let
-         * the grid re-query on every *Apply* while rendering the identical unfiltered list under an
-         * "1 active" badge. It cannot be done in the statement because `genres` is a newline-joined
-         * column with no SQL intersection against a bound list, and a half-SQL/half-Kotlin predicate
-         * would be worse than either: a `LIMIT` over the unfiltered set returns short pages, and a
-         * short page is how `ItemPagingSource` recognises the end of the library — the grid would
-         * simply stop early.
-         *
-         * So the ordering and the cheap columns come from Room ([ItemDao.downloadedListKeys], which
-         * carries no `dto` blob), the whole set is narrowed here, and only the surviving page's rows
-         * are read in full. `sortBy` still degrades to `sortName` offline — that is a known
-         * limitation and is untouched.
+         * Filter, *then* page — never a SQL `LIMIT` over the unfiltered set, because a short page is
+         * how [ItemPagingSource] recognises the end of the library and the grid would stop early.
+         * The filter cannot move into SQL: `genres` is a newline-joined column. `sortBy` degrades to
+         * `sortName` offline (known limitation).
          */
         private suspend fun gridPage(
             query: ItemQuery,
@@ -258,23 +203,14 @@ internal class OfflineJellyfinRepository
 
             if (page.isEmpty()) return emptyList()
 
-            // `getItems` answers in no particular order, so the sort the statement applied is
-            // re-imposed from the key list rather than re-derived.
+            // `getItems` answers unordered; the statement's sort is re-imposed from the key list.
             val rows = itemDao.getItems(page.map { it.id }).associateBy { it.id }
             return page.mapNotNull { rows[it.id] }
         }
 
         /**
-         * The facets the offline filter sheet offers — scoped to the library that asked.
-         *
-         * [parentId] is scoped by type, for the reason [typesOf] documents: without it, a film
-         * library's sheet would list the genres of downloaded *television*, and filtering by one
-         * of them could only ever produce an empty grid.
-         *
-         * The read is a three-column projection ([FacetKey]) and not [ItemEntity]: a facet list is
-         * the distinct values over the *whole* offline library, so this query has no `LIMIT` — and
-         * as whole rows it would deserialise every downloaded item's multi-kilobyte `dto` blob to
-         * produce three small lists, each time the sheet is opened.
+         * A projection, not whole rows: facets are distinct values over the whole offline library so
+         * the query has no `LIMIT`, and full rows would deserialise every `dto` blob per sheet open.
          */
         override suspend fun getFilterFacets(
             parentId: String?,
@@ -322,11 +258,6 @@ internal class OfflineJellyfinRepository
                     .withLocalUserData(currentUserId())
             }
 
-        /**
-         * Only the *downloaded* episodes, which is the honest offline answer: a group queue built
-         * from here skips what this device never fetched. The caller's fallback covers the case
-         * where that leaves nothing usable.
-         */
         override suspend fun getSeriesEpisodes(seriesId: String): AppResult<List<JellyfinItem>> =
             onIo {
                 val series = seriesId.toUuidOrNull() ?: return@onIo emptyList()
@@ -349,13 +280,7 @@ internal class OfflineJellyfinRepository
                     ?.let { mapper.toDomainOrNull(it, userDataDao.getUserData(it.id, userId)) }
             }
 
-        /**
-         * Always empty offline.
-         *
-         * "More like this" is a server-side recommendation over the *whole* library; the two or
-         * three downloaded items that happen to share a genre are not that, and presenting them as
-         * such would be a worse answer than an absent row.
-         */
+        /** Deliberately empty: a server recommendation over the whole library has no local stand-in. */
         override suspend fun getSimilarItems(
             id: String,
             limit: Int,
@@ -380,21 +305,8 @@ internal class OfflineJellyfinRepository
             }
 
         /**
-         * Offline "top tracks": this device's downloaded tracks of the artist, ranked by whatever
-         * play count each track's cached blob or local user-data carries.
-         *
-         * There is no per-track play-count query and asking a handful of downloaded songs for the
-         * server's actual top tracks would not be honest, so this walks every downloaded album of
-         * the artist ([ItemDao.albumsOfArtist]), reads each one's downloaded tracks
-         * ([ItemDao.tracksOfAlbum]), and sorts what it finds by [UserData.playCount] — a documented
-         * local approximation, not the server's ranking (see
-         * [JellyfinRepository.getArtistTopTracks]'s KDoc).
-         *
-         * One caveat worth recording: [UserData.playCount] on a track this device has *locally*
-         * written user data for (a favourite toggle, a played flag) reads `0` rather than the
-         * server's cached count — `UserDataMapper` deliberately does not persist `playCount`
-         * locally — so a track this device interacted with can rank below one it never touched.
-         * Acceptable for an offline approximation; not worth a schema change here.
+         * A local approximation, not the server's ranking. `UserDataMapper` does not persist
+         * [UserData.playCount], so a track with local user-data ranks at `0` — below one never touched.
          */
         override suspend fun getArtistTopTracks(
             artistId: String,
@@ -411,19 +323,12 @@ internal class OfflineJellyfinRepository
                     .take(limit)
             }
 
-        /**
-         * Always empty offline — see [JellyfinRepository.getPlaylistItems]'s KDoc: Room has no
-         * playlist-membership relation, so there is no set of downloaded tracks that can honestly be
-         * called "this playlist's members". Giving them one is the deferred item "offline playlist
-         * membership", not a gap left open by accident: a playlist download expands to its tracks,
-         * and those are reachable offline through their own albums and artists.
-         */
+        /** Deliberately empty: Room has no playlist-membership relation ("offline playlist membership"). */
         override suspend fun getPlaylistItems(playlistId: String): AppResult<List<JellyfinItem>> =
             AppResult.Success(emptyList())
 
         // ---- Continue Listening ---------------------------------------------------------------
 
-        /** [getResumeItems]'s audio counterpart — see [ItemDao.resumeDownloadedAudio]'s KDoc. */
         override suspend fun getResumeAudioItems(limit: Int): AppResult<List<JellyfinItem>> =
             onIo {
                 val userId = currentUserId() ?: return@onIo emptyList()
@@ -436,32 +341,20 @@ internal class OfflineJellyfinRepository
         // ---- Instant Mix & lyrics ---------------------------------------------------------------
 
         /**
-         * Instant Mix is a server recommendation with no offline analog — there is nothing local
-         * that could honestly answer "what would the server queue next", so this always refuses.
-         *
-         * [AppError.Network] rather than a new error case: it is the same "no network, no offline
-         * substitute" answer [dev.jellyboost.player.resolve.PlaybackSourceResolver] gives when a
-         * track has no downloaded copy and no connection either.
+         * Always refuses: a server recommendation has no offline analog. [AppError.Network] rather
+         * than a new case — the same answer `PlaybackSourceResolver` gives for an undownloaded track.
          */
         override suspend fun getInstantMix(
             itemId: String,
             limit: Int,
         ): AppResult<List<JellyfinItem>> = AppResult.Failure(AppError.Network())
 
-        /**
-         * Lyrics are not cached offline — see [getInstantMix]'s KDoc for the refusal this shares.
-         * "Offline lyrics" is a recorded deferred item.
-         */
+        /** Lyrics are not cached offline ("offline lyrics" is a deferred item). */
         override suspend fun getLyrics(itemId: String): AppResult<Lyrics> = AppResult.Failure(AppError.Network())
 
         // ---- helpers -------------------------------------------------------------------------
 
-        /**
-         * Overlays this device's local playback state onto cached items.
-         *
-         * Offline, `user_data` outranks whatever the blob was cached with: a position written while
-         * the network was down exists nowhere else yet.
-         */
+        /** Offline, `user_data` outranks the cached blob: a position written offline exists nowhere else. */
         private suspend fun List<ItemEntity>.withLocalUserData(userId: UUID?): List<JellyfinItem> {
             if (isEmpty()) return emptyList()
             val userData: Map<UUID, UserDataEntity> =
@@ -473,21 +366,10 @@ internal class OfflineJellyfinRepository
         }
 
         /**
-         * Which item kinds a library's offline list may contain.
-         *
-         * This is how an offline row is attributed to a library, and it replaces the parent-id
-         * filtering the queries would otherwise need. A downloaded row's `parentId` is its
-         * containing *folder* — when the server sends one at all; a downloaded film may be stored
-         * with `parentId NULL` — and a folder is not the library-view id the grid asks about, so
-         * the predicate could only ever be empty.
-         *
-         * Type is exact for the libraries v1 supports: a downloaded film belongs to the movie
-         * library, a downloaded series or episode to the TV one. It is *not* a general rule (two
-         * movie libraries would share their downloads), which is why it is a documented v1
-         * simplification rather than a new invariant.
-         *
-         * An unknown library id — one not in the cached `library_views` — narrows nothing, so a
-         * grid still lists what was asked for rather than nothing at all.
+         * Attributes an offline row to a library by *type*, because parent-id filtering cannot work:
+         * a downloaded row's `parentId` is its containing folder, or `NULL`, never the library-view
+         * id the grid asks about. A v1 simplification — two movie libraries would share downloads.
+         * An unknown library id narrows nothing rather than emptying the grid.
          */
         private suspend fun typesOf(
             libraryId: UUID?,
@@ -511,12 +393,6 @@ internal class OfflineJellyfinRepository
 
         private fun currentUserId(): UUID? = (sessionRepository.sessionState.value as? SessionState.LoggedIn)?.userId
 
-        /**
-         * Runs a Room read, folding any storage failure into [AppError.Storage].
-         *
-         * Cancellation is re-thrown for the same reason it is on the network path: a cancelled
-         * ViewModel scope must not render an error state.
-         */
         private suspend fun <T> onIo(block: suspend () -> T): AppResult<T> =
             withContext(ioDispatcher) {
                 try {
@@ -530,53 +406,27 @@ internal class OfflineJellyfinRepository
             }
 
         private companion object {
-            /** The item kinds any offline list can contain; seasons and folders are navigated to. */
             val LIST_ITEM_TYPES = listOf(ItemType.MOVIE, ItemType.SERIES, ItemType.EPISODE)
 
-            /** What a movie library's offline lists may show. */
             val MOVIE_LIBRARY_TYPES = listOf(ItemType.MOVIE)
 
-            /** What a TV library's offline lists may show — the grid asks for series, Latest also episodes. */
+            /** Episodes are here because Latest lists them; the grid asks only for series. */
             val TV_LIBRARY_TYPES = listOf(ItemType.SERIES, ItemType.EPISODE)
         }
     }
 
 /**
- * Narrows detail-shaped rows to the **card shape the home screen is drawn for**.
- *
- * The two paths into the home rows do not carry the same amount of item. Online they are fetched
- * with `OnlineJellyfinRepository.CARD_FIELDS`, which asks the server for exactly one extra field —
- * the primary image aspect ratio — and deliberately not for `OVERVIEW` (`OnlineJellyfinRepository`'s
- * own test pins that). Offline they are read back out of a cached `BaseItemDto`, and a download's
- * blob is the *full* item: the enqueue fetch asks for `OVERVIEW, GENRES, PEOPLE, …` so that the
- * detail page works with no server. So the identical screen was handed a synopsis offline and none
- * online, and the wide *Continue watching* hero — the one card that draws an overview — grew by a
- * paragraph offline and pushed its resume button over the row beneath it.
- *
- * Dropping the field here rather than hiding it in the UI keeps a cached item and a fetched one
- * indistinguishable downstream: the home rows answer with the same shape from either source, so
- * the hero has no way to look different offline. `getItem` is untouched — the offline *detail*
- * page is precisely where the blob's overview is meant to be read.
+ * A download's cached blob is the *full* item, but online cards are fetched without `OVERVIEW`, so
+ * the *Continue watching* hero grew a paragraph offline. Dropping it here keeps cached and fetched
+ * cards indistinguishable downstream. `getItem` is untouched — detail is where the overview belongs.
  */
 private fun List<JellyfinItem>.asHomeCards(): List<JellyfinItem> =
     map { if (it.overview == null) it else it.copy(overview = null) }
 
-/**
- * The answer for an item we do not have.
- *
- * `available = false` is `JellyfinItem`'s own vocabulary for "known of, but not openable";
- * it is required here instead of an error.
- */
 private fun unavailable(id: String): JellyfinItem =
     JellyfinItem(id = id, name = "", type = ItemType.UNKNOWN, available = false)
 
-/**
- * Whether a downloaded row survives [filters].
- *
- * Values inside one facet are OR-ed and the facets are AND-ed — jellyfin-web's own reading, and the
- * server's, so a filter means the same thing offline as online. An empty facet is not a filter at
- * all: [FilterOptions.isEmpty] holding means every row matches.
- */
+/** OR within a facet, AND across facets — the server's and jellyfin-web's reading of a filter. */
 private fun DownloadedItemKey.matches(filters: FilterOptions): Boolean =
     (filters.genres.isEmpty() || genres.any { it in filters.genres }) &&
         (filters.years.isEmpty() || productionYear in filters.years) &&

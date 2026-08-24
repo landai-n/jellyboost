@@ -26,12 +26,8 @@ import org.junit.jupiter.api.Test
 import kotlin.coroutines.CoroutineContext
 
 /**
- * Unit tests for [PlaybackSessionController] — the resolve → prepare sequence extracted from
- * `PlayerViewModel`.
- *
- * The ordering test is the point of the class: `reopen` must run its work so that
- * `stopTranscoding` provably happens *first*, not merely happens — "first" is the entire reason
- * the call exists.
+ * The ordering tests are the point: `reopen` must run its work so that `stopTranscoding`
+ * provably happens *first*, not merely happens — "first" is the entire reason the call exists.
  */
 class PlaybackSessionControllerTest {
     private val resolver = mockk<PlaybackSourceResolver>()
@@ -102,8 +98,8 @@ class PlaybackSessionControllerTest {
 
             controller.reopen(previous, request(), playWhenReady = true)
 
-            // Order, not count: asking the server for the next stream first is what leaves the old
-            // ffmpeg process running against a session nobody will ever stop.
+            // Order, not count: asking the server for the next stream first leaves the old ffmpeg
+            // process running against a session nobody will ever stop.
             coVerifyOrder {
                 reporter.stopTranscoding(previous)
                 resolver.resolve(any())
@@ -167,8 +163,7 @@ class PlaybackSessionControllerTest {
 
             handover.claim(PlaybackKind.MUSIC) {}
 
-            // Snapshot on main, then the report off it, then the stop on main — the report still
-            // completes before the player is let go, which is the arbiter's ordering invariant.
+            // The report must complete before the player is let go — the arbiter's ordering invariant.
             transcript shouldContainExactly listOf("main hop", "stop report", "main hop")
             playerHandle.stopped shouldBe true
         }

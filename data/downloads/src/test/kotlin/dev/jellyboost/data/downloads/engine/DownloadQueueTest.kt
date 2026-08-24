@@ -52,12 +52,10 @@ import java.time.Clock
 import java.time.ZoneOffset
 
 /**
- * Unit tests for [DownloadQueue] — the state machine the whole pipeline hangs off.
- *
- * The properties worth protecting are the ones a user notices when they break: an item that fails
- * on its poster must still be playable, an item that fails on its media file must not claim to be
- * downloaded, and a killed process must leave a row the next run can resume rather than one stuck
- * in `DOWNLOADING` forever.
+ * The state machine the whole pipeline hangs off. The properties worth protecting are the ones a user
+ * notices when they break: an item that fails on its poster must still be playable, one that fails on
+ * its media file must not claim to be downloaded, and a killed process must leave a row the next run
+ * can resume rather than one stuck in `DOWNLOADING` forever.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class DownloadQueueTest {
@@ -120,8 +118,8 @@ class DownloadQueueTest {
     @Test
     fun `interrupted rows are put back in the queue before anything else runs`() =
         runTest {
-            // A row still marked DOWNLOADING belongs to a process that no longer exists; without
-            // this the queue could not tell it from the item it is running right now.
+            // A row still marked DOWNLOADING belongs to a process that no longer exists; without this
+            // the queue could not tell it from the item it is running right now.
             queueWith()
 
             queue().drain(listener)
@@ -161,8 +159,8 @@ class DownloadQueueTest {
     @Test
     fun `a cold start restores the session before the queue needs a URL`() =
         runTest {
-            // WorkManager restarts this worker the moment the process comes up, before anything in
-            // the UI has restored anything.
+            // WorkManager restarts this worker the moment the process comes up, before anything in the
+            // UI has restored anything.
             queueWith(download())
 
             queue().drain(listener)
@@ -173,8 +171,8 @@ class DownloadQueueTest {
     @Test
     fun `no session parks the queue instead of failing the item`() =
         runTest {
-            // Without the park the item goes ERROR with the SDK's own "Required value baseUrl is
-            // null" text, and the user has to press Retry on a download that was never broken.
+            // Without the park the item goes ERROR with the SDK's own "Required value baseUrl is null"
+            // text, and the user has to press Retry on a download that was never broken.
             coEvery { sessionGate.ensureSession() } returns false
             queueWith(download())
 
@@ -188,8 +186,8 @@ class DownloadQueueTest {
     @Test
     fun `a parked queue still puts interrupted rows back to Waiting`() =
         runTest {
-            // Otherwise a row left DOWNLOADING by the killed process would render as a transfer
-            // that no process is performing until a session appears.
+            // Otherwise a row left DOWNLOADING by the killed process would render as a transfer that no
+            // process is performing until a session appears.
             coEvery { sessionGate.ensureSession() } returns false
             queueWith(download())
 
@@ -205,7 +203,7 @@ class DownloadQueueTest {
     fun `a failing media file marks the item ERROR`() =
         runTest {
             // Once its retry budget is spent: a transport failure on a row with attempts left is
-            // requeued instead — see the retry-policy section below.
+            // requeued instead.
             queueWith(download(attemptCount = DownloadQueue.MAX_ATTEMPTS - 1))
             coEvery { downloader.download(match { it.contains("download") }, any(), any(), any(), any(), any()) } throws
                 IOException("connection reset")
@@ -226,8 +224,6 @@ class DownloadQueueTest {
     @Test
     fun `a failure never shows the user the exception's own text`() =
         runTest {
-            // The device walk found a queue row reading "Download failed: Required value baseUrl is
-            // null. Provide it by setting ApiClient.baseUrl." — SDK internals on screen.
             queueWith(download())
             coEvery { downloader.download(any(), any(), any(), any(), any(), any()) } throws
                 IllegalStateException("Required value baseUrl is null. Provide it by setting ApiClient.baseUrl.")
@@ -245,7 +241,6 @@ class DownloadQueueTest {
     @Test
     fun `a failing poster leaves the item DOWNLOADED`() =
         runTest {
-            // The plan's optional-file rule: the file row goes ERROR, the item stays playable.
             queueWith(download())
             coEvery { downloader.download(match { it.contains("image") }, any(), any(), any(), any(), any()) } throws
                 IOException("404")
@@ -286,9 +281,8 @@ class DownloadQueueTest {
     fun `a non-403 error on the media file is not retried on the video stream`() =
         runTest {
             // The *fallback* is what this rules out — a 500 is not the download-policy refusal the
-            // static-stream re-plan exists for, so re-issuing it against another URL would only
-            // send the same failure twice. The row is still worth another *attempt* (a 500 is
-            // transient), which is the outcome below.
+            // static-stream re-plan exists for, so re-issuing it against another URL would only send
+            // the same failure twice. The row is still worth another *attempt*.
             queueWith(download())
             coEvery { downloader.download("https://server/download", any(), any(), any(), any(), any()) } throws
                 DownloadHttpException(code = 500, url = "https://server/download")
@@ -308,10 +302,9 @@ class DownloadQueueTest {
 
             queue().drain(listener) shouldBe DrainOutcome.COMPLETED
 
-            // The bytes already on disk were fetched at this quality; re-reading the preference
-            // here is what would let a setting change corrupt a half-finished file.
-            // The fourth argument is the baked audio track (schema v7); this fixture's movie has no
-            // audio streams at all, so the request names none rather than an index of nothing.
+            // The bytes already on disk were fetched at this quality; re-reading the preference here is
+            // what would let a setting change corrupt a half-finished file. The fourth argument is the
+            // baked audio track; this fixture's movie has no audio streams at all.
             verify { urls.transcodedVideoUrl(uuid(1), "source-1", DownloadQuality.MEDIUM, null) }
             coVerify(exactly = 0) { urls.mediaUrl(any()) }
         }
@@ -319,11 +312,10 @@ class DownloadQueueTest {
     @Test
     fun `the baked audio track comes from the row, not from the DTO's current default`() =
         runTest {
-            // The reconcile step re-plans on every drain. Re-deriving the pin from the DTO would
-            // make a resumed transcode ask for a *different* track than the bytes already on disk
-            // hold, the moment the server's default audio stream moved between the tap and the
-            // drain — a re-encode, a re-tag, a metadata refresh. `bakedAudioStreamIndex` is the
-            // record of what was actually asked for.
+            // The reconcile step re-plans on every drain. Re-deriving the pin from the DTO would make a
+            // resumed transcode ask for a *different* track than the bytes already on disk hold, the
+            // moment the server's default audio stream moved. `bakedAudioStreamIndex` is the record of
+            // what was actually asked for.
             every { itemMapper.toDtoOrNull(any()) } returns
                 movie(
                     streams = listOf(audioStream(index = 1), audioStream(index = 3)),
@@ -342,8 +334,7 @@ class DownloadQueueTest {
     fun `an ORIGINAL row plans no audio pin at all, whatever the DTO's default says`() =
         runTest {
             // The null half of the same rule: `bakedAudioStreamIndex` is null for an ORIGINAL row
-            // because that file keeps every track, and the planner must read that as "no pin"
-            // rather than fall back to the DTO — which is exactly what the old default did.
+            // because that file keeps every track, and the planner must read that as "no pin".
             every { itemMapper.toDtoOrNull(any()) } returns
                 movie(streams = listOf(audioStream(index = 1)), defaultAudioStreamIndex = 1)
             queueWith(download(quality = DownloadQuality.ORIGINAL))
@@ -357,8 +348,8 @@ class DownloadQueueTest {
     @Test
     fun `a 403 on a transcoded download is not retried on the static stream`() =
         runTest {
-            // That fallback exists to route around `enableContentDownloading`; taking it here would
-            // hand the user the original file they asked the server to shrink.
+            // That fallback exists to route around `enableContentDownloading`; taking it here would hand
+            // the user the original file they asked the server to shrink.
             queueWith(download(quality = DownloadQuality.LOW))
             every { urls.transcodedVideoUrl(any(), any(), any(), any()) } returns "https://server/videos/stream.mkv"
             coEvery {
@@ -373,9 +364,9 @@ class DownloadQueueTest {
     @Test
     fun `an unknown file size falls back to the size the enqueue step estimated`() =
         runTest {
-            // A transcode is chunked, so `FileDownloader` reports total 0 for as long as it is
-            // running. Without the estimate the item's total would collapse onto its downloaded
-            // bytes and the queue tab would read 100 % from the first chunk.
+            // A transcode is chunked, so `FileDownloader` reports total 0 for as long as it is running.
+            // Without the estimate the item's total would collapse onto its downloaded bytes and the
+            // queue tab would read 100 % from the first chunk.
             queueWith(download(quality = DownloadQuality.MEDIUM, bytesTotal = 4_000L))
             every { urls.transcodedVideoUrl(any(), any(), any(), any()) } returns "https://server/videos/stream.mkv"
             coEvery { downloader.download(any(), any(), any(), any(), any(), any()) } coAnswers {
@@ -386,16 +377,16 @@ class DownloadQueueTest {
 
             queue().drain(listener) shouldBe DrainOutcome.COMPLETED
 
-            // 300 bytes of the poster plus 300 of the film, against the estimate rather than
-            // against a total that only knows about the bytes already written.
+            // 300 bytes of the poster plus 300 of the film, against the estimate rather than against a
+            // total that only knows about the bytes already written.
             listener.progress shouldContain (600L to 4_000L)
         }
 
     @Test
     fun `a generous estimate cannot leave a finished item short of complete`() =
         runTest {
-            // Every file has reported a real size by the end, so the estimate is dropped and the
-            // exact sum wins — a download that ends at 90 % of a guess is worse than no guess.
+            // Every file has reported a real size by the end, so the estimate is dropped and the exact
+            // sum wins — a download that ends at 90 % of a guess is worse than no guess.
             queueWith(download(bytesTotal = 10_000L))
             coEvery { downloader.download(any(), any(), any(), any(), any(), any()) } returns 100L
 
@@ -410,8 +401,8 @@ class DownloadQueueTest {
     fun `a projection over the ceiling is clamped to the ceiling the enqueue step promised`() =
         runTest {
             givenTranscodeOfAnHour(ceiling = 10_000_000L)
-            // 2 000 bytes bought only 100 ms — all container header, the state of every transcode
-            // in its opening moment. Extrapolated that is 72 MB, which is not a promise to make.
+            // 2 000 bytes bought only 100 ms — all container header, the state of every transcode in its
+            // opening moment. Extrapolated that is 72 MB, which is not a promise to make.
             givenMediaStream(clusterMillis = 100L, reportedBytes = 2_000L)
 
             queue().drain(listener)
@@ -440,8 +431,8 @@ class DownloadQueueTest {
 
             queue().drain(listener)
 
-            // At that point the size is not projected, it is measured — and `bytesTotal` snaps to
-            // the sum of real sizes, which is the number the row should be divided by.
+            // At that point the size is not projected, it is measured — and `bytesTotal` snaps to the
+            // sum of real sizes, which is the number the row should be divided by.
             projections.last().shouldBeNull()
         }
 
@@ -459,8 +450,8 @@ class DownloadQueueTest {
     @Test
     fun `a row the enqueue step marked exact is not second-guessed by the scanner`() =
         runTest {
-            // A stream copy: `bytesTotal` predicts the actual file, so flipping the row to an
-            // approximate figure mid-transfer would be a downgrade, not a refinement.
+            // A stream copy: `bytesTotal` predicts the actual file, so flipping the row to an approximate
+            // figure mid-transfer would be a downgrade, not a refinement.
             givenTranscodeOfAnHour(ceiling = 10_000_000L, sizeIsExact = true)
             givenMediaStream(clusterMillis = 3_600_000L, reportedBytes = 2_000L)
 
@@ -478,8 +469,8 @@ class DownloadQueueTest {
 
             queue().drain(listener)
 
-            // The seed from the show's finished episodes is still the best answer available, and
-            // blanking it would make the row's wording flap from "~3,0 MB" back to "up to 10,0 MB".
+            // The seed from the show's finished episodes is still the best answer available, and blanking
+            // it would make the row's wording flap from "~3,0 MB" back to "up to 10,0 MB".
             projections shouldContain 3_000_000L + 400L
         }
 
@@ -501,9 +492,9 @@ class DownloadQueueTest {
     @Test
     fun `a row that starts with no projection is seeded from its finished siblings`() =
         runTest {
-            // The user's report: a season queued in one tap has nothing to be seeded from at
-            // enqueue, so the row reaching the front of the queue must ask again — otherwise it
-            // shows "up to X" until the scanner reads a cluster, which on a slow link is a minute.
+            // A season queued in one tap has nothing to be seeded from at enqueue, so the row reaching
+            // the front of the queue must ask again — otherwise it shows "up to X" until the scanner
+            // reads a cluster, which on a slow link is a minute.
             givenTranscodeOfAnHour(ceiling = 10_000_000L, seriesName = "Westworld")
             coEvery { seeder.seedFor(uuid(1), "Westworld", DownloadQuality.LOW, HOUR_MILLIS, 10_000_000L) } returns
                 3_000_000L
@@ -525,8 +516,8 @@ class DownloadQueueTest {
 
             queue().drain(listener)
 
-            // Whatever is on the row — an enqueue-time seed, or a measurement from an earlier
-            // attempt — is better evidence than a median recomputed now.
+            // Whatever is on the row — an enqueue-time seed, or a measurement from an earlier attempt —
+            // is better evidence than a median recomputed now.
             coVerify(exactly = 0) { seeder.seedFor(any(), any(), any(), any(), any()) }
         }
 
@@ -568,7 +559,6 @@ class DownloadQueueTest {
     @Test
     fun `a re-seed that fails does not fail the download that triggered it`() =
         runTest {
-            // The item is on disk and playable; an estimate for the *next* one is cosmetic.
             queueWith(download(seriesName = "Westworld"))
             coEvery { seeder.seedPendingSiblingsOf(any()) } throws IOException("room is busy")
 
@@ -587,8 +577,8 @@ class DownloadQueueTest {
             queue().drain(listener) shouldBe DrainOutcome.COMPLETED
 
             // The fifth argument is `transcoded`. A sidecar is a `/Videos` encode of its own, so the
-            // server ignores `Range` on it exactly as it does on the media file's, and a resumed
-            // fetch would splice two encodes into one file.
+            // server ignores `Range` on it exactly as it does on the media file's, and a resumed fetch
+            // would splice two encodes into one file.
             coVerify { downloader.download(AUDIO_URL, partFile(), any(), any(), true, any()) }
         }
 
@@ -613,8 +603,8 @@ class DownloadQueueTest {
 
             queue().drain(listener)
 
-            // The Downloaded tab sums file rows, so a row still claiming the fetch's size would
-            // overstate the item by more than the sidecar itself weighs.
+            // The Downloaded tab sums file rows, so a row still claiming the fetch's size would overstate
+            // the item by more than the sidecar itself weighs.
             coVerify { downloadDao.updateFileProgress(AUDIO_FILE_ID, SIDECAR_BYTES, SIDECAR_BYTES) }
             coVerify { downloadDao.setFileStatus(AUDIO_FILE_ID, DownloadStatus.DOWNLOADED) }
         }
@@ -627,11 +617,10 @@ class DownloadQueueTest {
 
             queue().drain(listener) shouldBe DrainOutcome.COMPLETED
 
-            // The optional-file rule, unchanged: a film without one dub is still a film.
             coVerify { downloadDao.setFileStatus(AUDIO_FILE_ID, DownloadStatus.ERROR) }
             coVerify { downloadDao.setStatus(uuid(1), DownloadStatus.DOWNLOADED, NOW, null) }
-            // Neither half survives: a part-written m4a would read as a finished sidecar to the
-            // next drain and to `DownloadedMediaProvider` alike.
+            // Neither half survives: a part-written m4a would read as a finished sidecar to the next
+            // drain and to `DownloadedMediaProvider` alike.
             partFile().exists() shouldBe false
             sidecarFile().exists() shouldBe false
         }
@@ -656,8 +645,8 @@ class DownloadQueueTest {
 
             queue().drain(listener) shouldBe DrainOutcome.COMPLETED
 
-            // Its fetch cannot be resumed, so re-running it would spend the whole track again —
-            // the row and the file together are what say it is finished.
+            // Its fetch cannot be resumed, so re-running it would spend the whole track again — the row
+            // and the file together are what say it is finished.
             coVerify(exactly = 0) { downloader.download(AUDIO_URL, any(), any(), any(), any(), any()) }
             extractor.calls.shouldBeEmpty()
         }
@@ -673,7 +662,6 @@ class DownloadQueueTest {
 
             runCatching { queue().drain(listener) }
 
-            // This is what makes the next run resume from the byte offset instead of restarting.
             coVerify { downloadDao.requeueIfDownloading(uuid(1), NOW) }
             coVerify(exactly = 0) { downloadDao.setStatus(uuid(1), DownloadStatus.ERROR, any(), any()) }
         }
@@ -682,10 +670,9 @@ class DownloadQueueTest {
     fun `cancellation never writes QUEUED over whatever status the row now has`() =
         runTest {
             // *Pause* writes `PAUSED` and then cancels the work to interrupt the transfer, so this
-            // handler runs *after* the user's own write. An unconditional `setStatus(QUEUED)` here
-            // would undo it and `nextRunnable` would pick the item straight back up — pause looking
-            // like it did nothing.
-            // The status test lives in the statement (`requeueIfDownloading`) so it cannot race.
+            // handler runs *after* the user's own write: an unconditional `setStatus(QUEUED)` would undo
+            // it and `nextRunnable` would pick the item straight back up. The status test lives in the
+            // statement (`requeueIfDownloading`) so it cannot race.
             queueWith(download())
             coEvery { downloader.download(any(), any(), any(), any(), any(), any()) } throws
                 CancellationException("paused")
@@ -728,9 +715,9 @@ class DownloadQueueTest {
     @Test
     fun `a retry targets the same file names as the first attempt`() =
         runTest {
-            // End to end: attempt one plans the media file from the DTO's `path`, the retry runs
-            // from a DTO with no `path` and would plan a different name — orphaning gigabytes and
-            // restarting the transfer from zero.
+            // End to end: attempt one plans the media file from the DTO's `path`, the retry runs from a
+            // DTO with no `path` and would plan a different name — orphaning gigabytes and restarting
+            // the transfer from zero.
             val rows = mutableListOf<DownloadFileEntity>()
             coEvery { downloadDao.insertFile(capture(rows)) } answers { nextFileId++ }
             every { itemMapper.toDtoOrNull(any()) } returns
@@ -751,10 +738,8 @@ class DownloadQueueTest {
 
             queue().drain(listener)
 
-            // Same rows, same names, same files on disk — so the byte offset still means something.
             updated.map { it.fileName } shouldContainExactly stored.map { it.fileName }
             updated.map { it.id } shouldContainExactly stored.map { it.id }
-            // Nothing new was inserted: the second run re-used every row the first one wrote.
             rows.size shouldBe firstPlan.size
             val target = File("/tmp/downloads/Backrooms.2026.MULTi-BATGirl.mkv")
             coVerify { downloader.download(any(), target, any(), any(), any(), any()) }
@@ -763,8 +748,8 @@ class DownloadQueueTest {
     @Test
     fun `a first attempt with no rows plans freely`() =
         runTest {
-            // The re-plan path is only reachable when nothing is on disk: a re-enqueue after a
-            // delete has no `download_files` rows *and* no directory, so a fresh name is safe.
+            // The re-plan path is only reachable when nothing is on disk: a re-enqueue after a delete has
+            // no `download_files` rows *and* no directory, so a fresh name is safe.
             every { itemMapper.toDtoOrNull(any()) } returns movie(name = "Backrooms", year = 2026, path = null)
             val rows = mutableListOf<DownloadFileEntity>()
             coEvery { downloadDao.insertFile(capture(rows)) } answers { nextFileId++ }
@@ -778,8 +763,8 @@ class DownloadQueueTest {
     @Test
     fun `URLs are rebuilt on every run, not read back from the row`() =
         runTest {
-            // `ServerReachabilityProbe` rotates the base URL between LAN and remote; a row queued
-            // at home and run on mobile data must be fetched from the address that answers now.
+            // `ServerReachabilityProbe` rotates the base URL between LAN and remote; a row queued at home
+            // and run on mobile data must be fetched from the address that answers now.
             val stale = file(id = 42L, type = DownloadFileType.MEDIA, url = "https://old-address/download")
             queueWith(download(), files = listOf(stale))
 
@@ -793,9 +778,9 @@ class DownloadQueueTest {
     @Test
     fun `an item deleted mid-transfer stops instead of re-creating its directory`() =
         runTest {
-            // WorkManager's cancellation is asynchronous, so the delete cascade can unlink the
-            // files while this loop is still between two of them; `FileDownloader` re-creates the
-            // item directory for every file it opens, which would leave files no row points at.
+            // WorkManager's cancellation is asynchronous, so the delete cascade can unlink the files while
+            // this loop is still between two of them; `FileDownloader` re-creates the item directory for
+            // every file it opens, which would leave files no row points at.
             queueWith(download())
             coEvery { downloadDao.get(uuid(1)) } returns null
 
@@ -861,9 +846,8 @@ class DownloadQueueTest {
     }
 
     /**
-     * The poster lands at a known 400 bytes; the media file feeds [clusterMillis] of Matroska into
-     * the chunk sink and then reports [reportedBytes] with an unknown total, as a chunked transcode
-     * does for its whole life.
+     * The poster lands at a known 400 bytes; the media file feeds [clusterMillis] of Matroska into the
+     * chunk sink and then reports [reportedBytes] with an unknown total, as a chunked transcode does.
      *
      * @param clusterMillis `null` writes bytes carrying no cluster header at all — the state of the
      *   stream before its first cluster arrives.
@@ -882,12 +866,9 @@ class DownloadQueueTest {
     }
 
     /**
-     * A transcoded film with two audio languages, one of them baked in — so the plan carries
-     * exactly one `AUDIO` row, for stream 2.
-     *
-     * Storage is redirected into the temp directory for these tests, because the sidecar path is
-     * the one place the queue touches real files: it writes a fetch beside the sidecar, hands both
-     * paths to the extractor, and deletes one of them.
+     * A transcoded film with two audio languages, one of them baked in — so the plan carries exactly one
+     * `AUDIO` row, for stream 2. Storage is redirected into the temp directory, because the sidecar path
+     * is the one place the queue touches real files.
      */
     private fun givenTwoLanguageTranscode(files: List<DownloadFileEntity> = emptyList()) {
         every { storage.resolve(any(), any()) } answers { File(directory, secondArg<String>()) }

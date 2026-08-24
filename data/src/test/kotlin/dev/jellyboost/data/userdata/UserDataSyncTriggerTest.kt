@@ -20,11 +20,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for [UserDataSyncTrigger].
- *
- * It exists for the two moments nothing else can enqueue the drain — a cold start with rows already
- * pending, and connectivity coming back — and the second one matters most: the airplane-mode
- * positions only reach the server because something notices the network return.
+ * The two moments nothing else can enqueue the drain: a cold start with rows pending, and
+ * connectivity coming back — airplane-mode positions reach the server only via the second.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class UserDataSyncTriggerTest {
@@ -48,7 +45,7 @@ class UserDataSyncTriggerTest {
             runCurrent()
 
             // The state flow replays its current value, so the first collection *is* the app-start
-            // check — no separate code path.
+            // check.
             verify(exactly = 1) { scheduler.enqueue() }
         }
 
@@ -85,7 +82,6 @@ class UserDataSyncTriggerTest {
             state.value = ConnectionState.OFFLINE_FORCED
             runCurrent()
 
-            // One enqueue from the app-start check, and nothing for the transition away.
             verify(exactly = 1) { scheduler.enqueue() }
         }
 
@@ -128,10 +124,8 @@ class UserDataSyncTriggerTest {
         }
 
     /**
-     * The broad guard above must not also swallow a cancellation: the count runs inside
-     * `withContext`, so a cancelled application scope arrives here as a `CancellationException`,
-     * and treating it as "could not count" would log a warning for an ordinary shutdown and let the
-     * caller carry on inside a cancelled coroutine.
+     * A cancelled application scope arrives here as a `CancellationException`; treating it as "could
+     * not count" logs a warning for an ordinary shutdown and runs on inside a cancelled coroutine.
      */
     @Test
     fun `a cancelled count propagates rather than being logged as a failure`() =
@@ -144,9 +138,8 @@ class UserDataSyncTriggerTest {
         }
 
     /**
-     * The trigger collects a never-completing `StateFlow`, so it is given `runTest`'s
-     * [TestScope.backgroundScope] — the application scope's stand-in, cancelled when the test ends
-     * instead of keeping the test coroutine alive forever.
+     * The trigger collects a never-completing `StateFlow`, so it gets [TestScope.backgroundScope] —
+     * cancelled when the test ends instead of keeping the test coroutine alive forever.
      */
     private fun TestScope.trigger() =
         UserDataSyncTrigger(

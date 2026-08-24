@@ -35,24 +35,16 @@ import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
 
-/** Diameter of the accent dot that precedes an eyebrow. */
 private val EyebrowDotSize = 6.dp
 
 /**
- * One horizontally-scrolling section of the home screen: a section title with an optional
- * "See all" action, above a `LazyRow` of cards.
+ * Rendering nothing when [items] is empty is intentional: an empty shelf is worse than no row.
  *
- * Rendering nothing when [items] is empty is intentional — jellyfin-web hides empty rows rather
- * than showing an empty shelf, and this matches that behaviour.
- *
- * @param key stable identity per item so the row survives recomposition and in-place user-data
- *   patches (the `UserDataEventBus` pattern).
- * @param eyebrow optional tracked-out caption above the title, preceded by an accent dot. Callers
- *   uppercase the text — the style tracks letters out but does not transform them, so a locale
- *   whose script has no case is unaffected.
- * @param contentType what kind of card [itemContent] draws. Every item in one row draws the same
- *   kind, so declaring it lets the `LazyRow` reuse a scrolled-off node instead of composing a fresh
- *   one; without it a lazy layout assumes every item may be different and reuses nothing.
+ * @param key stable identity per item, so the row survives in-place user-data patches (the
+ *   `UserDataEventBus` pattern).
+ * @param eyebrow callers uppercase the text — the style tracks letters out without transforming
+ *   them, so a caseless script is unaffected.
+ * @param contentType without one a lazy layout assumes every item differs and reuses nothing.
  */
 @Composable
 fun <T> MediaRow(
@@ -90,10 +82,8 @@ fun <T> MediaRow(
                 color = MaterialTheme.colorScheme.onBackground,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                // A section title is a heading, which is what makes TalkBack's heading-jump work:
-                // without it, reaching the fourth row of the home screen means swiping through
-                // three rows of cards. The full title is also spoken, whatever the visible line
-                // had room for.
+                // The heading is what makes TalkBack's heading-jump work: without it the fourth row
+                // is three rows of cards away. Spoken untruncated, whatever the line had room for.
                 modifier =
                     Modifier.weight(1f, fill = false).semantics {
                         heading()
@@ -101,8 +91,6 @@ fun <T> MediaRow(
                     },
             )
             if (onSeeAll != null) {
-                // Muted rather than accent-coloured: a row that shouts "See all" competes with the
-                // artwork it is introducing, and every row in the app carries one.
                 val seeAllDescription = stringResource(R.string.media_row_see_all_section, title)
                 TextButton(
                     onClick = onSeeAll,
@@ -110,8 +98,7 @@ fun <T> MediaRow(
                         ButtonDefaults.textButtonColors(
                             contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                         ),
-                    // Every row carries one of these, so a screen of them was a list of identical
-                    // "See all" stops with nothing saying all of *what*.
+                    // Named per section: every row carries one, and "See all" alone says all of what?
                     modifier = Modifier.semantics { contentDescription = seeAllDescription },
                 ) {
                     Text(text = stringResource(R.string.media_row_see_all), style = JellyfinTypeExtras.SeeAll)
@@ -132,7 +119,6 @@ fun <T> MediaRow(
     }
 }
 
-/** The accent dot plus tracked-out caption that can sit above a section title. */
 @Composable
 private fun SectionEyebrow(
     text: String,
@@ -159,7 +145,6 @@ private fun SectionEyebrow(
     }
 }
 
-/** Rows that do not say what they draw still reuse within themselves, just not across kinds. */
 private const val DEFAULT_CARD_CONTENT_TYPE = "media-card"
 
 @Preview(name = "MediaRow", showBackground = true, backgroundColor = 0xFF101010, widthDp = 420)

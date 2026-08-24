@@ -25,18 +25,11 @@ private val JellyfinDarkColorScheme =
         outline = JellyfinColors.Outline,
     )
 
-/** Default Material 3 type scale; overridden per-style as the design system grows. */
 private val JellyfinTypography = Typography()
 
 /**
- * The refresh's radii, mapped onto the M3 shape roles so components that take their corners from
- * the theme (buttons, chips, cards, menus) round the same way as the ones that name a [Dimens]
- * value directly: `medium` is [Dimens.CardCornerRadius], `large` is [Dimens.PanelRadius] and
- * `extraLarge` is [Dimens.RadiusXl]. `small` (6dp) is the mocks' mini-badge corner,
- * [Dimens.MPillRadius].
- *
- * `extraSmall` keeps its M3 default: nothing in the refresh is that tightly rounded, and leaving it
- * alone means the one role we have no opinion about still behaves like stock Material.
+ * Mirrors [Dimens]: `small` = `MPillRadius`, `medium` = `CardCornerRadius`, `large` = `PanelRadius`,
+ * `extraLarge` = `RadiusXl`. `extraSmall` keeps its M3 default deliberately.
  */
 private val JellyfinShapes =
     Shapes(
@@ -47,20 +40,12 @@ private val JellyfinShapes =
     )
 
 /**
- * The app theme. Dark only by design — jellyfin-web's dark theme is the reference and a light
- * scheme is explicitly out of scope for v1.
+ * Dark only by design; a light scheme is out of scope for v1.
  *
- * **Reduced motion is already handled — do not add a `MotionDurationScale` provider here.** It
- * might look like the app's ~54 animation sites ignore the system "Remove animations" setting, but
- * verified against the resolved artifacts (compose-ui / animation-core 1.11.4), they do not.
- * `androidx.activity.compose.setContent` installs a lifecycle-aware window
- * recomposer, and `WindowRecomposer.android.kt` puts a `MotionDurationScaleImpl` into that
- * recomposer's effect context unless one is already there; it reads
- * `Settings.Global.ANIMATOR_DURATION_SCALE` and keeps watching it with a `ContentObserver`.
- * `animation-core` reads that scale factor off the coroutine context on every animation
- * (`SuspendAnimation`), so `animate*AsState`, `AnimatedVisibility`, `Crossfade` and
- * `animateContentSize` all collapse to zero duration when the user turns animations off. Providing
- * our own would *replace* the platform-observing one — strictly worse.
+ * **Do not add a `MotionDurationScale` provider here.** Verified against compose-ui /
+ * animation-core 1.11.4: `setContent`'s window recomposer already puts a `MotionDurationScaleImpl`
+ * in its effect context, observing `Settings.Global.ANIMATOR_DURATION_SCALE`, and `animation-core`
+ * reads it on every animation. Providing our own would *replace* the platform-observing one.
  */
 @Composable
 fun JellyfinTheme(content: @Composable () -> Unit) {

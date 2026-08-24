@@ -32,15 +32,10 @@ import java.time.Clock
 import java.time.ZoneOffset
 
 /**
- * The cancellation half of [DownloadRepositoryImpl].
- *
- * Every mutation here runs in the **caller's** coroutine — the Downloads screen's ViewModel scope,
- * which dies with the screen. A broad catch that folded that cancellation into `AppError.Storage`
- * would log an ordinary back-press at E level, answer "could not pause", and swallow the
+ * The cancellation half of [DownloadRepositoryImpl]. Every mutation here runs in the **caller's**
+ * coroutine — a ViewModel scope that dies with the screen — so a broad catch folding that into
+ * `AppError.Storage` would log an ordinary back-press at E, answer "could not pause", and swallow the
  * cancellation the parent job is owed. Each test below is one such catch.
- *
- * Split from [DownloadRepositoryImplTest] purely for size — the fixture is the same shape; the
- * subject is the same class (as [DownloadRepositoryStorageTest] already is).
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class DownloadRepositoryCancellationTest {
@@ -131,9 +126,8 @@ class DownloadRepositoryCancellationTest {
         )
     }
 
-    // Same shape as the sibling suites': the constructor needs a real `CoroutineScope` for the
-    // `observeStates()` projection even though nothing here collects it, and the dispatcher ties to
-    // `runTest`'s own scheduler so the two never diverge.
+    // The constructor needs a real `CoroutineScope` for the `observeStates()` projection even though
+    // nothing here collects it, and the dispatcher ties to `runTest`'s scheduler so the two never diverge.
     private fun TestScope.repository(ioDispatcher: CoroutineDispatcher = UnconfinedTestDispatcher(testScheduler)) =
         DownloadRepositoryImpl(
             downloadDao = downloadDao,

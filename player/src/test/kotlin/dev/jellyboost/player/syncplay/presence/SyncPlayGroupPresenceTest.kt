@@ -7,14 +7,9 @@ import dev.jellyboost.player.syncplay.model.SyncPlayGroupState
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
-/**
- * Unit tests for [syncPlayPresenceDemanded].
- *
- * The rule this pins is the whole of the background behavior, and it is worth a test of its own
- * precisely because its failures are silent in both directions: demand it too rarely and a group
- * is dropped forty seconds after the user presses Home, demand it too eagerly and the app leaves
- * an ongoing notification standing over nothing.
- */
+// Worth a suite of its own because its failures are silent in both directions: demand presence
+// too rarely and a group is dropped after the user backgrounds the app; too eagerly and the app
+// leaves an ongoing notification standing over nothing.
 class SyncPlayGroupPresenceTest {
     @Test
     fun `a group with nothing playing is what the service exists for`() {

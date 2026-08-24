@@ -13,16 +13,8 @@ import java.util.UUID
 import org.jellyfin.sdk.model.api.SortOrder as SdkSortOrder
 
 /**
- * Translates the domain [ItemQuery] into the SDK's `getItems` parameters.
- *
- * Kept out of the repository so the exact wire shape of a library/search request is unit-testable
- * on its own: one request per page is as much about *what* is asked for as about how often.
- *
- * The request stays deliberately lean — the same card-sized field set the home rows use. Full
- * field sets belong to the detail and playback paths.
- *
- * @param fields extra `ItemFields` the cards need (`PRIMARY_IMAGE_ASPECT_RATIO`).
- * @param imageTypes artwork kinds worth asking the server to resolve.
+ * Kept out of the repository so the exact wire shape of a library/search request is unit-testable.
+ * Deliberately lean — the card-sized field set; full field sets belong to detail and playback.
  */
 internal fun ItemQuery.toGetItemsRequest(
     fields: List<ItemFields>,
@@ -46,14 +38,12 @@ internal fun ItemQuery.toGetItemsRequest(
         enableImageTypes = imageTypes,
         imageTypeLimit = 1,
         enableUserData = true,
-        // Off unless the caller explicitly asked: placeholders are off in the grid's PagingConfig,
-        // so nothing on screen needs a per-page total — and computing it costs the server an extra
-        // COUNT on every single page. The library grid's *first* page opts in, for the "N items"
-        // line in its header.
+        // Off unless asked: a per-page total costs the server an extra COUNT, and placeholders are
+        // off in the grid's PagingConfig. Only the grid's first page opts in, for its "N items".
         enableTotalRecordCount = includeTotalCount,
     )
 
-/** Maps a domain item type onto its SDK kind; `null` for kinds the server has no name for. */
+/** `null` for kinds the server has no name for. */
 internal fun ItemType.toBaseItemKind(): BaseItemKind? =
     when (this) {
         ItemType.MOVIE -> BaseItemKind.MOVIE
@@ -70,10 +60,8 @@ internal fun ItemType.toBaseItemKind(): BaseItemKind? =
     }
 
 /**
- * Maps a domain sort key onto the SDK's.
- *
- * `SORT_NAME` rather than `NAME` deliberately: it is the server-side sort name, which strips
- * leading articles ("The Expanse" sorts under E), exactly as jellyfin-web sorts a library.
+ * `SORT_NAME` rather than `NAME` deliberately: the server-side sort name strips leading articles
+ * ("The Expanse" sorts under E), exactly as jellyfin-web sorts a library.
  */
 internal fun SortBy.toSdk(): ItemSortBy =
     when (this) {
@@ -85,7 +73,6 @@ internal fun SortBy.toSdk(): ItemSortBy =
         SortBy.RANDOM -> ItemSortBy.RANDOM
     }
 
-/** Maps the domain sort direction onto the SDK's. */
 internal fun SortOrder.toSdk(): SdkSortOrder =
     when (this) {
         SortOrder.ASCENDING -> SdkSortOrder.ASCENDING

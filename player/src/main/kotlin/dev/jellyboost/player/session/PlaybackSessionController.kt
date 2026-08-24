@@ -21,28 +21,17 @@ import javax.inject.Singleton
  * Turns a [PlaybackResolveRequest] into a prepared stream, and re-negotiates one without stranding
  * the last.
  *
- * Kept out of `PlayerViewModel`: resolve → build a media item → prepare is a fixed sequence with no
- * UI state in it, and it is the largest thing that would otherwise stand between the ViewModel and
- * its actual subject, which is *what to do* with the outcome.
+ * Everything here is `suspend` and nothing here launches: as two racing coroutines, a
+ * re-negotiation could reach the server with the new `PlaybackInfo` before `stopEncodingProcess`
+ * for the old one, stranding an ffmpeg process. Keep it sequential.
  *
- * Everything here is `suspend` and nothing here launches, and that is deliberate. As two coroutines
- * racing — one killing the outgoing transcode, one asking the server for the next — a
- * re-negotiation could reach the server with the new `PlaybackInfo` before the
- * `stopEncodingProcess` for the old one, which is exactly the stranded ffmpeg process the whole
- * dance exists to prevent. Sequential `suspend` calls in one coroutine cannot get that wrong.
- *
- * [open] deliberately stops at `prepare`. Publishing the new source, re-applying the session's rate
- * and reporting the start all belong to the caller, because a player event arriving during the first
- * buffer would otherwise be attributed to the source that was just replaced; `open` returns without
- * suspending after `prepare`, which leaves the caller no window at all to do it in.
+ * [open] deliberately stops at `prepare` and does not suspend afterwards — publishing the source,
+ * re-applying the rate and reporting the start belong to the caller, in the window where no player
+ * event can yet be attributed to the source that was just replaced.
  */
 @Singleton
 internal class PlaybackSessionController
     @Inject
-    // Five collaborators plus the two handover seams (the arbiter and the dispatcher its
-    // relinquish closure marshals player calls to), both defaulted so tests construct the
-    // no-handover behaviour. Each is a distinct seam; bundling any pair would invent a type with
-    // no meaning of its own, which is why the list is suppressed rather than shortened.
     @Suppress("LongParameterList")
     constructor(
         private val resolver: PlaybackSourceResolver,
@@ -50,51 +39,24 @@ internal class PlaybackSessionController
         private val playerHandle: PlayerHandle,
         private val reporter: PlaybackReporter,
         /**
-         * Whether a receiver is in charge, re-read at prepare time.
-         *
-         * A cast session can start or end while [PlaybackSourceResolver.resolve] is on the wire, and
-         * the routing handle follows it immediately — so a stream negotiated for one side would be
-         * prepared on the other. Defaulted so that everything with no interest in
-         * casting (tests included) gets a holder that never casts and the check never fires; Hilt
-         * always injects the singleton the coordinator writes.
+         * Whether a receiver is in charge, re-read at prepare time: a cast session can start or end
+         * while [PlaybackSourceResolver.resolve] is on the wire. The default never casts, so tests
+         * never fire the check; Hilt injects the singleton the coordinator writes.
          */
         private val castStatus: CastStatusHolder = CastStatusHolder(),
-        /**
-         * The video⇄music arbiter.
-         *
-         * This is where video *actually starts* — the one place every open, transfer and
-         * re-negotiation funnels through on its way to `prepare` — so it is where the claim
-         * belongs. Defaulted for the same reason [castStatus] is: it holds nothing and depends on
-         * nothing, so a test constructs the no-handover behaviour exactly (no other owner exists,
-         * so no relinquish ever runs); Hilt always passes the singleton the music controller
-         * shares.
-         */
         private val handover: PlaybackHandover = PlaybackHandover(),
         /**
-         * Where player calls made from *inside the relinquish closure* are marshalled to.
-         *
-         * The closure registered with [handover] runs inline in whichever context the next
-         * claimant calls `claim` from — for a music claim that is the music session's own
-         * background dispatcher — and Media3 throws off the main thread. Every relinquish owns
-         * its marshalling ([PlaybackHandover]'s contract); this is video's. Defaulted for the
-         * same reason [castStatus] is: no existing test triggers a relinquish, and one that does
-         * passes its own dispatcher. Deliberately not `.immediate` — resolving the immediate view
-         * initializes the platform Main dispatcher at construction, which a plain-JVM test cannot
-         * do, and the closure's hop is rare enough that an extra post is irrelevant.
+         * Where player calls made from *inside the relinquish closure* are marshalled to: that
+         * closure runs inline in the claimant's context (music's background dispatcher) and Media3
+         * throws off the main thread. Deliberately not `.immediate` — resolving the immediate view
+         * initializes the platform Main dispatcher, which a plain-JVM test cannot do.
          */
         @MainDispatcher private val mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
     ) {
         /**
-         * Resolves [request] and hands the result to the player.
-         *
-         * If the cast state changed underneath the resolve — the request said `castTarget = true`
-         * but the session is gone, or the other way round — the result is thrown away and the item
-         * re-resolved for where playback will actually happen. Preparing it anyway would hand the
-         * receiver a stream negotiated against this device's decoders (or a `file://` path it cannot
-         * reach), and the error path while casting has no fallback ladder to recover with.
-         *
-         * @param playWhenReady whether to start playing once buffered — `false` preserves a paused
-         *   state across a re-resolve, and a restore that was paused when the process died.
+         * A cast state that changed underneath the resolve forces a re-resolve: preparing anyway
+         * would hand the receiver a stream negotiated against this device's decoders (or a `file://`
+         * path it cannot reach), and casting has no fallback ladder to recover with.
          */
         suspend fun open(
             request: PlaybackResolveRequest,
@@ -126,23 +88,18 @@ internal class PlaybackSessionController
 
             val spec = mediaSourceFactory.create(resolved) ?: return SessionOpenResult.UnsupportedSource
 
-            // Immediately before `prepare`, and it suspends until whatever held the player has
-            // finished closing its own server session — a music queue's stop report lands before
-            // this film's start report, which is the whole point. Claiming for a
-            // kind that already owns the player only replaces the callback, so a re-negotiation
-            // does not report itself stopped. The closure runs inline in the *claimant's* context
-            // — music's background session scope — so its player calls hop to the main thread
-            // themselves; the report in between stays off it, and the ordering (stop report
-            // completed before the player is let go) is untouched.
+            // Must stay immediately before `prepare`: it suspends until whatever held the player
+            // has closed its own server session, so a music queue's stop report lands before this
+            // film's start report. Inside the closure the stop report must complete before the
+            // player is let go.
             handover.claim(PlaybackKind.VIDEO) {
                 val snapshot = withContext(mainDispatcher) { playerHandle.snapshot() }
                 reporter.reportStop(resolved, snapshot)
                 withContext(mainDispatcher) { playerHandle.stop() }
             }
 
-            // The source travels alongside the spec: a cast receiver has to be told more about the
-            // negotiation than its URL says, and this is the one place both are in hand
-            // (`PlayerHandle.prepare`). Locally the overload drops it.
+            // The source travels alongside the spec: a cast receiver needs more of the negotiation
+            // than its URL carries. The local overload drops it.
             playerHandle.prepare(
                 source = resolved,
                 spec = spec,
@@ -153,11 +110,8 @@ internal class PlaybackSessionController
         }
 
         /**
-         * Reopens the item under new terms, stopping the outgoing transcode **first**.
-         *
-         * Every re-negotiation goes through here — quality change, a track change the server has to
-         * perform, and both fallback ladders — so the order only exists once and cannot be forgotten
-         * at a call site.
+         * Reopens the item under new terms, stopping the outgoing transcode **first**. Every
+         * re-negotiation goes through here so that order cannot be forgotten at a call site.
          */
         suspend fun reopen(
             previous: PlaybackMediaSource,
@@ -169,39 +123,25 @@ internal class PlaybackSessionController
         }
 
         /**
-         * The video session ended on its own terms, so nobody should close it on video's behalf
-         * later.
-         *
-         * Called from `PlayerViewModel`'s teardown, which has already issued the stop report on
-         * the detached scope. Without it the relinquish registered by [open] would still be armed,
-         * and the next music `play()` — minutes or hours later — would re-report a stop for a
-         * session that has been closed since the user left the player screen.
-         *
-         * Non-suspending because the teardown is not a coroutine; see
-         * [PlaybackHandover.releaseNow] for what it does when a handover is already in flight.
+         * Must be called from `PlayerViewModel`'s teardown: otherwise the relinquish registered by
+         * [open] stays armed and the next music `play()` re-reports a stop for a closed session.
          */
         fun endVideoSession() {
             handover.releaseNow(PlaybackKind.VIDEO)
         }
 
         private companion object {
-            /**
-             * How many times [open] will chase a cast state that changes mid-resolve. One flip is
-             * the real-world case; the cap only exists so a session flapping faster than the server
-             * answers cannot spin the loop forever.
-             */
+            /** One flip is the real case; the cap only stops a flapping session spinning forever. */
             const val MAX_CAST_REROUTES = 2
         }
     }
 
-/** What one [PlaybackSessionController.open] attempt produced. */
 internal sealed interface SessionOpenResult {
     /** The player is prepared on [source]; the caller owns publishing and reporting it. */
     data class Opened(
         val source: PlaybackMediaSource,
     ) : SessionOpenResult
 
-    /** Nothing to play: the resolve itself failed, and [error] says why in the domain's terms. */
     data class ResolveFailed(
         val error: AppError,
     ) : SessionOpenResult

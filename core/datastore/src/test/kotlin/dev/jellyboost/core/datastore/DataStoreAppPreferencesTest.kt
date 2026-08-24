@@ -19,12 +19,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
-/**
- * Unit tests for [DataStoreAppPreferences] against a real DataStore backed by a temporary file —
- * the round trip, not a mock, is the thing worth pinning: the force-offline flag is what makes the
- * app ignore a working network, so a setting that silently fails to persist would be invisible
- * until a user complained.
- */
 @OptIn(ExperimentalCoroutinesApi::class)
 class DataStoreAppPreferencesTest {
     @TempDir
@@ -84,13 +78,11 @@ class DataStoreAppPreferencesTest {
             }
         }
 
-    // ---- Wi-Fi-only downloads -------------------------------------------------------------------
-
     @Test
     fun `Wi-Fi-only downloads default to on`() =
         runTest {
-            // The one preference in this file that does not default to `false`: a multi-gigabyte
-            // film pulled over a metered connection is a mistake the user cannot undo.
+            // The one preference here that does not default to `false`: a multi-gigabyte film over a metered
+            // connection is a mistake the user cannot undo.
             val preferences = DataStoreAppPreferences(dataStore(this))
 
             preferences.downloadOverWifiOnly.first() shouldBe true
@@ -132,8 +124,6 @@ class DataStoreAppPreferencesTest {
                 cancelAndIgnoreRemainingEvents()
             }
         }
-
-    // ---- segment skip + picture-in-picture --------------------------------------------------------
 
     @Test
     fun `both segment skip modes default to showing a button`() =
@@ -194,8 +184,6 @@ class DataStoreAppPreferencesTest {
             DataStoreAppPreferences(store).pipOnLeave.first() shouldBe false
         }
 
-    // ---- download quality ---------------------------------------------------------------------
-
     @Test
     fun `download quality defaults to the original file`() =
         runTest {
@@ -223,8 +211,6 @@ class DataStoreAppPreferencesTest {
 
             DataStoreAppPreferences(store).downloadQuality.first() shouldBe DownloadQuality.ORIGINAL
         }
-
-    // ---- storage location ------------------------------------------------------------------------
 
     @Test
     fun `no storage volume is stored until the user picks one`() =
@@ -264,8 +250,6 @@ class DataStoreAppPreferencesTest {
 
             DataStoreAppPreferences(store).downloadStorageVolumeId.first() shouldBe null
         }
-
-    // ---- max streaming bitrate --------------------------------------------------------------------
 
     @Test
     fun `no streaming ceiling is stored until one is measured`() =

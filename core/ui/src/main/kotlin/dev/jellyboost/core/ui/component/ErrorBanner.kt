@@ -29,20 +29,13 @@ import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 
 /**
- * Text and glyph colour of an error banner.
- *
- * A lightened `#CF6679` rather than `colorScheme.error` itself: the palette's error colour is tuned
- * to be read as a *fill* (a failed progress bar, a destructive button), and at 13sp on a 10%-alpha
- * wash of itself it sits too close to the background to pass a contrast check. This is the same hue
- * pushed up in lightness until the sentence is comfortably readable, which is what the mocks
- * specify (`#F0A3AE`).
+ * Lightened rather than `colorScheme.error` itself: that colour is tuned to be read as a fill, and
+ * at 13sp on a 10%-alpha wash of itself it fails a contrast check.
  */
 val ErrorBannerContent: Color = Color(0xFFF0A3AE)
 
-/** The wash behind the message — the palette's error colour, faint enough to stay a background. */
 private const val BANNER_FILL_ALPHA = 0.10f
 
-/** Its edge, strong enough to hold the shape where the fill fades into the page. */
 private const val BANNER_BORDER_ALPHA = 0.28f
 
 private val BannerHorizontalPadding = 16.dp
@@ -58,18 +51,11 @@ private val BannerLabel =
     )
 
 /**
- * An inline failure notice: something the user tried did not work, and the screen is still usable.
+ * For a failure *within* still-usable content, unlike [ErrorState]; it never offers a retry of its
+ * own, since the screen it sits in already has one.
  *
- * Distinct from [ErrorState], which takes over a screen that has nothing to show. A banner sits
- * *within* working content — a lost session above a login form, a refresh that failed above the
- * stale list it failed to replace — so it never offers a retry of its own; the screen it belongs to
- * already has one.
- *
- * It announces itself. A banner appears *because* something the user just did failed, and a failure
- * nobody is told about is a screen that silently did nothing — so the whole banner is one node,
- * marked assertive, which is the one live-region level that interrupts. Assertive rather than
- * polite precisely because the user is mid-flow: they are
- * about to retype a password into a form that has already rejected it.
+ * One node, marked assertive — the one live-region level that interrupts, which is right for a user
+ * mid-flow about to retype a password into a form that already rejected it.
  *
  * @param message already translated by the caller; `:core:ui` never sees the failure taxonomy.
  */

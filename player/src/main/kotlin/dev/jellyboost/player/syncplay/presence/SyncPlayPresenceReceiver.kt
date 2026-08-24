@@ -9,17 +9,9 @@ import timber.log.Timber
 import javax.inject.Inject
 
 /**
- * Backs the **Leave** action on the SyncPlay group notification.
- *
- * A receiver rather than an activity, for the same reason the downloads notification uses one: the
- * whole point of the notification is that the group is controllable from wherever the user happens
- * to be, and leaving must not drag the app to the front to do it.
- *
- * No `goAsync()` is needed. [SyncPlayController.leaveGroup] is fire-and-forget on the controller's
- * process-lifetime scope, and the presence service is still in the foreground at this moment — it
- * is stopped by the coordinator only once the controller has reached
- * [Idle][dev.jellyboost.player.syncplay.SyncPlayState.Idle] — so the process is held open for
- * the round trip.
+ * No `goAsync()`: [SyncPlayController.leaveGroup] runs on the controller's process-lifetime scope,
+ * and the presence service stays in the foreground until the controller reaches
+ * [Idle][dev.jellyboost.player.syncplay.SyncPlayState.Idle], holding the process open for the trip.
  */
 @AndroidEntryPoint
 internal class SyncPlayPresenceReceiver : BroadcastReceiver() {
@@ -41,7 +33,6 @@ internal class SyncPlayPresenceReceiver : BroadcastReceiver() {
     }
 
     companion object {
-        /** Leaves the group, deliberately — so nothing will try to take it back. */
         const val ACTION_LEAVE = "dev.jellyboost.syncplay.LEAVE"
     }
 }

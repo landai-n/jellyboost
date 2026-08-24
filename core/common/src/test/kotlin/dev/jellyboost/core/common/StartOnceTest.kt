@@ -7,12 +7,6 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
-/**
- * Unit tests for [StartOnce] — the latch behind the three app-scope collaborators' `start()`.
- *
- * Two properties, and the second is the reason the class exists rather than a `Boolean`: a repeat
- * call does nothing, and two threads arriving together still produce exactly one run.
- */
 class StartOnceTest {
     @Test
     fun `runs the block on the first call`() {
@@ -47,9 +41,8 @@ class StartOnceTest {
     }
 
     /**
-     * The whole point of `compareAndSet`. A plain `if (!started) { started = true; … }` lets both
-     * threads through, and the symptom in production would be a second forever-collector nobody can
-     * see — so this is asserted directly rather than trusted to the field's type.
+     * The whole point of `compareAndSet`: a plain `if (!started) { started = true; … }` lets both threads
+     * through, and the symptom in production would be a second forever-collector nobody can see.
      */
     @Test
     fun `only one of many threads racing the latch runs the block`() {
@@ -81,7 +74,7 @@ class StartOnceTest {
     }
 
     private companion object {
-        /** Generous: the assertion is on the count, never on how long the pool took to get there. */
+        /** Generous: the assertion is on the count, never on how long the pool took. */
         const val TIMEOUT_SECONDS = 10L
     }
 }

@@ -22,10 +22,9 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 /**
- * The B3 timer safety nets — the behaviour `SyncPlayRecoveryNets` owns.
- *
- * Exercised through the real controller (see [SyncPlayControllerTestBase]): every scenario here
- * predates the extraction and pins the same observable protocol behaviour it always did.
+ * The B3 timer safety nets. Exercised through the real controller (see
+ * [SyncPlayControllerTestBase]): these scenarios predate the `SyncPlayRecoveryNets` extraction
+ * and pin the protocol behaviour it always had.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class SyncPlayRecoveryNetsTest : SyncPlayControllerTestBase() {
@@ -39,7 +38,6 @@ internal class SyncPlayRecoveryNetsTest : SyncPlayControllerTestBase() {
             fixture.socket.emit(command(SyncPlayCommandType.Unpause, now(), positionMs = 0))
             runCurrent()
 
-            // The item ends, the group advances and reports itself playing — and then goes quiet.
             fixture.player.emit(PlayerEvent.Ended)
             runCurrent()
             fixture.socket.emit(
@@ -60,15 +58,14 @@ internal class SyncPlayRecoveryNetsTest : SyncPlayControllerTestBase() {
             advanceTimeBy(SyncPlayRecoveryNets.SELF_SYNC_TIMEOUT_MS)
             runCurrent()
 
-            // Stage one asks rather than acts, and the server answers a request for the state it is
-            // already in with the authoritative command ("client got lost").
+            // Stage one asks rather than acts: the server reads a request for the state it is
+            // already in as "client got lost" and re-sends the authoritative command.
             fixture.api.callsOf<SyncPlayCall.RequestUnpause>().size shouldBe 1
             fixture.player.hadNoTransportCalls shouldBe true
 
             advanceTimeBy(SyncPlayRecoveryNets.COMMAND_REPEAT_TIMEOUT_MS)
             runCurrent()
 
-            // Nothing came back, so the local fallback lands — today's behaviour, one window later.
             fixture.player.playCount shouldBe 1
             fixture.player.seekedToMs shouldBe
                 listOf(SyncPlayRecoveryNets.SELF_SYNC_TIMEOUT_MS + SyncPlayRecoveryNets.COMMAND_REPEAT_TIMEOUT_MS)
@@ -77,7 +74,7 @@ internal class SyncPlayRecoveryNetsTest : SyncPlayControllerTestBase() {
                 .shouldBeInstanceOf<SyncPlayPhase.Playing>()
             // Recovering must not re-open the handshake: another ready is what the storm is made of.
             fixture.api.callsOf<SyncPlayCall.ReportReady>() shouldBe emptyList()
-            // And the second window is a fallback, not another ask: one request per episode.
+            // The second window is a fallback, not another ask: one request per episode.
             fixture.api.callsOf<SyncPlayCall.RequestUnpause>().size shouldBe 1
         }
 
@@ -98,9 +95,8 @@ internal class SyncPlayRecoveryNetsTest : SyncPlayControllerTestBase() {
             advanceTimeBy(SyncPlayRecoveryNets.SELF_SYNC_TIMEOUT_MS)
             runCurrent()
 
-            // A request for the state the group is already in is not a state change: the server
-            // reads it as "client got lost" and re-sends the current command to this session alone
-            // (`PlayingGroupState.HandleRequest(UnpauseGroupRequest)`, prevState == Playing).
+            // Server-side: `PlayingGroupState.HandleRequest(UnpauseGroupRequest)` with
+            // prevState == Playing re-sends the current command to this session alone.
             fixture.api.callsOf<SyncPlayCall.RequestUnpause>().size shouldBe 1
             fixture.player.hadNoTransportCalls shouldBe true
 
@@ -108,7 +104,7 @@ internal class SyncPlayRecoveryNetsTest : SyncPlayControllerTestBase() {
             fixture.socket.emit(command(SyncPlayCommandType.Unpause, whenInstant, positionMs = 90_000))
             runCurrent()
 
-            // The group's own timeline, exact — not the inferred anchor the fallback would have used.
+            // The group's own timeline, exact — not the inferred anchor the fallback would use.
             fixture.player.playCount shouldBe 1
             (fixture.controller.state.value as SyncPlayState.InGroup).phase shouldBe
                 SyncPlayPhase.Playing(SyncPlayAnchor(90_000L, whenInstant))
@@ -116,8 +112,6 @@ internal class SyncPlayRecoveryNetsTest : SyncPlayControllerTestBase() {
             advanceTimeBy(SyncPlayRecoveryNets.COMMAND_REPEAT_TIMEOUT_MS * 2)
             runCurrent()
 
-            // The applied command stood the second window down: no local self-sync behind it, and
-            // nothing asked for twice.
             fixture.player.playCount shouldBe 1
             fixture.api.callsOf<SyncPlayCall.RequestUnpause>().size shouldBe 1
         }
@@ -136,15 +130,14 @@ internal class SyncPlayRecoveryNetsTest : SyncPlayControllerTestBase() {
             advanceTimeBy(SyncPlayRecoveryNets.PAUSE_NET_TIMEOUT_MS)
             runCurrent()
 
-            // `PausedGroupState.HandleRequest(PauseGroupRequest)` with prevState == Paused answers
-            // the same way, and its command carries the position the group is parked at.
+            // Server-side: `PausedGroupState.HandleRequest(PauseGroupRequest)` with
+            // prevState == Paused answers the same way, its command carrying the parked position.
             fixture.api.callsOf<SyncPlayCall.RequestPause>().size shouldBe 1
             fixture.player.pauseCount shouldBe 0
 
             fixture.socket.emit(command(SyncPlayCommandType.Pause, now(), positionMs = 90_000))
             runCurrent()
 
-            // Parked where the group is, rather than merely stopped where this member happened to be.
             fixture.player.pauseCount shouldBe 1
             fixture.player.seekedToMs shouldBe listOf(90_000L)
 
@@ -173,8 +166,7 @@ internal class SyncPlayRecoveryNetsTest : SyncPlayControllerTestBase() {
             runCurrent()
             fixture.api.callsOf<SyncPlayCall.RequestUnpause>().size shouldBe 1
 
-            // The group changed its mind while the elicited command was still owed. The re-armed net
-            // is the same job, so the ordinary disarm reaches it.
+            // The re-armed net is the same job, so the ordinary disarm still reaches it.
             advanceTimeBy(SyncPlayRecoveryNets.COMMAND_REPEAT_TIMEOUT_MS - 1)
             fixture.socket.emit(
                 SyncPlayGroupEvent.StateChanged(SyncPlayGroupState.Paused, SyncPlayRequestKind.Pause),
@@ -183,8 +175,6 @@ internal class SyncPlayRecoveryNetsTest : SyncPlayControllerTestBase() {
             advanceTimeBy(SyncPlayRecoveryNets.SELF_SYNC_TIMEOUT_MS + SyncPlayRecoveryNets.COMMAND_REPEAT_TIMEOUT_MS)
             runCurrent()
 
-            // Nothing started a player in a group that is now paused, and the paused group's own net
-            // has a stopped player to look at, so it asks for nothing either.
             fixture.player.hadNoTransportCalls shouldBe true
             fixture.api.callsOf<SyncPlayCall.RequestUnpause>().size shouldBe 1
             fixture.api.callsOf<SyncPlayCall.RequestPause>() shouldBe emptyList()
@@ -194,10 +184,9 @@ internal class SyncPlayRecoveryNetsTest : SyncPlayControllerTestBase() {
     fun `a self-sync measures from the instant the group's position was true, not from now`() =
         runTest {
             val fixture = fixture()
-            // The group published "60 s" twenty seconds ago and has been playing ever since, so it
-            // is at 80 s now. Pairing that position with *this* moment is the browser-resume desync
-            // in the bug report: the member lands twenty seconds short and the drift monitor, handed
-            // the same anchor, then defends the short timeline instead of closing the gap.
+            // Published "60s" twenty seconds ago while still playing puts the group at 80s now.
+            // Pairing that position with *this* moment is the browser-resume desync from the bug
+            // report: the member lands 20s short and the drift monitor defends the short timeline.
             val stale =
                 queue(startTicks = 60_000L.millisToTicks())
                     .copy(lastUpdate = origin.minusMillis(GROUP_HEAD_START_MS))
@@ -210,8 +199,6 @@ internal class SyncPlayRecoveryNetsTest : SyncPlayControllerTestBase() {
                 SyncPlayGroupEvent.StateChanged(SyncPlayGroupState.Playing, SyncPlayRequestKind.Ready),
             )
             runCurrent()
-            // Both windows: the server is asked to repeat itself first, and only a repeat that never
-            // comes leaves the inferred anchor to do the work.
             advanceTimeBy(SyncPlayRecoveryNets.SELF_SYNC_TIMEOUT_MS + SyncPlayRecoveryNets.COMMAND_REPEAT_TIMEOUT_MS)
             runCurrent()
 
@@ -221,8 +208,8 @@ internal class SyncPlayRecoveryNetsTest : SyncPlayControllerTestBase() {
                     60_000L + GROUP_HEAD_START_MS +
                         SyncPlayRecoveryNets.SELF_SYNC_TIMEOUT_MS + SyncPlayRecoveryNets.COMMAND_REPEAT_TIMEOUT_MS,
                 )
-            // The anchor handed on to the drift monitor is the queue's own instant, so every later
-            // correction is measured against the group's real timeline.
+            // The anchor handed to the drift monitor is the queue's own instant, so later
+            // corrections are measured against the group's real timeline.
             (fixture.controller.state.value as SyncPlayState.InGroup).phase shouldBe
                 SyncPlayPhase.Playing(SyncPlayAnchor(60_000L, stale.lastUpdate))
         }
@@ -240,7 +227,6 @@ internal class SyncPlayRecoveryNetsTest : SyncPlayControllerTestBase() {
             // The net is what would call `play` again; the drift monitor's corrective seeks (which
             // this fake player earns by never advancing) are not it.
             fixture.player.playCount shouldBe 0
-            // Neither stage runs: a member playing in step has nothing to ask the server to repeat.
             fixture.api.callsOf<SyncPlayCall.RequestUnpause>() shouldBe emptyList()
         }
 
@@ -249,7 +235,6 @@ internal class SyncPlayRecoveryNetsTest : SyncPlayControllerTestBase() {
         runTest {
             val fixture = fixture()
             joinPlaying(fixture)
-            // The group pauses at 90 s — the command parks this member exactly there.
             fixture.socket.emit(
                 SyncPlayGroupEvent.StateChanged(SyncPlayGroupState.Paused, SyncPlayRequestKind.Pause),
             )
@@ -258,7 +243,7 @@ internal class SyncPlayRecoveryNetsTest : SyncPlayControllerTestBase() {
             fixture.player.snapshot = PlaybackSnapshot(positionMs = 90_000, isPlaying = false)
             fixture.player.resetCalls()
 
-            // Parked for a minute: the queue's own reading (0 s, published at join) is long stale.
+            // A minute parked makes the queue's own reading (0s, published at join) long stale.
             advanceTimeBy(60_000)
             // The resume's command frame is lost; only the state update arrives.
             fixture.socket.emit(
@@ -269,9 +254,8 @@ internal class SyncPlayRecoveryNetsTest : SyncPlayControllerTestBase() {
             runCurrent()
 
             fixture.player.playCount shouldBe 1
-            // The group froze where this member is parked, so the fallback resumes from the parked
-            // position plus its own delay — not from the queue's position plus a minute of elapsed
-            // wall clock, which is the 23-minute jump measured on device (run 3).
+            // Fallback resumes from the parked position plus its own delay — not the queue's
+            // position plus a minute of wall clock, which was a 23-minute jump measured on device.
             fixture.player.seekedToMs shouldBe
                 listOf(
                     90_000L + SyncPlayRecoveryNets.SELF_SYNC_TIMEOUT_MS +
@@ -292,7 +276,6 @@ internal class SyncPlayRecoveryNetsTest : SyncPlayControllerTestBase() {
             )
             runCurrent()
 
-            // Nothing local yet: the group's own `SendCommand` is still what is supposed to do this.
             fixture.player.hadNoTransportCalls shouldBe true
             val inGroup = fixture.controller.state.value as SyncPlayState.InGroup
             inGroup.groupState shouldBe SyncPlayGroupState.Paused
@@ -301,22 +284,20 @@ internal class SyncPlayRecoveryNetsTest : SyncPlayControllerTestBase() {
             advanceTimeBy(SyncPlayRecoveryNets.PAUSE_NET_TIMEOUT_MS)
             runCurrent()
 
-            // Stage one: a redundant pause request, which a group that is already paused answers by
-            // re-sending its own pause to this session. Still nothing local.
+            // Stage one: a group already paused answers a redundant pause request by re-sending
+            // its own pause to this session.
             fixture.api.callsOf<SyncPlayCall.RequestPause>().size shouldBe 1
             fixture.player.hadNoTransportCalls shouldBe true
 
             advanceTimeBy(SyncPlayRecoveryNets.COMMAND_REPEAT_TIMEOUT_MS)
             runCurrent()
 
-            // The command never came, and a member playing on alone is the one failure the phase
-            // cannot even see: `Paused` shuts the drift monitor off with it.
+            // `Paused` shuts the drift monitor off, so a member playing on alone is the one
+            // failure the phase cannot even see.
             fixture.player.pauseCount shouldBe 1
-            // The net only ever pauses — no seek, no `play`, and nothing reported to the server.
             fixture.player.seekedToMs shouldBe emptyList()
             fixture.player.playCount shouldBe 0
             fixture.api.callsOf<SyncPlayCall.ReportReady>() shouldBe emptyList()
-            // The fallback window asks nothing: one elicit per state-change episode.
             fixture.api.callsOf<SyncPlayCall.RequestPause>().size shouldBe 1
         }
 
@@ -339,9 +320,8 @@ internal class SyncPlayRecoveryNetsTest : SyncPlayControllerTestBase() {
             advanceTimeBy(SyncPlayRecoveryNets.PAUSE_NET_TIMEOUT_MS + SyncPlayRecoveryNets.COMMAND_REPEAT_TIMEOUT_MS)
             runCurrent()
 
-            // Once, by the command the group sent — the net armed behind it must not pause again.
-            fixture.player.pauseCount shouldBe 1
             // An applied command stands both stages down, so nothing is asked for either.
+            fixture.player.pauseCount shouldBe 1
             fixture.api.callsOf<SyncPlayCall.RequestPause>() shouldBe emptyList()
         }
 
@@ -361,8 +341,8 @@ internal class SyncPlayRecoveryNetsTest : SyncPlayControllerTestBase() {
             runCurrent()
 
             fixture.player.hadNoTransportCalls shouldBe true
-            // Nothing to recover, so nothing is asked for either: a stopped player is already where
-            // the group is, and a request per lost pause would be traffic for its own sake.
+            // A stopped player is already where the group is; asking per lost pause would just be
+            // traffic for its own sake.
             fixture.api.callsOf<SyncPlayCall.RequestPause>() shouldBe emptyList()
         }
 
@@ -370,7 +350,6 @@ internal class SyncPlayRecoveryNetsTest : SyncPlayControllerTestBase() {
     fun `joining a group that is already paused stops a player that was running solo`() =
         runTest {
             val fixture = fixture()
-            // The user was watching this alone, and joins a group that is sitting paused.
             fixture.player.snapshot = PlaybackSnapshot(isPlaying = true)
 
             fixture.controller.joinGroup(group(state = SyncPlayGroupState.Paused))
@@ -398,8 +377,7 @@ internal class SyncPlayRecoveryNetsTest : SyncPlayControllerTestBase() {
             runCurrent()
             fixture.player.resetCalls()
 
-            // The group changed its mind inside the net's window; nothing armed while it was playing
-            // may start playback in a group that is now paused.
+            // Nothing armed while the group was playing may start playback once it's paused.
             advanceTimeBy(SyncPlayRecoveryNets.SELF_SYNC_TIMEOUT_MS - 1)
             fixture.socket.emit(
                 SyncPlayGroupEvent.StateChanged(SyncPlayGroupState.Paused, SyncPlayRequestKind.Pause),
@@ -441,10 +419,9 @@ internal class SyncPlayRecoveryNetsTest : SyncPlayControllerTestBase() {
             nets.armPauseNet()
             advanceTimeBy(SyncPlayRecoveryNets.PAUSE_NET_TIMEOUT_MS)
             runCurrent()
-            // The elicit stage is now suspended on the main-thread player probe.
+            // The elicit stage is now suspended on the main-thread player probe: disarm mid-probe.
             driver.pauseRequests shouldBe 0
 
-            // The group's own command lands and the controller disarms - mid-probe.
             nets.cancelPauseNet()
             heldMain.drain()
             runCurrent()
@@ -453,7 +430,6 @@ internal class SyncPlayRecoveryNetsTest : SyncPlayControllerTestBase() {
             heldMain.drain()
             runCurrent()
 
-            // Neither stage fired: no redundant ask, and no local pause behind the disarm.
             driver.pauseRequests shouldBe 0
             player.pauseCount shouldBe 0
         }
@@ -480,14 +456,13 @@ internal class SyncPlayRecoveryNetsTest : SyncPlayControllerTestBase() {
             nets.armSelfSync()
             advanceTimeBy(SyncPlayRecoveryNets.SELF_SYNC_TIMEOUT_MS)
             runCurrent()
-            // The elicit stage asked once and re-armed as the fallback window.
             driver.unpauseRequests shouldBe 1
 
             advanceTimeBy(SyncPlayRecoveryNets.COMMAND_REPEAT_TIMEOUT_MS)
             runCurrent()
-            // The fallback is now suspended on its main-thread seek-and-play hop; the group
-            // stops playing and the controller disarms - exactly the "must never start playback
-            // in a group that has since stopped" rule.
+            // The fallback is now suspended on its main-thread seek-and-play hop when the group
+            // stops playing and disarms it — "must never start playback in a group that has
+            // since stopped".
             nets.cancelSelfSync()
             heldMain.drain()
             runCurrent()

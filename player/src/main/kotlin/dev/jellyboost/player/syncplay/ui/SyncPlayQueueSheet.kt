@@ -55,20 +55,8 @@ import java.util.UUID
 import dev.jellyboost.core.ui.R as CoreUiR
 
 /**
- * What the group is going to watch, and the four things a member may do about it.
- *
- * A bottom sheet like [SyncPlayGroupSheet] and for the same reason — it is a panel to read, not a
- * one-tap picker — but a scrolling one: a group queue can be a whole season.
- *
- * **Nothing here changes anything locally.** Tapping a row, moving one, removing one and the
- * next/previous buttons are all requests to the server; the list redraws when the group's own
- * `PlayQueueUpdate` comes back. Reordering is
- * therefore up/down buttons rather than a drag: a dragged row that snaps back until the server
- * answers reads as a broken gesture, and the round trip is not this device's to skip.
- *
- * The ViewModel is resolved here rather than passed in from `:app`: this
- * is a surface inside the player screen, not a navigation destination, and the solo player's call
- * site has no business knowing about it.
+ * **Nothing here changes anything locally**: every action is a server request, and the list redraws when the
+ * group's `PlayQueueUpdate` comes back. Hence up/down buttons rather than a drag that would snap back.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -103,17 +91,14 @@ private fun QueueSheetContent(
     onNext: () -> Unit,
     onPrevious: () -> Unit,
 ) {
-    // The list's cap has to know how tall the sheet is allowed to be: a fixed 420 dp is more than a
-    // phone-landscape sheet has in total, and a long queue then pushes the header and the
-    // next/previous buttons off the top of it.
+    // The list cap needs the sheet's own height; see [queueListMaxHeight].
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
         val listMaxHeight = queueListMaxHeight(maxHeight)
 
         Column(
             modifier =
                 Modifier
-                    // Capped and centred like the group sheet: full-bleed rows on a 2560 px tablet put a
-                    // title and the buttons that act on it a hand-span apart.
+                    // Full-bleed rows on a 2560 px tablet put a title and the buttons acting on it a hand-span apart.
                     .widthIn(max = SHEET_MAX_WIDTH)
                     .fillMaxWidth()
                     .padding(horizontal = Dimens.ScreenPadding)
@@ -159,17 +144,8 @@ private fun QueueSheetContent(
 }
 
 /**
- * How tall the queue list may grow inside a sheet that has [maxHeight] to give.
- *
- * [LIST_MAX_HEIGHT] alone was written for a landscape *tablet*, where it is a comfortable half of the
- * sheet. On a phone in landscape — the orientation the player forces — the whole sheet is about
- * 330 dp tall, so a fixed 420 dp list is taller than everything it is supposed to share the sheet
- * with, and the header and the next/previous buttons get pushed out of view. Taking at most
- * [LIST_MAX_HEIGHT_FRACTION] of what the sheet has leaves them on screen and still shows three or
- * four rows, which is enough to see what is coming and to move it.
- *
- * On any tablet the fraction lands well above [LIST_MAX_HEIGHT], so the old cap keeps winning and
- * nothing there changes. An unbounded sheet — no measured height at all — falls into the same case.
+ * A phone-landscape sheet is about 330 dp tall in total, so the fixed [LIST_MAX_HEIGHT] alone would push the
+ * header and the next/previous buttons out of view. On a tablet the fraction lands above it and it still wins.
  */
 internal fun queueListMaxHeight(maxHeight: Dp): Dp = minOf(LIST_MAX_HEIGHT, maxHeight * LIST_MAX_HEIGHT_FRACTION)
 
@@ -195,8 +171,6 @@ private fun QueueHeader(
             )
         }
 
-        // Next and previous belong to the *group*: the player screen has no queue of its own to
-        // move through, so they have no call site there. Here there is one.
         IconButton(onClick = onPrevious, enabled = state.hasPrevious) {
             Icon(
                 imageVector = Icons.Outlined.SkipPrevious,
@@ -222,8 +196,7 @@ private fun QueueRow(
     onMoveDown: () -> Unit,
     onRemove: () -> Unit,
 ) {
-    // primary@12% rather than `colorScheme.secondaryContainer`, so this row speaks the same
-    // "primary is the one accent" language as the rest of the app.
+    // primary@12%, not `secondaryContainer`: primary is the app's one accent.
     val background =
         if (row.isPlaying) {
             MaterialTheme.colorScheme.primary.copy(alpha = NOW_PLAYING_TINT_ALPHA)
@@ -231,9 +204,6 @@ private fun QueueRow(
             Color.Transparent
         }
     val thumbShape = RoundedCornerShape(Dimens.CardCornerRadius)
-    // Without it, every row's three buttons announce the same three words, so a queue of ten
-    // episodes is thirty identical "Move up" stops with nothing to tell them apart. The title is
-    // what distinguishes them, and it is already here.
     val title = row.title ?: stringResource(R.string.player_syncplay_queue_item_loading)
 
     Row(
@@ -258,7 +228,6 @@ private fun QueueRow(
                     .width(ROW_THUMB_WIDTH)
                     .heightIn(max = ROW_THUMB_HEIGHT)
                     .clip(thumbShape)
-                    // The inner hairline every `MediaCardArtwork` draws on top of its image.
                     .border(GlassDefaults.HairlineWidth, GlassDefaults.ArtworkInnerHairline, thumbShape),
             contentScale = ContentScale.Crop,
         )
@@ -292,8 +261,6 @@ private fun QueueRowLabels(
 ) {
     Column(modifier = modifier) {
         Text(
-            // Until the item is fetched the row still has to say *something*, so the queue's
-            // shape is readable before the last round trip lands.
             text = title,
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurface,
@@ -312,12 +279,7 @@ private fun QueueRowLabels(
     }
 }
 
-/**
- * Reorder and remove.
- *
- * @param title what tells this row's three buttons apart from every other row's: without it a queue
- *   of ten episodes is thirty identical "Move up" stops with nothing to distinguish them.
- */
+/** @param title distinguishes this row's three buttons from every other row's, which otherwise all speak alike. */
 @Composable
 private fun QueueRowActions(
     title: String,
@@ -347,10 +309,9 @@ private fun QueueRowActions(
     }
 }
 
-/** Wide enough for a title and its four controls, narrow enough to stay one glance on a tablet. */
 private val SHEET_MAX_WIDTH = 720.dp
 
-/** Caps the list so the sheet never grows past a comfortable half of a landscape tablet. */
+/** Half a landscape tablet's sheet. */
 private val LIST_MAX_HEIGHT = 420.dp
 
 /** How much of a *short* sheet the list may take before the header stops fitting above it. */
@@ -359,7 +320,6 @@ private const val LIST_MAX_HEIGHT_FRACTION = 0.6f
 private val ROW_THUMB_WIDTH = 96.dp
 private val ROW_THUMB_HEIGHT = 54.dp
 
-/** Now-playing row tint: primary at 12%. */
 private const val NOW_PLAYING_TINT_ALPHA = 0.12f
 
 @Preview(name = "Queue sheet", showBackground = true, widthDp = 800)
@@ -368,10 +328,7 @@ private fun QueueSheetContentPreview() {
     QueueSheetPreviewContent()
 }
 
-/**
- * The same sheet with only a phone-landscape sheet's worth of height, where the list has to give way
- * to the header rather than the other way round.
- */
+/** Phone-landscape height, where the list must give way to the header. */
 @Preview(name = "Queue sheet · phone landscape", showBackground = true, widthDp = 800, heightDp = 360)
 @Composable
 private fun QueueSheetContentPhoneLandscapePreview() {

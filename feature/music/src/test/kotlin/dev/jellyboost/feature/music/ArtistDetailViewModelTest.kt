@@ -33,7 +33,6 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-/** Unit tests for [ArtistDetailViewModel]. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class ArtistDetailViewModelTest {
     private val dispatcher = StandardTestDispatcher()
@@ -147,8 +146,7 @@ class ArtistDetailViewModelTest {
             val viewModel = viewModel()
             advanceUntilIdle()
 
-            // Both halves, not just the tracks: an album card carries the same badge every other
-            // card in the app does, and this page is where a user checks what they have offline.
+            // Both halves, not just the tracks: an album card carries a badge too.
             viewModel.uiState.value.albums
                 .single()
                 .downloadState shouldBe DownloadState.Downloaded

@@ -17,17 +17,10 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * The app's view of [SyncPlayController], for modules that may not see it.
+ * Translation only — holds no state, so the controller stays the single answer to "is there a group?".
  *
- * A translation layer and nothing else: `:core:common`'s vocabulary in, the controller's intents
- * out. It holds no state of its own, so there is
- * exactly one answer to "is there a group?" in the app and it is the controller's.
- *
- * Every method here is a *request to the server*, like every other in-group intent — nothing plays,
- * queues or moves on this device until the server broadcasts the result. That is
- * why "play this for the group" is not a variant of the ordinary Play: the ordinary Play opens a
- * player here, this one changes what everybody is watching and lets the group's own
- * `PlayQueueUpdate` bring the player up.
+ * Every method is a *request to the server*: nothing plays, queues or moves on this device until the
+ * server broadcasts the result, which the group's own `PlayQueueUpdate` then acts on.
  */
 @Singleton
 internal class ControllerSyncPlaySession
@@ -37,10 +30,9 @@ internal class ControllerSyncPlaySession
         @SyncPlayScope scope: CoroutineScope,
     ) : SyncPlaySession {
         /**
-         * Eagerly shared, and deliberately so: callers read `.value` to decide whether to *offer* a
-         * group action at all, and a lazily-started projection would answer `null` — "no group" — for
-         * the first read after every subscriber went away. The cost is one collector on an in-memory
-         * `StateFlow` for the life of the process.
+         * `Eagerly`, not lazily: callers read `.value` to decide whether to offer a group action, and
+         * a lazily-started projection answers `null` ("no group") on the first read after the last
+         * subscriber left.
          */
         override val activeGroup: StateFlow<SyncPlayGroupHandle?> =
             controller.state
@@ -49,9 +41,8 @@ internal class ControllerSyncPlaySession
                 .stateIn(scope, SharingStarted.Eagerly, initialValue = null)
 
         /**
-         * All ids or none: a queue is positional, and dropping a malformed entry from the middle
-         * would silently hand the group a playlist whose indices no longer mean what the caller
-         * meant. An empty list is nothing to play, so it too goes nowhere.
+         * All ids or none: a queue is positional, so dropping a malformed entry from the middle would
+         * hand the group a playlist whose indices no longer mean what the caller meant.
          */
         override suspend fun playForGroup(
             itemIds: List<String>,
@@ -85,13 +76,7 @@ private fun SyncPlayGroupSummary.toHandle() =
         participantCount = participants.size,
     )
 
-/**
- * Ids cross the `:core:common` seam as strings and the protocol wants `UUID`s.
- *
- * A malformed one is dropped with a log rather than thrown: the only way to get here is a caller
- * passing something that is not a Jellyfin item id, and taking the app down for it would be worse
- * than a group action that quietly does nothing.
- */
+/** Malformed ids are logged and dropped, not thrown: a bad caller must not take the app down. */
 private fun String.toItemIdOrNull(): UUID? =
     runCatching { UUID.fromString(this) }
         .getOrElse {

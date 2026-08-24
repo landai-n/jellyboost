@@ -11,22 +11,12 @@ import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 
 /**
- * Pushes the rows [UserDataRepository] could not deliver (`toBeSynced = true`) to the server, and
- * adopts the server's copy where that one is newer (most-recent-wins).
+ * Thin on purpose: the session check is [SessionGate]'s and the decision matrix is
+ * [UserDataSyncer]'s, both JVM-testable, while a `CoroutineWorker` only runs on a device.
  *
- * The worker itself is deliberately thin: the session check lives in [SessionGate] and the decision
- * matrix lives in [UserDataSyncer], both of which run on the JVM, while a `CoroutineWorker` only runs
- * on a device.
- *
- * ### Enqueued from three places
- * - a local write whose push failed ([UserDataRepositoryImpl]);
- * - app start, when rows are already pending ([UserDataSyncTrigger]);
- * - every transition back to `ConnectionState.ONLINE` (the same trigger).
- *
- * Any of the three can run before `MainViewModel` has restored the session — app start is the
- * obvious one, but a reconnect right after process death races it too — so [doWork] consults
- * [SessionGate] before touching [UserDataSyncer], the same reasoning `DownloadWorker` follows to
- * restore the session itself.
+ * Enqueued by a failed local push, by app start with rows pending, and by every transition back to
+ * `ConnectionState.ONLINE`. Any of the three can run before `MainViewModel` restored the session — a
+ * reconnect right after process death races it — hence the [SessionGate] check in [doWork].
  */
 @HiltWorker
 internal class UserDataSyncWorker
@@ -38,9 +28,8 @@ internal class UserDataSyncWorker
         private val syncer: UserDataSyncer,
     ) : CoroutineWorker(appContext, workerParameters) {
         /**
-         * A failed drain is [Result.retry], never [Result.failure]: the rows are still pending, so
-         * WorkManager's backoff is exactly the behaviour wanted, and a permanent failure would
-         * silently strand the user's watch state on the device.
+         * A failed drain is [Result.retry], never [Result.failure]: the rows are still pending, and
+         * a permanent failure would silently strand the user's watch state on the device.
          */
         @Suppress("TooGenericExceptionCaught")
         override suspend fun doWork(): Result {
@@ -55,12 +44,10 @@ internal class UserDataSyncWorker
                     SyncOutcome.RETRY -> Result.retry()
                 }
             } catch (cancellation: CancellationException) {
-                // A cancelled worker is not a failed one — WorkManager stopped it, and reporting
-                // that as an unexpected failure would ask for a retry of work nobody asked to run.
                 throw cancellation
             } catch (error: Exception) {
-                // Room or the SDK throwing something outside the mapped taxonomy must not kill the
-                // work chain — the pending rows are untouched and the next attempt sees them again.
+                // An exception outside the mapped taxonomy must not kill the work chain; the pending
+                // rows are untouched and the next attempt sees them again.
                 Timber.e(error, "User-data sync failed unexpectedly")
                 Result.retry()
             }

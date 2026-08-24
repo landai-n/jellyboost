@@ -12,26 +12,11 @@ import dev.jellyboost.core.ui.R
 import dev.jellyboost.core.ui.theme.GlassDefaults
 
 /**
- * The app's dialog: an M3 [AlertDialog] wearing the hairline the 2026 refresh gives every panel.
+ * Use this rather than [AlertDialog] directly: M3's flat `surfaceContainerHigh` container has no
+ * edge against the video surfaces, glass headers and poster grids this app's dialogs land on.
  *
- * `AlertDialog` draws a flat `surfaceContainerHigh` container with no outline of its own, and this
- * app's dialogs land over a video surface, a glass header or a poster grid — surfaces a flat
- * container has no edge against. Every dialog in the app therefore spelled out the same two
- * arguments by hand: a `border` at [GlassDefaults.PanelHairline] on `shapes.extraLarge`, and
- * `containerColor = surface`.
- *
- * Hand-spelling this border at every dialog site is the kind of idiom kept by convention that
- * drifts: nothing enforces that a new dialog remembers to add it, or that existing copies stay in
- * sync as the app changes. Every dialog in the app draws the same hairline through this component
- * instead, which is a deliberate visual convergence.
- *
- * The signature is `AlertDialog`'s, minus the two parameters this owns, so a caller that needs a
- * styled title or an arbitrary body ([PlayerDisplayDialog], the Quick Connect dialog, the SyncPlay
- * create-group dialog) keeps every slot it had. [ConfirmDialog] is the shorthand for the common
- * case: a sentence, a confirm and a cancel.
- *
- * @param modifier chained *after* the border, so a caller can still position or size the dialog
- *   without replacing the edge that makes it one of this app's.
+ * @param modifier chained *after* the border, so a caller can size or position the dialog without
+ *   replacing that edge.
  */
 @Composable
 fun JellyboostAlertDialog(
@@ -60,19 +45,9 @@ fun JellyboostAlertDialog(
 }
 
 /**
- * "Are you sure?" — a title, one sentence, and the two buttons that answer it.
- *
- * Six of the app's ten dialogs are exactly this shape (sign out, switch storage location, delete a
- * download from the detail screen and from the downloads screen, cancel the whole queue, leave a
- * SyncPlay group), and each had spelled out its own `TextButton`s around its own copy. The order —
- * dismiss at the start, confirm at the end — is `AlertDialog`'s own and is now settled in one place
- * rather than six.
- *
- * @param confirmLabel what the *action* is called, never "OK": the button says what it does, which
- *   is the difference between a user reading the sentence and a user reading the buttons.
- * @param dismissLabel defaults to the app-wide [R.string.action_cancel]. A caller
- *   passes its own only where "cancel" would be ambiguous — the downloads screen's *Cancel all*
- *   confirmation answers with "Keep", because "Cancel" there could mean either button.
+ * @param confirmLabel what the *action* is called, never "OK" — a button is named for what it does.
+ * @param dismissLabel pass one only where "cancel" is ambiguous: the *Cancel all* confirmation
+ *   answers with "Keep", since "Cancel" there could mean either button.
  */
 @Composable
 fun ConfirmDialog(

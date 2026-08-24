@@ -17,7 +17,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 import java.util.UUID
 
-/** Unit tests for the activity-level session state holder. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class MainViewModelTest {
     @JvmField
@@ -62,9 +61,7 @@ class MainViewModelTest {
             }
         }
 
-    // Sign-out is not this ViewModel's concern: it belongs to `:feature:settings`'s Account
-    // section, and `SettingsViewModelTest` covers it (including the delete-then-sign-out
-    // ordering, which is the part worth pinning).
+    // Sign-out belongs to `:feature:settings`; `SettingsViewModelTest` covers it.
 
     private companion object {
         val LOGGED_IN =

@@ -41,12 +41,10 @@ import java.util.UUID
 import org.jellyfin.sdk.api.operations.SyncPlayApi as SdkSyncPlayOperations
 
 /**
- * Unit tests for [SdkSyncPlayApi] — only the parts that are not pure delegation.
- *
- * Two things earn a test here: the DTO assembly the server is picky about (`SetNewQueue` takes
- * *library* item ids and an index, not playlist-item ids), and everything that touches a clock.
- * The clock cases run with a **non-UTC default zone** because that is the only setup in which
- * treating the SDK's `LocalDateTime` as UTC by mistake would be visible.
+ * Covers only the non-delegating parts of [SdkSyncPlayApi]: DTO assembly the server is picky
+ * about (`SetNewQueue` takes *library* item ids and an index, not playlist-item ids), and
+ * anything touching a clock — run with a non-UTC default zone, the only setup where treating the
+ * SDK's `LocalDateTime` as UTC by mistake would be visible.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class SdkSyncPlayApiTest {

@@ -49,13 +49,11 @@ import java.util.UUID
 /**
  * Unit tests for the single SDK↔domain boundary, `SyncPlayDtoMapping`.
  *
- * Half of this file is about one hazard. jellyfin-sdk 1.8.12 deserializes every date field into a
- * `LocalDateTime` expressed in **[ZoneId.systemDefault]**, not UTC — the mistake that shifts
- * progress reports by two hours if left uncorrected. In SyncPlay the same mistake shifts
- * `SendCommand.when`, so a device in Paris would schedule every group play/pause two hours away
- * from everyone else.
+ * jellyfin-sdk 1.8.12 deserializes every date field into a `LocalDateTime` in
+ * [ZoneId.systemDefault], not UTC — the mistake that shifts progress reports, and SyncPlay
+ * commands, by two hours if left uncorrected.
  *
- * So the zone here is always **explicit and never UTC**: `Europe/Paris`, +02:00 on the test date.
+ * So the zone here is always explicit and never UTC: `Europe/Paris`, +02:00 on the test date.
  * Any conversion that quietly assumes UTC fails these tests by exactly two hours.
  */
 class SyncPlayDtoMappingTest {
@@ -63,8 +61,8 @@ class SyncPlayDtoMappingTest {
 
     @BeforeEach
     fun setUp() {
-        // Also non-UTC, and deliberately *different* from PARIS: the default-zone tests below would
-        // pass by accident if the ambient zone happened to match the explicit one.
+        // Deliberately different from PARIS: the default-zone tests would pass by accident if the
+        // ambient zone happened to match the explicit one.
         TimeZone.setDefault(TimeZone.getTimeZone("America/New_York"))
     }
 
@@ -109,8 +107,8 @@ class SyncPlayDtoMappingTest {
 
     @Test
     fun `the default zone is the system zone, so it round trips too`() {
-        // No explicit zone: this is the path production takes, and it must stay symmetric even
-        // though the ambient zone here (New York, -04:00) is neither UTC nor PARIS.
+        // The default path (no explicit zone) must stay symmetric even though the ambient zone
+        // here (New York, -04:00) is neither UTC nor PARIS.
         val instant = Instant.parse("2026-07-30T18:41:03Z")
 
         val mapped = sendCommand(whenAt = instant.toSdkWallClock()).toDomain()
@@ -218,8 +216,8 @@ class SyncPlayDtoMappingTest {
 
     @Test
     fun `every playback request type has a domain counterpart`() {
-        // A missing branch would be a compile error today; this pins that none of them collapses
-        // onto the wrong kind, which a copy-pasted `when` arm easily does.
+        // Pins that none of them collapses onto the wrong kind, which a copy-pasted `when` arm
+        // easily does.
         val mapped =
             PlaybackRequestType.entries.map {
                 SyncPlayStateUpdate(GROUP_ID, GroupStateUpdate(GroupStateType.PLAYING, it))
@@ -299,8 +297,7 @@ class SyncPlayDtoMappingTest {
 
     @Test
     fun `every group update subtype the SDK can deliver is mapped`() {
-        // `GroupUpdate` is sealed, so the mapper's `when` is exhaustive by construction — this
-        // pins that no two subtypes collapse onto the same event, which is what an exhaustive but
+        // Pins that no two subtypes collapse onto the same event, which an exhaustive but
         // copy-pasted `when` would do.
         val events =
             listOf<GroupUpdate>(

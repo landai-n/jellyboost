@@ -14,11 +14,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/**
- * The episode page's two shortcut rows — Next episode, and More from this season — as rendered by
- * [ItemDetailContent]'s shared `LazyColumn` (both compact and wide flow through the same section
- * list, so one render suffices).
- */
+/** Compact and wide flow through the same section list, so one render covers both. */
 @RunWith(AndroidJUnit4::class)
 class EpisodeDetailSectionsTest {
     @get:Rule

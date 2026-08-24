@@ -21,27 +21,10 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Shuffle and repeat in the media notification and on the lock screen.
+ * The buttons must carry **custom** session commands, not `COMMAND_SET_SHUFFLE_MODE`/`COMMAND_SET_REPEAT_MODE`:
+ * a player command moves the player directly, so the mode never reaches [MusicController] or the server.
  *
- * ### What Media3 1.9.0 actually renders (verified against the `media3-session` 1.9.0 artifact)
- * `DefaultMediaNotificationProvider.getMediaButtons(session, playerCommands,
- * mediaButtonPreferences, showPauseButton)` takes the session's **media button preferences** and
- * lays them out around the transport controls, and `CommandButton` in 1.9.0 ships predefined icons
- * for exactly this pair — `ICON_SHUFFLE_ON`/`ICON_SHUFFLE_OFF` and
- * `ICON_REPEAT_OFF`/`ICON_REPEAT_ALL`/`ICON_REPEAT_ONE` — so no drawable of ours is involved and
- * the system draws them in its own style. A button backed by a **custom** session command is only
- * offered to a controller that was granted that command, which is what [onConnect] does.
- *
- * That is why this is a callback and a button list rather than a notification of our own: the
- * whole feature is two `SessionCommand`s, two `CommandButton`s and a dispatch back into
- * [MusicController].
- *
- * ### Why the buttons carry custom commands rather than player commands
- * `Player.COMMAND_SET_SHUFFLE_MODE` and `COMMAND_SET_REPEAT_MODE` would move the *player* directly,
- * behind the controller's back — the shuffle flag would flip without `PlaybackOrder.SHUFFLE` ever
- * reaching the server, and the queue state the mini-player draws would go stale. Routing both
- * through [MusicController] keeps one owner of the mode, exactly as
- * `SyncPlayAwareForwardingPlayer` keeps one owner of transport.
+ * A custom-command button is only offered to a controller that was granted the command — see [onConnect].
  */
 @UnstableApi
 @Singleton
@@ -52,20 +35,11 @@ class MusicSessionCallback
         private val controller: MusicController,
     ) : MediaSession.Callback {
         /**
-         * Grants the two custom commands on top of everything the session offers by default —
-         * minus the two *player* commands they exist to replace.
+         * The media notification connects as a controller like any other: without the grant its buttons are
+         * filtered out as unavailable before being drawn.
          *
-         * The media notification connects as a controller like any other, so without the grant its
-         * buttons would be filtered out as unavailable before they were ever drawn.
-         *
-         * `COMMAND_SET_SHUFFLE_MODE` and `COMMAND_SET_REPEAT_MODE` are stripped from the granted
-         * player commands because the modes are owned by [MusicController] (see the class KDoc):
-         * an external controller — Assistant, Bluetooth AVRCP, a companion app — holding the
-         * player command would flip the player directly, behind the controller's back, with no
-         * `PlaybackOrder`/`RepeatMode` ever reaching the server and the queue state going stale.
-         * The notification's own buttons never used them (they carry the custom session commands
-         * above). External shuffle requests land as a no-op until a follow-up routes them through
-         * the controller.
+         * The two player commands are stripped so an external controller (Assistant, AVRCP) cannot flip the
+         * player behind [MusicController]'s back; such requests become no-ops.
          */
         override fun onConnect(
             session: MediaSession,
@@ -114,16 +88,10 @@ class MusicSessionCallback
         }
 
         /**
-         * The buttons for [state], or an empty list when nothing musical is loaded — which is what
-         * a film's session gets, leaving the video notification exactly as it was.
+         * Empty for a parked queue as well as an idle one: parked means the media session now belongs to a film,
+         * whose notification must not gain the queue's shuffle/repeat buttons.
          *
-         * A **parked** queue gets none either: the state stays `Active` so the mini-player keeps
-         * its resume affordance, but the media session now belongs to the film, and the queue's
-         * shuffle/repeat buttons stamped onto the film's notification is exactly the confusion
-         * the `parked` flag exists to prevent.
-         *
-         * Both sit in the secondary slots: the central play/pause and the primary previous/next
-         * belong to the transport and must not be displaced by a mode toggle.
+         * Secondary slots only — a mode toggle must not displace the transport's own buttons.
          */
         fun buttonsFor(state: MusicPlaybackState): List<CommandButton> {
             val active = state as? MusicPlaybackState.Active ?: return emptyList()

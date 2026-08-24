@@ -9,16 +9,8 @@ import timber.log.Timber
 import javax.inject.Inject
 
 /**
- * Decides what to do when playback dies mid-stream.
- *
- * The mitigation for OEM decoder quirks: a device profile is built from what `MediaCodecList`
- * *claims*, and some decoders accept a format at initialisation and then fail on the first frame.
- * Rather than showing the user an error, we re-negotiate with the server under stricter terms:
- *
- * - a **renderer/decoder** failure means this device cannot play the file as delivered, so we
- *   forbid direct play *and* direct stream, forcing a transcode;
- * - a **source** failure while already transcoding is usually the server or the network failing to
- *   keep up, so we retry once at a lower bitrate.
+ * A device profile is built from what `MediaCodecList` *claims*, and some decoders accept a format at
+ * initialisation and then fail on the first frame; the recovery is to re-negotiate under stricter terms.
  *
  * Stateful on purpose: without an attempt counter a failing item retries forever.
  */
@@ -28,20 +20,15 @@ internal class DecoderFallbackHandler
         private var forcedTranscode = false
         private var loweredBitrate = false
 
-        /** Called whenever playback gets going again, so a later, unrelated failure retries afresh. */
+        /** Must be called whenever playback gets going again, or a later unrelated failure has no attempts left. */
         fun onPlaybackStarted() {
             forcedTranscode = false
             loweredBitrate = false
         }
 
         /**
-         * @param errorCode the failing player's `PlaybackException.errorCode`. Taken as a plain
-         *   `Int` rather than the exception itself because constructing a `PlaybackException`
-         *   reaches into `SystemClock`, which would drag this otherwise pure class onto a device
-         *   to be tested.
-         * @param source what was playing when it broke.
-         * @param positionTicks where to resume the retry from.
-         * @return the recovery to attempt, or [FallbackDecision.GiveUp] when there is none left.
+         * @param errorCode a plain `Int`, not the `PlaybackException`: constructing one reaches into `SystemClock`
+         *   and would make this class testable only on a device.
          */
         fun onPlayerError(
             errorCode: Int,
@@ -65,17 +52,11 @@ internal class DecoderFallbackHandler
             }
 
         /**
-         * Only meaningful once the server is already transcoding: a source error on a direct play
-         * is a network or file problem that a lower bitrate would not fix, so that case falls
-         * through to forcing a transcode instead.
-         *
-         * A local source can never be transcoding, so a failure to read the downloaded file
-         * lands in the same place: ask the server for the item instead. Offline that surfaces as an
-         * error rather than looping over bytes that have already failed, which is what
-         * `PlaybackSourceResolver` uses `enableDirectPlay = false` to mean.
+         * Only meaningful once the server is already transcoding; anything else — direct play, a local file —
+         * falls through to forcing a transcode, since a lower bitrate cannot fix a network or file problem.
          */
         @Suppress(
-            // Each exit is a rung of the bitrate ladder, including the two that mean "no rung below this".
+            // Each exit is a rung of the bitrate ladder.
             "ReturnCount",
         )
         private fun lowerBitrate(
@@ -96,41 +77,27 @@ internal class DecoderFallbackHandler
         }
     }
 
-/** What the player should try next after a failure. */
 internal sealed interface FallbackDecision {
-    /** Re-resolve with direct play and direct stream forbidden, resuming at [positionTicks]. */
+    /** Re-resolve with direct play *and* direct stream forbidden. */
     data class ForceTranscode(
         val positionTicks: Long,
     ) : FallbackDecision
 
-    /** Re-resolve with a lower bitrate cap, resuming at [positionTicks]. */
     data class LowerBitrate(
         val maxStreamingBitrate: Int,
         val positionTicks: Long,
     ) : FallbackDecision
 
-    /** Nothing left to try — show the error. */
     data object GiveUp : FallbackDecision
 }
 
-/** The three classes of failure the fallback ladder distinguishes. */
 internal enum class PlaybackErrorKind {
-    /** The device's decoder rejected or choked on the stream. */
     RENDERER,
-
-    /** The bytes did not arrive, or did not parse. */
     SOURCE,
-
-    /** Anything else — a bug on our side, or an unrecoverable player state. */
     OTHER,
 }
 
-/**
- * Classifies an ExoPlayer error code.
- *
- * Matched against Media3's own numeric groupings rather than against individual codes, so that a
- * code added in a future Media3 release still lands in the right bucket.
- */
+/** Matched against Media3's numeric groupings, not individual codes, so codes added in a later release still bucket. */
 internal fun errorKindOf(errorCode: Int): PlaybackErrorKind =
     when (errorCode) {
         in DECODING_ERRORS, in AUDIO_TRACK_ERRORS -> PlaybackErrorKind.RENDERER
@@ -138,11 +105,11 @@ internal fun errorKindOf(errorCode: Int): PlaybackErrorKind =
         else -> PlaybackErrorKind.OTHER
     }
 
-/** 4xxx — the device's decoder could not be started, or choked on the stream. */
+/** 4xxx — device-side: the decoder. */
 private val DECODING_ERRORS =
     PlaybackException.ERROR_CODE_DECODER_INIT_FAILED..PlaybackException.ERROR_CODE_DECODING_RESOURCES_RECLAIMED
 
-/** 5xxx — the audio output could not be opened or written to. Also a device-side failure. */
+/** 5xxx — device-side: the audio output. */
 private val AUDIO_TRACK_ERRORS =
     PlaybackException.ERROR_CODE_AUDIO_TRACK_INIT_FAILED..PlaybackException.ERROR_CODE_AUDIO_TRACK_OFFLOAD_INIT_FAILED
 

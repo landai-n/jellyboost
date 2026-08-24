@@ -12,11 +12,9 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for [PlaybackPositionTracker] — the fast half of the player's state, kept out of
- * `PlayerUiState`.
- *
- * The flow it publishes is the thing under test: a tick must move the position and nothing else, so
- * that the control surface around the scrubber has nothing to recompose for.
+ * [PlaybackPositionTracker] is the fast half of the player's state, kept out of `PlayerUiState`: a
+ * tick must move the position and nothing else, so the control surface around the scrubber has
+ * nothing to recompose for.
  */
 class PlaybackPositionTrackerTest {
     private val tracker = PlaybackPositionTracker()

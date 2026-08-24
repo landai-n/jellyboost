@@ -49,23 +49,10 @@ import dev.jellyboost.data.downloads.model.StorageVolumeOption
 import dev.jellyboost.core.ui.R as CoreUiR
 
 /**
- * The Settings screen: preferences, account and sign-out.
+ * The storage **location picker** chooses between the app-specific directories the platform
+ * reports; an arbitrary folder still waits on SAF behind the `DownloadStorage` seam.
  *
- * Reached from the home top bar's overflow menu rather than from a user avatar — there is no avatar
- * asset pipeline in this app. It is a pushed destination, not a bottom-nav tab, so it owns the
- * glass back-plus-home header `LibraryGridScreen` established rather than a `TopAppBar`.
- *
- * The Downloads section's storage **location picker** chooses between the app-specific directories
- * the platform reports — internal storage and, when one is in, the SD card. Picking an arbitrary
- * folder still waits on SAF, which stays deferred behind the `DownloadStorage` seam.
- *
- * @param viewModel passed in rather than resolved here so `:app` owns the `hiltViewModel()` call.
- * @param onBack pops this destination off the back stack.
- * @param onHome leaves the whole pushed chain at once and lands on the Home tab; see
- *   `AppScaffold.navigateHome`.
- * @param appVersion the app's version name for the About section. Passed in rather than read here
- *   because this feature module cannot see `:app`'s `BuildConfig` — the caller (`JellyfinNavHost`)
- *   supplies `BuildConfig.VERSION_NAME`.
+ * @param appVersion passed in because this module cannot see `:app`'s `BuildConfig`.
  */
 @Composable
 fun SettingsScreen(
@@ -97,14 +84,12 @@ fun SettingsScreen(
     )
 }
 
-/** Every action the screen can raise, bundled so the section composables stay small. */
 data class SettingsActions(
     val onIntroSkipMode: (SegmentSkipMode) -> Unit,
     val onOutroSkipMode: (SegmentSkipMode) -> Unit,
     val onPipOnLeave: (Boolean) -> Unit,
     val onWifiOnly: (Boolean) -> Unit,
     val onDownloadQuality: (DownloadQuality) -> Unit,
-    /** Volume id, and whether the user agreed to lose the downloads already on the device. */
     val onStorageLocation: (String, Boolean) -> Unit,
     val onForceOffline: (Boolean) -> Unit,
     /** `true` also removes every downloaded file before the session ends. */
@@ -112,15 +97,8 @@ data class SettingsActions(
 )
 
 /**
- * Stateless rendering — a pure function of [state], so it previews without a ViewModel.
- *
- * The width cap matters on the test tablet: an unconstrained settings list on a 2560 px-wide screen
- * puts the label at one edge and its switch at the other, which is unreadable and unreachable
- * one-handed. Same reasoning (and same shape) as `:feature:auth`'s `AuthContentMaxWidth`.
- *
- * @param appVersion the app's version name shown in the About section. Threaded in from
- *   [SettingsScreen] rather than read here because this feature module cannot see `:app`'s
- *   `BuildConfig`.
+ * The width cap matters on a tablet: unconstrained, the label sits at one edge and its switch at
+ * the other, unreadable and unreachable one-handed.
  */
 @Composable
 fun SettingsContent(
@@ -134,8 +112,6 @@ fun SettingsContent(
     var confirmingSignOut by remember { mutableStateOf(false) }
 
     Column(modifier = modifier.fillMaxSize()) {
-        // The pushed-screen glass idiom `LibraryGridScreen` established: back-then-home
-        // glass circles ahead of the screen title, no `TopAppBar`.
         SettingsHeader(onBack = onBack, onHome = onHome)
 
         Column(
@@ -158,8 +134,8 @@ fun SettingsContent(
                 AccountSection(
                     account = state.account,
                     signingOut = state.signingOut,
-                    // Once the sign-out is away there is nothing left to confirm: it cannot be
-                    // cancelled, and a second one would delete the downloads twice.
+                    // Once the sign-out is away there is nothing to confirm: it cannot be cancelled, and a
+                    // second one would delete the downloads twice.
                     onSignOutClick = { if (!state.signingOut) confirmingSignOut = true },
                 )
                 HorizontalDivider()
@@ -179,7 +155,6 @@ fun SettingsContent(
     }
 }
 
-/** The screen's own header row — back, home, title; no trailing action. */
 @Composable
 private fun SettingsHeader(
     onBack: () -> Unit,
@@ -190,7 +165,6 @@ private fun SettingsHeader(
     }
 }
 
-/** How wide the list is allowed to get; wider than a login form, narrow enough to stay one column. */
 internal val SettingsContentMaxWidth: Dp = 640.dp
 
 @Composable
@@ -227,8 +201,8 @@ private fun SkipModeGroup(
     SettingsChoiceGroup(label = label) {
         SegmentSkipMode.entries.forEach { mode ->
             SettingsChoiceRow(
-                // "Skip intro" and "Skip outro" draw the same three options; the group name is the
-                // only thing telling one set apart from the other.
+                // Both skip groups draw the same three options; the group name is the only thing
+                // telling one set apart from the other.
                 groupLabel = label,
                 label = stringResource(mode.labelRes()),
                 selected = mode == selected,
@@ -257,17 +231,10 @@ private fun DownloadsSection(
 }
 
 /**
- * The storage-location picker.
+ * One row per *mounted* volume; a card that is not in the device is no row at all, and the group
+ * hides itself when there is only one place to put files.
  *
- * One row per **mounted** volume: internal storage always, the SD card when there is one. A card
- * that is not in the device is not a disabled row, it is no row — there is nothing to explain about
- * a choice that is not on offer, and the missing-selection warning above covers the one case where
- * its absence matters. The group hides itself entirely when there is only one place to put files,
- * which is what most devices look like.
- *
- * Switching while downloads exist deletes them (files are not moved yet), so that switch goes
- * through a confirmation. Switching with an empty device is immediate: there is
- * nothing to lose and nothing to warn about.
+ * Switching while downloads exist deletes them — files are not moved yet — so it is confirmed.
  */
 @Composable
 private fun StorageLocationGroup(
@@ -289,20 +256,15 @@ private fun StorageLocationGroup(
                         end = Dimens.ScreenPadding,
                         bottom = Dimens.SpaceSmall,
                     )
-                    // Assertive: this appears because the volume the user chose is *gone* and
-                    // downloads are landing somewhere else, which is the kind of thing a screen
-                    // should say rather than wait to be found. It also appears on arrival, not in
-                    // response to a tap, so nothing else on the screen would ever draw attention
-                    // to it.
+                    // Assertive: the chosen volume is *gone* and downloads are landing elsewhere. It also
+                    // appears on arrival rather than in response to a tap, so nothing else would surface it.
                     .semantics { liveRegion = LiveRegionMode.Assertive },
         )
     }
 
     val pickerLabel = stringResource(R.string.settings_storage_picker)
-    // What tapping the row that is *already* selected actually does when the chosen volume is
-    // missing: it stores the fallback as the choice, so downloads stop being a fallback and the
-    // warning above goes away. Nothing on screen says that — the row simply looks selected — so the
-    // affordance existed only for someone who could see it was the odd one out.
+    // The affordance the row carries only for someone who can see it is the odd one out: tapping
+    // the already-selected row stores the fallback as the choice and clears the warning.
     val recoveryHint = stringResource(R.string.settings_storage_use_this_hint)
 
     SettingsChoiceGroup(label = pickerLabel) {
@@ -317,9 +279,8 @@ private fun StorageLocationGroup(
                 selected = isActive,
                 onSelect = {
                     when {
-                        // Tapping the row that is already in force normally does nothing. The
-                        // exception is a stale choice: with the card out, this is how the user says
-                        // "just use this one" — the files are already here, so nothing is deleted.
+                        // Tapping the row already in force normally does nothing. With the card out this is how
+                        // the user says "just use this one" — the files are already here, so nothing is deleted.
                         isActive -> if (locations.selectedVolumeMissing) onSelect(volume.id, false)
 
                         locations.downloadCount > 0 -> pendingVolumeId = volume.id
@@ -342,7 +303,7 @@ private fun StorageLocationGroup(
     }
 }
 
-/** Confirms that switching location throws the downloads away, because nothing moves them yet. */
+/** Switching location throws the downloads away, because nothing moves them yet. */
 @Composable
 private fun SwitchStorageDialog(
     downloadCount: Int,
@@ -364,11 +325,8 @@ private fun SwitchStorageDialog(
 }
 
 /**
- * What to call a volume.
- *
- * The platform's own description first — it is localised, and it knows whether the thing is an SD
- * card, a USB drive or something a manufacturer named itself. Our two strings are the fallback for
- * the devices that will not say.
+ * The platform's own description first: it is localised and knows whether the thing is an SD card,
+ * a USB drive or something a manufacturer named itself.
  */
 @Composable
 private fun StorageVolumeOption.label(): String =
@@ -377,12 +335,8 @@ private fun StorageVolumeOption.label(): String =
     )
 
 /**
- * The download-quality picker.
- *
- * Each option carries its bitrate in the label rather than in a supporting line, because what the
- * user is choosing between is four numbers and the numbers are the choice. The caveat under the
- * group is the one thing they cannot infer: a transcoded download shows an estimated size and does
- * not resume (see docs/features/download-quality.md).
+ * The caveat under the group is the one thing the labels cannot convey: a transcoded download shows
+ * an estimated size and does not resume (docs/features/download-quality.md).
  */
 @Composable
 private fun DownloadQualityGroup(
@@ -413,12 +367,7 @@ private fun DownloadQualityGroup(
     )
 }
 
-/**
- * How much room the downloads take and where they are — the *active* root, fallback included.
- *
- * Still informational: the picker underneath is what changes it. The path stays on screen because
- * it is the one thing a user can check against a file manager when a card is involved.
- */
+/** The path stays on screen: it is what a user checks against a file manager when a card is involved. */
 @Composable
 private fun StorageRow(usage: StorageUsage) {
     SettingsInfoRow(
@@ -461,12 +410,9 @@ private fun ConnectivitySection(
 }
 
 /**
- * User, server and the sign-out button.
- *
- * While a sign-out is in flight the button holds a spinner and stops taking taps: telling an
- * unreachable server the session ended is capped at seconds rather than instant
- * (`SessionRepository.SERVER_GOODBYE_TIMEOUT`), and a button that answers nothing for that long
- * reads as broken. It never comes back — the sign-out completing navigates off this screen.
+ * The button holds a spinner and stops taking taps while a sign-out is in flight: telling an
+ * unreachable server is capped at seconds (`SessionRepository.SERVER_GOODBYE_TIMEOUT`), and a button
+ * that answers nothing for that long reads as broken.
  */
 @Composable
 private fun AccountSection(
@@ -502,12 +448,7 @@ private fun AccountSection(
     }
 }
 
-/**
- * The build's version — the one section that never changes based on account state or preferences.
- *
- * Last in the list, so it carries the screen's bottom breathing room ([Dimens.SpaceExtraLarge])
- * instead of the sign-out button in [AccountSection] holding it.
- */
+/** Last in the list, so it carries the screen's bottom breathing room rather than the sign-out button. */
 @Composable
 private fun AboutSection(appVersion: String) {
     SettingsSection(title = stringResource(R.string.settings_section_about)) {
@@ -520,11 +461,8 @@ private fun AboutSection(appVersion: String) {
 }
 
 /**
- * Confirms the sign-out and offers to take the downloads with it.
- *
- * Unchecked by default, and deliberately so: files are the expensive thing to get back, and a user
- * signing out to switch accounts on a shared tablet should not lose a series they downloaded over
- * a weekend because a checkbox remembered its last answer.
+ * The delete-downloads box is unchecked by default: a user signing out to switch accounts on a
+ * shared tablet should not lose a weekend's downloads to a remembered answer.
  */
 @Composable
 private fun SignOutDialog(
@@ -546,8 +484,8 @@ private fun SignOutDialog(
             }
         },
         title = { Text(text = stringResource(R.string.settings_sign_out_dialog_title)) },
-        // Not a [ConfirmDialog]: the body carries a checkbox as well as a sentence, and the choice
-        // it offers is part of what the confirm button then does.
+        // Not a [ConfirmDialog]: the body carries a checkbox as well as a sentence, and that choice is
+        // part of what the confirm button does.
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium)) {
                 Text(text = stringResource(R.string.settings_sign_out_dialog_message))

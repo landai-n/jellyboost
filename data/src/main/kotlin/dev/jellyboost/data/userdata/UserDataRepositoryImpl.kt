@@ -24,25 +24,19 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Local-first [UserDataRepository].
- *
- * Every write follows the same four steps, in this order:
+ * Local-first. Every write follows the same four steps, in this order:
  *
  * 1. upsert the Room row with `toBeSynced = true` and a fresh `updatedAt`;
- * 2. publish the new value on [UserDataEventBus] — this is what patches the screens;
+ * 2. publish the new value on [UserDataEventBus];
  * 3. push to the server;
  * 4. on success clear `toBeSynced`; on failure leave it set and enqueue [UserDataSyncWorker].
  *
- * Steps 1 and 2 are the contract. Steps 3 and 4 are best effort: a failing push is a logged
- * warning and a scheduled retry, never a failed operation, because the change is already durable
- * and already on screen. While offline they are skipped altogether — see [pushToServer].
+ * Steps 1 and 2 are the contract; 3 and 4 are best effort — a failing push is a logged warning and
+ * a scheduled retry, never a failed operation, because the change is already durable and on screen.
  */
 @Singleton
 internal class UserDataRepositoryImpl
     @Suppress(
-        // Nine DI collaborators: one optimistic write spans the DAO, the transaction runner that makes its
-        // read-modify-write atomic, the API, the event bus that fans the change out to open screens, and the retry
-        // scheduler.
         "LongParameterList",
     )
     @Inject
@@ -69,15 +63,13 @@ internal class UserDataRepositoryImpl
                     current.copy(
                         played = played,
                         // The server clears the resume position when an item is marked watched;
-                        // not mirroring that would leave a progress bar on a watched card until
-                        // the next sync overwrote it.
+                        // mirror it or a watched card keeps its progress bar until the next sync.
                         playbackPositionTicks = if (played) 0L else current.playbackPositionTicks,
                         lastPlayedDate = if (played) clock.instant() else current.lastPlayedDate,
                     )
                 },
-                // No position re-assertion here even though `markPlayedItem` clears the server's:
-                // the edit above mirrors that locally, so the two already agree. The rule and the
-                // reasoning live in one place — see [pushUserData].
+                // No position re-assertion: the edit above already mirrors what `markPlayedItem`
+                // clears server-side. See [pushUserData] for the rule.
                 push = { row -> apiClient.pushPlayedState(row) },
             )
 
@@ -106,14 +98,7 @@ internal class UserDataRepositoryImpl
                 push = { row -> apiClient.pushFullState(row) },
             )
 
-        /**
-         * The local-first write path shared by all three operations.
-         *
-         * @param edit applies the operation to the current row (or to a fresh, empty one).
-         * @param push delivers the resulting row to the server.
-         */
         @Suppress(
-            // The optimistic-write path exits early on no session, no change, and offline — three real states.
             "ReturnCount",
         )
         private suspend fun write(
@@ -130,7 +115,7 @@ internal class UserDataRepositoryImpl
                     is AppResult.Success -> result.value
                 }
 
-            // Publish before touching the network: this is the whole point of local-first.
+            // Publish before touching the network: the whole point of local-first.
             eventBus.emit(UserDataChange(itemId = itemId, userData = stored.toDomain()))
 
             pushToServer(stored, push)
@@ -139,20 +124,10 @@ internal class UserDataRepositoryImpl
         }
 
         /**
-         * Step 1 of the write: read the row, apply [edit] to it, store the result — **as one
-         * transaction**.
-         *
-         * Read-modify-write over a row two independent callers touch: without one transaction, the
-         * three steps would be three separate DAO calls, and the interleaving is not exotic —
-         * during playback `PlaybackReporter` calls [setPosition] every five seconds, and each of
-         * those reads the whole row and writes the whole row back. A "mark watched" from another
-         * screen landing between a tick's read and its write would be overwritten by the stale
-         * snapshot — the watched tick flicked back off locally, *and* the tick would then push
-         * `played = false` to the server, so the mark would be lost on both sides.
-         *
-         * The [TransactionRunner] seam is the same one the browse cache's merge uses: the decision
-         * stays a plain Kotlin lambda the tests can drive, and the read that feeds it plus the
-         * write that follows it cannot be stepped into.
+         * Read-modify-write over a row two independent callers touch, so it must stay **one
+         * transaction**: `PlaybackReporter` calls [setPosition] every five seconds and rewrites the
+         * whole row, so a "mark watched" landing between a tick's read and its write would be
+         * overwritten locally *and* pushed back as `played = false`.
          */
         private suspend fun storeLocally(
             id: UUID,
@@ -172,31 +147,20 @@ internal class UserDataRepositoryImpl
                         }
                     AppResult.Success(next)
                 } catch (cancellation: CancellationException) {
-                    // A `withContext` that was cancelled has not written anything; reporting it as
-                    // `AppError.Storage` would tell the caller the disk failed and, worse, swallow
-                    // the cancellation this coroutine owes its parent.
                     throw cancellation
                 } catch (error: SQLiteException) {
-                    // Narrowed to Room's own failure: everything else in the block is a read, a
-                    // `copy` and a lambda the caller supplied, so a different exception is a bug
-                    // rather than a full disk and should not be dressed up as one.
+                    // Narrowed to Room's own failure: any other exception here is a bug, not a full
+                    // disk, and must not be dressed up as one.
                     Timber.e(error, "Could not write user data for %s", id)
                     AppResult.Failure(AppError.Storage(error))
                 }
             }
 
         /**
-         * Step 3 of the write, guarded on connectivity.
-         *
-         * While offline the push is not attempted at all. It could only fail, and during playback
-         * `PlaybackReporter` calls [setPosition] every five seconds, so without this guard each
-         * tick would cost a doomed request and a warning stack. Nothing is lost by
-         * skipping it: [storeLocally] has already set `toBeSynced = true`, and [UserDataSyncTrigger]
-         * drains every pending row on the next `OFFLINE → ONLINE` edge and at app start — which is
-         * also why the offline path does not bother scheduling the worker per write.
-         *
-         * When online this is exactly the pre-existing behaviour: push, clear the flag on success,
-         * warn and schedule a retry on failure.
+         * Offline the push is skipped entirely — it could only fail, and [setPosition] ticks every
+         * five seconds during playback. Nothing is lost: the row is already `toBeSynced`, and
+         * [UserDataSyncTrigger] drains on the next `OFFLINE → ONLINE` edge and at app start, which
+         * is also why the offline path does not schedule the worker per write.
          */
         private suspend fun pushToServer(
             row: UserDataEntity,
@@ -221,12 +185,10 @@ internal class UserDataRepositoryImpl
         private suspend fun clearPendingFlag(row: UserDataEntity) {
             withContext(ioDispatcher) {
                 try {
-                    // Guarded on `updatedAt`: if the user toggled again while the push was in
-                    // flight, the newer row keeps its flag instead of being declared synced.
+                    // Guarded on `updatedAt`: a row the user toggled again mid-push keeps its flag
+                    // instead of being declared synced.
                     userDataDao.clearPendingSync(row.itemId, row.userId, row.updatedAt)
                 } catch (cancellation: CancellationException) {
-                    // Best effort, but not at the price of a swallowed cancellation: the row simply
-                    // stays pending and `UserDataSyncTrigger` drains it later.
                     throw cancellation
                 } catch (error: SQLiteException) {
                     Timber.w(error, "Could not clear the pending flag for %s", row.itemId)

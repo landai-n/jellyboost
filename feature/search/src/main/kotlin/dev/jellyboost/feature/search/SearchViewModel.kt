@@ -24,18 +24,9 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * State holder for the search screen.
- *
- * Typing feeds a [MutableStateFlow] that is debounced by [DEBOUNCE_MILLIS] before it reaches the
- * server: a user typing "westworld" must cost one request, not nine. `collectLatest` additionally
- * cancels a search that is still in flight when the term
- * changes again, so a slow response can never overwrite the results of a newer term.
- *
- * Clearing the field bypasses the debounce — an empty screen should appear the moment the text
- * goes away, not half a second later.
- *
- * Search is deliberately unpaged: one capped request split into type sections, which is what
- * jellyfin-web's search does.
+ * Typing is debounced by [DEBOUNCE_MILLIS] so "westworld" costs one request, not nine, and
+ * `collectLatest` cancels an in-flight search so a slow response cannot overwrite a newer term.
+ * Clearing the field bypasses the debounce. Search is deliberately unpaged, as jellyfin-web's is.
  */
 @OptIn(FlowPreview::class)
 @HiltViewModel
@@ -48,7 +39,6 @@ class SearchViewModel
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(SearchUiState())
 
-        /** The single source of truth for [SearchScreen]. */
         val uiState: StateFlow<SearchUiState> = _uiState.asStateFlow()
 
         private val typedQuery = MutableStateFlow("")
@@ -65,7 +55,6 @@ class SearchViewModel
                     .distinctUntilChanged()
                     .collectLatest { term -> search(term) }
             }
-            // One subscription for the whole screen, error-guarded — see `observeBadgeStates`.
             viewModelScope.launch {
                 downloads.observeBadgeStates(screen = "search").collect { states ->
                     downloadStates = states
@@ -76,11 +65,9 @@ class SearchViewModel
         }
 
         /**
-         * Re-runs the current term whenever the connection changes: a search made offline only
-         * looked at downloaded items and one made online at everything, and the field keeps its text
-         * either way — so the results have to follow the connection, in both directions.
-         *
-         * An empty field has nothing to re-run — it is not a search waiting for a better connection.
+         * A search made offline only looked at downloaded items and one made online at everything,
+         * and the field keeps its text either way, so the results must follow the connection in both
+         * directions. An empty field has nothing to re-run.
          */
         private fun observeConnectivityChanges() {
             connectivityRefresher.reloadOnChange(
@@ -89,18 +76,15 @@ class SearchViewModel
             ) { retry() }
         }
 
-        /** Called on every keystroke. */
         fun onQueryChange(query: String) {
             _uiState.update { it.copy(query = query) }
             typedQuery.value = query
         }
 
-        /** Empties the field and the results. */
         fun clearQuery() {
             onQueryChange("")
         }
 
-        /** Re-runs the current search after a failure. */
         fun retry() {
             viewModelScope.launch { search(_uiState.value.query.trim()) }
         }
@@ -131,10 +115,6 @@ class SearchViewModel
 
             const val SEARCH_LIMIT = 50
 
-            /**
-             * Every type this client can open from a search result: movies, shows and episodes,
-             * plus four music kinds.
-             */
             val SEARCH_ITEM_TYPES =
                 listOf(
                     ItemType.MOVIE,

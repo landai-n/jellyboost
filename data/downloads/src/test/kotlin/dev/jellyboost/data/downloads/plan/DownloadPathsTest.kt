@@ -12,11 +12,9 @@ import io.kotest.matchers.string.shouldNotContain
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for [DownloadPaths].
- *
- * Naming looks trivial and is not: these strings become directories on an exFAT SD card, they are
- * the only thing the delete cascade has to find the files by once the item row is gone, and a
- * colon in a film title is enough to make `mkdirs()` fail on some devices and not others.
+ * Naming looks trivial and is not: these strings become directories on an exFAT SD card, they are the
+ * only thing the delete cascade has to find the files by once the item row is gone, and a colon in a
+ * film title is enough to make `mkdirs()` fail on some devices and not others.
  */
 class DownloadPathsTest {
     // ---- directory names ------------------------------------------------------------------------
@@ -48,9 +46,9 @@ class DownloadPathsTest {
 
     @Test
     fun `two same-titled tracks on different albums get different directories`() {
-        // The reason a track is not simply named after itself: it has no `productionYear` to
-        // disambiguate it, so the plain form would put both *Intro*s in one directory — sharing one
-        // `primary.webp`, and letting either one's delete take the other's files.
+        // A track has no `productionYear` to disambiguate it, so the plain form would put both
+        // *Intro*s in one directory — sharing one `primary.webp`, and letting either's delete take the
+        // other's files.
         val first = DownloadPaths.itemDirectoryName(track(name = "Intro", album = "Rumours", trackNumber = 1))
         val second =
             DownloadPaths.itemDirectoryName(
@@ -74,9 +72,8 @@ class DownloadPathsTest {
 
     @Test
     fun `same-numbered same-titled tracks on different discs get different directories`() {
-        // A reprise or an "Intro" repeated per disc: without the disc in the code, both would
-        // sanitise to one directory, share one primary.webp, and either's delete would take the
-        // other's files — the same collision the album name prevents across albums.
+        // A reprise or an "Intro" repeated per disc: without the disc in the code, both would sanitise
+        // to one directory and either's delete would take the other's files.
         val discOne = DownloadPaths.itemDirectoryName(track(name = "Intro", trackNumber = 1, discNumber = 1))
         val discTwo = DownloadPaths.itemDirectoryName(track(name = "Intro", trackNumber = 1, discNumber = 2))
 
@@ -85,10 +82,8 @@ class DownloadPathsTest {
 
     @Test
     fun `a track with neither album nor artist gets an id-suffixed directory`() {
-        // The old behaviour — the bare title — was the collision bug this pins: with no artist and
-        // no album in front, the title is the *whole* name, and two albumless tracks that share
-        // one would share a directory. The id suffix is the same disambiguator the empty-name
-        // fallback already uses.
+        // With no artist and no album in front, the title is the *whole* name, so two albumless tracks
+        // that share one would share a directory. The id suffix is the empty-name fallback's.
         val id = uuid(30)
 
         DownloadPaths.itemDirectoryName(track(id = id, album = null, albumArtist = null, trackNumber = null)) shouldBe
@@ -109,8 +104,7 @@ class DownloadPathsTest {
     fun `a track keeps the server's own file name and container`() {
         val name = DownloadPaths.mediaFileName(track(), "Fleetwood Mac - Rumours - 04 - Go Your Own Way")
 
-        // A flac stays a flac: originals-only means the bytes on disk are the bytes on the server,
-        // and the name is what makes that visible from a file manager.
+        // A flac stays a flac: originals-only means the bytes on disk are the bytes on the server.
         name shouldBe "04 - Go Your Own Way.flac"
     }
 
@@ -183,8 +177,8 @@ class DownloadPathsTest {
 
     @Test
     fun `without a server path the container becomes the extension`() {
-        // The PATH field is only served to users allowed to see it, so this is the common case for
-        // a non-admin account.
+        // The PATH field is only served to users allowed to see it, so this is the common case for a
+        // non-admin account.
         val item = movie(path = null)
 
         DownloadPaths.mediaFileName(item, "Arrival (2016)") shouldBe "Arrival (2016).mkv"
@@ -201,8 +195,8 @@ class DownloadPathsTest {
     fun `a transcoded download is named for the container it will actually receive`() {
         val item = movie(path = "/media/films/Arrival.2016.2160p.h264.mp4")
 
-        // Neither the source name nor its container describes what arrives, so both are dropped —
-        // and what arrives is Matroska, whatever the source was.
+        // Neither the source name nor its container describes what arrives, and what arrives is
+        // Matroska whatever the source was.
         DownloadPaths.mediaFileName(item, "Arrival (2016)", DownloadQuality.MEDIUM) shouldBe
             "Arrival (2016) (medium).mkv"
     }
@@ -211,11 +205,9 @@ class DownloadPathsTest {
     fun `a transcoded download is never named mp4`() {
         val item = movie(path = null)
 
-        // Not a style preference: a server muxing mp4 on the fly cannot write the `moov` before the
-        // `mdat` it indexes, so it emits a zero-sized `mdat` running to EOF with the `moov` behind
-        // it. Media3 reads that as one `mdat` swallowing the index and fails the whole load with
-        // `contentIsMalformed=true` — the file is unplayable, which is the only thing a download is
-        // for.
+        // A server muxing mp4 on the fly cannot write the `moov` before the `mdat` it indexes, so it
+        // emits a zero-sized `mdat` running to EOF with the `moov` behind it. Media3 reads that as one
+        // `mdat` swallowing the index and fails the load with `contentIsMalformed=true`.
         DownloadQuality.entries.filter { it.isTranscoded }.forEach { quality ->
             DownloadPaths.mediaFileName(item, "Arrival (2016)", quality) shouldEndWith ".mkv"
         }

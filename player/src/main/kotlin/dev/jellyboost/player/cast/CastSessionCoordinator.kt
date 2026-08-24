@@ -17,28 +17,14 @@ import javax.inject.Singleton
 
 /**
  * Owns the cast session: what it is, which player it puts in charge, and who tells the server
- * about it.
+ * about it. [start] is called once, from `JellyboostApplication.onCreate`.
  *
- * Shaped like `SyncPlayController`, because the problem is the same one. A cast session is not the
- * player screen's — it starts from the top bar, survives being backgrounded, and outlives the
- * screen that opened the film — so a `@Singleton` with its own scope holds it, and screens
- * [attach][attachHost] and [detach][detachHost] themselves from it. [start] is called from
- * `JellyboostApplication.onCreate`, alongside the other collaborators whose whole value is that
- * they run when no screen does.
+ * **Reporting invariant: this coordinator reports only while no host is attached.** With a screen
+ * attached, that screen owns the progress ticker and the stop report; a second party sending them
+ * would double every stop and race the encoder kill.
  *
- * ### The reporting invariant
- * **This coordinator reports only while no host is attached.** With a screen attached, that screen
- * owns the progress ticker and the stop report exactly as it does for local playback, and a second
- * party sending them would double every stop — and race the encoder kill. When the screen goes away
- * and the receiver plays on, this takes over: [PlaybackReporter.startReporting] on the detached
- * scope, reading the position off the cast player through [RoutingPlayerHandle], and one final stop
- * (which also kills the transcode) when the session ends.
- *
- * ### Transfers
- * Moving what is *already* playing from the phone to the television, and back again on disconnect,
- * belongs to the screen that holds the source — it is a stop report and a re-negotiation, and this
- * class has neither the item nor the resolver. What it owes the screen is the one thing only it can
- * see: where the outgoing player was at the instant playback was routed away from it
+ * Transfers themselves belong to the screen that holds the source. What this owes it is the one
+ * thing only it can see: where the outgoing player was at the instant playback was routed away
  * ([CastPlaybackHost.onCastStarted], [CastPlaybackHost.onCastEnded]).
  */
 @Singleton
@@ -52,7 +38,6 @@ class CastSessionCoordinator
         @DetachedPlayerScope detachedScope: CoroutineScope,
         @MainDispatcher mainDispatcher: CoroutineDispatcher,
     ) : CastPlaybackCoordinator {
-        /** The receiver this device is connected to, if any. */
         internal val connection: StateFlow<CastConnection> = status.connection
 
         /** `true` while a receiver is playing, or about to — what a resolve asks before negotiating. */
@@ -60,24 +45,15 @@ class CastSessionCoordinator
 
         private var host: CastPlaybackHost? = null
 
-        /**
-         * What the receiver is playing, remembered at the moment the screen let go of it.
-         *
-         * Only non-`null` while nobody is attached, which is exactly when it is the only record of
-         * what the reports below are about.
-         */
+        /** Non-`null` only while nobody is attached: then it is the only record the reports have. */
         private var detachedSource: PlaybackMediaSource? = null
 
         private var tickerJob: Job? = null
 
         /**
-         * The progress ticker's scope: the detached job, driven on the main thread.
-         *
-         * The job has to be the detached one — the whole point is a session that survives the screen
-         * — and the dispatcher has to be the main one, because every tick reads
-         * [RoutingPlayerHandle.snapshot], and `PlayerHandle` snapshots are main-thread-only. Built
-         * over the detached scope's context rather than a fresh `Job` so the ticker stays a *child*
-         * of it: cancellable on its own, and never orphaned.
+         * Main-dispatched because every tick reads [RoutingPlayerHandle.snapshot] and `PlayerHandle`
+         * snapshots are main-thread-only. Built over the detached scope's *context* rather than a
+         * fresh `Job` so the ticker stays a child of it and is never orphaned.
          */
         private val tickerScope = CoroutineScope(detachedScope.coroutineContext + mainDispatcher)
 
@@ -91,17 +67,11 @@ class CastSessionCoordinator
                 override fun onSessionEnded() = onCastEnded()
             }
 
-        /** Begins watching for cast sessions. Idempotent; called once, from the application. */
         fun start() {
             monitor.start(sessionListener)
         }
 
-        /**
-         * Hands the coordinator the screen that is driving cast playback.
-         *
-         * Idempotent by construction, and it silences this class's own reporting: from here the
-         * host's ticker is the one telling the server where the film is.
-         */
+        /** Silences this class's own reporting: from here the host's ticker owns the reports. */
         override fun attachHost(host: CastPlaybackHost) {
             this.host = host
             detachedSource = null
@@ -109,17 +79,10 @@ class CastSessionCoordinator
         }
 
         /**
-         * Gives the screen back while the receiver plays on.
-         *
-         * The source is taken across on the way out rather than read later: the host is about to
-         * stop existing, and without it there would be nothing to key a report on — the position
-         * still comes from the cast player itself, tick by tick.
-         *
-         * Taken **only while a session is live**: every screen detaches through here whether it was
-         * casting or not (`releaseSession` cannot know), and a source remembered from an ordinary
-         * local session would later be "orphaned" by a failed cast attempt — [onCastEnded] would
-         * then report a stop, at position zero, for a film that was never cast, wiping its resume
-         * position.
+         * The source is taken across on the way out because the host is about to stop existing —
+         * and **only while a session is live**: every screen detaches through here, casting or not,
+         * and a source remembered from a local session would later have [onCastEnded] report a
+         * stop at position zero for a film that was never cast, wiping its resume position.
          *
          * @param host ignored unless it is the attached one, so a stale ViewModel's teardown cannot
          *   detach the screen that replaced it.
@@ -132,22 +95,14 @@ class CastSessionCoordinator
         }
 
         /**
-         * A receiver appeared.
+         * Order matters. The snapshot comes **first**, off the still-playing local player — a
+         * moment later the only readable player is a cast one at zero. The routing flip comes
+         * before [RoutingPlayerHandle.stopInactive], or the local player's `IsPlayingChanged(false)`
+         * reaches the screen as if the session about to open had failed.
          *
-         * The order is the whole of it. The snapshot comes **first**, off the player that is still
-         * playing, because it is what the transfer resumes at and where the outgoing session's stop
-         * report belongs; a moment later the only readable player is a cast one at zero. The routing
-         * flip comes before [RoutingPlayerHandle.stopInactive] so that the local player's own
-         * shutdown events land on a subscription nothing is listening to any more — stopping it
-         * first would let its `IsPlayingChanged(false)` reach the screen as if the session it is
-         * about to open had failed. Stopping it at all is deliberate: two players must not sound at
-         * once, and the local media notification has no business surviving a film that has moved to
-         * a television.
-         *
-         * A start for a session that is **already** connected is dropped. The framework delivers one
-         * on `onSessionResumed` after a Wi-Fi blip, and the monitor's own start-time replay can add
-         * another; re-running the transfer for either would stop and re-negotiate a stream the
-         * receiver is happily playing — off a cast player that may still answer position zero.
+         * A start for an already-connected session is dropped: the framework delivers one on
+         * `onSessionResumed` after a Wi-Fi blip, and re-running the transfer would stop and
+         * re-negotiate a stream the receiver is happily playing.
          */
         private fun onCastStarted(
             deviceName: String?,
@@ -158,8 +113,7 @@ class CastSessionCoordinator
                 return
             }
             val receiver = CastReceiverClass.fromModelName(modelName)
-            // The model→class line is load-bearing diagnostics: a 4K receiver that logs as
-            // LEGACY_1080P here is a one-line allowlist fix in CastReceiverClass, not a bug hunt.
+            // A 4K receiver logging as LEGACY_1080P here is an allowlist fix in CastReceiverClass.
             Timber.i(
                 "Cast session started on %s (model %s, classified %s)",
                 deviceName ?: "an unnamed receiver",
@@ -174,19 +128,12 @@ class CastSessionCoordinator
         }
 
         /**
-         * The receiver went away.
+         * The final snapshot must be taken **before** the routing handle goes back to local: only
+         * the cast player knows where the film got to, an idle ExoPlayer would answer zero.
          *
-         * The final snapshot is taken **before** the routing handle goes back to local, because it
-         * is the cast player that knows where the film got to; afterwards the question would be
-         * answered by an ExoPlayer that has not played anything.
-         *
-         * [PlaybackReporter.reportStopDetached] carries the encoder kill with it — `reportStop`
-         * calls `stopTranscoding` — which is what stops a cast transcode from outliving the session
-         * that started it.
-         *
-         * With a screen attached none of that happens here and the snapshot goes to it instead: the
-         * screen owes the same stop report, at the same position, and it has somewhere to put the
-         * film afterwards — back on this device, paused where the television left it.
+         * [PlaybackReporter.reportStopDetached] carries the encoder kill with it, which is what
+         * stops a cast transcode outliving its session. With a screen attached that report is the
+         * screen's instead, from the snapshot handed to it.
          */
         private fun onCastEnded() {
             Timber.i("Cast session ended")
@@ -200,10 +147,8 @@ class CastSessionCoordinator
             }
             detachedSource = null
             routing.setActive(PlaybackTarget.Local)
-            // The receiver is gone, but the cast player is not: left alone it keeps its listener,
-            // its media items and the `loaded` spec a later subtitle selection would match
-            // against. Stopping the now-inactive side clears all three; the session itself
-            // is already over, so there is nothing this could interrupt.
+            // The receiver is gone but the cast player is not: left alone it keeps its listener,
+            // its media items and the `loaded` spec a later subtitle selection would match against.
             routing.stopInactive()
             host?.onCastEnded(last)
         }

@@ -207,12 +207,8 @@ internal object PlayerFixtures {
         )
 
     /**
-     * A transcoded download of the Élémentaire repro item, as `LocalPlaybackResolver` builds it.
-     *
-     * The file on disk holds one AAC track (the French VFF the download baked in) and the two
-     * subtitles whose sidecars came with it; the *source* has three audio tracks and four
-     * subtitles. That gap is the whole subject of the connectivity-aware pickers, so it is worth
-     * having in one place rather than re-listed per test.
+     * The file holds one AAC track and two subtitle sidecars; the source lists three audio
+     * tracks and four subtitles — the gap the connectivity-aware pickers exist to cover.
      */
     fun downloadedFilm(
         selectedAudioIndex: Int? = BAKED_AUDIO_INDEX,

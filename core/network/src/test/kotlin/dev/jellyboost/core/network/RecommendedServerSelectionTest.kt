@@ -10,7 +10,6 @@ import org.jellyfin.sdk.discovery.RecommendedServerInfoScore
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 
-/** Unit tests for the pure candidate-scoring rules used by server setup. */
 class RecommendedServerSelectionTest {
     @Test
     @DisplayName("a GREAT candidate wins even when a GOOD one comes first")

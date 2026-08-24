@@ -20,14 +20,8 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import java.io.IOException
 
-/**
- * Unit tests for [AutoBitrateDetector].
- *
- * The arithmetic is the point: this class decides the one number that makes the difference between
- * a film that plays and a film that stalls on a constrained link, and it decides it from timings
- * nothing else in the app can see. Time is injected rather than read from the clock so the ramp,
- * the early exit and the cache TTL can all be driven exactly.
- */
+// Time is injected rather than read from the clock so the ramp, the early exit and the cache TTL
+// can all be driven exactly.
 @OptIn(ExperimentalCoroutinesApi::class)
 class AutoBitrateDetectorTest {
     private val api = mockk<PlayerApi>()
@@ -37,16 +31,11 @@ class AutoBitrateDetectorTest {
             coEvery { setMaxStreamingBitrate(any()) } just Runs
         }
 
-    /** The fake clock the detector times chunks and ages its cache with. */
     private var clock = 0L
 
-    /**
-     * Answers every chunk instantly in virtual time, advancing [clock] by [millisPerChunk] instead.
-     *
-     * Real elapsed time and the test scheduler's virtual time are deliberately kept apart: the
-     * detector's budget runs on the scheduler (so a test can make it expire with a `delay`), while
-     * its throughput arithmetic runs on this clock.
-     */
+    // Real elapsed time and the test scheduler's virtual time are deliberately kept apart: the
+    // detector's budget runs on the scheduler (so a test can make it expire with a `delay`), while
+    // its throughput arithmetic runs on this clock.
     private fun answerChunks(vararg millisPerChunk: Long) {
         var call = 0
         coEvery { api.getBitrateTestBytes(any()) } answers {

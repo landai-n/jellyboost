@@ -16,13 +16,9 @@ import org.junit.jupiter.api.Test
 /**
  * Unit tests for [UpNextResolver].
  *
- * The interesting half is what it deliberately is *not*: the server's own "next up" answers "the
- * next episode you have not seen", and on a rewatch that is a completely different episode from the
- * one that follows the one playing. A card is drawn on the strength of this answer and a tap plays
- * it, so being positionally right on a rewatch is the property worth pinning.
- *
- * The other half is that every miss is silent. Nothing here throws, nothing surfaces an error, and
- * `null` is the ordinary answer for most of what a player opens.
+ * Deliberately not the server's own "next up" (next unwatched episode) — a rewatch must get the
+ * positional successor instead. Every miss is silent: nothing throws, nothing surfaces an error,
+ * and `null` is the ordinary answer for most of what a player opens.
  */
 internal class UpNextResolverTest {
     private val repository = mockk<JellyfinRepository>()
@@ -44,8 +40,8 @@ internal class UpNextResolverTest {
     @Test
     fun `crosses a season boundary`() =
         runTest {
-            // `getSeriesEpisodes` returns the whole series in playing order, so the first episode of
-            // the next season simply *is* the next entry — the case a per-season lookup would miss.
+            // `getSeriesEpisodes` returns the whole series in playing order, so the next season's
+            // first episode simply *is* the next entry — the case a per-season lookup would miss.
             givenSeries(episode(1, 1), episode(1, 2), episode(2, 1))
 
             val next = resolver.resolve("s1e2")
@@ -58,8 +54,7 @@ internal class UpNextResolverTest {
     @Test
     fun `a rewatch is offered the positional successor, not the next unwatched episode`() =
         runTest {
-            // The whole series is watched except the finale — which is exactly what the server's
-            // "next up" would answer with. Someone rewatching episode 1 wants episode 2.
+            // Watched except the finale — exactly what the server's "next up" would answer with.
             givenSeries(
                 episode(1, 1, watched = true),
                 episode(1, 2, watched = true),
@@ -106,8 +101,8 @@ internal class UpNextResolverTest {
     @Test
     fun `an episode the series listing does not contain is offered nothing`() =
         runTest {
-            // The offline shape of the same miss: the item is known, but the listing this device can
-            // produce — only what is downloaded — does not hold it.
+            // The offline shape of the same miss: the listing this device can produce — only
+            // what is downloaded — does not hold it.
             coEvery { repository.getItem("s1e9") } returns AppResult.Success(episode(1, 9))
             coEvery { repository.getSeriesEpisodes(SERIES_ID) } returns
                 AppResult.Success(listOf(episode(1, 1), episode(1, 2)))

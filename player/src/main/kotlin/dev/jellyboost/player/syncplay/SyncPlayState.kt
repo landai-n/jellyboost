@@ -6,49 +6,30 @@ import dev.jellyboost.player.syncplay.model.SyncPlayGroupSummary
 import java.time.Instant
 import java.util.UUID
 
-/** Where [SyncPlayController] is: outside a group, on the way in, or in one. */
 internal sealed interface SyncPlayState {
-    /** Not in a group, and nothing running — no websocket, no ping loop, no scheduled command. */
+    /** Nothing running: no websocket, no ping loop, no scheduled command. */
     data object Idle : SyncPlayState
 
-    /**
-     * The websocket collection is open and the join (or create) call is in flight.
-     *
-     * Short-lived by construction: it ends either at [InGroup] or back at [Idle].
-     */
     data object Joining : SyncPlayState
 
-    /**
-     * In a group.
-     *
-     * [queue] is `null` until the server's first `PlayQueueUpdate` arrives — a group can be joined
-     * before anyone has chosen anything to watch.
-     */
+    /** [queue] is `null` until the first `PlayQueueUpdate`: a group can be joined before it plays. */
     data class InGroup(
         val group: SyncPlayGroupSummary,
         val queue: SyncPlayGroupQueue?,
         /**
-         * What the **group** is doing, as of its last state update (seeded from the joined group).
-         *
-         * Deliberately kept apart from [phase]: the phase is what *this member* is doing, and after
-         * a `SendCommand` that never arrived it is a lie — a member whose phase says `Paused` can
-         * still be playing, and one whose phase says `Playing` can be sitting still. The group's own
-         * state is the truth every net is measured against, and the one the player UI shows.
+         * What the **group** is doing — never confuse with [phase], which is what *this member* is
+         * doing and is a lie after a `SendCommand` that never arrived. Nets are measured against this.
          */
         val groupState: SyncPlayGroupState,
         val phase: SyncPlayPhase,
     ) : SyncPlayState
 
     /**
-     * Membership was lost server-side without anyone here asking for it, and is being taken back.
+     * Membership lost server-side and being taken back. Deliberately **not** a kind of [InGroup]:
+     * the server really does not have this session in [group], so anything keyed on membership —
+     * `SyncPlayLocalSession` above all — must see it go away and come back.
      *
-     * Deliberately **not** a kind of [InGroup]: while this lasts the server really does not have this
-     * session in [group], so anything keyed on membership — the reported server session for a
-     * downloaded file above all (`SyncPlayLocalSession`) — has to see it go away and come back.
-     * Short-lived by construction, like [Joining]: it ends at [InGroup] or at [Idle], within
-     * `SyncPlayRejoinPolicy.REJOIN_MAX_ATTEMPTS` attempts.
-     *
-     * @param attempt 1-based, for the log and for the UI to be able to say "still trying".
+     * @param attempt 1-based.
      */
     data class Rejoining(
         val group: SyncPlayGroupSummary,
@@ -57,87 +38,55 @@ internal sealed interface SyncPlayState {
 }
 
 /**
- * What *this member* is doing inside the group.
- *
- * Deliberately not the same thing as the group's own `SyncPlayGroupState`: the group can be playing
- * while this client is still loading the file, and that difference is exactly what the WAITING
- * overlay shows.
+ * What *this member* is doing — not the group's own `SyncPlayGroupState`. The difference is what the
+ * WAITING overlay shows.
  */
 internal sealed interface SyncPlayPhase {
     /** Prepared, ready reported, waiting for the server to say go. */
     data object Waiting : SyncPlayPhase
 
-    /** Loading the item; the server has been told this client is buffering. */
     data object Buffering : SyncPlayPhase
 
-    /** Playing, in lockstep with [anchor] — the only phase the drift monitor runs in. */
+    /** The only phase the drift monitor runs in. */
     data class Playing(
         val anchor: SyncPlayAnchor,
     ) : SyncPlayPhase
 
-    /** Paused, by the group's command. */
     data object Paused : SyncPlayPhase
 }
 
 /**
- * "At server instant [at], playback was at [positionMs]" — the fixed point group playback is
- * measured against.
- *
- * Everything the drift monitor does follows from it: the position this client *should* be at is
- * `positionMs + (serverNow − at)`, so a wrong anchor is indistinguishable from a wrong clock.
- * [at] is on the **server's** clock, never the device's.
+ * "At server instant [at], playback was at [positionMs]". The drift monitor's target position is
+ * `positionMs + (serverNow − at)`, so [at] is on the **server's** clock, never the device's.
  */
 internal data class SyncPlayAnchor(
     val positionMs: Long,
     val at: Instant,
 )
 
-/**
- * Something the user has to be told about, in the shape the existing player uses
- * (`PlayerUiState.PlayerMessage`): a typed event, with the copy owned by the UI layer.
- *
- * Collected from `SyncPlayController.messages` by the player screen and the groups screen.
- */
+/** A typed event; the copy belongs to the UI layer. */
 enum class SyncPlayMessage {
-    /**
-     * The connection was confirmed lost while in a group, so the group was left and playback paused.
-     *
-     * The user-visible copy is "Left SyncPlay — connection lost": resuming from here plays solo.
-     * It is only reached once an
-     * automatic rejoin has been tried and could not get the membership back.
-     */
+    /** Only after an automatic rejoin failed: the group was left and playback paused. */
     ConnectionLost,
 
-    /**
-     * The server had dropped this session from the group and it has been taken back automatically.
-     *
-     * Low-key on purpose: nothing is asked of the user, and the group's own state has already put
-     * this member back in step.
-     */
+    /** The session was dropped server-side and taken back automatically; nothing is asked of the user. */
     Rejoined,
 
-    /** The join or create call failed; nothing was joined. */
     JoinFailed,
 
     /** The group no longer exists — the last other member left, or the server restarted. */
     GroupEnded,
 
-    /** The server says this session is not in the group any more. */
     RemovedFromGroup,
 
-    /** The group is watching something this account is not allowed to see. */
     LibraryAccessDenied,
 
-    /** The group's current item could not be opened on this device. */
     ItemUnavailable,
 }
 
 /**
- * "The group moved to an item and there is no player open" — the app should navigate to one.
- *
- * Emitted rather than acted on because the controller has no idea what a screen is; the NavHost
- * collects these. Membership survives leaving the player, so the group can move on while nothing
- * is attached, and the app has to catch up.
+ * "The group moved to an item and there is no player open" — the NavHost collects these. Membership
+ * survives leaving the player, so the group can move on while nothing is attached.
  */
 data class SyncPlayLaunchRequest(
     val itemId: UUID,

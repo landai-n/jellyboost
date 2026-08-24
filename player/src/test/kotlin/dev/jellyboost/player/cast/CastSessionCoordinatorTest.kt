@@ -19,12 +19,8 @@ import org.junit.jupiter.api.Test
 import javax.inject.Provider
 
 /**
- * Unit tests for [CastSessionCoordinator].
- *
- * The Cast framework's session lifecycle is behind [CastSessionMonitor] precisely so this can be
- * pinned without Play services, a `CastContext` or a receiver on the network — and what is pinned is
- * entirely ours: which player is in charge, and the invariant that stops the server being told twice
- * that a film stopped.
+ * [CastSessionMonitor] keeps the Cast framework's session lifecycle out of this suite, so these
+ * tests run without Play services, a `CastContext`, or a receiver on the network.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class CastSessionCoordinatorTest {
@@ -144,8 +140,7 @@ class CastSessionCoordinatorTest {
 
     @Test
     fun `a local session's detach leaves no orphan for a later failed cast attempt to report`() {
-        // Watch locally, back out, then try to cast and fail: the coordinator must not remember the
-        // local film as "what the receiver was playing" and stop-report it at zero.
+        // Must not remember the local film as "what the receiver was playing" and stop-report it at zero.
         coordinator.attachHost(host)
         coordinator.detachHost(host)
 
@@ -205,8 +200,8 @@ class CastSessionCoordinatorTest {
 
         framework.onSessionEnded()
 
-        // The position has to be read off the *cast* player, before routing goes back to a local one
-        // that has never played anything. `reportStopDetached` carries the encoder kill with it.
+        // Position must be read off the *cast* player, before routing goes back to a local one
+        // that never played anything.
         verify(exactly = 1) { reporter.reportStopDetached(source, onTheTelevision) }
         routing.activeHandle.value shouldBe local
     }
@@ -234,8 +229,7 @@ class CastSessionCoordinatorTest {
 
     @Test
     fun `the cast player is silenced once the session ends`() {
-        // Left alone it keeps its listener, media items and the stale `loaded` spec for the life of
-        // the process.
+        // Left alone it keeps its listener, media items, and stale `loaded` spec for the process's life.
         framework.onSessionStarted("Living Room TV")
 
         framework.onSessionEnded()
@@ -279,8 +273,8 @@ class CastSessionCoordinatorTest {
 
     @Test
     fun `a repeated start for a live session does not re-run the transfer`() {
-        // The framework reports a resumed (suspended) session as a start; re-running the transfer
-        // would reload the receiver off a cast player that may still answer zero.
+        // A resumed (suspended) session reports as a start too; re-running would reload the
+        // receiver off a cast player that may still answer zero.
         val recording = RecordingHost(source)
         coordinator.attachHost(recording)
         framework.onSessionStarted("Living Room TV")

@@ -14,13 +14,7 @@ import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/**
- * Finds Jellyfin servers, either by listening for their local-network announcements or by
- * probing the address a user typed.
- *
- * Nothing is persisted here: a resolved server is only written to Room once the user actually
- * signs in on it (see [AuthRepository]).
- */
+/** Nothing is persisted here: a resolved server reaches Room only once the user signs in on it ([AuthRepository]). */
 @Singleton
 class ServerDiscoveryRepository
     @Inject
@@ -29,12 +23,8 @@ class ServerDiscoveryRepository
         @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     ) {
         /**
-         * Emits servers as they announce themselves on the local network (UDP broadcast on port
-         * 7359). The flow is finite — the SDK stops after its discovery window — and is meant to
-         * be collected for the lifetime of the server-setup screen.
-         *
-         * Announcements carrying an unparseable server id are dropped with a warning rather than
-         * failing the whole flow.
+         * The flow is finite — the SDK stops after its discovery window. An announcement carrying an
+         * unparseable server id is dropped with a warning rather than failing the whole flow.
          */
         fun discoverLocalServers(): Flow<DiscoveredServer> =
             apiFacade
@@ -58,13 +48,11 @@ class ServerDiscoveryRepository
          * the setup screen's error copy is built from.
          */
         @Suppress(
-            // Six ways an address can resolve or fail to; each is a separate probe, not a branch of one.
             "ReturnCount",
         )
         suspend fun resolveServerAddress(input: String): AppResult<ResolvedServer> {
-            // Debug, and host only, on every line below that holds an address: this is the path
-            // that knows where a user's server lives, and its logs are the ones that end up pasted
-            // into a bug report. See [hostForLog].
+            // Debug, and host only, on every line below that holds an address: this path knows where a
+            // user's server lives, and its logs end up pasted into bug reports. See [hostForLog].
             Timber.d("Resolving server address for '%s'", hostForLog(input))
 
             val candidates =
@@ -96,8 +84,7 @@ class ServerDiscoveryRepository
             val systemInfo = selected.systemInfo.getOrNull()
             val serverId = systemInfo?.id?.toUUIDOrNull()
             if (systemInfo == null || serverId == null) {
-                // Stays a warning — it is a real server-side fault a maintainer must see — but the
-                // address it names is reduced to its host like every other line here.
+                // Stays a warning — a real server-side fault — but the address is still reduced to its host.
                 Timber.w("Server at %s answered without a usable id", hostForLog(selected.address))
                 return AppResult.Failure(AppError.Server(statusCode = null))
             }

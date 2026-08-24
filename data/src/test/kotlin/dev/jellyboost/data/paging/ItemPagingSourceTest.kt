@@ -17,25 +17,19 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for [ItemPagingSource]'s page arithmetic.
- *
- * The requirement — a >500-item library scrolling cleanly with one request per page — lives or
- * dies on these offsets, so every boundary (first page, middle page, last short page, empty
- * library) is pinned here rather than left to a device scroll.
- *
- * The total-record-count block pins the other half of that promise: the header's "N items" costs
- * exactly one server-side count, on the source's first load, and never one per page.
+ * One request per page lives or dies on these offsets, so every boundary is pinned here rather than
+ * left to a device scroll — including that the header's "N items" costs exactly one server-side
+ * count, on the first load only.
  */
 class ItemPagingSourceTest {
     private val requestedRanges = mutableListOf<Pair<Int, Int>>()
 
-    /** Whether each load asked its source for the total record count, in load order. */
+    /** In load order. */
     private val totalCountRequests = mutableListOf<Boolean>()
 
-    /** Every total the source reported to its owner. */
     private val reportedTotals = mutableListOf<Int>()
 
-    /** A 520-item library: 10 full pages of 50 plus a 20-item tail. */
+    /** 10 full pages of 50 plus a 20-item tail. */
     private val library = List(TOTAL_ITEMS) { index -> item(index) }
 
     private fun source(
@@ -50,7 +44,6 @@ class ItemPagingSourceTest {
         AppResult.Success(
             ItemPage(
                 items = items.drop(startIndex).take(limit),
-                // What a server that was asked to count answers; `null` when it was not asked.
                 totalCount = items.size.takeIf { withTotalCount },
             ),
         )
@@ -200,7 +193,7 @@ class ItemPagingSourceTest {
                 source
                     .load(append(key = PAGE_SIZE))
                     .shouldBeInstanceOf<PagingSource.LoadResult.Page<Int, JellyfinItem>>()
-            // A full page cannot be known to be the last, so paging asks once more…
+            // A full page cannot be known to be the last, so paging asks once more.
             secondPage.nextKey shouldBe PAGE_SIZE * 2
 
             val trailing =

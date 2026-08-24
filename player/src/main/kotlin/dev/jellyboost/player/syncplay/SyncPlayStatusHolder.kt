@@ -7,13 +7,8 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * The two facts about SyncPlay that things outside SyncPlay need to know.
- *
- * It exists to break a dependency cycle rather than to hold state for its own sake: `PlaybackReporter`
- * has to know whether this session is in a group (a local file only reports to the server while it
- * is), and `SyncPlayController` has to be able to drive playback, which means reaching the
- * reporter's world. Injecting the controller into the reporter would close that loop and Hilt would
- * reject it; both can depend on this instead.
+ * Breaks a dependency cycle: `PlaybackReporter` needs group membership and `SyncPlayController` needs
+ * the reporter's world, so neither may inject the other.
  *
  * Written only by the controller and by `PlaybackInfoResolver`'s mint path, read by anyone.
  */
@@ -23,27 +18,21 @@ internal class SyncPlayStatusHolder
     constructor() {
         private val _inGroup = MutableStateFlow(false)
 
-        /** `true` while this session is a member of a SyncPlay group. */
         val inGroup: StateFlow<Boolean> = _inGroup.asStateFlow()
 
         private val _mintedPlaySessionId = MutableStateFlow<String?>(null)
 
         /**
-         * The play session id minted for an in-group local file, or `null`.
-         *
-         * A `LocalPlaybackMediaSource` has no play session by construction — nothing was negotiated
-         * with the server to produce one. In a group we mint one anyway with a single `PlaybackInfo`
-         * POST so the member shows up in the dashboard; `null` means the mint was not attempted or
-         * failed, and reporting degrades to sending no session id rather than not reporting.
+         * A local file has no play session, so in a group one is minted with a `PlaybackInfo` POST.
+         * `null` means not attempted or failed: report with no session id rather than not at all.
          */
         val mintedPlaySessionId: StateFlow<String?> = _mintedPlaySessionId.asStateFlow()
 
-        /** Publishes group membership. Called by [SyncPlayController] only. */
         fun setInGroup(inGroup: Boolean) {
             _inGroup.value = inGroup
         }
 
-        /** Publishes the minted play session id, or clears it at the end of a group session. */
+        /** Pass `null` to clear at the end of a group session. */
         fun setMintedPlaySessionId(playSessionId: String?) {
             _mintedPlaySessionId.value = playSessionId
         }

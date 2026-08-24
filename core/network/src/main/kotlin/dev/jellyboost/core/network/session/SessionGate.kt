@@ -9,20 +9,13 @@ import javax.inject.Singleton
 /**
  * Makes sure the API client is pointed at a server before a `WorkManager` worker tries to use it.
  *
- * ### Why this exists
- * WorkManager can restart a job as soon as the process comes up, which is *before* the UI has done
- * anything at all — `MainViewModel` calls `SessionRepository.restoreSession()` from its `init`, and
- * on a cold start after `am force-stop` a worker can win that race. Without this gate the first call
- * a worker makes throws the SDK's own `Required value baseUrl is null. Provide it by setting
- * ApiClient.baseUrl.`, which reads as a genuine failure of whatever the worker was doing even though
- * nothing was actually wrong with it — the session just had not been restored yet. This is generic to
- * any worker, not specific to one: it gates both `DownloadWorker` and `UserDataSyncWorker`, since
- * the same race can show up in any background work that touches the API client.
+ * WorkManager can restart a job before the UI has done anything — `MainViewModel` calls `restoreSession()`
+ * from its `init`, and on a cold start a worker can win that race. Without this gate the worker's first call
+ * throws the SDK's `Required value baseUrl is null`, which reads as a failure of the work itself. It gates
+ * every worker, not one.
  *
- * ### Why it is safe to call from a worker
- * [SessionRepository.restoreSession] is a local-only path: `EncryptedSharedPreferences` plus
- * two Room reads, no network. Calling it twice is harmless — it is idempotent, and the second call
- * simply re-points the client at the address it already has.
+ * Safe to call from a worker: [SessionRepository.restoreSession] is local-only (credential store plus two Room
+ * reads, no network) and idempotent.
  */
 @Singleton
 class SessionGate
@@ -32,12 +25,8 @@ class SessionGate
         private val apiClient: ApiClient,
     ) {
         /**
-         * Restores the stored session if the API client has none.
-         *
-         * @return `true` when the client can build URLs and authenticate, `false` when this device
-         *   genuinely has no session (signed out, or the credential store could not be read). The
-         *   caller must park rather than fail: work that has never been attempted has nothing to
-         *   report to the user.
+         * @return `true` when the client can build URLs and authenticate, `false` when this device genuinely
+         *   has no session. The caller must park rather than fail: work never attempted has nothing to report.
          */
         suspend fun ensureSession(): Boolean {
             if (isUsable()) return true
@@ -51,9 +40,8 @@ class SessionGate
         }
 
         /**
-         * Both halves matter: the base URL is what the SDK's URL builders require, and the token is
-         * what an `Authorization` header is built from. A client with one and not the other would
-         * fail later and less legibly.
+         * Both halves matter: the base URL is what the SDK's URL builders require, the token is what an
+         * `Authorization` header is built from. A client with one and not the other fails later and less legibly.
          */
         private fun isUsable(): Boolean = !apiClient.baseUrl.isNullOrBlank() && !apiClient.accessToken.isNullOrBlank()
     }

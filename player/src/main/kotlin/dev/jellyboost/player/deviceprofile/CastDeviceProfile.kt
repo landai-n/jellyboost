@@ -13,54 +13,29 @@ import org.jellyfin.sdk.model.api.SubtitleProfile
 import org.jellyfin.sdk.model.api.TranscodingProfile
 
 /**
- * The `DeviceProfile` the server negotiates a **cast** session against.
+ * The `DeviceProfile` a **cast** session is negotiated against. [DeviceProfileBuilder] cannot serve
+ * here: it is built from *this* device's `MediaCodecList`, and advertising a tablet's decoders for a
+ * receiver is how a file that plays in the hand becomes a black television screen.
  *
- * [DeviceProfileBuilder] cannot serve here and it is not a matter of tuning: that profile is built
- * from this device's `MediaCodecList`, and while casting the bytes are decoded by a receiver on the
- * other side of the room. Advertising the tablet's decoders for a Chromecast is how a file that
- * plays perfectly in the hand becomes a black television screen.
+ * The floor is the intersection every receiver since the first dongle satisfies: H.264 High level
+ * 4.2 at 1080p with AAC or MP3 in `mp4`, VP8/VP9 in `webm`, and an HLS transcode to H.264 + AAC in
+ * `ts` for everything else. An HEVC-capable [CastReceiverClass] adds HEVC **direct play** only: the
+ * transcode target is identical in every class because CAF's TS demuxer is H.264-only, and the fMP4
+ * segments HEVC would need were measured broken on the reference Ultra.
  *
- * So this one is static, pure, and deliberately conservative — the floor is the intersection every
- * Cast receiver since the first-generation dongle satisfies: H.264 High up to level 4.2 and 1080p
- * with AAC or MP3 in `mp4`, VP8/VP9 in `webm`, and an HLS transcode to H.264 + AAC in `ts` segments
- * for everything else. On top of that floor, a receiver classified HEVC-capable by
- * [CastReceiverClass] (model-name allowlist — the only signal a sender has; see that class's doc)
- * additionally direct-plays HEVC Main/Main 10 in `mp4` up to its class's resolution ceiling. Direct
- * play only:
- * the transcode target is identical in every class, because CAF's TS demuxer is H.264-only and the
- * fMP4 segments HEVC would need were device-measured broken on the reference Ultra (below).
- * H.264 itself stays at the 1080p floor everywhere — correct even for the Ultra, whose published
- * 4K decode is HEVC/VP9 only. An unknown model changes nothing at all.
- *
- * Audio is capped at **stereo AAC**, and that cap is device-measured rather than a guess: on a real
- * Chromecast Ultra (Default Media Receiver, CC1AD845) every stream whose audio was AAC with more
- * than 2 channels failed with CAF `detailedErrorCode: 104` (`MEDIA_SRC_NOT_SUPPORTED`) — in HLS-ts
- * *and* progressive mp4 alike, so the container was never the variable. AC3/EAC3 5.1 passthrough
- * also failed (`LOAD_FAILED`), and HLS-fMP4 (`SegmentContainer=mp4`) does not work at all on this
- * receiver at either channel count — it accepts the load but never opens a media session, so it is
- * not a fallback worth adopting. Stereo AAC is the one combination that played in every cell of that
- * matrix, which is why it is the ceiling here rather than a per-receiver detail — in **every**
- * receiver class, including the 4K ones: the audio floor is a measured fact about the Default
- * Media Receiver, not spec-sheet conservatism, so relaxing it per model (for a receiver that
- * *does* take 5.1) would need its own measurement on that hardware first.
- *
- * The profiles are constants, one per receiver class; [build] picks one and stamps the quality
- * picker's cap onto it.
+ * **Audio is capped at stereo AAC everywhere, and that is device-measured, not conservatism.** On a
+ * Chromecast Ultra (Default Media Receiver CC1AD845) every AAC stream with more than 2 channels
+ * failed with CAF `detailedErrorCode: 104`, in HLS-ts *and* progressive mp4 alike; AC3/EAC3 5.1
+ * passthrough failed too, and HLS-fMP4 never opened a media session at all. Relaxing this per model
+ * needs its own measurement on that hardware first.
  */
 internal object CastDeviceProfile {
-    /** Shown next to the session in the server's Dashboard → Devices, beside the local "Jellyboost". */
+    /** Shown next to the session in the server's Dashboard → Devices. */
     const val PROFILE_NAME: String = "Jellyboost Chromecast"
 
     /**
-     * Builds the profile to send with a cast `PlaybackInfo` request.
-     *
-     * @param maxStreamingBitrate cap from the quality picker; `null` keeps the profile's own
-     *   ceiling. Lowering it below the file's bitrate is what makes the server transcode, exactly
-     *   as it does for local playback.
-     * @param receiver the connected receiver's [class][CastReceiverClass]. HEVC-capable classes
-     *   gain HEVC **direct play** and nothing else — the transcode target and the audio ceilings
-     *   are identical in every class, because those are bounded by CAF's TS demuxer and the
-     *   measured stereo floor respectively, not by the receiver's video decoder.
+     * @param maxStreamingBitrate `null` keeps the profile's own ceiling; lowering it below the
+     *   file's bitrate is what makes the server transcode.
      */
     fun build(
         maxStreamingBitrate: Int? = null,
@@ -74,10 +49,8 @@ internal object CastDeviceProfile {
     }
 
     /**
-     * What HEVC a receiver class may be handed directly, or `null` for none.
-     *
-     * @param level Jellyfin compares `VideoLevel` numerically as ffprobe reports it: `123` is
-     *   HEVC level 4.1 (the 1080p60 tier), `153` is 5.1 (the 4K60 tier).
+     * @param level compared numerically as ffprobe reports it: `123` is HEVC level 4.1 (1080p60),
+     *   `153` is 5.1 (4K60).
      */
     private data class HevcCeiling(
         val maxWidth: String,
@@ -93,12 +66,8 @@ internal object CastDeviceProfile {
         )
 
     /**
-     * One profile per receiver class, built once.
-     *
-     * Deliberately no `containerProfiles` in any of them: [DeviceProfileBuilder] emits one per
-     * container with an empty condition list, which constrains nothing — the containers a receiver
-     * accepts are already named by its direct-play profiles, and repeating them as conditionless
-     * container profiles would only be more of the profile for the server to walk.
+     * Deliberately no `containerProfiles`: a conditionless one constrains nothing, and the
+     * containers a receiver accepts are already named by its direct-play profiles.
      */
     private val PROFILES: Map<CastReceiverClass, DeviceProfile> by lazy {
         CastReceiverClass.entries.associateWith { receiver ->
@@ -117,21 +86,15 @@ internal object CastDeviceProfile {
         }
     }
 
-    /** The one H.264 level every Cast receiver decodes, expressed the way the server compares it. */
+    /** The one H.264 level every Cast receiver decodes, as the server compares it. */
     const val MAX_H264_LEVEL: String = "42"
     private const val MAX_WIDTH = "1920"
     private const val MAX_HEIGHT = "1080"
 
     /**
-     * What the receiver plays untouched.
-     *
      * `mkv` is absent on purpose even though most receivers demux it: the ones that do not fail
-     * silently, and a remux to `mp4` costs the server nothing next to the re-encode a wrong guess
-     * would eventually force anyway.
-     *
-     * [hevc] non-`null` adds `hevc` to the `mp4` entry — direct play is the *only* thing an
-     * HEVC-capable class gains, because HEVC over the HLS transcode would need fMP4 segments,
-     * which the reference receiver was measured to accept-and-never-play (class doc).
+     * silently. [hevc] non-`null` adds `hevc` to the `mp4` entry and nothing else — HEVC over the
+     * HLS transcode would need the fMP4 segments the reference receiver never plays.
      */
     private fun directPlayProfiles(hevc: HevcCeiling?) =
         listOf(
@@ -155,24 +118,15 @@ internal object CastDeviceProfile {
     private const val MAX_AUDIO_CHANNELS = "2"
 
     /**
-     * The ceiling on a direct-played H.264 stream, plus the stereo cap on AAC wherever it turns up.
+     * Without the `h264`/`mp4` entry "H.264 in mp4" would also claim High 10, 4:2:2 and 4K files,
+     * which the server would then hand over untranscoded.
      *
-     * The `h264`/`mp4` entry: without it "H.264 in mp4" would also claim High 10, 4:2:2 and 4K
-     * files, none of which a Cast receiver's baseline decoder touches — and the server, having been
-     * told they are fine, hands them over rather than transcoding.
+     * **Both** `aac` entries are needed: `VIDEO_AUDIO` and `AUDIO` are the two shapes that carry an
+     * AAC track past the container/codec check, and AAC above 2 channels fails on the receiver
+     * (CAF error 104), so a missing cap on either quietly ships a file it rejects.
      *
-     * The two `aac` entries exist because "direct play" has two shapes that both carry an AAC track
-     * past this profile's [DIRECT_PLAY_PROFILES] container/codec check unchallenged: a video's audio
-     * track (`VIDEO_AUDIO`) and an audio-only file (`AUDIO`). Device-measured on a real Chromecast
-     * Ultra: AAC with more than 2 channels fails with CAF error 104 in every container tried, so both
-     * shapes need the same [ProfileConditionValue.AUDIO_CHANNELS] cap or one of them quietly ships a
-     * file the receiver rejects.
-     *
-     * With [hevc] non-`null` an `hevc`/`mp4` entry joins for the same reason the `h264`/`mp4` one
-     * exists: without it "HEVC in mp4" would also claim High-tier profiles, resolutions past the
-     * class's ceiling, and Dolby Vision — whose bitstreams report "Main 10" but need a DV pipeline,
-     * so [ProfileConditionValue.VIDEO_RANGE_TYPE] pins the range to what the dongles render
-     * (HDR10/HLG tone-mapped where the screen lacks it, DV transcoded rather than black-screened).
+     * The `hevc` entry likewise pins [ProfileConditionValue.VIDEO_RANGE_TYPE]: Dolby Vision reports
+     * "Main 10" but needs a DV pipeline, so it must transcode rather than black-screen.
      */
     private fun codecProfiles(hevc: HevcCeiling?) =
         listOfNotNull(
@@ -234,7 +188,6 @@ internal object CastDeviceProfile {
             ),
         )
 
-    /** The HEVC ceiling of a capable class, expressed the way the server checks a file against it. */
     private fun hevcCodecProfile(ceiling: HevcCeiling): CodecProfile =
         CodecProfile(
             type = CodecType.VIDEO,
@@ -272,16 +225,9 @@ internal object CastDeviceProfile {
         )
 
     /**
-     * What we ask the server to transcode *to*.
-     *
-     * HLS with `ts` segments rather than the local profile's wide audio list: the Cast Application
-     * Framework's own player is what consumes this, and it decodes H.264 + AAC in MPEG-TS
-     * everywhere. Verified against the server: the returned `TranscodingUrl` is a `master.m3u8`
-     * with `SegmentContainer=ts`.
-     *
-     * `maxAudioChannels = "2"` puts `TranscodingMaxAudioChannels=2` on that same `TranscodingUrl` —
-     * device-measured on a real Chromecast Ultra: without it the server was transcoding 5.1 sources
-     * to 5.1 AAC, which the receiver rejects with CAF error 104 (see the class doc).
+     * HLS with `ts` segments: CAF's own player decodes H.264 + AAC in MPEG-TS everywhere.
+     * `maxAudioChannels = "2"` puts `TranscodingMaxAudioChannels=2` on the `TranscodingUrl` —
+     * without it the server transcodes 5.1 sources to 5.1 AAC, which the receiver rejects (104).
      */
     private val TRANSCODING_PROFILES =
         listOf(
@@ -305,17 +251,12 @@ internal object CastDeviceProfile {
         )
 
     /**
-     * WebVTT, and nothing else.
+     * The format list decides what the server converts a text subtitle **into**, not what the source
+     * is: declaring `srt` makes it deliver `Stream.subrip`, which a receiver cannot parse, while
+     * with only `vtt` the same stream comes back as `Stream.vtt`. `CastSpecMapper` relies on it.
      *
-     * The format list is not a statement about the *source* — it decides what the server converts
-     * a text subtitle **into** before handing over a delivery URL. Declaring `srt`/`subrip` here
-     * makes it deliver `Stream.subrip`, which a Cast receiver cannot parse; with only `vtt` declared
-     * the very same `subrip` stream comes back as `Stream.vtt` (probed against the server).
-     * `CastSpecMapper` relies on that: every side-loaded cast track is WebVTT.
-     *
-     * Image subtitles (PGS, DVB) are omitted altogether rather than declared. A format the profile
-     * does not mention cannot be delivered externally, so the server burns it into the video — which
-     * is the only way a receiver with no subtitle renderer of its own can show one.
+     * Image subtitles are omitted rather than declared: a format the profile does not mention cannot
+     * be delivered externally, so the server burns it in — the only way a receiver can show one.
      */
     private val SUBTITLE_PROFILES =
         listOf("vtt", "webvtt").map { SubtitleProfile(format = it, method = SubtitleDeliveryMethod.EXTERNAL) }

@@ -31,16 +31,8 @@ import org.junit.jupiter.api.Test
 /**
  * Unit tests for [SyncPlayController].
  *
- * Two properties carry the whole feature and neither is visible from a single call site:
- *
- * 1. **No in-group action moves this player locally.** Every intent test therefore asserts what
- *    the *player* was not asked to do, which is the only way to state it.
- * 2. **A confirmed connection loss pauses and leaves; a flap does nothing.** Both are exercised,
- *    because the failure mode of getting the second one wrong — a group dropped every time a
- *    train goes through a tunnel — is invisible in a test that only covers the first.
- *
  * `runCurrent()` rather than `advanceUntilIdle()` throughout: an in-group controller runs a ping
- * loop and a drift monitor for ever, so "advance until nothing is scheduled" never returns.
+ * loop and a drift monitor forever, so "advance until nothing is scheduled" never returns.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 @Suppress("LargeClass") // One class per collaborator would hide the interactions being pinned.
@@ -76,10 +68,8 @@ internal class SyncPlayControllerTest : SyncPlayControllerTestBase() {
             fixture.controller.joinGroup(group())
             runCurrent()
 
-            // Order, not merely presence: `SyncPlayTimeSync.offset` is ZERO until a sample records
-            // one, the pinger only starts once the group has been entered, and the server can send
-            // the group's current command the moment the join returns — so a clock measured after
-            // the join is a first command converted to local time against an assumed offset.
+            // Sampling after join risks converting an already-arrived first command against an
+            // assumed offset (`SyncPlayTimeSync.offset` is zero until a sample records one).
             fixture.api.calls.take(2) shouldBe
                 listOf(SyncPlayCall.SampleServerTime, SyncPlayCall.JoinGroup(group().id))
         }
@@ -196,17 +186,13 @@ internal class SyncPlayControllerTest : SyncPlayControllerTestBase() {
     fun `an item the host already has open is adopted rather than reloaded, and still owes a ready`() =
         runTest {
             val fixture = fixture()
-            // The user opened this item themselves and then the group moved onto it — or the group's
-            // own `PlayQueueUpdate` opened it through a launch request, which is the same shape.
             fixture.host.snapshot = SyncPlayHostSnapshot(itemId, 30_000L.millisToTicks(), isPlaying = true)
 
             joinWithQueue(fixture)
 
             fixture.host.loaded shouldBe emptyList()
-            // Buffering *first*: an adopted player has very often only just been handed the item, so
-            // an immediate `ready` claims a readiness nobody has. It is also what puts the group
-            // back to waiting on this member, which is what earns the unpause that clears the
-            // WAITING overlay.
+            // Buffering first: an immediate `ready` would claim a readiness nobody has, and only
+            // buffering re-enters the group's wait.
             val buffering = fixture.api.callsOf<SyncPlayCall.ReportBuffering>().single()
             buffering.playlistItemId shouldBe playlistItemId
             buffering.positionTicks shouldBe 30_000L.millisToTicks()
@@ -220,9 +206,8 @@ internal class SyncPlayControllerTest : SyncPlayControllerTestBase() {
             val ready = fixture.api.callsOf<SyncPlayCall.ReportReady>().single()
             ready.playlistItemId shouldBe playlistItemId
             ready.positionTicks shouldBe 30_000L.millisToTicks()
-            // The adopted player was running, so answering the group's wait parks it first — a
-            // `ready` that claims to be playing is answered `AllExceptCurrentSession` and this
-            // member is sent nothing (`WaitingGroupState.cs`:484-498).
+            // `WaitingGroupState.cs`:484-498 answers a `ready` claiming isPlaying=true with
+            // `AllExceptCurrentSession` and sends this member nothing — so it's parked first.
             ready.isPlaying shouldBe false
         }
 
@@ -233,9 +218,8 @@ internal class SyncPlayControllerTest : SyncPlayControllerTestBase() {
             fixture.host.snapshot = SyncPlayHostSnapshot(itemId, 30_000L.millisToTicks(), isPlaying = false)
 
             joinWithQueue(fixture)
-            // No `PlayerEvent.Ready`: the player was already prepared before the host was attached,
-            // so its readiness has been and gone. Without the fallback the group would wait on a
-            // member for an event that cannot happen again.
+            // No `PlayerEvent.Ready`: readiness already happened before the host attached; without
+            // the fallback the group waits on an event that cannot happen again.
             advanceTimeBy(SyncPlayController.SETTLED_READY_FALLBACK_MS + 1)
             runCurrent()
 
@@ -260,9 +244,8 @@ internal class SyncPlayControllerTest : SyncPlayControllerTestBase() {
     fun `a load cancelled from the host's side is not reported unplayable and skips nothing`() =
         runTest {
             val fixture = fixture()
-            // The host runs the load on its own scope; a screen dismissed mid-load cancels it from
-            // under the controller. A cancelled load says nothing about the item — treating it as
-            // unplayable would silently advance the queue for the whole group.
+            // A cancelled load (screen dismissed mid-load) says nothing about the item; treating it
+            // as unplayable would silently advance the queue for the whole group.
             fixture.host.loadError = CancellationException("screen going away")
 
             joinWithQueue(fixture)
@@ -270,7 +253,6 @@ internal class SyncPlayControllerTest : SyncPlayControllerTestBase() {
             fixture.messages.shouldBeEmpty()
             fixture.api.callsOf<SyncPlayCall.RequestNextItem>().shouldBeEmpty()
 
-            // The collector survived it, and the slot is still openable once a load can run again.
             fixture.host.loadError = null
             fixture.socket.emit(SyncPlayGroupEvent.QueueChanged(queue()))
             runCurrent()
@@ -283,7 +265,6 @@ internal class SyncPlayControllerTest : SyncPlayControllerTestBase() {
             val fixture = fixture()
             joinWithQueue(fixture)
 
-            // The group moves on to the second slot...
             fixture.socket.emit(
                 SyncPlayGroupEvent.QueueChanged(
                     twoItemQueue(playingIndex = 1).copy(lastUpdate = origin.plusSeconds(10)),
@@ -292,8 +273,8 @@ internal class SyncPlayControllerTest : SyncPlayControllerTestBase() {
             runCurrent()
             fixture.host.loaded shouldBe listOf(itemId to 0L, otherItemId to 0L)
 
-            // ...and a straggler published before that move — most concretely the pre-join stash
-            // replayed after a live update — must not drag it back.
+            // A straggler published before that move (e.g. the pre-join stash replayed late) must
+            // not drag it back.
             fixture.socket.emit(
                 SyncPlayGroupEvent.QueueChanged(
                     twoItemQueue(playingIndex = 0).copy(lastUpdate = origin.plusSeconds(5)),
@@ -312,16 +293,13 @@ internal class SyncPlayControllerTest : SyncPlayControllerTestBase() {
             joinWithQueue(fixture, startTicks = 12_000L.millisToTicks())
             fixture.launchRequests shouldBe listOf(SyncPlayLaunchRequest(itemId, 12_000L.millisToTicks()))
 
-            // A NavHost composed later — its collector did not exist when the request was raised
-            // (a task swipe or Activity reclaim while the presence service holds the group), and
-            // the request must survive until it does.
+            // Must survive a NavHost composed later than the request (a task swipe or Activity
+            // reclaim while the presence service holds the group).
             val replayed = mutableListOf<SyncPlayLaunchRequest>()
             backgroundScope.launch { fixture.controller.launchRequests.collect { replayed += it } }
             runCurrent()
             replayed shouldBe listOf(SyncPlayLaunchRequest(itemId, 12_000L.millisToTicks()))
 
-            // Consuming it is what keeps a handled request from re-navigating on the next
-            // composition.
             fixture.controller.consumeLaunchRequest()
             val afterConsume = mutableListOf<SyncPlayLaunchRequest>()
             backgroundScope.launch { fixture.controller.launchRequests.collect { afterConsume += it } }
@@ -337,7 +315,6 @@ internal class SyncPlayControllerTest : SyncPlayControllerTestBase() {
             joinPlaying(fixture)
             fixture.controller.detachHost(fixture.host)
             runCurrent()
-            // The screen is gone but the shared player plays on, forty minutes into the film.
             fixture.player.snapshot = fixture.player.snapshot.copy(positionMs = fortyMinutesMs, isPlaying = true)
             fixture.api.clearCalls()
 
@@ -345,8 +322,8 @@ internal class SyncPlayControllerTest : SyncPlayControllerTestBase() {
             advanceTimeBy(SyncPlayController.SETTLED_READY_FALLBACK_MS + 1)
             runCurrent()
 
-            // Both reports carry the player's own reading, not zero: the server holds the group
-            // and schedules its resume off reported positions.
+            // Reports carry the player's real position, not zero — the server schedules resume
+            // off reported positions.
             fixture.api
                 .callsOf<SyncPlayCall.ReportBuffering>()
                 .single()
@@ -454,15 +431,13 @@ internal class SyncPlayControllerTest : SyncPlayControllerTestBase() {
             fixture.controller.detachHost(fixture.host)
             runCurrent()
 
-            // Giving back the screen is not giving back the player: `PlaybackService` keeps the
-            // shared ExoPlayer running, so the phase must go on saying what the group is doing.
-            // Forcing it to `Paused` here would take the drift monitor down with it.
+            // Detaching the screen doesn't stop `PlaybackService`'s shared player; forcing phase to
+            // `Paused` here would take the drift monitor down with it.
             (fixture.controller.state.value as SyncPlayState.InGroup)
                 .phase
                 .shouldBeInstanceOf<SyncPlayPhase.Playing>()
 
-            // And a command the group issues after the screen went must still land on that player,
-            // which a cancelled scheduler would have swallowed.
+            // A command issued after detach must still land — a cancelled scheduler would swallow it.
             fixture.socket.emit(command(SyncPlayCommandType.Pause, now().plusMillis(500), positionMs = 30_000))
             runCurrent()
             fixture.player.pauseCount shouldBe 0
@@ -533,7 +508,6 @@ internal class SyncPlayControllerTest : SyncPlayControllerTestBase() {
 
             fixture.host.loaded shouldBe
                 listOf(itemId to 0L, otherItemId to 45_000L.millisToTicks())
-            // Opened paused and handed to the ordinary handshake: buffering out, ready back.
             fixture.api
                 .callsOf<SyncPlayCall.ReportBuffering>()
                 .last()
@@ -548,7 +522,6 @@ internal class SyncPlayControllerTest : SyncPlayControllerTestBase() {
             joinWithQueue(fixture, queue = twoItemQueue(playingIndex = 0))
             fixture.host.loaded shouldBe listOf(itemId to 0L)
 
-            // The same two slots, swapped — the group is still on the same one, now at index 1.
             fixture.socket.emit(
                 SyncPlayGroupEvent.QueueChanged(
                     twoItemQueue(playingIndex = 1, reason = SyncPlayQueueUpdateReason.MoveItem).let { moved ->
@@ -590,7 +563,6 @@ internal class SyncPlayControllerTest : SyncPlayControllerTestBase() {
             joinWithQueue(fixture, queue = twoItemQueue(playingIndex = 0))
             fixture.api.clearCalls()
 
-            // The group moves on, this one opens, and then the first slot comes round again.
             fixture.host.loadSucceeds = true
             fixture.socket.emit(SyncPlayGroupEvent.QueueChanged(twoItemQueue(playingIndex = 1)))
             runCurrent()
@@ -623,13 +595,11 @@ internal class SyncPlayControllerTest : SyncPlayControllerTestBase() {
     fun `buffering reports say what the player is really doing`() =
         runTest {
             val fixture = fixture()
-            // The user was already watching this item, still running, when the group moved onto it.
             fixture.host.snapshot = SyncPlayHostSnapshot(itemId, 30_000L.millisToTicks(), isPlaying = true)
 
             joinWithQueue(fixture)
 
-            // The adoption handshake's own report says it, before any readiness is claimed. The
-            // server tracks what each member reported here, and jellyfin-web sends its real state.
+            // Server tracks what each member reported; jellyfin-web sends its real state here too.
             fixture.api
                 .callsOf<SyncPlayCall.ReportBuffering>()
                 .single()
@@ -643,7 +613,6 @@ internal class SyncPlayControllerTest : SyncPlayControllerTestBase() {
                 .single()
                 .isPlaying shouldBe true
 
-            // And a player that really has stopped still reports `false`.
             fixture.host.snapshot = fixture.host.snapshot.copy(isPlaying = false)
             fixture.api.clearCalls()
             fixture.controller.onHostBuffering()
@@ -658,8 +627,8 @@ internal class SyncPlayControllerTest : SyncPlayControllerTestBase() {
     fun `a ready report parks a running player, and is reported from a stopped one`() =
         runTest {
             val fixture = fixture()
-            // The player really is running when the group's wait has to be answered: the post-seek
-            // settle, the adopt path and the re-negotiation after a blip all reach this state.
+            // Real scenarios reaching this state: post-seek settle, the adopt path, and
+            // re-negotiation after a blip.
             fixture.host.snapshot = SyncPlayHostSnapshot(itemId, 30_000L.millisToTicks(), isPlaying = true)
 
             joinWithQueue(fixture)
@@ -668,12 +637,9 @@ internal class SyncPlayControllerTest : SyncPlayControllerTestBase() {
             fixture.player.emit(PlayerEvent.Ready)
             runCurrent()
 
-            // `WaitingGroupState.cs`:484-498 — a `ready` whose `IsPlaying` is true from a session
-            // more than `2 × highestPing` behind is answered `AllExceptCurrentSession`: everyone
-            // else is told to resume and *this* member is sent nothing, on the assumption that a
-            // client already playing will catch up by itself. It does not: it sits under "Waiting
-            // for group" until somebody moves the group. So the player is parked first, and the
-            // report is then true as well as safe.
+            // `WaitingGroupState.cs`:484-498: a ready with isPlaying=true from a session more than
+            // `2 × highestPing` behind gets `AllExceptCurrentSession` and nothing — the client then
+            // sits under "Waiting for group" forever, so this parks the player first.
             fixture.player.pauseCount shouldBe 1
             val ready = fixture.api.callsOf<SyncPlayCall.ReportReady>().single()
             ready.isPlaying shouldBe false
@@ -693,8 +659,8 @@ internal class SyncPlayControllerTest : SyncPlayControllerTestBase() {
             fixture.player.emit(PlayerEvent.Ready)
             runCurrent()
 
-            // Parking is idempotent — it has to be, because the pause net and the WAITING hold both
-            // pause the same player and neither may be turned into a second transport call.
+            // Parking must be idempotent: the pause net and the WAITING hold both pause the same
+            // player, and neither may fire a second transport call.
             fixture.player.hadNoTransportCalls shouldBe true
             fixture.api
                 .callsOf<SyncPlayCall.ReportReady>()
@@ -711,8 +677,8 @@ internal class SyncPlayControllerTest : SyncPlayControllerTestBase() {
 
             fixture.socket.emit(command(SyncPlayCommandType.Pause, now(), positionMs = 30_000))
             runCurrent()
-            // Seeking to the position the group parked at makes the player ready again. Reporting
-            // that is what the server answers with the very pause that caused it — the storm.
+            // Reporting this ready would have the server answer with the same pause again — the
+            // storm this guards against.
             fixture.player.emit(PlayerEvent.Ready)
             runCurrent()
 
@@ -778,8 +744,7 @@ internal class SyncPlayControllerTest : SyncPlayControllerTestBase() {
             fixture.player.pauseCount shouldBe 1
             (fixture.controller.state.value as SyncPlayState.InGroup).phase shouldBe SyncPlayPhase.Waiting
 
-            // Being told to wait is not a handshake: the pause makes the player ready again and that
-            // must not turn into a report.
+            // The pause makes the player ready again; that must not turn into a report.
             fixture.player.emit(PlayerEvent.Ready)
             advanceTimeBy(10_000)
             runCurrent()
@@ -806,10 +771,9 @@ internal class SyncPlayControllerTest : SyncPlayControllerTestBase() {
             fixture.player.snapshot = PlaybackSnapshot(positionMs = 0, isPlaying = false)
             fixture.player.resetCalls()
 
-            // The server settles the rebuilt member by re-sending the standing command verbatim —
-            // same instant, same position, only `emittedAt` fresh. Remembered as applied, this
-            // would be dropped as a repeat and the member would never resume — the blind fallback
-            // would then jump from 6:35 to 27:27.
+            // Re-sent verbatim (same instant/position, fresh `emittedAt`) must not be dropped as a
+            // repeat — remembered-as-applied, this member would never resume and the blind fallback
+            // would jump from 6:35 to 27:27.
             fixture.socket.emit(
                 command(SyncPlayCommandType.Unpause, unpause.whenInstant, positionMs = 0, emittedAt = now()),
             )
@@ -827,8 +791,8 @@ internal class SyncPlayControllerTest : SyncPlayControllerTestBase() {
             joinPlaying(fixture)
             fixture.player.resetCalls()
 
-            // The pause the group sent never arrived: the phase says `Paused` over a player that is
-            // still playing, which is the reading the hold must not take its answer from.
+            // Phase says `Paused` but the player is still playing (the sent pause never arrived) —
+            // the hold must not trust phase alone.
             fixture.socket.emit(
                 SyncPlayGroupEvent.StateChanged(SyncPlayGroupState.Paused, SyncPlayRequestKind.Pause),
             )
@@ -841,8 +805,7 @@ internal class SyncPlayControllerTest : SyncPlayControllerTestBase() {
             )
             runCurrent()
 
-            // Held at once, well inside the pause net's window — a member that plays on behind the
-            // WAITING overlay is drifting ahead, phase or no phase.
+            // A member that plays on behind the WAITING overlay is drifting ahead, phase or no phase.
             fixture.player.pauseCount shouldBe 1
         }
 
@@ -855,8 +818,8 @@ internal class SyncPlayControllerTest : SyncPlayControllerTestBase() {
             runCurrent()
             fixture.api.clearCalls()
 
-            // The group restarted the item it is already on (`Unpause` out of Idle, server-side):
-            // same slot, nothing to load, and `SetAllBuffering(true)` waiting on a ready all the same.
+            // Group restarted the same item server-side (`Unpause` out of Idle): nothing to load,
+            // but `SetAllBuffering(true)` still waits on a ready.
             fixture.socket.emit(SyncPlayGroupEvent.QueueChanged(queue()))
             runCurrent()
 
@@ -985,8 +948,7 @@ internal class SyncPlayControllerTest : SyncPlayControllerTestBase() {
     @Test
     fun `the sign-out hook leaves the group on the server while the token still works`() =
         runTest {
-            // `SyncPlaySignOutHook` runs this *before* SessionRepository revokes the token: the
-            // server leave has to travel on a credential that still works.
+            // `SyncPlaySignOutHook` runs this before SessionRepository revokes the token.
             val fixture = fixture()
             joinWithQueue(fixture)
             fixture.api.clearCalls()
@@ -1002,8 +964,7 @@ internal class SyncPlayControllerTest : SyncPlayControllerTestBase() {
     @Test
     fun `the LoggedOut transition tears down locally without chasing a revoked token`() =
         runTest {
-            // By the time the state flips to LoggedOut the token is revoked; a server leave from
-            // here could only 401, so only the local session may be torn down.
+            // By this point the token is revoked; a server leave here could only 401.
             val fixture = fixture()
             joinWithQueue(fixture)
             fixture.api.clearCalls()

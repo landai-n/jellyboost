@@ -33,19 +33,13 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Signs the user in — by password or by Quick Connect — and is the only writer of the
- * credentials that result.
- *
- * Every successful authentication funnels through one private path that: upserts the server,
- * its address and the user into Room (all token-free), writes the access token to
- * [SecureCredentialStore] and nowhere else, points [ApiClientProvider] at the authenticated
- * server, and publishes [SessionState.LoggedIn] through [SessionStateHolder].
+ * Signs the user in — by password or by Quick Connect — and is the only writer of the credentials that
+ * result. Every successful authentication funnels through one private path; the access token goes to
+ * [SecureCredentialStore] and nowhere else, and Room only ever sees token-free rows.
  */
 @Singleton
 class AuthRepository
     @Suppress(
-        // Seven DI collaborators: sign-in touches the API, both DAOs, the credential store and the session holder in
-        // one flow. Boxing them would rename the coupling, not remove it.
         "LongParameterList",
     )
     @Inject
@@ -59,12 +53,8 @@ class AuthRepository
         @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     ) {
         /**
-         * Points the API client at [server] and gathers what the login screen needs: the public
-         * user list, the login disclaimer and whether Quick Connect is offered.
-         *
-         * Only the public-user call is fatal. Branding and Quick Connect availability degrade to
-         * `null`/`false` on failure, because an old or locked-down server that does not answer
-         * them must still be loggable-into.
+         * Only the public-user call is fatal: branding and Quick Connect availability degrade to `null`/`false`,
+         * because an old or locked-down server that does not answer them must still be loggable-into.
          */
         suspend fun fetchLoginContext(server: ResolvedServer): AppResult<LoginContext> {
             apiClientProvider.useServer(server.address)
@@ -84,8 +74,7 @@ class AuthRepository
             val quickConnectEnabled =
                 runCatchingApi { apiFacade.getQuickConnectEnabled() }.getOrNull() ?: false
 
-            // Host only, at debug: this is the sign-in flow, so it is the log a user captures when
-            // sign-in misbehaves and pastes into a bug report. See `hostForLog`.
+            // Host only, at debug: this is the log a user captures for a sign-in bug report. See `hostForLog`.
             Timber.d(
                 "Login context for %s: %d public user(s), quickConnect=%b, disclaimer=%b",
                 hostForLog(server.address),
@@ -110,12 +99,7 @@ class AuthRepository
             )
         }
 
-        /**
-         * Signs [username] in on [server] with [password].
-         *
-         * On success the session is fully persisted and the API client is authenticated; on
-         * failure nothing at all is written.
-         */
+        /** On success the session is fully persisted and the client authenticated; on failure nothing is written. */
         suspend fun loginWithPassword(
             server: ResolvedServer,
             username: String,
@@ -125,8 +109,7 @@ class AuthRepository
             return when (val result = runCatchingApi { apiFacade.authenticateUserByName(username, password) }) {
                 is AppResult.Success -> completeAuthentication(server, result.value)
                 is AppResult.Failure -> {
-                    // The username value is deliberately not logged: what the user typed there can
-                    // be a mistyped password.
+                    // The username is deliberately not logged: what the user typed there can be a mistyped password.
                     Timber.w("Password login failed: %s", result.error)
                     result
                 }
@@ -134,19 +117,15 @@ class AuthRepository
         }
 
         /**
-         * Opens a Quick Connect request on the currently configured server.
-         *
-         * Show [QuickConnectSession.code] to the user, then collect
-         * [observeQuickConnectState] with [QuickConnectSession.secret] and call
-         * [loginWithQuickConnect] once it reports [QuickConnectState.Approved].
+         * Show [QuickConnectSession.code] to the user, then collect [observeQuickConnectState] with its
+         * [QuickConnectSession.secret] and call [loginWithQuickConnect] once it reports approval.
          */
         suspend fun initiateQuickConnect(): AppResult<QuickConnectSession> =
             when (val result = runCatchingApi { apiFacade.initiateQuickConnect() }) {
                 is AppResult.Success -> {
                     val secret = result.value.secret
                     val code = result.value.code
-                    // The code is not logged: it is what authorizes this login, and logcat is a
-                    // wider audience than the screen showing it to the user.
+                    // The code is not logged: it authorizes this login, and logcat is a wider audience than the screen.
                     Timber.i("Quick Connect initiated")
                     AppResult.Success(QuickConnectSession(secret = secret, code = code))
                 }
@@ -154,13 +133,7 @@ class AuthRepository
                 is AppResult.Failure -> result
             }
 
-        /**
-         * Polls the state of the Quick Connect request identified by [secret] every
-         * [QUICK_CONNECT_POLL_INTERVAL], giving up after [QUICK_CONNECT_TIMEOUT].
-         *
-         * The flow emits [QuickConnectState.WaitingForApproval] once per poll and then completes
-         * with exactly one terminal value. Cancel the collection to stop polling early.
-         */
+        /** Emits [QuickConnectState.WaitingForApproval] per poll, then exactly one terminal value. */
         fun observeQuickConnectState(secret: String): Flow<QuickConnectState> =
             flow {
                 var elapsed = Duration.ZERO
@@ -178,8 +151,8 @@ class AuthRepository
                         is AppResult.Failure -> {
                             val error = result.error
                             if (error is AppError.NotFound) {
-                                // The server forgets a request once it expires or is denied. A 404
-                                // reaches here as `NotFound`, via the shared status-code mapper.
+                                // The server forgets a request once it expires or is denied.
+                                // The 404 arrives here as `NotFound`.
                                 Timber.i("Quick Connect request no longer exists on the server")
                                 emit(QuickConnectState.Expired)
                             } else {
@@ -198,10 +171,6 @@ class AuthRepository
                 emit(QuickConnectState.Expired)
             }.flowOn(ioDispatcher)
 
-        /**
-         * Exchanges an approved Quick Connect [secret] for a session on [server]. Persists
-         * exactly like [loginWithPassword].
-         */
         suspend fun loginWithQuickConnect(
             server: ResolvedServer,
             secret: String,
@@ -216,10 +185,7 @@ class AuthRepository
             }
         }
 
-        /**
-         * The one place a session is turned into persisted state. Room never sees the token —
-         * it goes to [SecureCredentialStore] and onto the in-memory API client only.
-         */
+        /** The one place a session is turned into persisted state. Room never sees the token. */
         private suspend fun completeAuthentication(
             server: ResolvedServer,
             result: AuthenticationResult,
@@ -251,9 +217,8 @@ class AuthRepository
                 ),
             )
 
-            // A server that forbids content downloading changes the whole offline story, so
-            // surface the policy loudly at every sign-in.
-            // The username is deliberately not logged here.
+            // A server that forbids content downloading changes the whole offline story, so the policy is
+            // surfaced loudly at every sign-in. The username is deliberately not logged.
             Timber.i(
                 "Signed in on '%s' (version %s, device %s); downloads allowed by policy: %b",
                 server.name,
@@ -274,10 +239,6 @@ class AuthRepository
             )
         }
 
-        /**
-         * Writes the server, its address and the user to Room — all token-free — and the token
-         * itself to [SecureCredentialStore], the only place it is ever allowed to be persisted.
-         */
         private suspend fun persistSession(
             server: ResolvedServer,
             user: UserDto,
@@ -309,10 +270,8 @@ class AuthRepository
             }
 
         companion object {
-            /** Interval between Quick Connect status polls. */
             val QUICK_CONNECT_POLL_INTERVAL: Duration = 5.seconds
 
-            /** How long this client keeps polling before giving up. */
             val QUICK_CONNECT_TIMEOUT: Duration = 5.minutes
         }
     }

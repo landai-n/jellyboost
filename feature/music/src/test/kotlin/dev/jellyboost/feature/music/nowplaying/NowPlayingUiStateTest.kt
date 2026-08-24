@@ -12,7 +12,6 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
-/** Unit tests for [toNowPlayingUiState] — the pure queue-state-to-screen-state mapping. */
 class NowPlayingUiStateTest {
     @Test
     fun `idle maps to an idle state with no track`() {
@@ -155,8 +154,8 @@ class NowPlayingUiStateTest {
     fun `an untimed line inside an otherwise synced set is skipped, not treated as starting at zero`() {
         val lines = listOf(line(10_000_000L, "First"), line(null, "Blank separator"), line(20_000_000L, "Second"))
 
-        // Between the first and third line's timing — the untimed second line must not have reset
-        // the active index back to itself (which would read as "starts at 0").
+        // Between the first and third line's timing: the untimed second line must not reset the
+        // active index to itself, which would read as "starts at 0".
         activeLyricLineIndex(lines, positionMs = 1_500L) shouldBe 0
     }
 

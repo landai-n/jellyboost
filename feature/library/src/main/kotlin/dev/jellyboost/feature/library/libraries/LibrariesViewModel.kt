@@ -14,12 +14,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/**
- * State holder for the Libraries tab.
- *
- * A thin wrapper over [JellyfinRepository.getUserViews] — the same call the home screen's
- * *My Media* row makes — rendered as its own full grid instead of a horizontal row.
- */
 @HiltViewModel
 class LibrariesViewModel
     @Inject
@@ -29,7 +23,6 @@ class LibrariesViewModel
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(LibrariesUiState())
 
-        /** The single source of truth for [LibrariesScreen]. */
         val uiState: StateFlow<LibrariesUiState> = _uiState.asStateFlow()
 
         init {
@@ -37,15 +30,11 @@ class LibrariesViewModel
             observeConnectivityChanges()
         }
 
-        /**
-         * Re-loads the list whenever the connection changes — the offline list only contains
-         * libraries this device has already seen. See [reloadOnChange].
-         */
+        /** The offline list only contains libraries this device has already seen. */
         private fun observeConnectivityChanges() {
             connectivityRefresher.reloadOnChange(viewModelScope) { refresh() }
         }
 
-        /** Re-fetches the library list; called by pull-to-refresh and the error state's retry button. */
         fun refresh() {
             load()
         }

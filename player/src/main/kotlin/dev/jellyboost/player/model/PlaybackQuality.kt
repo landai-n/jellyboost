@@ -1,18 +1,9 @@
 package dev.jellyboost.player.model
 
 /**
- * The choices in the player's quality picker.
- *
- * A cap is sent to the server as `maxStreamingBitrate`; anything above it forces the server to
- * transcode.
- *
- * [AUTO]'s own `maxStreamingBitrate` is `null`, but that is not what reaches the server:
- * an Auto request carries `PlaybackResolveRequest.autoBitrate`, and `PlaybackInfoResolver` fills the
- * cap in from `AutoBitrateDetector`'s measured throughput. `null` only
- * survives the round trip in the degraded case — a measurement that failed with no prior to fall
- * back on — which leaves the device profile's own 120 Mbps ceiling to apply.
- * That degraded case is also the only way [lowerThan] is ever asked about a `null` cap, which it
- * answers by treating the stream as [HIGH]'s 20 Mbps and stepping down from there.
+ * [AUTO]'s `null` cap is not what reaches the server: `PlaybackInfoResolver` fills it in from
+ * `AutoBitrateDetector`'s measured throughput. `null` survives only when measurement failed with no
+ * prior, leaving the device profile's 120 Mbps ceiling — the one case [lowerThan] sees a `null` cap.
  */
 internal enum class PlaybackQuality(
     val maxStreamingBitrate: Int?,
@@ -25,11 +16,9 @@ internal enum class PlaybackQuality(
     ;
 
     companion object {
-        /** The picker entry matching [bitrate], falling back to [AUTO]. */
         fun forBitrate(bitrate: Int?): PlaybackQuality =
             entries.firstOrNull { it.maxStreamingBitrate == bitrate } ?: AUTO
 
-        /** The next step down from [bitrate], used by the source-error retry. */
         fun lowerThan(bitrate: Int?): PlaybackQuality? {
             val capped = bitrate ?: HIGH.maxStreamingBitrate
             return entries
@@ -39,14 +28,13 @@ internal enum class PlaybackQuality(
     }
 }
 
-/** 20 Mbps — comfortably above a 1080p H.264 remux, so most files still direct-play. */
+/** 20 Mbps — above a 1080p H.264 remux, so most files still direct-play. */
 private const val BITRATE_HIGH = 20_000_000
 
 /** 8 Mbps — a 1080p transcode. */
 private const val BITRATE_MEDIUM = 8_000_000
 
-/** 3 Mbps — a 720p transcode; low enough to force one on almost any library file. */
+/** 3 Mbps — a 720p transcode. */
 private const val BITRATE_LOW = 3_000_000
 
-/** 720 kbps — the "make it work on this connection" setting. */
 private const val BITRATE_LOWEST = 720_000

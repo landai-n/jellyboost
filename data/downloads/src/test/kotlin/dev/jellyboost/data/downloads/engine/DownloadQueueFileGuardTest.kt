@@ -40,11 +40,9 @@ import java.time.Clock
 import java.time.ZoneOffset
 
 /**
- * Unit tests for the guards [DownloadQueue] applies *before* touching a file — the claim on the
- * item row, the already-whole-on-disk skip and the cancellation clean-up of a half-written strip.
- *
- * Separate from [DownloadQueueTest], which owns the transfer itself: what lives here is only what
- * keeps a re-entered or interrupted item from spending bytes it has already paid for, or from
+ * The guards [DownloadQueue] applies *before* touching a file — the claim on the item row, the
+ * already-whole-on-disk skip and the cancellation clean-up of a half-written strip. What lives here is
+ * what keeps a re-entered or interrupted item from spending bytes it has already paid for, or from
  * overwriting a status the user just wrote.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -91,10 +89,8 @@ class DownloadQueueFileGuardTest {
     fun `a row whose status changed between being picked and being claimed is left alone`() =
         runTest {
             // The race: Pause writes PAUSED and then stops the worker, and a drain sitting between
-            // nextRunnable() and the start of the transfer must not write DOWNLOADING over it —
-            // the cancellation would re-queue the row and the paused item would download anyway.
-            // A claim that touches zero rows means the row changed hands; nothing is transferred
-            // and nothing is written.
+            // nextRunnable() and the start of the transfer must not write DOWNLOADING over it. A claim
+            // that touches zero rows means the row changed hands.
             queueWith(download())
             coEvery { downloadDao.markDownloadingIfRunnable(uuid(1), NOW) } returns 0
 
@@ -109,11 +105,9 @@ class DownloadQueueFileGuardTest {
     @Test
     fun `a media file already downloaded whole is not re-fetched when the item re-enters the queue`() =
         runTest {
-            // The window: the audio lane keeps running for minutes after the film itself has
-            // finished, and any interruption there re-queues the whole item. The media row is
-            // already DOWNLOADED and its transcode is complete on disk — re-entering `downloadOne`
-            // without the guard truncates it and restarts the server-side encode from byte zero,
-            // because a live encode is flagged un-resumable.
+            // The window: the audio lane runs for minutes after the film has finished, and any
+            // interruption there re-queues the whole item. Re-entering `downloadOne` without the guard
+            // truncates a complete transcode and restarts the server-side encode from byte zero.
             every { urls.transcodedVideoUrl(any(), any(), any(), any()) } returns TRANSCODE_URL
             val media = File(directory, "Arrival (2016) (medium).mkv").apply { writeBytes(ByteArray(500)) }
             queueWith(
@@ -130,8 +124,8 @@ class DownloadQueueFileGuardTest {
     @Test
     fun `a DOWNLOADED row whose bytes no longer match what is on disk is fetched again`() =
         runTest {
-            // The other half of the guard: the row's recorded size is the file's final size, so a
-            // truncated file (a swept volume, a torn write) is not the file the row describes.
+            // The row's recorded size is the file's final size, so a truncated file (a swept volume,
+            // a torn write) is not the file the row describes.
             every { urls.transcodedVideoUrl(any(), any(), any(), any()) } returns TRANSCODE_URL
             val media = File(directory, "Arrival (2016) (medium).mkv").apply { writeBytes(ByteArray(100)) }
             queueWith(
@@ -149,9 +143,8 @@ class DownloadQueueFileGuardTest {
     @Test
     fun `a strip cancelled midway leaves no half-written sidecar behind`() =
         runTest {
-            // Keeping the truncated m4a would be junk occupying disk for as long as the pause
-            // lasts, for a file the next attempt rebuilds from its first byte anyway (the row stays
-            // DOWNLOADING, so nothing reads it as whole).
+            // Keeping the truncated m4a would occupy disk for as long as the pause lasts, for a file
+            // the next attempt rebuilds from its first byte anyway.
             givenTwoLanguageTranscode()
             extractor.failure = CancellationException("paused")
 

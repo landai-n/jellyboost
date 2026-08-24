@@ -8,9 +8,6 @@ import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import org.junit.jupiter.api.Test
 
-/**
- * Unit tests for [SyncPlayScopeModule] — its two provider properties.
- */
 class SyncPlayModuleTest {
     /**
      * The socket client must send RFC 6455 pings: the app-level keep-alive succeeds into the send

@@ -1,11 +1,6 @@
 package dev.jellyboost.core.common
 
-/**
- * Punctuation used to join short facts onto one line, shared so every card, header and row spells
- * the same join the same way — jellyfin-web's own convention for lines like
- * `"2016 · TV-MA · 4 seasons"` or `"S1 · E4"`.
- */
+/** jellyfin-web's own convention for lines like `"2016 · TV-MA · 4 seasons"` — shared so every surface joins alike. */
 object Separators {
-    /** Interpunct with a surrounding space on each side: `" · "`. */
     const val DOT = " · "
 }

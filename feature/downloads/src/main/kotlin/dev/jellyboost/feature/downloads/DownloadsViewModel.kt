@@ -25,28 +25,17 @@ import java.time.Clock
 import javax.inject.Inject
 
 /**
- * State holder for the Downloads screen.
+ * Holds no download state of its own: everything visible is a projection of three Room/DataStore
+ * flows, which is what makes the screen correct across a process death mid-transfer with no
+ * save/restore code.
  *
- * It holds no download state of its own: everything visible is a projection of three Room/DataStore
- * Flows (the downloads, the storage figures, the Wi-Fi-only preference), which is what makes the
- * screen correct across a process death mid-transfer without any save/restore code.
+ * [projection] and [local] must stay separate flows so the projection can be **stopped**: shared
+ * with [SharingStarted.WhileSubscribed], leaving the screen unsubscribes from the download list and
+ * the storage walk. A collector launched in `init` would keep both running from the first visit
+ * until process death — the tab switch that "leaves" this screen saves rather than pops it.
  *
- * The only derived value is the transfer speed, computed by [DownloadSpeedTracker] from successive
- * emissions — see its KDoc for why it is not a column.
- *
- * ### What the state is split into, and why
- * [projection] is everything Room and DataStore answer; [local] is everything only a tap changes
- * (the tab, the *Cancel all* dialog, the snackbar). They are separate flows so that the projection
- * can be **stopped**: it is shared with [SharingStarted.WhileSubscribed], so leaving the screen
- * unsubscribes from it, and with it from the download list and the storage walk it pulls. A single
- * collector launched in `init` would instead keep those queries running from the first visit until
- * process death — with the screen off, and with the tab switch that "leaves" the screen saving
- * rather than popping it. [STOP_TIMEOUT_MS] of grace means a rotation or a brief navigation away
- * re-uses the running projection instead of restarting it.
- *
- * The projection itself runs on [DefaultDispatcher]: grouping, sorting and the per-comparison
- * `lowercase()` in [toGroups] must not run in the collector's context — `Main.immediate` — at the
- * throttle's two-to-six emissions a second for the whole of a transfer.
+ * The projection runs on [DefaultDispatcher]: the grouping, sorting and `lowercase()` in [toGroups]
+ * must not run on `Main.immediate` at two-to-six emissions a second for a whole transfer.
  */
 @HiltViewModel
 class DownloadsViewModel
@@ -58,7 +47,6 @@ class DownloadsViewModel
     ) : ViewModel() {
         private val local = MutableStateFlow(LocalState())
 
-        /** The single source of truth for [DownloadsScreen]. */
         val uiState: StateFlow<DownloadsUiState> =
             combine(projection(), local, DownloadsProjection::toUiState)
                 .stateIn(
@@ -68,11 +56,9 @@ class DownloadsViewModel
                 )
 
         /**
-         * Everything the screen draws that comes from storage.
-         *
-         * The speed tracker and the ratchet are built *inside* the flow, once per subscription:
-         * both derive from successive emissions, and a tracker carried over from a subscription that
-         * ended minutes ago would report a speed measured against a stale timestamp.
+         * The tracker, ratchet and cache are built **inside** the flow, once per subscription: all
+         * three derive from successive emissions, and one carried over from a subscription that
+         * ended minutes ago would measure against a stale timestamp.
          */
         private fun projection(): Flow<DownloadsProjection> =
             flow {
@@ -87,13 +73,10 @@ class DownloadsViewModel
                     ) { items, storage, wifiOnly ->
                         val queue = items.toQueue()
                         DownloadsProjection(
-                            // Memoised: the finished half does not move during a transfer, but this
-                            // flow emits several times a second while one is running.
                             downloaded = groupCache.groups(items),
                             queue = queue,
                             speeds = speedTracker.update(items, clock.millis()),
-                            // The queue subset, not the whole table: nothing but a queue row reads
-                            // the ratchet's answer.
+                            // The queue subset, not the whole table: nothing else reads the ratchet.
                             progress = progressRatchet.update(queue),
                             storage = storage,
                             wifiOnly = wifiOnly,
@@ -101,61 +84,44 @@ class DownloadsViewModel
                     },
                 )
             }
-                // Without this the screen's failure mode is a spinner that never stops:
-                // `isLoading` starts `true` and only a first emission clears it, so one throw
-                // upstream — a corrupt dto blob raising `SQLiteBlobTooBigException` is the real
-                // one — leaves the user staring at it forever, with no way to tell a slow query
-                // from a broken one. A collapsed flow cannot recover on its own, so the state
-                // says so and the screen offers the failure instead of the spinner.
+                // Load-bearing: `isLoading` starts `true` and only a first emission clears it, so an
+                // upstream throw (a corrupt dto blob raising `SQLiteBlobTooBigException`) would
+                // otherwise leave a spinner that never stops. A collapsed flow cannot recover, so
+                // the state says so permanently.
                 .catch { error ->
                     Timber.e(error, "The downloads projection failed; showing the error state")
                     emit(DownloadsProjection(loadFailed = true))
                 }.flowOn(defaultDispatcher)
 
-        /** Switches between the *Downloaded* and *Queue* tabs. */
         fun selectTab(tab: DownloadsTab) {
             local.update { it.copy(selectedTab = tab) }
         }
 
-        /** Restricts downloads to unmetered networks, or lifts the restriction. */
         fun setWifiOnly(enabled: Boolean) {
             viewModelScope.launch { downloads.setWifiOnly(enabled) }
         }
 
-        // The five row actions take an item **id** rather than a `DownloadItem`. Every one of them
-        // only ever needs the id, and taking the whole row would force the composables that call
-        // them to take one too — `QueueRowActions` handed a fresh, always-unstable `DownloadItem`
-        // on every progress tick where two booleans and an id would do.
+        // The five row actions must keep taking an item **id**, not a `DownloadItem`: a row
+        // parameter would force `QueueRowActions` to take one too, and it is unstable and rebuilt on
+        // every progress tick.
 
-        /** Pauses one item; its partial files stay on disk for the next resume. */
         fun pause(itemId: String) {
             viewModelScope.launch { report(downloads.pause(itemId), DownloadsMessage.ActionFailed) }
         }
 
-        /** Puts a paused or failed item back in the queue. */
         fun resume(itemId: String) {
             viewModelScope.launch { report(downloads.resume(itemId), DownloadsMessage.ActionFailed) }
         }
 
-        /**
-         * Removes an item from the device.
-         *
-         * The same call backs *Cancel* in the queue and *Delete* in the downloaded list: both mean
-         * "get this off my device", and a half-transferred file does not deserve its own path.
-         */
+        /** Backs *Cancel* in the queue and *Delete* in the downloaded list alike. */
         fun delete(itemId: String) {
             viewModelScope.launch { report(downloads.delete(itemId), DownloadsMessage.DeleteFailed) }
         }
 
         /**
-         * Pauses every queue row that *can* be paused, and says so when some cannot.
-         *
-         * Transcodes are skipped rather than paused: the server ignores `Range` on a file it is
-         * still producing, so pausing one discards the transfer instead of suspending it
-         * (`DownloadItem.isPausable`). The per-row button hides *Pause* on exactly those rows, and
-         * this shares its predicate ([DownloadItem.isPauseTarget]) so the two cannot drift apart.
-         * When anything was skipped the snackbar reports both numbers — a queue that keeps moving
-         * after *Pause all* would otherwise read as the button having failed.
+         * Transcodes are skipped, not paused: the server ignores `Range` on a file it is still
+         * producing, so pausing one discards the transfer. Shares [DownloadItem.isPauseTarget] with
+         * the per-row button so the two cannot drift apart.
          */
         fun pauseAll() {
             val state = uiState.value
@@ -180,12 +146,7 @@ class DownloadsViewModel
             }
         }
 
-        /**
-         * Puts every paused or failed row back in the queue.
-         *
-         * Silent on success: the rows themselves change to *Waiting* under the user's finger, which
-         * says it better than a snackbar over them would.
-         */
+        /** Silent on success: the rows themselves change to *Waiting* under the user's finger. */
         fun resumeAll() {
             val targets = uiState.value.resumeAllTargets
             if (targets.isEmpty()) return
@@ -195,25 +156,18 @@ class DownloadsViewModel
             }
         }
 
-        /** *Cancel all* was tapped — ask first; [confirmCancelAll] is what actually removes anything. */
         fun requestCancelAll() {
             if (uiState.value.queue.isEmpty()) return
             local.update { it.copy(showCancelAllConfirmation = true) }
         }
 
-        /** The *Cancel all* dialog was dismissed; the queue is untouched. */
         fun dismissCancelAll() {
             local.update { it.copy(showCancelAllConfirmation = false) }
         }
 
         /**
-         * Empties the queue: every row it holds is removed in a single batched
-         * [DownloadRepository.deleteAll] call.
-         *
-         * **Finished downloads are never touched** — not by a filter here, but by construction: the
-         * queue tab is `toQueue()`, which excludes `DOWNLOADED` rows, so there is no id in this list
-         * that names a completed file. This is the season-cancel rule — cancelling keeps whatever
-         * already finished — applied to the whole queue.
+         * **Finished downloads are never touched** — not by a filter here, but by construction:
+         * `toQueue()` excludes `DOWNLOADED` rows, so no id in this list names a completed file.
          */
         fun confirmCancelAll() {
             val targets = uiState.value.queue
@@ -225,12 +179,10 @@ class DownloadsViewModel
             }
         }
 
-        /** Moves a queued item one place towards the front. */
         fun moveUp(itemId: String) {
             move(itemId, offset = -1)
         }
 
-        /** Moves a queued item one place towards the back. */
         fun moveDown(itemId: String) {
             move(itemId, offset = 1)
         }
@@ -250,7 +202,6 @@ class DownloadsViewModel
             }
         }
 
-        /** Clears the one-shot message once the snackbar has shown it. */
         fun consumeMessage() {
             local.update { it.copy(userMessage = null) }
         }
@@ -265,13 +216,7 @@ class DownloadsViewModel
         }
 
         internal companion object {
-            /**
-             * How long the projection keeps running after the last subscriber leaves.
-             *
-             * Long enough to cover a rotation and a there-and-back navigation — restarting the
-             * download list and the storage walk for either would cost more than keeping them —
-             * and short enough that a screen genuinely left behind stops pulling them.
-             */
+            /** Long enough to cover a rotation and a there-and-back navigation without restarting. */
             const val STOP_TIMEOUT_MS = 5_000L
         }
     }

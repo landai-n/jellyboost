@@ -4,65 +4,37 @@ package dev.jellyboost.data.downloads.engine
  * How much **media time** a Matroska byte stream has delivered so far, computed from the bytes as
  * they arrive.
  *
- * This is the one piece of information a progressive transcode does not otherwise give us. The
- * server encodes the file as it sends it, so the response is chunked and there is no
- * `Content-Length` to divide into — but Matroska writes an absolute timestamp at the head of every
- * cluster (ffmpeg's muxer emits one roughly every 5 s or 5 MB), and
- * `bytesReceived × runtime / mediaTimeReceived` is exactly "the average output bitrate so far",
- * which is the number the estimate needs. See [TranscodeSizeProjector].
+ * A progressive transcode is chunked with no `Content-Length`, but Matroska writes an absolute
+ * timestamp at the head of every cluster (ffmpeg's muxer emits one roughly every 5 s or 5 MB), and
+ * `bytesReceived × runtime / mediaTimeReceived` is the average output bitrate so far — which is the
+ * number [TranscodeSizeProjector] needs.
  *
- * ### Why not `MatroskaExtractor`
- * Media3 ships a complete one, and it is the wrong tool here: it wants a `SeekMap`, an
- * `ExtractorOutput` and a `DataSource`, it allocates per sample, and it gives up on a container it
- * does not fully understand. We need one integer, we need it to survive garbage, and a surprise in
- * the container must never break the download. So this looks for exactly two elements, ignores
- * everything else, and every rejection path simply leaves the last known value in place.
+ * `TimestampScale` (`0x2AD7B1`) is read only *before* the first cluster, where Matroska puts Segment
+ * Info, so a byte triple occurring inside later frame data can never move it; absent or implausible
+ * leaves the spec default of 1 000 000 ns — one tick = 1 ms, which is what ffmpeg writes.
  *
- * ### What it looks for
- * - **`TimestampScale`** (`0x2AD7B1`, in Segment Info) — nanoseconds per timestamp tick. Read only
- *   *before* the first cluster, which is where Matroska puts Segment Info, so a byte triple that
- *   happens to occur inside frame data later can never move it. Absent or implausible leaves it at
- *   the spec default of 1 000 000 ns — one tick = 1 ms, which is also what ffmpeg writes.
- * - **`Cluster`** (`0x1F43B675`) and its `Timestamp` child (`0xE7`) — the absolute media time of
- *   the cluster's first frame.
- *
- * ### Validation, in order — any one of these rejects a candidate outright
- * A four-byte pattern occurs by chance roughly every 4 GB of random data, and far more often in
- * real frame data, so a match is only believed when *all* of this holds:
- * 1. the cluster's size is a well-formed EBML varint of 1–8 bytes (a `0x00` lead byte would encode
- *    a longer form than Matroska allows, and is rejected);
- * 2. that size is either the "unknown size" sentinel — every value bit set, which is legal and is
- *    what a live mux writes — or a plausible length: at least [MIN_CLUSTER_BYTES] and at most
- *    [MAX_CLUSTER_BYTES];
- * 3. the cluster's first child is `Timestamp` (`0xE7`), optionally preceded by a `CRC-32` (`0xBF`)
- *    — the one element Matroska allows in front of it, because the spec requires `CRC-32` to be the
- *    first Child Element of whatever contains it. ffmpeg's muxer writes one on every cluster by
- *    default, so on a real transcode `Timestamp` is the *second* child; insisting it be the first
- *    reads zero clusters off a real server response. Requiring that shape is still what makes a
- *    stray `1F 43 B6 75` inside a video frame essentially impossible to accept: the id, a
- *    well-formed size, the `0xBF`/`0xE7` and a length byte all have to line up;
- * 4. the timestamp's own size is a one-byte varint in `0x81..0x88` — a 1–8 byte unsigned integer;
- * 5. every one of those bytes is actually present. A candidate that runs off the end of the chunk
- *    is dropped whole and re-examined on the next chunk through the carry buffer; it is never
- *    half-consumed and never leaves partial state behind;
+ * A four-byte pattern occurs by chance roughly every 4 GB of random data, so a `Cluster` candidate is
+ * believed only when all of this holds — these are the numbers the guards below cite:
+ * 1. the cluster's size is a well-formed EBML varint of 1–8 bytes;
+ * 2. that size is the "unknown size" sentinel (legal, and what a live mux writes) or lies in
+ *    [MIN_CLUSTER_BYTES]..[MAX_CLUSTER_BYTES];
+ * 3. its first child is `Timestamp` (`0xE7`), optionally behind a `CRC-32` (`0xBF`) — the spec
+ *    requires `CRC-32` to be the first child of whatever contains it and ffmpeg writes one per
+ *    cluster, so insisting `Timestamp` be first reads zero clusters off a real server response;
+ * 4. the timestamp's own size is a one-byte varint in `0x81..0x88`;
+ * 5. every one of those bytes is present — a candidate running off the end of the chunk is dropped
+ *    whole and retried through the carry buffer, never half-consumed;
  * 6. the decoded value is non-negative and scales to at most [MAX_MEDIA_MILLIS];
- * 7. the resulting media time is **not before** the newest one already accepted. ffmpeg writes the
- *    file linearly, so a timestamp that goes backwards is a false positive rather than a rewind,
- *    and is discarded instead of being allowed to shrink the projection.
+ * 7. it is **not before** the newest time already accepted: ffmpeg writes the file linearly, so a
+ *    timestamp going backwards is a false positive rather than a rewind.
  *
- * ### Chunk boundaries
  * [consume] is fed the same buffers `FileDownloader` writes to disk, so an element can straddle two
- * of them. The last [WINDOW] − 1 bytes of every chunk are carried forward and re-scanned joined to
- * the head of the next one, which covers the longest candidate this looks at ([WINDOW] bytes: 4 id
- * + 8 size + 1 child id + 1 child size + 8 value). Re-scanning the overlap is harmless because the
- * scanner only ever keeps the newest timestamp — seeing one cluster twice is a no-op.
+ * of them: the last [WINDOW] − 1 bytes of every chunk are carried forward and re-scanned joined to
+ * the head of the next. Re-scanning the overlap is harmless — only the newest timestamp is kept.
  *
- * Not thread-safe, and not meant to be: one instance belongs to one file transfer, on the one
- * thread copying it.
+ * Not thread-safe: one instance belongs to one file transfer, on the one thread copying it.
  */
 @Suppress(
-    // Like `MatroskaSeekIndexRepair`, every helper is a guard chain over untrusted bytes where each early return
-    // names a distinct malformation.
     "ReturnCount",
 )
 internal class MkvClusterScanner {
@@ -70,12 +42,8 @@ internal class MkvClusterScanner {
     private var carryLength = 0
 
     /**
-     * Scratch for the carry-plus-head join, allocated once and reused.
-     *
-     * At most `(WINDOW - 1)` carried bytes joined to at most `(WINDOW - 1)` of the new chunk, so
-     * this is the largest join that can ever be needed. A fresh `ByteArray` per chunk here, plus a
-     * second one in [rememberTail], would be two allocations for every 64 KB of a transfer, on the
-     * thread copying it.
+     * Scratch for the carry-plus-head join, allocated once and reused: a fresh `ByteArray` per chunk
+     * here, plus a second in [rememberTail], would be two allocations for every 64 KB of a transfer.
      */
     private val joined = ByteArray(2 * (WINDOW - 1))
 
@@ -85,20 +53,13 @@ internal class MkvClusterScanner {
 
     /**
      * Media milliseconds delivered so far, or `null` until a first cluster timestamp has been read
-     * *and* believed.
-     *
-     * It is the timestamp of the newest cluster **started**, so it slightly understates what has
-     * arrived — which makes the projection built on it slightly generous, and generous is the safe
-     * direction for a figure shown next to a progress bar.
+     * *and* believed. It is the timestamp of the newest cluster **started**, so it understates what
+     * has arrived — which makes the projection built on it generous, the safe direction for a figure
+     * shown next to a progress bar.
      */
     val mediaMillisReceived: Long? get() = latestMillis.takeIf { it >= 0L }
 
-    /**
-     * Feeds the next [length] bytes of the stream, beginning at [offset].
-     *
-     * Bytes must arrive in order and without gaps, which is why this is driven from the download's
-     * own copy loop and from nowhere else.
-     */
+    /** Bytes must arrive in order and without gaps, which is why only the download's copy loop drives this. */
     fun consume(
         chunk: ByteArray,
         offset: Int = 0,
@@ -106,8 +67,7 @@ internal class MkvClusterScanner {
     ) {
         if (length <= 0) return
 
-        // Candidates beginning in the bytes carried over from the previous chunk, joined to just
-        // enough of this one to complete the longest element we look at.
+        // Candidates beginning in the carried bytes, joined to enough of this chunk to complete them.
         if (carryLength > 0) {
             val take = minOf(length, WINDOW - 1)
             System.arraycopy(carry, 0, joined, 0, carryLength)
@@ -120,13 +80,9 @@ internal class MkvClusterScanner {
     }
 
     /**
-     * Scans `[from, end)` for candidates that *begin* before [startEnd].
-     *
-     * The two ids this looks for begin with distinct bytes, so the loop tests one byte per offset
-     * and only calls [matches] where a lead byte actually landed. Calling it at *every* offset —
-     * twice, once per pattern — would be two calls and two bounds checks for each byte of a
-     * multi-gigabyte transfer, on the thread copying it. Identical results: a byte that is not the
-     * pattern's first byte can never start the pattern.
+     * Scans `[from, end)` for candidates that *begin* before [startEnd]. The two ids have distinct
+     * lead bytes, so one byte test per offset replaces two [matches] calls and two bounds checks for
+     * each byte of a multi-gigabyte transfer, with identical results.
      */
     private fun scan(
         buffer: ByteArray,
@@ -154,11 +110,8 @@ internal class MkvClusterScanner {
     }
 
     /**
-     * Keeps the tail of `carry + chunk` for the next call, so a split element is not lost.
-     *
-     * Shifted in place. `System.arraycopy` is a `memmove`, so the surviving carry bytes can slide
-     * down over themselves before the chunk's tail is appended — a third array allocated per chunk
-     * would buy nothing.
+     * Keeps the tail of `carry + chunk` for the next call, shifted in place: `System.arraycopy` is a
+     * `memmove`, so the surviving carry bytes can slide down over themselves.
      */
     private fun rememberTail(
         chunk: ByteArray,
@@ -174,11 +127,10 @@ internal class MkvClusterScanner {
     }
 
     /**
-     * Rules 1–6 for a cluster: a sane size varint, the `0xE7` first child, a 1–8 byte value.
+     * Rules 1–6 for a cluster; [start] is the index just past the cluster id.
      *
-     * @param start index just past the cluster id.
-     * @return the cluster's start time in media milliseconds, or `null` when anything failed to
-     *   check out — including "not all the bytes are here yet", which the carry buffer retries.
+     * @return the cluster's start time in media milliseconds, or `null` when anything failed to check
+     *   out — including "not all the bytes are here yet", which the carry buffer retries.
      */
     private fun readClusterMillis(
         buffer: ByteArray,
@@ -187,13 +139,11 @@ internal class MkvClusterScanner {
     ): Long? {
         // 1. The cluster's own size.
         val size = readVarInt(buffer, start, end) ?: return null
-        // 2. Unknown-size clusters are legal (and are what a live mux writes); a known size has to
-        //    be big enough to hold a timestamp and small enough to be a cluster at all.
+        // 2. Unknown-size clusters are legal; a known size has to be able to hold a timestamp at all.
         if (!size.unknown && (size.value < MIN_CLUSTER_BYTES || size.value > MAX_CLUSTER_BYTES)) return null
 
-        // 3. `Timestamp` must be the first child, after an optional `CRC-32` — which is what
-        //    ffmpeg actually writes. This is the whole reason a false positive is unlikely: the id
-        //    bytes plus these are bytes that all have to line up.
+        // 3. `Timestamp` must be the first child, after an optional `CRC-32` — the shape ffmpeg
+        //    writes, and the reason a false positive is unlikely.
         var index = skipCrc32(buffer, start + size.length, end) ?: return null
         if (index >= end || (buffer[index].toInt() and BYTE_MASK) != TIMESTAMP_ID) return null
         index++
@@ -216,13 +166,9 @@ internal class MkvClusterScanner {
     }
 
     /**
-     * Reads `TimestampScale` (nanoseconds per tick) if the bytes are all there and plausible.
-     *
-     * Only ever called before the first cluster, so this cannot be fooled by frame data.
-     *
-     * The size is read as a full varint rather than as a single byte: nothing in the format says a
-     * muxer must spell "3" as `0x83` when `0x40 0x03` is equally legal, and reading only the
-     * one-byte form would silently leave every later timestamp on the default scale.
+     * Reads `TimestampScale` (nanoseconds per tick). Only ever called before the first cluster, so
+     * frame data cannot fool it. The size is read as a full varint, not one byte: nothing says a muxer
+     * must spell "3" as `0x83` when `0x40 0x03` is equally legal.
      */
     private fun readTimestampScale(
         buffer: ByteArray,
@@ -235,8 +181,7 @@ internal class MkvClusterScanner {
         if (start + size.length + valueLength > end) return
 
         val scale = readUnsigned(buffer, start + size.length, valueLength) ?: return
-        // A scale outside this range is not a Matroska file we can reason about; keep the default
-        // rather than turning every later timestamp into nonsense.
+        // A scale outside this range is not a file we can reason about; keep the default.
         if (scale in MIN_TIMESTAMP_SCALE_NANOS..MAX_TIMESTAMP_SCALE_NANOS) timestampScaleNanos = scale
     }
 
@@ -247,29 +192,19 @@ internal class MkvClusterScanner {
     }
 
     private companion object {
-        /** `Cluster`. */
         val CLUSTER_ID = byteArrayOf(0x1F, 0x43, 0xB6.toByte(), 0x75)
 
         /** `TimestampScale`, inside Segment Info. */
         val TIMESTAMP_SCALE_ID = byteArrayOf(0x2A, 0xD7.toByte(), 0xB1.toByte())
 
-        /**
-         * The first bytes of the two ids above, as the byte-per-offset test [scan] leads with.
-         *
-         * They are distinct, which is what lets one `when` decide which pattern (if either) an
-         * offset could possibly begin.
-         */
+        /** Distinct, which is what lets one `when` decide which pattern an offset could begin. */
         val CLUSTER_LEAD = CLUSTER_ID[0]
         val TIMESTAMP_SCALE_LEAD = TIMESTAMP_SCALE_ID[0]
 
         /** `Timestamp`, the first child of a cluster once any `CRC-32` is past. */
         const val TIMESTAMP_ID = 0xE7
 
-        /**
-         * `CRC-32`. Matroska requires it to be the first Child Element of its parent, and ffmpeg
-         * writes one on every cluster unless told not to, so it sits between the cluster's size and
-         * its [TIMESTAMP_ID] on every file this will ever see.
-         */
+        /** Matroska requires `CRC-32` to be its parent's first child, and ffmpeg writes one per cluster. */
         const val CRC32_ID = 0xBF
 
         /** A CRC-32 is four bytes, and the spec allows it to be spelled no other way. */
@@ -323,17 +258,12 @@ internal class MkvClusterScanner {
         const val MAX_VARINT_LENGTH = 8
 
         /**
-         * Steps over a cluster's `CRC-32` child when it has one.
+         * Steps over a cluster's `CRC-32` child. Its length has to be exactly four (`0x84`): accepting
+         * 1..8 the way a general integer would is one fewer byte that has to line up for a random
+         * `1F 43 B6 75` to be believed.
          *
-         * A `CRC-32` is a 32-bit checksum and nothing else, so its length has to be exactly four —
-         * `0x84`. Accepting 1..8 the way a general integer would makes a `BF` byte followed by any
-         * plausible length a step this would take, which is one fewer byte that has to line up for
-         * a random `1F 43 B6 75` to be believed.
-         *
-         * @param at the index of the cluster's first child.
-         * @return the index of the first child that is not a `CRC-32`, or `null` when one is there
-         *   but malformed or not yet fully arrived — in which case the carry buffer will retry the
-         *   whole candidate on the next chunk rather than half-reading it.
+         * @return the first child that is not a `CRC-32`, or `null` when one is there but malformed or
+         *   not yet fully arrived, so the carry buffer retries the whole candidate.
          */
         fun skipCrc32(
             buffer: ByteArray,
@@ -374,12 +304,7 @@ internal class MkvClusterScanner {
             return value
         }
 
-        /**
-         * One EBML varint: the number of leading zero bits in the first byte gives its width, and
-         * the remaining bits are the value.
-         *
-         * @return `null` when the encoding is invalid (rule 1) or the bytes are not all present.
-         */
+        /** @return `null` when the encoding is invalid (rule 1) or the bytes are not all present. */
         fun readVarInt(
             buffer: ByteArray,
             at: Int,
@@ -408,7 +333,6 @@ internal class MkvClusterScanner {
         }
     }
 
-    /** A decoded EBML variable-width integer. */
     private data class VarInt(
         val value: Long,
         val length: Int,

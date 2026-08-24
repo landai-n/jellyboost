@@ -25,21 +25,13 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * The `BaseItemDto` ⇄ [ItemEntity] boundary — the Room half of the offline read path.
- *
  * Two rules shape this class:
  *
- * 1. **The blob is the source of truth for reading.** An entity is turned back into a domain item
- *    by deserialising [ItemEntity.dto] and running it through the very same [ItemMapper] the online
- *    path uses. That identity is not an optimisation, it *is* what makes one seamless UI possible:
- *    a cached item and a freshly fetched one are indistinguishable downstream, artwork fallbacks
- *    and all.
- * 2. **The columns are for querying only.** Nothing reconstructs an item from them; they exist so
- *    the offline grid can sort, the offline search can match, and the offline home rows can group
- *    by series.
+ * 1. **The blob is the source of truth for reading** — deserialised and run through the same
+ *    [ItemMapper] the online path uses, so a cached item and a fetched one are indistinguishable.
+ * 2. **The columns are for querying only.** Nothing reconstructs an item from them.
  *
- * A row whose blob cannot be decoded (a JSON shape from a much older build, a truncated write) is
- * treated as absent rather than crashing the caller — see [toDomainOrNull].
+ * An undecodable blob is treated as absent rather than crashing the caller — see [toDomainOrNull].
  */
 @Singleton
 class ItemEntityMapper
@@ -50,11 +42,9 @@ class ItemEntityMapper
         private val widths: ArtworkRequestWidths = ArtworkRequestWidths.Default,
     ) {
         /**
-         * Serialises [dto] into a cache row.
-         *
-         * @param source why the row exists; callers writing a browse cache must go through
-         *   [BrowseCacheWriter], which enforces that a download is never demoted.
-         * @param cachedAt the write timestamp; also the "recently downloaded" ordering key.
+         * @param source browse-cache callers must go through [BrowseCacheWriter], which enforces
+         *   that a download is never demoted.
+         * @param cachedAt also the "recently downloaded" ordering key.
          */
         fun toEntity(
             dto: BaseItemDto,
@@ -64,8 +54,7 @@ class ItemEntityMapper
             ItemEntity(
                 id = dto.id,
                 name = dto.name.orEmpty(),
-                // Falling back to the display name keeps the grid's ordering sane for the items a
-                // server has no explicit sort name for.
+                // Fall back to the display name: some servers send no explicit sort name.
                 sortName = dto.sortName?.takeIf { it.isNotBlank() } ?: dto.name.orEmpty(),
                 type = dto.type.toItemType(),
                 source = source,
@@ -93,11 +82,8 @@ class ItemEntityMapper
             )
 
         /**
-         * Rebuilds a domain item, or returns `null` when the stored blob cannot be read.
-         *
-         * @param userData local playback state to overlay, if this device has any. Offline it is
-         *   *authoritative*: the blob carries whatever the server said when the item was cached,
-         *   which is stale the moment the user watches anything without a connection.
+         * @param userData offline this is *authoritative* over the blob, which carries only what the
+         *   server said when the item was cached.
          */
         fun toDomainOrNull(
             entity: ItemEntity,
@@ -109,14 +95,9 @@ class ItemEntityMapper
         }
 
         /**
-         * Reads the stored blob back as the SDK type it was written from, or `null` when it cannot
-         * be decoded.
-         *
-         * Almost everything wants [toDomainOrNull] instead — the whole point of this class is that
-         * `BaseItemDto` does not cross a repository boundary. The download pipeline is the one
-         * exception: its file plan is built from `mediaSources`, `mediaStreams`, `trickplay` and
-         * the image tags, which are SDK-shaped details deliberately absent from `JellyfinItem`. It
-         * consumes them inside `:data:downloads` and hands the UI domain models like everyone else.
+         * Almost everything wants [toDomainOrNull]: `BaseItemDto` does not cross a repository
+         * boundary. The download pipeline is the one exception — its file plan needs `mediaSources`,
+         * `mediaStreams` and `trickplay`, which `JellyfinItem` deliberately omits.
          */
         fun toDtoOrNull(entity: ItemEntity): BaseItemDto? =
             try {
@@ -129,21 +110,11 @@ class ItemEntityMapper
             }
 
         /**
-         * Rebuilds the **series** an episode row belongs to, as a card, or `null` when the row
-         * names no series (or its blob is unreadable).
-         *
-         * This is the fallback half of the offline *Latest* grouping. Normally the series' own
-         * cached row is the card — the download pipeline caches an episode's series and season
-         * alongside it — but that fetch is best effort, and a failure there must not put bare
-         * episodes back on a shelf that is supposed to show one poster per show.
-         *
-         * Artwork comes from the episode's `seriesPrimaryImageTag`/`seriesThumbImageTag`: those are
-         * the *series'* images, so the card gets the show's poster rather than an episode still
-         * stretched into a poster frame. Everything else is deliberately left at its default —
-         * a synthesised card carries only what an episode actually knows about its show.
+         * Fallback for the offline *Latest* grouping when a series' own cached row is missing (the
+         * pipeline's parent fetch is best effort). Artwork comes from the episode's
+         * `seriesPrimaryImageTag`/`seriesThumbImageTag` — the *series'* images, not an episode still.
          */
         @Suppress(
-            // A mapper that yields `null` on any missing field; the guards name which field was missing.
             "ReturnCount",
         )
         fun toSeriesCardOrNull(entity: ItemEntity): JellyfinItem? {
@@ -179,10 +150,7 @@ class ItemEntityMapper
 
         // ---- library views --------------------------------------------------------------------
 
-        /**
-         * Serialises a `getUserViews` entry, or returns `null` for a library kind v1 does not
-         * support — the same filter [ItemMapper.toLibraryView] applies online.
-         */
+        /** `null` for an unsupported library kind — the same filter the online path applies. */
         fun toEntity(
             dto: BaseItemDto,
             sortIndex: Int,
@@ -201,14 +169,11 @@ class ItemEntityMapper
         }
 
         /**
-         * Rebuilds a library card.
+         * Image URLs are re-derived from the stored tags, never stored whole: the base URL changes
+         * whenever the reachability probe rotates to another server address.
          *
-         * Image URLs are re-derived from the stored tags rather than stored whole: the base URL
-         * changes whenever the reachability probe rotates to another server address.
-         *
-         * [LibraryView.itemCount] is deliberately left `null`: the entity has no column for it and
-         * adding one would be a migration for a number the offline cache could not honestly answer
-         * anyway (it holds the downloaded items, not the library). Tiles hide the line instead.
+         * [LibraryView.itemCount] stays `null` — the offline cache holds downloads, not the library,
+         * so it could not answer honestly. Tiles hide the line instead.
          */
         fun toDomain(entity: LibraryViewEntity): LibraryView =
             LibraryView(
@@ -235,9 +200,8 @@ class ItemEntityMapper
 
         private companion object {
             /**
-             * `ignoreUnknownKeys` is what lets a blob written by an older build survive an SDK
-             * upgrade that renamed or dropped a field, and `encodeDefaults = false` keeps the blob
-             * to the fields the server actually sent — a `BaseItemDto` has well over a hundred.
+             * `ignoreUnknownKeys` lets a blob from an older build survive an SDK field rename;
+             * `encodeDefaults = false` keeps it to what the server sent (`BaseItemDto` has 100+).
              */
             val json =
                 Json {

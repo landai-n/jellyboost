@@ -29,25 +29,11 @@ import java.util.UUID
 import javax.inject.Inject
 
 /**
- * The dedicated SyncPlay section: every joinable group on the server, and the one this device may
- * already be in.
+ * The group **list** must be polled: the websocket is connected only while already in a group, so
+ * `GET /SyncPlay/List` is the only source. [SyncPlayController] owns membership; this only reads its state.
  *
- * Membership itself is never this class's business — [SyncPlayController] owns the socket, the
- * join handshake and the group's own state, and this ViewModel only *reads*
- * [SyncPlayController.state] and forwards the three membership intents. The one thing genuinely
- * local here is the group **list**, which is a plain polled `GET /SyncPlay/List` rather than
- * anything the websocket carries — the socket is connected only while already in a group.
- *
- * ### Polling
- * [SyncPlayApi.getGroups] is polled every [POLL_INTERVAL_MS] while this screen is visible — the
- * upstream flow lives inside `uiState`'s [SharingStarted.WhileSubscribed], the same "stop when
- * nobody is collecting" idiom `DownloadsViewModel` uses for its Room projection, and
- * `collectAsStateWithLifecycle` in the screen is what makes "visible" track the lifecycle. A 403
- * (`SyncPlay is disabled for your account`) is terminal: the poll loop parks itself in
- * [awaitCancellation] rather than looping again, so a disabled account costs exactly one request.
- * Any other failure is transient and the loop tries again at the next tick, or immediately if
- * [retry] is called — the same conflated-request idiom `ConnectionStateProvider` uses for its own
- * debounced probe.
+ * A 403 (SyncPlay disabled for the account) is terminal — the loop parks in [awaitCancellation]; every other
+ * failure is transient and retried at the next tick.
  */
 @HiltViewModel
 internal class SyncPlayGroupsViewModel
@@ -65,7 +51,6 @@ internal class SyncPlayGroupsViewModel
         /** Conflated: a tap on *Retry* collapses into whichever wait is already in progress. */
         private val retryRequests = Channel<Unit>(Channel.CONFLATED)
 
-        /** The single source of truth for [SyncPlayGroupsScreen]. */
         internal val uiState: StateFlow<SyncPlayGroupsUiState> =
             combine(pollGroups(), controller.state, local) { poll, controllerState, localState ->
                 poll.toUiState(membership = controllerState.toMembership(), userMessage = localState.userMessage)
@@ -76,37 +61,32 @@ internal class SyncPlayGroupsViewModel
             )
 
         init {
-            // Independent of the poll/uiState sharing: membership can change (a group ending, a
-            // connection loss) whether or not anyone is looking at this screen right now, and the
-            // messages that go with it should not be lost to a poll that has not restarted yet.
+            // Deliberately outside the poll's `WhileSubscribed` sharing: membership can change while nobody is
+            // looking, and those messages must not be lost to a poll that has not restarted yet.
             viewModelScope.launch {
                 controller.messages.collect { message -> local.update { it.copy(userMessage = message) } }
             }
         }
 
-        /** Creates a group named [name] and joins it. A blank name (all whitespace) is ignored. */
+        /** A blank name (all whitespace) is ignored. */
         internal fun createGroup(name: String) {
             val trimmed = name.trim()
             if (trimmed.isEmpty()) return
             controller.createGroup(trimmed)
         }
 
-        /** Joins [group] — one of the rows this screen is already showing. */
         internal fun join(group: SyncPlayGroupSummary) {
             controller.joinGroup(group)
         }
 
-        /** Leaves whatever group this device is in. */
         internal fun leave() {
             controller.leaveGroup()
         }
 
-        /** Asks the poll loop to try again now, instead of waiting out the rest of its 10 s tick. */
         internal fun retry() {
             retryRequests.trySend(Unit)
         }
 
-        /** Clears the one-shot message once the snackbar has shown it. */
         internal fun consumeMessage() {
             local.update { it.copy(userMessage = null) }
         }
@@ -116,9 +96,8 @@ internal class SyncPlayGroupsViewModel
                 while (true) {
                     val outcome = fetchGroups()
                     emit(outcome)
-                    // A disabled account never becomes enabled without a fresh sign-in, so there is
-                    // nothing a further request would learn — the loop parks here instead of
-                    // spending a request every ten seconds for the rest of the screen's life.
+                    // A disabled account cannot become enabled without a fresh sign-in; parking beats a request
+                    // every ten seconds for the rest of the screen's life.
                     if (outcome is SyncPlayGroupsPoll.Disabled) awaitCancellation()
                     waitForNextPoll()
                 }
@@ -149,24 +128,22 @@ internal class SyncPlayGroupsViewModel
         }
 
         private companion object {
-            /** How often the group list is re-fetched while this screen is visible. */
             const val POLL_INTERVAL_MS = 10_000L
 
-            /** Same grace period `DownloadsViewModel`/`SyncPlayQueueViewModel` give a rotation. */
+            /** Rotation grace period, matching `DownloadsViewModel`/`SyncPlayQueueViewModel`. */
             const val STOP_TIMEOUT_MS = 5_000L
         }
     }
 
-/** One outcome of a single `getGroups` poll. */
 private sealed interface SyncPlayGroupsPoll {
     data class Success(
         val groups: List<SyncPlayGroupSummary>,
     ) : SyncPlayGroupsPoll
 
-    /** HTTP 403 — SyncPlay is disabled for this account; terminal for the poll loop. */
+    /** HTTP 403 — terminal for the poll loop. */
     data object Disabled : SyncPlayGroupsPoll
 
-    /** Anything else — network blip, server hiccup; the next tick tries again. */
+    /** Transient; the next tick tries again. */
     data object Error : SyncPlayGroupsPoll
 }
 
@@ -189,30 +166,25 @@ private fun SyncPlayGroupsPoll.toUiState(
 private fun SyncPlayState.toMembership(): SyncPlayGroupsMembership =
     when (this) {
         SyncPlayState.Idle -> SyncPlayGroupsMembership.None
-        // Rejoining is a join in progress as far as the screen is concerned: the same spinner, and
-        // the same refusal to offer a second group while one is being negotiated.
+        // Rejoining is a join in progress to this screen: same spinner, same refusal of a second group.
         SyncPlayState.Joining, is SyncPlayState.Rejoining -> SyncPlayGroupsMembership.Joining
         is SyncPlayState.InGroup ->
             SyncPlayGroupsMembership.InGroup(
                 groupId = group.id,
                 groupName = group.name,
                 participants = group.participants,
-                // Reuses the launch-request shape rather than inventing a second one: "somewhere to
-                // open a player for" is exactly what a launch request already means, and the app
-                // NavHost's own collector resolves the same way from the same state.
                 openPlayer =
                     queue?.playingEntry?.let { entry -> SyncPlayLaunchRequest(entry.itemId, queue.startPositionTicks) },
             )
     }
 
-/** The groups screen's state: what is joinable, and what this device is already doing. */
 data class SyncPlayGroupsUiState(
     val isLoading: Boolean = true,
-    /** Joinable groups, minus the one this device is already in (that one is [membership]'s, pinned). */
+    /** Joinable groups, minus the one this device is already in — that one is [membership]'s. */
     val groups: List<SyncPlayGroupSummary> = emptyList(),
-    /** HTTP 403 from the server — permanent for this screen instance; the poll has stopped. */
+    /** HTTP 403 — permanent for this screen instance; the poll has stopped. */
     val disabled: Boolean = false,
-    /** A transient poll failure; the next tick (or [SyncPlayGroupsViewModel.retry]) tries again. */
+    /** Transient; the next tick (or [SyncPlayGroupsViewModel.retry]) tries again. */
     val transientError: Boolean = false,
     val membership: SyncPlayGroupsMembership = SyncPlayGroupsMembership.None,
     val userMessage: SyncPlayMessage? = null,
@@ -226,7 +198,6 @@ data class SyncPlayGroupsUiState(
                 membership == SyncPlayGroupsMembership.None
 }
 
-/** Where this device stands with respect to a group, independent of what is joinable. */
 sealed interface SyncPlayGroupsMembership {
     data object None : SyncPlayGroupsMembership
 
@@ -237,7 +208,7 @@ sealed interface SyncPlayGroupsMembership {
         val groupId: UUID,
         val groupName: String,
         val participants: List<String>,
-        /** Non-null when the group has something playing that this screen can open a player for. */
+        /** Non-null only when the group has something playing. */
         val openPlayer: SyncPlayLaunchRequest?,
     ) : SyncPlayGroupsMembership
 }

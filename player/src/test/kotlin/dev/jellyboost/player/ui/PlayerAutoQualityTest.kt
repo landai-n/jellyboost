@@ -18,11 +18,9 @@ import org.junit.jupiter.api.Test
 /**
  * What the quality picker does now that Auto resolves to a *measured* cap.
  *
- * Its own class rather than more of [PlayerViewModelTest] — which the addition tipped over detekt's
- * `LargeClass` threshold — and its own subject besides: every test here turns on the one thing a
- * bitrate cannot say, which is whether the user chose it. `AutoBitrateDetector` is not in the loop,
- * because the ViewModel never waits on the measurement: it sends the flag and the resolver, mocked
- * here, is what fills the number in.
+ * Split from [PlayerViewModelTest] (tipped detekt's `LargeClass` threshold). Every test here
+ * turns on the one thing a bitrate cannot say — whether the user chose it. `AutoBitrateDetector`
+ * is not in the loop: the ViewModel sends the flag and the mocked resolver fills the number in.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class PlayerAutoQualityTest : PlayerViewModelFixture() {
@@ -42,8 +40,8 @@ internal class PlayerAutoQualityTest : PlayerViewModelFixture() {
             val model = viewModel()
             advanceUntilIdle()
 
-            // 8 Mbps is Medium's number, but nobody picked Medium — the flag, not the bitrate, is
-            // what the chip is derived from.
+            // 8 Mbps is Medium's number, but nobody picked Medium — the chip is derived from the
+            // flag, not the bitrate.
             model.uiState.value.quality shouldBe PlaybackQuality.AUTO
         }
 

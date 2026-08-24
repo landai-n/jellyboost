@@ -3,15 +3,11 @@ package dev.jellyboost.core.network.model
 import java.util.UUID
 
 /**
- * The outcome of a successful sign-in, as handed back to the auth feature.
+ * Deliberately carries no access token: it is written straight to `SecureCredentialStore` and pushed onto the
+ * SDK `ApiClient`, and must never travel through UI state.
  *
- * Deliberately carries no access token: the token is written straight to
- * `SecureCredentialStore` and pushed onto the SDK `ApiClient` by `AuthRepository`, and must
- * never travel through UI state.
- *
- * [downloadPolicyAllowed] mirrors the server-side `UserPolicy.enableContentDownloading` flag.
- * This is confirmed at sign-in, because a server that disables content downloading forces the
- * offline feature onto a fallback path.
+ * [downloadPolicyAllowed] mirrors the server's `UserPolicy.enableContentDownloading`, confirmed at sign-in
+ * because a server that disables downloading forces the offline feature onto a fallback path.
  */
 data class AuthenticatedSession(
     val serverId: UUID,

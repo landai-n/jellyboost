@@ -26,11 +26,8 @@ import org.junit.jupiter.api.Test
 import java.time.Instant
 
 /**
- * Unit tests for [ItemEntityMapper] — the `BaseItemDto` ⇄ Room boundary.
- *
- * The round trip is the load-bearing assertion: the plan's promise is that a cached item and a
- * freshly fetched one are *the same* domain object, because the same [dev.jellyboost.data.mapper.ItemMapper]
- * produces both. Anything the blob loses would show up as a subtly different offline UI.
+ * The round trip is the load-bearing assertion: a cached item and a freshly fetched one must be
+ * *the same* domain object. Anything the blob loses shows up as a subtly different offline UI.
  */
 class ItemEntityMapperTest {
     private val movieId = uuid(1)
@@ -59,8 +56,7 @@ class ItemEntityMapperTest {
         val restored = mapper.toDomainOrNull(mapper.toEntity(dto, ItemSource.BROWSE_CACHE, NOW))
 
         restored.shouldNotBeNull()
-        // The promise the whole offline path rests on: byte-identical to what the online path
-        // would have produced from the very same DTO.
+        // Identical to what the online path would produce from the very same DTO.
         restored shouldBe ItemMapper(FakeImageUrlFactory()).toDomain(dto)
         restored.name shouldBe "Arrival"
         restored.overview shouldBe "Linguist meets heptapods."
@@ -293,7 +289,6 @@ class ItemEntityMapperTest {
                 name = "Films",
                 collectionType = org.jellyfin.sdk.model.api.CollectionType.MOVIES,
                 imageTags = mapOf(ImageType.PRIMARY to "library-tag"),
-                // The folder-children count the server sends; the cache stores no count at all.
                 childCount = 3,
             )
 
@@ -309,15 +304,13 @@ class ItemEntityMapperTest {
         restored.name shouldBe "Films"
         restored.collectionType shouldBe CollectionKind.MOVIES
         restored.primaryImageUrl!! shouldContain "library-tag"
-        // Offline tiles draw their name alone: Room has no column for a count, and a cache holding
-        // only downloaded items could not answer one honestly.
+        // Room has no column for a count, and a downloads-only cache could not answer one honestly.
         restored.itemCount.shouldBeNull()
     }
 
     @Test
     fun `refuses to cache a library kind the app does not support`() {
-        // Music is part of SUPPORTED — photos is what stays outside it, so this is still a live
-        // case for the guard being tested.
+        // Photos stay outside SUPPORTED; music does not.
         val dto =
             BaseItemDto(
                 id = uuid(20),

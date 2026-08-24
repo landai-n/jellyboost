@@ -12,28 +12,15 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Turns what ExoPlayer would have been handed into what a Cast receiver has to be handed.
+ * Turns what ExoPlayer would have been handed into what a Cast receiver has to be handed. Must stay
+ * pure — no `com.google.android.gms` type here, so the decisions are testable.
  *
- * Two differences carry the whole class, and both fail invisibly if they are got wrong.
+ * **Credentials.** A receiver fetches its own bytes, outside `JellyfinAuthInterceptor`, so the token
+ * has to travel in the media and subtitle URLs — [StreamUrlFactory.withApiKey] is idempotent, so it
+ * is applied to all of them. The poster is the deliberate exception (see [map]).
  *
- * **Credentials.** Every URL the app itself opens is authorised by `JellyfinAuthInterceptor`, an
- * OkHttp interceptor on the media client. A receiver fetches its own bytes over its own network
- * stack, so nothing of ours is in that loop: the token has to travel in the URL, on the media URL
- * and on every subtitle URL. A transcode's `TranscodingUrl` and every external-subtitle
- * `DeliveryUrl` already arrive with `ApiKey` on them — but a direct-play or direct-stream URL,
- * which the SDK builds locally, does not. Applying
- * [StreamUrlFactory.withApiKey] to all of them and relying on its idempotence is what covers both
- * without a table of which endpoint does what. The **poster** is the deliberate exception — see
- * [CastMetadata] handling in [map]: image endpoints answer without credentials, and every URL signed
- * here is published verbatim in the receiver's `MediaStatus`, readable by any sender on the network
- * — so the token goes only where the fetch actually needs it.
- *
- * **Track ids.** ExoPlayer identifies a side-loaded subtitle by the `external:<index>` string id
- * `ExoMediaSourceFactory` invents for it; Cast identifies one by a numeric id the sender chooses.
- * Choosing the Jellyfin stream index makes the two vocabularies the same one.
- *
- * Pure — no `com.google.android.gms` type appears here, which is the point: this is where the
- * decisions are, so this is what the tests cover.
+ * **Track ids.** Cast identifies a subtitle by a numeric id the sender chooses; using the Jellyfin
+ * stream index makes it the same vocabulary as ExoPlayer's `external:<index>`.
  */
 @Singleton
 internal class CastSpecMapper
@@ -41,13 +28,7 @@ internal class CastSpecMapper
     constructor(
         private val urls: StreamUrlFactory,
     ) {
-        /**
-         * @param spec what the same source would have been opened with locally; its URL and
-         *   side-loaded subtitles are already the right ones, and only their credentials and their
-         *   ids need translating.
-         * @param metadata what the receiver should display; the player screen owns it
-         *   ([CastMetadataHolder]), so it is passed in rather than dug out of the negotiation.
-         */
+        /** @param metadata owned by the player screen ([CastMetadataHolder]), not the negotiation. */
         fun map(
             spec: PlaybackMediaItemSpec,
             source: RemotePlaybackMediaSource,
@@ -57,31 +38,20 @@ internal class CastSpecMapper
                 mediaId = spec.mediaId,
                 contentId = urls.withApiKey(spec.uri),
                 contentType = contentTypeOf(spec, source),
-                // A runtime the server does not know is a live source; it is the only case where
-                // there is nothing to seek within and no end to play to.
+                // A runtime the server does not know means a live source: nothing to seek within.
                 streamType = if (source.runTimeTicks > 0L) CastStreamType.Buffered else CastStreamType.Live,
                 durationMs = source.runTimeTicks.ticksToMillis(),
                 startPositionMs = source.startPositionTicks.ticksToMillis(),
-                // The poster passes through *unsigned*, deliberately. Jellyfin's image endpoints
-                // answer `200` with no credentials, while every URL handed to the receiver — poster
-                // included, via `MediaMetadata`'s `WebImage` — is republished in its `MediaStatus`
-                // for any sender on the network to read. The media and subtitle URLs must carry the
-                // token or the receiver cannot fetch them; the poster's copy would buy nothing and
-                // cost a third place the account token leaks.
-                // Cost of the server ever changing its image policy: a blank poster card, never a
-                // playback failure.
+                // The poster stays *unsigned*: image endpoints answer without credentials, and every
+                // URL handed to the receiver is republished in its `MediaStatus` for any sender to
+                // read. Signing it would leak the token for nothing.
                 metadata = metadata,
                 tracks = spec.tracks(),
             )
 
         /**
-         * The MIME type the receiver is told to expect.
-         *
-         * A transcode — and a live source the server hands over as a playlist — is HLS, which the
-         * local spec already marks. Anything else is a file, and under `CastDeviceProfile` the only
-         * containers the server may direct-play or direct-stream are the two below; a container that
-         * somehow arrives anyway is announced as `mp4`, because guessing the container that was
-         * negotiated *for* is a better error than admitting one the receiver has no decoder for.
+         * `CastDeviceProfile` allows only the two containers below for direct play/stream; anything
+         * else is announced as `mp4`, a better guess than a container the receiver cannot decode.
          */
         private fun contentTypeOf(
             spec: PlaybackMediaItemSpec,
@@ -95,16 +65,11 @@ internal class CastSpecMapper
             }
 
         /**
-         * The side-loaded subtitles, renumbered onto their Jellyfin stream indices.
+         * Renumbered onto Jellyfin stream indices; an unrecognised id is dropped rather than invented,
+         * since a Cast track id is only ever compared against the index the picker asks for.
          *
-         * A subtitle whose id is not one of ours is dropped rather than given an invented id: the
-         * only thing a Cast track id is ever compared against is the index the picker asks for, so a
-         * track that cannot be addressed is a track that could only be turned on and never off.
-         *
-         * The MIME type is forced to WebVTT rather than copied across. That is not a correction of
-         * the local spec — there the codec named is the *source's*, which is right — but the cast
-         * profile declares WebVTT as the only external subtitle format, so whatever the source
-         * stream was, what its delivery URL serves is `.vtt`.
+         * The MIME type is forced to WebVTT, not copied: the cast profile declares WebVTT as the only
+         * external subtitle format, so the delivery URL serves `.vtt` whatever the source stream was.
          */
         private fun PlaybackMediaItemSpec.tracks(): List<CastTrackSpec> =
             subtitles.mapNotNull { subtitle ->

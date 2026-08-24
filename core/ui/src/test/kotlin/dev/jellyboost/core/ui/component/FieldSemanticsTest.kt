@@ -26,9 +26,7 @@ class FieldSemanticsTest {
         @Test
         @DisplayName("an eyebrow label draws its name uppercased and speaks it as written")
         fun eyebrowUppercasesOnlyTheCaption() {
-            // The bug this closes: "SERVER ADDRESS" handed to TTS is spelled out letter by letter,
-            // which is not a label. One argument, two spellings, no way to give
-            // the screen reader the drawn one.
+            // "SERVER ADDRESS" handed to TTS is spelled out letter by letter, which is not a label.
             val label = FieldLabel.eyebrow("Server address")
 
             label.text shouldBe "Server address"
@@ -38,8 +36,7 @@ class FieldSemanticsTest {
         @Test
         @DisplayName("a label with no caption is spoken but never drawn")
         fun plainLabelDrawsNothing() {
-            // The search box and the SyncPlay dialog: named by a placeholder that vanishes the
-            // moment there is a value, so the node has to carry the name itself.
+            // A placeholder vanishes the moment there is a value, so the node carries the name.
             val label = FieldLabel(text = "Search")
 
             label.text shouldBe "Search"
@@ -60,9 +57,8 @@ class FieldSemanticsTest {
         @Test
         @DisplayName("InFlight: read-only rather than disabled, and not an error")
         fun inFlight() {
-            // `enabled = false` here destroys the node a TalkBack user is standing on at the exact
-            // moment they pressed the button. This is the state that replaced it, and
-            // "not an error" is half its point: waiting is not failing.
+            // `enabled = false` destroys the node a TalkBack user is standing on, and waiting is
+            // not failing.
             FieldState.InFlight.isReadOnly shouldBe true
             FieldState.InFlight.isError shouldBe false
             FieldState.InFlight.errorMessage.shouldBeNull()
@@ -74,8 +70,7 @@ class FieldSemanticsTest {
             val state = FieldState.Error(FAILURE)
 
             state.isError shouldBe true
-            // The whole reason the message is *inside* the state: `isError = true` with no message
-            // announced "invalid" and nothing else, which is worse than silence.
+            // `isError = true` with no message announces "invalid" and nothing else.
             state.errorMessage shouldBe FAILURE
             // A rejected value is a value the user must be able to correct.
             state.isReadOnly shouldBe false
@@ -116,8 +111,6 @@ class FieldSemanticsTest {
         @Test
         @DisplayName("Password revealed: the eye shows the characters, the node stays a secret")
         fun revealedPassword() {
-            // The pair this replaced could express the opposite of both halves: masked without the
-            // secret marking, or marked while showing its value.
             val content = FieldContent.Password(revealed = true)
 
             content.visualTransformation shouldBe VisualTransformation.None

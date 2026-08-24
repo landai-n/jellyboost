@@ -40,38 +40,16 @@ import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.core.ui.R as CoreUiR
 
 /**
- * The wide layout's navigation: the brand mark, a glass capsule of four labelled tabs, and the
- * app-wide actions, in one 64dp row over the top of the content.
+ * The wide layout's navigation: brand mark, a glass capsule of tabs, and the app-wide actions.
  *
- * ### Why the row itself is not one big pane of glass
- * The bar *is* glass, but as a set of floating pieces rather than a full-width slab: the tab capsule
- * and each action carry their own blur, and the row between them is transparent. That is what the
- * mocks show, and it is also what keeps the effect cheap and correct — a full-width blurred bar
- * would mean a `hazeEffect` with the tab capsule's and the buttons' own effects nested inside it,
- * and Haze samples a backdrop, not another effect. Nothing is lost: every element the user has to
- * read sits on its own glass, and the gaps between them are exactly where the page below is meant
- * to show through.
+ * The row is floating pieces of glass rather than one full-width slab, and must stay that way: a
+ * blurred bar would nest the capsule's and the buttons' own `hazeEffect`s inside a third, and Haze
+ * samples a backdrop, not another effect. Readability over a bright backdrop comes from
+ * `AppScaffold`'s `TopChromeScrim` sibling, never from a background on this row.
  *
- * The row draws over the content rather than above it — `AppScaffold` hands screens the height
- * through `LocalAppChromePadding` so their first row comes to rest just below the bar and the rest
- * scrolls under it. What keeps it *readable* over a bright backdrop is not a background on this row
- * — that would be the nested-effect mistake described above — but the `TopChromeScrim` band
- * `AppScaffold` draws as a sibling underneath it, plus the darker [GlassDefaults.ChromeFill] its
- * pieces are tinted with.
- *
- * ### Fitting at the breakpoint
- * The row does not scroll and never clips: the tab capsule takes whatever the brand mark and the
- * actions leave (`weight`), and only the *selected* tab carries a label — the other three are
- * icon-only: labels on all four never fit a portrait tablet in a wordy locale and ellipsise into
- * noise. One label plus
- * three icons fits every window ≥560dp, and the weights remain as a backstop: a capsule with less
- * room than it wants starves all four tabs equally and the one label ellipsises, rather than the
- * trailing actions running off the end of the window as a collapsed `Spacer(weight)` once let them.
- *
- * @param currentDestination selects the tab; `null` while the graph is still settling.
- * @param chrome what the trailing app-wide actions read — forwarded to [AppActions] unchanged, which
- *   is why it is a bundle rather than six parameters this function does not otherwise touch.
- * @param actions what those actions do.
+ * Only the *selected* tab carries a label: labels on all four never fit a portrait tablet in a wordy
+ * locale. The weights are the backstop, so a starved capsule ellipsises that one label instead of
+ * running the trailing actions off the end of the window.
  */
 @Composable
 internal fun GlassTopNav(
@@ -86,29 +64,24 @@ internal fun GlassTopNav(
             modifier
                 .fillMaxWidth()
                 .windowInsetsPadding(TopChromeInsets)
-                // A *minimum*, not a fixed height, for the reason `GlassBottomNav` records: the
-                // capsule inside this bar carries a label, and at accessibility font scales the
-                // label outgrows the 56dp the design draws. A hard `height` clipped it. The bar
-                // floats over the page, so growing costs the content nothing but overlap slack.
+                // Minimum, not fixed: at accessibility font scales the tab label outgrows the height
+                // the design draws, and a hard `height` clipped it.
                 .heightIn(min = TopNavHeight)
-                // The trailing edge is corrected for the actions' invisible frame, so the last
-                // *circle* sits the same distance from the window edge as the brand mark does.
+                // Corrected for the actions' invisible frame, so the last *circle* — not its frame —
+                // sits as far from the window edge as the brand mark does.
                 .padding(start = BarHorizontalPadding, end = BarHorizontalPadding - ActionFrameOverhang),
         horizontalArrangement = Arrangement.spacedBy(BarGap),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Image(
             painter = painterResource(CoreUiR.drawable.ic_jellyboost_logo),
-            // Decorative: the tab beside it already names where the user is, and the app's identity
-            // is not a navigable thing here.
+            // Decorative: the tab beside it already names where the user is.
             contentDescription = null,
             modifier = Modifier.size(width = BrandMarkWidth, height = BrandMarkHeight),
         )
 
-        // A weighted box rather than the capsule plus a `Spacer(weight)`: the box is what pushes the
-        // actions to the end, and it hands the capsule a *maximum* width to fit inside instead of
-        // letting it take its intrinsic width and shove them off the edge. The capsule still hugs
-        // its tabs whenever there is room, because the box wraps its content.
+        // A weighted box, not capsule + `Spacer(weight)`: it hands the capsule a *maximum* width
+        // instead of letting the capsule's intrinsic width shove the actions off the edge.
         Box(modifier = Modifier.weight(1f)) {
             TopNavTabs(currentDestination = currentDestination, onSelectTab = onSelectTab)
         }
@@ -118,19 +91,11 @@ internal fun GlassTopNav(
 }
 
 /**
- * The four destinations as one glass capsule.
+ * The fill is flat rather than a blur (nesting a `hazeEffect` inside the buttons' own would blur an
+ * effect) and is [GlassDefaults.ChromeFill] rather than the mocks' white@6% [GlassDefaults.Fill],
+ * because an unselected label is white@70% and read as white-on-white over a bright frame.
  *
- * The capsule's fill is flat rather than a blur: it is already sitting on the glass of its own tabs'
- * container in the mocks, and nesting a second `hazeEffect` inside the buttons it holds would blur
- * an effect rather than the page — see this file's KDoc. The colour is [GlassDefaults.ChromeFill]
- * rather than the white@6% [GlassDefaults.Fill] the mocks specify, because an unselected tab's label
- * is `onSurfaceVariant` — white at 70% — and white-on-white is what the bar looked like whenever the
- * hero behind it happened to be a bright frame.
- *
- * Every tab is weighted so that a capsule with less room than it wants starves all four equally and
- * the selected tab's label ellipsises, rather than measuring them in order and leaving the last one
- * with nothing — the same reasoning `GlassBottomNav.UNSELECTED_ITEM_WEIGHT` records. `fill = false`
- * is what keeps a *roomy* capsule hugging its tabs instead of stretching them across the window.
+ * `fill = false` is what keeps a roomy capsule hugging its tabs instead of stretching them.
  */
 @Composable
 private fun TopNavTabs(
@@ -153,13 +118,9 @@ private fun TopNavTabs(
                 tab = tab,
                 selected = selected,
                 onClick = { onSelectTab(tab.route) },
-                // The selected tab is the only one carrying a label, so it is deliberately NOT
-                // weighted — it hugs its word, exactly as `GlassBottomNav.UNSELECTED_ITEM_WEIGHT`'s
-                // KDoc prescribes for the pill. Weighting all four equally would hand the labelled
-                // tab the same slice as an icon-only one, which on a portrait tablet (the one width
-                // where this bar is shown *and* starved) ellipsises the label — the sibling of the
-                // bug that KDoc guards against. Unselected tabs keep the equal weight so starvation,
-                // when it truly runs out of room, degrades them evenly.
+                // The labelled tab is deliberately NOT weighted: an equal slice with the icon-only
+                // ones ellipsises its label on a portrait tablet. Same rule as
+                // `GlassBottomNav.UNSELECTED_ITEM_WEIGHT`.
                 modifier = if (selected) Modifier else Modifier.weight(1f, fill = false),
             )
         }
@@ -167,13 +128,9 @@ private fun TopNavTabs(
 }
 
 /**
- * One tab: a 36dp capsule that fills solid white — and gains its label — when it is the current
- * destination. Unselected tabs are icon-only (see the file KDoc's "Fitting at the breakpoint").
- *
- * `Role.Tab` plus `selectable` is what makes the capsule announce as "Home, tab, selected" rather
- * than as four unrelated buttons, exactly as the combined app bar's tabs did. The label text and
- * the icon's content description trade places: whichever of the two is present names the tab, so
- * an icon-only tab still reads as "Downloads, tab" to TalkBack.
+ * `Role.Tab` plus `selectable` is what announces "Home, tab, selected" rather than four unrelated
+ * buttons. The label and the icon's content description trade places, so an icon-only tab still
+ * names itself to TalkBack.
  */
 @Composable
 private fun TopNavTab(
@@ -182,17 +139,14 @@ private fun TopNavTab(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // Selected content on the white fill is the app background colour, via the theme rather than a
-    // repeated literal, so this bar and `GlassBottomNav` cannot drift apart.
     val contentColor =
         if (selected) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.onSurfaceVariant
 
     Row(
         modifier =
             modifier
-                // Minimum, not fixed: 36dp around a 12sp label leaves under 4dp of slack at
-                // fontScale 1.0 and none at all once font padding is added, so the selected tab's
-                // word — the only text in this bar — was clipped at every accessibility scale.
+                // Minimum, not fixed: the pill leaves under 4dp of slack around its label at
+                // fontScale 1.0 and none once font padding is added, so a fixed height clipped it.
                 .heightIn(min = Dimens.PillHeightSmall)
                 .clip(CircleShape)
                 .selectable(selected = selected, onClick = onClick, role = Role.Tab)
@@ -221,18 +175,15 @@ private fun TopNavTab(
     }
 }
 
-/** Padding at both ends of the bar — roomier than a phone's, as the mocks' wide layouts are. */
 private val BarHorizontalPadding: Dp = 24.dp
 
-/** Gap between the bar's three groups: brand mark, tab capsule, actions. */
 private val BarGap: Dp = 12.dp
 
-/** The fin mark's footprint. Its aspect ratio is the vector's, so nothing is squashed. */
+/** The mark's footprint, at the vector's own aspect ratio. */
 private val BrandMarkWidth: Dp = 34.dp
 
 private val BrandMarkHeight: Dp = 29.dp
 
-/** Inset of the tabs from the capsule that holds them. */
 private val TabBarPadding: Dp = 4.dp
 
 private val TabGap: Dp = 2.dp
@@ -250,8 +201,7 @@ private val TabLabel =
     )
 
 // No `@Preview` for the whole bar: its actions include `CastRouteButton`, which resolves a
-// `hiltViewModel()` and therefore cannot render outside an activity. The tab capsule — the part of
-// the bar this file actually styles — previews on its own.
+// `hiltViewModel()` and cannot render outside an activity.
 @Preview(name = "GlassTopNav tabs", showBackground = true, backgroundColor = 0xFF101010, widthDp = 520)
 @Composable
 private fun TopNavTabsPreview() {
@@ -263,14 +213,9 @@ private fun TopNavTabsPreview() {
 }
 
 /**
- * The capsule at the three widths the bar's own weighted box hands it on a 560 / 640 / 740dp window
- * with two app actions showing — 358, 438 and 538dp.
- *
- * This is the fit check for the row: the capsule has to stay *inside* each of those boxes (the
- * dashed-looking edge of the surrounding box is exactly the space it is allowed) rather than push
- * its last tab out. With `currentDestination = null` no tab is selected, so all four render
- * icon-only — the capsule's widest state adds one selected label to that. The full bar cannot be
- * previewed — its actions include `CastRouteButton`, which resolves a `hiltViewModel()`.
+ * The fit check for the row: the capsule must stay *inside* each box — the space the bar's weighted
+ * box allows it at a 560 / 640 / 740dp window — rather than push its last tab out. No tab is
+ * selected here, so the widest real state is one label wider than what this shows.
  */
 @Preview(
     name = "GlassTopNav tabs — 560/640/740dp windows",
@@ -294,7 +239,7 @@ private fun TopNavTabsFitPreview() {
     }
 }
 
-/** What the bar's weighted box measures out for the capsule at 560dp, with two actions showing. */
+/** Measured: what the bar's weighted box leaves the capsule at a 560dp window, with two actions showing. */
 private val TabsBoxAt560: Dp = 358.dp
 
 private val TabsBoxAt640: Dp = 438.dp

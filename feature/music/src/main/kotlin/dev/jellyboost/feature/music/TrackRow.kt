@@ -35,14 +35,10 @@ import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 
 /**
- * One track row — the single row composable shared by [AlbumDetailScreen] and
- * [PlaylistDetailScreen].
+ * Shared by [AlbumDetailScreen] and [PlaylistDetailScreen].
  *
- * @param index the track number drawn at the row's start; `null` hides that column (nothing
- *   meaningful to show — e.g. a playlist row whose source order carries no per-track index).
- * @param onClick the row was tapped. Wired to the album/playlist screen's `onPlay(tracks,
- *   startIndex)` callback.
- * @param onToggleFavorite the favourite heart was tapped.
+ * @param index `null` hides the number column — a playlist row's source order carries no per-track
+ *   index.
  */
 @Composable
 fun TrackRow(
@@ -104,7 +100,6 @@ fun TrackRow(
     }
 }
 
-/** The row's trailing heart — [TrackRow]'s own affordance, sized to the minimum touch target. */
 @Composable
 private fun TrackFavoriteButton(
     isFavorite: Boolean,
@@ -123,7 +118,6 @@ private fun TrackFavoriteButton(
     }
 }
 
-/** `3:45` — track lengths are short enough that whole minutes lose too much to be useful. */
 internal fun formatTrackDuration(runTimeTicks: Long?): String? {
     val totalSeconds = runTimeTicks?.takeIf { it > 0L }?.let { it / TICKS_PER_SECOND } ?: return null
     val minutes = totalSeconds / SECONDS_PER_MINUTE

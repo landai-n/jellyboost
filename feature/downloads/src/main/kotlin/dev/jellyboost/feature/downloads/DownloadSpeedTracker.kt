@@ -4,27 +4,13 @@ import dev.jellyboost.core.common.model.DownloadStatus
 import dev.jellyboost.data.downloads.model.DownloadItem
 
 /**
- * Derives a transfer speed from successive Room emissions.
+ * Derives a transfer speed from successive Room emissions; the pipeline deliberately stores no
+ * bytes-per-second column, which would be a staler second source of truth beside `bytesDownloaded`.
  *
- * The queue tab wants a speed, and the pipeline deliberately does not store one: a
- * bytes-per-second column would be a second, staler source of truth next to `bytesDownloaded`, and
- * it would have to be written on every throttled progress update. Two samples of a counter that is
- * already there give the same answer for free.
- *
- * ### Why a measurement window, and not simply the last two emissions
- * The emissions are not the progress writes. `DownloadDao.observeAll` is a `@Transaction` over
- * `downloads` *and* `download_files`, so it re-emits for the file-level write as well as the
- * item-level one — and `DownloadQueue` writes those back to back, milliseconds apart. Dividing a
- * whole throttle window's worth of bytes by the few milliseconds between two halves of one write
- * reports 100–180 MB/s for a transfer actually running at 2–8 MB/s.
- *
- * So a sample is only *folded in* once at least [windowMillis] has passed since the last one; until
- * then the bytes accumulate against the same anchor and the previous answer stands. Rapid emissions
- * therefore cost nothing and cannot inflate anything, and the denominator is always a real second
- * of wall clock rather than an artefact of how Room batches its notifications.
- *
- * The result is additionally smoothed with an exponential moving average, because a transfer's true
- * rate over one second still jumps around enough to make the number unreadable.
+ * The [windowMillis] gate is **not** optional. Emissions are not progress writes:
+ * `DownloadDao.observeAll` is a `@Transaction` over `downloads` *and* `download_files`, and
+ * `DownloadQueue` writes those back to back, milliseconds apart. Dividing a whole throttle window's
+ * bytes by the gap between two halves of one write reported 100–180 MB/s for a 2–8 MB/s transfer.
  *
  * Not thread-safe; one instance belongs to one ViewModel.
  */
@@ -37,16 +23,11 @@ class DownloadSpeedTracker(
         val atMillis: Long,
     )
 
-    /** The last sample each item's next measurement is taken *from*. */
+    /** The anchor each item's next measurement is taken *from*, not simply the last emission. */
     private val anchors = mutableMapOf<String, Sample>()
     private val smoothed = mutableMapOf<String, Long>()
 
-    /**
-     * Folds a fresh snapshot in and returns the current speed per item, in bytes per second.
-     *
-     * @param nowMillis wall-clock milliseconds; a parameter so the rule is testable without
-     *   sleeping.
-     */
+    /** @param nowMillis wall-clock ms; a parameter so the window rule is testable without sleeping. */
     fun update(
         items: List<DownloadItem>,
         nowMillis: Long,
@@ -64,11 +45,8 @@ class DownloadSpeedTracker(
     }
 
     /**
-     * Takes one item's measurement, if enough time has passed to make one worth taking.
-     *
-     * Nothing is measurable from a first sample; and a sample taken before the window is up is not
-     * discarded — leaving the anchor where it is means its bytes count towards the next
-     * measurement instead.
+     * A sample taken before the window is up is **not** discarded: leaving the anchor where it is
+     * means its bytes count towards the next measurement instead.
      */
     private fun sample(
         item: DownloadItem,
@@ -88,10 +66,8 @@ class DownloadSpeedTracker(
     }
 
     /**
-     * Folds one measurement into the running average.
-     *
-     * A negative [delta] means the file restarted — a server that ignored the `Range` header makes
-     * the byte counter go backwards — and reporting a negative speed would be worse than none.
+     * A negative [delta] means the file restarted — a server that ignored `Range` makes the byte
+     * counter go backwards — and a negative speed would be worse than none.
      */
     private fun fold(
         itemId: String,
@@ -108,11 +84,8 @@ class DownloadSpeedTracker(
         const val DEFAULT_SMOOTHING = 0.3f
 
         /**
-         * The shortest interval a rate may be measured over.
-         *
-         * One second: long enough that it always spans several of Room's emissions (the progress
-         * writes themselves are throttled to 500 ms or 1 %), and short enough that the number on
-         * screen still reacts to a link that slows down.
+         * Long enough to span several of Room's emissions — the progress writes themselves are
+         * throttled to 500 ms or 1 % — and short enough to react to a link that slows down.
          */
         const val DEFAULT_WINDOW_MILLIS = 1_000L
         const val MILLIS_PER_SECOND = 1_000L

@@ -17,12 +17,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * The placeholder path keeps the caller's label ("JellyfinAsyncImage drops the caller's
- * contentDescription on the placeholder path").
- *
- * Pinned by a test rather than left to a reading of the file. An item with no
- * artwork is the case that matters: a cast rail or a queue row draws no text beside the picture, so
- * an unlabelled placeholder is a person who is simply not there.
+ * The placeholder path must keep the caller's label: a cast rail or queue row draws no text beside
+ * the picture, so an unlabelled placeholder is a person who is simply not there.
  */
 @RunWith(AndroidJUnit4::class)
 class JellyfinAsyncImageA11yTest {
@@ -61,8 +57,8 @@ class JellyfinAsyncImageA11yTest {
 
     @Test
     fun decorativeArtworkStaysUnlabelled() {
-        // What every card passes: the merged card node owns the sentence, so the slot must add
-        // nothing — a described placeholder inside a merged card would append a second name to it.
+        // What every card passes: a described placeholder inside a merged card appends a second
+        // name to the card's sentence.
         rule.setContent {
             JellyfinTheme {
                 JellyfinAsyncImage(

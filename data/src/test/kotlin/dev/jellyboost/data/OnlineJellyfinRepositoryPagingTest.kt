@@ -45,11 +45,8 @@ import java.util.UUID
 import org.jellyfin.sdk.model.api.SortOrder as SdkSortOrder
 
 /**
- * Unit tests for the library grid + search surface of [OnlineJellyfinRepository].
- *
- * The paged tests drive the real `Pager` through `asSnapshot`, so the assertions about how many
- * server requests a scroll costs are the actual Paging behaviour rather than a restatement of the
- * `PagingConfig` — that is what "one request per page" actually rests on.
+ * The paged tests drive the real `Pager` through `asSnapshot`, so the request counts are actual
+ * Paging behaviour rather than a restatement of the `PagingConfig`.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class OnlineJellyfinRepositoryPagingTest {
@@ -68,7 +65,7 @@ class OnlineJellyfinRepositoryPagingTest {
 
     private val moviesLibraryId = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa")
 
-    /** A 520-item library, so paging has ten full pages and a short tail to walk through. */
+    /** Ten full pages and a short tail. */
     private val library = List(TOTAL_ITEMS) { index -> itemDto(BaseItemKind.MOVIE, "Item $index") }
 
     private val requests = mutableListOf<GetItemsRequest>()
@@ -248,8 +245,8 @@ class OnlineJellyfinRepositoryPagingTest {
     @Test
     fun `the total the first page carries reaches the caller exactly once`() =
         runTest {
-            // Unlike `stubPagedLibrary`, this server reports the size of the *library* rather than
-            // of the page it is answering with — which is what a real total record count is.
+            // Unlike `stubPagedLibrary`, this reports the *library* size rather than the page's —
+            // what a real total record count is.
             coEvery { itemsApi.getItems(any<GetItemsRequest>()) } answers {
                 val request = firstArg<GetItemsRequest>()
                 requests += request
@@ -293,7 +290,6 @@ class OnlineJellyfinRepositoryPagingTest {
             val facets = (result as AppResult.Success).value
             facets.genres shouldContainExactly listOf("Drama", "Science Fiction")
             facets.officialRatings shouldContainExactly listOf("PG-13", "R")
-            // Newest first — the years a user filters by are almost always recent ones.
             facets.years shouldContainExactly listOf(2021, 2016, 1999)
             parentId.captured shouldBe moviesLibraryId
             includeItemTypes.captured shouldContainExactly listOf(BaseItemKind.MOVIE)
@@ -329,7 +325,6 @@ class OnlineJellyfinRepositoryPagingTest {
             itemTypes = listOf(ItemType.MOVIE, ItemType.SERIES),
         )
 
-    /** Serves [library] as pages, recording every request so the test can count them. */
     private fun stubPagedLibrary() {
         coEvery { itemsApi.getItems(any<GetItemsRequest>()) } answers {
             val request = firstArg<GetItemsRequest>()

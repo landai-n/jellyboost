@@ -21,39 +21,26 @@ import javax.inject.Singleton
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
-/**
- * Asks WorkManager to run the download queue.
- *
- * Behind an interface so the enqueue/pause/resume paths can be unit-tested without WorkManager,
- * exactly like `UserDataSyncScheduler` in `:data`.
- */
+/** Asks WorkManager to run the download queue, behind an interface the callers can be tested without. */
 internal interface DownloadScheduler {
     /**
-     * Makes sure the queue is running, without disturbing a run already in progress.
-     *
-     * This is `ExistingWorkPolicy.KEEP` — the plan's own choice. The worker drains whatever is
-     * pending *when it runs*, so enqueueing five items in a row must not keep replacing (and
-     * therefore restarting) the one job that is already downloading the first of them.
+     * Makes sure the queue is running without disturbing a run already in progress —
+     * `ExistingWorkPolicy.KEEP`: the worker drains whatever is pending *when it runs*, so enqueueing
+     * five items in a row must not keep restarting the one job already downloading the first of them.
      */
     suspend fun ensureRunning()
 
-    /**
-     * Restarts the queue with freshly-read constraints.
-     *
-     * Used when the constraints themselves changed — the user flipped Wi-Fi-only, or resumed a
-     * paused item — because a running job keeps the constraints it was enqueued with.
-     */
+    /** Restarts with freshly-read constraints: a running job keeps the constraints it was enqueued with. */
     suspend fun restart()
 
     /**
-     * Stops the running job **and waits for it to be gone**. Partial files stay on disk, so the
-     * next run resumes them.
+     * Stops the running job **and waits for it to be gone**. Partial files stay on disk, so the next
+     * run resumes them.
      *
-     * The waiting is the contract, not an implementation detail. Callers stop the queue before
-     * unlinking files precisely so the downloader cannot be holding a handle to one of them, and
-     * WorkManager's cancellation is asynchronous: a fire-and-forget cancel returns while the
-     * transfer is still writing, and `FileDownloader` re-creates the item directory for every file
-     * it opens — so the cascade's delete would race a `mkdirs()` that puts it straight back.
+     * The waiting is the contract, not an implementation detail: callers stop the queue before
+     * unlinking files precisely so the downloader cannot be holding a handle to one, and WorkManager's
+     * cancellation is asynchronous — a fire-and-forget cancel returns while the transfer is still
+     * writing, and `FileDownloader` re-creates the item directory for every file it opens.
      */
     suspend fun stop()
 }
@@ -88,12 +75,10 @@ internal class WorkManagerDownloadScheduler
         }
 
         /**
-         * Waits for the unique work to leave `RUNNING`, and gives up after [STOP_TIMEOUT].
-         *
-         * The ceiling matters more than the wait: the worker stops at its next `ensureActive()`,
-         * which inside a 64 KB copy loop is milliseconds, but a socket wedged mid-read could hold
-         * it indefinitely — and blocking a *delete* on that would trade a leaked directory for a
-         * frozen UI. The orphan sweep on the next drain is what covers the give-up case.
+         * Waits for the unique work to leave `RUNNING`, giving up after [STOP_TIMEOUT]. The ceiling
+         * matters more than the wait: a socket wedged mid-read could hold the worker indefinitely, and
+         * blocking a *delete* on that would trade a leaked directory for a frozen UI — the orphan sweep
+         * on the next drain covers the give-up case.
          */
         private suspend fun awaitNotRunning(manager: WorkManager) {
             val stopped =
@@ -115,10 +100,9 @@ internal class WorkManagerDownloadScheduler
                     .setConstraints(
                         Constraints
                             .Builder()
-                            // The Wi-Fi-only preference *is* this line. Handing the rule to
-                            // WorkManager rather than checking it ourselves is what makes leaving
-                            // Wi-Fi mid-transfer suspend the job (and rejoining resume it) with no
-                            // code of ours involved.
+                            // The Wi-Fi-only preference *is* this line: handing the rule to
+                            // WorkManager is what makes leaving Wi-Fi mid-transfer suspend the job
+                            // (and rejoining resume it) with no code of ours involved.
                             .setRequiredNetworkType(
                                 if (wifiOnly) NetworkType.UNMETERED else NetworkType.CONNECTED,
                             ).setRequiresStorageNotLow(true)
@@ -140,11 +124,9 @@ internal class WorkManagerDownloadScheduler
             const val UNIQUE_WORK_NAME = "downloads"
 
             /**
-             * WorkManager's own minimum backoff; anything smaller is clamped to it anyway.
-             *
-             * It is also the retry cadence `DownloadQueue.MAX_ATTEMPTS` is sized against: a
-             * transient failure comes back here as `Result.retry()`, so the attempts are spread
-             * 30 s, 60 s, 120 s, 240 s apart rather than hammering a server that is restarting.
+             * WorkManager's own minimum backoff; anything smaller is clamped to it anyway. It is also
+             * the retry cadence `DownloadQueue.MAX_ATTEMPTS` is sized against — attempts spread 30 s,
+             * 60 s, 120 s, 240 s apart rather than hammering a server that is restarting.
              */
             const val BACKOFF_SECONDS = 30L
 

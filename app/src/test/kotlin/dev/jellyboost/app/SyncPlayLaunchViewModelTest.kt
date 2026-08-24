@@ -12,11 +12,6 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import java.util.UUID
 
-/**
- * Unit tests for [SyncPlayLaunchViewModel] — the seam that hands the controller's "the group
- * moved on and no player is open" requests to the NavHost. Pure pass-through, so what is pinned
- * is that a request emitted by the controller reaches the ViewModel's collectors unchanged.
- */
 class SyncPlayLaunchViewModelTest {
     private val requests = MutableSharedFlow<SyncPlayLaunchRequest>()
     private val controller = mockk<SyncPlayController> { every { launchRequests } returns requests }

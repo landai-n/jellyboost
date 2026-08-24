@@ -22,8 +22,6 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * [PlayerApi] backed by jellyfin-sdk-kotlin.
- *
  * Every call hops onto the IO dispatcher: the SDK's operations are `suspend` but block on OkHttp
  * underneath, and these run from the player's main-thread callbacks.
  */

@@ -17,24 +17,12 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * [SyncPlaySocket] backed by the SDK's `ApiClient.webSocket`.
- *
- * **Unbound — kept as the reference implementation of an SDK defect, not used.**
- * `OkHttpSyncPlaySocket` is what `SyncPlayModule` binds, because the SDK's socket delivers received
- * messages through a conflated `StateFlow` (`SocketConnection.state`, fed by
- * `OkHttpSocketConnection.onMessage`) and decodes them in a `.map` over it: of any two frames
- * arriving closer together than one decode, the first is lost, and two identical consecutive frames
- * are dropped outright. The server sends every SyncPlay transport action as a `SendCommand` /
- * `GroupStateUpdate` pair ~2 ms apart, so the command is the frame that loses. This class is what
- * a future SDK bump has to be re-verified against; its tests still run.
- *
- * Deliberately thin: all it does is subscribe and hand each message to the pure mappers in
- * `dev.jellyboost.player.syncplay.SyncPlayDtoMapping`, which is where the tests live. The SDK
- * owns the socket itself — connecting on first subscriber, reconnecting, and the keep-alive ping —
- * so there is nothing here to schedule or retry.
- *
- * `subscribe<T>()` filters the socket's shared message flow by type, so subscribing twice (as this
- * class does, once per stream) still uses one connection.
+ * **Unbound — kept as the reference implementation of an SDK defect, not used.** `SyncPlayModule`
+ * binds `OkHttpSyncPlaySocket` instead: the SDK's socket delivers messages through a conflated
+ * `StateFlow` and decodes them in a `.map` over it, so of two frames arriving closer together than
+ * one decode the first is lost, and identical consecutive frames are dropped outright. The server
+ * sends every transport action as a `SendCommand`/`GroupStateUpdate` pair ~2 ms apart, so the command
+ * is what loses. Re-verify this against every SDK bump; its tests still run.
  */
 @Singleton
 internal class SdkSyncPlaySocket
@@ -52,11 +40,8 @@ internal class SdkSyncPlaySocket
             get() =
                 apiClient.webSocket
                     .subscribe<SyncPlayCommandMessage>()
-                    // `SyncPlayCommandMessage.data` is nullable in the SDK's schema; a command with
-                    // no payload carries nothing to schedule, so it is dropped rather than guessed
-                    // at — but loudly. A command that arrives and vanishes here is indistinguishable
-                    // from one the server never sent, and that difference is the whole of a member
-                    // silently failing to start.
+                    // `data` is nullable in the SDK's schema; a payload-less command is dropped
+                    // loudly, since silently it is indistinguishable from one never sent.
                     .mapNotNull { message ->
                         message.data?.toDomain()
                             ?: null.also { Timber.w("A SyncPlay command message arrived with no payload") }

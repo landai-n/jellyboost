@@ -9,33 +9,18 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * [AudioStreamUrlFactory] over the SDK's `UniversalAudioApi` URL builder (SDK 1.8.12).
+ * `playSessionId` is appended by hand: `getUniversalAudioStreamUrl` has no parameter for it, yet the
+ * server binds it from the query string, and without it `stopEncodingProcess` cannot find the ffmpeg
+ * process to kill.
  *
- * Two details are load-bearing and neither is obvious from the builder's signature:
- *
- * - **`playSessionId` is appended by hand.** `getUniversalAudioStreamUrl` has nineteen parameters
- *   and none of them is the play session; jellyfin-web appends `PlaySessionId=` to the built URL
- *   and the server binds it from the query string all the same. Without it the start/progress/stop
- *   reports name a session the stream is not tied to, and `stopEncodingProcess` cannot find the
- *   ffmpeg process to kill.
- * - **No `ApiKey`.** Unlike the Cast receiver's URLs, this stream is opened by *this* app's
- *   ExoPlayer, whose data source carries `JellyfinAuthInterceptor`'s `Authorization` header — the
- *   same arrangement as `directPlayUrl`, which likewise does not carry a token.
+ * No `ApiKey` in the URL — ExoPlayer's data source carries `JellyfinAuthInterceptor`'s header.
  */
 @Singleton
 internal class SdkAudioStreamUrlFactory
     @Inject
     constructor(
         private val apiClient: ApiClient,
-        /**
-         * Where the signed-in user's id comes from.
-         *
-         * `ApiClient` carries the token and the device but not the user, and the universal
-         * endpoint's `userId` is what the server resolves the *user's* library and transcoding
-         * policy against. It is optional — the server falls back to the authenticated user — but
-         * jellyfin-web sends it, and a request that does not is one more difference to explain if
-         * the dashboard ever disagrees with the browser.
-         */
+        /** `ApiClient` carries the token but not the user id the endpoint resolves policy against. */
         private val sessionState: SessionStateHolder,
     ) : AudioStreamUrlFactory {
         override fun audioUniversalUrl(request: AudioStreamRequest): String {
@@ -47,17 +32,13 @@ internal class SdkAudioStreamUrlFactory
                     deviceId = apiClient.deviceInfo.id,
                     userId = (sessionState.state.value as? SessionState.LoggedIn)?.userId,
                     audioCodec = request.audioCodec,
-                    // The transcode target is stereo: the plan's music path is a phone, a pair of
-                    // headphones or a Bluetooth speaker, and asking for more only makes the encode
-                    // bigger. A direct-played multichannel track is untouched by this.
+                    // Transcode target is stereo; a direct-played multichannel track is untouched.
                     maxAudioChannels = MAX_AUDIO_CHANNELS,
                     transcodingAudioChannels = MAX_AUDIO_CHANNELS,
                     maxStreamingBitrate = request.maxStreamingBitrate,
                     audioBitRate = request.audioBitRate,
                     transcodingContainer = request.transcodingContainer,
-                    // HLS, not the device profile's mp3-over-HTTP audio transcoding profile: HLS is
-                    // seekable, ExoPlayer plays it natively, and it sidesteps the video resolver's
-                    // HLS-only transcode gate entirely.
+                    // HLS, not the profile's mp3-over-HTTP transcoding profile: HLS stays seekable.
                     transcodingProtocol = MediaStreamProtocol.HLS,
                     enableRedirection = true,
                 )

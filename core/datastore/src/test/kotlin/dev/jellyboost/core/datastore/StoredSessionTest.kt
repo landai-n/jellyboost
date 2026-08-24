@@ -6,11 +6,7 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import java.util.UUID
 
-/**
- * Pins [StoredSession]'s redacting `toString()`: the class's own contract says the token must
- * never reach a log, and a regenerated data-class `toString()` is the easiest way to break that
- * silently.
- */
+/** A regenerated data-class `toString()` is the easiest way to break the never-logged contract silently. */
 class StoredSessionTest {
     private val session =
         StoredSession(

@@ -27,41 +27,20 @@ import javax.inject.Singleton
 import kotlin.math.abs
 
 /**
- * Applies a `SendCommand` to the player at the instant the server said, and not before.
- *
- * This is the whole point of SyncPlay: the server does not say "play now", it says "play at
- * 20:41:03.250 server time", and every member converts that to its own clock and waits. Playing on
- * arrival instead would put each member out by its own network latency, which is exactly the skew
- * the protocol exists to remove.
- *
- * ### One pending slot
- * A group is one timeline, so there is only ever one command worth waiting for: a pause issued
- * while an unpause is still pending *replaces* it. Keeping a queue would let a superseded command
- * fire after the one that overtook it.
- *
- * ### Past-due commands
- * A command whose instant has already passed — the app was backgrounded, the socket reconnected,
- * the join handshake took a moment — is not dropped. An unpause catches up by seeking to
- * `position + (now − when)`, because the group has been playing for that long without us. That is
- * the difference between rejoining in sync and rejoining permanently behind.
+ * Applies a `SendCommand` at the instant the server named, never on arrival: the server says "play
+ * at 20:41:03.250 server time", and applying on arrival would put each member out by its own
+ * network latency. One pending slot, because a group is one timeline — a pause issued while an
+ * unpause is pending *replaces* it. A past-due command is not dropped: an unpause catches up by
+ * seeking to `position + (now − when)`. A command emitted before the newer of the two remembered
+ * commands is stale and dropped.
  *
  * ### Applied exactly once
  * The server re-sends the group's *current* state command to a single session whenever it thinks
- * that session got lost — `PausedGroupState.HandleRequest(ReadyGroupRequest)` and
- * `PlayingGroupState`'s equivalent both do it, verbatim ("Client got lost, sending current state").
- * Those repeats carry the same `when` and the same position as the command already applied, so
- * acting on them again is at best wasted work and at worst a re-seek that re-buffers, emits another
- * readiness, and earns another repeat — a feedback storm.
- *
- * The guard therefore remembers two things, not one: the command *applied* to the player, and the
- * command currently *pending*. A repeat of either is a no-op — the applied one because acting twice
- * is the storm, the pending one because it is already going to happen. The distinction matters
- * because a pending command that never applies — superseded by the next one, or cancelled — is
- * *forgotten*. Remembering it would turn the server's own recovery re-send into a no-op and leave
- * this member stuck on a state it never reached, which is the one thing the re-send exists to fix.
- *
- * A command emitted before the newer of those two is stale and dropped, so the group's timeline only
- * ever moves forwards and a straggler cannot displace a newer command still waiting to fire.
+ * that session got lost ("Client got lost, sending current state") — verbatim, same `when` and
+ * position — and acting on such a repeat re-seeks, re-buffers, emits another readiness and earns
+ * another repeat: a feedback storm. So both the *applied* and the *pending* command are remembered,
+ * and a pending one that never applies is deliberately **forgotten**: remembering it would turn the
+ * server's own recovery re-send into a no-op.
  */
 @Singleton
 internal class SyncPlayCommandScheduler
@@ -80,35 +59,22 @@ internal class SyncPlayCommandScheduler
             )
 
         /**
-         * Commands after they have been applied to the player.
-         *
-         * The controller needs the *applied* moment, not the scheduled one: an unpause is what
-         * establishes the drift monitor's anchor, and until it actually runs there is nothing to
-         * anchor to.
+         * Commands after they have been applied to the player — the *applied* moment, not the
+         * scheduled one, because an unpause is what establishes the drift monitor's anchor.
          */
         val applied: SharedFlow<SyncPlayAppliedCommand> = _applied.asSharedFlow()
 
         private var pending: Job? = null
 
         /**
-         * The command [pending] is waiting to apply.
-         *
-         * Held only while it can still happen: it is dropped the moment the command applies, is
+         * Held only while it can still happen: dropped the moment the command applies, is
          * superseded, or is cancelled — a command that never reached the player must not be
          * mistaken for one that did.
          */
         private var pendingScheduled: TakenCommand? = null
 
-        /** The last command actually applied to the player, so its repeats can be told apart. */
         private var lastApplied: TakenCommand? = null
 
-        /**
-         * Schedules [command], replacing whatever was pending.
-         *
-         * Ignored when it is the same command as the one already applied or already pending (same
-         * type, instant, position and slot), or when it was emitted before either — see the class
-         * docs.
-         */
         fun schedule(command: SyncPlayCommand) {
             val taken = TakenCommand(command.identity(), command.emittedAt)
             if (taken.identity == lastApplied?.identity || taken.identity == pendingScheduled?.identity) {
@@ -130,34 +96,24 @@ internal class SyncPlayCommandScheduler
                     val localWhen = timeSync.toLocalTime(command.whenInstant)
                     val waitMillis = Duration.between(clock.instant(), localWhen).toMillis()
                     if (waitMillis > 0L) delay(waitMillis)
-                    // Bookkeeping on the scheduler's own single-threaded scope, never on main:
-                    // schedule() reads these fields from this thread, so the dedupe and staleness
-                    // checks always see them coherently. Written *before* the main
-                    // hop, deliberately — a command superseded mid-apply stays remembered, and its
-                    // superseder is what corrects the player either way; the reverse order would
-                    // let an applied command go unrecorded and its verbatim re-send re-applied.
+                    // Bookkeeping on the scheduler's own single-threaded scope, never on main, and
+                    // written *before* the main hop: the reverse order would let an applied command
+                    // go unrecorded and its verbatim re-send re-applied.
                     if (pendingScheduled === taken) pendingScheduled = null
                     lastApplied = taken
                     val result = withContext(mainDispatcher) { apply(command, localWhen) }
                     _applied.tryEmit(result)
-                    // Guarded by identity: a completion racing a
-                    // schedule() that already replaced this job must not orphan the replacement's
-                    // cancellation handle.
+                    // Guarded by identity: a completion racing a schedule() that already replaced
+                    // this job must not orphan the replacement's cancellation handle.
                     if (pending === coroutineContext[Job]) pending = null
                 }
         }
 
         /**
-         * Drops the pending command and forgets what was taken on — when the group session ends, and
-         * only then (`SyncPlayController.teardown` and `standDown`).
-         *
-         * The memory goes with it deliberately: the next session is a new timeline, and a command
-         * remembered across it would silence the first thing the group said.
-         *
-         * Deliberately **not** called when the player screen detaches. The screen going away does not
-         * take the player with it — `PlaybackService` keeps the shared ExoPlayer playing — so the
-         * group's commands still have somewhere to land, and forgetting them would only make the
-         * server's "client got lost" re-send re-apply a state the player never left.
+         * Called when the group session ends, and only then — deliberately **not** when the player
+         * screen detaches: `PlaybackService` keeps the shared ExoPlayer playing, so the group's
+         * commands still have somewhere to land, and forgetting them would make the server's
+         * "client got lost" re-send re-apply a state the player never left.
          */
         fun cancel() {
             pending?.cancel()
@@ -167,32 +123,17 @@ internal class SyncPlayCommandScheduler
         }
 
         /**
-         * Forgets the applied-command memory alone — when the player's continuity breaks.
-         *
          * "Applied" describes the *player*, not this class: a command applied before the player was
-         * rebuilt (a track change, a quality change, a decoder fallback — anything that re-opens the
-         * session) has not been applied to the player that comes back. The rebuild re-runs the
-         * buffering→ready handshake, and the server answers a ready from a group it considers
-         * settled by re-sending the standing command *verbatim* — same `when`, same position, the
-         * command this member already applied once. Remembering it would drop exactly that answer:
-         * the resumed Unpause would be deduplicated as a repeat, and the blind fallback would then
-         * jump to wherever the coarse anchor guesses.
-         *
-         * The pending slot survives: a command still waiting for its instant is the group's newest
-         * word either way. Its `emittedAt` also keeps anchoring the staleness check, so this cannot
-         * reopen the door to stragglers older than what is already scheduled.
+         * rebuilt (track change, quality change, decoder fallback) has not been applied to the
+         * player that comes back. The rebuild re-runs the buffering→ready handshake and the server
+         * answers with the standing command verbatim, which a remembered one would deduplicate away.
+         * The pending slot survives, and its `emittedAt` keeps anchoring the staleness check.
          */
         fun forgetApplied() {
             lastApplied = null
         }
 
-        /**
-         * The later of the two remembered emission stamps, or `null` when nothing is remembered.
-         *
-         * Both count: a pending command is the newest thing the server said, and an applied one is
-         * the newest thing that happened. Measuring staleness against only one of them would let a
-         * straggler through.
-         */
+        /** Both count: measuring staleness against only one of them would let a straggler through. */
         private fun newestEmittedAt(): Instant? =
             listOfNotNull(pendingScheduled, lastApplied).maxOfOrNull { it.emittedAt }
 
@@ -200,9 +141,6 @@ internal class SyncPlayCommandScheduler
             command: SyncPlayCommand,
             localWhen: Instant,
         ): SyncPlayAppliedCommand {
-            // The lateness, not just the schedule: a command that lands hundreds of milliseconds
-            // after the instant it named is a desync nobody can see from the schedule alone, and it
-            // is the one reading that tells a mis-measured clock apart from a slow dispatch.
             Timber.d(
                 "Applying SyncPlay %s scheduled for %s, %d ms after its local instant",
                 command.type,
@@ -217,9 +155,8 @@ internal class SyncPlayCommandScheduler
                     playerHandle.pause()
                     SyncPlayAppliedCommand(command, anchor = null)
                 }
-                // A seek deliberately does not touch play/pause state. The group's own state machine
-                // pairs a seek with WAITING and re-runs the buffering/ready handshake, and the
-                // unpause that ends it is what starts playback again.
+                // A seek deliberately does not touch play/pause state: the group's own state
+                // machine pairs a seek with WAITING, and the unpause ending it restarts playback.
                 SyncPlayCommandType.Seek -> {
                     command.positionMillis()?.let(playerHandle::seekTo)
                     SyncPlayAppliedCommand(command, anchor = null)
@@ -238,13 +175,12 @@ internal class SyncPlayCommandScheduler
         ): SyncPlayAppliedCommand {
             val lateByMillis = Duration.between(localWhen, clock.instant()).toMillis().coerceAtLeast(0L)
             val positionMillis = playerHandle.snapshot().positionMs
-            // Where the group was at `when`. With no position given, the only reading available is
-            // this client's own, wound back by however late the command is.
+            // With no position given, the only reading available is this client's own, wound back
+            // by however late the command is.
             val anchorMillis = command.positionMillis() ?: (positionMillis - lateByMillis)
             val targetMillis = anchorMillis + lateByMillis
 
-            // On time and already on the anchor, seeking would only cost a re-buffer. Off it — by a
-            // resume position, or by the catch-up above — it is the only way to start in step.
+            // On time and already on the anchor, seeking would only cost a re-buffer.
             if (abs(targetMillis - positionMillis) > SEEK_EPSILON_MS) {
                 playerHandle.seekTo(targetMillis)
             }
@@ -257,10 +193,9 @@ internal class SyncPlayCommandScheduler
         private fun SyncPlayCommand.identity() = CommandIdentity(type, whenInstant, positionTicks, playlistItemId)
 
         /**
-         * What makes two `SendCommand`s the same instruction.
-         *
-         * `emittedAt` is deliberately not part of it: the server stamps every send with
-         * `DateTime.UtcNow`, so a re-send of the identical group state differs in that field alone.
+         * `emittedAt` is deliberately not part of a command's identity: the server stamps every
+         * send with `DateTime.UtcNow`, so a re-send of the identical group state differs in that
+         * field alone.
          */
         private data class CommandIdentity(
             val type: SyncPlayCommandType,
@@ -276,24 +211,16 @@ internal class SyncPlayCommandScheduler
 
         companion object {
             /**
-             * How far off the anchor an unpause tolerates before it seeks, in milliseconds.
-             *
-             * Small enough that no one sees it, large enough that the ordinary "already parked
-             * where the group paused" case does not re-buffer for a few frames of rounding.
+             * How far off the anchor an unpause tolerates before it seeks, in milliseconds: small
+             * enough that no one sees it, large enough that rounding does not re-buffer.
              */
             const val SEEK_EPSILON_MS = 250L
 
-            /** Applied commands buffered for a controller that is momentarily busy. */
             private const val APPLIED_BUFFER = 8
         }
     }
 
-/**
- * A command, after the scheduler applied it.
- *
- * [anchor] is non-null exactly for an unpause — it is the fixed point the drift monitor measures
- * against, and no other command establishes one.
- */
+/** [anchor] is non-null exactly for an unpause — no other command establishes one. */
 internal data class SyncPlayAppliedCommand(
     val command: SyncPlayCommand,
     val anchor: SyncPlayAnchor?,

@@ -11,11 +11,8 @@ import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 
 /**
- * Swaps `Dispatchers.Main` for a [TestDispatcher] around each test so `viewModelScope` work runs
- * on the test's virtual clock.
- *
- * Deliberately duplicated from `:feature:auth`'s test source set — this project has no shared
- * test-fixtures module, and one small extension is cheaper than introducing one.
+ * Swaps `Dispatchers.Main` for a [TestDispatcher] so `viewModelScope` work runs on the test clock.
+ * Duplicated from `:feature:auth`'s test source set — there is no shared test-fixtures module.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class MainDispatcherExtension(

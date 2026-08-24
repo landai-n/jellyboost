@@ -10,15 +10,7 @@ import org.junit.jupiter.api.extension.AfterEachCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 
-/**
- * Swaps `Dispatchers.Main` for a [TestDispatcher] around each test so `viewModelScope` work runs
- * on the test's virtual clock.
- *
- * Deliberately duplicated from `:app`'s test source set — this project has no shared test-fixtures
- * module, and one small extension is cheaper than introducing one. Shared across this module's two
- * test packages ([LibraryViewModelTest] here, `libraries.LibrariesViewModelTest` by import) rather
- * than duplicated a second time within `:feature:library` itself.
- */
+/** Duplicated per module on purpose: this project has no shared test-fixtures module. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class MainDispatcherExtension(
     private val dispatcher: TestDispatcher = UnconfinedTestDispatcher(),

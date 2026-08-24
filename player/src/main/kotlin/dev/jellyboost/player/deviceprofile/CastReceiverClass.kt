@@ -1,19 +1,12 @@
 package dev.jellyboost.player.deviceprofile
 
 /**
- * What a Cast receiver can decode, as far as a sender is able to know it.
+ * No API reports a receiver's real capabilities (`CastDevice`'s flags say nothing about codecs, and
+ * CAF's `canDisplayType()` runs inside Google's Default Media Receiver), so this is a model-name
+ * allowlist and every unrecognised name must land on [LEGACY_1080P].
  *
- * There is no API for the real answer. The sender SDK's `CastDevice` capability flags cover
- * audio/video in/out and nothing about codecs or resolution, and CAF's `canDisplayType()` runs on
- * the receiver — which, with the Default Media Receiver, is Google's code we cannot ask. So this is
- * a **model-name allowlist**, the same trade every model-adaptive sender makes (jellyfin-web's
- * chromecast plugin included), and every name it does not recognise deliberately lands on
- * [LEGACY_1080P] — the profile every Cast receiver since the first dongle satisfies.
- *
- * The ceilings each class stands for are published decoder specs, not guesses; what they buy is
- * decided in `CastDeviceProfile`. `CastSessionCoordinator` logs the raw model name next to the
- * class it resolved to, so a 4K receiver that lands in [LEGACY_1080P] is a one-line addition to
- * the allowlist rather than an investigation.
+ * The ceilings are published decoder specs. `CastSessionCoordinator` logs the raw model name beside
+ * the class it resolved to, so a misclassified receiver is a one-line addition here.
  */
 internal enum class CastReceiverClass {
     /** Everything unrecognised: H.264 High L4.2 at 1080p, the measured-safe floor. */
@@ -29,8 +22,8 @@ internal enum class CastReceiverClass {
 
     companion object {
         /**
-         * Names seen from `CastDevice.getModelName()` for receivers whose published spec is
-         * HEVC Main 10 at 4K. SHIELD appears under more than one name across firmware generations.
+         * `CastDevice.getModelName()` values whose published spec is HEVC Main 10 at 4K. SHIELD
+         * appears under more than one name across firmware generations.
          */
         private val ULTRA_4K_MODELS =
             setOf(
@@ -46,7 +39,6 @@ internal enum class CastReceiverClass {
         /** The 1080p Google TV dongle: HEVC Main 10, but only up to 1080p60. */
         private val HEVC_1080P_MODELS = setOf("chromecast hd")
 
-        /** The class for [modelName], with `null` and every stranger falling to the safe floor. */
         fun fromModelName(modelName: String?): CastReceiverClass =
             when (modelName?.trim()?.lowercase()) {
                 in ULTRA_4K_MODELS -> ULTRA_4K

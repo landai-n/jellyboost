@@ -21,16 +21,7 @@ import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.core.ui.theme.SQUARE_ASPECT_RATIO
 
-/**
- * A 1:1 album card — Jellyfin's music artwork shape.
- *
- * Otherwise the same shape as [PosterCard]/[ThumbCard]: [MediaCardArtwork] carries the resume
- * progress bar, watched tick and [DownloadState] badge, and the title/subtitle sit underneath —
- * [JellyfinItem.displaySubtitle] already reads `albumArtist · year` for a [ItemType.MUSIC_ALBUM].
- *
- * @param width fixed card width, as a row of cards needs; [Dp.Unspecified] fills the available
- *   width instead, which is what an adaptive grid cell wants.
- */
+/** @param width [Dp.Unspecified] fills the parent, which is what an adaptive grid cell wants. */
 @Composable
 fun AlbumCard(
     item: JellyfinItem,

@@ -19,11 +19,9 @@ import java.time.Instant
 import java.util.UUID
 
 /**
- * Unit tests for [SyncPlayCommandScheduler].
- *
- * The scheduler is where a wrong answer is invisible until someone else in the room says "you're
- * ahead of me". Every test therefore fixes a server-clock offset and asserts on the *exact* virtual
- * instant the player was touched, not merely that it eventually was.
+ * Every test fixes a server-clock offset and asserts on the exact virtual instant the player was
+ * touched, not merely that it eventually was — a wrong answer here is invisible until another
+ * member of the group notices it's out of sync.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class SyncPlayCommandSchedulerTest {
@@ -34,8 +32,7 @@ class SyncPlayCommandSchedulerTest {
     fun `an unpause is applied at the local instant matching the server's, not on arrival`() =
         runTest {
             val fixture = fixture(serverOffsetMillis = 2_000)
-            // Server says "unpause at server-18:41:03", and the server clock runs 2 s ahead — so
-            // this device must act at device-18:41:01, one second from now.
+            // Server clock runs 2 s ahead: server-18:41:03 is device-18:41:01, one second from now.
             fixture.scheduler.schedule(command(SyncPlayCommandType.Unpause, atMillis = 3_000, positionMs = 0))
 
             advanceTimeBy(999)
@@ -153,9 +150,8 @@ class SyncPlayCommandSchedulerTest {
     @Test
     fun `a command pending after an earlier one applied is still replaceable`() =
         runTest {
-            // Pins the pending bookkeeping: a completed apply must clear only its *own* handle —
-            // clearing unconditionally would orphan the next pending command's cancellation, and
-            // the superseded command would survive to fire at its instant.
+            // A completed apply must clear only its own handle, or it orphans the next pending
+            // command's cancellation and the superseded command survives to fire.
             val fixture = fixture()
             fixture.scheduler.schedule(command(SyncPlayCommandType.Unpause, atMillis = 500, positionMs = 0))
             advanceTimeBy(500)
@@ -335,8 +331,7 @@ class SyncPlayCommandSchedulerTest {
             runCurrent()
             fixture.player.seekedToMs shouldBe listOf(90_000L)
 
-            // "Client got lost, sending current state" — the pause verbatim, freshly stamped. It is
-            // the recovery path, and dropping it would leave this member playing on alone.
+            // Recovery re-send of the pause verbatim; dropping it leaves this member playing alone.
             fixture.scheduler.schedule(
                 command(SyncPlayCommandType.Pause, atMillis = 5_000, positionMs = 60_000, emittedAtMillis = 1_000),
             )
@@ -358,8 +353,7 @@ class SyncPlayCommandSchedulerTest {
 
             fixture.player.playCount shouldBe 1
 
-            // The storm guard: this one *did* reach the player, so acting again would only re-seek,
-            // re-buffer, report ready, and earn the next repeat.
+            // This one did reach the player; acting again would only re-seek and re-buffer for nothing.
             fixture.scheduler.schedule(
                 command(SyncPlayCommandType.Unpause, atMillis = 500, positionMs = 60_000, emittedAtMillis = 1_000),
             )
@@ -379,10 +373,7 @@ class SyncPlayCommandSchedulerTest {
             runCurrent()
             fixture.player.playCount shouldBe 1
 
-            // The player is rebuilt (a track change): what was applied no longer describes it. The
-            // controller forgets on the rebuild, and the server answers the rebuild's `ready` with
-            // the standing command verbatim — same instant, same position, fresh `emittedAt`.
-            // Without the forget this reads as "Ignoring a repeated SyncPlay Unpause" on device,
+            // Without forgetting on rebuild, the server's verbatim re-send is ignored as a repeat
             // and the member never resumes.
             fixture.scheduler.forgetApplied()
             advanceTimeBy(2_000)
@@ -448,11 +439,8 @@ class SyncPlayCommandSchedulerTest {
         val player: FakePlayerHandle,
     )
 
-    /**
-     * @param serverOffsetMillis how far the *server's* clock runs ahead of this device's. The
-     *   command instants in these tests are always server instants, so a non-zero offset is what
-     *   proves the conversion happens at all.
-     */
+    // serverOffsetMillis: command instants here are always server instants, so a non-zero value is
+    // what proves the server-to-device conversion happens at all.
     private fun TestScope.fixture(serverOffsetMillis: Long = 0L): Fixture {
         val clock = VirtualClock(testScheduler, origin)
         val timeSync = timeSyncWithOffset(clock, serverOffsetMillis)

@@ -23,10 +23,6 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
-/**
- * State holder for [ArtistDetailScreen]: the artist's own metadata, their albums (newest first)
- * and their top tracks, fetched concurrently.
- */
 @HiltViewModel
 class ArtistDetailViewModel
     @Inject
@@ -64,7 +60,6 @@ class ArtistDetailViewModel
             }
         }
 
-        /** Reveals the rest of the top-tracks list. */
         fun expandTopTracks() {
             _uiState.update { it.copy(topTracksExpanded = true) }
         }
@@ -75,7 +70,7 @@ class ArtistDetailViewModel
             }
         }
 
-        /** The app-wide badge feed, kept for [load] to stamp onto a freshly-fetched page. */
+        /** Kept so [load] can stamp it onto a freshly-fetched page. */
         private fun observeDownloadStates() {
             viewModelScope.launch {
                 downloads
@@ -137,7 +132,7 @@ class ArtistDetailViewModel
         }
 
         companion object {
-            /** Key the navigation library stores `Routes.ArtistDetail.artistId` under. */
+            /** Must match `Routes.ArtistDetail`'s property name. */
             const val ARG_ARTIST_ID = "artistId"
         }
     }

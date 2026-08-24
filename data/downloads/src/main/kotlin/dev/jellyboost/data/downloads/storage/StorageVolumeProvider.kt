@@ -10,21 +10,18 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * One place downloaded files can be written to.
- *
- * A volume here is always an **app-specific** directory — one entry of `getExternalFilesDirs(null)`
- * — and never an arbitrary folder the user browsed to. That is what keeps the whole pipeline on
- * plain `java.io.File`: no runtime permission, no persisted URI grant, no `DocumentFile`, and the
- * same wipe-on-uninstall behaviour on the SD card as on internal storage.
+ * One place downloaded files can be written to: always an **app-specific** directory — one entry of
+ * `getExternalFilesDirs(null)` — and never an arbitrary folder the user browsed to. That is what keeps
+ * the whole pipeline on plain `java.io.File`: no runtime permission, no persisted URI grant, no
+ * `DocumentFile`, and the same wipe-on-uninstall behaviour on the SD card as on internal storage.
  *
  * @property id the token persisted in DataStore. `"primary"` for the built-in volume, otherwise the
  *   volume's UUID — deliberately not an index (they reorder when a card is pulled) and not a path
- *   (only stable while mounted). See [DownloadVolume.PRIMARY_ID].
- * @property description the system's own name for the volume ("Internal shared storage", "SD card"),
- *   already localised, or `null` when the platform will not say — the UI then falls back to its own
- *   wording from [isRemovable].
- * @property directory the app-specific directory on the volume; the downloads root is a
- *   sub-directory of it, so a volume is never written to outside the app's own space.
+ *   (only stable while mounted).
+ * @property description the system's own localised name for the volume, or `null` when the platform
+ *   will not say — the UI then falls back to its own wording from [isRemovable].
+ * @property directory the app-specific directory; the downloads root is a sub-directory of it, so a
+ *   volume is never written to outside the app's own space.
  */
 internal data class DownloadVolume(
     val id: String,
@@ -42,24 +39,12 @@ internal data class DownloadVolume(
     }
 }
 
-/**
- * Enumerates the volumes downloads may live on.
- *
- * An interface purely so `StorageLocationManager` — where the resolution and fallback rules live —
- * can be exercised on the JVM against temporary directories. [AndroidStorageVolumeProvider] is the
- * only production implementation.
- */
+/** An interface so `StorageLocationManager`'s resolution and fallback rules can be exercised on the JVM. */
 internal interface StorageVolumeProvider {
-    /**
-     * Every currently **mounted** volume, primary first.
-     *
-     * An ejected card is simply absent rather than reported as unavailable: the caller's question
-     * is "where can I write", and a volume that is not there is not an answer to it.
-     */
+    /** Every currently **mounted** volume, primary first; an ejected card is simply absent. */
     fun volumes(): List<DownloadVolume>
 }
 
-/** [StorageVolumeProvider] over `getExternalFilesDirs` and the platform's `StorageManager`. */
 @Singleton
 internal class AndroidStorageVolumeProvider
     @Inject

@@ -7,12 +7,8 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for [SegmentSkipController].
- *
- * The auto-skip loop is the bug this class exists to prevent: without the "once per segment" rule,
- * a user who seeks back into an intro is skipped straight back out, and again, and again — a player
- * that cannot be made to play the thing the user is asking for. It is also the one behaviour nobody
- * would find by clicking around, because it only shows up when someone deliberately rewinds.
+ * Without the "once per segment" rule, a user seeking back into an intro is skipped straight back
+ * out, repeatedly — only surfaces on a deliberate rewind, so it's easy to miss by clicking around.
  */
 class SegmentSkipControllerTest {
     private val controller = SegmentSkipController()
@@ -69,7 +65,6 @@ class SegmentSkipControllerTest {
 
         controller.decide(35_000L, segments, modes).shouldBeInstanceOf<SegmentSkipDecision.AutoSkip>()
 
-        // The user seeks back into the intro they were just carried out of.
         repeat(3) {
             controller
                 .decide(35_000L, segments, modes)

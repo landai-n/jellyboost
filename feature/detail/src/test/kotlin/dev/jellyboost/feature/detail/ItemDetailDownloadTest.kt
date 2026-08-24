@@ -16,16 +16,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 /**
- * The Download button — solo items, containers (a season or series expanding into episode
- * downloads), and the on-device footprint the metadata line reads once a download finishes.
- *
- * Its own class rather than more of [ItemDetailViewModelTest], which is at detekt's `LargeClass`
- * ceiling — the same split [ItemDetailGroupActionsTest] and [ItemDetailSelectionTest] already make
- * for SyncPlay and batch selection.
- *
- * This file is [DetailDownloadsDelegate]'s coverage, and it is deliberately driven through
- * [ItemDetailViewModel]: the delegate writes into the ViewModel's own state and the screen only
- * ever sees the ViewModel, so the boundary worth holding still is the one these tests exercise.
+ * [DetailDownloadsDelegate]'s coverage, deliberately driven through [ItemDetailViewModel]: the
+ * delegate writes into the ViewModel's own state and the screen only ever sees the ViewModel.
+ * Split off to stay under detekt's `LargeClass` ceiling.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class ItemDetailDownloadTest : ItemDetailViewModelFixture() {
@@ -63,8 +56,6 @@ internal class ItemDetailDownloadTest : ItemDetailViewModelFixture() {
             model.onDownloadClick()
             advanceUntilIdle()
 
-            // A tap that would remove something already on the device is destructive enough to
-            // confirm first — nothing is deleted until the dialog is confirmed.
             model.uiState.value.showDeleteConfirmation shouldBe true
             coVerify(exactly = 0) { downloads.deleteAll(any()) }
             coVerify(exactly = 0) { downloads.enqueue(any()) }
@@ -118,7 +109,6 @@ internal class ItemDetailDownloadTest : ItemDetailViewModelFixture() {
             model.onDownloadClick()
             advanceUntilIdle()
 
-            // Resuming picks up from the bytes already on disk; deleting would throw them away.
             coVerify { downloads.resume(ITEM_ID) }
             coVerify(exactly = 0) { downloads.deleteAll(any()) }
         }
@@ -228,8 +218,6 @@ internal class ItemDetailDownloadTest : ItemDetailViewModelFixture() {
     @Test
     fun `a season's download button reads its episodes, not a row of its own`() =
         runTest(dispatcher) {
-            // A season has no download row — the pipeline expands it into episode downloads — so
-            // "is this season downloaded" is a question about its episodes.
             givenSeasonWithEpisodes()
             downloadStates.value =
                 mapOf(EPISODE_1 to DownloadState.Downloaded, EPISODE_2 to DownloadState.Downloaded)
@@ -253,8 +241,7 @@ internal class ItemDetailDownloadTest : ItemDetailViewModelFixture() {
             val model = viewModel()
             advanceUntilIdle()
 
-            // One episode done and one half-done is 75 % of the season, not 50 % of whichever file
-            // happens to be moving.
+            // 75 % of the season, not 50 % of whichever file happens to be moving.
             model.uiState.value.downloadState shouldBe DownloadState.Downloading(progress = 0.75f)
         }
 
@@ -272,8 +259,6 @@ internal class ItemDetailDownloadTest : ItemDetailViewModelFixture() {
             model.onDownloadClick()
             advanceUntilIdle()
 
-            // Enqueueing the *season* is right: the pipeline expands it and skips the episode that
-            // is already on the device.
             coVerify(exactly = 1) { downloads.enqueue(ITEM_ID) }
         }
 
@@ -291,8 +276,6 @@ internal class ItemDetailDownloadTest : ItemDetailViewModelFixture() {
             model.onDownloadClick()
             advanceUntilIdle()
 
-            // There is no row keyed on the season to put back in the queue; re-enqueueing is what
-            // retries the episodes that failed.
             coVerify(exactly = 1) { downloads.enqueue(ITEM_ID) }
             coVerify(exactly = 0) { downloads.resume(any()) }
         }
@@ -314,8 +297,7 @@ internal class ItemDetailDownloadTest : ItemDetailViewModelFixture() {
             model.confirmDeleteDownload()
             advanceUntilIdle()
 
-            // One batch call for the whole season, and the season's own id is not in it: it
-            // never had a row, and deleting it would be a no-op round trip.
+            // The season's own id must not be in the batch: it never had a row.
             coVerify(exactly = 1) { downloads.deleteAll(listOf(EPISODE_1, EPISODE_2)) }
             coVerify(exactly = 1) { downloads.deleteAll(any()) }
             model.uiState.value.userMessage shouldBe UserMessage.DownloadDeleted
@@ -335,15 +317,12 @@ internal class ItemDetailDownloadTest : ItemDetailViewModelFixture() {
             advanceUntilIdle()
 
             coVerify(exactly = 1) { downloads.deleteAll(listOf(EPISODE_2)) }
-            // Nothing had finished, so this is an ordinary removal — no "kept" message.
             model.uiState.value.userMessage shouldBe UserMessage.DownloadDeleted
         }
 
     @Test
     fun `cancelling a partly-finished season keeps the episodes that already downloaded`() =
         runTest(dispatcher) {
-            // Cancel must not run the same delete as Remove and take the finished episodes
-            // with it.
             givenSeasonWithEpisodes()
             downloadStates.value =
                 mapOf(
@@ -357,7 +336,6 @@ internal class ItemDetailDownloadTest : ItemDetailViewModelFixture() {
             model.onDownloadClick()
             advanceUntilIdle()
 
-            // The finished episode is not in the batch at all — a cancel keeps what landed.
             coVerify(exactly = 1) { downloads.deleteAll(listOf(EPISODE_2)) }
             model.uiState.value.userMessage shouldBe UserMessage.DownloadCancelledKeepingFinished(keptCount = 1)
         }
@@ -365,9 +343,8 @@ internal class ItemDetailDownloadTest : ItemDetailViewModelFixture() {
     @Test
     fun `cancelling a season is one batch call, never one delete per episode`() =
         runTest(dispatcher) {
-            // Each single delete stops the download worker and starts it again, and every restart
-            // hands the queue the next doomed episode — a server transcode begun for an item the
-            // next iteration cancels. One call, one stop, one restart.
+            // Each single delete stops and restarts the worker, and every restart begins a server
+            // transcode the next iteration cancels.
             givenSeasonWithEpisodes()
             downloadStates.value =
                 mapOf(EPISODE_1 to DownloadState.Queued, EPISODE_2 to DownloadState.Queued)
@@ -397,9 +374,6 @@ internal class ItemDetailDownloadTest : ItemDetailViewModelFixture() {
             model.onDownloadClick()
             advanceUntilIdle()
 
-            // The pipeline drops the cancelled row; what is left on the device is the finished
-            // episode — the season is partly downloaded, so the button goes back to offering the
-            // rest rather than to removing what survived.
             downloadStates.value = mapOf(EPISODE_1 to DownloadState.Downloaded)
             advanceUntilIdle()
             model.uiState.value.downloadState shouldBe DownloadState.NotDownloaded
@@ -421,8 +395,7 @@ internal class ItemDetailDownloadTest : ItemDetailViewModelFixture() {
 
             val model = viewModel()
             advanceUntilIdle()
-            // Not the Cancel path: the dialog's confirm is the "remove everything" affordance and
-            // is unfiltered, finished episodes included.
+            // Unlike Cancel, the dialog's confirm is unfiltered — finished episodes included.
             model.confirmDeleteDownload()
             advanceUntilIdle()
 

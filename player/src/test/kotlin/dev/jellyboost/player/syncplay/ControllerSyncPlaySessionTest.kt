@@ -17,12 +17,8 @@ import org.junit.jupiter.api.Test
 import java.util.UUID
 
 /**
- * Unit tests for [ControllerSyncPlaySession] — the seam `:feature:*` modules reach SyncPlay through.
- *
- * Two things are worth pinning and neither is about behaviour inside the controller: that the group
- * a feature sees is *the* group and not a copy that can drift from it, and that a browse-surface
- * verb maps onto the queue intent it claims to. The controller is mocked precisely so a failure here
- * can only mean the translation is wrong.
+ * [ControllerSyncPlaySession] is the seam `:feature:*` modules reach SyncPlay through. The
+ * controller is mocked so a failure here can only mean the translation layer is wrong.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class ControllerSyncPlaySessionTest {
@@ -137,8 +133,7 @@ class ControllerSyncPlaySessionTest {
 
             fixture.session.playForGroup(listOf(itemId.toString(), "item-2", nextItemId.toString()))
 
-            // Dropping just the bad entry would leave a shorter playlist than the caller counted on,
-            // which is exactly the index mismatch this queue shape exists to avoid.
+            // Dropping just the bad entry would leave a shorter playlist than the caller counted on.
             verify(exactly = 0) { fixture.controller.setNewQueue(any(), any(), any()) }
         }
 

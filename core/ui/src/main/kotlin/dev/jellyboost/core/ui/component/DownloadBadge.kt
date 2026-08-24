@@ -28,40 +28,27 @@ import dev.jellyboost.core.common.model.DownloadState
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 
-/** Diameter of the dark disc every download state is drawn on. */
 private val BadgeContainerSize = 24.dp
 
-/** The disc itself — dark enough to carry a glyph over the brightest artwork. */
 private val BadgeScrim = Color.Black.copy(alpha = 0.65f)
 
 private val BadgeGlyphSize = 14.dp
 
-/** The progress ring, inset inside the disc. */
 private val RingSize = 20.dp
 
 private val RingStroke = 2.dp
 
-/** How much of the ring's colour the not-yet-downloaded remainder keeps. */
 private const val RING_TRACK_ALPHA = 0.25f
 
-/** Tint of the waiting states — present, but not competing with the artwork. */
 private val WaitingGlyphTint = Color.White.copy(alpha = 0.75f)
 
 /**
- * The one visual marker that distinguishes downloaded media from streamed media.
+ * [DownloadState.NotDownloaded] draws nothing, so callers pass the state unconditionally.
  *
- * Rendered in the corner of every item card. [DownloadState.NotDownloaded]
- * renders nothing at all, so callers can pass the state unconditionally.
+ * The finished state must not become a tick: on a card that mark already means "watched".
  *
- * The finished state keeps the `DownloadForOffline` glyph rather than becoming the mocks' solid disc
- * with a tick: on a card that tick is already taken — it is what "watched" means — and two identical
- * marks in the same corner meaning two different things is worse than one mark that differs from a
- * mock.
- *
- * @param decorative `true` when the badge sits inside a node that already says what it means — an
- *   item card, whose merged description names the download state along with everything else. It
- *   then draws exactly the same thing and contributes nothing to speak. Standalone badges keep
- *   their labels, including the in-flight ring, which is the one state with no words at all.
+ * @param decorative `true` inside a node that already names the download state (an item card). A
+ *   standalone badge keeps its label, including the in-flight ring — the one state with no words.
  */
 @Composable
 fun DownloadBadge(
@@ -114,9 +101,8 @@ fun DownloadBadge(
                     modifier =
                         Modifier
                             .size(RingSize)
-                            // A ring with no glyph has nothing to hang a description off, so it
-                            // takes one — with the percentage in it, since that is the only thing
-                            // the ring's fill was saying.
+                            // The ring has no glyph to hang a description off, so it takes one with
+                            // the percentage in it.
                             .semantics { label?.let { contentDescription = it } },
                     color = MaterialTheme.colorScheme.primary,
                     trackColor = MaterialTheme.colorScheme.primary.copy(alpha = RING_TRACK_ALPHA),

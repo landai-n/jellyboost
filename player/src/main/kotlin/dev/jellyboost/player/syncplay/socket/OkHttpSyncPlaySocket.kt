@@ -50,28 +50,16 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * [SyncPlaySocket] on a websocket of our own, because the SDK's loses messages.
+ * [SyncPlaySocket] on a websocket of our own, because the SDK's loses messages: in
+ * jellyfin-sdk-kotlin 1.8.12 and master `SocketConnection.state` is a conflated **`StateFlow`**
+ * whose values include received messages, so two frames arriving faster than the decode of the
+ * first lose the first, and two *identical* consecutive frames are dropped by its equality check.
+ * The server sends every SyncPlay transport action as a back-to-back pair (`SendCommand` then
+ * `GroupStateUpdate`, ~2 ms apart), so the command is systematically the frame that loses. The rule
+ * that fixes it: **nothing but a queue push happens on OkHttp's reader thread.**
  *
- * **The defect this exists for** (jellyfin-sdk-kotlin 1.8.12 and master):
- * `SocketConnection.state` is a **`StateFlow`** whose values include received
- * messages — `OkHttpSocketConnection.kt`:39-43 does `onMessage → _state.value = Message(text)` —
- * and `DefaultSocketApi.messages` decodes JSON in a `.map` over it. A `StateFlow` is conflated, so
- * two frames arriving faster than the decode of the first lose the first, and two *identical*
- * consecutive frames are dropped by its equality check. The server sends every SyncPlay transport
- * action as a back-to-back pair — `SendCommand` then `GroupStateUpdate`, ~2 ms apart — so the
- * command is systematically the frame that loses. On device that is a member sitting still while
- * the group plays. [SdkSyncPlaySocket] is kept next door as the reference implementation of it.
- *
- * **The fix is one rule: nothing but a queue push happens on OkHttp's reader thread.** `onMessage`
- * `trySend`s the raw text into a generously bounded [Channel]; a consumer coroutine decodes and routes.
- * There is no conflation anywhere on the path, and no frame can overtake or erase another.
- *
- * Everything else is deliberately the contract the seam already had: the two streams are cold, one
- * connection is shared between them, it opens on the first collector and closes with the last
- * (`shareIn` + [SharingStarted.WhileSubscribed], where the SDK reference-counted subscribers), and
- * [connectionState] is the same hot signal `SyncPlayController.awaitSocketReady`/`watchSocket`
- * already watch. The streams never *end* while a collector is attached — the controller reads a
- * finished stream as a confirmed connection loss — so a drop is a reconnect, not a completion.
+ * The streams never *end* while a collector is attached — the controller reads a finished stream
+ * as a confirmed connection loss — so a drop is a reconnect, not a completion.
  */
 @Singleton
 internal class OkHttpSyncPlaySocket
@@ -87,12 +75,9 @@ internal class OkHttpSyncPlaySocket
         override val connectionState: Flow<SyncPlaySocketState> = _connectionState.asStateFlow()
 
         /**
-         * Every SyncPlay frame the server sent, decoded, in arrival order.
-         *
-         * Shared rather than per-stream so that collecting both [groupUpdates] and [commands] uses
-         * one socket — one server session, as the SDK's reference counting gave us. `replay = 0`
-         * with the default (suspending) buffer: a slow collector delays the next frame, it never
-         * loses it.
+         * Shared so that collecting both [groupUpdates] and [commands] uses one socket, i.e. one
+         * server session. The default (suspending) buffer: a slow collector delays the next frame,
+         * it never loses it.
          */
         private val frames: SharedFlow<OutboundWebSocketMessage> =
             connectionLoop().shareIn(scope, SharingStarted.WhileSubscribed(), replay = 0)
@@ -106,21 +91,16 @@ internal class OkHttpSyncPlaySocket
             frames
                 .filterIsInstance<SyncPlayCommandMessage>()
                 // `SyncPlayCommandMessage.data` is nullable in the SDK's schema; a command with no
-                // payload carries nothing to schedule, so it is dropped rather than guessed at —
-                // but loudly, exactly as the SDK-backed implementation did.
+                // payload carries nothing to schedule.
                 .mapNotNull { message ->
                     message.data?.toDomain()
                         ?: null.also { Timber.w("A SyncPlay command message arrived with no payload") }
                 }
 
         /**
-         * One connection after another, for as long as anything is collecting.
-         *
-         * Backoff is 1 s → 2 s → 4 s → capped at 10 s, reset as soon as an attempt actually opens,
-         * so a flapping network re-establishes quickly and a server that is simply down is not
-         * hammered. Nothing is re-sent on a reconnect: SyncPlay has no subscription message, the
-         * server pushes to group members unconditionally. Failures are logged and retried rather
-         * than propagated — ending this flow would tell the controller the group is lost.
+         * Nothing is re-sent on a reconnect: SyncPlay has no subscription message, the server
+         * pushes to group members unconditionally. Failures are logged and retried rather than
+         * propagated — ending this flow would tell the controller the group is lost.
          */
         private fun connectionLoop(): Flow<OutboundWebSocketMessage> =
             channelFlow {
@@ -142,27 +122,16 @@ internal class OkHttpSyncPlaySocket
             }
 
         /**
-         * A single connection: open it, drain it, end when it does.
-         *
-         * The flow completes when the server closes the socket and fails when the connection does —
-         * either way [connectionLoop] takes it from there. [opened] is set from OkHttp's thread,
-         * hence the atomic; it is what tells a reconnect from a first attempt.
+         * A single connection: the flow completes when the server closes the socket and fails when
+         * the connection does. [opened] is set from OkHttp's thread, hence the atomic.
          */
         private fun connection(opened: AtomicBoolean): Flow<OutboundWebSocketMessage> =
             callbackFlow {
                 val request = socketRequest()
-                // Host only: the full URL is the user's server address in a line
-                // that fires on every reconnect, i.e. exactly the log a user pastes when SyncPlay
-                // misbehaves. Through the shared helper so all four address-logging sites in the
-                // app say the same thing. See `hostForLog`.
+                // Host only: the full URL is the user's server address, in a line that fires on
+                // every reconnect.
                 Timber.d("Opening the SyncPlay websocket at %s", hostForLog(request.url.toString()))
                 _connectionState.value = SyncPlaySocketState.Connecting
-                // Generously bounded: the reader thread must never block or drop under any
-                // *healthy* load — this queue is the whole difference from the SDK's conflated
-                // state flow — but a consumer wedged on network I/O for minutes must not grow the
-                // heap without limit either. SyncPlay traffic is a few frames a
-                // second at its busiest, so the cap is minutes of backlog; hitting it is logged
-                // in [listener] rather than absorbed silently.
                 val raw = Channel<String>(RAW_FRAME_BUFFER)
                 val socket = webSockets.newWebSocket(request, listener(opened, raw))
                 launch {
@@ -173,19 +142,13 @@ internal class OkHttpSyncPlaySocket
                 awaitClose {
                     raw.close()
                     socket.cancel()
-                    // "Disconnected when nothing is collecting" is part of the seam's contract, and
-                    // this is also the cancellation path — where `connectionLoop` never runs again
-                    // and so never gets to say so itself.
+                    // Also the cancellation path, where `connectionLoop` never runs again and so
+                    // never gets to publish the disconnect itself.
                     _connectionState.value = SyncPlaySocketState.Disconnected(error = null)
                 }
             }
 
-        /**
-         * The only code that runs on OkHttp's threads.
-         *
-         * It hands the frame to [raw] and returns. Everything else — decoding, mapping, delivery,
-         * the keep-alive reply — happens in [route], on a coroutine.
-         */
+        /** The only code that runs on OkHttp's threads: it hands the frame to [raw] and returns. */
         private fun listener(
             opened: AtomicBoolean,
             raw: Channel<String>,
@@ -234,13 +197,7 @@ internal class OkHttpSyncPlaySocket
                 }
             }
 
-        /**
-         * Decodes each queued frame and sends the SyncPlay ones downstream.
-         *
-         * Returns when the connection ended cleanly; throws what closed it otherwise. Frames the
-         * app has no use for are ignored here rather than filtered downstream, so a busy server
-         * session (library scans, playback state for other clients) costs one `when` branch.
-         */
+        /** Returns when the connection ended cleanly; throws what closed it otherwise. */
         private suspend fun ProducerScope<OutboundWebSocketMessage>.route(
             raw: ReceiveChannel<String>,
             socket: WebSocket,
@@ -299,17 +256,11 @@ internal class OkHttpSyncPlaySocket
         }
 
         /**
-         * The socket request: same URL, same credentials, same session as every REST call.
-         *
          * Read from the [ApiClient] on every attempt rather than cached, so a re-pointed client (a
-         * server switch, a re-issued token) is picked up by the next reconnect. The device id and
-         * the access token are what make the server attach this socket to *our* session — a socket
-         * authenticated as anything else is not sent this client's SyncPlay messages at all.
-         *
-         * No same-origin guard around [jellyfinAuthorizationHeader] here (unlike
-         * `JellyfinAuthInterceptor`): the URL comes straight from `apiClient.createUrl`, not from a
-         * caller-supplied or redirect-followed one, so it is always this same [ApiClient]'s own
-         * server and there is no other origin the header could leak to.
+         * server switch, a re-issued token) is picked up by the next reconnect. No same-origin
+         * guard around [jellyfinAuthorizationHeader] (unlike `JellyfinAuthInterceptor`): the URL
+         * comes straight from `apiClient.createUrl`, never from a caller or a redirect, so there is
+         * no other origin the header could leak to.
          */
         private fun socketRequest(): Request =
             Request
@@ -319,12 +270,9 @@ internal class OkHttpSyncPlaySocket
                 .build()
 
         /**
-         * The SDK's own decoder, off the socket thread.
-         *
          * A frame this client cannot read must not take the connection down with it — the server
          * sends every session everything, and one unknown message type would otherwise cost the
-         * whole group. The raw `MessageType` is logged because that is the only thing that makes
-         * such a frame identifiable after the fact.
+         * whole group.
          */
         private fun decode(text: String): OutboundWebSocketMessage? =
             runCatching { ApiSerializer.decodeSocketMessage(text) }
@@ -350,11 +298,8 @@ internal class OkHttpSyncPlaySocket
             val MAX_RETRY: Duration = 10.seconds
 
             /**
-             * Frames queued between OkHttp's reader thread and the routing coroutine.
-             *
              * Far beyond any healthy backlog (SyncPlay is a handful of frames per action), but a
-             * ceiling all the same, so a wedged consumer costs bounded memory in this
-             * process-lifetime singleton rather than the heap.
+             * ceiling all the same, so a wedged consumer costs bounded memory in this singleton.
              */
             const val RAW_FRAME_BUFFER = 256
 

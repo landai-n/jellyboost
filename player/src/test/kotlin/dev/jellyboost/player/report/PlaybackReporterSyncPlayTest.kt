@@ -32,13 +32,9 @@ import org.junit.jupiter.api.Test
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * The one exception to "a downloaded file tells the server nothing": a SyncPlay group.
- *
- * The rule these tests pin has three terms and every one of them matters. A local file reports
- * **only** while the device is in a group **and** online; alone or offline it is exactly as
- * silent as [PlaybackReporterTest] pins from the other side, which is why that class is
- * untouched. The fourth term is a call that must never happen: a file on disk started no
- * encoder, so being in a group must not make the reporter ask the server to kill one.
+ * A local file reports only while the device is in a group *and* online; alone or offline it stays
+ * silent (as [PlaybackReporterTest] pins). Being in a group must never make the reporter ask the
+ * server to kill an encoder, since a file on disk started none.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class PlaybackReporterSyncPlayTest {
@@ -92,9 +88,7 @@ class PlaybackReporterSyncPlayTest {
 
             info.captured.positionTicks shouldBe 900_000_000L
             info.captured.playSessionId shouldBe MINTED_ID
-            // The local-resume guarantee is not traded away for the SyncPlay one: the position is
-            // still written locally, so the download resumes in the right place with or without a
-            // server.
+            // Position is still written locally, so the download resumes correctly with or without a server.
             coVerify(exactly = 1) { userDataRepository.setPosition(any(), 900_000_000L) }
         }
 
@@ -136,8 +130,7 @@ class PlaybackReporterSyncPlayTest {
     @Test
     fun `a failed mint still reports, with no session id at all`() =
         runTest {
-            // The server keys the session on the authenticated device, so a report without an id
-            // still lands — and a member the others cannot see is worse than an unkeyed one.
+            // The server keys the session on the authenticated device, so a report without an id still lands.
             syncPlay.setMintedPlaySessionId(null)
             val info = slot<PlaybackStartInfo>()
             coEvery { api.reportPlaybackStart(capture(info)) } just Runs
@@ -164,8 +157,7 @@ class PlaybackReporterSyncPlayTest {
             coVerify(exactly = 0) { api.reportPlaybackStart(any()) }
             coVerify(exactly = 0) { api.reportPlaybackProgress(any()) }
             coVerify(exactly = 0) { api.reportPlaybackStopped(any()) }
-            // The group is unreachable too; the controller is tearing the membership down as this
-            // happens (key decision 10). Nothing is owed to the server until it is back.
+            // The group is unreachable too, and nothing is owed to the server until it's back (decision 10).
             coVerify(exactly = 1) { userDataRepository.setPosition(any(), 950_000_000L) }
         }
 
@@ -194,8 +186,7 @@ class PlaybackReporterSyncPlayTest {
             reporter.reportStop(source, PlaybackSnapshot(positionMs = 95_000L))
             reporter.stopTranscoding(source)
 
-            // A file on disk is direct play by construction: there is no ffmpeg process anywhere,
-            // and asking the server to stop one would be a lie about a session it does not have.
+            // A file on disk is direct play by construction: there is no ffmpeg process to stop.
             coVerify(exactly = 0) { api.stopEncodingProcess(any(), any()) }
         }
 
@@ -204,8 +195,8 @@ class PlaybackReporterSyncPlayTest {
     @Test
     fun `leaving a group mid-item closes the server session that was opened for it`() =
         runTest {
-            // By the time anything can observe the group ending, `inGroup` is already false — which
-            // is exactly why this path exists rather than an ordinary stop report.
+            // `inGroup` is already false by the time anything can observe the group ending — why
+            // this path exists rather than an ordinary stop report.
             syncPlay.setInGroup(false)
             syncPlay.setMintedPlaySessionId(null)
             val info = slot<PlaybackStopInfo>()
@@ -219,8 +210,7 @@ class PlaybackReporterSyncPlayTest {
 
             info.captured.playSessionId shouldBe MINTED_ID
             info.captured.positionTicks shouldBe 950_000_000L
-            // Playback carries on solo from the same file, so nothing is written as "stopped"
-            // locally — the progress ticker keeps the resume position current.
+            // Playback carries on solo, so nothing is written as "stopped" locally.
             coVerify(exactly = 0) { userDataRepository.setPosition(any(), any()) }
             coVerify(exactly = 0) { userDataRepository.setPlayed(any(), any()) }
         }

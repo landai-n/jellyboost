@@ -7,13 +7,7 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 
-/**
- * Unit tests for the two rules [JellyboostSnackbarHost] took over from five hand-written hosts:
- * where the pill sits, and when it fires.
- */
 class JellyboostSnackbarHostTest {
-    // ---- where the pill sits ---------------------------------------------------------------------
-
     @Test
     @DisplayName("a top-level screen floats the snackbar above the nav pill")
     fun chromeBottomWinsWhenThePillIsUp() {
@@ -25,8 +19,7 @@ class JellyboostSnackbarHostTest {
     @Test
     @DisplayName("a pushed destination falls back to the navigation-bar inset")
     fun navigationBarInsetWinsWhenThereIsNoChrome() {
-        // Every pushed destination: `LocalAppChromePadding` is zero by contract, and this is the
-        // value the hand-written `navigationBarsPadding()` was applying.
+        // On a pushed destination `LocalAppChromePadding` is zero by contract.
         SnackbarBottomInset(PaddingValues(bottom = 0.dp), navigationBarInset = 24.dp)
             .calculateBottomPadding() shouldBe 24.dp
     }
@@ -34,9 +27,8 @@ class JellyboostSnackbarHostTest {
     @Test
     @DisplayName("a wide layout keeps the gesture-bar inset the chrome padding no longer carries")
     fun wideLayoutKeepsTheGestureBarInset() {
-        // On a wide window the chrome is all at the top, so its bottom padding is zero. A screen
-        // that read only the chrome padding — the downloads screen did — put its snackbar under
-        // the gesture bar on exactly the tablet this app is tested on.
+        // On a wide window the chrome is all at the top, so reading only its bottom padding put the
+        // snackbar under the gesture bar on the test tablet.
         SnackbarBottomInset(PaddingValues(bottom = 0.dp), navigationBarInset = 48.dp)
             .calculateBottomPadding() shouldBe 48.dp
     }
@@ -51,7 +43,6 @@ class JellyboostSnackbarHostTest {
     @Test
     @DisplayName("an immersive screen can raise the floor for chrome it drew itself")
     fun minimumInsetRaisesTheFloor() {
-        // The player: no system insets, no app chrome, but its own transport controls to clear.
         SnackbarBottomInset(PaddingValues(bottom = 0.dp), navigationBarInset = 0.dp, minimumInset = 72.dp)
             .calculateBottomPadding() shouldBe 72.dp
         // …and it never *lowers* one that is already larger.
@@ -71,8 +62,6 @@ class JellyboostSnackbarHostTest {
         inset.calculateRightPadding(LayoutDirection.Rtl) shouldBe 0.dp
     }
 
-    // ---- when the pill fires -----------------------------------------------------------------------
-
     /**
      * Two distinct messages that happen to share their copy, arriving back to back with no `null`
      * between them — a batch finishing while a failure is still on screen.
@@ -82,7 +71,7 @@ class JellyboostSnackbarHostTest {
     private val copy: (Message) -> String =
         { message ->
             when (message) {
-                // Deliberately identical: this is the case the copy-keyed effect could not see.
+                // Deliberately identical: the case a copy-keyed effect cannot see.
                 Message.DeleteFailed -> "Something went wrong"
                 Message.ActionFailed -> "Something went wrong"
                 Message.Queued -> "Added to downloads"
@@ -101,9 +90,8 @@ class JellyboostSnackbarHostTest {
     @Test
     @DisplayName("keying on the resolved copy wedges the second message — the bug this replaces")
     fun keyingOnCopyWedgesTheSecondMessage() {
-        // The characterization of this bug, kept so the fix cannot be quietly undone: the second
-        // message is never shown and — worse — never consumed, so the field stays non-null and the
-        // screen can never show another snackbar again.
+        // Characterizes the bug: the second message is never shown *and* never consumed, so the
+        // field stays non-null and the screen can never show another snackbar.
         val run = replayOneShot(sharedCopyBurst, key = { it?.let(copy) }, text = copy)
 
         run.shown shouldBe listOf("Something went wrong")
@@ -147,7 +135,6 @@ class JellyboostSnackbarHostTest {
         run.consumed shouldBe 0
     }
 
-    /** Stand-in for the message types the five screens hold — the shape, not any one screen's. */
     private enum class Message { DeleteFailed, ActionFailed, Queued }
 
     private data class OneShotRun(
@@ -156,12 +143,8 @@ class JellyboostSnackbarHostTest {
     )
 
     /**
-     * Replays `LaunchedEffect`'s restart contract over a sequence of message states.
-     *
-     * This module has no Robolectric and no composition harness, so the one property under test is
-     * modelled directly: an effect body runs when — and only when — its key differs from the key it
-     * last ran with. [key] is the production function under test, so a change to it changes what
-     * this measures.
+     * Models `LaunchedEffect`'s restart contract — the body runs when, and only when, its key
+     * differs from the key it last ran with — since this module has no composition harness.
      */
     private fun <T : Any> replayOneShot(
         states: List<T?>,

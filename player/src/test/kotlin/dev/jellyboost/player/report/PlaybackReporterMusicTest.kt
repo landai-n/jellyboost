@@ -28,13 +28,11 @@ import org.junit.jupiter.api.Test
 import java.util.UUID
 
 /**
- * The music half of [PlaybackReporter].
- *
- * The video path's own tests are untouched and still pass unchanged — the point of adding a
- * parallel entry point rather than widening `PlaybackMediaSource`. What is pinned here is the
- * vocabulary a *queue* has and a film does not (repeat and shuffle reach the wire), the
- * completed-track rule (full runtime, marked played), and the two silences: a downloaded track and
- * an offline session tell the server nothing while still writing the position locally.
+ * The music half of [PlaybackReporter] — a parallel entry point rather than a widened
+ * `PlaybackMediaSource`, so the video path's own tests are untouched. Pins the vocabulary a
+ * *queue* has that a film does not (repeat and shuffle reach the wire), the completed-track rule
+ * (full runtime, marked played), and the two silences: a downloaded track and an offline session
+ * tell the server nothing while still writing the position locally.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class PlaybackReporterMusicTest {

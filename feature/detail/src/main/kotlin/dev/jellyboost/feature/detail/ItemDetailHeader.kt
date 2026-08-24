@@ -91,20 +91,11 @@ import dev.jellyboost.core.ui.theme.popShadow
 import dev.jellyboost.core.ui.R as CoreUiR
 
 /**
- * The top of the detail screen: the backdrop, the title lockup drawn **on** it, the action row, and
- * the long-form text under them.
+ * The lockup is drawn *on* the artwork, which is what `ItemDetailScreen`'s taller backdrop fractions
+ * exist to make room for.
  *
- * The lockup sits on the artwork — eyebrow, title and metadata in the bottom-left of the banner
- * rather than in a block below it, which is what the taller backdrop (`ItemDetailScreen`'s
- * fractions) exists to make room for.
- *
- * On a wide screen the same lockup lives in a *stage*: a 190×285 poster overlaps the bottom of the
- * backdrop and the facts column runs beside it, capped at [FACTS_MAX_WIDTH] so a paragraph never
- * spans a tablet. The two shapes share every piece below the lockup, so a change to the metadata
- * line or the action row lands on both.
- *
- * @param playTarget what the Play button will actually start (`ItemDetailUiState.playTarget`) — the
- *   label says so ("Play S1 · E10") when a series or season page resolves to an episode.
+ * @param playTarget what Play will actually start — the label says so ("Play S1 · E10") when a
+ *   series or season page resolves to an episode.
  */
 @Composable
 internal fun DetailHero(
@@ -169,11 +160,8 @@ internal fun DetailHero(
 }
 
 /**
- * The wide stage: poster over the backdrop's bottom edge, facts beside it.
- *
- * The overlap is a top padding on the whole row rather than a negative offset, so the stage stays a
- * single measured box — a negative offset inside a `LazyColumn` item would draw outside the item's
- * bounds and be clipped away by the row above it.
+ * The poster's overlap must stay a top padding, never a negative offset: inside a `LazyColumn` item
+ * a negative offset draws outside the item's bounds and is clipped away by the row above.
  */
 @Composable
 private fun WideStage(
@@ -202,9 +190,8 @@ private fun WideStage(
             DetailPoster(item = item)
 
             Column(
-                // `fill = false` is what lets [FACTS_MAX_WIDTH] bite: a filled weight hands the
-                // child a *fixed* width, and `widthIn` enforces the incoming constraint over its
-                // own, so the cap would silently do nothing on a 1200dp tablet.
+                // `fill = false` is what lets [FACTS_MAX_WIDTH] bite: a filled weight hands a fixed
+                // width, and `widthIn` obeys the incoming constraint over its own.
                 modifier =
                     Modifier
                         .weight(1f, fill = false)
@@ -233,7 +220,6 @@ private fun WideStage(
     }
 }
 
-/** The artwork itself, with its scrim and — on wide — the accent halo. */
 @Composable
 private fun DetailBackdrop(
     item: JellyfinItem,
@@ -249,31 +235,16 @@ private fun DetailBackdrop(
     }
 }
 
-/** The things the header can do, bundled so the composables stay under the parameter limit. */
 data class DetailActionHandlers(
     val onPlay: () -> Unit,
     val onDownload: () -> Unit,
     val onToggleWatched: () -> Unit,
     val onToggleFavorite: () -> Unit,
-    /**
-     * The SyncPlay group this page is acting for, or `null` when there is no group — which is the
-     * ordinary case, and why the field is nullable rather than a flag beside a lambda.
-     * Carried in this bundle so no composable between here and the buttons grows a parameter for a
-     * feature it does not otherwise know about.
-     *
-     * Non-null also changes what [onPlay] *means*: in a group a play is the group's play, which is
-     * why the Play button reads its label from here.
-     */
+    /** Non-null changes what [onPlay] *means*: in a group a play is the group's play. */
     val group: DetailGroupActions? = null,
 )
 
-/**
- * The active group, and the one callback its queue buttons share.
- *
- * [groupName] is here because the buttons name the group they act on: "Play for Film night" says
- * what a tap does in a way "Play" cannot, and on a detail page a user may well have forgotten which
- * group they joined — which matters more now that Play itself is the group's play.
- */
+/** [groupName] is carried because the buttons name the group they act on ("Play for Film night"). */
 data class DetailGroupActions(
     val groupName: String,
     val onAction: (GroupAction) -> Unit,
@@ -298,11 +269,7 @@ private fun DetailPoster(
     )
 }
 
-/**
- * Eyebrow, title and metadata — the block that reads as the page's headline, wherever it is drawn.
- *
- * @param expanded the wide/landscape size of the title (44sp rather than 34sp).
- */
+/** @param expanded the wide/landscape size of the title (44sp rather than 34sp). */
 @Composable
 private fun TitleLockup(
     item: JellyfinItem,
@@ -332,9 +299,8 @@ private fun TitleLockup(
             color = Color.White,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
-            // The page's own heading, which is what makes TalkBack's heading-jump land somewhere
-            // useful on a screen whose first stop is otherwise a backdrop. The full
-            // title is spoken whatever the two ellipsized lines had room for.
+            // The page's only heading — TalkBack's heading-jump has nowhere else to land. The
+            // contentDescription speaks the full title whatever the two lines had room for.
             modifier =
                 Modifier.semantics {
                     heading()
@@ -359,16 +325,9 @@ private fun TitleLockup(
 }
 
 /**
- * The series and season an episode belongs to, as tappable chips under the title lockup — a
- * shortcut that saves a trip through the season page.
- *
- * Lives in [TitleLockup] and nowhere else: that composable is shared by both the compact and the
- * wide hero, so one call site serves both layouts (the point of putting it here rather than in
- * [DetailHero] or [WideStage] directly).
- *
- * Either chip is skipped independently when its own target is missing — a series page's episode
- * may carry a `seasonId` the server has not resolved a [JellyfinItem.parentIndexNumber] for, or vice
- * versa — and the whole row draws nothing for a non-episode item, or an episode with neither target.
+ * Called from [TitleLockup] only, which both heroes share — putting it in [DetailHero] or
+ * [WideStage] would need two call sites. Either chip drops out independently: the server may give a
+ * `seasonId` with no [JellyfinItem.parentIndexNumber], or the reverse.
  */
 @Composable
 internal fun EpisodeOriginChips(
@@ -417,21 +376,11 @@ internal fun EpisodeOriginChips(
 /**
  * `★ 8.6 · 2016 · TV-MA · 4 seasons`, skipping whatever the server does not know.
  *
- * The line is split into three kinds of element — the accent-starred community rating, the
- * outlined certificate badge, and plain muted text for the rest — drawn in the order the server
- * states them.
+ * [downloadedBytes] is trusted **only** while [downloadState] is [DownloadState.Downloaded], so a
+ * season mid-download shows the server's figure rather than a partial sum.
  *
- * The size entry reads from the device rather than the server once a local copy is what the user
- * actually has: [downloadedBytes] is only trusted while [downloadState] itself is
- * [DownloadState.Downloaded], so a season mid-download (whose aggregate state is not yet
- * `Downloaded`) keeps showing the server's figure rather than a partial sum, and a fully-downloaded
- * container — which has no download row, and so no bytes, of its own — falls back to it too.
- *
- * To a screen reader the row is **one** node. Read as drawn it would be four or five disconnected
- * fragments — "8.6", "2016", "TV-MA" — none of which says what it is a number *of*. The merged
- * sentence qualifies the two that need it in words, the way
- * the star glyph and the badge outline qualify them to the eye: "Rating 8.6, 2016, rated TV-MA,
- * 4 seasons".
+ * One merged node to a screen reader, and the description must qualify the bare numbers in words —
+ * drawn, "8.6" and "TV-MA" say nothing about what they are numbers of.
  */
 @Composable
 private fun MetaRow(
@@ -475,17 +424,11 @@ private fun MetaRow(
 }
 
 /**
- * The metadata row as one sentence, in the order the row draws it.
+ * Extracted so the *order* is pinned by a JVM test. [describeParts] drops blanks, so a server that
+ * answers `""` for a certificate cannot produce a dangling "rated".
  *
- * A plain function, so the *order* is held still by a JVM test rather than by a device. The join
- * itself — blanks dropped so a server that answers `""` for a certificate cannot produce a dangling
- * "rated", duplicates collapsed, and a comma rather than the interpunct the row draws — is
- * `:core:ui`'s [describeParts], shared with the cards and the home hero.
- *
- * @param rating the community rating, already qualified ("Rating 8.6") and formatted.
- * @param certificate the age certificate, already qualified ("rated TV-MA").
- * @param facts the same plain-text facts the row's last element joins with [SEPARATOR] — season
- *   count or runtime, size, time left — each of which already says what it is.
+ * @param rating already qualified ("Rating 8.6") and formatted.
+ * @param certificate already qualified ("rated TV-MA").
  */
 internal fun metaRowDescription(
     rating: String?,
@@ -494,7 +437,6 @@ internal fun metaRowDescription(
     facts: List<String>,
 ): String = describeParts(listOf(rating, year, certificate) + facts)
 
-/** The starred community rating — the one part of the metadata line drawn in colour. */
 @Composable
 private fun RatingFact(
     rating: Float,
@@ -528,7 +470,6 @@ private fun MetaText(
     )
 }
 
-/** The resume bar, kept from the pre-refresh header — a page for a half-watched item says so. */
 @Composable
 private fun ProgressLine(
     item: JellyfinItem,
@@ -544,7 +485,6 @@ private fun ProgressLine(
     )
 }
 
-/** Tagline, overview, credits and genres — everything under the action row, in both layouts. */
 @Composable
 private fun DetailBody(
     item: JellyfinItem,
@@ -592,9 +532,7 @@ private fun DetailBody(
                 verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
             ) {
                 item.genres.forEach { genre ->
-                    // Not a filter — genre filtering lives on the library grid. The inert chip is
-                    // what keeps it looking like the filter it will be without claiming to be a
-                    // disabled one: a genre here is a label, and a screen reader is told so.
+                    // An inert label, not a filter: genre filtering lives on the library grid.
                     InfoPillChip(text = genre)
                 }
             }
@@ -602,14 +540,7 @@ private fun DetailBody(
     }
 }
 
-/**
- * The action row.
- *
- * Compact keeps one worded button — the white Play pill, which stretches — beside 44dp glass
- * circles for download and mark-watched; the favourite heart moved up to the overlay nav
- * (`ItemDetailScreen`), which is what freed the room. Wide has the width for a labelled Download
- * ghost pill, and keeps favourite and watched as glass circles beside it.
- */
+/** Compact has no favourite heart here: it lives in `ItemDetailScreen`'s overlay nav instead. */
 @Composable
 private fun DetailActions(
     item: JellyfinItem,
@@ -646,9 +577,8 @@ private fun DetailActions(
                 )
             }
         } else {
-            // A plain Row, not a FlowRow: the Play pill takes the width the two circles leave, and
-            // a weighted child in a wrapping row is what would decide to wrap them onto a line of
-            // their own instead.
+            // A plain Row, not a FlowRow: a weighted child in a wrapping row makes the circles wrap
+            // onto a line of their own.
             Row(
                 horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
                 verticalAlignment = Alignment.CenterVertically,
@@ -676,17 +606,8 @@ private fun DetailActions(
 }
 
 /**
- * What the Play button says.
- *
- * In a group there is one Play button and it plays for the group — there is no second "Play for
- * group" button beside it, and no solo escape hatch on this page: while
- * a group is joined, everything this page starts is started for everyone in it. What must *not*
- * happen is the meaning changing silently, so the label carries the group's name and the group icon
- * replaces the play triangle.
- *
- * Outside a group the label names the *episode* a container page will start — "Play S1 · E10",
- * from [playTarget] — which a bare "Play" on a series page never says. An episode's own page keeps
- * the bare word: its title lockup is already the episode.
+ * In a group there is no solo escape hatch on this page, so the label must carry the group's name —
+ * the meaning of Play changes and must not change silently.
  */
 @Composable
 private fun playLabel(
@@ -710,29 +631,15 @@ private fun playLabel(
 }
 
 /**
- * The overview clamped to [COMPACT_OVERVIEW_MAX_LINES] on a phone, expanding (and collapsing
- * again) on tap. A paragraph that already fits is not made tappable — a ripple on inert text
- * would promise interaction it doesn't have.
+ * A paragraph that already fits must not become tappable, and the clickable one must keep its state
+ * and click label — TalkBack reads the click label in place of "double tap to activate".
  *
- * Non-visually the affordance would otherwise be invisible: a clickable paragraph with no state
- * and no label, announced as five ellipsized lines that could be activated for reasons unknown. It
- * says which of the two states it is in, and names what a tap does — TalkBack reads the click label
- * in place of its own "double tap to activate", so "Read full overview" is the whole of the
- * promise.
+ * `expanded` and `overflowing` must survive the same events, which is why one saveable
+ * [OverviewState] holds both: a saveable `expanded` beside a `remember`ed `overflowing` leaves a
+ * restored paragraph inert until a layout pass re-measures it.
  *
- * ### Why both flags are saveable, and why the measurement is written once
- * `expanded` and `overflowing` together decide whether the paragraph is tappable at all, so they
- * have to survive the same events or the control comes back in a state that cannot be described:
- * a saveable `expanded` beside a plain `remember`ed `overflowing` would leave a collapsed paragraph
- * restored after process death briefly inert — clickable only once a layout pass had re-measured
- * it. One saveable [OverviewState] holds both.
- *
- * The write from `onTextLayout` is also **conditional on the value changing**. `onTextLayout` runs
- * inside layout, and this `Text` sits under `animateContentSize`, so an unconditional
- * `overflowing = …` would queue a recomposition on every frame of the expand animation — the
- * measurement is settled after the first meaningful pass and re-asserting it is what turns a
- * one-shot into a per-frame loop. It is guarded today by the `if (!expanded)`; making the write
- * itself idempotent is what keeps it guarded after the next edit.
+ * The `onTextLayout` write must stay **conditional on the value changing**: it runs inside layout
+ * under `animateContentSize`, so an unconditional write recomposes on every frame of the animation.
  */
 @Composable
 private fun ExpandableOverview(
@@ -754,8 +661,7 @@ private fun ExpandableOverview(
         maxLines = if (expanded) Int.MAX_VALUE else COMPACT_OVERVIEW_MAX_LINES,
         overflow = TextOverflow.Ellipsis,
         onTextLayout = { result ->
-            // Only while collapsed (an expanded paragraph never overflows), and only when the
-            // answer actually moves — see this composable's KDoc.
+            // Idempotent by construction — see this composable's KDoc.
             if (!expanded && result.hasVisualOverflow != overflowing) {
                 state = state.copy(overflowing = result.hasVisualOverflow)
             }
@@ -778,13 +684,7 @@ private fun ExpandableOverview(
     )
 }
 
-/**
- * Both halves of [ExpandableOverview]'s state, in one saveable object.
- *
- * Saveable rather than remembered: the pair is what makes the paragraph tappable, and restoring one
- * without the other brings the control back in a state its own semantics cannot describe. Kept as
- * one value rather than two `rememberSaveable`s so a future edit cannot re-introduce the asymmetry.
- */
+/** One value rather than two `rememberSaveable`s, so an edit cannot re-introduce the asymmetry. */
 private data class OverviewState(
     val expanded: Boolean = false,
     val overflowing: Boolean = false,
@@ -798,13 +698,10 @@ private data class OverviewState(
     }
 }
 
-/** Lines a compact overview shows before asking for a tap — about a third of a 360×800 screen. */
+/** About a third of a 360×800 screen. */
 private const val COMPACT_OVERVIEW_MAX_LINES = 5
 
-/**
- * The "mark watched/unwatched" toggle: a 44dp glass circle whose glyph goes accent when the item is
- * watched. The icon's `contentDescription` carries the label, so TalkBack still names the action.
- */
+/** The icon's `contentDescription` is the only thing naming this action to TalkBack. */
 @Composable
 private fun WatchedButton(
     watched: Boolean,
@@ -822,7 +719,7 @@ private fun WatchedButton(
     )
 }
 
-/** The favourite toggle, drawn here only on wide — compact hosts it in the overlay nav. */
+/** Wide only — compact hosts the heart in `ItemDetailScreen`'s overlay nav. */
 @Composable
 private fun FavoriteButton(
     favorite: Boolean,
@@ -840,13 +737,7 @@ private fun FavoriteButton(
     )
 }
 
-/**
- * The two group *queue* actions, drawn only while a SyncPlay group is active.
- *
- * They join the Play button — which is itself the group's play, see [playLabel] — because they are
- * the two things playing has no way to say: put this after what we are watching, or at the end.
- * Small ghost pills, so the page keeps exactly one primary action.
- */
+/** Ghost pills, not primary: the page keeps exactly one primary action. */
 @Composable
 private fun GroupActionButtons(group: DetailGroupActions) {
     GhostPillButton(
@@ -864,17 +755,11 @@ private fun GroupActionButtons(group: DetailGroupActions) {
 }
 
 /**
- * The Download control: one button that is really four wearing one coat, its glyph saying what
- * tapping it does *now* — download, cancel, remove, retry.
+ * Four actions in one coat — download, cancel, remove, retry — and a transfer in flight draws a
+ * determinate ring instead of a glyph, which is why this is not a plain `GlassIconButton`.
  *
- * A transfer in flight keeps the determinate ring the cards' `DownloadBadge` draws, which is why
- * this is not simply a `GlassIconButton`: that case has no glyph at all, it has progress.
- *
- * @param labelled `true` on the wide layout, which has the room to say the word as well as draw the
- *   glyph, so the control becomes a ghost pill rather than a 44dp circle. The state machine is the
- *   same either way — which is the point. A *static* `GhostPillButton` drawn straight off
- *   `labelRes()` would show a frozen "Cancel" pill on a tablet for the whole of a transfer the
- *   phone reports as a filling ring, and would give a finished download none of the accent tint.
+ * @param labelled the wide form. Both forms must keep the same state machine: a static
+ *   `GhostPillButton` off `labelRes()` would freeze at "Cancel" for a whole transfer.
  */
 @Composable
 private fun DownloadButton(
@@ -891,8 +776,6 @@ private fun DownloadButton(
             onClick = onClick,
             modifier = modifier,
             leadingIcon = state.icon(),
-            // The determinate ring and the completion tint the circular form has always drawn,
-            // reported through the pill's leading slot instead of replacing the glyph wholesale.
             progress = (state as? DownloadState.Downloading)?.progress,
             leadingIconTint =
                 if (state is DownloadState.Downloaded || state is DownloadState.Downloading) {
@@ -910,8 +793,7 @@ private fun DownloadButton(
                 modifier
                     .size(Dimens.PillHeight)
                     .glassSurface(CircleShape)
-                    // The one action row control that is not a `GlassIconButton`, and the only one
-                    // that had no role: a progress ring you can tap is a button.
+                    // The explicit role is load-bearing: a tappable progress ring is a button.
                     .clickable(role = Role.Button, onClick = onClick)
                     .semantics { contentDescription = label },
             contentAlignment = Alignment.Center,
@@ -943,12 +825,7 @@ private fun DownloadState.icon() =
         else -> Icons.Outlined.Downloading
     }
 
-/**
- * The label says what a tap *does*, not what the state is — the state is already the icon.
- *
- * Cancelling a queued, running or paused download and deleting a finished one are the same
- * operation with different words for it, which is why they share a handler.
- */
+/** The label says what a tap *does*, not what the state is — the state is already the icon. */
 private fun DownloadState.labelRes(): Int =
     when (this) {
         is DownloadState.NotDownloaded -> R.string.detail_download
@@ -962,7 +839,6 @@ private fun DownloadState.labelRes(): Int =
 @Composable
 private fun accent(active: Boolean) = if (active) MaterialTheme.colorScheme.primary else GlassIconTint
 
-/** The facts that stay plain text in the metadata row, in the order the old single line used. */
 @Composable
 private fun JellyfinItem.metaFacts(
     downloadState: DownloadState,
@@ -994,19 +870,9 @@ private fun JellyfinItem.childCountLabel(): String? {
 }
 
 /**
- * `SERIES` / `MOVIE` — the lockup's eyebrow, or nothing for the shapes a user never opens.
- *
- * Returns the drawn text and the spoken one, which are deliberately not the same string — the same
- * split `TagPill` documents:
- *
- * - **Uppercased in the *device's* locale**, not the JVM's root: `uppercase()` with no argument
- *   takes `Locale.getDefault()`, which on Android is the *system* locale rather than the one the
- *   resources resolved in, and in Turkish maps `i` to `İ`. The project's own rule
- *   (`PlayerControls.kt`, `config/lint/lint.xml`) says to pass the locale explicitly; the lint rule
- *   is not gateable, so this is the second place it has to be written down rather than checked.
- * - **Spoken in sentence case.** An all-caps word is a word to the eye and an initialism to a screen
- *   reader: TalkBack spells the eyebrow out letter by letter, "S-E-R-I-E-S". The
- *   `contentDescription` carries the untransformed resource.
+ * Drawn and spoken are deliberately different strings, as in `TagPill`: uppercase in the *device's*
+ * locale (bare `uppercase()` takes the system locale, not the resources' one, and maps `i` to `İ` in
+ * Turkish), and spoken in sentence case, or TalkBack spells the eyebrow out "S-E-R-I-E-S".
  */
 @Composable
 private fun JellyfinItem.typeEyebrow(): TypeEyebrow? {
@@ -1023,13 +889,11 @@ private fun JellyfinItem.typeEyebrow(): TypeEyebrow? {
     return TypeEyebrow(drawn = spoken.uppercase(locale), spoken = spoken)
 }
 
-/** The eyebrow's two forms — see [typeEyebrow]. */
 private data class TypeEyebrow(
     val drawn: String,
     val spoken: String,
 )
 
-/** `Directed by X · A, B, C` — the one-line version of the credits the cast rail draws in full. */
 @Composable
 private fun JellyfinItem.creditLine(): String? {
     val director = people.firstOrNull { it.kind == PersonKind.DIRECTOR }?.name
@@ -1046,25 +910,21 @@ private fun JellyfinItem.creditLine(): String? {
     return parts.joinToString(Separators.DOT).ifBlank { null }
 }
 
-/** How many actors the credit line names before it stops. */
 private const val TOP_BILLED = 4
 
-/** Screen gutter of the lockup and of everything under it (the mocks' 20dp detail padding). */
+/** The mocks' 20dp detail padding. */
 internal val DetailEdgePadding = 20.dp
 
-/** How far the wide stage's poster reaches up over the backdrop. */
 private val POSTER_OVERLAP = 190.dp
 
-/** Top inset of the wide facts column, which lands its eyebrow inside the backdrop. */
+/** Lands the wide facts column's eyebrow inside the backdrop. */
 private val FACTS_TOP_PADDING = 96.dp
 
-/** Width cap of the wide stage's facts column. */
 private val FACTS_MAX_WIDTH = 660.dp
 
-/** Long-form text stops growing here; a full-width paragraph on a tablet is unreadable. */
+/** A full-width paragraph on a tablet is unreadable. */
 private val TEXT_MAX_WIDTH = 680.dp
 
-/** Ellipsis point for the series origin chip — long titles stop here rather than stretching. */
 private val OriginChipMaxWidth = 200.dp
 
 private val MetaGap = 10.dp
@@ -1074,10 +934,7 @@ private val RatingStarSize = 13.dp
 private val DownloadRingWidth = 2.dp
 
 /**
- * Track of the resume bar — the same white@40% the cards' inset progress uses.
- *
- * 40% rather than something fainter: an unfilled track is what gives the filled part a scale, so
- * WCAG 1.4.11 asks 3:1 of it. White@22% is 1.97:1 on `#101010`; white@40% is 3.82:1.
+ * WCAG 1.4.11 asks 3:1 of the unfilled track: white@22% is 1.97:1 on `#101010`, white@40% is 3.82:1.
  */
 private const val PROGRESS_TRACK_ALPHA = 0.40f
 

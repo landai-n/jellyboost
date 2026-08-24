@@ -6,31 +6,16 @@ import java.time.ZoneId
 
 /**
  * Conversions between [Instant] — the only timestamp type the domain models and Room use — and the
- * `java.time.LocalDateTime` values jellyfin-sdk exposes for every date field.
+ * `LocalDateTime` values jellyfin-sdk exposes for every date field.
  *
- * **These must not treat the SDK's `LocalDateTime` as UTC.** The SDK's `DateTimeSerializer`
- * (verified against jellyfin-sdk 1.8.12) is zone-aware and defaults to [ZoneId.systemDefault]:
- *
- * ```
- * serialize   -> value.atZone(zoneId).format(ISO_OFFSET_DATE_TIME)
- * deserialize -> ZonedDateTime.parse(text).withZoneSameInstant(zoneId).toLocalDateTime()
- * ```
- *
- * So an SDK `LocalDateTime` is always **local wall-clock time**, and handing it UTC wall-clock time
- * makes it stamp the device's offset onto the wrong reading — a 17:22 UTC event would go out as
- * `17:22:57+02:00` and the server would store it two hours early. Round-tripping through
- * [ZoneId.systemDefault] is what makes the *instant* survive.
- *
- * They live in `:core:network` rather than `:data` because two modules read SDK date fields —
- * `:data`'s mappers and `:player`'s SyncPlay DTO mapping. `:core:network` is the module that owns
- * the SDK boundary these conversions describe, and both callers already depend on it.
- * `:core:common` would also have compiled (nothing here names an SDK type) but would have put a
- * rule *about* jellyfin-sdk's serializer into the one module that is deliberately innocent of the
- * SDK.
+ * **These must not treat the SDK's `LocalDateTime` as UTC.** Its `DateTimeSerializer` (verified against
+ * jellyfin-sdk 1.8.12) is zone-aware and defaults to [ZoneId.systemDefault], so an SDK `LocalDateTime` is
+ * always **local wall-clock time**: handing it UTC wall-clock time stamps the device's offset onto the wrong
+ * reading, and a 17:22 UTC event goes out as `17:22:57+02:00` — stored two hours early. Round-tripping
+ * through [ZoneId.systemDefault] is what makes the *instant* survive.
  *
  * @param zone the zone the SDK serializer will apply; only tests ever pass it explicitly.
  */
 fun Instant.toSdkDateTime(zone: ZoneId = ZoneId.systemDefault()): LocalDateTime = LocalDateTime.ofInstant(this, zone)
 
-/** Inverse of [toSdkDateTime]: reads an SDK date field back as the instant it denotes. */
 fun LocalDateTime.toSdkInstant(zone: ZoneId = ZoneId.systemDefault()): Instant = atZone(zone).toInstant()

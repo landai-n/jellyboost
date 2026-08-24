@@ -39,17 +39,12 @@ import java.time.Clock
 import java.time.ZoneOffset
 
 /**
- * Unit tests for the one rule `withFetchFile` states: a sidecar's fetch cannot be resumed, so its
- * part file is worthless however the transfer ends.
+ * The one rule `withFetchFile` states: a sidecar's fetch cannot be resumed, so its part file is
+ * worthless however the transfer ends — and an ordinary file has no such part file, which is the half
+ * of the rule a `finally` in the wrong place would quietly delete a download over.
  *
- * Separate from [DownloadQueueTest], which owns the transfer itself, and from
- * [DownloadQueueFileGuardTest], which owns what happens *before* a byte is fetched. What lives
- * here is only the fetch file's lifetime — and the fact that an ordinary file has none, which is
- * the half of the rule a `finally` in the wrong place would quietly delete a download over.
- *
- * The rule was three catch arms before, so its three exits are three tests: the sidecar's fetch
- * failing, the same fetch being cancelled, and a plain success. What a *strip* failure or
- * cancellation costs is [DownloadQueueTest] and [DownloadQueueFileGuardTest]'s, unchanged.
+ * The rule was three catch arms before, so its three exits are three tests: the fetch failing, the
+ * fetch being cancelled, and a plain success.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class DownloadQueueFetchFileTest {
@@ -99,9 +94,8 @@ class DownloadQueueFetchFileTest {
 
             queue().drain(listener) shouldBe DrainOutcome.COMPLETED
 
-            // The optional-file rule marks the row, and the fetch goes with the attempt: it cannot
-            // be resumed, so keeping it would cost the item's directory the whole junk video until
-            // a retry that truncates it from byte zero anyway.
+            // The optional-file rule marks the row, and the fetch goes with the attempt: it cannot be
+            // resumed, so keeping it would cost the item's directory the whole junk video.
             coVerify { downloadDao.setFileStatus(AUDIO_FILE_ID, DownloadStatus.ERROR) }
             partFile().exists() shouldBe false
         }
@@ -116,10 +110,9 @@ class DownloadQueueFetchFileTest {
 
             runCatching { queue().drain(listener) }
 
-            // The same clean-up as a failure, for the opposite reason: a pause may last a week and
-            // this is hundreds of megabytes of video nobody asked for. The *row* is treated
-            // differently — a cancelled file is not a failed one, so it keeps DOWNLOADING and the
-            // retry re-plans it rather than clearing an error off it.
+            // The same clean-up as a failure, for the opposite reason: a pause may last a week. The
+            // *row* is treated differently — a cancelled file is not a failed one, so it keeps
+            // DOWNLOADING and the retry re-plans it rather than clearing an error off it.
             partFile().exists() shouldBe false
             coVerify(exactly = 0) { downloadDao.setFileStatus(AUDIO_FILE_ID, DownloadStatus.ERROR) }
         }
@@ -136,9 +129,8 @@ class DownloadQueueFetchFileTest {
 
             queue().drain(listener) shouldBe DrainOutcome.COMPLETED
 
-            // The rule is the *sidecar's*, and this difference is the whole reason for stating it
-            // in one place: a video has no second file to sweep, and sweeping its target would
-            // delete the download the user just waited for.
+            // The rule is the *sidecar's*: a video has no second file to sweep, and sweeping its
+            // target would delete the download the user just waited for.
             val target = requireNotNull(mediaTarget)
             target.name shouldNotContain DownloadQueue.PART_SUFFIX
             target.exists() shouldBe true

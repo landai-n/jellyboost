@@ -10,16 +10,9 @@ import org.jellyfin.sdk.model.api.PlaybackStopInfo
 import org.jellyfin.sdk.model.api.TrickplayInfoDto
 import java.util.UUID
 
-/**
- * The server calls playback needs, behind one seam.
- *
- * Same reason `:core:network` has `JellyfinApiFacade`: the SDK's `ApiClient` is an abstract class
- * whose operation objects are created through extension properties, which makes it awkward to fake.
- * With this interface the resolver and the reporter — the two classes this milestone must test
- * densely — are plain objects with a mockable dependency.
- */
+/** An interface because the SDK's `ApiClient` is an abstract class whose operations are extension properties. */
 internal interface PlayerApi {
-    /** Device id the server attributes this session to; `null` only if the SDK has no DeviceInfo. */
+    /** `null` only if the SDK has no DeviceInfo. */
     val deviceId: String?
 
     /** `POST /Items/{itemId}/PlaybackInfo` — negotiates the play method for one item. */
@@ -28,41 +21,30 @@ internal interface PlayerApi {
         request: PlaybackInfoDto,
     ): PlaybackInfoResponse
 
-    /** `POST /Sessions/Playing` — playback began. */
+    /** `POST /Sessions/Playing` */
     suspend fun reportPlaybackStart(info: PlaybackStartInfo)
 
-    /** `POST /Sessions/Playing/Progress` — periodic position/pause report. */
+    /** `POST /Sessions/Playing/Progress` */
     suspend fun reportPlaybackProgress(info: PlaybackProgressInfo)
 
-    /** `POST /Sessions/Playing/Stopped` — playback ended, for whatever reason. */
+    /** `POST /Sessions/Playing/Stopped` */
     suspend fun reportPlaybackStopped(info: PlaybackStopInfo)
 
-    /**
-     * `DELETE /Videos/ActiveEncodings` — kills the server-side ffmpeg process for this session.
-     *
-     * Skipping this is what leaves orphaned transcodes behind on the server.
-     */
+    /** `DELETE /Videos/ActiveEncodings` — skipping it leaves an orphaned ffmpeg process on the server. */
     suspend fun stopEncodingProcess(
         deviceId: String,
         playSessionId: String,
     )
 
     /**
-     * The item's trickplay geometry — `BaseItemDto.trickplay`, keyed by media source id and then by
-     * thumbnail width.
-     *
-     * `PlaybackInfo` does not carry it, so the scrubber has to ask for the item itself. Empty when
-     * the server generated no scrubbing thumbnails for this item, which is the common case for a
-     * freshly added library.
+     * `BaseItemDto.trickplay`, keyed by media source id then thumbnail width. `PlaybackInfo` does not carry it,
+     * so the item itself has to be fetched; empty whenever the server generated no thumbnails.
      */
     suspend fun getTrickplayInfo(itemId: UUID): Map<String, Map<String, TrickplayInfoDto>>
 
     /**
-     * `GET /MediaSegments/{itemId}` — the intro/outro ranges a plugin detected.
-     *
-     * Server-only by definition, and optional: a server without the Media Segments API, or without
-     * a provider plugin, answers 404 or with nothing, and the feature is simply absent rather than
-     * broken.
+     * `GET /MediaSegments/{itemId}` — intro/outro ranges. Optional: a server without the API or without a
+     * provider plugin answers 404 or nothing, and the feature is absent rather than broken.
      */
     suspend fun getMediaSegments(
         itemId: UUID,
@@ -70,12 +52,8 @@ internal interface PlayerApi {
     ): List<MediaSegmentDto>
 
     /**
-     * `GET /Playback/BitrateTest` — [size] bytes of throwaway data, for timing the link.
-     *
-     * The endpoint jellyfin-web's Auto quality measures with: the server streams zeroes, so what
-     * comes back is worth nothing except how long it took to arrive. `AutoBitrateDetector` is the
-     * only caller, and it keeps the sizes small enough that the returned array is never a memory
-     * problem.
+     * `GET /Playback/BitrateTest` — [size] bytes of zeroes, worth nothing but the time they took to arrive.
+     * The caller keeps [size] small enough that the returned array is never a memory problem.
      */
     suspend fun getBitrateTestBytes(size: Int): ByteArray
 }

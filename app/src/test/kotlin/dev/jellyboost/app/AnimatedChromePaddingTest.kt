@@ -9,18 +9,9 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for the deferred-read [PaddingValues] the scaffold publishes through
- * `LocalAppChromePadding`.
- *
- * The whole point of the class is *when* the animated value is read: identity stays stable across
- * recompositions while `calculate*` follows the underlying state, so a navigation transition
- * invalidates the layouts that consume the padding rather than the scaffold's whole composition.
- * These tests pin the value side of that contract — the reads track the states, and the horizontal
- * sides stay zero, exactly as the `PaddingValues(top, bottom)` it replaced.
- *
- * The snackbar's own inset lives in `:core:ui` with the host that owns it; its rules are pinned by
- * `JellyboostSnackbarHostTest`, not this file, alongside the cases the other four hand-written
- * hosts need.
+ * The point of this [PaddingValues] is *when* the animated value is read: a stable identity whose
+ * `calculate*` follows the state, so a transition invalidates the consuming layouts rather than the
+ * whole scaffold. Pinned here is the value side — reads track the states, horizontal sides stay zero.
  */
 class AnimatedChromePaddingTest {
     @Test

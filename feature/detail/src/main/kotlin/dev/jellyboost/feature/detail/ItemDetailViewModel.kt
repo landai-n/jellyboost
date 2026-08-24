@@ -36,22 +36,9 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * State holder for the movie / series / season detail screen.
- *
- * Loads the item in full first — the detail path deliberately re-fetches instead of reusing the
- * lean item a list handed it — then fans out to whatever related rows that item's type calls for,
- * concurrently.
- *
- * Failure policy matches the home screen: only the item itself failing produces an error state; a
- * related row that fails is simply absent.
- *
- * Watched and favourite toggles go through [UserDataRepository], which writes locally and
- * publishes on the user-data event bus this ViewModel collects — so the button flips from the
- * local write, not from a server round-trip.
- *
- * The **download** half of the page — the button, its confirmation dialog, and the two Room
- * subscriptions behind them — lives in [DetailDownloadsDelegate]. It is the one slice of this
- * screen with state of its own that nothing else here reads.
+ * The detail path deliberately re-fetches the item in full rather than reusing the lean one a list
+ * handed it. Failure policy matches the home screen: only the item itself failing produces an error
+ * state; a related row that fails is simply absent.
  */
 @HiltViewModel
 class ItemDetailViewModel
@@ -64,10 +51,7 @@ class ItemDetailViewModel
         private val syncPlaySession: SyncPlaySession,
         savedStateHandle: SavedStateHandle,
     ) : ViewModel() {
-        /**
-         * Navigation stores the arguments of a type-safe route under its property names, so this
-         * key is `Routes.ItemDetail::itemId`.
-         */
+        /** Navigation stores a type-safe route's arguments under its property names. */
         private val itemId: String =
             requireNotNull(savedStateHandle.get<String>(ARG_ITEM_ID)) {
                 "ItemDetail route is missing its '$ARG_ITEM_ID' argument"
@@ -75,14 +59,7 @@ class ItemDetailViewModel
 
         private val _uiState = MutableStateFlow(ItemDetailUiState())
 
-        /**
-         * The download button, its confirmation, and the two Room subscriptions behind them.
-         *
-         * Constructed here rather than injected: three of its four collaborators — the state, the
-         * route's item id and the scope — are this instance's, and no graph can supply them. The
-         * three entry points below forward to it so the screen keeps one ViewModel to talk to
-         * (see [DetailDownloadsDelegate] for what the split is for).
-         */
+        /** Not injectable: three of its four collaborators are this instance's own. */
         private val downloadsDelegate =
             DetailDownloadsDelegate(
                 downloads = downloads,
@@ -91,42 +68,28 @@ class ItemDetailViewModel
                 scope = viewModelScope,
             )
 
-        /** The single source of truth for [ItemDetailScreen]. */
         val uiState: StateFlow<ItemDetailUiState> = _uiState.asStateFlow()
 
         private val _selection = MutableStateFlow(ItemSelection())
 
         /**
-         * Which **episode rows** are selected (docs/features/batch-selection.md).
-         *
-         * Scoped to the episode list and to nothing else on the page: the seasons row, *Next up* and
-         * *More like this* are navigation surfaces that lead somewhere else, and a season page's one
-         * list of comparable things is its episodes. Kept out of [uiState] so a row reading it is
-         * not also subscribed to the download progress this page re-emits several times a second.
+         * Episode rows only (docs/features/batch-selection.md). Kept out of [uiState] so a row
+         * reading it is not also subscribed to download progress this page re-emits several times a
+         * second.
          */
         val selection: StateFlow<ItemSelection> = _selection.asStateFlow()
 
         /**
-         * The SyncPlay group this device is in, or `null`.
-         *
-         * Handed through as the session's own flow rather than folded into [uiState]: this page
-         * re-emits its state several times a second while a download runs, and a value that changes
-         * a handful of times a session has no business riding along with that. It also keeps the
-         * whole feature's dependency on SyncPlay to one `:core:common` interface — `:feature:*`
-         * modules never see `:player`.
+         * Kept out of [uiState] for the same reason [selection] is. It also holds the whole feature's
+         * SyncPlay dependency to one `:core:common` interface — `:feature:*` never sees `:player`.
          */
         val activeGroup: StateFlow<SyncPlayGroupHandle?> get() = syncPlaySession.activeGroup
 
         private val playRequestChannel = Channel<PlayRequest>(Channel.BUFFERED)
 
         /**
-         * Solo play navigations — "open the player on this item, here, now".
-         *
-         * One-shot events collected by [ItemDetailScreen] (the pattern `:feature:auth`'s
-         * `LoginViewModel` uses), because a play tap resolves to *either* a navigation or a request
-         * to the group ([onPlay]) and only the ViewModel can tell which. In a group nothing is
-         * emitted here at all: the player is opened by the server's answer, through
-         * `SyncPlayController.launchRequests`.
+         * **Solo** plays only. In a group nothing is emitted here at all: the player is opened by
+         * the server's answer, through `SyncPlayController.launchRequests`.
          */
         val playRequests: Flow<PlayRequest> = playRequestChannel.receiveAsFlow()
 
@@ -138,25 +101,17 @@ class ItemDetailViewModel
         }
 
         /**
-         * Re-fetches this item whenever the connection changes, in either direction — see
-         * [reloadOnChange] for the general argument.
-         *
-         * Offline, `getItem` answers from the cache — and for anything that is not downloaded, with
-         * a placeholder carrying `available = false`. That page has to become the real one when the
-         * server returns, and the real one has to become the placeholder when it goes away: a user
-         * looking at a detail page across either transition should not have to back out and return
-         * to see a Play button that means what it says.
+         * Both directions matter: offline, `getItem` answers with an `available = false` placeholder,
+         * and the page has to swap between that and the real one without the user backing out.
          */
         private fun observeConnectivityChanges() {
             connectivityRefresher.reloadOnChange(viewModelScope) { refresh() }
         }
 
-        /** Re-fetches the item and its rows; backs pull-to-refresh and the error state's retry. */
         fun refresh() {
             load(isRefresh = true)
         }
 
-        /** Toggles the watched flag, optimistically via the user-data event bus. */
         fun toggleWatched() {
             val item = _uiState.value.item ?: return
             viewModelScope.launch {
@@ -167,7 +122,6 @@ class ItemDetailViewModel
             }
         }
 
-        /** Toggles the favourite flag, optimistically via the user-data event bus. */
         fun toggleFavorite() {
             val item = _uiState.value.item ?: return
             viewModelScope.launch {
@@ -178,30 +132,16 @@ class ItemDetailViewModel
             }
         }
 
-        /** The Download button — see [DetailDownloadsDelegate.onDownloadClick] for what it decides. */
         fun onDownloadClick() = downloadsDelegate.onDownloadClick()
 
-        /** The delete-download dialog was confirmed; [DetailDownloadsDelegate] does the removal. */
         fun confirmDeleteDownload() = downloadsDelegate.confirmDeleteDownload()
 
-        /** The delete-download dialog was dismissed without confirming — the download is untouched. */
         fun dismissDeleteConfirmation() = downloadsDelegate.dismissDeleteConfirmation()
 
         /**
-         * Everything the contextual selection bar over the episode list can ask for.
-         *
-         * One entry point rather than a method per button, so this screen and the library grid hand
-         * the shared `SelectionAppBar` the identical lambda (docs/features/batch-selection.md).
-         *
-         * Unlike the grid, **Select all** is offered and means exactly what it says: an episode list
-         * is fetched whole, so "all" is a set the user can see and count. Also unlike the grid, the
-         * selection is *not* dropped when the page reloads — [emitDetail] keeps whatever episodes
-         * came back — because a reload here is a background refresh (a connectivity change), not
-         * something the user asked for.
-         *
-         * The batch itself is `runSelectionBatch`, shared with the library grid — the skip rule and
-         * the container carve-out live there. Selection mode ends before the work starts; the
-         * snackbar says when it finished.
+         * Unlike the library grid, the selection is *not* dropped on a reload — [emitDetail] keeps
+         * whatever episodes came back — because a reload here is a background connectivity refresh,
+         * not something the user asked for (docs/features/batch-selection.md).
          */
         fun onSelection(intent: SelectionIntent) {
             val ids = _selection.value.ids.toList()
@@ -213,9 +153,8 @@ class ItemDetailViewModel
                 is SelectionIntent.SelectAll ->
                     _selection.update { it.selecting(_uiState.value.episodes.map(JellyfinItem::id)) }
 
-                // Selection mode ends *before* the work starts, not after: a batch is a series of
-                // ordinary single-item calls that can take a while, and a bar left up over a live
-                // list invites a second tap on the same selection.
+                // Selection mode must end *before* the work starts: a batch takes a while, and a bar
+                // left up over a live list invites a second tap on the same selection.
                 is SelectionIntent.Clear, is SelectionIntent.Run -> _selection.update { it.cleared() }
             }
 
@@ -234,25 +173,9 @@ class ItemDetailViewModel
         }
 
         /**
-         * Play / Resume — **for the group when there is one**, for this device otherwise.
-         *
-         * The one entry point for every play affordance on this page: the header button (which
-         * resolves a series or season to an episode through `ItemDetailUiState.playTarget`) and each
-         * episode row's own play button. They share it because the decision it makes is the same one
-         * either way, and it is a decision only this class can make — the screen can see neither the
-         * group nor the series listing an episode has to be expanded against.
-         *
-         * **In a group, a play is the group's play.** It is sent as a `SetNewQueue` carrying the
-         * same series-tail expansion and the same resume position a solo play would use, and this
-         * screen deliberately **does not navigate**: nothing plays anywhere until the server
-         * broadcasts the resulting queue, and the player is then opened by
-         * `SyncPlayController.launchRequests` → `JellyfinNavHost`. Opening a local player here
-         * instead would leave it sitting under a "Waiting for group" overlay for ever, since the
-         * group knows nothing about it.
-         *
-         * Solo — and in a group for anything a group cannot play (`ItemType.isPlayable`, the same
-         * narrowing `ItemDetailUiState.groupTarget` makes) — it is the navigation it has always
-         * been, emitted on [playRequests].
+         * In a group this deliberately **does not navigate**: nothing plays anywhere until the
+         * server broadcasts the queue, and opening a local player here would leave it under a
+         * "Waiting for group" overlay for ever, since the group knows nothing about it.
          */
         fun onPlay(target: JellyfinItem) {
             val startPositionTicks = playbackStartTicks(target)
@@ -271,22 +194,13 @@ class ItemDetailViewModel
         }
 
         /**
-         * [target] and, when it is an episode, everything the series runs after it — the queue a
-         * group play is sent as ([onPlay]).
-         *
-         * This looks like a UI decision and is really an interop one. jellyfin-web's
-         * `translateItemsForPlayback` intercepts a group queue holding exactly one episode and — with
-         * `EnableNextEpisodeAutoPlay`, the default — replaces it locally with that episode plus every
-         * following one across seasons; `QueueCore` then walks the server's playlist by the
-         * *expanded* length to copy the playlist-item ids over, reads past the end of our one-entry
-         * playlist, throws, and drops the update, so nobody's playback ever starts. Web never trips
-         * this on itself because it expands *before* it calls `SetNewQueue`. Sending the same
-         * expansion makes the two lengths agree. Movies are untouched: web leaves a single one alone,
-         * and a single-item movie queue is verified good.
-         *
-         * A failed lookup, or an episode the series listing does not contain, falls back to the lone
-         * id: a group queue that web may reject beats no request at all, and the caller's snackbar is
-         * about the ask going out either way.
+         * The series-tail expansion is an **interop** requirement, not a UI choice: jellyfin-web's
+         * `translateItemsForPlayback` expands a one-episode group queue locally (with
+         * `EnableNextEpisodeAutoPlay`, the default), then `QueueCore` walks the server's playlist by
+         * that expanded length, reads past the end of a one-entry playlist, throws, and drops the
+         * update — so nobody's playback starts. Web never trips this on itself because it expands
+         * before calling `SetNewQueue`. Movies are untouched; a single-item movie queue is verified
+         * good.
          */
         private suspend fun groupPlayQueue(target: JellyfinItem): List<String> {
             val seriesId = target.seriesId
@@ -298,17 +212,9 @@ class ItemDetailViewModel
         }
 
         /**
-         * Sends one *queue* action for whatever this page's Play button resolves to.
-         *
-         * One entry point rather than a method per action, exactly as [onSelection] is.
-         *
-         * Nothing local happens, and nothing here waits to see whether it worked in the sense of the
-         * group actually moving: the call is a request, the group's queue is the server's, and its
-         * result arrives on the SyncPlay websocket (key decision 11). The snackbar therefore reports
-         * that the request went out, which is the only thing this screen can honestly claim.
-         *
-         * A silent no-op when there is no group or nothing playable to send — the buttons are not
-         * drawn in either case, so reaching this is a race with the group ending, not a user error.
+         * The snackbar can only claim the *request* went out: the group's queue is the server's and
+         * the result arrives on the SyncPlay websocket (key decision 11). Silently a no-op with no
+         * group or nothing playable — reaching that is a race with the group ending, not an error.
          */
         fun onGroupAction(action: GroupAction) {
             val target = _uiState.value.groupTarget ?: return
@@ -321,11 +227,8 @@ class ItemDetailViewModel
         }
 
         /**
-         * Turns one [GroupAction] into the SyncPlay request that carries it.
-         *
          * Neither queue action carries a resume position, deliberately: an item added to a queue is
-         * not a resume, and the group would be surprised to find it starting in the middle. Playing
-         * something *now* does carry one, and that is [onPlay]'s business.
+         * not a resume, and the group would be surprised to find it starting in the middle.
          */
         private suspend fun sendGroupAction(
             action: GroupAction,
@@ -337,7 +240,6 @@ class ItemDetailViewModel
             }
         }
 
-        /** Clears the one-shot message once the snackbar has shown it. */
         fun consumeMessage() {
             _uiState.update { it.copy(userMessage = null) }
         }
@@ -371,10 +273,7 @@ class ItemDetailViewModel
             }
         }
 
-        /**
-         * Fetches the rows [item]'s type calls for, all at once: a series page is bound by its
-         * slowest request rather than by the sum of three.
-         */
+        /** Concurrent: a series page is bound by its slowest request, not the sum of three. */
         private suspend fun fetchRelated(item: JellyfinItem): Related =
             coroutineScope {
                 val isSeries = item.type == ItemType.SERIES
@@ -393,16 +292,15 @@ class ItemDetailViewModel
                     } else {
                         null
                     }
-                // Episode detail's "More from this season" row — deliberately a separate fetch from
-                // the season page's own `episodes` above, which also drives batch-selection/download.
+                // Must stay a separate fetch from `episodes` above, which also drives
+                // batch-selection and download.
                 val seasonEpisodes =
                     if (isEpisode && seriesId != null && episodeSeasonId != null) {
                         async { repository.getEpisodes(seriesId, episodeSeasonId).getOrNull().orEmpty() }
                     } else {
                         null
                     }
-                // The positional successor across the whole series (not `getNextUpForSeries`, which
-                // is next-*unwatched* and wrong on a rewatch) — same recipe as `groupPlayQueue`.
+                // Not `getNextUpForSeries`: that is next-*unwatched* and wrong on a rewatch.
                 val seriesEpisodesForNext =
                     if (isEpisode && seriesId != null) {
                         async { repository.getSeriesEpisodes(seriesId).getOrNull().orEmpty() }
@@ -435,9 +333,8 @@ class ItemDetailViewModel
 
         private suspend fun emitDetail(item: JellyfinItem) {
             val related = fetchRelated(item)
-            // A reload here is a background refresh — a connectivity edge, not a user action — so an
-            // open selection is kept rather than dropped. Episodes the server no longer returns fall
-            // out of it, because a batch must never act on a row that is not on the screen.
+            // An open selection survives a reload, but episodes the server no longer returns must
+            // fall out of it: a batch must never act on a row that is not on the screen.
             _selection.update { it.retaining(related.episodes.map(JellyfinItem::id)) }
             _uiState.update {
                 it
@@ -457,12 +354,11 @@ class ItemDetailViewModel
         }
 
         companion object {
-            /** Key the navigation library stores `Routes.ItemDetail.itemId` under. */
+            /** Must match `Routes.ItemDetail`'s property name. */
             const val ARG_ITEM_ID = "itemId"
         }
     }
 
-/** What one [ItemDetailViewModel.fetchRelated] fan-out came back with. */
 private data class Related(
     val seasons: List<JellyfinItem>,
     val episodes: List<JellyfinItem>,
@@ -472,17 +368,10 @@ private data class Related(
     val similar: List<JellyfinItem>,
 )
 
-/**
- * Types the server has meaningful recommendations for. A season is browsed through its series, so
- * "more like this season" would be noise.
- */
+/** Seasons are excluded: browsed through their series, "more like this season" would be noise. */
 private val SIMILAR_TYPES = setOf(ItemType.MOVIE, ItemType.SERIES, ItemType.EPISODE)
 
-/**
- * What this screen calls the one branch it does not share: an unclassified failure here happened
- * loading this item. A missing thing is an item, which is already the shared default.
- */
+/** Only `unknown` is overridden; the shared default for a missing thing already says "item". */
 internal val DetailErrorCopy = AppErrorCopy(unknown = R.string.detail_error_unknown)
 
-/** Turns the domain failure taxonomy into copy a user can act on. */
 internal fun AppError.toMessage(): UiText = toUiText(DetailErrorCopy)

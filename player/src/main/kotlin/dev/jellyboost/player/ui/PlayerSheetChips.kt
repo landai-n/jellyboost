@@ -14,22 +14,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import dev.jellyboost.player.R
 
-/**
- * Which picker a bottom-bar chip is; the row's drawing order is this enum's own.
- *
- * ### What this file is
- * Which pickers the player's bottom bar offers, and what each of them says.
- *
- * Kept out of `PlayerControls.BottomBar`, where the rules would be seven `if`s over six different
- * [PlayerUiState] fields interleaved with the chips they guard: the row could not then be reasoned
- * about without reading the layout, and the one number the bar's width threshold is measured
- * against — how many pickers can be up at once — would have no answer short of putting a tablet in
- * a group and counting. Here the rules are a pure function over the state ([sheetChipSpecs]),
- * the drawing is a `forEach`, and the count is arithmetic a unit test performs ([MAX_SHEET_CHIPS]).
- *
- * The split is by *question*, not by size: this file answers "which chips, saying what", and
- * `PlayerControls` answers "what a chip looks like and where the row sits".
- */
+/** Declaration order is the bottom bar's drawing order. */
 internal enum class SheetChipId {
     AUDIO,
     SUBTITLES,
@@ -41,12 +26,8 @@ internal enum class SheetChipId {
 }
 
 /**
- * One picker in the bottom bar, and whether the state currently offers it.
- *
- * `visible` rather than an already-filtered list, so [sheetChipSpecs] is a *total* description of the
- * bar — every chip the row can draw, present in every state, with one boolean saying why it is or is
- * not there. That is what makes `SheetChipSpecTest`'s worst-case sweep possible: it enumerates the
- * states, not the chips.
+ * `visible` rather than an already-filtered list, so [sheetChipSpecs] stays a *total* description of
+ * the bar — `SheetChipSpecTest`'s worst-case sweep enumerates states, not chips.
  */
 internal data class SheetChipSpec(
     val id: SheetChipId,
@@ -54,24 +35,9 @@ internal data class SheetChipSpec(
 )
 
 /**
- * Which pickers the bottom bar offers, given the state — the seven rules, in one place.
- *
- * Pure and `internal` so the rules are a unit test rather than a screenshot, and so the question
- * behind `LABELLED_BUTTONS_MIN_WIDTH` becomes arithmetic — see [MAX_SHEET_CHIPS].
- *
- * Each rule, worth restating because none of them is arbitrary:
- * - **audio** when there is more than one track — a picker with one row picks nothing;
- * - **subtitles** whenever the item has any, because "off" is always one of the choices;
- * - **speed** only outside a group and only where the deciding player has a rate at all. SyncPlay has
- *   no per-member rate (playing faster than the group is drifting from it), and a receiver publishes
- *   whether it takes one ([PlayerUiState.canSetSpeed]);
- * - **group** while in one — the participants, the shuffle/repeat and the way out;
- * - **queue** while in a group *that has a queue*: before the first `PlayQueueUpdate` the sheet would
- *   have nothing in it;
- * - **display** unless a television has the film: brightness and volume act on *this* device, which
- *   is exactly the condition the swipes they replace are offered under;
- * - **quality** unless the bytes are coming off the disk — a downloaded file has no streaming bitrate
- *   to cap, so the picker would be inert.
+ * Must stay pure: [MAX_SHEET_CHIPS] and `LABELLED_BUTTONS_MIN_WIDTH` are derived from these rules by
+ * a unit-test sweep. SyncPlay has no per-member rate, so speed is hidden in a group; display acts on
+ * *this* device, so it is hidden while casting.
  */
 internal fun sheetChipSpecs(state: PlayerUiState): List<SheetChipSpec> =
     listOf(
@@ -84,27 +50,14 @@ internal fun sheetChipSpecs(state: PlayerUiState): List<SheetChipSpec> =
         SheetChipSpec(SheetChipId.QUALITY, !state.isLocalPlayback),
     )
 
-/** The chips actually drawn, in row order. */
 internal fun visibleSheetChips(state: PlayerUiState): List<SheetChipSpec> = sheetChipSpecs(state).filter { it.visible }
 
 /**
- * The most pickers the bar can hold at once — the number `PlayerControls.LABELLED_BUTTONS_MIN_WIDTH`
- * is measured against, and the one thing about the row a width sweep cannot be re-run without.
- *
- * Not a comment but a test: `SheetChipSpecTest` derives it from [sheetChipSpecs] by sweeping every
- * combination of the seven state inputs the rules read, and fails if the answer moves. Adding an
- * eighth picker, or loosening a rule so two that exclude each other can both appear, therefore
- * breaks a test rather than silently overflowing a bar somebody measured once.
- *
- * The worst case is **in a group with a queue**: audio, subtitles, group, queue, display and quality,
- * with speed composed out (there is no per-member rate in SyncPlay). Solo it is five — audio,
- * subtitles, speed, display, quality — which is the case the device sweep behind that threshold
- * actually measured; the display picker is what takes the in-a-group case to six. See
- * `showSheetButtonLabels` for what that means for the threshold.
+ * The most chips the bar can hold at once — what `PlayerControls.LABELLED_BUTTONS_MIN_WIDTH` is
+ * measured against. `SheetChipSpecTest` re-derives it from [sheetChipSpecs] and fails if it moves.
  */
 internal const val MAX_SHEET_CHIPS = 6
 
-/** The chip's glyph. */
 internal val SheetChipId.icon: ImageVector
     get() =
         when (this) {
@@ -117,14 +70,11 @@ internal val SheetChipId.icon: ImageVector
             SheetChipId.QUALITY -> Icons.Outlined.HighQuality
         }
 
-/** The chip's words — one string resource each, except the rate, which says itself. */
 @Composable
 internal fun SheetChipId.label(state: PlayerUiState): String =
     when (this) {
         SheetChipId.AUDIO -> stringResource(R.string.player_audio)
         SheetChipId.SUBTITLES -> stringResource(R.string.player_subtitles)
-        // The current rate replaces the word once it is not 1×, so the control says what it is doing
-        // without needing a second badge next to it.
         SheetChipId.SPEED -> if (state.speed.isNormal) stringResource(R.string.player_speed) else state.speed.label
         SheetChipId.GROUP -> stringResource(R.string.player_syncplay_group)
         SheetChipId.QUEUE -> stringResource(R.string.player_syncplay_queue)
@@ -132,7 +82,7 @@ internal fun SheetChipId.label(state: PlayerUiState): String =
         SheetChipId.QUALITY -> stringResource(R.string.player_quality)
     }
 
-/** What this picker is currently set to, for the chip's `stateDescription` — see [SheetChipValues]. */
+/** Feeds the chip's `stateDescription`. */
 internal fun SheetChipId.value(values: SheetChipValues): String? =
     when (this) {
         SheetChipId.AUDIO -> values.audio
@@ -146,12 +96,8 @@ internal fun SheetChipId.value(values: SheetChipValues): String? =
     }
 
 /**
- * What a tap on this chip opens.
- *
- * One destination for all seven. A picker hosted by the control bar itself would not survive the
- * bar composing itself out four seconds later and would be disposed mid-selection, so every chip
- * opens a [PlayerPanel] through [PlayerActions] and `PlayerScreen` hosts it. The mapping is total,
- * so a chip added without a panel is a compile error rather than a dead tap.
+ * `PlayerScreen` hosts the panel, never the control bar: a picker hosted by the bar is disposed
+ * mid-selection when the bar auto-hides.
  */
 internal val SheetChipId.panel: PlayerPanel
     get() =
@@ -165,17 +111,6 @@ internal val SheetChipId.panel: PlayerPanel
             SheetChipId.DISPLAY -> PlayerPanel.DISPLAY
         }
 
-/**
- * What each picker is currently set to.
- *
- * The chips announce "Audio", "Subtitles", "Quality" — which track, which language, which cap? The
- * answer becomes each chip's `stateDescription`, so a picker says what it is doing without anyone
- * having to open it, exactly as the settings rows do.
- *
- * Assembled unconditionally, in one place, because every field is cheap and the alternative is six
- * `firstOrNull { … } ?: …` scattered through the row. Which of them a chip reads is
- * [SheetChipId.value]'s table; whether that chip is drawn at all is [sheetChipSpecs]'.
- */
 internal class SheetChipValues(
     val audio: String?,
     val subtitles: String,

@@ -5,12 +5,8 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Leaves any SyncPlay group before sign-out revokes the access token.
- *
- * `SessionRepository.signOut` awaits this hook first; the `SessionState.LoggedOut` transition it
- * ends with then only triggers the controller's local teardown. Without the hook the leave would
- * chase a revoked token and the server would keep this session in the group — a phantom member the
- * rest of the group waits on.
+ * Must run before sign-out revokes the access token: a leave that chases a revoked token leaves the
+ * server holding this session in the group, a phantom member the rest wait on.
  */
 @Singleton
 internal class SyncPlaySignOutHook

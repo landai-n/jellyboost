@@ -11,7 +11,6 @@ import org.jellyfin.sdk.model.DeviceInfo
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 
-/** Unit tests for the shared `Authorization` header builder and its same-origin guard. */
 class JellyfinAuthorizationHeaderTest {
     private val apiClient =
         mockk<ApiClient>(relaxed = true) {
@@ -85,8 +84,8 @@ class JellyfinAuthorizationHeaderTest {
     @Test
     @DisplayName("a different effective port is a different origin")
     fun differentPort() {
-        // No explicit port on either side: HttpUrl fills in the scheme default (443), so this is
-        // the same origin as an explicit ":443".
+        // No explicit port on either side: HttpUrl fills in the scheme default (443), so this is the same
+        // origin as an explicit ":443".
         val implicitPort = "https://server.example/".toHttpUrl()
         val explicitDefaultPort = "https://server.example:443/".toHttpUrl()
         val otherPort = "https://server.example:8443/".toHttpUrl()

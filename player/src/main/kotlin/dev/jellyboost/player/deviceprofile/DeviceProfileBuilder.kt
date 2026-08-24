@@ -16,20 +16,12 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Builds the `DeviceProfile` the server negotiates playback against.
+ * The `DeviceProfile` the server negotiates against: a hardware probe crossed with a hand-maintained
+ * container/codec matrix, deliberately **not** a permissive "direct play everything" profile, which
+ * pushes decode failures onto the device.
  *
- * This is the single most consequential object in the playback pipeline: it is what makes the
- * server answer "direct play" instead of spinning up ffmpeg. Reimplemented from jellyfin-android's
- * `player/deviceprofile/DeviceProfileBuilder.kt` — a hardware probe crossed with a hand-maintained
- * container/codec matrix — and deliberately **not** Findroid's permissive "direct play everything"
- * profile, which pushes decode failures onto the device.
- *
- * The external-player and web-codec-capabilities outputs of the original are dropped: this app has
- * no external player hand-off and no WebView to feed.
- *
- * The expensive part — the `MediaCodecList` probe and the container/codec cross-product — happens
- * once, lazily, and is then reused; [getDeviceProfile] only re-derives when a caller asks for
- * settings that differ from the defaults.
+ * The `MediaCodecList` probe and the cross-product happen once, lazily; [getDeviceProfile]
+ * re-derives only for settings that differ from the defaults.
  */
 @Singleton
 internal class DeviceProfileBuilder
@@ -39,14 +31,12 @@ internal class DeviceProfileBuilder
     ) {
         private val codecs: DeviceCodecs by lazy(LazyThreadSafetyMode.SYNCHRONIZED) { probe.probe() }
 
-        /** Video codecs, per container, that both the container supports and the device decodes. */
         private val supportedVideoCodecs: List<List<String>> by lazy {
             AVAILABLE_VIDEO_CODECS.map { forContainer -> forContainer.filter { it in codecs.videoCodecs } }
         }
 
         /**
-         * Audio codecs, per container, that the device decodes **or** the bundled ffmpeg extension
-         * handles. The forced list is why AC3/E-AC3/DTS/TrueHD files direct-play on devices whose
+         * [FORCED_AUDIO_CODECS] is why AC3/E-AC3/DTS/TrueHD files direct-play on devices whose
          * `MediaCodecList` never mentions them.
          */
         private val supportedAudioCodecs: List<List<String>> by lazy {
@@ -57,24 +47,17 @@ internal class DeviceProfileBuilder
 
         private val defaultProfile: DeviceProfile by lazy { build(directPlayAss = DEFAULT_DIRECT_PLAY_ASS) }
 
-        /** The default profile's twin for the transcode pass; see [getDeviceProfile]. */
         private val hlsSubtitleProfile: DeviceProfile by lazy {
             build(directPlayAss = DEFAULT_DIRECT_PLAY_ASS, hlsTextSubtitles = true)
         }
 
         /**
-         * The profile to send with a `PlaybackInfo` request.
-         *
-         * @param maxStreamingBitrate cap from the quality picker. Lowering it below a file's
-         *   bitrate is what forces the server to transcode. `null` keeps the profile's own
-         *   120 Mbps ceiling.
-         * @param directPlayAss whether ASS/SSA subtitles are claimed as directly renderable.
-         *   Advertising them avoids a full transcode of subtitled content, at the cost of
-         *   ExoPlayer's approximate SSA rendering.
-         * @param hlsTextSubtitles whether text subtitles should be asked for as **in-manifest HLS
-         *   renditions** instead of side-loaded files. Only meaningful for a negotiation that is
-         *   already known to end in a transcode — see [subtitleProfiles] for why the two shapes
-         *   cannot be advertised together, and `PlaybackInfoResolver` for who asks for which.
+         * @param maxStreamingBitrate lowering it below a file's bitrate is what forces a transcode;
+         *   `null` keeps the profile's own 120 Mbps ceiling.
+         * @param directPlayAss claiming ASS/SSA avoids a full transcode of subtitled content, at the
+         *   cost of ExoPlayer's approximate SSA rendering.
+         * @param hlsTextSubtitles only meaningful for a negotiation already known to end in a
+         *   transcode — see [subtitleProfiles] for why the two shapes cannot be advertised together.
          */
         fun getDeviceProfile(
             maxStreamingBitrate: Int? = null,
@@ -144,20 +127,13 @@ internal class DeviceProfileBuilder
         }
 
         /**
-         * Restricts [videoCodec] to what the device's decoders actually handle: the profiles they
-         * advertise — a device that only decodes H.264 High should not be handed a High 4:4:4
-         * file — and the largest frame they accept, which also caps the size the server transcodes
-         * *to*. Without the size conditions a 4K source either direct-plays or transcodes at full
-         * width into a hardware decoder that tops out below it, and ExoPlayer falls back to
-         * software decode.
+         * The size conditions also cap what the server transcodes *to*: without them a 4K source
+         * reaches a hardware decoder that tops out below it and ExoPlayer falls back to software.
          *
-         * One profile per codec, with **no container**, and that is load-bearing rather than
-         * convenience: the server was measured (10.11.11) dropping container-bound codec profiles
-         * when sizing a Dolby Vision transcode — the same conditions bound to `mkv` produced a
-         * 3840-wide stream where the containerless shape produced 2560 — and a decoder's limits do
-         * not depend on the container anyway.
-         *
-         * Either half may be unknown; `null` only when both are.
+         * One profile per codec with **no container**, which is load-bearing: the server (10.11.11)
+         * was measured dropping container-bound codec profiles when sizing a Dolby Vision transcode —
+         * the same conditions bound to `mkv` produced a 3840-wide stream where the containerless
+         * shape produced 2560.
          */
         private fun codecProfile(videoCodec: String): CodecProfile? {
             val profiles = codecs.videoProfiles[videoCodec]?.takeIf { it.isNotEmpty() }
@@ -201,23 +177,12 @@ internal class DeviceProfileBuilder
         }
 
         /**
-         * What the server may do with each subtitle format.
-         *
-         * The embedded half is the same either way — a subtitle that travels inside the container
-         * is ExoPlayer's to demux and nothing about it drifts.
-         *
-         * The other half is exclusive, and that is a fact about the *server*, not a design choice
-         * (measured against 10.11.11): offered both an `External` and an `Hls` profile
-         * for the same format, `StreamBuilder.GetExternalSubtitleProfile` returns the first match in
-         * profile order and that is always External. Asking for HLS renditions therefore means
-         * advertising **no** text External profile at all — which is exactly why this variant is
-         * reserved for a negotiation already known to end in a transcode. Sent for a direct-played
-         * file with a sidecar `.srt`, the server would find no way to deliver it and fall back to
-         * `Encode`, burning it in and transcoding a file that needed no transcode.
-         *
-         * ASS/SSA drop out of the external half too when [hlsTextSubtitles] is set: the server
-         * converts them to WebVTT for the rendition, which loses positioning and styling ExoPlayer's
-         * SSA renderer largely ignores anyway.
+         * External and HLS are mutually exclusive, and that is a fact about the *server* (10.11.11):
+         * offered both profiles for one format, `StreamBuilder.GetExternalSubtitleProfile` returns
+         * the first match in profile order, which is always External. Asking for HLS renditions
+         * therefore means advertising **no** text External profile at all — and that shape sent for
+         * a direct-played file with a sidecar `.srt` makes the server fall back to `Encode`,
+         * transcoding a file that needed no transcode.
          */
         private fun subtitleProfiles(
             directPlayAss: Boolean,
@@ -240,17 +205,14 @@ internal class DeviceProfileBuilder
             const val PROFILE_NAME: String = "Jellyboost"
 
             /**
-             * ASS/SSA is claimed by default. ExoPlayer's SSA renderer ignores most positioning and
-             * styling, but the alternative is burning subtitles in — a full transcode of otherwise
-             * direct-playable content, which is a far worse default on a tablet.
+             * ExoPlayer's SSA renderer ignores most positioning and styling, but the alternative is
+             * burning subtitles in — a full transcode of otherwise direct-playable content.
              */
             const val DEFAULT_DIRECT_PLAY_ASS: Boolean = true
 
             /**
-             * Containers ExoPlayer can demux.
-             *
-             * The three codec tables below are index-aligned with this list; changing one without
-             * the others silently mislabels a container's codecs.
+             * The codec tables below are index-aligned with this list; changing one without the
+             * others silently mislabels a container's codecs.
              */
             private val SUPPORTED_CONTAINER_FORMATS =
                 listOf("mp4", "fmp4", "webm", "mkv", "mp3", "ogg", "wav", "mpegts", "flv", "aac", "flac", "3gp")
@@ -340,16 +302,16 @@ internal class DeviceProfileBuilder
                 )
 
             /**
-             * Audio codecs advertised regardless of what `MediaCodecList` says, because the
-             * bundled `org.jellyfin.media3:media3-ffmpeg-decoder` extension decodes them in
-             * software. Without this list every AC3 or DTS track would force a transcode.
+             * Advertised regardless of `MediaCodecList` because the bundled
+             * `media3-ffmpeg-decoder` extension decodes them in software; without this list every
+             * AC3 or DTS track would force a transcode.
              */
             private val FORCED_AUDIO_CODECS =
                 PCM_CODECS + listOf("alac", "aac", "ac3", "eac3", "dts", "mlp", "truehd")
 
             /**
-             * The one format an HLS subtitle rendition is ever served in — the server writes
-             * `stream.vtt` segments with an `X-TIMESTAMP-MAP` header, whatever the source codec was.
+             * The only format a rendition is served in: the server writes `stream.vtt` segments with
+             * an `X-TIMESTAMP-MAP` header whatever the source codec was.
              */
             private const val HLS_SUBTITLE_FORMAT = "vtt"
 
@@ -358,11 +320,8 @@ internal class DeviceProfileBuilder
             private val SSA_SUBTITLES = listOf("ssa", "ass")
 
             /**
-             * What we ask the server to transcode *to*.
-             *
-             * H.264 in an HLS stream, because that is the one combination every Android device
-             * since API 26 decodes in hardware. The wide audio codec list keeps the server from
-             * re-encoding audio it does not have to.
+             * H.264 in HLS: the one combination every Android device since API 26 decodes in
+             * hardware. The wide audio list keeps the server from re-encoding audio it need not.
              */
             private val TRANSCODING_PROFILES =
                 listOf(

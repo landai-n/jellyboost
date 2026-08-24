@@ -58,7 +58,6 @@ class PlaybackSourceResolverTest {
 
             result.shouldBeInstanceOf<AppResult.Success<*>>()
             result.value.shouldBeInstanceOf<LocalPlaybackMediaSource>()
-            // The differentiator: a film the user deliberately put on the device is never streamed.
             coVerify(exactly = 0) { remote.resolve(any()) }
         }
 
@@ -92,8 +91,8 @@ class PlaybackSourceResolverTest {
 
             val result = resolver.resolve(request)
 
-            // A PlaybackInfo POST into a dead network would sit on the SDK's socket timeout behind
-            // a spinner with no cancel.
+            // A PlaybackInfo POST into a dead network would sit on the SDK's socket timeout
+            // behind a spinner with no cancel.
             result.shouldBeInstanceOf<AppResult.Failure>().error.shouldBeInstanceOf<AppError.Network>()
             coVerify(exactly = 0) { remote.resolve(any()) }
         }
@@ -134,8 +133,7 @@ class PlaybackSourceResolverTest {
 
             val result = resolver.resolve(request.copy(forceRemote = true, audioStreamIndex = 5))
 
-            // Rule 1 would hand back the same file and the same tracks, which is the loop the flag
-            // exists to break — the requested index has to reach the server.
+            // Rule 1 would hand back the same file and tracks — the loop this flag exists to break.
             result.shouldBeInstanceOf<AppResult.Success<*>>()
             result.value.shouldBeInstanceOf<RemotePlaybackMediaSource>()
             coVerify(exactly = 0) { local.resolve(any()) }
@@ -148,8 +146,7 @@ class PlaybackSourceResolverTest {
             state.value = ConnectionState.OFFLINE_NO_NETWORK
             coEvery { local.resolve(any()) } returns PlayerFixtures.localSource()
 
-            // Succeeding here would return the file *without* the track that was asked for, and the
-            // player would have restarted for nothing. The caller decides what to do with this.
+            // Succeeding here would return the file without the track that was asked for.
             resolver.resolve(request.copy(forceRemote = true)).shouldBeInstanceOf<AppResult.Failure>()
         }
 
@@ -171,8 +168,8 @@ class PlaybackSourceResolverTest {
     fun `a negotiation that never answers is cut off at the ceiling instead of hanging`() =
         runTest {
             coEvery { remote.resolve(any()) } coAnswers {
-                // A server that died since the last browse call still reads as online: nothing has
-                // probed it since, so Play goes out and rides the SDK's own socket timeout.
+                // A server that died since the last browse call still reads as online, so Play
+                // rides the SDK's own socket timeout.
                 delay(SOCKET_TIMEOUT_MS)
                 AppResult.Success(PlayerFixtures.remoteSource())
             }

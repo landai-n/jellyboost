@@ -55,16 +55,13 @@ import java.time.ZoneOffset
 import java.util.UUID
 
 /**
- * Unit tests for [DownloadEnqueuer] — the enqueue step.
- *
  * The rule the tests exist for is step 3: the item **and its parents** are cached with
- * `source = DOWNLOAD`. Get that wrong and the download works perfectly while the offline library
- * shows an episode that cannot reach its own series page.
+ * `source = DOWNLOAD`. Get that wrong and the download works perfectly while the offline library shows
+ * an episode that cannot reach its own series page.
  *
- * The second half of the file pins **container expansion**: a season or
- * a series is a folder, and enqueueing one has to become one download per episode rather than a row
- * for the folder itself — which is the row that produced *"The server couldn't send this download
- * (error 400)"*.
+ * The second half pins **container expansion**: a season or a series is a folder, and enqueueing one
+ * has to become one download per episode rather than a row for the folder itself — the row that
+ * produced *"The server couldn't send this download (error 400)"*.
  */
 class DownloadEnqueuerTest {
     private val api = mockk<DownloadApi>()
@@ -82,7 +79,6 @@ class DownloadEnqueuerTest {
     private val upserted = slot<List<ItemEntity>>()
     private val rows = mutableListOf<DownloadEntity>()
 
-    /** The single row a non-container enqueue writes — most tests only ever create one. */
     private val row: DownloadEntity get() = rows.single()
 
     @BeforeEach
@@ -90,8 +86,8 @@ class DownloadEnqueuerTest {
         coEvery { itemDao.upsert(capture(upserted)) } just Runs
         coEvery { downloadDao.upsert(capture(rows)) } just Runs
         coEvery { downloadDao.get(any()) } returns null
-        // The season path reads its whole batch in one statement; routing it
-        // through the per-id stub keeps every test below expressing its rows one at a time.
+        // The season path reads its whole batch in one statement; routing it through the per-id stub
+        // keeps every test below expressing its rows one at a time.
         coEvery { downloadDao.getAll(any()) } coAnswers {
             firstArg<List<UUID>>().mapNotNull { downloadDao.get(it) }
         }
@@ -206,8 +202,8 @@ class DownloadEnqueuerTest {
 
             enqueuer().enqueue(uuid(1), USER)
 
-            // Retrying a failure must not send the item to the back of the queue, nor throw away
-            // the bytes already on disk that the Range resume will pick up from.
+            // Retrying a failure must not send the item to the back of the queue, nor throw away the
+            // bytes already on disk that the Range resume will pick up from.
             row.queuePosition shouldBe 2
             row.bytesDownloaded shouldBe 900_000L
             row.status shouldBe DownloadStatus.QUEUED
@@ -218,8 +214,8 @@ class DownloadEnqueuerTest {
     fun `the created timestamp survives a re-enqueue`() =
         runTest {
             val earlier = Instant.parse("2026-07-01T08:00:00Z")
-            // `ERROR`, because that is a state a re-enqueue actually writes over: a row still
-            // `QUEUED` is one the second tap must leave alone (see the refusal test below).
+            // `ERROR`, because that is a state a re-enqueue actually writes over: a row still `QUEUED` is
+            // one the second tap must leave alone.
             coEvery { downloadDao.get(uuid(1)) } returns
                 DownloadFixtures.download(status = DownloadStatus.ERROR).copy(createdAt = earlier)
             coEvery { api.getFullItems(any()) } returns AppResult.Success(listOf(movie()))
@@ -233,10 +229,9 @@ class DownloadEnqueuerTest {
     @Test
     fun `a second tap on a single item already downloaded leaves its row exactly as it is`() =
         runTest {
-            // The container path filters these out, and the single path has to as well: writing
-            // over whatever it finds would let a badge one tick stale — or a plain double tap —
-            // restamp a finished row's quality, `bytesTotal` and `sizeIsExact` from the *current*
-            // preference, describing a plan the file on disk was never fetched under.
+            // The container path filters these out, and the single path has to as well: writing over
+            // whatever it finds would let a badge one tick stale — or a plain double tap — restamp a
+            // finished row's quality, `bytesTotal` and `sizeIsExact` from the *current* preference.
             coEvery { downloadDao.get(uuid(1)) } returns
                 DownloadFixtures.download(status = DownloadStatus.DOWNLOADED, quality = DownloadQuality.ORIGINAL)
             coEvery { api.getFullItems(any()) } returns AppResult.Success(listOf(movie()))
@@ -250,9 +245,9 @@ class DownloadEnqueuerTest {
     @Test
     fun `a cancelled row is re-enqueued, because that is what re-downloading after a cancel is`() =
         runTest {
-            // The other side of the same guard, and the state a cancel leaves behind: the cascade
-            // has not reached the row yet, the UI already offers Download, and the tap has to
-            // write — the fresh QUEUED row is what makes the cascade skip it.
+            // The state a cancel leaves behind: the cascade has not reached the row yet, the UI already
+            // offers Download, and the tap has to write — the fresh QUEUED row is what makes the cascade
+            // skip it.
             coEvery { downloadDao.get(uuid(1)) } returns
                 DownloadFixtures.download(status = DownloadStatus.CANCELLED)
             coEvery { api.getFullItems(any()) } returns AppResult.Success(listOf(movie()))
@@ -265,8 +260,8 @@ class DownloadEnqueuerTest {
     @Test
     fun `every row of one enqueue gets its own queue position`() =
         runTest {
-            // The `maxQueuePosition()` read and the row writes are one transaction; the counter
-            // it seeds still has to advance per row within it.
+            // The `maxQueuePosition()` read and the row writes are one transaction; the counter it seeds
+            // still has to advance per row within it.
             givenSeason(episodeIds = listOf(uuid(2), uuid(3), uuid(4)))
             coEvery { downloadDao.maxQueuePosition() } returns 7
             coEvery { api.getFullItems(listOf(uuid(2), uuid(3), uuid(4))) } returns
@@ -313,9 +308,9 @@ class DownloadEnqueuerTest {
         }
 
     /**
-     * The enqueue runs in the caller's scope — a ViewModel's, which dies with the screen. Turning
-     * that cancellation into `AppError.Storage` would put a "could not download" message on a
-     * screen the user has already left, and would swallow the cancellation the parent job is owed.
+     * The enqueue runs in the caller's scope — a ViewModel's, which dies with the screen. Turning that
+     * cancellation into `AppError.Storage` would put a "could not download" message on a screen the user
+     * has already left, and would swallow the cancellation the parent job is owed.
      */
     @Test
     fun `a cancelled enqueue propagates instead of being reported as a storage failure`() =
@@ -359,8 +354,8 @@ class DownloadEnqueuerTest {
 
             enqueuer().enqueue(uuid(1), USER)
 
-            // The file will hold exactly one audio track; the cached blob still describes three, so
-            // this column is the only thing that knows which of them survived.
+            // The file will hold exactly one audio track; the cached blob still describes three, so this
+            // column is the only thing that knows which of them survived.
             row.bakedAudioStreamIndex shouldBe 2
         }
 
@@ -397,8 +392,8 @@ class DownloadEnqueuerTest {
 
             enqueuer().enqueue(uuid(1), USER)
 
-            // The URL names no index either; a pin for a track that does not exist would be a lie
-            // the offline picker would then label from.
+            // The URL names no index either; a pin for a track that does not exist would be a lie the
+            // offline picker would then label from.
             row.bakedAudioStreamIndex.shouldBeNull()
         }
 
@@ -426,8 +421,8 @@ class DownloadEnqueuerTest {
 
             enqueuer().enqueue(uuid(11), USER)
 
-            // One quality for the whole season, but the stream numbering is each episode's own —
-            // a season-wide index would name a different language halfway through the show.
+            // One quality for the whole season, but the stream numbering is each episode's own — a
+            // season-wide index would name a different language halfway through the show.
             rows.map { it.bakedAudioStreamIndex } shouldContainExactly listOf(2, 4)
         }
 
@@ -462,8 +457,8 @@ class DownloadEnqueuerTest {
 
             enqueuer().enqueue(uuid(1), USER)
 
-            // The server will not send a Content-Length for a file it has not encoded yet, so an
-            // hour at 8 Mbps + 192 kbps of audio is the only number the queue tab can show.
+            // The server will not send a Content-Length for a file it has not encoded yet, so an hour at
+            // 8 Mbps + 192 kbps of audio is the only number the queue tab can show.
             val expected = 3_600L * (DownloadQuality.MEDIUM.videoBitRate!! + DownloadQuality.AUDIO_BITRATE) / 8
             row.bytesTotal shouldBe expected
         }
@@ -472,16 +467,15 @@ class DownloadEnqueuerTest {
     fun `a transcoded download of a source under the cap is sized from the source bitrate`() =
         runTest {
             downloadQuality.value = DownloadQuality.LOW
-            // Below the LOW cap (3 Mbps + 192 kbps audio) — an HEVC source, say — so the transcode
-            // cannot need more bits per second than the source already uses.
+            // Below the LOW cap — an HEVC source, say — so the transcode cannot need more bits per
+            // second than the source already uses.
             val sourceBitRate = 1_500_000
             coEvery { api.getFullItems(any()) } returns
                 AppResult.Success(
                     listOf(
                         movie(
-                            // No size reported for this source, so the fall-back-to-original rule
-                            // has nothing to compare the estimate against and leaves the user's
-                            // choice alone — this test is about the arithmetic, not that rule.
+                            // No size reported for this source, so the fall-back-to-original rule has
+                            // nothing to compare the estimate against and leaves the choice alone.
                             sizeBytes = null,
                             sourceBitRate = sourceBitRate,
                             runTimeTicks = HOUR_TICKS,
@@ -536,15 +530,15 @@ class DownloadEnqueuerTest {
     fun `a season becomes one download per episode, in the order the server lists them`() =
         runTest {
             givenSeason(episodeIds = listOf(uuid(2), uuid(3)))
-            // Deliberately answered out of order: `getItems(ids = …)` sorts to its own taste, and
-            // the queue's order is the one that was asked for.
+            // Deliberately answered out of order: `getItems(ids = …)` sorts to its own taste, and the
+            // queue's order is the one that was asked for.
             coEvery { api.getFullItems(listOf(uuid(2), uuid(3))) } returns
                 AppResult.Success(listOf(episode(id = uuid(3), episodeNumber = 3), episode(id = uuid(2))))
 
             val result = enqueuer().enqueue(uuid(11), USER)
 
-            // The season itself is never a download row: `/Items/{id}/Download` answers 400 for a
-            // folder, which is the bug this whole expansion exists to fix.
+            // The season itself is never a download row: `/Items/{id}/Download` answers 400 for a folder,
+            // which is the bug this whole expansion exists to fix.
             rows.map { it.itemId } shouldContainExactly listOf(uuid(2), uuid(3))
             rows.map { it.queuePosition } shouldContainExactly listOf(1, 2)
             result.shouldBeInstanceOf<AppResult.Success<List<DownloadEntity>>>().value.size shouldBe 2
@@ -554,7 +548,6 @@ class DownloadEnqueuerTest {
     fun `a series is expanded across every one of its seasons at once`() =
         runTest {
             coEvery { api.getFullItems(listOf(uuid(10))) } returns AppResult.Success(listOf(series()))
-            // No season id: one request for the whole show, in broadcast order.
             coEvery { api.getEpisodeIds(uuid(10), null) } returns AppResult.Success(listOf(uuid(2), uuid(3)))
             coEvery { api.getFullItems(listOf(uuid(2), uuid(3))) } returns
                 AppResult.Success(listOf(episode(id = uuid(2)), episode(id = uuid(3), episodeNumber = 3)))
@@ -577,8 +570,8 @@ class DownloadEnqueuerTest {
 
             enqueuer().enqueue(uuid(11), USER)
 
-            // Re-tapping Download on a half-downloaded season must not restart what is already
-            // there — and must not re-fetch it either.
+            // Re-tapping Download on a half-downloaded season must not restart what is already there —
+            // and must not re-fetch it either.
             rows.map { it.itemId } shouldContainExactly listOf(uuid(3))
             coVerify(exactly = 0) { api.getFullItems(listOf(uuid(2), uuid(3))) }
         }
@@ -599,7 +592,6 @@ class DownloadEnqueuerTest {
             enqueuer().enqueue(uuid(11), USER)
 
             row.status shouldBe DownloadStatus.QUEUED
-            // Retrying keeps the place in the queue and the bytes the Range resume picks up from.
             row.queuePosition shouldBe 4
             row.bytesDownloaded shouldBe 900_000L
         }
@@ -607,8 +599,8 @@ class DownloadEnqueuerTest {
     @Test
     fun `the season's own unusable download row is cleaned up as the episodes are queued`() =
         runTest {
-            // The rows the user is stuck with: a season enqueued as if it were a file, permanently
-            // ERROR because no retry of `/Items/{seasonId}/Download` can ever succeed.
+            // The rows the user is stuck with: a season enqueued as if it were a file, permanently ERROR
+            // because no retry of `/Items/{seasonId}/Download` can ever succeed.
             givenSeason(episodeIds = listOf(uuid(2)))
             coEvery { downloadDao.get(uuid(11)) } returns
                 DownloadFixtures.download(itemId = uuid(11), status = DownloadStatus.ERROR)
@@ -617,8 +609,8 @@ class DownloadEnqueuerTest {
             enqueuer().enqueue(uuid(11), USER)
 
             coVerifyOrder {
-                // The claim first: the cascade only removes rows out of the queue's reach, and a
-                // doomed container row never leaves QUEUED/ERROR on its own.
+                // The claim first: the cascade only removes rows out of the queue's reach, and a doomed
+                // container row never leaves QUEUED/ERROR on its own.
                 downloadDao.demoteRunnable(listOf(uuid(11)), DownloadStatus.CANCELLED, NOW)
                 deleter.delete(uuid(11))
             }
@@ -647,8 +639,8 @@ class DownloadEnqueuerTest {
 
             enqueuer().enqueue(uuid(11), USER)
 
-            // One tap, one quality: a preference changed while the season drains cannot make half
-            // the episodes a different file.
+            // One tap, one quality: a preference changed while the season drains cannot make half the
+            // episodes a different file.
             rows.map { it.quality }.distinct() shouldContainExactly listOf(DownloadQuality.MEDIUM)
         }
 
@@ -660,8 +652,8 @@ class DownloadEnqueuerTest {
 
             enqueuer().enqueue(uuid(11), USER)
 
-            // Without the season and series rows the downloaded episodes cannot be navigated to
-            // offline — the same rule a single episode download follows.
+            // Without the season and series rows the downloaded episodes cannot be navigated to offline —
+            // the same rule a single episode download follows.
             upserted.captured.map { it.id } shouldContainExactlyInAnyOrder listOf(uuid(11), uuid(2), uuid(10))
         }
 
@@ -729,7 +721,6 @@ class DownloadEnqueuerTest {
 
             val result = enqueuer().enqueue(uuid(40), USER)
 
-            // The album itself is never a download row — a folder has no file, exactly as a season.
             rows.map { it.itemId } shouldContainExactly listOf(uuid(30), uuid(31))
             rows.map { it.queuePosition } shouldContainExactly listOf(1, 2)
             result.shouldBeInstanceOf<AppResult.Success<List<DownloadEntity>>>().value.size shouldBe 2
@@ -768,8 +759,8 @@ class DownloadEnqueuerTest {
 
             coVerify(exactly = 1) { api.getArtistTrackIds(uuid(50)) }
             rows.map { it.itemId } shouldContainExactly listOf(uuid(30), uuid(32))
-            // Both albums are cached — the artist page lists them, and each one's own page lists
-            // the tracks underneath it.
+            // Both albums are cached — the artist page lists them, and each one's own page lists the
+            // tracks underneath it.
             upserted.captured.map { it.id } shouldContainExactlyInAnyOrder
                 listOf(uuid(50), uuid(30), uuid(32), uuid(40), uuid(41))
         }
@@ -786,9 +777,9 @@ class DownloadEnqueuerTest {
             enqueuer().enqueue(uuid(60), USER)
 
             rows.map { it.itemId } shouldContainExactly listOf(uuid(30))
-            // The playlist row is deliberately absent: offline it could only ever open onto an
-            // empty track list, because Room has no playlist-membership relation. The tracks are
-            // reachable through their album and artist instead.
+            // The playlist row is deliberately absent: offline it could only ever open onto an empty
+            // track list, because Room has no playlist-membership relation. The tracks are reachable
+            // through their album and artist instead.
             upserted.captured.map { it.id } shouldContainExactlyInAnyOrder listOf(uuid(30), uuid(40), uuid(50))
         }
 
@@ -827,13 +818,11 @@ class DownloadEnqueuerTest {
 
             enqueuer().enqueue(uuid(40), USER)
 
-            // Key decision 10: music is originals-only, and the *row* says so. Every downstream
-            // rule keys off this column — the transcode URL, the size projector, the "a transcode
-            // cannot be paused" rule, the *Transcoded* marker — so a row written ORIGINAL is one
-            // none of that machinery can reach.
+            // Music is originals-only and the *row* says so: every downstream rule keys off this column
+            // — the transcode URL, the size projector, the no-pause rule, the *Transcoded* marker — so a
+            // row written ORIGINAL is one none of that machinery can reach.
             row.quality shouldBe DownloadQuality.ORIGINAL
             row.bakedAudioStreamIndex.shouldBeNull()
-            // …and the size is the server's own, exactly, rather than a runtime × bitrate ceiling.
             row.bytesTotal shouldBe 32_000_000L
             row.sizeIsExact shouldBe true
             row.projectedBytes.shouldBeNull()
@@ -847,8 +836,8 @@ class DownloadEnqueuerTest {
 
             enqueuer().enqueue(uuid(40), USER)
 
-            // The column the Downloaded tab groups by (`DownloadItem.seriesKey`): a track's heading
-            // is its album, the way an episode's is its show.
+            // The column the Downloaded tab groups by (`DownloadItem.seriesKey`): a track's heading is
+            // its album, the way an episode's is its show.
             row.seriesName shouldBe "Rumours"
             // And the directory is unique per track — two albums' *Intro* must not share one.
             row.directoryName shouldBe "Fleetwood Mac - Rumours - 04 - Go Your Own Way"

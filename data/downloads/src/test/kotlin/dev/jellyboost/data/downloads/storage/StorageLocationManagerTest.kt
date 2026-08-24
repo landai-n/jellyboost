@@ -20,13 +20,9 @@ import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
 /**
- * Unit tests for [StorageLocationManager] — the resolution rule behind a configurable download path.
- *
- * The rule is one sentence ("the chosen volume if it is mounted, the primary volume otherwise") and
- * every failure mode of it is a user losing files: writing to the wrong card, writing nowhere, or
- * an app that will not download at all because the card it was told about is on a desk somewhere.
- * Temporary directories stand in for the volumes, which is the whole reason `StorageVolumeProvider`
- * is an interface.
+ * The resolution rule behind a configurable download path: the chosen volume if it is mounted, the
+ * primary volume otherwise. Every failure mode of it is a user losing files — writing to the wrong
+ * card, writing nowhere, or an app that will not download because the card is on a desk somewhere.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class StorageLocationManagerTest {
@@ -50,9 +46,8 @@ class StorageLocationManagerTest {
     private fun manager(
         volumes: List<DownloadVolume>,
         stored: String? = null,
-        // `Unconfined` so the seed the constructor launches has landed by the time it returns —
-        // the app scope's behaviour, without a scheduler to advance. `seedNever()` below is the
-        // test for the window before it lands.
+        // `Unconfined` so the seed the constructor launches has landed by the time it returns.
+        // `seedNever()` below is the test for the window before it lands.
         scope: CoroutineScope = CoroutineScope(Dispatchers.Unconfined),
     ): StorageLocationManager {
         every { preferences.downloadStorageVolumeId } returns MutableStateFlow(stored)
@@ -94,8 +89,8 @@ class StorageLocationManagerTest {
         val selection = manager(listOf(primary), stored = card.id).resolve(card.id)
 
         selection.active shouldBe primary
-        // The fallback is the whole point of the flag: writing to internal storage silently is how
-        // a user ends up hunting for downloads that were never on the card.
+        // The fallback is the whole point of the flag: writing to internal storage silently is how a
+        // user ends up hunting for downloads that were never on the card.
         selection.selectionMissing shouldBe true
     }
 
@@ -138,9 +133,9 @@ class StorageLocationManagerTest {
     @Test
     fun `a selection takes effect on the very next write, not on the next process`() =
         runTest {
-            // A preference flow that never reports the change: only the manager's own cache can
-            // make the new root visible here, which is exactly the guarantee the download worker
-            // relies on when it resolves paths straight after the user switched.
+            // A preference flow that never reports the change: only the manager's own cache can make
+            // the new root visible here, which is what the worker relies on when it resolves paths
+            // straight after the user switched.
             every { preferences.downloadStorageVolumeId } returns flowOf(null)
             val manager =
                 StorageLocationManager(
@@ -163,13 +158,10 @@ class StorageLocationManagerTest {
     @Test
     fun `a read before the stored choice has been loaded resolves the primary volume`() =
         runTest {
-            // Filling the cache with a `runBlocking` under the non-suspending
-            // `DownloadStorage.rootPath` would charge a DataStore read to whatever thread got there
-            // first. It is seeded from the app scope instead, and this is the window that opens:
-            // `null` is not a failure but the documented default — "no volume chosen" — and it
+            // Filling the cache with a `runBlocking` under the non-suspending `DownloadStorage.rootPath`
+            // would charge a DataStore read to whatever thread got there first. It is seeded from the
+            // app scope instead, and `null` is the documented default — "no volume chosen" — which
             // resolves to the path every download before the picker existed was written to.
-            // A scope that has not run yet: the seed is queued, exactly as it is in the moment
-            // between the graph being built and the app scope getting a turn.
             val unstarted = TestScope()
             val manager = manager(listOf(primary, card), stored = card.id, scope = unstarted)
 

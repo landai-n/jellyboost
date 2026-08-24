@@ -18,45 +18,23 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * The single door between the app and Google Cast.
- *
- * Two jobs. It owns the process-wide [CastContext] — created once, from `MainActivity.onCreate`,
- * and only when Play services are actually there — and it publishes what the Cast world looks like
- * right now as [state], a GMS-free [CastDeviceState] the Compose UI can observe without ever naming
- * a `com.google.android.gms` type.
- *
- * That second job is the load-bearing one. Jellyboost ships one APK for every device, including
- * those with no Play services at all (the plan's "first GMS dependency" risk): every GMS type stays
- * inside this package, nothing outside it may name one, and on a device without Play services
- * nothing here runs past the guard in [initialize]. [state] staying [CastDeviceState.Unavailable] is
- * what stops the cast button — and every Cast class behind it — from ever being touched there.
+ * The single door between the app and Google Cast. One APK ships to devices with no Play services,
+ * so every `com.google.android.gms` type must stay inside this package: nothing outside it may name
+ * one, and [state] staying [CastDeviceState.Unavailable] is what keeps those classes untouched there.
  */
 @Singleton
 class CastAvailability
     @Inject
     constructor() {
-        // ktlint reads `_x`/`x` as an idiom for exposing a mutable field *publicly*, and refuses it
-        // when the read-only half is not `public`. Here [state] is `internal` because
-        // `CastDeviceState` is — the pairing is otherwise exactly the idiom the rule is about.
+        // The rule only accepts `_x`/`x` when the read-only half is public; [state] is internal
+        // because `CastDeviceState` is.
         @Suppress("ktlint:standard:backing-property-naming")
         private val _state = MutableStateFlow<CastDeviceState>(CastDeviceState.Unavailable)
 
-        /**
-         * What casting looks like right now; [CastDeviceState.Unavailable] until (and unless)
-         * [initialize] finds a working Cast stack.
-         */
+        /** [CastDeviceState.Unavailable] until (and unless) [initialize] finds a working Cast stack. */
         internal val state: StateFlow<CastDeviceState> = _state.asStateFlow()
 
-        /**
-         * The shared [CastContext], or `null` while unavailable — the sender-side API
-         * `CastPlayerHandle` and `CastSessionCoordinator` hang off. Callers outside this
-         * package have no business with it; the type is what confines them.
-         *
-         * `@Volatile` for the same reason `CastMetadataHolder`'s field is: today every write and
-         * read happens on the main thread, but that is a convention rather than a checked property
-         * of a `@Singleton`, and a future off-main reader seeing a stale `null` would silently
-         * disable casting.
-         */
+        /** `@Volatile`: main-thread-only access is convention here, and a stale `null` disables casting. */
         @Volatile
         internal var castContext: CastContext? = null
             private set
@@ -66,23 +44,11 @@ class CastAvailability
         private var initializationStarted = false
 
         /**
-         * Brings the Cast stack up, once per process.
+         * Brings the Cast stack up, once per process. Must stay guarded on Play services being
+         * present: `getSharedInstance` throws without them, on the path to the first frame.
          *
-         * Guarded on Play services being present *and* usable: `getSharedInstance` on a device
-         * without them throws, and a hard crash on launch is the one outcome a cast button is not
-         * worth. Failure of any kind simply leaves [state] at [CastDeviceState.Unavailable].
-         *
-         * ### Nothing here blocks the main thread
-         * `isGooglePlayServicesAvailable` is a **binder round trip to another process**, and
-         * `MainActivity.onCreate` reaches this method on the critical path to the first frame. Run
-         * inline it would cost a synchronous IPC there, so the probe runs on the same single-thread
-         * executor the framework's own initialisation uses.
-         *
-         * `getSharedInstance` still has to be reached from the **main** thread — it builds a
-         * `CastContext` bound to the caller's looper — so a successful probe posts back to the main
-         * looper before continuing. That is one message on an idle looper rather than a synchronous
-         * IPC on a busy one. The method therefore returns immediately and is `@MainThread` only for
-         * the guard and the context capture, which is what its two writes need.
+         * `isGooglePlayServicesAvailable` is a binder round trip, so it must stay off the main
+         * thread; `getSharedInstance` must stay *on* it — the `CastContext` binds to that looper.
          *
          * @param context any context; only the application context is retained.
          */
@@ -92,8 +58,6 @@ class CastAvailability
             initializationStarted = true
 
             val appContext = context.applicationContext
-            // One thread, used once: the probe and the framework's initialisation are both I/O-ish
-            // and neither belongs on the main thread; the executor has no work left afterwards.
             val executor = Executors.newSingleThreadExecutor()
             executor.execute {
                 val playServicesStatus =
@@ -117,8 +81,7 @@ class CastAvailability
                 .getSharedInstance(appContext, executor)
                 .addOnSuccessListener { shared ->
                     castContext = shared
-                    // Never removed: the CastContext is process-wide and outlives everything that
-                    // could plausibly unregister from it.
+                    // Never removed: the CastContext is process-wide and outlives every possible owner.
                     shared.addCastStateListener { castState -> publish(castState) }
                     publish(shared.castState)
                 }.addOnFailureListener { error ->
@@ -131,11 +94,8 @@ class CastAvailability
         }
 
         /**
-         * The friendly name of whatever is connected, or `null`.
-         *
-         * Defensive: the session accessors are documented to throw when the session is not in the
-         * state the caller assumed, and this runs from a listener callback that fires *during* the
-         * transitions where that is most likely.
+         * The session accessors throw when the session is not in the assumed state, and this runs
+         * from a listener that fires *during* those transitions.
          */
         private fun connectedDeviceName(): String? =
             runCatching {
@@ -147,28 +107,21 @@ class CastAvailability
             }.getOrNull()
     }
 
-/**
- * What the app knows about casting, with no Google Play services types in sight — the whole point,
- * so the UI can observe it on a device that has no Cast stack to observe.
- */
+/** Casting state with no GMS types in it, so the UI can observe it where there is no Cast stack. */
 internal sealed interface CastDeviceState {
-    /** No Cast stack: no Play services, or the framework failed to start. Draw nothing. */
+    /** No Play services, or the framework failed to start. Draw nothing. */
     data object Unavailable : CastDeviceState
 
     /** Cast works, but no receiver has been discovered on this network yet. */
     data object NoDevices : CastDeviceState
 
-    /** Receivers are around and nothing is connected — the button is worth offering. */
     data object Available : CastDeviceState
 
-    /** A session is being established. */
     data object Connecting : CastDeviceState
 
     /**
-     * Connected and playing (or ready to).
-     *
-     * @property deviceName the receiver's friendly name; `null` when the framework has not
-     *   published one yet, which callers show as a generic "casting" rather than an empty label.
+     * @property deviceName `null` until the framework publishes one; callers show a generic
+     *   "casting" rather than an empty label.
      */
     data class Connected(
         val deviceName: String?,
@@ -176,12 +129,8 @@ internal sealed interface CastDeviceState {
 }
 
 /**
- * The Cast framework's `CastState` int, as a [CastDeviceState].
- *
- * Kept pure and separate from [CastAvailability] so the table can be tested without a Cast stack:
- * the `CastState` constants are Java compile-time constants, inlined by the compiler, so nothing
- * here loads a GMS class at runtime — reading this function's bytecode is the fastest way to
- * confirm the mapping is honest.
+ * Kept out of [CastAvailability] so it is testable without a Cast stack: the `CastState` constants
+ * are Java compile-time constants, so nothing here loads a GMS class at runtime.
  *
  * @param deviceName only meaningful for [CastState.CONNECTED]; ignored otherwise.
  */
@@ -194,9 +143,7 @@ internal fun castDeviceStateOf(
         CastState.NOT_CONNECTED -> CastDeviceState.Available
         CastState.CONNECTING -> CastDeviceState.Connecting
         CastState.CONNECTED -> CastDeviceState.Connected(deviceName)
-        // A code this build does not know about. Treated as "nothing to cast to" rather than as
-        // Unavailable: the stack is demonstrably up (it just told us something), so hiding the
-        // button for good would be the wrong lie — MediaRouter still hides its own button while
-        // there is nothing to route to.
+        // An unknown code means the stack is up, so NoDevices rather than Unavailable: the button
+        // hides for now instead of for good.
         else -> CastDeviceState.NoDevices
     }

@@ -8,11 +8,8 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * [StreamUrlFactory] backed by the SDK's URL builders.
- *
- * The `playSessionId` and `deviceId` query parameters are not decoration: the server ties an
- * active transcode to them, and `stopEncodingProcess` will not find the ffmpeg process to kill if
- * the stream was requested without them.
+ * Every stream URL must carry `playSessionId` and `deviceId`: the server ties the active transcode to
+ * them, and `stopEncodingProcess` cannot find the ffmpeg process to kill without them.
  */
 @Singleton
 internal class SdkStreamUrlFactory
@@ -50,13 +47,8 @@ internal class SdkStreamUrlFactory
         override fun absoluteUrl(path: String): String = apiClient.createUrl(path)
 
         /**
-         * The tile URL, with the access token appended as a query parameter.
-         *
-         * Trickplay is an authorised endpoint, and the sheet is fetched by Coil — an image loader
-         * with no knowledge of this app's `Authorization` header. Jellyfin accepts the token as the
-         * `ApiKey` query parameter for exactly this case, which keeps the seam a plain `String` the
-         * scrubber can hand to any loader. The Cast receiver needs the identical treatment, which is
-         * why the appending itself now lives in [withApiKey].
+         * Carries the token as a query parameter because the sheet is fetched by Coil, which knows
+         * nothing of this app's `Authorization` header.
          */
         override fun trickplayTileUrl(
             itemId: UUID,
@@ -74,12 +66,9 @@ internal class SdkStreamUrlFactory
             )
 
         /**
-         * Appends `ApiKey`, unless the URL already has one.
-         *
-         * The guard matches the parameter as a *parameter* rather than as a substring: a URL that
-         * merely contains the letters — a subtitle path, an item name — must not be mistaken for one
-         * that is already authorised, because the mistake surfaces as a 401 on the television and
-         * nowhere else.
+         * The guard matches `ApiKey` as a *parameter*, never as a substring: a path or item name
+         * containing the letters must not be taken for an already-authorised URL (a 401 on the
+         * television and nowhere else).
          */
         override fun withApiKey(url: String): String {
             if (API_KEY_PARAMETER.containsMatchIn(url)) return url

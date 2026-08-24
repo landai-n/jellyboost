@@ -32,12 +32,7 @@ import dev.jellyboost.core.ui.component.PrimaryPillButton
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 
-/**
- * The library's filter sheet: genres, years and watched state.
- *
- * Edits go into a *draft* copy of the filters and only reach the grid when the user applies them —
- * a chip tap must not re-query a 500-item library over the network.
- */
+/** Edits go into a *draft*: a chip tap must not re-query a 500-item library over the network. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun LibraryFilterSheet(
@@ -93,8 +88,7 @@ private fun FilterSheetContent(
                 .padding(bottom = Dimens.SpaceExtraLarge),
         verticalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
     ) {
-        // The sheet's own title, and each section below it, are headings: a sheet of a hundred
-        // genre chips is exactly the list a heading-jump exists to get past.
+        // Headings: a sheet of a hundred genre chips is what a heading-jump exists to get past.
         Text(
             text = stringResource(R.string.library_filters_title),
             style = MaterialTheme.typography.titleLarge,
@@ -148,8 +142,8 @@ private fun FilterSheetContent(
 }
 
 /**
- * The one tri-state facet: any / played / unplayed. Unlike genres and years it is not derived from
- * the library's contents, so it is always drawn and its three chips are spelled out here.
+ * Not derived from the library's contents, unlike genres and years, so it is always drawn and its
+ * three chips are spelled out here.
  */
 @Composable
 private fun PlayedFilterSection(
@@ -206,7 +200,6 @@ private fun ToggleChip(
     PillChip(text = label, selected = selected, onClick = onClick)
 }
 
-/** Adds [value] if it is absent, removes it if it is present — chip toggling. */
 internal fun <T> List<T>.toggle(value: T): List<T> = if (value in this) this - value else this + value
 
 @Preview(name = "Filter sheet", showBackground = true, backgroundColor = 0xFF101010, widthDp = 420)

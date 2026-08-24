@@ -15,23 +15,14 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Answers "is our server reachable right now?", and rotates through the server's known addresses
- * while doing so.
+ * Answers "is our server reachable right now?", rotating through the server's known addresses: losing the
+ * LAN when leaving the house is not "offline", it is "use the other address", so the probe tries the
+ * configured address first, then every other stored candidate, and re-points the shared `ApiClient`.
  *
- * A Jellyfin server usually has more than one address — a LAN address, a remote/tunnel address,
- * whatever the user typed at setup — all stored as `ServerAddressEntity` rows. Losing the LAN when
- * leaving the house is not "offline", it is "use the other address", so the probe tries the address
- * currently configured first and then every other candidate, and re-points the shared `ApiClient`
- * at whichever one answers.
- *
- * An address only counts as answering when the server behind it reports the signed-in session's
- * server id. The stored addresses are routinely private LAN ones that mean a
- * different machine on a different network — the shared client carries the access token, so
- * re-pointing it at whatever 200s `/System/Info/Public` would hand the token to any host squatting
- * that address. A mismatched id is treated exactly like an unreachable address.
- *
- * Every attempt is capped at [PROBE_TIMEOUT_MS]. That cap is what keeps a server-down-but-Wi-Fi-up
- * case degrading without a 30-second hang.
+ * An address counts as answering **only** when the server behind it reports the signed-in session's server
+ * id. Stored addresses are routinely private LAN ones that mean a different machine on a different network,
+ * and the shared client carries the access token — re-pointing it at whatever 200s `/System/Info/Public`
+ * would hand that token to any host squatting the address. A mismatched id is treated as unreachable.
  */
 @Singleton
 class ServerReachabilityProbe
@@ -44,11 +35,8 @@ class ServerReachabilityProbe
         @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     ) {
         /**
-         * Probes the known addresses in order and returns `true` as soon as one answers **as our
-         * server**, having pointed the shared client at it.
-         *
-         * Returns `false` when nobody is signed in: there is no server to be reachable, and
-         * reporting "online" would send the delegating repository down a path with no credentials.
+         * `false` when nobody is signed in: there is no server to be reachable, and reporting "online" would send
+         * the delegating repository down a path with no credentials.
          */
         suspend fun isServerReachable(): Boolean =
             withContext(ioDispatcher) {
@@ -67,14 +55,11 @@ class ServerReachabilityProbe
                     when {
                         probedId == null -> Unit // Nothing (usable) answered; try the next one.
                         probedId != session.serverId ->
-                            // Somebody answered, but not our server — a different Jellyfin
-                            // instance, or anything at all squatting a reused LAN address.
-                            // Never switch to it.
+                            // Somebody answered, but not our server — a different instance, or anything
+                            // squatting a reused LAN address. Never switch to it.
                             //
-                            // Debug, and host only, on this line and the two below:
-                            // the probe walks every address the user's server is known by, so its
-                            // log is a list of where that server lives, and it is exactly the log a
-                            // user pastes when connectivity misbehaves. See `hostForLog`.
+                            // Debug, and host only, here and below: this log is a list of where the user's
+                            // server lives, and it is what they paste when connectivity misbehaves.
                             Timber.d(
                                 "Host %s answered as server %s, not ours; skipping it",
                                 hostForLog(address),
@@ -94,14 +79,10 @@ class ServerReachabilityProbe
                 false
             }
 
-        /**
-         * The addresses to try, in order: the one the client is already using first, then every
-         * other address stored for this server. Rotating only matters once the current one failed.
-         */
+        /** The address the client is already using first; rotating only matters once that one failed. */
         private suspend fun candidateAddresses(session: SessionState.LoggedIn): List<String> {
-            // `runCatchingUnlessCancelled`, not `runCatching`: the Room read is a
-            // suspend call, and the plain one would swallow the CancellationException that unwinds
-            // a cancelled probe — turning "the caller gave up" into "the server has no addresses".
+            // `runCatchingUnlessCancelled`, not `runCatching`: the plain one swallows the CancellationException
+            // that unwinds a cancelled probe, turning "the caller gave up" into "the server has no addresses".
             val stored =
                 runCatchingUnlessCancelled { serverDao.getAddresses(session.serverId).map { it.address } }
                     .onFailure { Timber.w(it, "Could not read the server's addresses") }
@@ -110,12 +91,7 @@ class ServerReachabilityProbe
         }
 
         companion object {
-            /**
-             * Per-address budget, in milliseconds.
-             *
-             * Long enough for a sleepy LAN server, short enough that a dead one degrades the UI
-             * before the user notices.
-             */
+            /** Long enough for a sleepy LAN server, short enough that a dead one degrades the UI unnoticed. */
             const val PROBE_TIMEOUT_MS = 3_000L
         }
     }

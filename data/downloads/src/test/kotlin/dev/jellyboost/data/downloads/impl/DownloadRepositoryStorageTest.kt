@@ -44,11 +44,7 @@ import java.time.ZoneOffset
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
- * The storage half of [DownloadRepositoryImpl]: volume selection, and what the storage walk is
- * keyed on.
- *
- * Split from [DownloadRepositoryImplTest] purely for size — the fixture is the same shape; the
- * subject is the same class.
+ * The storage half of [DownloadRepositoryImpl]: volume selection, and what the storage walk is keyed on.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class DownloadRepositoryStorageTest {
@@ -126,8 +122,8 @@ class DownloadRepositoryStorageTest {
     @Test
     fun `switching volume while downloads exist is refused unless the caller agrees to lose them`() =
         runTest {
-            // The policy: nothing moves files yet, and a finished download's file
-            // rows hold absolute paths on the old volume that nothing rewrites.
+            // The policy: nothing moves files yet, and a finished download's file rows hold absolute
+            // paths on the old volume that nothing rewrites.
             coEvery { downloadDao.allItemIds() } returns listOf(uuid(1))
 
             val result = repository().setStorageLocation(CARD_ID, deleteExistingDownloads = false)
@@ -146,11 +142,10 @@ class DownloadRepositoryStorageTest {
 
             result.shouldBeInstanceOf<AppResult.Success<Unit>>()
             coVerifyOrder {
-                // Claim the rows first — the cascade only deletes what is out of the queue's reach
-                // (`DownloadDao.deleteUnlessRunnable`), so a QUEUED row reaching it unclaimed would
-                // survive the switch and point at files on the volume the user just left. Then stop,
-                // so the downloader cannot hold a handle to a file being unlinked, and delete before
-                // the root moves or the cascade looks on the wrong volume for them.
+                // Claim the rows first — the cascade only deletes what is out of the queue's reach, so
+                // a QUEUED row reaching it unclaimed would survive the switch pointing at the old
+                // volume. Then stop, so the downloader cannot hold a handle, and delete before the root
+                // moves or the cascade looks on the wrong volume.
                 downloadDao.demoteRunnable(listOf(uuid(1), uuid(2)), DownloadStatus.CANCELLED, NOW)
                 scheduler.stop()
                 deleter.deleteAll(listOf(uuid(1), uuid(2)))
@@ -161,8 +156,8 @@ class DownloadRepositoryStorageTest {
     @Test
     fun `re-affirming the volume already in force keeps the downloads that are on it`() =
         runTest {
-            // What clearing a stale choice looks like: the card is out, the fallback is already
-            // writing to internal storage, and the user taps it. Nothing moves, so nothing is lost.
+            // Clearing a stale choice: the card is out, the fallback is already writing to internal
+            // storage, and the user taps it. Nothing moves, so nothing is lost.
             coEvery { downloadDao.allItemIds() } returns listOf(uuid(1))
             every { locations.activeVolume() } returns PRIMARY_VOLUME
 
@@ -206,8 +201,8 @@ class DownloadRepositoryStorageTest {
     @Test
     fun `progress writes alone do not re-walk the downloads tree`() =
         runTest {
-            // `usedBytes()` is a stat() of every file under the root; a transfer writes progress
-            // twice a second for its whole length, so the walk must not be keyed on it.
+            // `usedBytes()` is a stat() of every file under the root; a transfer writes progress twice
+            // a second for its whole length, so the walk must not be keyed on it.
             val rows = MutableStateFlow(listOf(progress(uuid(1), DownloadStatus.DOWNLOADING)))
             every { downloadDao.observeProgress() } returns rows
             var walks = 0
@@ -312,8 +307,7 @@ class DownloadRepositoryStorageTest {
     fun `progress writes alone do not re-resolve the storage locations`() =
         runTest {
             // `locations.resolve()` re-scans the mounted volumes, so it must not be keyed on raw
-            // `observeProgress()` — the same 2/s hot path the storage walk stays off.
-            // Only the download *count* is read here, and that does not move on a byte-count tick.
+            // `observeProgress()`. Only the download *count* is read here.
             val rows = MutableStateFlow(listOf(progress(uuid(1), DownloadStatus.DOWNLOADING)))
             every { downloadDao.observeProgress() } returns rows
             var resolves = 0
@@ -379,15 +373,10 @@ class DownloadRepositoryStorageTest {
         )
     }
 
-    // The dispatcher is a parameter only so the storage-location tests can share `runTest`'s
-    // scheduler: they collect a projection that never completes, which needs the two in step.
-    //
-    // `TestScope.repository`: `observeStates()` shares a `stateIn` over `@ApplicationScope`, and
-    // `backgroundScope` is `runTest`'s stand-in for it — none of these tests collect
-    // `observeStates()`, but the constructor still needs a real `CoroutineScope` to hand it. The
-    // default dispatcher ties to the same `testScheduler` `backgroundScope` uses, matching every
-    // explicit `UnconfinedTestDispatcher(testScheduler)` below — coroutines-test throws the moment
-    // two different schedulers are exercised in one hierarchy.
+    // The dispatcher is a parameter so the storage-location tests can share `runTest`'s scheduler: they
+    // collect a projection that never completes. `TestScope.repository` because the constructor needs a
+    // real `CoroutineScope`, and coroutines-test throws the moment two different schedulers are
+    // exercised in one hierarchy.
     private fun TestScope.repository(ioDispatcher: CoroutineDispatcher = UnconfinedTestDispatcher(testScheduler)) =
         DownloadRepositoryImpl(
             downloadDao = downloadDao,

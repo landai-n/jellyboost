@@ -20,41 +20,18 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * The **read** half of the browse cache's retention policy: it throws rows away again.
+ * Eviction half of the browse cache's retention policy.
  *
- * `BrowseCacheWriter` mirrors every successful server read into the `items` table; without this
- * class nothing would ever delete a row — the table would grow monotonically for the life of the
- * install and an item deleted on the server would keep resolving offline forever. `ItemEntity`
- * carries both a `cachedAt` column and the rule that "DOWNLOAD rows never evicted" for exactly the
- * eviction pass this class runs.
+ * Downloads are excluded by **source**, never by age: deleting an [ItemSource.DOWNLOAD] row would
+ * orphan its files on disk and blank the offline detail page — including the series and season rows
+ * `DownloadEnqueuer` writes behind a downloaded episode. A `BROWSE_CACHE` row is disposable; losing
+ * one costs one network read.
  *
- * ### What it may delete, and what it may not
- * Exactly one query, [ItemDao.evictBrowseCacheOlderThan], and it excludes downloads by **source**
- * rather than by age: an [ItemSource.DOWNLOAD] row is never evicted, however stale it looks, because
- * deleting it would orphan the files on disk with no row pointing at them, and because it is what
- * the offline detail page reads. That includes the series and season rows behind a downloaded
- * episode, which `DownloadEnqueuer` also writes as `DOWNLOAD`. A `BROWSE_CACHE` row, by contrast, is
- * disposable by definition: losing one costs a network read the next time the user browses past it,
- * and nothing at all while they are online.
+ * Two bounds, because age alone is not one: rows are written by *browsing*, so an afternoon of
+ * scrolling can add tens of thousands the TTL will not touch for a month.
  *
- * ### Two bounds, because age alone is not one
- * The TTL sweep answers "how long is a row worth keeping". It does **not** answer "how many", and
- * that was the gap: rows are written by *browsing*, which happens far faster than a month passes,
- * so a single afternoon of scrolling a large library could add tens of thousands of rows that the
- * age sweep would not touch for thirty days — each carrying a multi-kilobyte `BaseItemDto` blob.
- * [BROWSE_CACHE_MAX_ROWS] is the second bound: past it, the oldest rows go however fresh they are.
- *
- * ### When it runs
- * Once at startup, from `JellyboostApplication.onCreate` on the application scope — the same place
- * and for the same reason as `UserDataSyncTrigger` and `DownloadedMetadataRefresher` — **and** every
- * [WRITES_BETWEEN_SWEEPS]th write-through, so a process that stays alive for a long browsing
- * session still gets eviction between its startup sweep and its death, not only at the two
- * endpoints. The counter is the whole of the throttle: a sweep is two indexed `DELETE`s, cheap but
- * not free, and it must not ride the write path itself.
- *
- * A periodic worker would be the wrong shape for either trigger. The table is only ever grown *by
- * using the app*, so the writes are the honest clock — a scheduled job would run on a device nobody
- * has opened, and not run during the session that is actually filling the table.
+ * Triggered at startup and every [WRITES_BETWEEN_SWEEPS]th write-through, not by a periodic worker:
+ * the table is only grown by using the app, so writes are the honest clock.
  */
 @Singleton
 class BrowseCacheMaintenance
@@ -69,21 +46,13 @@ class BrowseCacheMaintenance
         private val writesSinceSweep = AtomicInteger(0)
         private val sweeping = AtomicBoolean(false)
 
-        /** Sweeps the browse cache, once. Idempotent — see [StartOnce]. */
         fun start() {
             startOnce { scope.launch { sweep() } }
         }
 
         /**
-         * Counts one write-through, and sweeps when enough of them have piled up.
-         *
-         * Called by `BrowseCacheWriter` after each successful item write. Cheap by construction:
-         * an atomic increment on all but every [WRITES_BETWEEN_SWEEPS]th call, and the sweep itself
-         * is handed to the application scope rather than run on the writer's coroutine — an
-         * eviction pass must never be something the user waits for, and a write that succeeded is
-         * not made better or worse by it.
-         *
-         * [sweeping] keeps a slow sweep from being started again by the writes that land during it.
+         * The sweep goes to the application scope: a write that succeeded must not wait on eviction.
+         * [sweeping] keeps a slow sweep from being restarted by the writes that land during it.
          */
         fun onWriteThrough() {
             if (writesSinceSweep.incrementAndGet() < WRITES_BETWEEN_SWEEPS) return
@@ -100,24 +69,13 @@ class BrowseCacheMaintenance
         }
 
         /**
-         * Both bounds, in order: drop what is too old, then drop what is beyond the row cap.
-         *
-         * Age first, because it is the bound with a *reason* — a row past the TTL is near-certainly
-         * stale — and running it first means the cap only ever has to remove rows that are still
-         * within their lifetime, which is the case where "oldest" is a genuine tie-break rather
-         * than a rediscovery of what the TTL already knew.
-         *
-         * Suspending and public so tests can await it directly instead of racing the scope.
-         *
-         * @return how many rows were dropped in total, or `0` if the sweep could not run.
+         * Age first, then the cap: the TTL is the bound with a *reason*, so running it first leaves
+         * the cap only rows still within their lifetime, where "oldest" is a genuine tie-break.
+         * Public so tests can await it instead of racing the scope.
          */
         suspend fun sweep(): Int = evictExpired() + trimToCap()
 
-        /**
-         * Drops every browse-cache row last written more than [BROWSE_CACHE_TTL] ago.
-         *
-         * @return how many rows were dropped, or `0` if the sweep could not run.
-         */
+        /** @return rows dropped — also `0` when the sweep failed, which is never an error. */
         suspend fun evictExpired(): Int {
             val cutoff = clock.instant().minus(BROWSE_CACHE_TTL)
 
@@ -139,11 +97,7 @@ class BrowseCacheMaintenance
             return dropped
         }
 
-        /**
-         * Drops the browse-cache rows beyond the newest [BROWSE_CACHE_MAX_ROWS].
-         *
-         * @return how many rows were dropped, or `0` if the trim could not run.
-         */
+        /** @return rows dropped — also `0` when the trim failed, which is never an error. */
         suspend fun trimToCap(): Int {
             val dropped =
                 try {
@@ -165,53 +119,24 @@ class BrowseCacheMaintenance
 
         companion object {
             /**
-             * How long an unvisited browse-cache row is kept.
-             *
-             * The *policy* (`cachedAt` + "DOWNLOAD rows never evicted") fixes no number, so this
-             * one is chosen for what the row is actually for:
-             * a `BROWSE_CACHE` row exists so that a **cached parent of a download** — a series page,
-             * a season — still opens with no network, and so that a recently-browsed item does. Both
-             * are about the recent past. A month covers a holiday's worth of offline use, which is
-             * the longest stretch anyone plausibly spends away from their server with the app
-             * already loaded, while still bounding a table whose rows each carry a multi-kilobyte
-             * `BaseItemDto` blob.
-             *
-             * It is deliberately not shorter: eviction is not free to the user — a row dropped while
-             * offline is a detail page that no longer opens. And not longer: past a month the row is
-             * near-certainly stale (the server may have deleted the item outright, and nothing tells
-             * this device so), and browsing past it again rewrites it at full fidelity anyway, which
-             * makes the cost of being wrong one network read.
+             * A month: covers a holiday's worth of offline use (a dropped row is a detail page that
+             * no longer opens) without keeping rows the server may have deleted since. Being wrong
+             * either way costs one network read.
              */
             val BROWSE_CACHE_TTL: Duration = Duration.ofDays(30)
 
             /**
-             * How many browse-cache rows are kept at all, whatever their age.
-             *
-             * The bound the TTL cannot supply, and chosen against the same question: how much
-             * browsing is worth being able to open offline? A page is fifty items, so this is two
-             * hundred pages — far more than anyone scrolls through and then wants back without a
-             * network, and enough that the cap is only ever reached by the pathological session
-             * (paging a ten-thousand-item library end to end) the TTL was blind to.
-             *
-             * The unit that matters is bytes, not rows: each row carries a multi-kilobyte
-             * `BaseItemDto` blob, so five thousand of them is a cache measured in tens of
-             * megabytes. Rows are what the database can bound cheaply — an indexed `OFFSET` — and
-             * blob sizes vary by less than the order of magnitude this number is chosen at.
-             *
-             * Being wrong in either direction costs one network read per lost row, exactly as with
-             * the TTL, which is what makes both bounds safe to set by reasoning rather than by
-             * measurement.
+             * A page is fifty items, so 5000 rows is two hundred pages — reached only by the
+             * pathological session the TTL is blind to. Each row carries a multi-kilobyte
+             * `BaseItemDto` blob, so this is a cache measured in tens of megabytes; rows are simply
+             * what the database can bound cheaply (an indexed `OFFSET`).
              */
             const val BROWSE_CACHE_MAX_ROWS = 5_000
 
             /**
-             * How many write-throughs go by between sweeps.
-             *
-             * One write is one server response — a page of up to fifty items, or a single item's
-             * detail read — so this is a sweep every few hundred cached rows at the outside, and
-             * every twenty-five taps at the very least. Frequent enough that the cap is a real
-             * ceiling within a session, rare enough that the two `DELETE`s never show up next to
-             * the write path they are counted from.
+             * One write is one server response (up to fifty items), so 25 is a sweep every few
+             * hundred cached rows at the outside — a real ceiling within a session, rare enough that
+             * the two `DELETE`s never show up next to the write path.
              */
             const val WRITES_BETWEEN_SWEEPS = 25
         }

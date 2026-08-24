@@ -60,130 +60,59 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * The SyncPlay coordinator: everything the group protocol does to this device, and everything this
- * device asks of the group.
+ * The SyncPlay coordinator. A `@Singleton` with its own scope, not a ViewModel: membership outlives
+ * the player screen, and a `PlayQueueUpdate` for an item nobody has open has to bring one back
+ * ([launchRequests]).
  *
- * A `@Singleton` with its own scope rather than a ViewModel, because group membership is not a
- * screen. The user can back out of the
- * player, the app can be backgrounded, and the group carries on — commands still have to land on
- * the shared [PlayerHandle], and a `PlayQueueUpdate` for an item nobody has open still has to bring
- * the player back ([launchRequests]).
- *
- * ### The one rule that shapes the whole class
- * **In a group, nothing this client does moves this client's player.** Pause, seek, next, queue
- * edits — all of them are requests to the server, and the player moves only when the server
- * rebroadcasts the matching command to everyone. It is what makes "in lockstep"
- * true rather than approximately true, and it is why every intent below is a one-line API call.
+ * **In a group, nothing this client does moves this client's player.** Every transport and queue
+ * intent is a request to the server; the player moves only when the server rebroadcasts the command
+ * to everyone.
  *
  * ### Join handshake
- * Collect the websocket → measure the clock → join → the server sends the group and its queue →
- * open the item paused (or ask the app to open a player) → report `buffering` → park the player and
- * report `ready` when it is → the server flips the group out of WAITING and schedules an unpause
- * everyone applies at the same instant. **A member reporting `ready` is stopped** — the server's own
- * `WaitingGroupState` answers a `ready` that claims to be playing by resuming everyone *else*
- * ([reportReady]).
+ * Collect the websocket → measure the clock → join → group + queue arrive → open the item paused (or
+ * raise a launch request) → report `buffering` → report `ready` when parked → the server leaves
+ * WAITING and schedules an unpause everyone applies at the same instant.
  *
- * The websocket is collected *before* the join call, not after: collecting is what opens it (the SDK
- * has no `connect()`), and a group joined before the socket is up would never hear its own
- * `GroupJoined`/`PlayQueueUpdate`. The clock is measured before it too — see [warmClock].
+ * - the websocket is collected *before* the join call: collecting is what opens it (the SDK has no
+ *   `connect()`), and a group joined first would never hear its own `GroupJoined`/`PlayQueueUpdate`;
+ * - a member reporting `ready` must be **stopped**: the server's `WaitingGroupState` answers a
+ *   `ready` that claims to be playing by resuming everyone *else*;
+ * - a `ready` is reported only when one is owed ([readyOwedFor]). The server answers an unowed one
+ *   by re-sending the group's current state command to this session, which repositions the player
+ *   and produces another readiness — a closed loop measured at some thirteen requests a second.
  *
- * **A `ready` is reported only when one is owed.** Readiness is not news on its own: the server
- * answers a `ready` from a group that is not waiting by re-sending that group's current state
- * command to this session alone ("Client got lost, sending current state" — `PausedGroupState`
- * and `PlayingGroupState`, `HandleRequest(ReadyGroupRequest)`). Since applying a pause or a seek
- * repositions the player and makes it emit another readiness, reporting every one of them is a
- * closed loop that runs at some thirteen requests a second on device. So [readyOwedFor] records
- * the slot the group is actually waiting on — set when this member
- * loads an item, re-negotiates, or is handed a seek — and a readiness with nothing owed is silence.
+ * ### Losing the connection, and getting it back
+ * Three signals confirm a loss through one mechanism (`confirmLoss`): the socket collection *ending*
+ * (a finished stream is the transport giving up), [PING_FAILURE_STREAK] failed ping cycles, and
+ * being offline for [CONNECTIVITY_GRACE_MS]. Nothing here resumes playback — playing on would drift
+ * from the group invisibly. A socket flap the SDK reconnects through is not a loss.
  *
- * ### Losing the connection
- * A confirmed loss pauses the player and — once the rejoin below has failed — leaves the group and
- * says so. Nothing here resumes: playing on would mean drifting from
- * the group invisibly, so the state change is made honest and the user resumes solo with one tap.
- * Three things confirm one, and they are deliberately one mechanism (`confirmLoss`):
+ * The server does not survive a dropped websocket either: it ends the session,
+ * `SyncPlayManager.OnSessionEnded` calls `LeaveGroup`, and the next request lands on a new session
+ * belonging to no group (answered with `SyncPlayNotInGroupUpdate`). Nobody here asked to leave, so
+ * a removal after trouble stands the session down into [SyncPlayState.Rejoining] and re-runs the
+ * ordinary join flow rather than ending the group; a deliberate exit forgets the target first.
+ * Exhausted attempts are terminal — there is no background retry loop.
  *
- * | signal | why it is confirmation | delay |
- * |---|---|---|
- * | the socket collection ending | a *finished* stream is the transport giving up — see [collectStream] | immediate |
- * | [PING_FAILURE_STREAK] failed ping cycles | the REST API has stopped answering, whatever the OS says | ≥ 15 s |
- * | offline for [CONNECTIVITY_GRACE_MS] | the radio is genuinely gone, not switching | 5 s |
- *
- * The grace window is what a two-second Wi-Fi blip costs instead of the group: playback is
- * frozen for it — paused, not run on into a drift nobody asked for — and connectivity returning
- * inside the window re-enters the buffering/ready handshake so the server re-syncs this member
- * rather than tearing anything down. A momentary socket flap that the SDK reconnects through is
- * *not* a loss and deliberately does nothing.
- *
- * ### Getting the group back
- * Surviving the blip is not the same thing as keeping the membership, because the *server* does not
- * survive it: a dropped websocket ends the session, `SyncPlayManager.OnSessionEnded` calls
- * `LeaveGroup`, and the next request this client makes arrives on a brand-new session that belongs
- * to no group — answered with a `SyncPlayNotInGroupUpdate` over the socket (the ping loop discovers
- * it within five seconds even when nothing else is happening). Nobody here asked to leave, so the
- * controller takes the membership back rather than reporting a loss.
- * **A confirmed loss goes the same way**: on the device the
- * grace window usually expires *before* anything discovers the removal, so `confirmLoss` hands over
- * to the rejoin rather than ending the group, and reaches the old ending only if the attempts do.
- * In detail:
- *
- * - the group is remembered in `rejoinTarget` for as long as membership is *not* given up
- *   deliberately — [leaveGroup], sign-out, `LibraryAccessDenied` and `GroupGone` all forget it, and
- *   so does a removal that arrives over a socket which was never in trouble (`recentlyTroubled`);
- * - losing it after trouble stands the session down into [SyncPlayState.Rejoining] and runs up to
- *   `REJOIN_MAX_ATTEMPTS` attempts, `REJOIN_RETRY_DELAY_MS` apart, of "list the groups, and if ours
- *   is still there, join it" — the ordinary join flow, handshake and all;
- * - the player is paused for the whole of it and is never started by the rejoin itself; the group's
- *   answer to this member's `ready` is what puts it back in step;
- * - a group that is no longer listed has dissolved (we were its last member), and exhausted attempts
- *   are the old ending: [teardown] to [SyncPlayState.Idle] with a message. There is no background
- *   retry loop after that — once out, we stay out until the user acts.
- *
- * ### Coming back to the app
- * Returning to the foreground **is** the user acting, and it is the one moment a membership lost to a
- * backgrounded process having its network cut can be taken back. So [onAppForegrounded]:
- *
- * - in a group, fires an immediate ping cycle, because a connection that died off screen is
- *   otherwise not even suspected until the next five-second cadence;
- * - at [SyncPlayState.Idle] with a `lostMembership` still inside `FOREGROUND_REJOIN_WINDOW_MS`, runs
- *   the same rejoin attempts, once and **silently** — a re-check that fails or finds the group gone
- *   must not put a message on screen every time the app is opened.
+ * [onAppForegrounded] is the one moment a membership lost to a backgrounded process can be taken
+ * back, and its rejoin is **silent**: opening the app must not put a message on screen.
  *
  * ### Threading: the confinement contract
- * Every field in this class — the [session] box, the extracted collaborators' state, the
- * scheduler's memory — is confined to the single-threaded `@SyncPlayScope`
- * (`SyncPlayScopeModule`: `limitedParallelism(1)`, which serialises every coroutine with a
- * happens-before edge between them). That confinement **is** the synchronization; there are no
- * locks on the fields, and the [sessionMutex] serialises *membership transitions*, not field
- * access. The contract, in three rules:
+ * Every field here — the [session] box, the collaborators' state, the scheduler's memory — is
+ * confined to the single-threaded `@SyncPlayScope` (`limitedParallelism(1)`). That confinement **is**
+ * the synchronization; [sessionMutex] serialises *membership transitions*, not field access.
  *
- * 1. **Public entry points hop first.** Anything callable from another thread ([attachHost],
- *    [detachHost], [onHostBuffering], [leaveGroup], [onAppForegrounded], `createGroup`,
- *    `joinGroup`) does nothing but `scope.launch`/`withContext(scope)` onto the confined scope
- *    before touching state.
+ * 1. **Public entry points hop first**: anything callable from another thread does nothing but
+ *    `scope.launch`/`withContext(scope)` before touching state.
  * 2. **Session work runs on the session's child scope** ([launchInSession]), so [closeSession]
- *    cancels it wholesale — the child inherits the same confined dispatcher, so rule 1's
- *    guarantee is unchanged there.
- * 3. **Only [PlayerHandle]/host reads leave the scope**, via `withContext(mainDispatcher)`, and
- *    they carry no controller state with them beyond their parameters.
- *
- * Kept as a documented contract rather than a compile-time receiver type deliberately: a
- * `SyncPlaySessionScope` only `enterGroup` could mint would re-thread most private signatures to
- * encode what the confined dispatcher already enforces mechanically, and the rejoin loop and the
- * safety-net timers live behind [SyncPlayRejoinPolicy] and [SyncPlayRecoveryNets], which run on
- * this same scope.
+ *    cancels it wholesale; the child inherits the same confined dispatcher.
+ * 3. **Only [PlayerHandle]/host reads leave the scope**, via `withContext(mainDispatcher)`, carrying
+ *    no controller state beyond their parameters.
  */
 @Singleton
 @Suppress(
-    "TooManyFunctions", // A protocol coordinator; the intents alone are the plan's 15.
-    // What owns *disjoint* state is split out (the rejoin policy, the recovery nets, the
-    // scheduler, the drift monitor, the pinger). What remains is one
-    // membership lifecycle: joining, losing and leaving all read and write the same session box,
-    // the same handshake bookkeeping and the same lock, and publishing that state to another
-    // collaborator would be a larger surface than the lines it saves.
+    "TooManyFunctions",
     "LargeClass",
-    // Thirteen constructor collaborators, the visible cost of the "LargeClass" trade above: each
-    // one is a protocol organ (socket, time sync, scheduler, drift monitor, pinger…) the
-    // membership lifecycle drives directly.
     "LongParameterList",
 )
 class SyncPlayController
@@ -205,17 +134,12 @@ class SyncPlayController
         @SyncPlayScope private val scope: CoroutineScope,
         @MainDispatcher private val mainDispatcher: CoroutineDispatcher,
     ) {
-        // ktlint reads `_x`/`x` as an idiom for exposing a mutable field *publicly*, and refuses it
-        // when the read-only half is not `public`. Here the read-only half is `internal` because
-        // nothing outside `:player` may see it — the pairing is otherwise exactly the idiom the
-        // rule is about.
+        // The read-only half is `internal`, not public; ktlint's rule only recognises the public idiom.
         @Suppress("ktlint:standard:backing-property-naming")
         private val _state = MutableStateFlow<SyncPlayState>(SyncPlayState.Idle)
 
-        /** Where the group is, and where this member is inside it. */
         internal val state: StateFlow<SyncPlayState> = _state.asStateFlow()
 
-        // See [_state] for why the rule is suppressed rather than the field renamed.
         @Suppress("ktlint:standard:backing-property-naming")
         private val _messages =
             MutableSharedFlow<SyncPlayMessage>(
@@ -223,16 +147,13 @@ class SyncPlayController
                 onBufferOverflow = BufferOverflow.DROP_OLDEST,
             )
 
-        /** Things the user has to be told; the UI owns the copy. */
         internal val messages: SharedFlow<SyncPlayMessage> = _messages.asSharedFlow()
 
         private val _launchRequests =
             MutableSharedFlow<SyncPlayLaunchRequest>(
-                // Replayed to the next collector: the NavHost effect only exists while an Activity
-                // is composed, and the presence service keeps the group alive precisely when none
-                // is — a request raised then must be honoured on the next composition rather than
-                // evaporate. The collector calls [consumeLaunchRequest] once it has
-                // acted, and teardown clears it, so a stale request cannot re-open a player.
+                // Replayed: the NavHost effect only exists while an Activity is composed, and the
+                // presence service keeps the group alive precisely when none is. The collector calls
+                // [consumeLaunchRequest] once it has acted, and teardown clears it.
                 replay = 1,
                 extraBufferCapacity = EVENT_BUFFER,
                 onBufferOverflow = BufferOverflow.DROP_OLDEST,
@@ -241,7 +162,6 @@ class SyncPlayController
         /** "The group moved on and no player is open" — collected by the NavHost. */
         val launchRequests: SharedFlow<SyncPlayLaunchRequest> = _launchRequests.asSharedFlow()
 
-        /** Forgets the replayed launch request once the app has acted on (or knowingly ignored) it. */
         fun consumeLaunchRequest() {
             _launchRequests.resetReplayCache()
         }
@@ -256,23 +176,16 @@ class SyncPlayController
         private var host: SyncPlayPlaybackHost? = null
 
         /**
-         * Every field one group session owns, boxed so that ending a session is one assignment.
+         * Every field one group session owns, boxed so that each ending ([teardown], [standDown]) is
+         * one assignment rather than a dozen resets kept in step by hand — a field missing from such
+         * a list carries stale state into a rejoined group invisibly.
          *
-         * The box exists so that the two endings ([teardown] and [standDown]) are one assignment
-         * each rather than a dozen reset statements kept in step by hand: a session-scoped field
-         * missing from one such list leaves a rejoin carrying stale state into a fresh group, and
-         * nothing in review shows it. A field added here is reset by construction, and the semantic
-         * difference between the two endings is the named factory below plus
-         * [SyncPlayController.teardown]'s explicit `timeSync.reset()`.
-         *
-         * Confined to the single-threaded `@SyncPlayScope` like everything else the controller
-         * mutates; plain `var`s are safe there.
+         * Confined to the single-threaded `@SyncPlayScope`, so plain `var`s are safe.
          */
         private class GroupSessionState(
             /**
-             * `true` once the group has been told to stop waiting on us, so re-attaching can undo
-             * it. Survives a stand-down: a member with no player must go on being one after the
-             * rejoin ([enterGroup] re-sends it).
+             * `true` once the group has been told to stop waiting on us. Survives a stand-down: a
+             * member with no player must go on being one after the rejoin ([enterGroup] re-sends it).
              */
             var ignoreWaitSent: Boolean = false,
         ) {
@@ -280,11 +193,8 @@ class SyncPlayController
             var loadedPlaylistItemId: UUID? = null
 
             /**
-             * Slots this device could not open and has already asked the group to move past.
-             *
              * The loop guard for [onEntryUnplayable]: skipping is itself a request that produces
-             * another `PlayQueueUpdate`, so without a memory a queue of unplayable items would
-             * cycle for ever. Cleared as soon as anything opens successfully.
+             * another `PlayQueueUpdate`, so a queue of unplayable items would cycle for ever.
              */
             val skippedSlots = mutableSetOf<UUID>()
 
@@ -293,31 +203,24 @@ class SyncPlayController
             var pendingQueue: SyncPlayGroupQueue? = null
 
             /**
-             * The slot the group is waiting on a `ready` for, or `null` when it is waiting on
-             * nothing.
-             *
-             * The whole of the anti-storm rule (see the class docs): a `PlayerEvent.Ready` is only
-             * worth reporting when the server has actually reset this member to buffering.
+             * The slot the group is waiting on a `ready` for; the anti-storm rule (see the class
+             * docs) reports a `PlayerEvent.Ready` only when the server reset this member to buffering.
              */
             var readyOwedFor: UUID? = null
 
             /** Reports the owed `ready` when the player will not re-buffer to announce itself. */
             var readyFallbackJob: Job? = null
 
-            /** The connectivity grace window: fires when the radio did not come back in time. */
+            /** Fires when the radio did not come back inside the grace window. */
             var connectivityGraceJob: Job? = null
 
-            /** Failed ping cycles in a row; [PING_FAILURE_STREAK] of them is a confirmed loss. */
+            /** [PING_FAILURE_STREAK] of them in a row is a confirmed loss. */
             var pingFailures = 0
 
             /**
-             * Cancels every timer this session armed.
-             *
-             * Explicit rather than left to [closeSession]'s scope cancellation: the
-             * jobs are launched via [launchInSession], which falls back to the singleton scope when
-             * no session scope is open, and a reset that only nils the handles would leave such a
-             * job running with nothing able to reach it. The two safety-net timers live with
-             * [SyncPlayRecoveryNets] and are cancelled by its own `reset()`.
+             * Explicit rather than left to [closeSession]'s scope cancellation: [launchInSession]
+             * falls back to the singleton scope when no session scope is open, and nilling the
+             * handles alone would leave such a job running with nothing able to reach it.
              */
             fun cancelJobs() {
                 readyFallbackJob?.cancel()
@@ -327,8 +230,8 @@ class SyncPlayController
             companion object {
                 /**
                  * The [standDown] ending: the server ended the *session*, nobody ended the
-                 * *membership* — so the ignore-wait promise carries over, and (unlike [teardown])
-                 * the clock offset and the rejoin policy's trouble memory are left standing too.
+                 * *membership*, so the ignore-wait promise carries over — as do the clock offset and
+                 * the rejoin policy's trouble memory, unlike [teardown].
                  */
                 fun carriedAcrossStandDown(previous: GroupSessionState) =
                     GroupSessionState(
@@ -337,65 +240,42 @@ class SyncPlayController
             }
         }
 
-        /** The state of the current group session; replaced wholesale when the session ends. */
+        /** Replaced wholesale when the session ends. */
         private var session = GroupSessionState()
 
-        /**
-         * The rejoin state machine: what to take back, when taking it back is right, and the
-         * attempt loop. It drives the membership transitions through
-         * [RejoinDriver], each one under [sessionMutex].
-         */
+        /** Drives its membership transitions through [RejoinDriver], each one under [sessionMutex]. */
         private val rejoinPolicy =
             SyncPlayRejoinPolicy(connectionState, timeSync, clock, scope, RejoinDriver())
 
-        /**
-         * The timer safety nets and the coarse group anchor they fall back on. They read the
-         * controller through [NetsDriver] and act on the player directly.
-         */
         private val recoveryNets =
             SyncPlayRecoveryNets(playerHandle, timeSync, mainDispatcher, NetsDriver())
 
         init {
-            // On the singleton scope rather than a group session, because a rejoin attempt stands the
-            // session down: a sign-out in the middle of one has to be able to abort it, and a watcher
-            // that was cancelled along with the session could not.
+            // On the singleton scope, not a group session: a rejoin attempt stands the session down,
+            // and a sign-out during one has to be able to abort it.
             scope.launch { watchSignOut() }
         }
 
         // Membership intents ------------------------------------------------------------------------
 
-        /** Creates a group and joins it. */
         internal fun createGroup(name: String) {
             scope.launch { startSession(existing = null, newGroupName = name) }
         }
 
-        /**
-         * Joins [group].
-         *
-         * Takes the summary rather than an id because every caller has one (the groups screen lists
-         * them) and the server's own `GroupJoined` refreshes it a moment later anyway — so the
-         * alternative would be a `getGroups` round trip to fill in a name we already knew.
-         */
         internal fun joinGroup(group: SyncPlayGroupSummary) {
             scope.launch { startSession(existing = group, newGroupName = null) }
         }
 
         /**
-         * Leaves the group on the server while the access token still works.
-         *
-         * Called by [SyncPlaySignOutHook] **before** `SessionRepository` revokes the token —
-         * waiting for the [SessionState.LoggedOut] transition would send the leave with a dead
-         * credential, a request guaranteed to 401. The `LoggedOut` transition that follows finds
-         * the session already torn down, so [watchSignOut] has only local memory left to clear.
+         * Called by [SyncPlaySignOutHook] **before** `SessionRepository` revokes the token: waiting
+         * for the [SessionState.LoggedOut] transition would send the leave with a dead credential.
          */
         internal suspend fun leaveBeforeSignOut() {
-            // On the confined scope, like every entry point that touches session state — but
-            // awaited, because `signOut` must not revoke the token until the leave has actually
-            // gone out.
+            // Awaited, not just hopped: `signOut` must not revoke the token until the leave is out.
             withContext(scope.coroutineContext) {
                 rejoinPolicy.forgetLoss()
-                // Awaited so a join in flight cannot land after the leave and strand the
-                // session in the group server-side.
+                // Awaited so a join in flight cannot land after the leave and strand the session in
+                // the group server-side.
                 rejoinPolicy.abandonRejoinAndAwait()
                 if (_state.value is SyncPlayState.Idle) return@withContext
                 leaveOnServer()
@@ -405,10 +285,8 @@ class SyncPlayController
 
         /** Leaves the group. Playback is left exactly as it is, now solo. */
         internal fun leaveGroup() {
-            // On the confined scope, like every entry point that touches session state.
-            // First thing inside it, before anything suspends: clearing the target is the
-            // one signal that the exit is deliberate, and a loss confirmed while the leave is in
-            // flight must find nothing to rejoin.
+            // Clearing the target first, before anything suspends: it is the one signal that the exit
+            // is deliberate, and a loss confirmed mid-leave must find nothing to rejoin.
             scope.launch {
                 rejoinPolicy.forgetLoss()
                 rejoinPolicy.abandonRejoinAndAwait()
@@ -418,21 +296,9 @@ class SyncPlayController
         }
 
         /**
-         * The app is back in front of the user (`ProcessLifecycleOwner`, `ON_START`).
-         *
-         * Two jobs, and which one runs depends on whether the group survived the background:
-         *
-         * - **still in it** — take a ping sample immediately. Between the last one and now the
-         *   platform may have cut this process's network without telling anyone, and the ordinary
-         *   cadence would leave that undiscovered for up to five seconds before the failure streak
-         *   even starts.
-         * - **out of it** — if the membership was lost involuntarily and recently
-         *   (`FOREGROUND_REJOIN_WINDOW_MS`), ask for it back, once. This is the net under the
-         *   presence service: an OEM that kills the service anyway costs the group until the user
-         *   comes back, not for the rest of the evening.
-         *
-         * Anything else — [SyncPlayState.Joining], [SyncPlayState.Rejoining] — is already in the
-         * middle of the conversation this would start.
+         * `ProcessLifecycleOwner`, `ON_START`. In a group, sample the ping immediately: the platform
+         * may have cut this process's network while it was away, which the ordinary cadence would
+         * not even suspect for five seconds. Idle, take a recently-lost membership back, once.
          */
         internal fun onAppForegrounded() {
             scope.launch {
@@ -485,15 +351,11 @@ class SyncPlayController
         // Host attachment ---------------------------------------------------------------------------
 
         /**
-         * Hands the controller a player to drive.
-         *
-         * If the group is already on an item, this is what gets it opened — including the ordinary
-         * case where the user opened that very item themselves, which is adopted rather than
-         * reloaded (see [reconcile]).
+         * If the group is already on an item, this is what gets it opened — an item the user opened
+         * themselves is adopted rather than reloaded (see [reconcile]).
          */
         internal fun attachHost(host: SyncPlayPlaybackHost) {
-            // Hopped onto the confined scope: the handshake bookkeeping this touches is only ever
-            // read and written there, and a main-thread write would race it.
+            // Hopped onto the confined scope: a main-thread write would race the handshake bookkeeping.
             scope.launch {
                 this@SyncPlayController.host = host
                 val current = _state.value as? SyncPlayState.InGroup ?: return@launch
@@ -509,32 +371,21 @@ class SyncPlayController
         }
 
         /**
-         * Gives the player back, keeping the group.
+         * Gives the player back, keeping the group. `setIgnoreWait(true)` is the mechanism
+         * jellyfin-web uses: a member with no player must never keep everyone else in WAITING.
          *
-         * `setIgnoreWait(true)` is the mechanism jellyfin-web uses for exactly this: a member with
-         * no player must never be the reason everyone else is stuck in WAITING. The
-         * group survives, and a later `PlayQueueUpdate` re-launches a player via [launchRequests].
-         *
-         * **The group keeps its reach.** Giving back the *screen* is not giving back the *player*:
-         * `PlaybackService` keeps the shared ExoPlayer alive and playing, so cancelling the
-         * scheduler here would leave a member that goes on playing with the group's commands
-         * landing nowhere, and forcing the phase to `Paused` would shut off the drift monitor
-         * (which runs in `Playing` only) with it — a free-running background member. Neither
-         * happens: commands go on being scheduled and applied, and the phase goes on saying what
-         * the group is doing. Only a full [teardown] or [standDown] cancels the scheduler, because
-         * only those end the timeline it is tracking.
-         *
-         * What still resets is what belongs to the *screen*: [loadedPlaylistItemId] (so a re-attach
-         * may adopt an item the host already holds, see [reconcile]) and [skippedSlots].
+         * **Do not cancel the scheduler or force the phase to `Paused` here.** `PlaybackService`
+         * keeps the shared ExoPlayer alive and playing, so either would leave a member playing on
+         * with the group's commands landing nowhere and the drift monitor (which runs in `Playing`
+         * only) shut off. Only [teardown] and [standDown] end the timeline the scheduler tracks.
          *
          * @param host ignored unless it is the attached one, so a stale ViewModel's teardown cannot
          *   detach the player that replaced it.
          */
         internal fun detachHost(host: SyncPlayPlaybackHost) {
-            // Hopped like [attachHost], and for a sharper reason: `session.skippedSlots.clear()`
-            // from the main thread would race the collectors' own `add`/`clear` on a plain
-            // `HashSet` — a `ConcurrentModificationException` inside the group-updates collector
-            // reads as a lost connection.
+            // Hopped like [attachHost]: `session.skippedSlots.clear()` from the main thread would
+            // race the collectors' own `add`/`clear` on a plain `HashSet`, and the resulting
+            // `ConcurrentModificationException` inside the collector reads as a lost connection.
             scope.launch {
                 if (this@SyncPlayController.host !== host) return@launch
                 this@SyncPlayController.host = null
@@ -548,28 +399,21 @@ class SyncPlayController
         }
 
         /**
-         * Re-enters the handshake because the host started re-negotiating (quality, track, decoder
-         * fallback), which throws away the prepared player and rebuilds it.
-         *
-         * Called by the host rather than inferred, because `PlayerEvent` has no "buffering" —
-         * ExoPlayer's re-prepare is invisible from here, and a group that was not told would keep
-         * playing while this member reloads.
+         * Called by the host rather than inferred: `PlayerEvent` has no "buffering", so ExoPlayer's
+         * re-prepare is invisible from here and the group would keep playing while this member
+         * rebuilds its player.
          */
         internal fun onHostBuffering() {
-            // Hopped onto the confined scope like the other host entry points:
-            // `readyOwedFor` and the scheduler's memory belong to that thread.
             scope.launch {
                 val entry = currentEntry() ?: return@launch
                 setPhase(SyncPlayPhase.Buffering)
-                // The rebuild breaks the player's continuity, so what was applied to the old player
-                // has not been applied to the one that comes back. The server settles this member by
-                // re-sending the standing command verbatim after the ready — same `when`, same
-                // position — and remembering it as applied would dedupe exactly that answer.
-                // Measured on device: a track change left the resumed Unpause dropped as a repeat,
-                // and the blind fallback then jumped from 6:35 to 27:27.
+                // The server settles this member by re-sending the standing command verbatim after
+                // the ready, so remembering it as applied would dedupe exactly that answer. Measured
+                // on device: the resumed Unpause was dropped as a repeat and the blind fallback then
+                // jumped from 6:35 to 27:27.
                 scheduler.forgetApplied()
-                // The player really is being rebuilt, so its own readiness is what ends this
-                // handshake: no fallback, however long the re-negotiation takes.
+                // The player really is being rebuilt, so its own readiness ends this handshake: no
+                // fallback, however long the re-negotiation takes.
                 oweReady(entry, fallbackMillis = null)
                 launchInSession {
                     val snapshot = hostSnapshot()
@@ -603,11 +447,8 @@ class SyncPlayController
         }
 
         /**
-         * The join itself: collect the socket, ask the server, enter the group.
-         *
-         * Shared by the first join and by every rejoin attempt, deliberately — a rejoin that took a
-         * shortcut would be a second protocol implementation, and the handshake is the part that has
-         * to be identical for the server to put this member back in step.
+         * Shared by the first join and by every rejoin attempt: the handshake has to be identical
+         * for the server to put this member back in step.
          *
          * @return `true` when the group was entered. On `false` the session scope is still open and
          *   the caller decides what to do with it.
@@ -648,18 +489,10 @@ class SyncPlayController
         }
 
         /**
-         * Measures the server clock once, before the handshake can produce a command to schedule.
-         *
-         * [SyncPlayTimeSync.offset] is `Duration.ZERO` until something records a sample, and the
-         * pinger only starts in [enterGroup] — so between the join call returning and its first
-         * sample landing, every `SendCommand` would be converted to local time with an *assumed*
-         * offset. On a device whose clock is off by a second that is a second of desync built into
-         * the very first unpause, invisible to everyone including this client.
-         *
-         * Inline rather than on the session scope, because "before the join returns" is the whole
-         * point; a clock exchange is one round trip and the socket is already up. A failure is
-         * logged by the pinger and changes nothing: joining with an unmeasured clock is exactly
-         * where this started, and the pinger corrects it a moment later.
+         * Measures the server clock **before** the handshake can produce a command to schedule:
+         * [SyncPlayTimeSync.offset] is `Duration.ZERO` until a sample lands and the pinger only
+         * starts in [enterGroup], so a device clock off by a second would build that second of
+         * desync into the very first unpause. Inline, not on the session scope, for that ordering.
          */
         private suspend fun warmClock() {
             if (pinger.sampleClock() == null) {
@@ -668,10 +501,8 @@ class SyncPlayController
         }
 
         /**
-         * Waits for the socket to actually be up before the join call goes out.
-         *
-         * Bounded, because a socket that never connects must not block the join for ever: joining
-         * anyway costs at most the initial `PlayQueueUpdate`, and the group is still joined.
+         * Bounded: a socket that never connects must not block the join for ever, and joining anyway
+         * costs at most the initial `PlayQueueUpdate`.
          */
         private suspend fun awaitSocketReady() {
             val connected =
@@ -698,14 +529,12 @@ class SyncPlayController
             openedSession.launch { watchConnectivity() }
             openedSession.launch { watchSocket() }
 
-            // A group already paused when we arrived gets the same net as one that pauses while we
-            // are in it: nothing here can tell "paused before we joined" from "paused a moment ago
-            // and the command was lost", and the net only ever pauses a player that is running.
+            // Nothing here can tell "paused before we joined" from "paused a moment ago and the
+            // command was lost"; the net only ever pauses a player that is running.
             if (entered.state == SyncPlayGroupState.Paused) recoveryNets.armPauseNet()
 
-            // A rejoin lands on a new server session, which knows nothing of the ignore-wait this
-            // client sent when it gave the player back — so a member with no player would silently
-            // start gating the group again.
+            // A rejoin lands on a new server session, which knows nothing of the ignore-wait sent
+            // when the player was given back — a member with no player would gate the group again.
             if (host == null && session.ignoreWaitSent) {
                 openedSession.launch {
                     runCatchingUnlessCancelled { api.setIgnoreWait(true) }
@@ -713,8 +542,8 @@ class SyncPlayController
                 }
             }
 
-            // Off the join path deliberately: opening an item can take a while, and nothing else
-            // should be waiting behind it on the membership lock.
+            // Off the join path: opening an item can take a while, and nothing else should wait
+            // behind it on the membership lock.
             session.pendingQueue?.let { queued ->
                 session.pendingQueue = null
                 openedSession.launch { onQueueChanged(queued) }
@@ -743,8 +572,6 @@ class SyncPlayController
         }
 
         /**
-         * Ends the group session.
-         *
          * Idempotent by way of the state check inside the lock: a connection loss can be reported by
          * both socket collections at once, and the player must be paused once, not twice.
          */
@@ -766,12 +593,7 @@ class SyncPlayController
             }
         }
 
-        /**
-         * The reset both endings share: collaborators stood down, timers cancelled, replay cleared.
-         *
-         * The caller replaces [session] right after — [teardown] with a fresh box, [standDown] with
-         * [GroupSessionState.carriedAcrossStandDown] — which is what resets the fields themselves.
-         */
+        /** The caller must replace [session] right after; this resets no field of it. */
         private fun releaseSession() {
             statusHolder.setInGroup(false)
             statusHolder.setMintedPlaySessionId(null)
@@ -801,15 +623,9 @@ class SyncPlayController
         // Websocket ----------------------------------------------------------------------------------
 
         /**
-         * Collects one socket stream, treating its end as the end of the group.
-         *
          * A [SyncPlaySocket] reconnects on its own and the flow rides through it, so a stream that
-         * *finishes* — normally or with an error — is the transport having given up, which is the
-         * confirmed loss described above. The in-house [OkHttpSyncPlaySocket] retries
-         * for ever and so never finishes; this stays as the seam's contract (and the fake's way of
-         * ending a session in tests), with the ping streak and the connectivity grace as the
-         * operative detectors. Momentary `Disconnected` states on `SyncPlaySocket.connectionState`
-         * are deliberately not watched: they flap.
+         * *finishes* is the transport having given up — a confirmed loss. Momentary `Disconnected`
+         * states on `SyncPlaySocket.connectionState` are deliberately not watched: they flap.
          */
         private suspend fun collectStream(
             name: String,
@@ -829,13 +645,8 @@ class SyncPlayController
         }
 
         /**
-         * Runs one stream event's handler, so a handler bug cannot end the stream.
-         *
-         * With the in-house socket the streams never finish on their own, which would make an
-         * exception thrown by `onGroupUpdate`/`onCommand` the *only* way [collectStream]'s loss
-         * path could fire — a bug mis-read as a lost connection, driving a stand-down and a rejoin
-         * that would hit the same bug again. A handler failure is logged loudly and the next
-         * event is processed; the protocol's own safety nets cover whatever the failed one missed.
+         * A handler bug must not end the stream: with the in-house socket that would be the only way
+         * [collectStream]'s loss path could fire, and the rejoin would hit the same bug again.
          */
         private suspend fun <T : Any> handleStreamEvent(
             name: String,
@@ -856,13 +667,9 @@ class SyncPlayController
         // Losing the connection ------------------------------------------------------------------------
 
         /**
-         * Watches connectivity for a loss worth confirming.
-         *
-         * Both edges, not just the first offline one: a Wi-Fi handover or a two-second blip reports
-         * offline and then online again within a moment, and dropping the group on the transition is
-         * exactly what the plan says must not happen ("never on a transient blip the socket recovers
-         * from"). So going offline opens a [CONNECTIVITY_GRACE_MS] window instead, and coming back
-         * inside it closes the window and re-negotiates.
+         * Both edges, not just the first offline one: a Wi-Fi handover reports offline then online
+         * within a moment, and the group must never be dropped on a transient blip. Going offline
+         * opens a [CONNECTIVITY_GRACE_MS] window; coming back inside it re-negotiates.
          */
         private suspend fun watchConnectivity() {
             connectionState.state
@@ -872,13 +679,8 @@ class SyncPlayController
         }
 
         /**
-         * Connectivity went away; freeze and start counting.
-         *
-         * Freezing rather than playing on is a deliberate choice: five
-         * seconds of playback with no way to hear a pause is five seconds of drift the group cannot
-         * see, and a member that stops for a moment and resumes in step is easier to understand than
-         * one that quietly ends up ahead. It also makes the hard-kill case — where the window will
-         * expire — pause immediately rather than at the end of the grace.
+         * Freezes rather than playing on: playback with no way to hear a pause is drift the group
+         * cannot see, and the hard-kill case pauses immediately instead of at the end of the grace.
          */
         private fun onConnectivityGone() {
             rejoinPolicy.markTrouble()
@@ -906,12 +708,9 @@ class SyncPlayController
         }
 
         /**
-         * Counts ping cycles, and calls a long enough silence what it is.
-         *
-         * The device case this exists for: the OS still reports a usable network while the platform
-         * has quietly cut the app's, so every REST call times out, the socket never reconnects, and
-         * the server disposes the group — with nothing here noticing for minutes. The ping loop
-         * is the only fixed-cadence conversation with the server, so its failures are the signal.
+         * The case this exists for: the OS reports a usable network while the platform has quietly
+         * cut the app's, so every REST call times out and nothing else here would notice for
+         * minutes. The ping loop is the only fixed-cadence conversation with the server.
          */
         private fun onPingOutcome(succeeded: Boolean) {
             if (succeeded) {
@@ -926,11 +725,8 @@ class SyncPlayController
         }
 
         /**
-         * Watches the socket's own state, for the record only.
-         *
-         * Nothing here ends a group — a flapping socket is the SDK doing its job, and reacting to it
-         * is exactly the bug the loss rules avoid. It is collected because a socket that went away
-         * and came back is the *reason* the server no longer has this session in the group, and
+         * For the record only — nothing here ends a group; a flapping socket is the SDK doing its
+         * job. A socket that went away is the *reason* the server dropped this session, and
          * `recentlyTroubled` is what stops an unexplained removal being rejoined.
          */
         private suspend fun watchSocket() {
@@ -940,33 +736,24 @@ class SyncPlayController
         }
 
         /**
-         * Signing out ends any membership, in any state, and forgets it for good.
-         *
-         * Local teardown only: the server-side leave happens in [leaveBeforeSignOut], which the
-         * sign-out flow runs *before* the token is revoked — from here a server
-         * call could only 401. This watcher remains the net under `LoggedOut` transitions that
-         * never ran a hook (a failed restore on app start, where the session is already Idle).
+         * Local teardown only: the server-side leave happens in [leaveBeforeSignOut] before the token
+         * is revoked, so a server call from here could only 401.
          */
         private suspend fun watchSignOut() {
             sessionStateHolder.state.collect { session ->
                 if (session !is SessionState.LoggedOut) return@collect
-                // The memory is cleared even from Idle: a signed-out account must not have a group
-                // taken back for it when somebody signs in and opens the app.
+                // Cleared even from Idle: a signed-out account must not have a group taken back for it.
                 rejoinPolicy.forgetLoss()
                 if (_state.value is SyncPlayState.Idle) return@collect
                 // Awaited, not just cancelled, so a join in flight cannot land after the local
-                // teardown and take the group back for a signed-out account. No server call from
-                // here: the token is already revoked, and [leaveBeforeSignOut] did the server-side
-                // leave while it still worked.
+                // teardown and take the group back for a signed-out account.
                 rejoinPolicy.abandonRejoinAndAwait()
                 teardown(message = null, pausePlayer = false)
             }
         }
 
         private suspend fun onGroupUpdate(event: SyncPlayGroupEvent) {
-            // The class name only, never the payload: `UserJoined`/`UserLeft` and the participant
-            // lists carry other accounts' display names, which stay out of the log for the same
-            // reason the local username does.
+            // The class name only, never the payload: `UserJoined`/`UserLeft` carry display names.
             Timber.d("SyncPlay group update: %s", event::class.simpleName)
             when (event) {
                 is SyncPlayGroupEvent.Joined -> onJoined(event.group)
@@ -976,8 +763,7 @@ class SyncPlayController
                 is SyncPlayGroupEvent.UserJoined -> updateGroup { it.copy(participants = it.participants + event.name) }
                 is SyncPlayGroupEvent.UserLeft -> updateGroup { it.copy(participants = it.participants - event.name) }
                 SyncPlayGroupEvent.NotInGroup -> rejoinPolicy.onMembershipGone()
-                // Definitive, and nothing a rejoin could undo: the id this client would ask for is
-                // the one the server has just said does not exist.
+                // Nothing a rejoin could undo: the id it would ask for is the one just declared gone.
                 SyncPlayGroupEvent.GroupGone -> forgetAndTearDown(SyncPlayMessage.GroupEnded)
                 SyncPlayGroupEvent.LibraryAccessDenied -> forgetAndTearDown(SyncPlayMessage.LibraryAccessDenied)
             }
@@ -1001,11 +787,7 @@ class SyncPlayController
 
         // Taking the group back --------------------------------------------------------------------
 
-        /**
-         * The membership operations [SyncPlayRejoinPolicy] drives, each under [sessionMutex] —
-         * the rejoin runs through the same [performJoin]/[standDown] entry points every other
-         * membership change uses.
-         */
+        /** Each operation under [sessionMutex], through the same entry points every join uses. */
         private inner class RejoinDriver : SyncPlayRejoinPolicy.SessionDriver {
             override suspend fun standDownForRejoin(target: SyncPlayGroupSummary): Boolean =
                 sessionMutex.withLock {
@@ -1015,14 +797,9 @@ class SyncPlayController
                 }
 
             /**
-             * Enters `Rejoining` from idle — the foreground re-check.
-             *
-             * Everything a group session needs was already released by the teardown that got
-             * here, so there is nothing to tear down and nothing to pause — only the state to
-             * set, so that [attemptJoin] and [enterGroup] behave exactly as they do on every
-             * other rejoin. The one thing restored by hand is the ignore-wait: with no player
-             * attached this member must not be why the whole group sits in WAITING, and
-             * [enterGroup] sends it only when it believes one was owed.
+             * The foreground re-check: the teardown that got here already released everything, so
+             * only the state is set. The ignore-wait is restored by hand — with no player attached
+             * this member must not be why the whole group sits in WAITING.
              */
             override suspend fun standUpFromIdle(target: SyncPlayGroupSummary): Boolean =
                 sessionMutex.withLock {
@@ -1065,11 +842,8 @@ class SyncPlayController
         }
 
         /**
-         * Ends the group session that the server has already ended, keeping `rejoinTarget`.
-         *
-         * Everything [teardown] resets except what [GroupSessionState.carriedAcrossStandDown]
-         * names — and the clock offset, because it is the same server and the rejoin handshake
-         * needs it immediately.
+         * Ends the session the server has already ended, keeping `rejoinTarget` — and the clock
+         * offset, because it is the same server and the rejoin handshake needs it immediately.
          */
         private suspend fun standDown(target: SyncPlayGroupSummary) {
             Timber.w("Lost the SyncPlay membership of %s server-side; taking it back", target.id)
@@ -1081,27 +855,16 @@ class SyncPlayController
         }
 
         /**
-         * Mirrors the group's own state onto [SyncPlayState.InGroup.groupState], and onto this
-         * member's phase — except `Playing`.
+         * The phase mirrors the group's state **except `Playing`**, which is owned by the applied
+         * unpause: only that knows the anchor, and taking it from a state update would leave the
+         * drift monitor nothing to measure.
          *
-         * `Playing` is owned by the applied unpause, because that is the only thing that knows the
-         * anchor; taking it from a state update would give the drift monitor nothing to measure. It
-         * is still recorded, in `groupPlayingAnchor`, as the coarse reading the safety net falls
-         * back on when no unpause turns up at all.
+         * **WAITING pauses** — a member playing on behind the overlay drifts ahead (measured at
+         * seven seconds over eight on device). The *player* is asked whether it is running, not the
+         * phase: the phase is the thing that lies after a lost command.
          *
-         * **WAITING pauses.** The group entering `Waiting` means it is stalled on somebody, and a
-         * member that keeps playing behind the overlay is not waiting, it is drifting ahead —
-         * measured at seven seconds over eight on device. jellyfin-web pauses here and so do
-         * we. It is a command-like application, not a handshake: nothing is reported, and the
-         * position is held for the resume the server will schedule. The player itself is asked
-         * whether it is running, deliberately: the phase is the thing that lies after a lost
-         * command, and a member whose phase says `Paused` over a player that is still playing is
-         * exactly the case the hold exists for.
-         *
-         * **PAUSED arms a net.** The pause the group named reaches this member as a `SendCommand`
-         * and nothing here acts locally — but a command that never arrives leaves this member
-         * playing on for ever, with the drift monitor (which runs in `Playing` only) shut off along
-         * with it. See `armPauseNet`: the mirror image of `armSelfSync`.
+         * **PAUSED arms a net**, because a pause command that never arrives would leave this member
+         * playing for ever with the drift monitor (which runs in `Playing` only) shut off with it.
          */
         private suspend fun onGroupStateChanged(groupState: SyncPlayGroupState) {
             val resumedFromPause =
@@ -1111,14 +874,14 @@ class SyncPlayController
                 recoveryNets.groupPlayingAnchor =
                     (if (resumedFromPause) parkedPlayerAnchor() else null) ?: inferredGroupAnchor()
                 recoveryNets.cancelPauseNet()
-                // Either order is possible — the state update can beat this member's own `ready` or
-                // trail it — so the net is armed from both ends. It disarms on the first command.
+                // The state update can beat this member's own `ready` or trail it, so the net is
+                // armed from both ends. It disarms on the first command.
                 recoveryNets.armSelfSync()
                 return
             }
             recoveryNets.groupPlayingAnchor = null
-            // Structural rather than incidental: a self-sync armed while the group was playing must
-            // never start playback in a group that has since stopped.
+            // A self-sync armed while the group was playing must never start playback in a group
+            // that has since stopped.
             recoveryNets.cancelSelfSync()
             if (groupState == SyncPlayGroupState.Waiting && isPlayerRunning()) {
                 Timber.d("SyncPlay group is waiting; holding this member where it is")
@@ -1134,16 +897,9 @@ class SyncPlayController
         }
 
         /**
-         * Where the group is now, from its queue update alone — the only reading a wedge leaves.
-         *
-         * **The instant is the queue's, not this moment's.** `startPositionTicks` is where the group
-         * was when it last published the queue, so pairing it with `serverNow()` claims the group has
-         * not moved since — and everything downstream then measures against a timeline that is behind
-         * the real one by however long ago the update was. That is the browser-resume desync in the
-         * bug report: `selfSyncToGroup` seeks to a position seconds short, and the drift monitor,
-         * handed the same anchor, defends the wrong timeline instead of closing the gap
-         * (`syncplay-bugreport.md`, "keeping a desynchronization of a few seconds initially, somehow
-         * growing from there"). `lastUpdate` is the instant the position was actually true at.
+         * **The instant is the queue's `lastUpdate`, not `serverNow()`.** `startPositionTicks` is
+         * where the group was when it last published the queue; pairing it with now claims the group
+         * has not moved since, and everything downstream then defends a timeline seconds behind.
          */
         private fun inferredGroupAnchor(): SyncPlayAnchor? {
             val queue = (_state.value as? SyncPlayState.InGroup)?.queue ?: return null
@@ -1151,17 +907,11 @@ class SyncPlayController
         }
 
         /**
-         * The group's position read off this member's own parked player — the anchor a
-         * pause-to-playing transition trusts before the queue's.
-         *
-         * A group leaving `Paused` resumes from the position it froze at, and every pause path ends
-         * with this member parked exactly there: the pause command seeks before it pauses, the
-         * elicited repeat does the same, and a parked player does not move. The queue's reading
-         * ([inferredGroupAnchor]) dates from its `lastUpdate` and goes stale the moment any
-         * pause/resume happens without a queue update — device run 3 measured the fallback turning a
-         * 6:03 seek into a 23:17 landing off a seventeen-minute-old queue. A player still running is
-         * no anchor (it may be the very member that missed the pause), and neither is one with
-         * nothing loaded: both fall back to the queue.
+         * Trusted before the queue's anchor on a pause-to-playing transition: every pause path parks
+         * this member at the position the group froze at, while [inferredGroupAnchor] goes stale the
+         * moment a pause/resume happens without a queue update — measured on device turning a 6:03
+         * seek into a 23:17 landing off a seventeen-minute-old queue. A player still *running* is no
+         * anchor (it may be the member that missed the pause), nor is one with nothing loaded.
          */
         private suspend fun parkedPlayerAnchor(): SyncPlayAnchor? {
             if (session.loadedPlaylistItemId == null) return null
@@ -1176,10 +926,9 @@ class SyncPlayController
                 session.pendingQueue = queue
                 return
             }
-            // Queues can arrive out of order — most concretely the pre-join stash replayed by
-            // [enterGroup] racing a live update the collector applied first — and an
-            // older queue applied over a newer one loads the slot the group already left.
-            // `lastUpdate` is the server's own publication instant, so strictly-older is stale.
+            // Queues can arrive out of order (the pre-join stash replayed by [enterGroup] racing a
+            // live update), and an older queue applied over a newer one loads the slot the group
+            // already left. `lastUpdate` is the server's own publication instant.
             val known = current.queue
             if (known != null && queue.lastUpdate.isBefore(known.lastUpdate)) {
                 Timber.d("Ignoring a stale SyncPlay queue from %s; already on %s", queue.lastUpdate, known.lastUpdate)
@@ -1193,19 +942,14 @@ class SyncPlayController
         }
 
         /**
-         * Makes the player show what the group is on.
-         *
-         * The decision itself is pure — [decideReconcile], which owns the
-         * four-outcome rule and the slot-not-item identity; this function only gathers its inputs
-         * and acts on the result, so `loadedPlaylistItemId` has exactly one write site per
-         * outcome.
+         * The decision itself is pure ([decideReconcile], which owns the slot-not-item identity);
+         * this only gathers inputs and acts, so `loadedPlaylistItemId` has one write site per outcome.
          */
         private suspend fun reconcile(queue: SyncPlayGroupQueue) {
             val entry = queue.playingEntry
             val snapshot =
                 if (host != null && entry != null && entry.playlistItemId != session.loadedPlaylistItemId) {
-                    // The one branch set that can need the host's reading; a same-slot update must
-                    // not pay the main-thread hop for a snapshot nothing looks at.
+                    // A same-slot update must not pay the main-thread hop for an unread snapshot.
                     hostSnapshot()
                 } else {
                     null
@@ -1258,11 +1002,9 @@ class SyncPlayController
                 try {
                     attached.loadItem(entry.itemId, queue.startPositionTicks)
                 } catch (cancellation: CancellationException) {
-                    // Not necessarily *our* cancellation: the host runs the load on its own scope,
-                    // and a screen dismissed mid-load cancels it from under us. A cancelled load
-                    // says nothing about the item — reporting it unplayable here would skip the
-                    // queue forward for the whole group on a Back press. A real cancellation of
-                    // this coroutine still propagates.
+                    // Not necessarily *our* cancellation: the host loads on its own scope, so a
+                    // screen dismissed mid-load cancels it from under us, and reporting the item
+                    // unplayable would skip the queue forward for the whole group on a Back press.
                     currentCoroutineContext().ensureActive()
                     Timber.d(cancellation, "A SyncPlay item load was cancelled; leaving the queue alone")
                     session.loadedPlaylistItemId = null
@@ -1277,22 +1019,13 @@ class SyncPlayController
         }
 
         /**
-         * The host already holds the item the group is on — run the handshake around it rather than
-         * reloading it.
+         * The host already holds the item: the handshake without the load. `buffering` is reported
+         * first rather than `ready` — that is what puts the group back to waiting on this member,
+         * which is what earns the unpause that clears the overlay.
          *
-         * The same three steps [reconcile]'s load branch takes, minus the load: phase to
-         * `Buffering`, owe the `ready`, tell the group this member is buffering. Reporting `ready`
-         * on the spot would be a claim about a player that has very often only just been handed
-         * the item — the launch-request route (the group's `PlayQueueUpdate` opens a player
-         * through `launchRequests`) adopts within a moment of `prepare`, before any readiness. A
-         * `ready` for a player that is not leaves this member under the WAITING overlay while the
-         * group moves on; reporting `buffering` first is also what puts the group back to waiting
-         * on us, which is what earns the unpause that clears the overlay.
-         *
-         * The fallback is [SETTLED_READY_FALLBACK_MS] rather than `null`, unlike the load branch,
-         * precisely because the player is already prepared: it may have passed its readiness before
-         * the host was attached and would then never announce itself again, wedging the whole group
-         * on a `ready` that could not come.
+         * The fallback is [SETTLED_READY_FALLBACK_MS], not `null` as in the load branch: an
+         * already-prepared player may have passed its readiness before the host was attached and
+         * would then never announce itself, wedging the group on a `ready` that cannot come.
          */
         private suspend fun adoptOpenItem(
             entry: SyncPlayQueueEntry,
@@ -1311,13 +1044,9 @@ class SyncPlayController
         }
 
         /**
-         * The group re-sent a queue this member is already on.
-         *
-         * Usually nothing to do — every reorder, removal, shuffle and repeat change lands here. But
-         * some of those updates come with `SetAllBuffering(true)` on the server side (a new playlist,
-         * a new current item, next, previous), which means the group has gone back to waiting on
-         * *everyone*, this member included, and will sit there until it hears a `ready`. The player
-         * is already prepared, so the answer is one report rather than a reload.
+         * Some queue updates come with `SetAllBuffering(true)` server-side (new playlist, new current
+         * item, next, previous): the group is waiting on everyone again and sits there until it
+         * hears a `ready`. The player is already prepared, so the answer is one report.
          */
         private suspend fun onSameSlotUpdate(
             entry: SyncPlayQueueEntry,
@@ -1334,17 +1063,9 @@ class SyncPlayController
         }
 
         /**
-         * The group is on something this device cannot open.
-         *
-         * A group's queue is not filtered for this client: it can hold an audio track, an item whose
-         * file has gone, or something this account may not see — and the resolver refuses all three,
-         * which is what `loadItem` returning `false` means here. The controller cannot tell them
-         * apart (it holds item ids, not metadata) and does not need to: the answer is the same, say
-         * so and ask the group to move on rather than sit there gating everyone.
-         *
-         * Asking to move on is also how this turns into a loop, so each slot is skipped **once**.
-         * A queue of unplayable items therefore costs one
-         * pass and then stops, instead of cycling for as long as the group exists.
+         * A group's queue is not filtered for this client, so `loadItem` returning `false` is normal.
+         * Asking the group to move on produces another `PlayQueueUpdate`, so each slot is skipped
+         * **once** — a queue of unplayable items costs one pass rather than cycling for ever.
          */
         private suspend fun onEntryUnplayable(entry: SyncPlayQueueEntry) {
             Timber.w("SyncPlay could not open item %s", entry.itemId)
@@ -1369,11 +1090,9 @@ class SyncPlayController
         }
 
         /**
-         * A readiness the group is waiting for — and only that one.
-         *
-         * The player becomes ready again after every seek and every pause the scheduler applies, and
-         * a report the group did not ask for is answered with the very command that caused it. See
-         * the class docs; [readyOwedFor] is the whole of the rule.
+         * A readiness the group is waiting for, and only that one: the player becomes ready again
+         * after every applied seek and pause, and an unasked-for report is answered with the very
+         * command that caused it.
          */
         private suspend fun onPlayerReady() {
             val entry = currentEntry() ?: return
@@ -1385,13 +1104,9 @@ class SyncPlayController
         }
 
         /**
-         * Records that the group has been told to wait on this member.
-         *
-         * @param fallbackMillis when set, how long to wait for the player to announce itself before
-         *   reporting `ready` anyway. Needed where the player has no reason to re-buffer and so will
-         *   never emit a readiness — a seek to where it already is, or a re-negotiation after a
-         *   connectivity blip that never actually stopped it. `null` where the player really is
-         *   being rebuilt and its own readiness is the honest answer.
+         * @param fallbackMillis how long to wait for the player to announce itself before reporting
+         *   `ready` anyway — needed wherever the player has no reason to re-buffer (a seek to where
+         *   it already is). `null` where it really is being rebuilt.
          */
         private fun oweReady(
             entry: SyncPlayQueueEntry,
@@ -1403,9 +1118,9 @@ class SyncPlayController
                 fallbackMillis?.let { millis ->
                     launchInSession {
                         delay(millis)
-                        // Identity-guarded: an unconditional nil
-                        // here could orphan a replacement's handle. Cleared *before* reportReady,
-                        // whose own disarm must not cancel the very job that is reporting.
+                        // Identity-guarded, and cleared *before* reportReady: an unconditional nil
+                        // could orphan a replacement's handle, and reportReady's own disarm must not
+                        // cancel the job that is reporting.
                         if (session.readyFallbackJob === coroutineContext[Job]) session.readyFallbackJob = null
                         val current = currentEntry() ?: return@launchInSession
                         if (session.readyOwedFor != current.playlistItemId) return@launchInSession
@@ -1415,10 +1130,6 @@ class SyncPlayController
                 }
         }
 
-        /**
-         * What [SyncPlayRecoveryNets] reads of this controller, and the two things it may do to
-         * it (publish a self-synced phase, send the ordinary group requests).
-         */
         private inner class NetsDriver : SyncPlayRecoveryNets.Driver {
             override fun state(): SyncPlayState = _state.value
 
@@ -1440,23 +1151,19 @@ class SyncPlayController
             }
 
         /**
-         * Re-enters the handshake from a player that is already prepared — see [onConnectivityBack].
-         *
-         * The first request after a blip is also the first chance to find out that the membership did
-         * not survive it. Usually the server answers that on the websocket (`NotInGroup`), but a
-         * refusal on the REST call says the same thing sooner, so it is treated the same way.
+         * Re-enters the handshake from an already-prepared player ([onConnectivityBack]). The first
+         * request after a blip is also the first chance to learn the membership did not survive it,
+         * so a REST refusal is treated like the websocket's own `NotInGroup`.
          */
         private suspend fun renegotiate() {
             val entry = currentEntry() ?: return
             setPhase(SyncPlayPhase.Buffering)
-            // The blip may have cost this member commands it will never see; the server's answer to
-            // the coming ready is a verbatim re-send, which the applied-memory would dedupe away
-            // (see onHostBuffering). The player survived, but the timeline's continuity did not.
+            // The server answers the coming ready with a verbatim re-send, which the applied-memory
+            // would dedupe away (see onHostBuffering).
             scheduler.forgetApplied()
             val snapshot = hostSnapshot()
-            // The shared player's own reading when no screen is attached: a detached member plays
-            // on in the background, and a buffering report at 0 would misstate it by the whole
-            // watched duration.
+            // The shared player's reading when no screen is attached: a detached member plays on in
+            // the background, and a buffering report at 0 would misstate it by the whole duration.
             val positionTicks =
                 snapshot?.positionTicks
                     ?: withContext(mainDispatcher) { playerHandle.snapshot() }.positionTicks
@@ -1490,24 +1197,14 @@ class SyncPlayController
         }
 
         /**
-         * Answers the group's wait, once — from a player that has been **parked** for it.
+         * Clearing [readyOwedFor] *before* the call is what makes this happen once: the report is a
+         * round trip, and a second readiness arriving inside it would send a second one.
          *
-         * Clearing [readyOwedFor] *before* the call is what makes it once: the report is a round
-         * trip, and a second readiness arriving inside it would otherwise send a second one.
-         *
-         * **A member reporting `ready` is stopped, and says so.** The handshake the design is built
-         * on is open-paused → buffering → `ready` → *the server's unpause starts playback*, and
-         * `WaitingGroupState` enforces it: a
-         * `ReadyGroupRequest` from a resuming group whose reporter is more than `2 × highestPing`
-         * behind is answered `AllExceptCurrentSession` **when `request.IsPlaying` is true** — the
-         * group is told to resume and the reporter is deliberately sent nothing, on the assumption
-         * that a client already playing will catch up by playing (`WaitingGroupState.cs`:484-498).
-         * Several of our paths report while the player really is running — the post-seek settle, the
-         * adopt path, the re-negotiation after a blip — and each of them would strand this member
-         * under the WAITING overlay until somebody else moved the group. So [parkForReady] stops
-         * the player first and the report then carries `isPlaying = false`, which is both what
-         * jellyfin-web does and the truth. Parking is idempotent: a player already stopped is not
-         * touched.
+         * **A member reporting `ready` must be stopped, and say so.** `WaitingGroupState` answers a
+         * `ReadyGroupRequest` whose `IsPlaying` is true by resuming everyone *else*, assuming a
+         * client already playing will catch up on its own — which strands this member under the
+         * WAITING overlay. So [parkForReady] stops the player first and the report carries
+         * `isPlaying = false`.
          */
         private suspend fun reportReady(entry: SyncPlayQueueEntry) {
             session.readyOwedFor = null
@@ -1529,21 +1226,10 @@ class SyncPlayController
         }
 
         /**
-         * Stops the player where it stands, so the `ready` about to go out is true — see [reportReady].
-         *
-         * On the main dispatcher and in one pass, deliberately: the position reported has to be the
-         * position the player is parked at, and reading it from a second snapshot taken after the
-         * pause would only add the jitter of a dispatch. The host's own reading where one is
-         * attached, the shared player's otherwise — a detached member goes on playing in the
-         * background (see [detachHost]), and it is exactly as unwelcome a `ready` from a running
-         * player as an attached one.
-         *
-         * Nothing else changes: `armSelfSync` still runs after the report, so a member the group
-         * never answers is still recovered three seconds later by the self-sync net.
-         *
-         * With no host attached the **shared player's** snapshot answers for both the running
-         * check and the position: a detached member forty minutes in would otherwise report
-         * `ready` at 0, and the server holds and schedules the group off reported positions.
+         * One pass on the main dispatcher: the position reported has to be the one the player is
+         * parked at, and a second snapshot after the pause would only add dispatch jitter. With no
+         * host attached the *shared* player answers both questions — a detached member forty minutes
+         * in would otherwise report `ready` at 0, and the server schedules the group off that.
          */
         private suspend fun parkForReady(): ParkedForReady =
             withContext(mainDispatcher) {
@@ -1557,30 +1243,27 @@ class SyncPlayController
                 ParkedForReady(hostSnapshot?.positionTicks ?: playback.positionTicks, running)
             }
 
-        /** What [parkForReady] found: where the player stands, and whether it had to be stopped. */
         private data class ParkedForReady(
             val positionTicks: Long,
             val parked: Boolean,
         )
 
         private fun onCommand(command: SyncPlayCommand) {
-            // Logged on arrival as well as on application: "the command never came" and "the command
-            // came and did nothing" are the two halves of every desync, and only the pair tells them
-            // apart in a device log.
+            // Logged on arrival as well as on application: only the pair distinguishes "the command
+            // never came" from "the command came and did nothing" in a device log.
             Timber.d("SyncPlay command %s for %s (emitted %s)", command.type, command.whenInstant, command.emittedAt)
             if (_state.value !is SyncPlayState.InGroup) return
             scheduler.schedule(command)
         }
 
         private suspend fun onCommandApplied(applied: SyncPlayAppliedCommand) {
-            // The group has spoken, so neither safety net is needed for this handshake.
             recoveryNets.cancelSelfSync()
             recoveryNets.cancelPauseNet()
             val phase =
                 when (applied.command.type) {
                     SyncPlayCommandType.Unpause -> applied.anchor?.let(SyncPlayPhase::Playing) ?: SyncPlayPhase.Paused
-                    // A seek invalidates whatever anchor was current, so it drops out of Playing
-                    // too — the unpause that follows the group's re-handshake sets the next one.
+                    // A seek invalidates the current anchor; the unpause after the group's
+                    // re-handshake sets the next one.
                     else -> SyncPlayPhase.Paused
                 }
             setPhase(phase)
@@ -1592,7 +1275,6 @@ class SyncPlayController
             }
         }
 
-        /** Runs the drift monitor for exactly as long as there is an anchor to run it against. */
         private suspend fun observeAnchor() {
             state
                 .map { ((it as? SyncPlayState.InGroup)?.phase as? SyncPlayPhase.Playing)?.anchor }
@@ -1603,10 +1285,8 @@ class SyncPlayController
         // Plumbing -----------------------------------------------------------------------------------
 
         /**
-         * Issues one server request, in a group only.
-         *
-         * Every user transport action funnels through here, which is where the one rule is
-         * enforced structurally: there is no path from an intent to [playerHandle].
+         * Every user transport action funnels through here, which is where the one rule is enforced
+         * structurally: there is no path from an intent to [playerHandle].
          */
         private fun request(block: suspend () -> Unit) {
             if (_state.value !is SyncPlayState.InGroup) {
@@ -1647,16 +1327,9 @@ class SyncPlayController
         }
 
         /**
-         * Whether this member is actually playing, for a `buffering` report.
-         *
-         * A blanket `false` would be a lie the *server* acts on: it tracks
-         * what each member reported and jellyfin-web sends its real state here. The host's own
-         * reading where one is attached, the shared player otherwise — a detached member goes on
-         * playing in the background (see [detachHost]), so `false` is only right when nothing is
-         * running at all.
-         *
-         * **Buffering only.** A `ready` is reported from a player [parkForReady] has just stopped,
-         * so its answer is `false` by construction rather than by measurement — see [reportReady].
+         * For a `buffering` report only: a blanket `false` would be a lie the *server* acts on. A
+         * `ready` is reported from a player [parkForReady] has just stopped, so its answer is
+         * `false` by construction.
          */
         private suspend fun reportedIsPlaying(snapshot: SyncPlayHostSnapshot?): Boolean =
             snapshot?.isPlaying ?: isPlayerRunning()
@@ -1666,36 +1339,19 @@ class SyncPlayController
             const val SOCKET_READY_TIMEOUT_MS = 5_000L
 
             /**
-             * How long connectivity may be gone before the group is given up on, in milliseconds.
-             *
-             * Long enough to ride out a Wi-Fi handover or the two-second blip that ejected the group
-             * on device, short enough that a genuinely dead connection is admitted while the
-             * user is still looking at the screen. Playback is frozen for the duration either way,
-             * so the cost of being wrong is a pause, not a drift.
+             * Long enough to ride out the two-second Wi-Fi blip that ejected the group on device;
+             * playback is frozen for the duration, so the cost of being wrong is a pause, not drift.
              */
             const val CONNECTIVITY_GRACE_MS = 5_000L
 
-            /**
-             * Consecutive failed ping cycles that count as a lost connection.
-             *
-             * Three at the pinger's five-second cadence is about fifteen seconds of silence — long
-             * enough not to fire on one timed-out request, short enough to beat the server's own
-             * group disposal.
-             */
+            /** Three at the pinger's five-second cadence: ~15 s, which beats the server's disposal. */
             const val PING_FAILURE_STREAK = 3
 
-            /**
-             * How long an owed `ready` waits for a player that may never re-buffer, in milliseconds.
-             *
-             * Only used where the player is already prepared and the handshake is a formality — a
-             * seek to where it stands, a re-negotiation after a blip.
-             */
+            /** How long an owed `ready` waits for a player that may never re-buffer, in millis. */
             const val SETTLED_READY_FALLBACK_MS = 1_500L
 
             /**
-             * Queue updates that put every member back to buffering on the server.
-             *
-             * `WaitingGroupState` calls `SetAllBuffering(true)` for each of them, and then waits for
+             * `WaitingGroupState` calls `SetAllBuffering(true)` for each of these and then waits for
              * a `ready` from everyone — including a member whose playing slot did not change.
              */
             private val READY_OWING_REASONS =

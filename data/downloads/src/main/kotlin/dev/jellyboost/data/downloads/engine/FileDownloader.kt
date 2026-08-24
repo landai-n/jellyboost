@@ -25,11 +25,9 @@ import kotlin.coroutines.coroutineContext
 import kotlin.coroutines.resumeWithException
 
 /**
- * An HTTP response the download cannot use, carrying the status code.
- *
- * The code is not decoration: `403` on the media file is how a server tells this client that the
- * user's `enableContentDownloading` policy is off, and the queue answers it by re-planning that one
- * file onto the static video stream instead of failing the item.
+ * An HTTP response the download cannot use. The code is not decoration: `403` on the media file is
+ * how a server tells this client the user's `enableContentDownloading` policy is off, and the queue
+ * answers it by re-planning that one file onto the static video stream rather than failing the item.
  */
 internal class DownloadHttpException(
     val code: Int,
@@ -39,8 +37,7 @@ internal class DownloadHttpException(
 /** Reported every [FileDownloader.BUFFER_BYTES]; the caller decides how often it reaches Room. */
 internal fun interface ProgressCallback {
     /**
-     * @param bytesDownloaded total bytes of the file present locally, *including* whatever a
-     *   previous run had already written — not the bytes of this run.
+     * @param bytesDownloaded bytes of the file present locally, *including* what a previous run wrote.
      * @param bytesTotal the file's full size, or `0` when the server did not say.
      */
     suspend fun onProgress(
@@ -52,15 +49,10 @@ internal fun interface ProgressCallback {
 /**
  * Sees every byte of the response body as it is written, in order and without gaps.
  *
- * The one consumer is [MkvClusterScanner], which reads a transcode's media timestamps out of the
- * stream so its finished size can be projected while it is still arriving. It is a *tap*, not a
- * transform: the bytes have already been written to disk when this is called, nothing here can
- * change them, and an implementation must not block — it runs inside the copy loop.
- *
- * Chunks are whatever the copy loop wrote — one full [FileDownloader.BUFFER_BYTES] buffer, and a
- * shorter tail at the end of the body. An implementation must not assume a size: "in order and
- * without gaps" is the whole contract, and it is what lets an element straddling two chunks be
- * carried forward.
+ * A *tap*, not a transform: the bytes have already been written to disk when this is called, and an
+ * implementation must not block — it runs inside the copy loop. Chunks are whatever the copy loop
+ * wrote, so nothing may assume a size; "in order and without gaps" is the whole contract, and it is
+ * what lets an element straddling two chunks be carried forward.
  */
 internal fun interface MediaChunkSink {
     /** [length] bytes of the body, starting at [offset] in [buffer]. The array is reused. */
@@ -74,38 +66,22 @@ internal fun interface MediaChunkSink {
 /**
  * Downloads one file over OkHttp, resuming from whatever is already on disk.
  *
- * This is the engine the plan points at jellyfin-android's `downloads/FileDownloader.kt` for, and
- * the reason the plan chose OkHttp over the system `DownloadManager` in the first place: an
- * `Authorization` header, byte-level progress, and an HTTP `Range` request that picks up exactly
- * where a killed process left off.
+ * The partial file *is* the bookmark: its length is the resume offset, so no separate state has to
+ * survive a process death and none can disagree with the bytes on disk. The request goes out as
+ * `Range: bytes=<existing length>-`; `206` means the server honoured it and the body is appended,
+ * `200` means it ignored `Range` (some proxies do) so the file is truncated and rewritten from zero
+ * rather than corrupted by a second copy, and `416` means the file was already complete.
  *
- * ### How resume works
- * The partial file *is* the bookmark. Its length is the resume offset, so no separate state has to
- * survive a process death and no state can disagree with the bytes on disk:
- *
- * - the request goes out as `Range: bytes=<existing length>-`;
- * - `206 Partial Content` → the server honoured it, and the body is appended from that offset;
- * - `200 OK` → the server ignored `Range` (some proxies do), so the file is truncated and rewritten
- *   from zero rather than silently corrupted by appending a second copy;
- * - `416 Range Not Satisfiable` → the file was already complete; nothing is transferred.
- *
- * ### The one thing that cannot be resumed
- * A **transcode** is not a file; it is an encode the server runs while it answers. A second run
- * produces different bytes at the same offset, so appending its body to the first run's prefix
- * splices two encodes into one container: a file that still opens, still has `Cues` ending exactly
- * at its last byte, and would earn a `SeekHead` pointing into the middle of the wrong encode. The
- * server usually says so itself by ignoring `Range` and answering `200` — but that is the server
- * being careful, not this client. So a transcoded download never asks to resume: see [download]'s
+ * A **transcode** is not a file but an encode the server runs while it answers: a second run produces
+ * different bytes at the same offset, so appending splices two encodes into one container — a file
+ * that still opens, still has `Cues` ending at its last byte, and would earn a `SeekHead` pointing
+ * into the middle of the wrong encode. So a transcoded download never asks to resume; see [download]'s
  * `transcoded` parameter.
  *
- * ### Cancellation
- * Cancelling the coroutine cancels the OkHttp call and stops the write loop, leaving the partial
- * file in place — that is precisely what makes it resumable. Nothing here ever deletes a file.
- *
- * The call is cancelled during the **body** as well as while awaiting the headers: the copy loop's
- * blocking `read` cannot be reached by coroutine cancellation on its own, so a watcher coroutine
- * holds the [Call] and cancels it the moment the download's job is — which fails the blocked read
- * immediately instead of waiting out the socket.
+ * Cancelling the coroutine cancels the call and stops the write loop, leaving the partial file in
+ * place — nothing here ever deletes a file. The call is cancelled during the **body** as well: the
+ * copy loop's blocking `read` is out of coroutine cancellation's reach, so a watcher coroutine holds
+ * the [Call] and cancels it, failing the read at once instead of waiting out the socket.
  */
 @Singleton
 internal class FileDownloader
@@ -117,16 +93,12 @@ internal class FileDownloader
         /**
          * Fetches [url] into [target], appending to it when it already holds part of the file.
          *
-         * @param chunkSink an optional tap on the body as it is written; see [MediaChunkSink]. It
-         *   is deliberately declared before [onProgress] so the callback stays a trailing lambda at
-         *   every call site.
          * @param transcoded whether [url] is a live transcode rather than a file the server already
          *   holds. One is un-resumable by nature, so no `Range` is asked for and a `206` answered
-         *   anyway is treated exactly like a `200`: truncate and start over. Half of a discarded
-         *   encode costs bandwidth; splicing two encodes together costs the download.
+         *   anyway is treated exactly like a `200`: truncate and start over. Half of a discarded encode
+         *   costs bandwidth; splicing two encodes together costs the download.
          * @return the total number of bytes the file holds once this call returns.
-         * @throws IOException on any transport or HTTP failure the caller should treat as a
-         *   download failure.
+         * @throws IOException on any transport or HTTP failure the caller should treat as a failure.
          */
         @Suppress("LongParameterList")
         suspend fun download(
@@ -145,18 +117,15 @@ internal class FileDownloader
                 val call = newCall(url, resumeFrom)
                 val response = awaitUsableResponse(call, url)
                 // `use` outside `cancellingCall`, not inside it: `cancellingCall` opens a
-                // `coroutineScope`, and a scope entered in an already-cancelled coroutine throws
-                // before it ever runs the block. With the `use` inside, a pause or a delete landing
-                // in that hairline window would leave the response — and the connection under it
-                // — open for the pool to discover later. Out here the response
-                // is closed on every path, cancellation included, and there is no suspension point
-                // between the two lines for a cancellation to arrive at.
+                // `coroutineScope`, and a scope entered in an already-cancelled coroutine throws before
+                // it ever runs the block — leaving the response, and the connection under it, open.
+                // Out here it is closed on every path, with no suspension point between the two lines.
                 response.use {
                     cancellingCall(call) {
                         when (response.code) {
                             HTTP_RANGE_NOT_SATISFIABLE -> {
-                                // Already complete. Report the final size so the caller can close
-                                // the file out instead of retrying it forever.
+                                // Already complete. Report the final size so the caller can close the
+                                // file out instead of retrying it forever.
                                 onProgress.onProgress(existing, existing)
                                 existing
                             }
@@ -203,13 +172,9 @@ internal class FileDownloader
         }
 
         /**
-         * Runs [block] with a watcher that cancels [call] if this coroutine is cancelled first.
-         *
-         * The `await()` continuation's own `invokeOnCancellation` has already resumed by the time
-         * the body is being read, so without this nothing holds the call during `writeBody` — a
-         * pause, a stop or a delete could only wait for the socket to fail on its own, which a
-         * half-open connection never does. The blocked `read` then throws an
-         * `IOException` that [copy] converts back into the cancellation it really is.
+         * Runs [block] with a watcher that cancels [call] if this coroutine is cancelled first. The
+         * `await()` continuation's own `invokeOnCancellation` has already resumed by the time the body
+         * is read, so without this a pause could only wait for a half-open socket to fail on its own.
          */
         private suspend fun <T> cancellingCall(
             call: Call,
@@ -222,8 +187,7 @@ internal class FileDownloader
                         try {
                             awaitCancellation()
                         } finally {
-                            // Cancelled by the `finally` below when the body simply ended; only a
-                            // cancellation arriving *while the transfer is live* touches the call.
+                            // Only a cancellation arriving *while the transfer is live* touches the call.
                             if (!finished.get()) call.cancel()
                         }
                     }
@@ -238,15 +202,13 @@ internal class FileDownloader
         /**
          * Streams the body into [target].
          *
-         * @param appendFrom where in the file the body belongs. Seeking rather than opening in
-         *   append mode is what makes the `200`-after-`Range` case safe: position 0 plus
+         * @param appendFrom where in the file the body belongs. Seeking rather than opening in append
+         *   mode is what makes the `200`-after-`Range` case safe: position 0 plus
          *   [RandomAccessFile.setLength] truncates whatever a partial run had left behind.
          *
-         * A [chunkSink] is only wired up when [appendFrom] is `0`. A sink reads the stream from its
-         * beginning — a resumed body starts in the middle of a container it never saw the head of,
-         * and feeding it that would produce a confident wrong answer instead of no answer. In
-         * practice a transcode always lands here: it never asks to resume, so its body is always the
-         * whole file and this method always rewrites from zero.
+         * A [chunkSink] is wired up only when [appendFrom] is `0`: a resumed body starts in the middle
+         * of a container the sink never saw the head of, and feeding it that would produce a confident
+         * wrong answer instead of no answer.
          */
         private suspend fun writeBody(
             response: Response,
@@ -271,20 +233,11 @@ internal class FileDownloader
         }
 
         /**
-         * The copy loop.
-         *
-         * ### The buffer is *filled* before it is written
-         * OkHttp's stream hands back one okio segment — 8 KB — per read however large the array
-         * offered is, and [RandomAccessFile] is unbuffered: every `write` is a `pwrite` syscall.
-         * Writing each read straight through would therefore turn one 64 KB write into eight 8 KB
-         * ones, ~15,300 syscalls a second on a gigabit LAN, for a loop whose whole job is to move
-         * bytes. Reads accumulate into the array until it is full, and the write, the tap and the
-         * progress callback all happen once per full buffer.
-         *
-         * That is the same cadence as a callback firing when *accumulated reads* reach
-         * [BUFFER_BYTES], which with 8 KB segments is exactly when the array fills. Cancellation
-         * granularity is per read as well — [coroutineContext.ensureActive] is checked once per
-         * read, not once per write.
+         * The copy loop. The buffer is *filled* before it is written: OkHttp's stream hands back one
+         * 8 KB okio segment per read however large the array offered, and [RandomAccessFile] is
+         * unbuffered, so writing each read straight through would turn one 64 KB write into eight —
+         * ~15,300 syscalls a second on a gigabit LAN. The write, the tap and the progress callback
+         * happen once per full buffer; cancellation is still checked once per *read*.
          */
         @Suppress("LongParameterList")
         private suspend fun copy(
@@ -300,7 +253,6 @@ internal class FileDownloader
             // Bytes held in `buffer` that are not on disk yet — always < BUFFER_BYTES at loop top.
             var filled = 0
 
-            /** One write: the disk, then the tap, then the callback. A no-op on an empty buffer. */
             suspend fun flush() {
                 if (filled == 0) return
                 output.write(buffer, 0, filled)
@@ -317,9 +269,8 @@ internal class FileDownloader
                     try {
                         input.read(buffer, filled, buffer.size - filled)
                     } catch (error: IOException) {
-                        // A cancelled coroutine cancels the OkHttp call (see [cancellingCall]),
-                        // and the blocked read then fails with an IOException. The caller asked
-                        // for a cancellation, not a failure — let the cancellation win.
+                        // A cancelled coroutine cancels the OkHttp call (see [cancellingCall]) and the
+                        // blocked read then fails; the caller asked for a cancellation, not a failure.
                         coroutineContext.ensureActive()
                         throw error
                     }
@@ -328,25 +279,22 @@ internal class FileDownloader
                 if (filled == buffer.size) flush()
             }
 
-            // The tail: a body that ended mid-buffer would otherwise never have its last bytes
-            // written at all, let alone reported.
+            // The tail: a body that ended mid-buffer would otherwise never have its last bytes written.
             flush()
             return written
         }
 
         /**
-         * No same-origin guard around [jellyfinAuthorizationHeader] here (unlike
-         * `JellyfinAuthInterceptor`): [url] is always one `DownloadUrlFactory` built from this same
-         * [ApiClient]'s own base URL, never a caller-supplied or redirect-followed one, so there is
-         * no other origin the header could leak to.
+         * No same-origin guard around [jellyfinAuthorizationHeader] (unlike `JellyfinAuthInterceptor`):
+         * [url] is always one `DownloadUrlFactory` built from this same [ApiClient]'s own base URL,
+         * never a caller-supplied or redirect-followed one, so there is no other origin to leak to.
          */
         private fun authorizationHeader(): String = jellyfinAuthorizationHeader(apiClient)
 
         companion object {
             /**
-             * Read granularity, and therefore progress granularity — the plan's "callback per
-             * 64 KB". Large enough that the loop is not syscall-bound on a fast LAN, small enough
-             * that a paused download stops within milliseconds.
+             * Read granularity, and therefore progress granularity. Large enough that the loop is not
+             * syscall-bound on a fast LAN, small enough that a paused download stops within milliseconds.
              */
             const val BUFFER_BYTES = 64 * 1024
 
@@ -356,8 +304,6 @@ internal class FileDownloader
     }
 
 /**
- * Suspends on an OkHttp call, cancelling it if the coroutine is cancelled.
- *
  * `enqueue` rather than `execute` so the cancellation actually reaches the socket: a blocking
  * `execute` on a dispatcher thread would keep reading until the server gave up.
  */

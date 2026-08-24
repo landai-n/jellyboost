@@ -8,9 +8,8 @@ import org.junit.jupiter.api.Test
 /**
  * Unit tests for the player's keyboard table ([playerKeyBinding]).
  *
- * The mapping is worth pinning without a device for two reasons: which key does what is a promise to
- * a keyboard user, and *which pass handles it* is the difference between shortcuts that help and
- * shortcuts that steal — an arrow consumed at the root is an arrow the focused seek bar never sees.
+ * *Which pass handles a key* is the difference between shortcuts that help and shortcuts that
+ * steal — an arrow consumed at the root is an arrow the focused seek bar never sees.
  */
 class PlayerKeysTest {
     @Test

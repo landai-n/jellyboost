@@ -1,35 +1,17 @@
 package dev.jellyboost.feature.auth
 
 /**
- * Whether [address] is a server the app would talk to **in the clear, across a network it has no
- * reason to trust**.
+ * Warns about `http://` to a host the packets *leave the local network* to reach — not about http
+ * as such. `network_security_config.xml` has to permit cleartext globally (users type arbitrary
+ * addresses, and most Jellyfin servers are plain http on a LAN), which leaves a port-forwarded
+ * server over public Wi-Fi handing the `Authorization` header to anyone on the path.
  *
- * `network_security_config.xml` permits cleartext globally and has to: the user types an arbitrary
- * address and a great many Jellyfin servers are plain `http://` boxes on a home LAN. That is a
- * reasonable default and a terrible silence — the one realistic remote token-theft path this app has
- * is a port-forwarded server reached over `http://` from public Wi-Fi, where the `Authorization`
- * header on every single request is readable by anyone on the path.
+ * Local means: loopback, RFC1918, link-local, ULA, CGNAT `100.64/10`, a single-label name, and the
+ * reserved suffixes below. False negatives are accepted, false positives are not — a warning the
+ * user cannot act on teaches them to ignore warnings — so it stays advisory rather than a block.
  *
- * So the rule is not "is this http" but "is this http *and* somewhere the packets leave the local
- * network":
- *
- * | host | verdict |
- * |---|---|
- * | `https://…` anything | safe — encrypted |
- * | `localhost`, `127.x`, `::1` | safe — never leaves the device |
- * | RFC1918 (`10/8`, `172.16/12`, `192.168/16`) | safe — home/office LAN |
- * | link-local (`169.254/16`, `fe80::/10`), ULA (`fc00::/7`) | safe — same segment |
- * | CGNAT `100.64/10` | safe — where Tailscale and friends live |
- * | a single-label name (`nas`, `jellyfin`) | safe — a LAN name; there is no public TLD to reach |
- * | `.local`, `.lan`, `.home`, `.internal`, `.home.arpa` | safe — reserved for local use |
- * | anything else over `http://` | **warn** |
- *
- * False negatives are accepted and false positives are not: a warning the user cannot act on
- * teaches them to ignore warnings. A public host behind a VPN, or a LAN with a real domain name,
- * will be warned about — that is the trade, and the warning is advisory rather than a block.
- *
- * Pure, and deliberately not built on `:core:network`'s `hostForLog`: that helper's own contract is
- * "never route, connect or *compare* on its output", and comparing is the whole of this function.
+ * Deliberately not built on `:core:network`'s `hostForLog`, whose contract forbids comparing on its
+ * output.
  */
 internal fun isCleartextPublicAddress(address: String): Boolean {
     val trimmed = address.trim()
@@ -38,11 +20,6 @@ internal fun isCleartextPublicAddress(address: String): Boolean {
     return !isLocalHost(host)
 }
 
-/**
- * The host part of [address], lowercased, or `null` when there is nothing usable in it.
- *
- * Accepts what a user types: `http://host`, `http://host:8096/path`, `http://[::1]:8096`.
- */
 internal fun hostOf(address: String): String? {
     val authority =
         address
@@ -50,8 +27,7 @@ internal fun hostOf(address: String): String? {
             .substringAfter("://")
             .substringBefore('/')
             .substringBefore('?')
-            // Nobody puts userinfo in a Jellyfin address, but `user@host` would otherwise be read
-            // as the host and classified on the wrong string.
+            // `user@host` would otherwise be read as the host and classified on the wrong string.
             .substringAfterLast('@')
     val host =
         if (authority.startsWith("[")) {
@@ -62,7 +38,6 @@ internal fun hostOf(address: String): String? {
     return host.lowercase().ifBlank { null }
 }
 
-/** `true` when [host] is somewhere the packets never leave the local network. See the table above. */
 private fun isLocalHost(host: String): Boolean =
     host in LOOPBACK_NAMES ||
         isSingleLabelName(host) ||
@@ -70,15 +45,9 @@ private fun isLocalHost(host: String): Boolean =
         isPrivateIpv4(host) ||
         isLocalIpv6(host)
 
-/**
- * A name with no dot in it — `nas`, `jellyfin`.
- *
- * It cannot be a public DNS name; it is a NetBIOS/mDNS/hosts-file name that only resolves on the
- * network the device is already on. The colon check keeps a bare IPv6 literal out.
- */
+/** A name with no dot resolves only on the network the device is on; the colon check excludes IPv6. */
 private fun isSingleLabelName(host: String): Boolean = !host.contains('.') && !host.contains(':')
 
-/** RFC1918, loopback, link-local and the CGNAT range, over a dotted-quad host. */
 @Suppress("ReturnCount") // One early return per range reads better than a seven-clause boolean.
 private fun isPrivateIpv4(host: String): Boolean {
     val octets = host.split('.')
@@ -97,7 +66,6 @@ private fun isPrivateIpv4(host: String): Boolean {
     }
 }
 
-/** Loopback, link-local (`fe80::/10`) and unique-local (`fc00::/7`) IPv6 literals. */
 private fun isLocalIpv6(host: String): Boolean {
     if (!host.contains(':')) return false
     if (host == "::1" || host == "::") return true

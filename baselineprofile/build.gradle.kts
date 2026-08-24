@@ -1,34 +1,22 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 /**
- * Baseline profile generator.
+ * Baseline profile generator: a `com.android.test` module that ships no code.
  *
- * A `com.android.test` module: it ships no code, only an instrumented macrobenchmark that drives
- * `:app` through its startup and scrolling flows while ART records which methods and classes were
- * used. The recording is written back into `app/src/main/generated/baselineProfiles/` and
- * packaged into the APK, where `androidx.profileinstaller` hands it to the platform so those paths
- * are AOT-compiled on first run instead of being interpreted and JIT-compiled.
+ * **Generation requires a device** (`./gradlew :app:generateBaselineProfile`) and is therefore not
+ * part of the normal build or of `/verify` — `automaticGenerationDuringBuild = false` in `:app` is
+ * what keeps `assemble*` device-free.
  *
- * **Generation requires a device** and is therefore *not* part of the normal build or of `/verify`:
- *
- *     ./gradlew :app:generateBaselineProfile
- *
- * `automaticGenerationDuringBuild = false` in `:app` is what keeps `assembleDebug` and
- * `assembleRelease` device-free. Until the task has been run the generated directory does not
- * exist and the release build packages no profile — a missed optimisation, never a build failure.
- *
- * This module deliberately sits outside the project's conventions: macrobenchmark is a JUnit 4 API
- * (the rest of the project is JUnit 5) and none of the convention plugins fit a `com.android.test`
- * module, so AGP is configured directly here.
+ * Deliberately outside the project's conventions: macrobenchmark is a JUnit 4 API where the rest of
+ * the project is JUnit 5, and no convention plugin fits a `com.android.test` module.
  */
 plugins {
     alias(libs.plugins.android.test)
     alias(libs.plugins.baselineprofile)
 }
 
-// Read straight from gradle/libs.versions.toml so this module can never drift from the app it
-// profiles. (`Integer.parseInt` rather than `.toInt()` only to keep the call chains flat enough
-// for ktlint's chain-method-continuation rule.)
+// Read from the catalog so this module cannot drift from the app it profiles. (`Integer.parseInt`
+// rather than `.toInt()` only to keep the chains flat enough for ktlint's continuation rule.)
 val catalogCompileSdk: Int = Integer.parseInt(libs.versions.androidCompileSdk.get())
 val catalogCompileSdkMinor: Int = Integer.parseInt(libs.versions.androidCompileSdkMinor.get())
 val catalogTargetSdk: Int = Integer.parseInt(libs.versions.androidTargetSdk.get())
@@ -45,8 +33,8 @@ android {
     }
 
     defaultConfig {
-        // Macrobenchmark needs API 28+ to pull the recorded profile back off the device. That is
-        // above the app's own minSdk 26; the generated profile still applies from minSdk upwards.
+        // Macrobenchmark needs API 28+ to pull the profile back off the device — above the app's own
+        // minSdk 26, though the generated profile still applies from minSdk upwards.
         minSdk = 28
         targetSdk = catalogTargetSdk
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -56,8 +44,7 @@ android {
 }
 
 baselineProfile {
-    // Generation runs against a real connected device — the test tablet used for every
-    // milestone DoD — rather than a Gradle-managed AVD the project does not define.
+    // A real connected device rather than a Gradle-managed AVD the project does not define.
     useConnectedDevices = true
 }
 

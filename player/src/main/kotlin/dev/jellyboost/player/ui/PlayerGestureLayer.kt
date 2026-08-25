@@ -45,6 +45,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.player.R
+import dev.jellyboost.player.gesture.BrightnessCurve
 import dev.jellyboost.player.gesture.GestureConfig
 import dev.jellyboost.player.gesture.PlayerGestureController
 import dev.jellyboost.player.gesture.SwipeTarget
@@ -246,13 +247,15 @@ internal fun AudioManager?.setVolumeFraction(fraction: Float) {
 }
 
 /**
+ * A perceived level, not the raw attribute — [BrightnessCurve] owns the two directions.
+ *
  * `BRIGHTNESS_OVERRIDE_NONE` (-1) is a window's "follow the system" value, not a brightness: a swipe
  * starting from it would jump the screen to full dark, so the system setting seeds it instead.
  */
 internal fun Activity?.brightnessFraction(): Float {
     val activity = this ?: return DEFAULT_BRIGHTNESS
     val attribute = activity.window.attributes.screenBrightness
-    if (attribute in 0f..1f) return attribute
+    if (attribute in 0f..1f) return BrightnessCurve.toFraction(attribute)
     val system =
         runCatching {
             Settings.System.getFloat(
@@ -260,7 +263,7 @@ internal fun Activity?.brightnessFraction(): Float {
                 Settings.System.SCREEN_BRIGHTNESS,
             ) / SYSTEM_BRIGHTNESS_MAX
         }.getOrNull()
-    return system?.coerceIn(0f, 1f) ?: DEFAULT_BRIGHTNESS
+    return system?.let { BrightnessCurve.toFraction(it) } ?: DEFAULT_BRIGHTNESS
 }
 
 /**
@@ -272,7 +275,7 @@ internal fun Activity?.setBrightnessFraction(fraction: Float) {
     window.attributes =
         WindowManager.LayoutParams().apply {
             copyFrom(window.attributes)
-            screenBrightness = fraction.coerceIn(MIN_BRIGHTNESS, 1f)
+            screenBrightness = BrightnessCurve.toBacklight(fraction).coerceIn(MIN_BACKLIGHT, 1f)
         }
 }
 
@@ -293,5 +296,8 @@ internal const val PERCENT = 100f
 private const val DEFAULT_BRIGHTNESS = 0.5f
 private const val SYSTEM_BRIGHTNESS_MAX = 255f
 
-/** Never fully black: a brightness of zero looks exactly like a crash. */
-private const val MIN_BRIGHTNESS = 0.01f
+/**
+ * Never fully black: a backlight of zero looks exactly like a crash. A backlight floor, not a
+ * perceived one — the curve's bottom end is where the fine steps live, so it has to stay narrow.
+ */
+private const val MIN_BACKLIGHT = 0.004f

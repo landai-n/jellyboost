@@ -142,6 +142,31 @@ class ItemEntityMapper
             )
         }
 
+        /**
+         * The album counterpart of [toSeriesCardOrNull]: artwork is the *album's* primary image, not
+         * the track's, so a shelf of albums does not turn into a shelf of identical thumbnails.
+         */
+        @Suppress(
+            "ReturnCount",
+        )
+        fun toAlbumCardOrNull(entity: ItemEntity): JellyfinItem? {
+            val dto = toDtoOrNull(entity) ?: return null
+            val albumId = dto.albumId ?: return null
+            val name = dto.album?.takeIf { it.isNotBlank() } ?: return null
+            return JellyfinItem(
+                id = albumId.toString(),
+                name = name,
+                type = ItemType.MUSIC_ALBUM,
+                primaryImageUrl =
+                    imageUrls.imageUrl(
+                        albumId,
+                        ImageKind.PRIMARY,
+                        dto.albumPrimaryImageTag,
+                        widths.poster,
+                    ),
+            )
+        }
+
         /** Maps a whole page, dropping rows whose blob is unreadable. */
         fun toDomain(
             entities: List<ItemEntity>,

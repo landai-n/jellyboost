@@ -20,6 +20,7 @@ import dev.jellyboost.core.database.entities.LibraryViewEntity
 import dev.jellyboost.core.network.SessionRepository
 import dev.jellyboost.core.network.model.SessionState
 import dev.jellyboost.data.cache.CacheFixtures.MOVIES_LIBRARY
+import dev.jellyboost.data.cache.CacheFixtures.MUSIC_LIBRARY
 import dev.jellyboost.data.cache.CacheFixtures.NOW
 import dev.jellyboost.data.cache.CacheFixtures.SHOWS_LIBRARY
 import dev.jellyboost.data.cache.CacheFixtures.USER_ID
@@ -83,6 +84,8 @@ class OfflineJellyfinRepositoryTest {
             listOf(
                 libraryRow(MOVIES_LIBRARY, "Films", CollectionKind.MOVIES, sortIndex = 0),
                 libraryRow(SHOWS_LIBRARY, "Séries", CollectionKind.TVSHOWS, sortIndex = 1),
+                libraryRow(MUSIC_LIBRARY, "Musique", CollectionKind.MUSIC, sortIndex = 2),
+                libraryRow(OTHER_LIBRARY, "Photos", CollectionKind.OTHER, sortIndex = 3),
             )
         coEvery { userDataDao.getUserDataFor(any(), any()) } returns emptyList()
         coEvery { userDataDao.getUserData(any(), any()) } returns null
@@ -382,6 +385,88 @@ class OfflineJellyfinRepositoryTest {
             card.type shouldBe ItemType.SERIES
             // The show's poster, not the episode still.
             card.primaryImageUrl!! shouldContain "/Items/$THRONES/Images/PRIMARY?tag=series-tag"
+        }
+
+    // ---- Latest: a music library is music, not whatever else is downloaded --------------------
+
+    @Test
+    fun `a music library's latest row never contains films`() =
+        runTest {
+            // The offline home showed every downloaded film under *Musique*: an unhandled collection
+            // kind fell through to the caller's types, and Latest asks for films, shows and episodes.
+            val types = seedLatest(emptyList())
+
+            repository.getLatestMedia(MUSIC_LIBRARY.toString(), limit = 16)
+
+            types.single() shouldContainExactly
+                listOf(ItemType.MUSIC_ALBUM, ItemType.AUDIO, ItemType.MUSIC_ARTIST)
+        }
+
+    @Test
+    fun `every downloaded track of an album collapses into one card for the album`() =
+        runTest {
+            val album = entity(albumDto(ABBEY_ROAD, "Abbey Road"))
+            seedLatest(
+                listOf(
+                    entity(audioDto(uuid(31), "Come Together", albumId = ABBEY_ROAD)),
+                    entity(audioDto(uuid(32), "Something", albumId = ABBEY_ROAD)),
+                    album,
+                ),
+            )
+
+            val items = repository.getLatestMedia(MUSIC_LIBRARY.toString(), limit = 16).getOrNull()!!
+
+            items shouldHaveNames listOf("Abbey Road")
+            items.single().type shouldBe ItemType.MUSIC_ALBUM
+            // The tap target is the album, so the card opens the album and not a single track.
+            items.single().id shouldBe ABBEY_ROAD.toString()
+        }
+
+    @Test
+    fun `an album whose own row was never cached still gets an album card built from the track`() =
+        runTest {
+            val tracks =
+                listOf(
+                    entity(
+                        audioDto(
+                            uuid(31),
+                            "Come Together",
+                            albumId = ABBEY_ROAD,
+                            album = "Abbey Road",
+                            albumPrimaryImageTag = "album-tag",
+                        ),
+                    ),
+                )
+            seedLatest(newestFirst = tracks, cached = tracks)
+
+            val card = repository.getLatestMedia(MUSIC_LIBRARY.toString(), limit = 16).getOrNull()!!.single()
+
+            card.id shouldBe ABBEY_ROAD.toString()
+            card.name shouldBe "Abbey Road"
+            card.type shouldBe ItemType.MUSIC_ALBUM
+            // The sleeve, not whatever art the track itself carries.
+            card.primaryImageUrl!! shouldContain "/Items/$ABBEY_ROAD/Images/PRIMARY?tag=album-tag"
+        }
+
+    @Test
+    fun `a track that names no album at all still appears, as itself`() =
+        runTest {
+            seedLatest(listOf(entity(audioDto(uuid(31), "Blue Monday"))))
+
+            repository.getLatestMedia(MUSIC_LIBRARY.toString(), limit = 16).getOrNull()!! shouldHaveNames
+                listOf("Blue Monday")
+        }
+
+    @Test
+    fun `a library kind nothing can be downloaded into stays empty`() =
+        runTest {
+            // Photos, live TV: attributing by type would hand it the whole device.
+            val types = seedLatest(listOf(entity(movieDto(uuid(1), "Dune"))))
+
+            repository.getLatestMedia(OTHER_LIBRARY.toString(), limit = 16).getOrNull()!!.shouldBeEmpty()
+
+            // Not merely filtered to nothing — never asked, so no statement runs on an empty `IN`.
+            types.shouldBeEmpty()
         }
 
     @Test
@@ -777,11 +862,16 @@ class OfflineJellyfinRepositoryTest {
             newestFirst.map { row ->
                 LatestDownloadKey(
                     id = row.id,
-                    groupId = if (row.type == ItemType.EPISODE) row.seriesId ?: row.id else row.id,
+                    groupId =
+                        when (row.type) {
+                            ItemType.EPISODE -> row.seriesId ?: row.id
+                            ItemType.AUDIO -> row.albumId ?: row.id
+                            else -> row.id
+                        },
                 )
             }
         coEvery {
-            itemDao.latestDownloadedKeys(ItemSource.DOWNLOAD, capture(types), ItemType.EPISODE)
+            itemDao.latestDownloadedKeys(ItemSource.DOWNLOAD, capture(types), ItemType.EPISODE, ItemType.AUDIO)
         } returns keys
         coEvery { itemDao.getItems(any()) } answers {
             val ids = firstArg<List<UUID>>().toSet()
@@ -824,6 +914,10 @@ class OfflineJellyfinRepositoryTest {
     private companion object {
         val THRONES: UUID = uuid(10)
         val DRAGON: UUID = uuid(20)
+        val ABBEY_ROAD: UUID = uuid(30)
+
+        /** A photo or live-TV library: recognised, but nothing downloads into it. */
+        val OTHER_LIBRARY: UUID = uuid(40)
 
         /** A synopsis long enough to unbalance the home hero if it were not stripped. */
         const val SYNOPSIS =

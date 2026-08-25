@@ -149,9 +149,9 @@ interface ItemDao {
     ): List<ItemEntity>
 
     /**
-     * **No `LIMIT`, and no whole rows.** Episodes collapse into their series before the row limit applies
-     * (see [LatestDownloadKey]), so the statement cannot stop at sixteen rows and the caller must not read
-     * sixteen `dto` blobs to discover that.
+     * **No `LIMIT`, and no whole rows.** Episodes collapse into their series and tracks into their album
+     * before the row limit applies (see [LatestDownloadKey]), so the statement cannot stop at sixteen rows
+     * and the caller must not read sixteen `dto` blobs to discover that.
      */
     @Query(
         """
@@ -159,6 +159,7 @@ interface ItemDao {
           id AS id,
           CASE
             WHEN type = :episodeType AND seriesId IS NOT NULL THEN seriesId
+            WHEN type = :audioType AND albumId IS NOT NULL THEN albumId
             ELSE id
           END AS groupId
         FROM items
@@ -171,6 +172,7 @@ interface ItemDao {
         source: ItemSource,
         types: List<ItemType>,
         episodeType: ItemType,
+        audioType: ItemType,
     ): List<LatestDownloadKey>
 
     /**

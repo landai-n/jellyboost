@@ -93,8 +93,8 @@ internal class OfflineJellyfinRepository
             }
 
         /**
-         * One card per series, matching the online row's `GroupItems=true`: group first, *then*
-         * [limit], or a twenty-episode download fills the whole shelf.
+         * One card per series or album, matching the online row's `GroupItems=true`: group first,
+         * *then* [limit], or a twenty-episode download fills the whole shelf.
          */
         override suspend fun getLatestMedia(
             parentId: String,
@@ -102,11 +102,13 @@ internal class OfflineJellyfinRepository
         ): AppResult<List<JellyfinItem>> =
             onIo {
                 val library = parentId.toUuidOrNull() ?: return@onIo emptyList()
+                val types = typesOf(library, LIST_ITEM_TYPES).ifEmpty { return@onIo emptyList() }
                 itemDao
                     .latestDownloadedKeys(
                         source = ItemSource.DOWNLOAD,
-                        types = typesOf(library, LIST_ITEM_TYPES),
+                        types = types,
                         episodeType = ItemType.EPISODE,
+                        audioType = ItemType.AUDIO,
                     )
                     // Newest first already, so a group's surviving row is that show's latest download.
                     .distinctBy { it.groupId }
@@ -128,16 +130,24 @@ internal class OfflineJellyfinRepository
 
             return groups.mapNotNull { group ->
                 val card = rows[group.groupId]
-                if (group.groupId == group.id || card?.type == ItemType.SERIES) {
+                if (group.groupId == group.id || card?.type in GROUP_CARD_TYPES) {
                     card?.let { mapper.toDomainOrNull(it, userData[it.id]) }
                 } else {
-                    rows[group.id]?.let { episode ->
-                        mapper.toSeriesCardOrNull(episode)
-                            ?: mapper.toDomainOrNull(episode, userData[episode.id])
+                    rows[group.id]?.let { child ->
+                        mapper.groupCardOrNull(child)
+                            ?: mapper.toDomainOrNull(child, userData[child.id])
                     }
                 }
             }
         }
+
+        /** The parent a grouped row stands for, built from the child's own blob when it is uncached. */
+        private fun ItemEntityMapper.groupCardOrNull(child: ItemEntity): JellyfinItem? =
+            when (child.type) {
+                ItemType.EPISODE -> toSeriesCardOrNull(child)
+                ItemType.AUDIO -> toAlbumCardOrNull(child)
+                else -> null
+            }
 
         // ---- library grid & search ---------------------------------------------------------
 
@@ -190,11 +200,12 @@ internal class OfflineJellyfinRepository
             query: ItemQuery,
             requested: List<ItemType>,
         ): List<ItemEntity> {
+            val types = typesOf(query.parentId?.toUuidOrNull(), requested).ifEmpty { return emptyList() }
             val page =
                 itemDao
                     .downloadedListKeys(
                         source = ItemSource.DOWNLOAD,
-                        types = typesOf(query.parentId?.toUuidOrNull(), requested),
+                        types = types,
                         userId = currentUserId(),
                         descending = query.sortOrder == SortOrder.DESCENDING,
                     ).filter { it.matches(query.filters) }
@@ -217,11 +228,10 @@ internal class OfflineJellyfinRepository
             itemTypes: List<ItemType>,
         ): AppResult<FilterFacets> =
             onIo {
-                val rows =
-                    itemDao.facetKeysBySource(
-                        ItemSource.DOWNLOAD,
-                        typesOf(parentId?.toUuidOrNull(), itemTypes.ifEmpty { LIST_ITEM_TYPES }),
-                    )
+                val types =
+                    typesOf(parentId?.toUuidOrNull(), itemTypes.ifEmpty { LIST_ITEM_TYPES })
+                        .ifEmpty { return@onIo FilterFacets() }
+                val rows = itemDao.facetKeysBySource(ItemSource.DOWNLOAD, types)
                 FilterFacets(
                     genres = rows.flatMap { it.genres }.distinct().sorted(),
                     years = rows.mapNotNull { it.productionYear }.distinct().sortedDescending(),
@@ -369,7 +379,9 @@ internal class OfflineJellyfinRepository
          * Attributes an offline row to a library by *type*, because parent-id filtering cannot work:
          * a downloaded row's `parentId` is its containing folder, or `NULL`, never the library-view
          * id the grid asks about. A v1 simplification — two movie libraries would share downloads.
-         * An unknown library id narrows nothing rather than emptying the grid.
+         * An unknown library id narrows nothing rather than emptying the grid; a *known* kind with
+         * no downloadable type answers empty, and each caller then skips its query rather than pass
+         * an empty `IN` list to SQLite.
          */
         private suspend fun typesOf(
             libraryId: UUID?,
@@ -386,8 +398,14 @@ internal class OfflineJellyfinRepository
                 when (kind) {
                     CollectionKind.MOVIES -> MOVIE_LIBRARY_TYPES
                     CollectionKind.TVSHOWS -> TV_LIBRARY_TYPES
-                    else -> return requested
+                    CollectionKind.MUSIC -> MUSIC_LIBRARY_TYPES
+                    // Live TV, photos: nothing downloadable can be attributed to one, and falling
+                    // through to [requested] would fill it with every film on the device.
+                    CollectionKind.OTHER -> emptyList()
+                    // An id no cached view claims narrows nothing.
+                    null -> requested
                 }
+            if (allowed.isEmpty()) return emptyList()
             return requested.filter { it in allowed }.ifEmpty { allowed }
         }
 
@@ -408,10 +426,20 @@ internal class OfflineJellyfinRepository
         private companion object {
             val LIST_ITEM_TYPES = listOf(ItemType.MOVIE, ItemType.SERIES, ItemType.EPISODE)
 
+            /** A grouped row's parent is only usable as a card when the cached row really is one. */
+            val GROUP_CARD_TYPES = setOf(ItemType.SERIES, ItemType.MUSIC_ALBUM)
+
             val MOVIE_LIBRARY_TYPES = listOf(ItemType.MOVIE)
 
             /** Episodes are here because Latest lists them; the grid asks only for series. */
             val TV_LIBRARY_TYPES = listOf(ItemType.SERIES, ItemType.EPISODE)
+
+            /**
+             * Tracks are here because Latest groups them into albums. Artists earn their place by
+             * being unreachable: nothing downloads *as* an artist, so the tab that asks for them
+             * must answer empty rather than be widened into albums by the fallback below.
+             */
+            val MUSIC_LIBRARY_TYPES = listOf(ItemType.MUSIC_ALBUM, ItemType.AUDIO, ItemType.MUSIC_ARTIST)
         }
     }
 

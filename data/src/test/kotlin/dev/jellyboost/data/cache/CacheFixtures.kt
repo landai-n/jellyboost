@@ -30,6 +30,7 @@ internal object CacheFixtures {
     val USER_ID: UUID = UUID.fromString("99999999-9999-9999-9999-999999999999")
     val MOVIES_LIBRARY: UUID = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa")
     val SHOWS_LIBRARY: UUID = UUID.fromString("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb")
+    val MUSIC_LIBRARY: UUID = UUID.fromString("cccccccc-cccc-cccc-cccc-cccccccccccc")
 
     val mapper = ItemEntityMapper(ItemMapper(FakeImageUrlFactory()), FakeImageUrlFactory())
 
@@ -142,12 +143,17 @@ internal object CacheFixtures {
         parentId: UUID? = albumId,
         /** Cached on the DTO's own `userData`, the way a server response actually carries it. */
         playCount: Int = 0,
+        /** The album's own name and artwork, which a track carries so a card can be built without it. */
+        album: String? = null,
+        albumPrimaryImageTag: String? = null,
     ): BaseItemDto =
         BaseItemDto(
             id = id,
             type = BaseItemKind.AUDIO,
             name = name,
             albumId = albumId,
+            album = album,
+            albumPrimaryImageTag = albumPrimaryImageTag,
             albumArtists = albumArtistId?.let { listOf(NameGuidPair(id = it, name = "Artist")) },
             parentIndexNumber = discNumber,
             indexNumber = trackNumber,

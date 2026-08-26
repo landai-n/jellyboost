@@ -6,6 +6,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import dev.jellyboost.core.common.model.DownloadQuality
 import dev.jellyboost.core.common.model.DownloadStatus
+import dev.jellyboost.core.common.model.ItemType
 import java.time.Instant
 import java.util.UUID
 
@@ -29,6 +30,10 @@ import java.util.UUID
  * @property queuePosition the queue always takes the pending row with the lowest value.
  * @property attemptCount transient-failure retries since the last thing the user did to this row; the cap
  *   that keeps the retry policy bounded. *Resume* clears it, so a user-initiated attempt starts fresh.
+ * @property itemType what this row is. `null` on a row written before the column existed, which every
+ *   reader has to fold back onto the cached item.
+ * @property groupId the stable identity of the heading these rows file under — an episode's `seriesId`, a
+ *   track's `albumId`, `null` for a film. Two shows of the same name are the case it exists for.
  * @property bakedAudioStreamIndex the **absolute** `MediaStream.index` of the one audio track a transcoded
  *   download asked for; `null` for `ORIGINAL` (which holds every track) and for a downgraded row. The
  *   cached `BaseItemDto` describes the *source*, so without this offline playback falls back to
@@ -65,11 +70,11 @@ data class DownloadEntity(
     /** Directory name under the storage root, e.g. `Westworld - S01E02 - Chestnut`. */
     val directoryName: String,
     val itemName: String,
-    /**
-     * The heading this row belongs under: an episode's series, a track's **album**, `null` for a film. The
-     * name predates music and is kept because the column's meaning did not change.
-     */
+    val itemType: ItemType? = null,
+    /** An episode's series, and only that: a track's album goes in [albumName]. */
     val seriesName: String? = null,
+    val albumName: String? = null,
+    val groupId: UUID? = null,
     val errorMessage: String? = null,
     val createdAt: Instant,
     val updatedAt: Instant,

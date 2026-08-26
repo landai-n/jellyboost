@@ -14,6 +14,7 @@ import dev.jellyboost.core.network.connectivity.onEachOnlineStretch
 import dev.jellyboost.core.network.session.SessionGate
 import dev.jellyboost.data.cache.ItemEntityMapper
 import dev.jellyboost.data.downloads.engine.SubtitleSidecarTopUp
+import dev.jellyboost.data.mapper.toItemType
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -114,6 +115,7 @@ class DownloadedMetadataRefresher
 
             val parents = fetch(parentIdsOf(items, known = items.mapTo(mutableSetOf()) { it.id }))
             store(items + parents)
+            backfillGrouping(items)
             // Deliberately after the metadata write and never gating it: a sidecar that could not be
             // fetched must not cost the whole table its refresh.
             @Suppress("TooGenericExceptionCaught")
@@ -196,6 +198,30 @@ class DownloadedMetadataRefresher
                 throw cancellation
             } catch (error: SQLiteException) {
                 Timber.w(error, "Could not store the refreshed metadata of %d item(s)", unique.size)
+            }
+        }
+
+        /**
+         * Fills in the grouping columns of rows written before they existed — including moving a track's
+         * album out of `seriesName`, which held both facts. The `itemType IS NULL` guard lives in the
+         * statement, so a row an enqueue has already stamped is never rewritten from this pass's fetch.
+         */
+        private suspend fun backfillGrouping(dtos: List<BaseItemDto>) {
+            try {
+                dtos.forEach { dto ->
+                    val type = dto.type.toItemType()
+                    downloadDao.backfillGrouping(
+                        itemId = dto.id,
+                        type = type,
+                        seriesName = dto.seriesName?.takeIf { it.isNotBlank() },
+                        albumName = dto.album?.takeIf { it.isNotBlank() },
+                        groupId = dto.seriesId ?: dto.albumId,
+                    )
+                }
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (error: SQLiteException) {
+                Timber.w(error, "Could not backfill the grouping of %d downloaded item(s)", dtos.size)
             }
         }
 

@@ -4,8 +4,10 @@ import dev.jellyboost.core.common.AppError
 import dev.jellyboost.core.common.AppResult
 import dev.jellyboost.core.common.model.DownloadQuality
 import dev.jellyboost.core.common.model.DownloadStatus
+import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.data.downloads.DownloadRepository
 import dev.jellyboost.data.downloads.model.DownloadItem
+import dev.jellyboost.data.downloads.model.DownloadKind
 import dev.jellyboost.data.downloads.model.StorageUsage
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -33,6 +35,8 @@ import java.time.Instant
 import java.time.ZoneOffset
 
 @OptIn(ExperimentalCoroutinesApi::class)
+// One class per action group would separate each from the repository mock and clock they share.
+@Suppress("LargeClass")
 class DownloadsViewModelTest {
     private val dispatcher = StandardTestDispatcher()
     private val downloads = mockk<DownloadRepository>(relaxUnitFun = true)
@@ -74,7 +78,7 @@ class DownloadsViewModelTest {
             advanceUntilIdle()
 
             model.uiState.value.downloaded
-                .flatMap { it.items }
+                .rows()
                 .map { it.itemId } shouldContainExactly listOf("1")
             model.uiState.value.queue
                 .map { it.itemId } shouldContainExactly listOf("2", "3")
@@ -93,35 +97,42 @@ class DownloadsViewModelTest {
             val model = viewModel()
             advanceUntilIdle()
 
-            val groups = model.uiState.value.downloaded
-            groups.map { it.title } shouldContainExactly listOf("Fargo", "Westworld")
-            groups.none { it.isMoviesSection } shouldBe true
-            groups.first { it.title == "Westworld" }.items.map { it.itemId } shouldContainExactly listOf("1", "3")
+            val section =
+                model.uiState.value.downloaded
+                    .single()
+            section.kind shouldBe DownloadKind.SERIES
+            section.groups.map { it.title } shouldContainExactly listOf("Fargo", "Westworld")
+            section.groups.all { it.isCollapsible } shouldBe true
+            section.groups
+                .first { it.title == "Westworld" }
+                .items
+                .map { it.itemId } shouldContainExactly listOf("1", "3")
         }
 
     @Test
-    fun `downloaded tracks group under their album, alongside series groups`() =
+    fun `downloaded tracks group under their album, in a music section of their own`() =
         runTest(dispatcher) {
-            // `DownloadEnqueuer` writes a track's album into the same column an episode's series
-            // goes in, so albums group with no second rule; artists do not nest above them.
+            // Artists do not nest above albums; the album is the whole heading.
             items.value =
                 listOf(
-                    item("1", "Go Your Own Way", series = "Rumours", status = DownloadStatus.DOWNLOADED),
-                    item("2", "Dreams", series = "Rumours", status = DownloadStatus.DOWNLOADED),
+                    track("1", "Go Your Own Way", album = "Rumours"),
+                    track("2", "Dreams", album = "Rumours"),
                     item("3", "Chestnut", series = "Westworld", status = DownloadStatus.DOWNLOADED),
                 )
 
             val model = viewModel()
             advanceUntilIdle()
 
-            val groups = model.uiState.value.downloaded
-            groups.map { it.title } shouldContainExactly listOf("Rumours", "Westworld")
-            groups.all { it.isSeries } shouldBe true
-            groups.first().items.map { it.itemId } shouldContainExactly listOf("2", "1") // Dreams, Go Your…
+            val sections = model.uiState.value.downloaded
+            sections.map { it.kind } shouldContainExactly listOf(DownloadKind.SERIES, DownloadKind.MUSIC)
+            val album = sections.last().groups.single()
+            album.title shouldBe "Rumours"
+            album.isCollapsible shouldBe true
+            album.items.map { it.itemId } shouldContainExactly listOf("2", "1") // Dreams, Go Your…
         }
 
     @Test
-    fun `a lone film gets no heading of its own name`() =
+    fun `films share one headerless group that never folds`() =
         runTest(dispatcher) {
             items.value =
                 listOf(
@@ -132,13 +143,18 @@ class DownloadsViewModelTest {
             val model = viewModel()
             advanceUntilIdle()
 
-            val groups = model.uiState.value.downloaded
-            groups.single { it.title == "Dune" }.isSeries shouldBe false
-            groups.none { it.isMoviesSection } shouldBe true
+            val films =
+                model.uiState.value.downloaded
+                    .single()
+            films.kind shouldBe DownloadKind.MOVIE
+            films.groups.single().isCollapsible shouldBe false
+            films.groups.single().title shouldBe ""
+            // A single kind on the tab needs no label above it.
+            model.uiState.value.showKindHeaders shouldBe false
         }
 
     @Test
-    fun `a film alongside a series is gathered under the shared Movies heading, after every series group`() =
+    fun `films come first as one section, series after them`() =
         runTest(dispatcher) {
             items.value =
                 listOf(
@@ -151,15 +167,15 @@ class DownloadsViewModelTest {
             val model = viewModel()
             advanceUntilIdle()
 
-            val groups = model.uiState.value.downloaded
+            val sections = model.uiState.value.downloaded
+            sections.map { it.kind } shouldContainExactly listOf(DownloadKind.MOVIE, DownloadKind.SERIES)
 
-            groups.dropLast(1).map { it.title } shouldContainExactly listOf("Fargo", "Westworld")
-            groups.dropLast(1).all { it.isSeries } shouldBe true
+            val films = sections.first().groups.single()
+            films.isCollapsible shouldBe false
+            films.items.map { it.itemId } shouldContainExactly listOf("2", "1") // Arrival, Dune
 
-            val moviesSection = groups.last()
-            moviesSection.isMoviesSection shouldBe true
-            moviesSection.isSeries shouldBe false
-            moviesSection.items.map { it.itemId } shouldContainExactly listOf("2", "1") // Arrival, Dune
+            sections.last().groups.map { it.title } shouldContainExactly listOf("Fargo", "Westworld")
+            model.uiState.value.showKindHeaders shouldBe true
         }
 
     @Test
@@ -176,7 +192,11 @@ class DownloadsViewModelTest {
             advanceUntilIdle()
 
             model.uiState.value.downloaded
-                .map { it.items.single().itemId } shouldContainExactly listOf("1", "2")
+                .single()
+                .groups
+                .single()
+                .items
+                .map { it.itemId } shouldContainExactly listOf("1", "2")
         }
 
     @Test
@@ -192,6 +212,8 @@ class DownloadsViewModelTest {
             advanceUntilIdle()
 
             model.uiState.value.downloaded
+                .single()
+                .groups
                 .single()
                 .bytesOnDisk shouldBe 1_000L
         }
@@ -699,7 +721,7 @@ class DownloadsViewModelTest {
             advanceUntilIdle()
 
             model.uiState.value.downloaded
-                .flatMap { it.items }
+                .rows()
                 .map { it.itemId } shouldContainExactly listOf("1")
         }
 
@@ -718,7 +740,49 @@ class DownloadsViewModelTest {
             model.uiState.value.selectedTab shouldBe DownloadsTab.QUEUE
         }
 
+    // ---- folding a group ------------------------------------------------------------------------
+
+    @Test
+    fun `toggling a group unfolds exactly that one, and folds it again`() =
+        runTest(dispatcher) {
+            items.value =
+                listOf(
+                    item("1", "Chestnut", series = "Westworld", status = DownloadStatus.DOWNLOADED),
+                    item("2", "Woodcutters in the Mist", series = "Fargo", status = DownloadStatus.DOWNLOADED),
+                )
+
+            val model = viewModel()
+            advanceUntilIdle()
+
+            model.toggleGroup("SERIES:Westworld")
+            advanceUntilIdle()
+            model.uiState.value.expandedGroups shouldBe setOf("SERIES:Westworld")
+
+            model.toggleGroup("SERIES:Westworld")
+            advanceUntilIdle()
+            model.uiState.value.expandedGroups shouldBe emptySet()
+        }
+
+    @Test
+    fun `an unfolded group survives the projection stopping and starting again`() =
+        runTest(dispatcher) {
+            items.value = listOf(item("1", "Chestnut", series = "Westworld", status = DownloadStatus.DOWNLOADED))
+
+            val model = viewModel()
+            advanceUntilIdle()
+            model.toggleGroup("SERIES:Westworld")
+
+            val screen = launch { model.uiState.collect {} }
+            advanceUntilIdle()
+            screen.cancel()
+            advanceUntilIdle()
+
+            model.uiState.value.expandedGroups shouldBe setOf("SERIES:Westworld")
+        }
+
     // ---- helpers --------------------------------------------------------------------------------
+
+    private fun List<DownloadSection>.rows() = flatMap { section -> section.groups.flatMap { it.items } }
 
     /**
      * The subscriber is load-bearing: with nothing collecting `uiState` the `WhileSubscribed`
@@ -771,6 +835,20 @@ class DownloadsViewModelTest {
         status: DownloadStatus,
         position: Int = 0,
     ) = item(id, title, status = status, position = position, quality = DownloadQuality.LOW)
+
+    private fun track(
+        id: String,
+        title: String,
+        album: String,
+        onDisk: Long = 0L,
+    ) = downloadItem(
+        itemId = id,
+        title = title,
+        status = DownloadStatus.DOWNLOADED,
+        bytesOnDisk = onDisk,
+        itemType = ItemType.AUDIO,
+        albumName = album,
+    )
 
     @Suppress("LongParameterList")
     private fun item(

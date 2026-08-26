@@ -9,6 +9,7 @@ import androidx.room.Update
 import androidx.room.Upsert
 import dev.jellyboost.core.common.model.DownloadQuality
 import dev.jellyboost.core.common.model.DownloadStatus
+import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.database.entities.DownloadEntity
 import dev.jellyboost.core.database.entities.DownloadFileEntity
 import dev.jellyboost.core.database.entities.DownloadProgress
@@ -107,6 +108,26 @@ interface DownloadDao {
 
     @Query("SELECT * FROM downloads WHERE status IN ('QUEUED', 'DOWNLOADING', 'PAUSED') ORDER BY queuePosition ASC")
     suspend fun pending(): List<DownloadEntity>
+
+    /**
+     * The `itemType IS NULL` test must stay in the statement: this runs on a background refresh while the
+     * queue is writing, so reading the row first and deciding outside SQL would let an enqueue land in
+     * between and have its columns overwritten from a stale server fetch.
+     */
+    @Query(
+        """
+        UPDATE downloads
+        SET itemType = :type, seriesName = :seriesName, albumName = :albumName, groupId = :groupId
+        WHERE itemId = :itemId AND itemType IS NULL
+        """,
+    )
+    suspend fun backfillGrouping(
+        itemId: UUID,
+        type: ItemType,
+        seriesName: String?,
+        albumName: String?,
+        groupId: UUID?,
+    )
 
     @Upsert
     suspend fun upsert(download: DownloadEntity)

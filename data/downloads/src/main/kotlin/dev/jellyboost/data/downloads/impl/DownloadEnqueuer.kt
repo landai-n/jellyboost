@@ -18,6 +18,7 @@ import dev.jellyboost.data.downloads.engine.SiblingSeeder
 import dev.jellyboost.data.downloads.plan.DownloadPaths
 import dev.jellyboost.data.downloads.plan.downloadAudioStreamIndex
 import dev.jellyboost.data.downloads.plan.isFolderItem
+import dev.jellyboost.data.mapper.toItemType
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
 import org.jellyfin.sdk.model.api.BaseItemDto
@@ -302,9 +303,10 @@ internal class DownloadEnqueuer
                 queuePosition = position,
                 directoryName = DownloadPaths.itemDirectoryName(this),
                 itemName = name.orEmpty().ifBlank { id.toString() },
-                // The Downloads screen groups by this column, so a track files under its **album** the
-                // way an episode files under its show. A track has no series to conflict with.
-                seriesName = seriesName ?: album?.takeIf { it.isNotBlank() },
+                itemType = type.toItemType(),
+                seriesName = seriesName,
+                albumName = album?.takeIf { it.isNotBlank() },
+                groupId = seriesId ?: albumId,
                 errorMessage = null,
                 createdAt = existing?.createdAt ?: now,
                 updatedAt = now,

@@ -84,7 +84,7 @@ internal fun DownloadedRow(
     onDelete: () -> Unit,
     onPlay: () -> Unit,
     modifier: Modifier = Modifier,
-    inSeriesGroup: Boolean = false,
+    inGroup: Boolean = false,
     compact: Boolean = false,
 ) {
     Row(
@@ -110,7 +110,7 @@ internal fun DownloadedRow(
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = item.rowTitle(inSeriesGroup = inSeriesGroup),
+                text = item.rowTitle(inGroup = inGroup),
                 style = CardTitle,
                 color = MaterialTheme.colorScheme.onBackground,
                 maxLines = 1,
@@ -426,15 +426,11 @@ internal fun percentOf(fraction: Float): Int = (fraction.coerceIn(0f, 1f) * PERC
 private const val PERCENT_SCALE = 100
 
 /**
- * @param inSeriesGroup the group header already names the series, so the row drops it. Standalone
- *   rows — the queue tab, and films, which are never grouped — keep the full `Series · Title` form.
+ * @param inGroup the group header already names the series or album, so the row drops it. Standalone
+ *   rows — the queue tab, and films, which are never grouped — keep the full `Group · Title` form.
  */
-internal fun DownloadItem.rowTitle(inSeriesGroup: Boolean = false): String =
-    if (inSeriesGroup) {
-        title
-    } else {
-        listOfNotNull(seriesName?.takeIf { it.isNotBlank() }, title).joinToString(Separators.DOT)
-    }
+internal fun DownloadItem.rowTitle(inGroup: Boolean = false): String =
+    if (inGroup) title else listOfNotNull(groupTitle, title).joinToString(Separators.DOT)
 
 @Composable
 private fun DownloadItem.statusLine(speedBytesPerSecond: Long?): String =

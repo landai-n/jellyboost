@@ -5,7 +5,25 @@
     <string name="downloads_wifi_only">Pouze Wi-Fi</string>
     <string name="downloads_screen_title">Stahování</string>
 
-    <string name="downloads_group_movies">Filmy</string>
+    <string name="downloads_section_movies">Filmy</string>
+    <string name="downloads_section_series">Seriály</string>
+    <string name="downloads_section_music">Hudba</string>
+    <plurals name="downloads_group_episode_count">
+        <item quantity="one">%1$d epizoda</item>
+        <item quantity="few">%1$d epizody</item>
+        <item quantity="many">%1$d epizod</item>
+        <item quantity="other">%1$d epizod</item>
+    </plurals>
+    <plurals name="downloads_group_track_count">
+        <item quantity="one">%1$d skladba</item>
+        <item quantity="few">%1$d skladby</item>
+        <item quantity="many">%1$d skladeb</item>
+        <item quantity="other">%1$d skladeb</item>
+    </plurals>
+    <string name="downloads_group_expand">Rozbalit</string>
+    <string name="downloads_group_collapse">Sbalit</string>
+    <string name="downloads_group_expanded">Rozbaleno</string>
+    <string name="downloads_group_collapsed">Sbaleno</string>
 
     <string name="downloads_storage_summary">%1$s využito · %2$s volno</string>
     <string name="downloads_storage_free">%1$s volno</string>

@@ -5,7 +5,21 @@
     <string name="downloads_wifi_only">Csak Wi‑Fi</string>
     <string name="downloads_screen_title">Letöltések</string>
 
-    <string name="downloads_group_movies">Filmek</string>
+    <string name="downloads_section_movies">Filmek</string>
+    <string name="downloads_section_series">Sorozatok</string>
+    <string name="downloads_section_music">Zene</string>
+    <plurals name="downloads_group_episode_count">
+        <item quantity="one">%1$d epizód</item>
+        <item quantity="other">%1$d epizód</item>
+    </plurals>
+    <plurals name="downloads_group_track_count">
+        <item quantity="one">%1$d szám</item>
+        <item quantity="other">%1$d szám</item>
+    </plurals>
+    <string name="downloads_group_expand">Kibontás</string>
+    <string name="downloads_group_collapse">Összecsukás</string>
+    <string name="downloads_group_expanded">Kibontva</string>
+    <string name="downloads_group_collapsed">Összecsukva</string>
 
     <string name="downloads_storage_summary">%1$s felhasználva · %2$s szabad</string>
     <string name="downloads_storage_free">%1$s szabad</string>

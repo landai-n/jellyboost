@@ -159,8 +159,8 @@ internal class ItemMapper
         }
     }
 
-/** Internal so the Room cache mapper folds `BaseItemKind` exactly the same way. */
-internal fun BaseItemKind.toItemType(): ItemType =
+/** The one folding of `BaseItemKind`: the Room cache mapper and the download row must agree on it. */
+fun BaseItemKind.toItemType(): ItemType =
     when (this) {
         BaseItemKind.MOVIE -> ItemType.MOVIE
         BaseItemKind.SERIES -> ItemType.SERIES

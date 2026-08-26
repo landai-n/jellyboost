@@ -21,9 +21,9 @@ class DownloadGroupCacheTest {
     fun `an unchanged table gives back the same list, not an equal one`() {
         val items = listOf(finished("1"), finished("2"))
 
-        val first = cache.groups(items)
+        val first = cache.sections(items)
         // Fresh-but-equal rows, which is what Room hands the projection on every emission.
-        val second = cache.groups(listOf(finished("1"), finished("2")))
+        val second = cache.sections(listOf(finished("1"), finished("2")))
 
         second shouldBeSameInstanceAs first
     }
@@ -32,35 +32,39 @@ class DownloadGroupCacheTest {
     fun `a queue writing progress does not disturb the finished half`() {
         val finished = listOf(finished("1"))
 
-        val first = cache.groups(finished + downloading(bytes = 100L))
-        val second = cache.groups(finished + downloading(bytes = 200L))
+        val first = cache.sections(finished + downloading(bytes = 100L))
+        val second = cache.sections(finished + downloading(bytes = 200L))
 
         second shouldBeSameInstanceAs first
     }
 
     @Test
     fun `a new download regroups`() {
-        val first = cache.groups(listOf(finished("1")))
-        val second = cache.groups(listOf(finished("1"), finished("2")))
+        val first = cache.sections(listOf(finished("1")))
+        val second = cache.sections(listOf(finished("1"), finished("2")))
 
         second shouldNotBeSameInstanceAs first
-        second.flatMap { it.items }.map { it.itemId } shouldBe listOf("1", "2")
+        second.rows().map { it.itemId } shouldBe listOf("1", "2")
     }
 
     @Test
     fun `a deleted download regroups`() {
-        cache.groups(listOf(finished("1"), finished("2")))
+        cache.sections(listOf(finished("1"), finished("2")))
 
-        cache.groups(listOf(finished("1"))).flatMap { it.items }.map { it.itemId } shouldBe listOf("1")
+        cache.sections(listOf(finished("1"))).rows().map { it.itemId } shouldBe listOf("1")
     }
 
     @Test
     fun `a size that changed regroups, since a group header draws it`() {
-        val first = cache.groups(listOf(finished("1", bytesOnDisk = 100L)))
-        val second = cache.groups(listOf(finished("1", bytesOnDisk = 200L)))
+        val first = cache.sections(listOf(finished("1", bytesOnDisk = 100L)))
+        val second = cache.sections(listOf(finished("1", bytesOnDisk = 200L)))
 
         second shouldNotBeSameInstanceAs first
-        second.single().bytesOnDisk shouldBe 200L
+        second
+            .single()
+            .groups
+            .single()
+            .bytesOnDisk shouldBe 200L
     }
 
     @Test
@@ -68,31 +72,32 @@ class DownloadGroupCacheTest {
         // Why whole rows are compared rather than a key of ids and byte counts: artwork arriving
         // with a metadata refresh would otherwise never show.
         val withoutArtwork = finished("1")
-        val first = cache.groups(listOf(withoutArtwork))
+        val first = cache.sections(listOf(withoutArtwork))
 
-        val second = cache.groups(listOf(withoutArtwork.copy(item = jellyfinItem())))
+        val second = cache.sections(listOf(withoutArtwork.copy(item = jellyfinItem())))
 
         second shouldNotBeSameInstanceAs first
         second
-            .single()
-            .items
+            .rows()
             .single()
             .item shouldBe jellyfinItem()
     }
 
     @Test
     fun `a rename regroups, since the tab is ordered by title`() {
-        val first = cache.groups(listOf(finished("1")))
-        val second = cache.groups(listOf(finished("1").copy(title = "Renamed")))
+        val first = cache.sections(listOf(finished("1")))
+        val second = cache.sections(listOf(finished("1").copy(title = "Renamed")))
 
         second shouldNotBeSameInstanceAs first
-        second.single().title shouldBe "Renamed"
+        second.rows().single().title shouldBe "Renamed"
     }
 
     @Test
     fun `an empty table gives an empty list`() {
-        cache.groups(listOf(downloading(bytes = 10L))) shouldBe emptyList()
+        cache.sections(listOf(downloading(bytes = 10L))) shouldBe emptyList()
     }
+
+    private fun List<DownloadSection>.rows() = flatMap { section -> section.groups.flatMap { it.items } }
 
     private fun finished(
         itemId: String,

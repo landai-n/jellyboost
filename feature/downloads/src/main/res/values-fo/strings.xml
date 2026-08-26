@@ -5,7 +5,21 @@
     <string name="downloads_wifi_only">Bert Wi‑Fi</string>
     <string name="downloads_screen_title">Niðurhal</string>
 
-    <string name="downloads_group_movies">Filmar</string>
+    <string name="downloads_section_movies">Filmar</string>
+    <string name="downloads_section_series">Seriur</string>
+    <string name="downloads_section_music">Tónlist</string>
+    <plurals name="downloads_group_episode_count">
+        <item quantity="one">%1$d episodi</item>
+        <item quantity="other">%1$d episodir</item>
+    </plurals>
+    <plurals name="downloads_group_track_count">
+        <item quantity="one">%1$d spor</item>
+        <item quantity="other">%1$d spor</item>
+    </plurals>
+    <string name="downloads_group_expand">Legg út</string>
+    <string name="downloads_group_collapse">Legg saman</string>
+    <string name="downloads_group_expanded">Útlagt</string>
+    <string name="downloads_group_collapsed">Samanlagt</string>
 
     <string name="downloads_storage_summary">%1$s brúkt · %2$s frítt</string>
     <string name="downloads_storage_free">%1$s frítt</string>

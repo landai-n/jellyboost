@@ -5,7 +5,21 @@
     <string name="downloads_wifi_only">ಕೇವಲ Wi‑Fi</string>
     <string name="downloads_screen_title">ಡೌನ್‌ಲೋಡ್‌ಗಳು</string>
 
-    <string name="downloads_group_movies">ಚಲನಚಿತ್ರಗಳು</string>
+    <string name="downloads_section_movies">ಚಲನಚಿತ್ರಗಳು</string>
+    <string name="downloads_section_series">ಸರಣಿಗಳು</string>
+    <string name="downloads_section_music">ಸಂಗೀತ</string>
+    <plurals name="downloads_group_episode_count">
+        <item quantity="one">%1$d ಸಂಚಿಕೆ</item>
+        <item quantity="other">%1$d ಸಂಚಿಕೆಗಳು</item>
+    </plurals>
+    <plurals name="downloads_group_track_count">
+        <item quantity="one">%1$d ಟ್ರ್ಯಾಕ್</item>
+        <item quantity="other">%1$d ಟ್ರ್ಯಾಕ್‌ಗಳು</item>
+    </plurals>
+    <string name="downloads_group_expand">ವಿಸ್ತರಿಸಿ</string>
+    <string name="downloads_group_collapse">ಸಂಕುಚಿಸಿ</string>
+    <string name="downloads_group_expanded">ವಿಸ್ತರಿಸಲಾಗಿದೆ</string>
+    <string name="downloads_group_collapsed">ಸಂಕುಚಿತಗೊಂಡಿದೆ</string>
 
     <string name="downloads_storage_summary">%1$s ಬಳಕೆಯಾಗಿದೆ · %2$s ಖಾಲಿ ಇದೆ</string>
     <string name="downloads_storage_free">%1$s ಖಾಲಿ ಇದೆ</string>

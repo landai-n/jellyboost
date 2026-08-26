@@ -34,8 +34,9 @@ import javax.inject.Inject
  * the storage walk. A collector launched in `init` would keep both running from the first visit
  * until process death — the tab switch that "leaves" this screen saves rather than pops it.
  *
- * The projection runs on [DefaultDispatcher]: the grouping, sorting and `lowercase()` in [toGroups]
- * must not run on `Main.immediate` at two-to-six emissions a second for a whole transfer.
+ * The projection runs on [DefaultDispatcher]: the grouping, sorting and `lowercase()` in
+ * [toSections] must not run on `Main.immediate` at two-to-six emissions a second for a whole
+ * transfer.
  */
 @HiltViewModel
 class DownloadsViewModel
@@ -73,7 +74,7 @@ class DownloadsViewModel
                     ) { items, storage, wifiOnly ->
                         val queue = items.toQueue()
                         DownloadsProjection(
-                            downloaded = groupCache.groups(items),
+                            downloaded = groupCache.sections(items),
                             queue = queue,
                             speeds = speedTracker.update(items, clock.millis()),
                             // The queue subset, not the whole table: nothing else reads the ratchet.
@@ -95,6 +96,19 @@ class DownloadsViewModel
 
         fun selectTab(tab: DownloadsTab) {
             local.update { it.copy(selectedTab = tab) }
+        }
+
+        /**
+         * A key whose group is gone stays in the set: nothing reads it, and pruning would need the
+         * projection, which is exactly what this state must outlive.
+         */
+        fun toggleGroup(key: String) {
+            local.update { state ->
+                val expanded = state.expandedGroups
+                state.copy(
+                    expandedGroups = if (key in expanded) expanded - key else expanded + key,
+                )
+            }
         }
 
         fun setWifiOnly(enabled: Boolean) {

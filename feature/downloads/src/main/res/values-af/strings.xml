@@ -5,7 +5,21 @@
     <string name="downloads_wifi_only">Slegs Wi‑Fi</string>
     <string name="downloads_screen_title">Aflaaie</string>
 
-    <string name="downloads_group_movies">Flieks</string>
+    <string name="downloads_section_movies">Flieks</string>
+    <string name="downloads_section_series">Reekse</string>
+    <string name="downloads_section_music">Musiek</string>
+    <plurals name="downloads_group_episode_count">
+        <item quantity="one">%1$d episode</item>
+        <item quantity="other">%1$d episodes</item>
+    </plurals>
+    <plurals name="downloads_group_track_count">
+        <item quantity="one">%1$d snit</item>
+        <item quantity="other">%1$d snitte</item>
+    </plurals>
+    <string name="downloads_group_expand">Vou uit</string>
+    <string name="downloads_group_collapse">Vou in</string>
+    <string name="downloads_group_expanded">Uitgevou</string>
+    <string name="downloads_group_collapsed">Ingevou</string>
 
     <string name="downloads_storage_summary">%1$s gebruik · %2$s beskikbaar</string>
     <string name="downloads_storage_free">%1$s beskikbaar</string>

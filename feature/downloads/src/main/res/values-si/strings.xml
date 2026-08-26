@@ -4,7 +4,21 @@
     <string name="downloads_tab_queue">පෝලිම</string>
     <string name="downloads_wifi_only">Wi‑Fi පමණි</string>
     <string name="downloads_screen_title">බාගත කිරීම්</string>
-    <string name="downloads_group_movies">චිත්‍රපට</string>
+    <string name="downloads_section_movies">චිත්‍රපට</string>
+    <string name="downloads_section_series">සිරීස්</string>
+    <string name="downloads_section_music">සංගීතය</string>
+    <plurals name="downloads_group_episode_count">
+        <item quantity="one">%1$d එපිසෝඩය</item>
+        <item quantity="other">%1$d එපිසෝඩ</item>
+    </plurals>
+    <plurals name="downloads_group_track_count">
+        <item quantity="one">%1$d ට්‍රැකය</item>
+        <item quantity="other">%1$d ට්‍රැක්</item>
+    </plurals>
+    <string name="downloads_group_expand">දිගහරින්න</string>
+    <string name="downloads_group_collapse">හකුළන්න</string>
+    <string name="downloads_group_expanded">දිගහැර ඇත</string>
+    <string name="downloads_group_collapsed">හකුළා ඇත</string>
     <string name="downloads_storage_summary">%1$s භාවිතයි · %2$s නිදහස්</string>
     <string name="downloads_storage_free">%1$s නිදහස්</string>
     <string name="downloads_stat_on_device">මෙම උපාංගයේ</string>

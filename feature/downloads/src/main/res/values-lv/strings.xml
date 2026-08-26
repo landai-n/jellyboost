@@ -5,7 +5,23 @@
     <string name="downloads_wifi_only">Tikai Wi‑Fi</string>
     <string name="downloads_screen_title">Lejupielādes</string>
 
-    <string name="downloads_group_movies">Filmas</string>
+    <string name="downloads_section_movies">Filmas</string>
+    <string name="downloads_section_series">Seriāli</string>
+    <string name="downloads_section_music">Mūzika</string>
+    <plurals name="downloads_group_episode_count">
+        <item quantity="zero">%1$d epizožu</item>
+        <item quantity="one">%1$d epizode</item>
+        <item quantity="other">%1$d epizodes</item>
+    </plurals>
+    <plurals name="downloads_group_track_count">
+        <item quantity="zero">%1$d celiņu</item>
+        <item quantity="one">%1$d celiņš</item>
+        <item quantity="other">%1$d celiņi</item>
+    </plurals>
+    <string name="downloads_group_expand">Izvērst</string>
+    <string name="downloads_group_collapse">Sakļaut</string>
+    <string name="downloads_group_expanded">Izvērsts</string>
+    <string name="downloads_group_collapsed">Sakļauts</string>
 
     <string name="downloads_storage_summary">Izmantots %1$s · brīvs %2$s</string>
     <string name="downloads_storage_free">%1$s brīvs</string>

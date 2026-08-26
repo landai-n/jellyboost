@@ -449,6 +449,9 @@ internal class DownloadRepositoryImpl
                     projectedBytes = row.download.projectedBytes,
                     sizeIsExact = row.download.sizeIsExact,
                     errorMessage = row.download.errorMessage,
+                    itemType = row.download.itemType,
+                    albumName = row.download.albumName,
+                    groupId = row.download.groupId,
                     item = items[row.download.itemId],
                 )
             }

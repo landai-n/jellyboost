@@ -4,7 +4,19 @@
     <string name="downloads_tab_queue">คิว</string>
     <string name="downloads_wifi_only">Wi‑Fi เท่านั้น</string>
     <string name="downloads_screen_title">ดาวน์โหลด</string>
-    <string name="downloads_group_movies">ภาพยนตร์</string>
+    <string name="downloads_section_movies">ภาพยนตร์</string>
+    <string name="downloads_section_series">ซีรีส์</string>
+    <string name="downloads_section_music">เพลง</string>
+    <plurals name="downloads_group_episode_count">
+        <item quantity="other">%1$d ตอน</item>
+    </plurals>
+    <plurals name="downloads_group_track_count">
+        <item quantity="other">%1$d เพลง</item>
+    </plurals>
+    <string name="downloads_group_expand">ขยาย</string>
+    <string name="downloads_group_collapse">ย่อ</string>
+    <string name="downloads_group_expanded">ขยายอยู่</string>
+    <string name="downloads_group_collapsed">ย่ออยู่</string>
     <string name="downloads_storage_summary">ใช้ไป %1$s · เหลือ %2$s</string>
     <string name="downloads_storage_free">เหลือ %1$s</string>
     <string name="downloads_stat_on_device">ในอุปกรณ์นี้</string>

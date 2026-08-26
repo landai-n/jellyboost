@@ -39,6 +39,9 @@ the sync source; `design/_shared/tokens.css` restates the Kotlin tokens).
 - `PillChip.kt` — pill chips (selected = solid white) + `MPillBadge` mini outlined badge.
 - `JellyfinTextField.kt` — filled field (white@4%, 12dp radius, hairline → white@22% when
   focused/filled), uppercase caption label above the well, leading/trailing icon slots.
+  The well is 50dp so a 48dp trailing target (password reveal, search clear) fits *inside*
+  it: a field with a trailing button is exactly as tall as one without, and the 14dp
+  vertical padding is the text's, not the well's.
 - `PillSnackbar.kt` (no action affordance), `ErrorBanner.kt` (error@10% fill, error@28%
   border, `#F0A3AE` content).
 - `MediaCardArtwork.kt` — 12dp radius, `cardShadow`, inner white@7% hairline; overlay

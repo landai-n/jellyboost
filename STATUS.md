@@ -14,6 +14,19 @@ baseline profile still compiles into the release APK (`assets/dexopt/baseline.pr
 
 ## Planned milestone: M13 — Music (approved 2026-08-05; all 6 phases landed, code complete; device DoD owed)
 
+**2026-08-26 — the password field is the same height as the username field, this time
+for real.** The 2026-08-21 fix (`7f4066cf`) wrapped the trailing slot in
+`requiredSize(MinTouchTarget)`, which ignores incoming constraints but still *reports*
+48dp to the row — a no-op for height. The field's 14dp padding sat on the outer node, so
+the well was only 22dp of the 50, and the 48dp reveal button pushed the whole field to
+76dp against the username field's 50 (visible on a phone; the same one component draws
+both the compact and the two-pane auth layouts, and the search field's clear button was
+the unfixed sibling of the same bug). Vertical padding now belongs to the text, not the
+well: `BasicTextField` propagates the min-height constraint into the decoration box, so
+the touch target lays out *inside* a 50dp field and both fields measure 50dp at every
+font scale. Pinned by `FieldGeometryTest` (the well can never fall below
+`Dimens.MinTouchTarget`) and by an instrumented case measuring two real fields.
+
 **2026-08-26 — the Downloaded tab sections and folds; the download row records its
 kind.** One column had carried two meanings — `DownloadEnqueuer` filed a track's album
 in `seriesName` — so an album and a show were indistinguishable at the data layer.

@@ -59,7 +59,13 @@ private val FieldPlaceholder = Color.White.copy(alpha = 0.48f)
 
 private val FieldPadding = 14.dp
 
-private val FieldMinHeight = 50.dp
+/**
+ * Also the height of the trailing slot's touch target, which is why it may never fall below
+ * [Dimens.MinTouchTarget]: the target lays out inside the well rather than inflating it, so a
+ * field with a trailing button (password reveal, search clear) is exactly as tall as one without.
+ * `FieldGeometryTest` holds the floor.
+ */
+internal val FieldMinHeight = 50.dp
 
 private val FieldTextStyle =
     TextStyle(
@@ -144,7 +150,7 @@ fun JellyfinTextField(
                         password = content.isSecret,
                         errorMessage = state.errorMessage,
                         autofillContentType = content.autofillContentType,
-                    ).padding(FieldPadding),
+                    ),
             readOnly = state.isReadOnly,
             textStyle = FieldTextStyle.copy(color = MaterialTheme.colorScheme.onSurface),
             keyboardOptions = keyboardOptions,
@@ -154,7 +160,16 @@ fun JellyfinTextField(
             interactionSource = interactionSource,
             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
             decorationBox = { innerTextField ->
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                // Vertical padding belongs to the text, not to the well: [FieldMinHeight] reaches
+                // this row undiminished (`BasicTextField` propagates min constraints into the
+                // decoration box), so the trailing touch target has the field's full height to sit
+                // in. Padding the whole row instead left it [FieldPadding] * 2 short of
+                // [Dimens.MinTouchTarget], and the 48dp button then pushed the field past every
+                // field beside it.
+                Row(
+                    modifier = Modifier.padding(horizontal = FieldPadding),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
                     if (leadingIcon != null) {
                         CompositionLocalProvider(
                             LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant,
@@ -162,7 +177,7 @@ fun JellyfinTextField(
                         )
                         Spacer(modifier = Modifier.width(Dimens.SpaceSmall))
                     }
-                    Box(modifier = Modifier.weight(1f)) {
+                    Box(modifier = Modifier.weight(1f).padding(vertical = FieldPadding)) {
                         if (value.isEmpty() && placeholder != null) {
                             CompositionLocalProvider(
                                 LocalTextStyle provides FieldTextStyle,
@@ -173,10 +188,9 @@ fun JellyfinTextField(
                         innerTextField()
                     }
                     if (trailingIcon != null) {
-                        // A 48dp `IconButton` measured normally inflates the whole field past
-                        // [FieldMinHeight]. `requiredSize` reports the row's own height back while
-                        // the touch target draws and hit-tests centred over it; nothing in the
-                        // chain clips, so the overflowing target stays tappable.
+                        // Fits inside the well rather than stretching it, which holds only while
+                        // [FieldMinHeight] >= [Dimens.MinTouchTarget]; `requiredSize` keeps the
+                        // target 48dp even where a caller bounds the field's height below that.
                         Box(
                             modifier = Modifier.requiredSize(Dimens.MinTouchTarget),
                             contentAlignment = Alignment.Center,

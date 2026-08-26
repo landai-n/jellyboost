@@ -15,8 +15,17 @@ class AndroidApplicationConventionPlugin : Plugin<Project> {
                 configureKotlinAndroid(this)
                 defaultConfig {
                     targetSdk = libs.intVersion("androidTargetSdk")
-                    versionCode = 1
-                    versionName = "0.1.0"
+                    versionCode =
+                        target.providers.gradleProperty("jellyboost.versionCode").orNull
+                            ?.toIntOrNull()
+                            ?: error(
+                                "gradle.properties is missing jellyboost.versionCode (or it is not " +
+                                    "an integer) — Play rejects an upload without a strictly " +
+                                    "increasing versionCode.",
+                            )
+                    versionName =
+                        target.providers.gradleProperty("jellyboost.versionName").orNull
+                            ?: error("gradle.properties is missing jellyboost.versionName.")
                     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
                 }
                 buildFeatures {

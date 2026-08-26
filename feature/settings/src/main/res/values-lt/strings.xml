@@ -52,4 +52,10 @@
     <string name="settings_sign_out_delete_downloads">Taip pat ištrinti atsisiuntimus iš šio įrenginio</string>
     <string name="settings_section_about">Apie programėlę</string>
     <string name="settings_version">Programėlės versija</string>
+    <string name="settings_source_code">Pirminis kodas</string>
+    <string name="settings_open_link_failed">Šiame įrenginyje nėra programos, galinčios atverti nuorodas.</string>
+    <string name="settings_licence">Licencija</string>
+    <string name="settings_licence_intro">Jellyboost yra laisva programinė įranga: galite ją naudoti, tirti, dalytis ja ir ją keisti pagal GNU General Public License 3 arba bet kurios vėlesnės versijos sąlygas. Ji teikiama be jokios garantijos.</string>
+    <string name="settings_third_party">Trečiųjų šalių licencijos</string>
+    <string name="settings_third_party_supporting">Atvirojo kodo komponentai, iš kurių sudaryta ši programa.</string>
 </resources>

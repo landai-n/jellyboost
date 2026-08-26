@@ -47,4 +47,10 @@
     <string name="settings_sign_out_delete_downloads">Șterge și descărcările de pe acest dispozitiv</string>
     <string name="settings_section_about">Despre</string>
     <string name="settings_version">Versiunea aplicației</string>
+    <string name="settings_source_code">Cod sursă</string>
+    <string name="settings_open_link_failed">Nicio aplicație de pe acest dispozitiv nu poate deschide linkuri.</string>
+    <string name="settings_licence">Licență</string>
+    <string name="settings_licence_intro">Jellyboost este software liber: îl poți folosi, studia, distribui și modifica în termenii licenței GNU General Public License, versiunea 3 sau orice versiune ulterioară. Este oferit fără nicio garanție.</string>
+    <string name="settings_third_party">Licențe terțe</string>
+    <string name="settings_third_party_supporting">Componentele open source din care este construită această aplicație.</string>
 </resources>

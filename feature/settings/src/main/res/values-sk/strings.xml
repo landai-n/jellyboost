@@ -52,4 +52,10 @@
     <string name="settings_sign_out_delete_downloads">Odstrániť aj stiahnutia z tohto zariadenia</string>
     <string name="settings_section_about">O aplikácii</string>
     <string name="settings_version">Verzia aplikácie</string>
+    <string name="settings_source_code">Zdrojový kód</string>
+    <string name="settings_open_link_failed">V tomto zariadení nie je aplikácia, ktorá by dokázala otvárať odkazy.</string>
+    <string name="settings_licence">Licencia</string>
+    <string name="settings_licence_intro">Jellyboost je slobodný softvér: môžete ho používať, študovať, zdieľať a meniť podľa podmienok licencie GNU General Public License verzie 3 alebo ktorejkoľvek neskoršej. Poskytuje sa bez akejkoľvek záruky.</string>
+    <string name="settings_third_party">Licencie tretích strán</string>
+    <string name="settings_third_party_supporting">Komponenty s otvoreným zdrojovým kódom, z ktorých je táto aplikácia zostavená.</string>
 </resources>

@@ -1,5 +1,6 @@
 package dev.jellyboost.feature.settings
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Switch
@@ -17,6 +19,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -161,6 +164,37 @@ internal fun SettingsChoiceGroup(
                     ).clearAndSetSemantics {},
         )
         Column(modifier = Modifier.selectableGroup(), content = content)
+    }
+}
+
+/**
+ * The trailing glyph is decorative: `clickable` merges the row into one node, and the label plus the
+ * button role already say what a tap does.
+ */
+@Composable
+internal fun SettingsActionRow(
+    label: String,
+    supportingText: String,
+    icon: ImageVector,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .heightIn(min = SettingsRowMinHeight)
+                .clickable(role = Role.Button, onClick = onClick)
+                .padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.SpaceSmall),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        RowLabel(label = label, supportingText = supportingText, modifier = Modifier.weight(1f))
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 

@@ -49,4 +49,10 @@
     <string name="settings_sign_out_delete_downloads">同時刪除呢部裝置上嘅下載內容</string>
     <string name="settings_section_about">關於</string>
     <string name="settings_version">應用程式版本</string>
+    <string name="settings_source_code">原始碼</string>
+    <string name="settings_open_link_failed">呢部裝置冇應用程式可以開連結。</string>
+    <string name="settings_licence">授權條款</string>
+    <string name="settings_licence_intro">Jellyboost 係自由軟件：你可以按 GNU General Public License 第 3 版或以後任何版本嘅條款使用、研究、分享同修改佢。本軟件不附任何保養。</string>
+    <string name="settings_third_party">第三方授權條款</string>
+    <string name="settings_third_party_supporting">呢個應用程式所用嘅開源元件。</string>
 </resources>

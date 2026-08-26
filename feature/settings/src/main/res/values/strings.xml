@@ -59,4 +59,13 @@
     <!-- About -->
     <string name="settings_section_about">About</string>
     <string name="settings_version">App version</string>
+    <!-- The row's supporting line is the repository URL itself, which is not a translatable string. -->
+    <string name="settings_source_code">Source code</string>
+    <string name="settings_open_link_failed">No app on this device can open links.</string>
+    <string name="settings_licence">Licence</string>
+    <!-- The licence is named by its stewards and is the same name in every language. -->
+    <string name="settings_licence_name" translatable="false">GNU General Public License v3.0 or later</string>
+    <string name="settings_licence_intro">Jellyboost is free software: you may use, study, share and change it under the terms of the GNU General Public License, version 3 or any later version. It comes with no warranty.</string>
+    <string name="settings_third_party">Third-party licences</string>
+    <string name="settings_third_party_supporting">The open-source components this app is built with.</string>
 </resources>

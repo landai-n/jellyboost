@@ -50,4 +50,10 @@
     <string name="settings_sign_out_delete_downloads">या डिव्हाइसवरील डाउनलोड्स देखील हटवा</string>
     <string name="settings_section_about">अ‍ॅपबद्दल</string>
     <string name="settings_version">अ‍ॅप आवृत्ती</string>
+    <string name="settings_source_code">स्रोत कोड</string>
+    <string name="settings_open_link_failed">या डिव्हाइसवर लिंक उघडू शकेल असे कोणतेही अ‍ॅप नाही.</string>
+    <string name="settings_licence">परवाना</string>
+    <string name="settings_licence_intro">Jellyboost हे मुक्त सॉफ्टवेअर आहे: GNU General Public License आवृत्ती 3 किंवा त्यानंतरच्या कोणत्याही आवृत्तीच्या अटींनुसार तुम्ही ते वापरू, अभ्यासू, सामायिक करू आणि बदलू शकता. ते कोणत्याही हमीशिवाय दिले जाते.</string>
+    <string name="settings_third_party">तृतीय-पक्ष परवाने</string>
+    <string name="settings_third_party_supporting">हे अ‍ॅप ज्या मुक्त स्रोत घटकांपासून बनले आहे ते.</string>
 </resources>

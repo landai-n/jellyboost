@@ -50,4 +50,10 @@
     <string name="settings_sign_out_delete_downloads">Энэ төхөөрөмж дэх татсан файлуудыг мөн устгах</string>
     <string name="settings_section_about">Аппын тухай</string>
     <string name="settings_version">Аппын хувилбар</string>
+    <string name="settings_source_code">Эх код</string>
+    <string name="settings_open_link_failed">Энэ төхөөрөмж дээр холбоос нээх боломжтой апп алга.</string>
+    <string name="settings_licence">Лиценз</string>
+    <string name="settings_licence_intro">Jellyboost бол чөлөөт програм хангамж: та үүнийг GNU General Public License-ийн 3 дугаар хувилбар буюу түүнээс хойшхи аль ч хувилбарын нөхцлийн дагуу ашиглаж, судалж, түгээж, өөрчилж болно. Ямар ч баталгаагүйгээр нийлүүлэгддэг.</string>
+    <string name="settings_third_party">Гуравдагч талын лицензүүд</string>
+    <string name="settings_third_party_supporting">Энэ аппыг бүтээсэн нээлттэй эхийн бүрэлдэхүүн хэсгүүд.</string>
 </resources>

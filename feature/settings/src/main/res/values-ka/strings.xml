@@ -46,4 +46,10 @@
     <string name="settings_sign_out_delete_downloads">ასევე წაშალეთ გადმოწერები ამ მოწყობილობიდან</string>
     <string name="settings_section_about">აპლიკაციის შესახებ</string>
     <string name="settings_version">აპლიკაციის ვერსია</string>
+    <string name="settings_source_code">საწყისი კოდი</string>
+    <string name="settings_open_link_failed">ამ მოწყობილობაზე ბმულების გახსნა ვერცერთ აპს შეუძლია.</string>
+    <string name="settings_licence">ლიცენზია</string>
+    <string name="settings_licence_intro">Jellyboost თავისუფალი პროგრამაა: შეგიძლიათ გამოიყენოთ, შეისწავლოთ, გააზიაროთ და შეცვალოთ იგი GNU General Public License-ის მე-3 ან ნებისმიერი შემდგომი ვერსიის პირობებით. იგი გარანტიის გარეშე მოგეწოდებათ.</string>
+    <string name="settings_third_party">მესამე მხარის ლიცენზიები</string>
+    <string name="settings_third_party_supporting">ღია კოდის კომპონენტები, რომლებზეც ეს აპია აგებული.</string>
 </resources>

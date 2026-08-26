@@ -38,7 +38,9 @@ import dev.jellyboost.feature.music.MusicLibraryScreen
 import dev.jellyboost.feature.music.PlaylistDetailScreen
 import dev.jellyboost.feature.music.nowplaying.NowPlayingScreen
 import dev.jellyboost.feature.search.SearchScreen
+import dev.jellyboost.feature.settings.LicenceScreen
 import dev.jellyboost.feature.settings.SettingsScreen
+import dev.jellyboost.feature.settings.ThirdPartyLicencesScreen
 import dev.jellyboost.player.syncplay.ui.SyncPlayGroupsScreen
 import dev.jellyboost.player.ui.PlayerScreen
 import timber.log.Timber
@@ -149,7 +151,27 @@ internal fun JellyfinNavHost(
                 viewModel = hiltViewModel(),
                 onBack = { navController.popBackStack() },
                 onHome = { navController.navigateHome() },
+                onOpenLicence = { navController.navigate(Routes.Licence) },
+                onOpenThirdPartyLicences = { navController.navigate(Routes.ThirdPartyLicences) },
                 appVersion = BuildConfig.VERSION_NAME,
+            )
+        }
+
+        composable<Routes.Licence> {
+            LicenceScreen(
+                viewModel = hiltViewModel(),
+                onBack = { navController.popBackStack() },
+                onHome = { navController.navigateHome() },
+            )
+        }
+
+        composable<Routes.ThirdPartyLicences> {
+            ThirdPartyLicencesScreen(
+                // The AboutLibraries Gradle plugin generates this from `:app`'s resolved graph, which
+                // is the one that ships; `:feature:settings` cannot name it.
+                librariesRawResId = R.raw.aboutlibraries,
+                onBack = { navController.popBackStack() },
+                onHome = { navController.navigateHome() },
             )
         }
 

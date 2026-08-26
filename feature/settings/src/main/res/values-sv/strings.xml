@@ -50,4 +50,10 @@
     <string name="settings_sign_out_delete_downloads">Ta även bort nedladdningar från den här enheten</string>
     <string name="settings_section_about">Om appen</string>
     <string name="settings_version">Appversion</string>
+    <string name="settings_source_code">Källkod</string>
+    <string name="settings_open_link_failed">Ingen app på den här enheten kan öppna länkar.</string>
+    <string name="settings_licence">Licens</string>
+    <string name="settings_licence_intro">Jellyboost är fri programvara: du får använda, studera, dela och ändra den enligt villkoren i GNU General Public License version 3 eller någon senare version. Den levereras utan någon garanti.</string>
+    <string name="settings_third_party">Tredjepartslicenser</string>
+    <string name="settings_third_party_supporting">De komponenter med öppen källkod som appen är byggd av.</string>
 </resources>

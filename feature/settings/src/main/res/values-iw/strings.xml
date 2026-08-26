@@ -52,4 +52,10 @@
     <string name="settings_sign_out_delete_downloads">מחיקת ההורדות מהמכשיר הזה גם כן</string>
     <string name="settings_section_about">אודות</string>
     <string name="settings_version">גרסת האפליקציה</string>
+    <string name="settings_source_code">קוד מקור</string>
+    <string name="settings_open_link_failed">אין באפליקציה כלשהי במכשיר הזה אפשרות לפתוח קישורים.</string>
+    <string name="settings_licence">רישיון</string>
+    <string name="settings_licence_intro">Jellyboost היא תוכנה חופשית: מותר לך להשתמש בה, ללמוד אותה, לשתף אותה ולשנות אותה לפי תנאי הרישיון GNU General Public License גרסה 3 או כל גרסה מאוחרת יותר. היא מסופקת ללא כל אחריות.</string>
+    <string name="settings_third_party">רישיונות של צד שלישי</string>
+    <string name="settings_third_party_supporting">רכיבי הקוד הפתוח שמהם בנויה האפליקציה.</string>
 </resources>

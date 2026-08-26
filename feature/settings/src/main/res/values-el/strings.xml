@@ -50,4 +50,10 @@
     <string name="settings_sign_out_delete_downloads">Διαγραφή επίσης των λήψεων από αυτή τη συσκευή</string>
     <string name="settings_section_about">Σχετικά</string>
     <string name="settings_version">Έκδοση εφαρμογής</string>
+    <string name="settings_source_code">Πηγαίος κώδικας</string>
+    <string name="settings_open_link_failed">Καμία εφαρμογή σε αυτή τη συσκευή δεν μπορεί να ανοίξει συνδέσμους.</string>
+    <string name="settings_licence">Άδεια χρήσης</string>
+    <string name="settings_licence_intro">Το Jellyboost είναι ελεύθερο λογισμικό: μπορείτε να το χρησιμοποιείτε, να το μελετάτε, να το μοιράζεστε και να το τροποποιείτε υπό τους όρους της GNU General Public License, έκδοση 3 ή οποιαδήποτε μεταγενέστερη. Διατίθεται χωρίς καμία εγγύηση.</string>
+    <string name="settings_third_party">Άδειες τρίτων</string>
+    <string name="settings_third_party_supporting">Τα στοιχεία ανοικτού κώδικα από τα οποία είναι φτιαγμένη η εφαρμογή.</string>
 </resources>

@@ -46,4 +46,10 @@
     <string name="settings_sign_out_delete_downloads">Tanggalin din ang mga download sa device na ito</string>
     <string name="settings_section_about">Tungkol sa app</string>
     <string name="settings_version">Bersyon ng app</string>
+    <string name="settings_source_code">Source code</string>
+    <string name="settings_open_link_failed">Walang app sa device na ito na makakapagbukas ng mga link.</string>
+    <string name="settings_licence">Lisensya</string>
+    <string name="settings_licence_intro">Malayang software ang Jellyboost: maaari mo itong gamitin, pag-aralan, ibahagi, at baguhin sa ilalim ng mga tuntunin ng GNU General Public License, bersyon 3 o anumang mas bagong bersyon. Wala itong anumang warranty.</string>
+    <string name="settings_third_party">Mga lisensya ng third party</string>
+    <string name="settings_third_party_supporting">Ang mga open source na bahagi kung saan ginawa ang app na ito.</string>
 </resources>

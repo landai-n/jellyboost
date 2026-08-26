@@ -54,4 +54,10 @@
     <string name="settings_sign_out_delete_downloads">حذف التنزيلات من هذا الجهاز أيضًا</string>
     <string name="settings_section_about">حول التطبيق</string>
     <string name="settings_version">إصدار التطبيق</string>
+    <string name="settings_source_code">الشيفرة المصدرية</string>
+    <string name="settings_open_link_failed">لا يوجد تطبيق على هذا الجهاز يمكنه فتح الروابط.</string>
+    <string name="settings_licence">الترخيص</string>
+    <string name="settings_licence_intro">Jellyboost برنامج حر: يمكنك استخدامه ودراسته ومشاركته وتغييره وفق شروط رخصة GNU General Public License، الإصدار 3 أو أي إصدار لاحق. ويأتي دون أي ضمان.</string>
+    <string name="settings_third_party">تراخيص الأطراف الثالثة</string>
+    <string name="settings_third_party_supporting">المكوّنات مفتوحة المصدر التي بُني بها هذا التطبيق.</string>
 </resources>

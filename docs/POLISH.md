@@ -87,3 +87,10 @@ intro segments on the dev server — and was deliberately left unchanged.
   Material's 24dp default ellipsized "Resume"); overview clamps to 5 lines with
   tap-to-expand. All device-verified at 360×800dp; wide/tablet paths byte-identical.
 Commits: fc0ffb5, 57e9c1c, 9943008, e5d9ee2.
+
+### A11y seam noted during the field-height fix (2026-08-26, not yet done)
+`SheetChip` (`PlayerControls.kt:778`) and `GlassIconButton` (`JellyfinButtons.kt:184`)
+deliberately draw a smaller clickable inside a 48dp frame — the same 40dp-measured-target
+shape ATF flagged in the text-field trailing slot (fixed with `propagateMinConstraints`,
+`b3ae5b71`). If ATF measures the clickable node, these are the next findings; sweep them
+in the next a11y pass.

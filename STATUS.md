@@ -14,6 +14,22 @@ baseline profile still compiles into the release APK (`assets/dexopt/baseline.pr
 
 ## Planned milestone: M13 — Music (approved 2026-08-05; all 6 phases landed, code complete; device DoD owed)
 
+**2026-08-26 — the Downloaded tab sections and folds; the download row records its
+kind.** One column had carried two meanings — `DownloadEnqueuer` filed a track's album
+in `seriesName` — so an album and a show were indistinguishable at the data layer.
+Three nullable columns (`itemType`, `albumName`, `groupId`) fix that at the root
+(Room v10 → v11 stays an `@AutoMigration`; the metadata refresh backfills older rows
+through a SQL-guarded `UPDATE`), and the *Downloaded* tab becomes three ordered
+sections — MOVIES, SERIES, MUSIC, kind headers only when more than one kind is present —
+with every series and album folded by default to a one-line header (count · size).
+Fold state is in-memory (`LocalState`), like the tab selection. Nine new strings ×
+69 locales; `downloads_group_movies` retired. Full gate + all five guardrail scripts
+green post-merge; DECISIONS entry of the same date supersedes the two 2026-07-29
+grouping entries. **Owed to a device walk:** the v10→v11 upgrade-without-wipe, the
+legacy-album backfill (SERIES → MUSIC after refresh), fold/expand under TalkBack, and
+the instrumented ATF case for the collapsible header (`:feature:downloads` is still
+allowlisted in `scripts/a11y-scaffolding-allowlist.json`).
+
 **2026-08-21 — blur input-scale fix + queue dismissal.** The mini-player's
 checkerboard was PERF-1's `HazeInputScale.Auto` downsampling at ~1/3 on the
 wide bars; `glassSurface` gains a per-caller scale and the two bars pin

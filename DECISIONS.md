@@ -4413,3 +4413,19 @@ Seeded from the approved plan; listed for traceability, no divergence:
 - **Plan said:** `docs/PLAN.md:76` specifies the Downloaded tab as "grouped, sizes, delete" — grouping unqualified, no kind split and no collapsing. Two earlier entries here refine it: 2026-07-29 "only series get a heading in the *Downloaded* tab" (a film is a headerless group of one) and 2026-07-29 "the Downloaded tab gathers films under a shared Movies heading, after every series group". `DownloadEntity.seriesName`'s KDoc documents its double meaning — an episode's series *or* a track's album — as deliberate, and `DownloadEnqueuer` writes `seriesName ?: album` into it.
 - **Done instead:** three nullable columns give each fact its own home (`itemType`, `albumName`, `groupId`), `seriesName` goes back to meaning only an episode's series, and the enqueuer writes all four explicitly; database v10 → v11 as an `@AutoMigration`, with `DownloadedMetadataRefresher` backfilling pre-v11 rows through a single SQL-guarded `UPDATE ... WHERE itemType IS NULL`. On that foundation the *Downloaded* tab becomes three ordered sections (MOVIES, SERIES, MUSIC — kind headers drawn only when more than one kind is present), with every series and album group folded by default to a one-line header carrying its item count and size. Expansion is a `Set<String>` of group keys in `LocalState`, in-memory only, like the tab selection beside it. Films keep no heading of their own, so the 2026-07-29 headerless-film rule stands; the shared *Movies* heading is superseded by the MOVIES kind header, which now comes first.
 - **Reason:** the crowding was the symptom; one column carrying two meanings was the cause. With an album and a show indistinguishable at the data layer, a Movies/Series/Music split could only be reconstructed in Compose from the joined `item?.type` — a guess layered over a column that had already thrown the answer away, and one that guesses wrong in exactly the degraded state (`DownloadItem.item == null`, a wiped or unreadable item cache) the denormalised columns exist to survive. Grouping on `groupId` rather than the heading text also stops two same-named albums by different artists merging into one group, the same failure the 2026-07-29 entry recorded for same-titled films. Moving albums out of `seriesName` is behaviourally neutral for `SiblingSeeder`'s `(seriesName, quality)` size lookups: `seedPendingSiblingsOf` returns early on `!quality.isTranscoded` and music is always `ORIGINAL` (`planQuality` short-circuits `AUDIO`), so an audio row could never reach them — and their index is unchanged.
+## 2026-08-26 — release version identity moves out of the convention plugin (not in plan)
+- **Scope:** `build-logic/convention/src/main/kotlin/AndroidApplicationConventionPlugin.kt`
+  (`versionCode`/`versionName` now read via `providers.gradleProperty`, failing the build
+  with a named-property message if either is absent); root `gradle.properties`
+  (`jellyboost.versionCode=1`, `jellyboost.versionName=0.1.0`).
+- **Plan said:** nothing — `docs/PLAN.md` does not mention version code/name handling or
+  Play Store release mechanics anywhere.
+- **Done instead:** the two literals hardcoded in the convention plugin (`versionCode = 1`,
+  `versionName = "0.1.0"`) move to `gradle.properties` as `jellyboost.versionCode` /
+  `jellyboost.versionName`, read at configuration time instead of hardcoded. Values are
+  set to `1.0.0` — the user picked 1.0 for the first public release (2026-08-26); the
+  three-part form keeps the established scheme. A missing property fails the build by
+  name rather than falling back to a silent default.
+- **Reason:** Play rejects an upload whose `versionCode` is not strictly higher than the
+  last one accepted; a literal buried inside a convention plugin is not where a release
+  process looks to bump it before every upload.

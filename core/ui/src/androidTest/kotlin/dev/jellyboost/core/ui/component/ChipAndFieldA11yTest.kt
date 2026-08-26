@@ -3,6 +3,8 @@ package dev.jellyboost.core.ui.component
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -180,10 +182,44 @@ class ChipAndFieldA11yTest {
         // The 48dp target lays out inside the well; letting it measure the row instead made the
         // password field visibly taller than the username field above it.
         assertEquals(plain.height, withButton.height)
-        // …and it is still a full target, not a shrunken one bought with that height.
+        // The button's own node is the target — it carries the click and the semantics — so a
+        // 48dp frame drawn around a 40dp `IconButton` state layer measures 40dp to a11y tooling.
         val reveal = rule.onNodeWithContentDescription(REVEAL)
         reveal.assertHeightIsAtLeast(Dimens.MinTouchTarget)
         reveal.assertWidthIsAtLeast(Dimens.MinTouchTarget)
+    }
+
+    @Test
+    fun aLeadingIconDoesNotChangeWhatTheTrailingButtonMeasures() {
+        rule.setContent {
+            JellyfinTheme {
+                Column {
+                    JellyfinTextField(
+                        value = ADDRESS,
+                        onValueChange = {},
+                        label = FieldLabel(text = LABEL),
+                    )
+                    JellyfinTextField(
+                        value = ADDRESS,
+                        onValueChange = {},
+                        label = FieldLabel(text = SEARCH_LABEL),
+                        leadingIcon = { Icon(imageVector = Icons.Filled.Search, contentDescription = null) },
+                        trailingIcon = {
+                            IconButton(onClick = {}) {
+                                Icon(imageVector = Icons.Filled.Close, contentDescription = CLEAR)
+                            }
+                        },
+                    )
+                }
+            }
+        }
+
+        val plain = rule.onNodeWithContentDescription(LABEL).getUnclippedBoundsInRoot()
+        val search = rule.onNodeWithContentDescription(SEARCH_LABEL).getUnclippedBoundsInRoot()
+        assertEquals(plain.height, search.height)
+        val clear = rule.onNodeWithContentDescription(CLEAR)
+        clear.assertHeightIsAtLeast(Dimens.MinTouchTarget)
+        clear.assertWidthIsAtLeast(Dimens.MinTouchTarget)
     }
 
     private companion object {
@@ -193,6 +229,8 @@ class ChipAndFieldA11yTest {
         const val LABEL = "Server address"
         const val SECRET_LABEL = "Password"
         const val REVEAL = "Show password"
+        const val SEARCH_LABEL = "Search"
+        const val CLEAR = "Clear search"
         const val ADDRESS = "http://example.invalid:8096"
         const val FAILURE = "That server did not answer."
     }

@@ -24,8 +24,13 @@ both the compact and the two-pane auth layouts, and the search field's clear but
 the unfixed sibling of the same bug). Vertical padding now belongs to the text, not the
 well: `BasicTextField` propagates the min-height constraint into the decoration box, so
 the touch target lays out *inside* a 50dp field and both fields measure 50dp at every
-font scale. Pinned by `FieldGeometryTest` (the well can never fall below
-`Dimens.MinTouchTarget`) and by an instrumented case measuring two real fields.
+font scale. The slot's 48dp frame also turned out to be a promise nothing kept: it handed
+its child `min = 0`, so M3's `IconButton` drew its 40dp state layer inside it and *that*
+node — the one carrying the click and the semantics — was the real target, measured at
+40.2dp on the device. `propagateMinConstraints = true` makes the button itself 48dp.
+Pinned by `FieldGeometryTest` (the well can never fall below `Dimens.MinTouchTarget`) and
+by two instrumented cases — password and search, the slot's two callers — measuring real
+fields against each other and the button against 48dp. Device run: 8/8 green.
 
 **2026-08-26 — the Downloaded tab sections and folds; the download row records its
 kind.** One column had carried two meanings — `DownloadEnqueuer` filed a track's album

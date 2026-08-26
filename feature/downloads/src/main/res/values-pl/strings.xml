@@ -5,7 +5,25 @@
     <string name="downloads_wifi_only">Tylko Wi-Fi</string>
     <string name="downloads_screen_title">Pobrania</string>
 
-    <string name="downloads_group_movies">Filmy</string>
+    <string name="downloads_section_movies">Filmy</string>
+    <string name="downloads_section_series">Seriale</string>
+    <string name="downloads_section_music">Muzyka</string>
+    <plurals name="downloads_group_episode_count">
+        <item quantity="one">%1$d odcinek</item>
+        <item quantity="few">%1$d odcinki</item>
+        <item quantity="many">%1$d odcinków</item>
+        <item quantity="other">%1$d odcinków</item>
+    </plurals>
+    <plurals name="downloads_group_track_count">
+        <item quantity="one">%1$d utwór</item>
+        <item quantity="few">%1$d utwory</item>
+        <item quantity="many">%1$d utworów</item>
+        <item quantity="other">%1$d utworów</item>
+    </plurals>
+    <string name="downloads_group_expand">Rozwiń</string>
+    <string name="downloads_group_collapse">Zwiń</string>
+    <string name="downloads_group_expanded">Rozwinięty</string>
+    <string name="downloads_group_collapsed">Zwinięty</string>
 
     <string name="downloads_storage_summary">%1$s użyte · %2$s wolne</string>
     <string name="downloads_storage_free">%1$s wolne</string>

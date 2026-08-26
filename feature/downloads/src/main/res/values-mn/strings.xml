@@ -5,7 +5,21 @@
     <string name="downloads_wifi_only">Зөвхөн Wi-Fi</string>
     <string name="downloads_screen_title">Татсан</string>
 
-    <string name="downloads_group_movies">Кино</string>
+    <string name="downloads_section_movies">Кино</string>
+    <string name="downloads_section_series">Цуврал</string>
+    <string name="downloads_section_music">Хөгжим</string>
+    <plurals name="downloads_group_episode_count">
+        <item quantity="one">%1$d анги</item>
+        <item quantity="other">%1$d анги</item>
+    </plurals>
+    <plurals name="downloads_group_track_count">
+        <item quantity="one">%1$d дуу</item>
+        <item quantity="other">%1$d дуу</item>
+    </plurals>
+    <string name="downloads_group_expand">Дэлгэх</string>
+    <string name="downloads_group_collapse">Хураах</string>
+    <string name="downloads_group_expanded">Дэлгэсэн</string>
+    <string name="downloads_group_collapsed">Хураасан</string>
 
     <string name="downloads_storage_summary">%1$s ашигласан · %2$s чөлөөтэй</string>
     <string name="downloads_storage_free">%1$s чөлөөтэй</string>

@@ -5,7 +5,25 @@
     <string name="downloads_wifi_only">Wi‑Fi בלבד</string>
     <string name="downloads_screen_title">הורדות</string>
 
-    <string name="downloads_group_movies">סרטים</string>
+    <string name="downloads_section_movies">סרטים</string>
+    <string name="downloads_section_series">סדרות</string>
+    <string name="downloads_section_music">מוזיקה</string>
+    <plurals name="downloads_group_episode_count">
+        <item quantity="one">פרק אחד</item>
+        <item quantity="two">שני פרקים</item>
+        <item quantity="many">%1$d פרקים</item>
+        <item quantity="other">%1$d פרקים</item>
+    </plurals>
+    <plurals name="downloads_group_track_count">
+        <item quantity="one">רצועה אחת</item>
+        <item quantity="two">שתי רצועות</item>
+        <item quantity="many">%1$d רצועות</item>
+        <item quantity="other">%1$d רצועות</item>
+    </plurals>
+    <string name="downloads_group_expand">הרחבה</string>
+    <string name="downloads_group_collapse">כיווץ</string>
+    <string name="downloads_group_expanded">מורחב</string>
+    <string name="downloads_group_collapsed">מכווץ</string>
 
     <string name="downloads_storage_summary">%1$s בשימוש · %2$s פנויים</string>
     <string name="downloads_storage_free">%1$s פנויים</string>

@@ -5,7 +5,21 @@
     <string name="downloads_wifi_only">फक्त Wi‑Fi</string>
     <string name="downloads_screen_title">डाउनलोड्स</string>
 
-    <string name="downloads_group_movies">चित्रपट</string>
+    <string name="downloads_section_movies">चित्रपट</string>
+    <string name="downloads_section_series">मालिका</string>
+    <string name="downloads_section_music">संगीत</string>
+    <plurals name="downloads_group_episode_count">
+        <item quantity="one">%1$d भाग</item>
+        <item quantity="other">%1$d भाग</item>
+    </plurals>
+    <plurals name="downloads_group_track_count">
+        <item quantity="one">%1$d ट्रॅक</item>
+        <item quantity="other">%1$d ट्रॅक</item>
+    </plurals>
+    <string name="downloads_group_expand">विस्तृत करा</string>
+    <string name="downloads_group_collapse">संक्षिप्त करा</string>
+    <string name="downloads_group_expanded">विस्तारित केलेले</string>
+    <string name="downloads_group_collapsed">संक्षिप्त केलेले</string>
 
     <string name="downloads_storage_summary">%1$s वापरले · %2$s मोकळे</string>
     <string name="downloads_storage_free">%1$s मोकळे</string>

@@ -5,7 +5,21 @@
     <string name="downloads_wifi_only">Само Wi‑Fi</string>
     <string name="downloads_screen_title">Преземања</string>
 
-    <string name="downloads_group_movies">Филмови</string>
+    <string name="downloads_section_movies">Филмови</string>
+    <string name="downloads_section_series">Серии</string>
+    <string name="downloads_section_music">Музика</string>
+    <plurals name="downloads_group_episode_count">
+        <item quantity="one">%1$d епизода</item>
+        <item quantity="other">%1$d епизоди</item>
+    </plurals>
+    <plurals name="downloads_group_track_count">
+        <item quantity="one">%1$d песна</item>
+        <item quantity="other">%1$d песни</item>
+    </plurals>
+    <string name="downloads_group_expand">Прошири</string>
+    <string name="downloads_group_collapse">Собери</string>
+    <string name="downloads_group_expanded">Раширено</string>
+    <string name="downloads_group_collapsed">Собрано</string>
 
     <string name="downloads_storage_summary">%1$s искористено · %2$s слободно</string>
     <string name="downloads_storage_free">%1$s слободно</string>

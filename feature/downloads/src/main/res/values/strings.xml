@@ -8,10 +8,6 @@
     <string name="downloads_screen_title">Downloads</string>
 
     <!-- Downloaded tab grouping -->
-    <!-- Unreferenced by code: kept so the 69 locale files keep name parity until the translation
-         pass that adds downloads_section_movies drops it. -->
-    <string name="downloads_group_movies">Movies</string>
-
     <!-- Section labels over the three kinds, drawn uppercase in code and only when more than one
          kind is on the tab. -->
     <string name="downloads_section_movies">Movies</string>

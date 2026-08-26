@@ -4,7 +4,21 @@
     <string name="downloads_tab_queue">File d\'attente</string>
     <string name="downloads_wifi_only">Wi‑Fi uniquement</string>
     <string name="downloads_screen_title">Téléchargements</string>
-    <string name="downloads_group_movies">Films</string>
+    <string name="downloads_section_movies">Films</string>
+    <string name="downloads_section_series">Séries</string>
+    <string name="downloads_section_music">Musique</string>
+    <plurals name="downloads_group_episode_count">
+        <item quantity="one">%1$d épisode</item>
+        <item quantity="other">%1$d épisodes</item>
+    </plurals>
+    <plurals name="downloads_group_track_count">
+        <item quantity="one">%1$d piste</item>
+        <item quantity="other">%1$d pistes</item>
+    </plurals>
+    <string name="downloads_group_expand">Développer</string>
+    <string name="downloads_group_collapse">Réduire</string>
+    <string name="downloads_group_expanded">Développé</string>
+    <string name="downloads_group_collapsed">Réduit</string>
     <string name="downloads_storage_summary">%1$s utilisés · %2$s libres</string>
     <string name="downloads_storage_free">%1$s libres</string>
     <string name="downloads_stat_on_device">Sur cet appareil</string>

@@ -4,7 +4,21 @@
     <string name="downloads_tab_queue">Atendovico</string>
     <string name="downloads_wifi_only">Nur Wi‑Fi</string>
     <string name="downloads_screen_title">Elŝutoj</string>
-    <string name="downloads_group_movies">Filmoj</string>
+    <string name="downloads_section_movies">Filmoj</string>
+    <string name="downloads_section_series">Serioj</string>
+    <string name="downloads_section_music">Muziko</string>
+    <plurals name="downloads_group_episode_count">
+        <item quantity="one">%1$d epizodo</item>
+        <item quantity="other">%1$d epizodoj</item>
+    </plurals>
+    <plurals name="downloads_group_track_count">
+        <item quantity="one">%1$d trako</item>
+        <item quantity="other">%1$d trakoj</item>
+    </plurals>
+    <string name="downloads_group_expand">Malfaldi</string>
+    <string name="downloads_group_collapse">Kunfaldi</string>
+    <string name="downloads_group_expanded">Malfaldita</string>
+    <string name="downloads_group_collapsed">Kunfaldita</string>
     <string name="downloads_storage_summary">%1$s uzataj · %2$s liberaj</string>
     <string name="downloads_storage_free">%1$s liberaj</string>
     <string name="downloads_stat_on_device">Sur ĉi tiu aparato</string>

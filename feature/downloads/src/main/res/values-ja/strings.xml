@@ -5,7 +5,19 @@
     <string name="downloads_wifi_only">Wi‑Fi接続時のみ</string>
     <string name="downloads_screen_title">ダウンロード</string>
 
-    <string name="downloads_group_movies">映画</string>
+    <string name="downloads_section_movies">映画</string>
+    <string name="downloads_section_series">シリーズ</string>
+    <string name="downloads_section_music">音楽</string>
+    <plurals name="downloads_group_episode_count">
+        <item quantity="other">%1$d 話</item>
+    </plurals>
+    <plurals name="downloads_group_track_count">
+        <item quantity="other">%1$d トラック</item>
+    </plurals>
+    <string name="downloads_group_expand">展開</string>
+    <string name="downloads_group_collapse">折りたたみ</string>
+    <string name="downloads_group_expanded">展開中</string>
+    <string name="downloads_group_collapsed">折りたたみ中</string>
 
     <string name="downloads_storage_summary">使用中 %1$s · 空き %2$s</string>
     <string name="downloads_storage_free">空き %1$s</string>

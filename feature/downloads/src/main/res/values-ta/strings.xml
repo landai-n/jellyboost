@@ -5,7 +5,21 @@
     <string name="downloads_wifi_only">Wi‑Fi மட்டும்</string>
     <string name="downloads_screen_title">பதிவிறக்கங்கள்</string>
 
-    <string name="downloads_group_movies">திரைப்படங்கள்</string>
+    <string name="downloads_section_movies">திரைப்படங்கள்</string>
+    <string name="downloads_section_series">தொடர்கள்</string>
+    <string name="downloads_section_music">இசை</string>
+    <plurals name="downloads_group_episode_count">
+        <item quantity="one">%1$d அத்தியாயம்</item>
+        <item quantity="other">%1$d அத்தியாயங்கள்</item>
+    </plurals>
+    <plurals name="downloads_group_track_count">
+        <item quantity="one">%1$d பாடல்</item>
+        <item quantity="other">%1$d பாடல்கள்</item>
+    </plurals>
+    <string name="downloads_group_expand">விரிவாக்கு</string>
+    <string name="downloads_group_collapse">சுருக்கு</string>
+    <string name="downloads_group_expanded">விரிவாக்கப்பட்டது</string>
+    <string name="downloads_group_collapsed">சுருக்கப்பட்டது</string>
 
     <string name="downloads_storage_summary">%1$s பயன்படுத்தப்பட்டது · %2$s காலி</string>
     <string name="downloads_storage_free">%1$s காலி</string>

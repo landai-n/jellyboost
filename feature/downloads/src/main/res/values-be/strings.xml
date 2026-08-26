@@ -5,7 +5,25 @@
     <string name="downloads_wifi_only">Толькі Wi-Fi</string>
     <string name="downloads_screen_title">Спампоўкі</string>
 
-    <string name="downloads_group_movies">Фільмы</string>
+    <string name="downloads_section_movies">Фільмы</string>
+    <string name="downloads_section_series">Серыялы</string>
+    <string name="downloads_section_music">Музыка</string>
+    <plurals name="downloads_group_episode_count">
+        <item quantity="one">%1$d эпізод</item>
+        <item quantity="few">%1$d эпізоды</item>
+        <item quantity="many">%1$d эпізодаў</item>
+        <item quantity="other">%1$d эпізодаў</item>
+    </plurals>
+    <plurals name="downloads_group_track_count">
+        <item quantity="one">%1$d трэк</item>
+        <item quantity="few">%1$d трэкі</item>
+        <item quantity="many">%1$d трэкаў</item>
+        <item quantity="other">%1$d трэкаў</item>
+    </plurals>
+    <string name="downloads_group_expand">Разгарнуць</string>
+    <string name="downloads_group_collapse">Згарнуць</string>
+    <string name="downloads_group_expanded">Разгорнута</string>
+    <string name="downloads_group_collapsed">Згорнута</string>
 
     <string name="downloads_storage_summary">%1$s выкарыстана · %2$s вольна</string>
     <string name="downloads_storage_free">%1$s вольна</string>

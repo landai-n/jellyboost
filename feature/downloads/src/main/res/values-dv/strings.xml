@@ -5,7 +5,21 @@
     <string name="downloads_wifi_only">Wi‑Fi އެކަނި</string>
     <string name="downloads_screen_title">ޑައުންލޯޑްތައް</string>
 
-    <string name="downloads_group_movies">ފިލްމުތައް</string>
+    <string name="downloads_section_movies">ފިލްމުތައް</string>
+    <string name="downloads_section_series">ސީރީސް</string>
+    <string name="downloads_section_music">މިއުޒިކް</string>
+    <plurals name="downloads_group_episode_count">
+        <item quantity="one">%1$d އެޕިސޯޑް</item>
+        <item quantity="other">%1$d އެޕިސޯޑް</item>
+    </plurals>
+    <plurals name="downloads_group_track_count">
+        <item quantity="one">%1$d ޓްރެކް</item>
+        <item quantity="other">%1$d ޓްރެކް</item>
+    </plurals>
+    <string name="downloads_group_expand">ދިއްކޮށްލާ</string>
+    <string name="downloads_group_collapse">ފޮރުވާލާ</string>
+    <string name="downloads_group_expanded">ދިއްކޮށްލެވިފައި</string>
+    <string name="downloads_group_collapsed">ފޮރުވާލެވިފައި</string>
 
     <string name="downloads_storage_summary">%1$s ބޭނުންކޮށްފި · %2$s ހުސް</string>
     <string name="downloads_storage_free">%1$s ހުސް</string>

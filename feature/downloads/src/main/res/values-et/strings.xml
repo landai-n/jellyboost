@@ -5,7 +5,21 @@
     <string name="downloads_wifi_only">Ainult Wi‑Fi</string>
     <string name="downloads_screen_title">Allalaadimised</string>
 
-    <string name="downloads_group_movies">Filmid</string>
+    <string name="downloads_section_movies">Filmid</string>
+    <string name="downloads_section_series">Sarjad</string>
+    <string name="downloads_section_music">Muusika</string>
+    <plurals name="downloads_group_episode_count">
+        <item quantity="one">%1$d episood</item>
+        <item quantity="other">%1$d episoodi</item>
+    </plurals>
+    <plurals name="downloads_group_track_count">
+        <item quantity="one">%1$d lugu</item>
+        <item quantity="other">%1$d lugu</item>
+    </plurals>
+    <string name="downloads_group_expand">Laienda</string>
+    <string name="downloads_group_collapse">Klapi kokku</string>
+    <string name="downloads_group_expanded">Laiendatud</string>
+    <string name="downloads_group_collapsed">Kokku klapitud</string>
 
     <string name="downloads_storage_summary">%1$s kasutatud · %2$s vaba</string>
     <string name="downloads_storage_free">%1$s vaba</string>

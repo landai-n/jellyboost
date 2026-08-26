@@ -5,7 +5,21 @@
     <string name="downloads_wifi_only">Endast Wi-Fi</string>
     <string name="downloads_screen_title">Nedladdningar</string>
 
-    <string name="downloads_group_movies">Filmer</string>
+    <string name="downloads_section_movies">Filmer</string>
+    <string name="downloads_section_series">Serier</string>
+    <string name="downloads_section_music">Musik</string>
+    <plurals name="downloads_group_episode_count">
+        <item quantity="one">%1$d avsnitt</item>
+        <item quantity="other">%1$d avsnitt</item>
+    </plurals>
+    <plurals name="downloads_group_track_count">
+        <item quantity="one">%1$d spår</item>
+        <item quantity="other">%1$d spår</item>
+    </plurals>
+    <string name="downloads_group_expand">Fäll ut</string>
+    <string name="downloads_group_collapse">Fäll ihop</string>
+    <string name="downloads_group_expanded">Utfälld</string>
+    <string name="downloads_group_collapsed">Hopfälld</string>
 
     <string name="downloads_storage_summary">%1$s använt · %2$s ledigt</string>
     <string name="downloads_storage_free">%1$s ledigt</string>

@@ -4,7 +4,21 @@
     <string name="downloads_tab_queue">Kuyruk</string>
     <string name="downloads_wifi_only">Yalnızca Wi‑Fi</string>
     <string name="downloads_screen_title">İndirilenler</string>
-    <string name="downloads_group_movies">Filmler</string>
+    <string name="downloads_section_movies">Filmler</string>
+    <string name="downloads_section_series">Diziler</string>
+    <string name="downloads_section_music">Müzik</string>
+    <plurals name="downloads_group_episode_count">
+        <item quantity="one">%1$d bölüm</item>
+        <item quantity="other">%1$d bölüm</item>
+    </plurals>
+    <plurals name="downloads_group_track_count">
+        <item quantity="one">%1$d parça</item>
+        <item quantity="other">%1$d parça</item>
+    </plurals>
+    <string name="downloads_group_expand">Genişlet</string>
+    <string name="downloads_group_collapse">Daralt</string>
+    <string name="downloads_group_expanded">Genişletildi</string>
+    <string name="downloads_group_collapsed">Daraltıldı</string>
     <string name="downloads_storage_summary">%1$s kullanıldı · %2$s boş</string>
     <string name="downloads_storage_free">%1$s boş</string>
     <string name="downloads_stat_on_device">Bu cihazda</string>

@@ -5,7 +5,19 @@
     <string name="downloads_wifi_only">Wi‑Fi에서만</string>
     <string name="downloads_screen_title">다운로드</string>
 
-    <string name="downloads_group_movies">영화</string>
+    <string name="downloads_section_movies">영화</string>
+    <string name="downloads_section_series">시리즈</string>
+    <string name="downloads_section_music">음악</string>
+    <plurals name="downloads_group_episode_count">
+        <item quantity="other">%1$d화</item>
+    </plurals>
+    <plurals name="downloads_group_track_count">
+        <item quantity="other">%1$d트랙</item>
+    </plurals>
+    <string name="downloads_group_expand">펼치기</string>
+    <string name="downloads_group_collapse">접기</string>
+    <string name="downloads_group_expanded">펼침</string>
+    <string name="downloads_group_collapsed">접힘</string>
 
     <string name="downloads_storage_summary">사용 %1$s · 여유 공간 %2$s</string>
     <string name="downloads_storage_free">여유 공간 %1$s</string>

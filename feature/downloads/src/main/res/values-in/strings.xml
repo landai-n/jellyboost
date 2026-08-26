@@ -4,7 +4,19 @@
     <string name="downloads_tab_queue">Antrean</string>
     <string name="downloads_wifi_only">Hanya Wi‑Fi</string>
     <string name="downloads_screen_title">Unduhan</string>
-    <string name="downloads_group_movies">Film</string>
+    <string name="downloads_section_movies">Film</string>
+    <string name="downloads_section_series">Serial</string>
+    <string name="downloads_section_music">Musik</string>
+    <plurals name="downloads_group_episode_count">
+        <item quantity="other">%1$d episode</item>
+    </plurals>
+    <plurals name="downloads_group_track_count">
+        <item quantity="other">%1$d trek</item>
+    </plurals>
+    <string name="downloads_group_expand">Perluas</string>
+    <string name="downloads_group_collapse">Ciutkan</string>
+    <string name="downloads_group_expanded">Diperluas</string>
+    <string name="downloads_group_collapsed">Diciutkan</string>
     <string name="downloads_storage_summary">%1$s digunakan · %2$s tersisa</string>
     <string name="downloads_storage_free">%1$s tersisa</string>
     <string name="downloads_stat_on_device">Di perangkat ini</string>

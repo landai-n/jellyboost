@@ -16,7 +16,7 @@ on disk plus Room rows; tapping Play on a downloaded item still takes the online
 |---|---|
 | Detail screen | *Download* enqueues; the same button then reads *Cancel* / *Remove* / *Retry* and shows live progress. On a **season or series** it enqueues the episodes underneath (see [Containers](#containers-a-season-is-its-episodes)). |
 | Every item card | `DownloadBadge` — queued, downloading (ring), paused, downloaded (tick), failed. |
-| Downloads tab | *Downloaded* (episodes grouped under their series heading; once any series is present, every film is gathered under one shared "Movies" heading placed after the series groups — so a film never reads as part of the series above it; with no series on the tab, films stay as their own headerless rows; sizes, delete) and *Queue* (progress, speed, ETA, pause/resume/cancel/reorder per row, plus a *Pause all* / *Resume all* / *Cancel all* bar above the list, no grouping), with a storage header and the Wi-Fi-only toggle. |
+| Downloads tab | *Downloaded* (three ordered sections — MOVIES, SERIES, MUSIC — see [Sections and folding](#sections-and-folding)) and *Queue* (progress, speed, ETA, pause/resume/cancel/reorder per row, plus a *Pause all* / *Resume all* / *Cancel all* bar above the list, no grouping), with a storage header and the Wi-Fi-only toggle. |
 | Notification | Foreground, per-item progress, Pause and Cancel actions. |
 | Offline | Every downloaded item appears in the offline home / library / search, because the pipeline writes `ItemEntity(source = DOWNLOAD)` rows (M6 reads exactly those). |
 
@@ -305,6 +305,42 @@ buttons branch on, so a bulk action can never act on something its own row refus
 
 ---
 
+## Sections and folding
+
+The *Downloaded* tab is three sections in a fixed order — **MOVIES, SERIES, MUSIC** — each drawn
+under an uppercase kind label. The label appears only when **more than one** kind is present: with
+nothing but films on the tab, the rows are already all of one sort and a heading over them says
+nothing. A kind with nothing downloaded gets no section at all.
+
+Inside a section:
+
+- **Films** are one group with no heading of its own: a film's heading would repeat its own row's
+  title verbatim ("Dune" over "Dune"), and the MOVIES label already names them.
+- **Series and albums** are one group each, and each starts **collapsed** to a single header line
+  carrying the title, the item count and the size ("8 episodes · 6.1 GB"). The whole header is the
+  toggle — `Role.Button`, an expand/collapse click label, an expanded/collapsed `stateDescription`,
+  and a chevron rotated by `animateFloatAsState`.
+- A series or album row whose heading identity is missing joins a **headerless catch-all** at the
+  end of its own section, drawn like the films group. No download may drop out of the only list it
+  is deletable from.
+
+Group identity is `DownloadItem.groupKey` — the server's series/album id where the row has one, else
+`"KIND:title"` — never the heading text alone: two shows of the same name, or an album and a series
+sharing one, must stay two groups.
+
+The fold state is `DownloadsUiState.expandedGroups`, a set of **expanded** keys, so the default empty
+set *is* the collapsed default. It lives in `LocalState` beside the selected tab, which means it is
+**in-memory only**: it survives a rotation and the `WhileSubscribed` projection stopping, and resets
+on a cold start. It cannot live on `DownloadGroup` — `DownloadGroupCache` hands back the same list
+instance while the finished rows are unchanged, and a per-group flag folded into it would defeat that
+memoisation and recompose every finished row on the queue's progress ticks. A key whose group is gone
+simply stays in the set; nothing reads it.
+
+The storage header sums **every** section, folded or not: it reports what is on disk, not what is
+unfolded.
+
+---
+
 ## Screen scrolling: pinned chrome vs. one page
 
 The screen's chrome — title, storage/queue summary, tab row — is **pinned above an inner-scrolling
@@ -319,8 +355,9 @@ does not: a landscape phone is wide enough for the tablet summary but only ~360d
 put the entire window under chrome and the queue could not be reached at all; in portrait it pinned
 about half the screen and scrolled a short list inside the rest.
 
-Both layouts emit their rows through the same `LazyListScope` extensions (`downloadedRows`,
-`queueRows`) and the same `DownloadsChrome` composable, so nothing about a row's or the header's
+Both layouts emit their rows through the same `LazyListScope` extensions (`downloadedRows` — which
+is where the kind labels, group headers and the fold check live, so both layouts fold identically —
+and `queueRows`) and the same `DownloadsChrome` composable, so nothing about a row's or the header's
 appearance depends on which layout is in play; only the delete-confirmation state is hoisted to the
 screen (a `LazyListScope` extension cannot `remember`).
 
@@ -440,7 +477,10 @@ delete do not.
 | `DownloadedMetadataRefresherTest` | when it fires (app start online, the return of the connection, never while offline, once per stretch, re-armed by losing it, no API call with nothing downloaded); what it writes (`source = DOWNLOAD`, parents, batching at 50, `cachedAt` preserved for an existing row and stamped for a new one); what it survives (a failing fetch, one failing batch of several, a remotely deleted item, a failing parent fetch, no session, an unreadable table, a failing write); and the file top-up (each pass offering its fresh DTOs, parents excluded, nothing offered when the fetch failed, a failing top-up not costing the metadata write) |
 | `DownloadDeleterTest` | file-before-rows ordering, the surviving-parent set, user-data prune |
 | `DownloadRepositoryImplTest` | status → badge mapping, mutation ordering, reordering |
-| `DownloadsViewModelTest` | tab split, grouping, actions, reorder bounds, the queue-wide actions (which statuses each one touches, the transcode message, the cancel-all confirmation) |
+| `DownloadsViewModelTest` | tab split, sectioning (films first, series after, albums in their own section), folding (every group starts collapsed, one toggle moves one key, an unfolded group survives the projection stopping, the storage figure ignores what is unfolded), actions, reorder bounds, the queue-wide actions (which statuses each one touches, the transcode message, the cancel-all confirmation) |
+| `DownloadsUiStateTest` | queue aggregates and the precomputed chrome; the fixed MOVIES/SERIES/MUSIC order, empty sections omitted, `showKindHeaders` off for a single kind, the one non-folding films group, a series and an album sharing a name staying two groups, two same-named shows told apart by their heading id, the headerless catch-all, and a legacy row with no type still appearing under its series |
+| `DownloadGroupCacheTest` | the same list instance back while only queue rows moved; every field a row draws from invalidating it |
+| `DownloadRowsTest` | the size shown and how it is worded, ETA, pause/resume eligibility, playback start position, row titles (the group prefix dropped inside a group, for albums as well as series), the announced percentage |
 | `DownloadSpeedTrackerTest` | derived speed, smoothing, restarts, stopped items |
 
 `FileDownloader` is tested against an OkHttp `Interceptor` returning canned responses — no server,

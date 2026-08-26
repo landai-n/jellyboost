@@ -8,9 +8,32 @@
     <string name="downloads_screen_title">Downloads</string>
 
     <!-- Downloaded tab grouping -->
-    <!-- Heading over every standalone film, shown only once at least one series group is also on
-         the tab — see DownloadGroup.isMoviesSection. -->
+    <!-- Unreferenced by code: kept so the 69 locale files keep name parity until the translation
+         pass that adds downloads_section_movies drops it. -->
     <string name="downloads_group_movies">Movies</string>
+
+    <!-- Section labels over the three kinds, drawn uppercase in code and only when more than one
+         kind is on the tab. -->
+    <string name="downloads_section_movies">Movies</string>
+    <string name="downloads_section_series">Series</string>
+    <string name="downloads_section_music">Music</string>
+
+    <!-- How many rows a folded series or album group holds, shown beside its size
+         ("8 episodes · 6.1 GB"). -->
+    <plurals name="downloads_group_episode_count">
+        <item quantity="one">%1$d episode</item>
+        <item quantity="other">%1$d episodes</item>
+    </plurals>
+    <plurals name="downloads_group_track_count">
+        <item quantity="one">%1$d track</item>
+        <item quantity="other">%1$d tracks</item>
+    </plurals>
+
+    <!-- Click labels and states for a group header, which is the whole fold control. -->
+    <string name="downloads_group_expand">Expand</string>
+    <string name="downloads_group_collapse">Collapse</string>
+    <string name="downloads_group_expanded">Expanded</string>
+    <string name="downloads_group_collapsed">Collapsed</string>
 
     <!-- Storage header -->
     <string name="downloads_storage_summary">%1$s used · %2$s free</string>

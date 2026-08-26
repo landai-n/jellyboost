@@ -2,6 +2,9 @@
 
 *Last updated: 2026-08-26*
 
+> Published at <https://landai-n.github.io/jellyboost/privacy-policy.html> (GitHub Pages,
+> `gh-pages` branch). This file is the source; edit here, re-render there.
+
 Jellyboost is a native Android client for [Jellyfin](https://jellyfin.org), the open-source
 media server. It is an independent, community project and is not affiliated with, endorsed
 by, or sponsored by the Jellyfin project. Jellyboost has no back end of its own: it is a
@@ -99,6 +102,6 @@ where practical.
 
 ## Contact
 
-Questions about this policy can be sent to `<contact-email>`. For issues or feature
-requests, use the project's issue tracker at
-[github.com/landai-n/jellyboost](https://github.com/landai-n/jellyboost).
+Questions about this policy, along with issues and feature requests, go to the project's
+issue tracker at
+[github.com/landai-n/jellyboost/issues](https://github.com/landai-n/jellyboost/issues).

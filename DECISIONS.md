@@ -4418,9 +4418,9 @@ Seeded from the approved plan; listed for traceability, no divergence:
 - **Done instead:** the two literals hardcoded in the convention plugin (`versionCode = 1`,
   `versionName = "0.1.0"`) move to `gradle.properties` as `jellyboost.versionCode` /
   `jellyboost.versionName`, read at configuration time instead of hardcoded. Values are
-  unchanged — `0.1.0` stays a placeholder; the eventual `1.0` naming is a pending user
-  decision, not made here. A missing property fails the build by name rather than falling
-  back to a silent default.
+  set to `1.0.0` — the user picked 1.0 for the first public release (2026-08-26); the
+  three-part form keeps the established scheme. A missing property fails the build by
+  name rather than falling back to a silent default.
 - **Reason:** Play rejects an upload whose `versionCode` is not strictly higher than the
   last one accepted; a literal buried inside a convention plugin is not where a release
   process looks to bump it before every upload.

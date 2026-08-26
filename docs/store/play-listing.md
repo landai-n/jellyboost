@@ -10,16 +10,16 @@ Play Store titles are capped at **30 characters**.
 
 | Candidate | Chars | Fits 30? |
 |---|---:|:---:|
-| `Jellyboost — a client for Jellyfin` | 34 | **No** |
+| `Jellyboost - A Jellyfin client` | 30 | **Yes — user's pick** |
 | `Jellyboost for Jellyfin` | 23 | Yes |
 | `Jellyboost: Jellyfin Client` | 27 | Yes |
+| `Jellyboost — a client for Jellyfin` | 34 | No |
 
-The Matrix-preferred primary title, "Jellyboost — a client for Jellyfin," is 4 characters over
-the limit and cannot be used as-is on the Play listing (it's fine as a README/tagline). Pending
-the naming answer, **`Jellyboost for Jellyfin`** (23 chars) is the recommended fallback: it keeps
-the app name first, states the relationship to Jellyfin plainly (helps with Play's
-unauthorized-content review, see below), and leaves headroom. `Jellyboost: Jellyfin Client` (27
-chars) is a secondary option if "for" reads as too informal.
+**Title: `Jellyboost - A Jellyfin client`** (user decision 2026-08-26) — exactly 30 characters,
+so it fits the cap with nothing to spare; re-count before any edit. App name first, relationship
+to Jellyfin stated plainly (helps with Play's unauthorized-content review, see below).
+`Jellyboost for Jellyfin` (23) stays as the fallback if the cap or policy ever forces a change.
+Still contingent on the Matrix naming answer for "Jellyboost" itself.
 
 ## Short description
 

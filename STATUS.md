@@ -14,6 +14,17 @@ baseline profile still compiles into the release APK (`assets/dexopt/baseline.pr
 
 ## Planned milestone: M13 — Music (approved 2026-08-05; all 6 phases landed, code complete; device DoD owed)
 
+**2026-08-26 — GPL-3.0 distribution compliance in Settings > About.** Three
+rows under *App version*: *Source code* (`ACTION_VIEW` on the repository, the
+URL on screen as the offer §6 asks for), *Licence* (the repo's `LICENSE`
+bundled verbatim as a raw resource, reflowed for a phone and pinned
+byte-identical by test), and *Third-party licences* (223 artifacts and six
+licence texts generated at build time by the AboutLibraries Gradle plugin from
+`:app`'s resolved graph, drawn with `aboutlibraries-compose-m3`). Six new
+strings, base + 69 locales; seven unit tests (DECISIONS 2026-08-26).
+**Owed to a device walk:** the three rows and the two pushed screens at
+fontScale 2.0 and in landscape.
+
 **2026-08-21 — blur input-scale fix + queue dismissal.** The mini-player's
 checkerboard was PERF-1's `HazeInputScale.Auto` downsampling at ~1/3 on the
 wide bars; `glassSurface` gains a per-caller scale and the two bars pin

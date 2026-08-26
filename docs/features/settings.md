@@ -17,6 +17,7 @@ through `:core:network`, and asks `:data:downloads` for the storage figures and 
 | Downloads | *Wi-Fi only* — pause transfers on metered networks; *Download quality*; a storage line reporting used/free bytes and where the files live; *Storage location* — one option per mounted volume (internal storage, SD card), shown only on a device that has more than one. |
 | Connectivity | *Offline mode* — the same force-offline preference the home overflow toggles and the offline banner reports. |
 | Account | The signed-in user name and the server name, and *Sign out* behind a confirm dialog with an optional *Also delete downloads*. |
+| About | The app version; *Source code*, which opens the repository in a browser; *Licence*, which pushes the app's own GPL-3.0 text; *Third-party licences*, which pushes the generated list of bundled dependencies. |
 
 Every row writes a DataStore key and reads the same key back. Nothing is cached in the screen, so a
 preference changed somewhere else — the Downloads tab's own Wi-Fi switch, the home overflow's
@@ -44,15 +45,20 @@ JellyfinNavHost
                                ├── PlaybackSection
                                ├── DownloadsSection
                                ├── ConnectivitySection
-                               └── AccountSection → SignOutDialog
+                               ├── AccountSection → SignOutDialog
+                               └── AboutSection ──→ Routes.Licence            → LicenceScreen
+                                                └─ Routes.ThirdPartyLicences → ThirdPartyLicencesScreen
 ```
 
 | File | Responsibility |
 |---|---|
 | `SettingsViewModel.kt` | The projection and the five setters; owns the sign-out ordering. |
 | `SettingsUiState.kt` | `SettingsUiState` and `AccountInfo`. |
-| `SettingsScreen.kt` | `Scaffold` + `TopAppBar`, the four sections, the sign-out dialog, the preview. |
-| `SettingsRows.kt` | The row vocabulary — section, switch row, choice group/row, info row — plus `formatBytes`. |
+| `SettingsScreen.kt` | `Scaffold` + `TopAppBar`, the five sections, the sign-out dialog, the source-code intent, the preview. |
+| `SettingsRows.kt` | The row vocabulary — section, switch row, choice group/row, info row, action row — plus `formatBytes`. |
+| `LicenceViewModel.kt` | Reads `res/raw/gpl_3_0.txt` off the IO dispatcher and reflows it into paragraphs (`licenceBlocks`). |
+| `LicenceScreen.kt` | The app's own licence: a translated sentence, then the untranslated document. |
+| `ThirdPartyLicencesScreen.kt` | AboutLibraries' `LibrariesContainer` over the raw resource `:app` hands it. |
 
 The state combines nine sources. `combine` tops out at five typed flows, so the six preference
 keys fold into one private `Preferences` value first and the outer `combine` takes that plus the
@@ -192,6 +198,41 @@ waits on SAF (DECISIONS.md, 2026-07-29).
 
 ---
 
+## About, and what distributing the binary requires
+
+The app is GPL-3.0. Shipping the compiled thing means conveying the licence with it (§4) and
+offering the corresponding source (§6), and the bundle also carries a few hundred Apache-2.0 AndroidX
+artifacts, each of which wants its notice. Three rows under *App version* carry all of it.
+
+**Source code.** An `Intent.ACTION_VIEW` on `https://github.com/landai-n/jellyboost`, with the URL
+itself as the row's supporting line — the URL is the offer, so it stays on screen rather than hiding
+behind a label. A device with no browser at all throws `ActivityNotFoundException`; that is a
+permanent failure, not a transient one, so it is reported once as a toast instead of retried.
+
+**Licence.** The repository's `LICENSE` is bundled verbatim as `res/raw/gpl_3_0.txt` — a raw
+resource, not a string: it is the document being conveyed, and putting it in `strings.xml` would
+oblige `validate_i18n.py` to demand 69 translations of a legal text nobody should translate. Above it
+sits one translated sentence saying what the licence grants, plus the licence's own name, which is
+`translatable="false"` for the same reason.
+
+The file is hard-wrapped at ~70 columns, which on a phone breaks every line twice, so `licenceBlocks`
+rejoins each paragraph and leaves headings — lines indented eight columns or more in the source —
+standing alone. `LicenceBlocksTest` pins that the reflow loses no word, and `LicenceViewModelTest`
+pins that the bundled copy is byte-identical to `LICENSE`.
+
+**Third-party licences.** `com.mikepenz:aboutlibraries`. Its Gradle plugin is applied to `:app`,
+because `:app`'s resolved dependency graph is the one that ships, and emits `R.raw.aboutlibraries` —
+223 artifacts with the full text of six licences, read from the real graph at build time, so the list
+cannot drift from the bundle. `:feature:settings` draws it with `LibrariesContainer` but never names
+`:app`'s `R`: the resource id arrives as a parameter, the same seam `appVersion` already uses.
+
+Its colours are passed explicitly rather than defaulted. `LibraryDefaults.libraryColors()` derives
+the dialog background, the version chip and the content colour from `libraryBackgroundColor`, so the
+`Color.Transparent` that lets the app's own background show through would otherwise make the dialog
+and the chip invisible.
+
+---
+
 ## Not here
 
 **An arbitrary storage folder.** The picker above chooses between app-specific volume directories,
@@ -215,6 +256,8 @@ later, it is a `SessionRepository` change first.
 |---|---|
 | `SettingsViewModelTest` | each of the six preferences read back from the store and written through by its setter; a preference changed upstream reaching an open screen; the storage volumes reaching the state and a card removed while the screen is open; a switch passing the user's agreement through, and a refused switch leaving the state alone; `LoggedIn` vs `LoggedOut` account info; delete-then-sign-out ordering (`coVerifyOrder`); no deletes when the box is unchecked; a failed delete still signing out; a screen popped mid-sign-out (`viewModelScope` cancelled) still deleting and signing out; the busy flag going up on the first ask and staying up |
 | `SessionRepositoryTest` | (`:core:network`) a caller cancelled mid-goodbye still clearing the credentials and reaching `LoggedOut`; a server that never answers costing the sign-out `SERVER_GOODBYE_TIMEOUT` rather than the session; a hook that hangs being cut short the same way |
+| `LicenceViewModelTest` | the bundled text reaching the screen as paragraphs; an unreadable raw resource leaving the screen empty rather than taking the process down; the packaged copy being byte-identical to the repository's `LICENSE` |
+| `LicenceBlocksTest` | headings standing alone, hard-wrapped prose joining, blank lines separating, and the whole document surviving the reflow word for word |
 
 `SettingsContent` is stateless and takes a `SettingsUiState` plus a `SettingsActions` bundle, so the
 `@Preview` renders the full screen — every section, a live storage figure, a signed-in account —

@@ -50,4 +50,10 @@
     <string name="settings_sign_out_delete_downloads">இந்தச் சாதனத்திலிருந்து பதிவிறக்கங்களையும் நீக்கு</string>
     <string name="settings_section_about">ஆப் பற்றி</string>
     <string name="settings_version">ஆப் பதிப்பு</string>
+    <string name="settings_source_code">மூலக் குறியீடு</string>
+    <string name="settings_open_link_failed">இந்தச் சாதனத்தில் இணைப்புகளைத் திறக்கக்கூடிய பயன்பாடு எதுவும் இல்லை.</string>
+    <string name="settings_licence">உரிமம்</string>
+    <string name="settings_licence_intro">Jellyboost ஒரு கட்டற்ற மென்பொருள்: GNU General Public License பதிப்பு 3 அல்லது அதற்குப் பிந்தைய எந்தப் பதிப்பின் நிபந்தனைகளின் கீழும் நீங்கள் இதைப் பயன்படுத்தலாம், ஆய்வு செய்யலாம், பகிரலாம், மாற்றலாம். இது எந்த உத்தரவாதமும் இன்றி வழங்கப்படுகிறது.</string>
+    <string name="settings_third_party">மூன்றாம் தரப்பு உரிமங்கள்</string>
+    <string name="settings_third_party_supporting">இந்தப் பயன்பாடு உருவாக்கப்பட்ட திறந்த மூல கூறுகள்.</string>
 </resources>

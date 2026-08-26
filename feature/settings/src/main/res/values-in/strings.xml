@@ -45,4 +45,10 @@
     <string name="settings_sign_out_delete_downloads">Hapus juga unduhan dari perangkat ini</string>
     <string name="settings_section_about">Tentang</string>
     <string name="settings_version">Versi aplikasi</string>
+    <string name="settings_source_code">Kode sumber</string>
+    <string name="settings_open_link_failed">Tidak ada aplikasi di perangkat ini yang dapat membuka tautan.</string>
+    <string name="settings_licence">Lisensi</string>
+    <string name="settings_licence_intro">Jellyboost adalah perangkat lunak bebas: kamu boleh menggunakan, mempelajari, membagikan, dan mengubahnya berdasarkan ketentuan GNU General Public License versi 3 atau versi mana pun setelahnya. Disediakan tanpa jaminan apa pun.</string>
+    <string name="settings_third_party">Lisensi pihak ketiga</string>
+    <string name="settings_third_party_supporting">Komponen sumber terbuka yang membangun aplikasi ini.</string>
 </resources>

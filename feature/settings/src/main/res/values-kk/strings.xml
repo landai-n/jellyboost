@@ -50,4 +50,10 @@
     <string name="settings_sign_out_delete_downloads">Осы құрылғыдағы жүктеулерді де жою</string>
     <string name="settings_section_about">Қолданба туралы</string>
     <string name="settings_version">Қолданба нұсқасы</string>
+    <string name="settings_source_code">Бастапқы код</string>
+    <string name="settings_open_link_failed">Бұл құрылғыда сілтемелерді аша алатын қолданба жоқ.</string>
+    <string name="settings_licence">Лицензия</string>
+    <string name="settings_licence_intro">Jellyboost — еркін бағдарламалық жасақтама: оны GNU General Public License лицензиясының 3-нұсқасы немесе кез келген кейінгі нұсқасы шарттары бойынша пайдалануға, зерттеуге, таратуға және өзгертуге болады. Ол ешқандай кепілдіксіз беріледі.</string>
+    <string name="settings_third_party">Үшінші тарап лицензиялары</string>
+    <string name="settings_third_party_supporting">Осы қолданба құрастырылған ашық бастапқы кодты құрамдастар.</string>
 </resources>

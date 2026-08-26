@@ -50,4 +50,10 @@
     <string name="settings_sign_out_delete_downloads">Och d\'Downloads vun dësem Apparat läschen</string>
     <string name="settings_section_about">Iwwer d\'App</string>
     <string name="settings_version">App-Versioun</string>
+    <string name="settings_source_code">Quellcode</string>
+    <string name="settings_open_link_failed">Keng App op dësem Apparat kann Linke opmaachen.</string>
+    <string name="settings_licence">Lizenz</string>
+    <string name="settings_licence_intro">Jellyboost ass fräi Software: du däerfs se no de Bedingungen vun der GNU General Public License Versioun 3 oder enger spéiderer Versioun benotzen, studéieren, deelen an änneren. Si kënnt ouni all Garantie.</string>
+    <string name="settings_third_party">Lizenze vun Drëttubidder</string>
+    <string name="settings_third_party_supporting">D\'Open-Source-Komponenten, aus deenen dës App gebaut ass.</string>
 </resources>

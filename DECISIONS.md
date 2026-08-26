@@ -4407,3 +4407,20 @@ Seeded from the approved plan; listed for traceability, no divergence:
 - **Plan said:** nothing on comment style; the earlier entry today removed provenance but let the narration it decorated stand.
 - **Done instead:** user rejected that result — stripping citations while keeping the prose left the noise in place. The bar is now: a comment earns its place only by stating a constraint, invariant, trap, or measured external fact the code cannot show, in as few lines as possible. What-the-code-does narration, name-restating KDoc, @param echoes, and design-rationale essays are deleted; load-bearing constraints inside them survive as single lines. The gate now flags such noise in every staged diff.
 - **Reason:** a comment that narrates readable code is a second copy of the code that goes stale for free; the only comments worth maintaining are the ones that stop a wrong edit or record what cannot be re-derived from the source.
+
+## 2026-08-26 — release version identity moves out of the convention plugin (not in plan)
+- **Scope:** `build-logic/convention/src/main/kotlin/AndroidApplicationConventionPlugin.kt`
+  (`versionCode`/`versionName` now read via `providers.gradleProperty`, failing the build
+  with a named-property message if either is absent); root `gradle.properties`
+  (`jellyboost.versionCode=1`, `jellyboost.versionName=0.1.0`).
+- **Plan said:** nothing — `docs/PLAN.md` does not mention version code/name handling or
+  Play Store release mechanics anywhere.
+- **Done instead:** the two literals hardcoded in the convention plugin (`versionCode = 1`,
+  `versionName = "0.1.0"`) move to `gradle.properties` as `jellyboost.versionCode` /
+  `jellyboost.versionName`, read at configuration time instead of hardcoded. Values are
+  unchanged — `0.1.0` stays a placeholder; the eventual `1.0` naming is a pending user
+  decision, not made here. A missing property fails the build by name rather than falling
+  back to a silent default.
+- **Reason:** Play rejects an upload whose `versionCode` is not strictly higher than the
+  last one accepted; a literal buried inside a convention plugin is not where a release
+  process looks to bump it before every upload.

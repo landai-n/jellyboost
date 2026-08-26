@@ -190,10 +190,15 @@ fun JellyfinTextField(
                     if (trailingIcon != null) {
                         // Fits inside the well rather than stretching it, which holds only while
                         // [FieldMinHeight] >= [Dimens.MinTouchTarget]; `requiredSize` keeps the
-                        // target 48dp even where a caller bounds the field's height below that.
+                        // frame 48dp even where a caller bounds the field's height below that.
+                        // M3's `IconButton` declares a 40dp state layer and carries the click and
+                        // the semantics on that node, and a `Box` hands its children `min = 0`:
+                        // both are needed for the 48dp floor to reach the button rather than stop
+                        // at the frame drawn around it.
                         Box(
                             modifier = Modifier.requiredSize(Dimens.MinTouchTarget),
                             contentAlignment = Alignment.Center,
+                            propagateMinConstraints = true,
                         ) {
                             CompositionLocalProvider(
                                 LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant,

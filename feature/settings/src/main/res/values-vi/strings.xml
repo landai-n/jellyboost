@@ -45,4 +45,10 @@
     <string name="settings_sign_out_delete_downloads">Đồng thời xóa các tải xuống khỏi thiết bị này</string>
     <string name="settings_section_about">Giới thiệu</string>
     <string name="settings_version">Phiên bản ứng dụng</string>
+    <string name="settings_source_code">Mã nguồn</string>
+    <string name="settings_open_link_failed">Không có ứng dụng nào trên thiết bị này mở được liên kết.</string>
+    <string name="settings_licence">Giấy phép</string>
+    <string name="settings_licence_intro">Jellyboost là phần mềm tự do: bạn có thể dùng, nghiên cứu, chia sẻ và thay đổi nó theo các điều khoản của GNU General Public License, phiên bản 3 hoặc bất kỳ phiên bản nào sau đó. Phần mềm được cung cấp mà không có bảo hành nào.</string>
+    <string name="settings_third_party">Giấy phép của bên thứ ba</string>
+    <string name="settings_third_party_supporting">Các thành phần mã nguồn mở tạo nên ứng dụng này.</string>
 </resources>

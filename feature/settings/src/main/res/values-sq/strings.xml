@@ -50,4 +50,10 @@
     <string name="settings_sign_out_delete_downloads">Fshi gjithashtu shkarkimet nga kjo pajisje</string>
     <string name="settings_section_about">Rreth aplikacionit</string>
     <string name="settings_version">Versioni i aplikacionit</string>
+    <string name="settings_source_code">Kodi burimor</string>
+    <string name="settings_open_link_failed">Asnjë aplikacion në këtë pajisje nuk mund të hapë lidhje.</string>
+    <string name="settings_licence">Licenca</string>
+    <string name="settings_licence_intro">Jellyboost është software i lirë: mund ta përdorni, studioni, shpërndani dhe ndryshoni sipas kushteve të GNU General Public License, versioni 3 ose çdo version i mëvonshëm. Vjen pa asnjë garanci.</string>
+    <string name="settings_third_party">Licenca të palëve të treta</string>
+    <string name="settings_third_party_supporting">Komponentët me kod të hapur me të cilët është ndërtuar ky aplikacion.</string>
 </resources>

@@ -1,5 +1,9 @@
 package dev.jellyboost.feature.settings
 
+import android.content.ActivityNotFoundException
+import android.content.Context
+import android.content.Intent
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,6 +15,9 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -23,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -32,6 +40,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.jellyboost.core.common.formatBytes
 import dev.jellyboost.core.common.model.DownloadQuality
@@ -46,6 +55,7 @@ import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.data.downloads.model.StorageLocations
 import dev.jellyboost.data.downloads.model.StorageUsage
 import dev.jellyboost.data.downloads.model.StorageVolumeOption
+import timber.log.Timber
 import dev.jellyboost.core.ui.R as CoreUiR
 
 /**
@@ -59,6 +69,8 @@ fun SettingsScreen(
     viewModel: SettingsViewModel,
     onBack: () -> Unit,
     onHome: () -> Unit,
+    onOpenLicence: () -> Unit,
+    onOpenThirdPartyLicences: () -> Unit,
     appVersion: String,
     modifier: Modifier = Modifier,
 ) {
@@ -79,6 +91,8 @@ fun SettingsScreen(
             ),
         onBack = onBack,
         onHome = onHome,
+        onOpenLicence = onOpenLicence,
+        onOpenThirdPartyLicences = onOpenThirdPartyLicences,
         appVersion = appVersion,
         modifier = modifier,
     )
@@ -106,6 +120,8 @@ fun SettingsContent(
     actions: SettingsActions,
     onBack: () -> Unit,
     onHome: () -> Unit,
+    onOpenLicence: () -> Unit,
+    onOpenThirdPartyLicences: () -> Unit,
     appVersion: String,
     modifier: Modifier = Modifier,
 ) {
@@ -139,7 +155,11 @@ fun SettingsContent(
                     onSignOutClick = { if (!state.signingOut) confirmingSignOut = true },
                 )
                 HorizontalDivider()
-                AboutSection(appVersion = appVersion)
+                AboutSection(
+                    appVersion = appVersion,
+                    onOpenLicence = onOpenLicence,
+                    onOpenThirdPartyLicences = onOpenThirdPartyLicences,
+                )
             }
         }
     }
@@ -448,17 +468,70 @@ private fun AccountSection(
     }
 }
 
-/** Last in the list, so it carries the screen's bottom breathing room rather than the sign-out button. */
+/**
+ * Last in the list, so it carries the screen's bottom breathing room rather than the sign-out button.
+ *
+ * The three rows below the version are what makes the binary distributable: GPL-3.0 §4 requires the
+ * licence to be conveyed with it, §6 requires the corresponding source to be offered, and the bundled
+ * Apache-2.0 artifacts each require their own notice.
+ */
 @Composable
-private fun AboutSection(appVersion: String) {
+private fun AboutSection(
+    appVersion: String,
+    onOpenLicence: () -> Unit,
+    onOpenThirdPartyLicences: () -> Unit,
+) {
     SettingsSection(title = stringResource(R.string.settings_section_about)) {
         SettingsInfoRow(
             label = stringResource(R.string.settings_version),
             value = appVersion,
+        )
+        SourceCodeRow()
+        SettingsActionRow(
+            label = stringResource(R.string.settings_licence),
+            supportingText = stringResource(R.string.settings_licence_name),
+            icon = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            onClick = onOpenLicence,
+        )
+        SettingsActionRow(
+            label = stringResource(R.string.settings_third_party),
+            supportingText = stringResource(R.string.settings_third_party_supporting),
+            icon = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            onClick = onOpenThirdPartyLicences,
             modifier = Modifier.padding(bottom = Dimens.SpaceExtraLarge),
         )
     }
 }
+
+/** GPL-3.0 §6's offer of the corresponding source; the URL is the offer, so it stays on screen. */
+@Composable
+private fun SourceCodeRow() {
+    val context = LocalContext.current
+    val failureMessage = stringResource(R.string.settings_open_link_failed)
+
+    SettingsActionRow(
+        label = stringResource(R.string.settings_source_code),
+        supportingText = SOURCE_CODE_URL,
+        icon = Icons.AutoMirrored.Filled.OpenInNew,
+        onClick = { openSourceCode(context, failureMessage) },
+    )
+}
+
+private fun openSourceCode(
+    context: Context,
+    failureMessage: String,
+) {
+    try {
+        context.startActivity(Intent(Intent.ACTION_VIEW, SOURCE_CODE_URL.toUri()))
+    } catch (error: ActivityNotFoundException) {
+        // Permanent, not transient: a device with no browser does not grow one on a retry, so the
+        // user is told once rather than left with a row that silently does nothing.
+        Timber.w(error, "No activity on this device can open a web link")
+        Toast.makeText(context, failureMessage, Toast.LENGTH_LONG).show()
+    }
+}
+
+private const val SOURCE_CODE_URL = "https://github.com/landai-n/jellyboost"
 
 /**
  * The delete-downloads box is unchecked by default: a user signing out to switch accounts on a
@@ -534,49 +607,51 @@ private fun SegmentSkipMode.labelRes(): Int =
         SegmentSkipMode.AUTO_SKIP -> R.string.settings_skip_mode_auto
     }
 
+private val PreviewState =
+    SettingsUiState(
+        introSkipMode = SegmentSkipMode.AUTO_SKIP,
+        outroSkipMode = SegmentSkipMode.SHOW_BUTTON,
+        pipOnLeave = true,
+        downloadOverWifiOnly = true,
+        downloadQuality = DownloadQuality.MEDIUM,
+        forceOffline = false,
+        storage =
+            StorageUsage(
+                usedBytes = 12_300_000_000L,
+                availableBytes = 41_000_000_000L,
+                rootPath = "/storage/emulated/0/Android/data/dev.jellyboost.app/files/downloads",
+            ),
+        storageLocations =
+            StorageLocations(
+                volumes =
+                    listOf(
+                        StorageVolumeOption(
+                            id = "primary",
+                            description = "Internal shared storage",
+                            isRemovable = false,
+                            path = "/storage/emulated/0/Android/data/dev.jellyboost.app/files",
+                            availableBytes = 41_000_000_000L,
+                        ),
+                        StorageVolumeOption(
+                            id = "1A2B-3C4D",
+                            description = "SD card",
+                            isRemovable = true,
+                            path = "/storage/1A2B-3C4D/Android/data/dev.jellyboost.app/files",
+                            availableBytes = 118_000_000_000L,
+                        ),
+                    ),
+                activeVolumeId = "primary",
+                downloadCount = 3,
+            ),
+        account = AccountInfo(userName = "casey", serverName = "Living Room"),
+    )
+
 @Preview(name = "Settings", showBackground = true, backgroundColor = 0xFF101010, heightDp = 900)
 @Composable
 private fun SettingsPreview() {
     JellyfinTheme {
         SettingsContent(
-            state =
-                SettingsUiState(
-                    introSkipMode = SegmentSkipMode.AUTO_SKIP,
-                    outroSkipMode = SegmentSkipMode.SHOW_BUTTON,
-                    pipOnLeave = true,
-                    downloadOverWifiOnly = true,
-                    downloadQuality = DownloadQuality.MEDIUM,
-                    forceOffline = false,
-                    storage =
-                        StorageUsage(
-                            usedBytes = 12_300_000_000L,
-                            availableBytes = 41_000_000_000L,
-                            rootPath = "/storage/emulated/0/Android/data/dev.jellyboost.app/files/downloads",
-                        ),
-                    storageLocations =
-                        StorageLocations(
-                            volumes =
-                                listOf(
-                                    StorageVolumeOption(
-                                        id = "primary",
-                                        description = "Internal shared storage",
-                                        isRemovable = false,
-                                        path = "/storage/emulated/0/Android/data/dev.jellyboost.app/files",
-                                        availableBytes = 41_000_000_000L,
-                                    ),
-                                    StorageVolumeOption(
-                                        id = "1A2B-3C4D",
-                                        description = "SD card",
-                                        isRemovable = true,
-                                        path = "/storage/1A2B-3C4D/Android/data/dev.jellyboost.app/files",
-                                        availableBytes = 118_000_000_000L,
-                                    ),
-                                ),
-                            activeVolumeId = "primary",
-                            downloadCount = 3,
-                        ),
-                    account = AccountInfo(userName = "casey", serverName = "Living Room"),
-                ),
+            state = PreviewState,
             actions =
                 SettingsActions(
                     onIntroSkipMode = {},
@@ -590,6 +665,8 @@ private fun SettingsPreview() {
                 ),
             onBack = {},
             onHome = {},
+            onOpenLicence = {},
+            onOpenThirdPartyLicences = {},
             appVersion = "0.1.0-debug",
         )
     }

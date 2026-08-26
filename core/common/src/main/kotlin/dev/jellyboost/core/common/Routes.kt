@@ -22,6 +22,14 @@ object Routes {
     @Serializable
     data object Settings
 
+    /** The app's own licence, verbatim — GPL-3.0 §4 requires the binary to convey it. */
+    @Serializable
+    data object Licence
+
+    /** The generated disclosure for every bundled dependency, mostly Apache-2.0 AndroidX. */
+    @Serializable
+    data object ThirdPartyLicences
+
     @Serializable
     data object ServerSetup
 

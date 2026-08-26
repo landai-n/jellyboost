@@ -50,4 +50,10 @@
     <string name="settings_sign_out_delete_downloads">Skrap ook aflaaie van hierdie toestel</string>
     <string name="settings_section_about">Oor die app</string>
     <string name="settings_version">App-weergawe</string>
+    <string name="settings_source_code">Bronkode</string>
+    <string name="settings_open_link_failed">Geen program op hierdie toestel kan skakels oopmaak nie.</string>
+    <string name="settings_licence">Lisensie</string>
+    <string name="settings_licence_intro">Jellyboost is vrye sagteware: jy mag dit gebruik, bestudeer, deel en verander onder die voorwaardes van die GNU General Public License, weergawe 3 of enige latere weergawe. Dit kom sonder enige waarborg.</string>
+    <string name="settings_third_party">Derdeparty-lisensies</string>
+    <string name="settings_third_party_supporting">Die oopbron-komponente waarmee hierdie program gebou is.</string>
 </resources>

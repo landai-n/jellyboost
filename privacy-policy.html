@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jellyboost Privacy Policy</title>
+<style>
+  :root {
+    --bg: #ffffff; --ink: #1c2229; --muted: #5b6873; --accent: #0a6e9e; --line: #dde4ea; --code: #eef2f5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #10151a; --ink: #e4eaf0; --muted: #93a1ad; --accent: #4fb3e0; --line: #2a343d; --code: #1b232b; }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 17px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 44rem; margin: 0 auto; padding: 3rem 1.25rem 5rem; }
+  h1 { font-size: 2rem; line-height: 1.15; letter-spacing: -.015em; margin: 0 0 .25rem; }
+  .updated { color: var(--muted); font-size: .9rem; margin: 0 0 2rem; }
+  h2 { font-size: 1.3rem; letter-spacing: -.01em; margin: 2.2rem 0 .6rem; padding-top: 1.2rem; border-top: 1px solid var(--line); }
+  p, li { color: var(--ink); }
+  ul { padding-left: 1.3rem; }
+  li { margin: .35rem 0; }
+  a { color: var(--accent); }
+  code { background: var(--code); border-radius: 4px; padding: .1em .35em; font-size: .88em; }
+  strong { font-weight: 600; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Jellyboost Privacy Policy</h1>
+  <p class="updated">Last updated: 26 August 2026</p>
+
+  <p>Jellyboost is a native Android client for <a href="https://jellyfin.org">Jellyfin</a>, the
+  open-source media server. It is an independent, community project and is not affiliated with,
+  endorsed by, or sponsored by the Jellyfin project. Jellyboost has no back end of its own: it is
+  a window onto a Jellyfin server that you (or someone you trust) already run. This policy
+  explains, in plain language, what the app stores, what it sends, and to whom.</p>
+
+  <h2>What Jellyboost stores on your device</h2>
+  <p>Everything Jellyboost keeps is stored locally, in the app's own private storage:</p>
+  <ul>
+    <li><strong>Server address</strong> — the URL of the Jellyfin server you connect to.</li>
+    <li><strong>Username and auth token</strong> — the token the server issues after you sign in,
+    so you don't have to re-enter your password every time. Stored encrypted, using Android's
+    <code>androidx.security.crypto</code> (an encrypted, hardware-backed keystore where the device
+    supports one).</li>
+    <li><strong>Playback positions</strong> — how far you've gotten into something, so playback can
+    resume where you left off, on this device and (via your server) on your other Jellyfin
+    clients.</li>
+    <li><strong>Downloaded media</strong> — video and audio files you chose to download for offline
+    playback, plus their artwork and metadata, stored in the app's own storage area.</li>
+    <li><strong>Preferences</strong> — app settings such as playback quality defaults, download
+    quality choices, and UI preferences.</li>
+  </ul>
+  <p>None of this ever leaves your device except as described in the next section.</p>
+
+  <h2>What Jellyboost transmits, and to whom</h2>
+  <p>Jellyboost talks to exactly one place: <strong>the Jellyfin server address you
+  configure</strong>. It does not talk to any Jellyboost-operated service, because there isn't
+  one, and it does not talk to any third-party analytics, advertising, or crash-reporting
+  service.</p>
+  <p>What gets sent to your server:</p>
+  <ul>
+    <li><strong>Credentials at sign-in</strong> — your username and password, sent once to
+    authenticate and obtain an auth token. Your password itself is never stored on the device
+    afterward; only the token is.</li>
+    <li><strong>Playback progress</strong> — how far you are into something, so your watch/listen
+    state stays in sync across your own devices.</li>
+    <li><strong>Library and playback requests</strong> — the normal calls a Jellyfin client makes
+    to browse your library, request a stream or transcode, download a file, or take part in a
+    SyncPlay session.</li>
+  </ul>
+  <p>If you use Chromecast, playback commands and the media URL are also exchanged with the Cast
+  device on your local network, following the same Jellyfin-server address — Jellyboost does not
+  route cast traffic through any intermediary of its own.</p>
+
+  <h2>What Jellyboost does not do</h2>
+  <ul>
+    <li><strong>No analytics.</strong> Jellyboost does not collect usage statistics, telemetry, or
+    behavioral data of any kind.</li>
+    <li><strong>No ads.</strong> There are no advertisements, and no ad SDKs are included in the
+    app.</li>
+    <li><strong>No tracking.</strong> Nothing about your usage is tracked, fingerprinted, or
+    profiled.</li>
+    <li><strong>No third-party data sharing.</strong> Jellyboost has no third party to share data
+    with — it does not sell, rent, or otherwise disclose any information to anyone.</li>
+    <li><strong>No Jellyboost accounts.</strong> There is no sign-up, no Jellyboost user database,
+    and no identity Jellyboost itself manages. Your account lives entirely on your Jellyfin
+    server, under its own privacy terms and the control of whoever administers it.</li>
+  </ul>
+
+  <h2>Transit security</h2>
+  <p>Whether data in transit between your device and your Jellyfin server is encrypted depends
+  entirely on how that server is configured. Jellyboost recommends connecting over HTTPS whenever
+  possible. Because many Jellyfin servers are self-hosted on a home network and reached over plain
+  HTTP on a local network — a very common setup for self-hosted software — Jellyboost also
+  supports cleartext (unencrypted) HTTP connections, so it does not lock users out of servers
+  configured that way. If your server only supports HTTP, traffic between the app and that server
+  is not encrypted; this is a property of your server's configuration, not something Jellyboost
+  can change on your behalf.</p>
+
+  <h2>Data deletion</h2>
+  <ul>
+    <li><strong>Signing out</strong> clears the server address, stored credentials,
+    playback-position cache, and preferences from the device.</li>
+    <li><strong>Deleting a download</strong> removes that specific file and its local
+    metadata.</li>
+    <li><strong>Uninstalling the app</strong> removes everything Jellyboost has ever stored on the
+    device, including all downloads, without exception — Android guarantees this for an app's
+    private storage.</li>
+  </ul>
+  <p>Because Jellyboost has no server of its own, there is no remote copy of your data for
+  Jellyboost to delete on request: nothing about you exists outside your device and your own
+  Jellyfin server.</p>
+
+  <h2>Children's privacy</h2>
+  <p>Jellyboost is not directed at children and does not knowingly collect information from
+  children. Since the app collects no personal information of its own — everything described above
+  is either local to the device or is traffic to a server the user or their guardian/administrator
+  controls — there is no Jellyboost-side data to collect from anyone, child or adult.</p>
+
+  <h2>Changes to this policy</h2>
+  <p>If this policy changes, the updated version will be published at the same location with a
+  revised "Last updated" date. Material changes will also be noted in the app's release notes
+  where practical.</p>
+
+  <h2>Contact</h2>
+  <p>Questions about this policy, along with issues and feature requests, go to the project's
+  issue tracker at
+  <a href="https://github.com/landai-n/jellyboost/issues">github.com/landai-n/jellyboost/issues</a>.</p>
+</main>
+</body>
+</html>

@@ -5,7 +5,19 @@
     <string name="downloads_wifi_only">淨係 Wi‑Fi</string>
     <string name="downloads_screen_title">下載</string>
 
-    <string name="downloads_group_movies">電影</string>
+    <string name="downloads_section_movies">電影</string>
+    <string name="downloads_section_series">劇集</string>
+    <string name="downloads_section_music">音樂</string>
+    <plurals name="downloads_group_episode_count">
+        <item quantity="other">%1$d 集</item>
+    </plurals>
+    <plurals name="downloads_group_track_count">
+        <item quantity="other">%1$d 首</item>
+    </plurals>
+    <string name="downloads_group_expand">展開</string>
+    <string name="downloads_group_collapse">收起</string>
+    <string name="downloads_group_expanded">已展開</string>
+    <string name="downloads_group_collapsed">已收起</string>
 
     <string name="downloads_storage_summary">已用 %1$s · 仲有 %2$s</string>
     <string name="downloads_storage_free">仲有 %1$s</string>

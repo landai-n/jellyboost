@@ -5,7 +5,21 @@
     <string name="downloads_wifi_only">Alleen wifi</string>
     <string name="downloads_screen_title">Downloads</string>
 
-    <string name="downloads_group_movies">Films</string>
+    <string name="downloads_section_movies">Films</string>
+    <string name="downloads_section_series">Series</string>
+    <string name="downloads_section_music">Muziek</string>
+    <plurals name="downloads_group_episode_count">
+        <item quantity="one">%1$d aflevering</item>
+        <item quantity="other">%1$d afleveringen</item>
+    </plurals>
+    <plurals name="downloads_group_track_count">
+        <item quantity="one">%1$d nummer</item>
+        <item quantity="other">%1$d nummers</item>
+    </plurals>
+    <string name="downloads_group_expand">Uitklappen</string>
+    <string name="downloads_group_collapse">Inklappen</string>
+    <string name="downloads_group_expanded">Uitgeklapt</string>
+    <string name="downloads_group_collapsed">Ingeklapt</string>
 
     <string name="downloads_storage_summary">%1$s gebruikt · %2$s vrij</string>
     <string name="downloads_storage_free">%1$s vrij</string>

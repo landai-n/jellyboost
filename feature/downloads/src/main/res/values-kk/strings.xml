@@ -5,7 +5,21 @@
     <string name="downloads_wifi_only">Тек Wi-Fi</string>
     <string name="downloads_screen_title">Жүктеулер</string>
 
-    <string name="downloads_group_movies">Фильмдер</string>
+    <string name="downloads_section_movies">Фильмдер</string>
+    <string name="downloads_section_series">Сериалдар</string>
+    <string name="downloads_section_music">Музыка</string>
+    <plurals name="downloads_group_episode_count">
+        <item quantity="one">%1$d эпизод</item>
+        <item quantity="other">%1$d эпизод</item>
+    </plurals>
+    <plurals name="downloads_group_track_count">
+        <item quantity="one">%1$d трек</item>
+        <item quantity="other">%1$d трек</item>
+    </plurals>
+    <string name="downloads_group_expand">Жаю</string>
+    <string name="downloads_group_collapse">Жинау</string>
+    <string name="downloads_group_expanded">Жайылған</string>
+    <string name="downloads_group_collapsed">Жиналған</string>
 
     <string name="downloads_storage_summary">%1$s қолданылды · %2$s бос</string>
     <string name="downloads_storage_free">%1$s бос</string>

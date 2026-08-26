@@ -4,7 +4,21 @@
     <string name="downloads_tab_queue">Ilara</string>
     <string name="downloads_wifi_only">Wi‑Fi bidez soilik</string>
     <string name="downloads_screen_title">Deskargak</string>
-    <string name="downloads_group_movies">Filmak</string>
+    <string name="downloads_section_movies">Filmak</string>
+    <string name="downloads_section_series">Seriak</string>
+    <string name="downloads_section_music">Musika</string>
+    <plurals name="downloads_group_episode_count">
+        <item quantity="one">%1$d atal</item>
+        <item quantity="other">%1$d atal</item>
+    </plurals>
+    <plurals name="downloads_group_track_count">
+        <item quantity="one">%1$d pista</item>
+        <item quantity="other">%1$d pista</item>
+    </plurals>
+    <string name="downloads_group_expand">Zabaldu</string>
+    <string name="downloads_group_collapse">Tolestu</string>
+    <string name="downloads_group_expanded">Zabalduta</string>
+    <string name="downloads_group_collapsed">Tolestuta</string>
     <string name="downloads_storage_summary">%1$s erabilita · %2$s libre</string>
     <string name="downloads_storage_free">%1$s libre</string>
     <string name="downloads_stat_on_device">Gailu honetan</string>

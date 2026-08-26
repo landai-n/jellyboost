@@ -5,7 +5,21 @@
     <string name="downloads_wifi_only">Vain Wi‑Fi</string>
     <string name="downloads_screen_title">Lataukset</string>
 
-    <string name="downloads_group_movies">Elokuvat</string>
+    <string name="downloads_section_movies">Elokuvat</string>
+    <string name="downloads_section_series">Sarjat</string>
+    <string name="downloads_section_music">Musiikki</string>
+    <plurals name="downloads_group_episode_count">
+        <item quantity="one">%1$d jakso</item>
+        <item quantity="other">%1$d jaksoa</item>
+    </plurals>
+    <plurals name="downloads_group_track_count">
+        <item quantity="one">%1$d kappale</item>
+        <item quantity="other">%1$d kappaletta</item>
+    </plurals>
+    <string name="downloads_group_expand">Laajenna</string>
+    <string name="downloads_group_collapse">Tiivistä</string>
+    <string name="downloads_group_expanded">Laajennettu</string>
+    <string name="downloads_group_collapsed">Tiivistetty</string>
 
     <string name="downloads_storage_summary">%1$s käytetty · %2$s vapaana</string>
     <string name="downloads_storage_free">%1$s vapaana</string>

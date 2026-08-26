@@ -5,7 +5,29 @@
     <string name="downloads_wifi_only">Wi‑Fi فقط</string>
     <string name="downloads_screen_title">التنزيلات</string>
 
-    <string name="downloads_group_movies">الأفلام</string>
+    <string name="downloads_section_movies">الأفلام</string>
+    <string name="downloads_section_series">المسلسلات</string>
+    <string name="downloads_section_music">الموسيقى</string>
+    <plurals name="downloads_group_episode_count">
+        <item quantity="zero">لا حلقات</item>
+        <item quantity="one">حلقة واحدة</item>
+        <item quantity="two">حلقتان</item>
+        <item quantity="few">%1$d حلقات</item>
+        <item quantity="many">%1$d حلقةً</item>
+        <item quantity="other">%1$d حلقة</item>
+    </plurals>
+    <plurals name="downloads_group_track_count">
+        <item quantity="zero">لا مقاطع</item>
+        <item quantity="one">مقطع واحد</item>
+        <item quantity="two">مقطعان</item>
+        <item quantity="few">%1$d مقاطع</item>
+        <item quantity="many">%1$d مقطعًا</item>
+        <item quantity="other">%1$d مقطع</item>
+    </plurals>
+    <string name="downloads_group_expand">توسيع</string>
+    <string name="downloads_group_collapse">طي</string>
+    <string name="downloads_group_expanded">موسّعة</string>
+    <string name="downloads_group_collapsed">مطوية</string>
 
     <string name="downloads_storage_summary">%1$s مستخدَمة · %2$s متاحة</string>
     <string name="downloads_storage_free">%1$s متاحة</string>

@@ -4,7 +4,21 @@
     <string name="downloads_tab_queue">რიგი</string>
     <string name="downloads_wifi_only">მხოლოდ Wi‑Fi</string>
     <string name="downloads_screen_title">გადმოწერები</string>
-    <string name="downloads_group_movies">ფილმები</string>
+    <string name="downloads_section_movies">ფილმები</string>
+    <string name="downloads_section_series">სერიალები</string>
+    <string name="downloads_section_music">მუსიკა</string>
+    <plurals name="downloads_group_episode_count">
+        <item quantity="one">%1$d ეპიზოდი</item>
+        <item quantity="other">%1$d ეპიზოდი</item>
+    </plurals>
+    <plurals name="downloads_group_track_count">
+        <item quantity="one">%1$d ტრეკი</item>
+        <item quantity="other">%1$d ტრეკი</item>
+    </plurals>
+    <string name="downloads_group_expand">გაშლა</string>
+    <string name="downloads_group_collapse">ჩაკეცვა</string>
+    <string name="downloads_group_expanded">გაშლილია</string>
+    <string name="downloads_group_collapsed">ჩაკეცილია</string>
     <string name="downloads_storage_summary">%1$s გამოყენებულია · %2$s თავისუფალია</string>
     <string name="downloads_storage_free">%1$s თავისუფალია</string>
     <string name="downloads_stat_on_device">ამ მოწყობილობაზე</string>

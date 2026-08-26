@@ -2,8 +2,10 @@ package dev.jellyboost.feature.downloads
 
 import dev.jellyboost.core.common.model.DownloadQuality
 import dev.jellyboost.core.common.model.DownloadStatus
+import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.data.downloads.model.DownloadItem
+import java.util.UUID
 
 /**
  * The union of every field the six test classes in this package need, each defaulted to the plainest
@@ -23,6 +25,9 @@ internal fun downloadItem(
     projectedBytes: Long? = null,
     sizeIsExact: Boolean = false,
     errorMessage: String? = null,
+    itemType: ItemType? = null,
+    albumName: String? = null,
+    groupId: UUID? = null,
     item: JellyfinItem? = null,
 ) = DownloadItem(
     itemId = itemId,
@@ -37,5 +42,8 @@ internal fun downloadItem(
     projectedBytes = projectedBytes,
     sizeIsExact = sizeIsExact,
     errorMessage = errorMessage,
+    itemType = itemType,
+    albumName = albumName,
+    groupId = groupId,
     item = item,
 )

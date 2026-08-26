@@ -4,7 +4,23 @@
     <string name="downloads_tab_queue">Coadă</string>
     <string name="downloads_wifi_only">Doar Wi‑Fi</string>
     <string name="downloads_screen_title">Descărcări</string>
-    <string name="downloads_group_movies">Filme</string>
+    <string name="downloads_section_movies">Filme</string>
+    <string name="downloads_section_series">Seriale</string>
+    <string name="downloads_section_music">Muzică</string>
+    <plurals name="downloads_group_episode_count">
+        <item quantity="one">%1$d episod</item>
+        <item quantity="few">%1$d episoade</item>
+        <item quantity="other">%1$d de episoade</item>
+    </plurals>
+    <plurals name="downloads_group_track_count">
+        <item quantity="one">%1$d piesă</item>
+        <item quantity="few">%1$d piese</item>
+        <item quantity="other">%1$d de piese</item>
+    </plurals>
+    <string name="downloads_group_expand">Extinde</string>
+    <string name="downloads_group_collapse">Restrânge</string>
+    <string name="downloads_group_expanded">Extins</string>
+    <string name="downloads_group_collapsed">Restrâns</string>
     <string name="downloads_storage_summary">%1$s utilizați · %2$s liberi</string>
     <string name="downloads_storage_free">%1$s liberi</string>
     <string name="downloads_stat_on_device">Pe acest dispozitiv</string>

@@ -141,6 +141,47 @@ class SchemaMigrationTest {
         (before.keys - after.keys).shouldBeEmpty()
     }
 
+    @Test
+    fun `v10 to v11 adds the grouping columns and touches nothing else`() {
+        val before = columns(10, "downloads")
+        val after = columns(11, "downloads")
+
+        (after.keys - before.keys) shouldContainExactly setOf("itemType", "albumName", "groupId")
+    }
+
+    @Test
+    fun `v10 to v11 drops no column and changes no type`() {
+        val before = columns(10, "downloads")
+        val after = columns(11, "downloads")
+
+        (before.keys - after.keys).shouldBeEmpty()
+        before.forEach { (name, column) -> after.getValue(name) shouldBe column }
+    }
+
+    @Test
+    fun `the grouping columns are nullable with no default, which is what keeps the bump automatic`() {
+        val after = columns(11, "downloads")
+
+        // Nullable with no default: a row that predates these columns reads back as NULL, which is what
+        // sends the read path to the cached item for its kind and heading.
+        listOf("itemType", "albumName", "groupId").forEach { name ->
+            val column = after.getValue(name)
+            column.affinity shouldBe "TEXT"
+            column.notNull shouldBe false
+            column.defaultValue shouldBe null
+        }
+    }
+
+    @Test
+    fun `v11 adds no table and removes none`() {
+        tables(11) shouldContainExactly tables(10)
+    }
+
+    @Test
+    fun `v11 adds no index, since the grouping happens in Kotlin`() {
+        indices(11, "downloads") shouldBe indices(10, "downloads")
+    }
+
     private data class Column(
         val affinity: String,
         val notNull: Boolean,

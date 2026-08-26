@@ -4,7 +4,21 @@
     <string name="downloads_tab_queue">Pila</string>
     <string name="downloads_wifi_only">Wi‑Fi lang</string>
     <string name="downloads_screen_title">Mga Download</string>
-    <string name="downloads_group_movies">Mga Pelikula</string>
+    <string name="downloads_section_movies">Mga Pelikula</string>
+    <string name="downloads_section_series">Mga Serye</string>
+    <string name="downloads_section_music">Musika</string>
+    <plurals name="downloads_group_episode_count">
+        <item quantity="one">%1$d episode</item>
+        <item quantity="other">%1$d episode</item>
+    </plurals>
+    <plurals name="downloads_group_track_count">
+        <item quantity="one">%1$d track</item>
+        <item quantity="other">%1$d track</item>
+    </plurals>
+    <string name="downloads_group_expand">Buksan</string>
+    <string name="downloads_group_collapse">Itiklop</string>
+    <string name="downloads_group_expanded">Nakabukas</string>
+    <string name="downloads_group_collapsed">Nakatiklop</string>
     <string name="downloads_storage_summary">%1$s ginamit · %2$s libre</string>
     <string name="downloads_storage_free">%1$s libre</string>
     <string name="downloads_stat_on_device">Nasa device na ito</string>

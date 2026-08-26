@@ -4,7 +4,21 @@
     <string name="downloads_tab_queue">Cua</string>
     <string name="downloads_wifi_only">Només Wi‑Fi</string>
     <string name="downloads_screen_title">Baixades</string>
-    <string name="downloads_group_movies">Pel·lícules</string>
+    <string name="downloads_section_movies">Pel·lícules</string>
+    <string name="downloads_section_series">Sèries</string>
+    <string name="downloads_section_music">Música</string>
+    <plurals name="downloads_group_episode_count">
+        <item quantity="one">%1$d episodi</item>
+        <item quantity="other">%1$d episodis</item>
+    </plurals>
+    <plurals name="downloads_group_track_count">
+        <item quantity="one">%1$d pista</item>
+        <item quantity="other">%1$d pistes</item>
+    </plurals>
+    <string name="downloads_group_expand">Desplega</string>
+    <string name="downloads_group_collapse">Replega</string>
+    <string name="downloads_group_expanded">Desplegada</string>
+    <string name="downloads_group_collapsed">Replegada</string>
     <string name="downloads_storage_summary">%1$s utilitzats · %2$s lliures</string>
     <string name="downloads_storage_free">%1$s lliures</string>
     <string name="downloads_stat_on_device">En aquest dispositiu</string>

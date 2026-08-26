@@ -16,6 +16,7 @@ import dev.jellyboost.data.cache.ItemEntityMapper
 import dev.jellyboost.data.downloads.DownloadFixtures.NOW
 import dev.jellyboost.data.downloads.DownloadFixtures.album
 import dev.jellyboost.data.downloads.DownloadFixtures.artist
+import dev.jellyboost.data.downloads.DownloadFixtures.download
 import dev.jellyboost.data.downloads.DownloadFixtures.episode
 import dev.jellyboost.data.downloads.DownloadFixtures.movie
 import dev.jellyboost.data.downloads.DownloadFixtures.season
@@ -79,6 +80,7 @@ class DownloadedMetadataRefresherTest {
         coEvery { downloadDao.allItemIds() } returns emptyList()
         coEvery { itemDao.getCacheKeys(any()) } returns emptyList()
         coEvery { itemDao.upsert(capture(upserted)) } just Runs
+        coEvery { downloadDao.backfillGrouping(any(), any(), any(), any(), any()) } just Runs
         coEvery { sidecars.topUp(any()) } returns 0
         // `toEntity` is overloaded (items and library views), so the argument types are explicit.
         every { mapper.toEntity(any<BaseItemDto>(), any<ItemSource>(), any<Instant>()) } answers {
@@ -287,6 +289,97 @@ class DownloadedMetadataRefresherTest {
             coVerify(exactly = 1) { api.getFullItems(ids.subList(50, 100)) }
             coVerify(exactly = 1) { api.getFullItems(ids.subList(100, 120)) }
             upserted.captured.size shouldBe 120
+        }
+
+    // ---- the grouping backfill -------------------------------------------------------------------
+
+    @Test
+    fun `a legacy track row has its album moved out of the series column`() =
+        runTest {
+            coEvery { downloadDao.allItemIds() } returns listOf(uuid(30))
+            coEvery { api.getFullItems(listOf(uuid(30))) } returns AppResult.Success(listOf(track()))
+            coEvery { api.getFullItems(listOf(uuid(40), uuid(50))) } returns
+                AppResult.Success(listOf(album(), artist()))
+
+            refresher().refresh()
+
+            // Without this write the row stays a downloaded album that reads as a downloaded show.
+            coVerify {
+                downloadDao.backfillGrouping(uuid(30), ItemType.AUDIO, null, "Rumours", uuid(40))
+            }
+        }
+
+    @Test
+    fun `a legacy episode row is stamped with its kind and its show's id`() =
+        runTest {
+            coEvery { downloadDao.allItemIds() } returns listOf(uuid(2))
+            coEvery { api.getFullItems(listOf(uuid(2))) } returns AppResult.Success(listOf(episode()))
+            coEvery { api.getFullItems(listOf(uuid(10), uuid(11))) } returns
+                AppResult.Success(listOf(series(), season()))
+
+            refresher().refresh()
+
+            coVerify {
+                downloadDao.backfillGrouping(uuid(2), ItemType.EPISODE, "Westworld", null, uuid(10))
+            }
+        }
+
+    @Test
+    fun `a parent with no download row of its own is not stamped`() =
+        runTest {
+            coEvery { downloadDao.allItemIds() } returns listOf(uuid(2))
+            coEvery { api.getFullItems(listOf(uuid(2))) } returns AppResult.Success(listOf(episode()))
+            coEvery { api.getFullItems(listOf(uuid(10), uuid(11))) } returns
+                AppResult.Success(listOf(series(), season()))
+
+            refresher().refresh()
+
+            coVerify(exactly = 0) { downloadDao.backfillGrouping(uuid(10), any(), any(), any(), any()) }
+            coVerify(exactly = 0) { downloadDao.backfillGrouping(uuid(11), any(), any(), any(), any()) }
+        }
+
+    @Test
+    fun `the row is never read before it is stamped`() =
+        runTest {
+            givenDownloads(uuid(1))
+
+            refresher().refresh()
+
+            // The `itemType IS NULL` test belongs to the statement: this pass runs while the queue is
+            // writing, and a read-then-write across the suspension point would overwrite whatever landed
+            // in between with a decision made from a stale row.
+            coVerify(exactly = 0) { downloadDao.get(any()) }
+            coVerify(exactly = 0) { downloadDao.getAll(any()) }
+        }
+
+    @Test
+    fun `a row an enqueue already stamped keeps every column it was written with`() =
+        runTest {
+            // The guard is applied here the way the statement applies it — the module has no Room
+            // instance to run the real SQL against.
+            val row =
+                download(itemId = uuid(30), itemType = ItemType.AUDIO, albumName = "Rumours", groupId = uuid(40))
+            var stored = row
+            coEvery { downloadDao.backfillGrouping(any(), any(), any(), any(), any()) } answers {
+                if (stored.itemType == null) {
+                    stored =
+                        stored.copy(
+                            itemType = secondArg(),
+                            seriesName = thirdArg(),
+                            albumName = arg(3),
+                            groupId = arg(4),
+                        )
+                }
+            }
+            coEvery { downloadDao.allItemIds() } returns listOf(uuid(30))
+            coEvery { api.getFullItems(listOf(uuid(30))) } returns
+                AppResult.Success(listOf(track(album = "Rumours (Remastered)")))
+            coEvery { api.getFullItems(listOf(uuid(40), uuid(50))) } returns
+                AppResult.Success(listOf(album(), artist()))
+
+            refresher().refresh()
+
+            stored shouldBe row
         }
 
     // ---- the file top-up -------------------------------------------------------------------------

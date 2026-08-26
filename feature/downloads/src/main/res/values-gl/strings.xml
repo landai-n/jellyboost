@@ -4,7 +4,21 @@
     <string name="downloads_tab_queue">Cola</string>
     <string name="downloads_wifi_only">Só Wi‑Fi</string>
     <string name="downloads_screen_title">Descargas</string>
-    <string name="downloads_group_movies">Películas</string>
+    <string name="downloads_section_movies">Películas</string>
+    <string name="downloads_section_series">Series</string>
+    <string name="downloads_section_music">Música</string>
+    <plurals name="downloads_group_episode_count">
+        <item quantity="one">%1$d episodio</item>
+        <item quantity="other">%1$d episodios</item>
+    </plurals>
+    <plurals name="downloads_group_track_count">
+        <item quantity="one">%1$d pista</item>
+        <item quantity="other">%1$d pistas</item>
+    </plurals>
+    <string name="downloads_group_expand">Expandir</string>
+    <string name="downloads_group_collapse">Contraer</string>
+    <string name="downloads_group_expanded">Expandida</string>
+    <string name="downloads_group_collapsed">Contraída</string>
     <string name="downloads_storage_summary">%1$s usados · %2$s libres</string>
     <string name="downloads_storage_free">%1$s libres</string>
     <string name="downloads_stat_on_device">Neste dispositivo</string>

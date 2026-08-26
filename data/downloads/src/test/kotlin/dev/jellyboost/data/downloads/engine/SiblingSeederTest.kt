@@ -5,6 +5,7 @@ import dev.jellyboost.core.common.model.DownloadStatus
 import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.database.dao.DownloadDao
 import dev.jellyboost.core.database.dao.ItemDao
+import dev.jellyboost.core.database.entities.DownloadEntity
 import dev.jellyboost.core.database.entities.ItemEntity
 import dev.jellyboost.core.database.entities.ItemSource
 import dev.jellyboost.data.downloads.DownloadFixtures.NOW
@@ -233,7 +234,108 @@ class SiblingSeederTest {
             coVerify(exactly = 0) { downloadDao.setProjectedBytesIfAbsent(any(), any(), any()) }
         }
 
+    // ---- music is out of reach ---------------------------------------------------------------------
+
+    @Test
+    fun `a finished track seeds nothing, because a track's heading is not a series`() =
+        runTest {
+            // Stamped `LOW`, which no music row can actually be, so that the *series* column is the only
+            // thing left holding this back.
+            seeder().seedPendingSiblingsOf(
+                download(itemId = uuid(30), quality = DownloadQuality.LOW, albumName = "Rumours"),
+            )
+
+            coVerify(exactly = 0) { downloadDao.unseededSiblings(any(), any()) }
+        }
+
+    @Test
+    fun `a finished track is not evidence for a show that happens to share its album's name`() =
+        runTest {
+            givenTable(
+                download(
+                    itemId = uuid(30),
+                    status = DownloadStatus.DOWNLOADED,
+                    bytesDownloaded = 40_000_000L,
+                    quality = DownloadQuality.LOW,
+                    albumName = "Westworld",
+                ),
+                download(
+                    itemId = uuid(31),
+                    status = DownloadStatus.DOWNLOADED,
+                    bytesDownloaded = 200_000_000L,
+                    quality = DownloadQuality.LOW,
+                    seriesName = "Westworld",
+                ),
+            )
+
+            // A leaked track would drag the median to 120 MB.
+            seeder().seedFor(uuid(2), "Westworld", DownloadQuality.LOW, HOUR_MILLIS, CEILING) shouldBe 200_000_000L
+        }
+
+    @Test
+    fun `a waiting track is left alone by the pass that seeds a waiting episode`() =
+        runTest {
+            givenTable(
+                download(
+                    itemId = uuid(31),
+                    status = DownloadStatus.DOWNLOADED,
+                    bytesDownloaded = 200_000_000L,
+                    quality = DownloadQuality.LOW,
+                    seriesName = "Westworld",
+                ),
+                download(
+                    itemId = uuid(2),
+                    bytesTotal = CEILING,
+                    quality = DownloadQuality.LOW,
+                    seriesName = "Westworld",
+                ),
+                download(
+                    itemId = uuid(30),
+                    bytesTotal = CEILING,
+                    quality = DownloadQuality.LOW,
+                    albumName = "Westworld",
+                ),
+            )
+
+            seeder().seedPendingSiblingsOf(finishedEpisode())
+
+            coVerify { downloadDao.setProjectedBytesIfAbsent(uuid(2), 200_000_000L, NOW) }
+            coVerify(exactly = 0) { downloadDao.setProjectedBytesIfAbsent(uuid(30), any(), any()) }
+        }
+
     // ---- helpers --------------------------------------------------------------------------------
+
+    /**
+     * Answers both sibling queries out of [rows] by applying their `WHERE` clauses in Kotlin — the
+     * statements filter on `seriesName`, and a music row's series column is `NULL` because its heading
+     * lives in `albumName`. The module has no Room instance to run the real SQL against.
+     */
+    private fun givenTable(vararg rows: DownloadEntity) {
+        coEvery { downloadDao.completedSiblings(any(), any(), any()) } answers {
+            val name = firstArg<String>()
+            val quality = secondArg<DownloadQuality>()
+            rows
+                .filter {
+                    it.seriesName == name && it.quality == quality && it.status == DownloadStatus.DOWNLOADED
+                }.sortedByDescending { it.updatedAt }
+                .take(thirdArg())
+        }
+        coEvery { downloadDao.unseededSiblings(any(), any()) } answers {
+            val name = firstArg<String>()
+            val quality = secondArg<DownloadQuality>()
+            rows
+                .filter {
+                    it.seriesName == name &&
+                        it.quality == quality &&
+                        it.status in WAITING &&
+                        it.projectedBytes == null &&
+                        !it.sizeIsExact
+                }.sortedBy { it.queuePosition }
+        }
+        coEvery { itemDao.getItems(any()) } answers {
+            firstArg<List<UUID>>().map { cachedEpisode(it, HOUR_TICKS) }
+        }
+    }
 
     /** Finished *Westworld* rows at `LOW`, each an hour long and each having landed at its size. */
     private fun givenFinished(vararg landed: Pair<UUID, Long>) {
@@ -297,5 +399,7 @@ class SiblingSeederTest {
 
         /** The enqueue-time upper bound every seed is clamped by. */
         const val CEILING = 500_000_000L
+
+        val WAITING = setOf(DownloadStatus.QUEUED, DownloadStatus.PAUSED)
     }
 }

@@ -2,7 +2,9 @@ package dev.jellyboost.data.downloads.model
 
 import dev.jellyboost.core.common.model.DownloadQuality
 import dev.jellyboost.core.common.model.DownloadStatus
+import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.common.model.JellyfinItem
+import java.util.UUID
 
 /**
  * One row of the Downloads screen — a download joined to the item it belongs to. [item] can be
@@ -13,6 +15,7 @@ import dev.jellyboost.core.common.model.JellyfinItem
 data class DownloadItem(
     val itemId: String,
     val title: String,
+    /** An episode's series, and only that: a track's album arrives in [albumName]. */
     val seriesName: String?,
     val status: DownloadStatus,
     val bytesDownloaded: Long,
@@ -26,6 +29,10 @@ data class DownloadItem(
     /** `true` when [bytesTotal] is the size the file will be, not an upper bound. */
     val sizeIsExact: Boolean = false,
     val errorMessage: String? = null,
+    val itemType: ItemType? = null,
+    val albumName: String? = null,
+    /** The heading's stable identity; two shows of the same name are the case it exists for. */
+    val groupId: UUID? = null,
     val item: JellyfinItem? = null,
 ) {
     /**
@@ -47,11 +54,25 @@ data class DownloadItem(
             } ?: 0f
 
     /**
-     * What the *Downloaded* tab groups by: the show an episode belongs to, the **album** a track
-     * belongs to, or `null` for a film. One column serves both because it only ever meant "the heading
-     * these rows belong under" — `DownloadEnqueuer` writes a track's album into [seriesName].
+     * Which section this row belongs to, resolved column → cached item → heading heuristic. The last
+     * step is the only answer left for a row that predates [itemType] and whose [item] is gone with a
+     * wiped cache, and it reproduces what the screen did before kinds existed: no row may drop out of
+     * the list it is deletable from.
      */
-    val seriesKey: String? get() = seriesName?.takeIf { it.isNotBlank() }
+    val kind: DownloadKind
+        get() =
+            when (itemType ?: item?.type) {
+                ItemType.MOVIE -> DownloadKind.MOVIE
+                ItemType.EPISODE, ItemType.SERIES, ItemType.SEASON -> DownloadKind.SERIES
+                ItemType.AUDIO, ItemType.MUSIC_ALBUM -> DownloadKind.MUSIC
+                else -> if (seriesName != null || albumName != null) DownloadKind.SERIES else DownloadKind.MOVIE
+            }
+
+    /** The heading these rows appear under; `null` for a film, which would only repeat its own title. */
+    val groupTitle: String? get() = (seriesName ?: albumName)?.takeIf { it.isNotBlank() }
+
+    /** [kind] is part of it: a show and an album of the same name are two headings, not one. */
+    val groupKey: String? get() = groupId?.toString() ?: groupTitle?.let { "${kind.name}:$it" }
 
     /**
      * How much the size on this row can be trusted, which is what decides how it is worded. Collapsing
@@ -78,6 +99,12 @@ data class DownloadItem(
      * failed transcoded row, so one left `PAUSED` by an earlier build has a way out.
      */
     val isPausable: Boolean get() = !quality.isTranscoded
+}
+
+enum class DownloadKind {
+    MOVIE,
+    SERIES,
+    MUSIC,
 }
 
 enum class SizeCertainty {

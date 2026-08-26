@@ -5,7 +5,21 @@
     <string name="downloads_wifi_only">فقط Wi‑Fi</string>
     <string name="downloads_screen_title">دانلودها</string>
 
-    <string name="downloads_group_movies">فیلم‌ها</string>
+    <string name="downloads_section_movies">فیلم‌ها</string>
+    <string name="downloads_section_series">سریال‌ها</string>
+    <string name="downloads_section_music">موسیقی</string>
+    <plurals name="downloads_group_episode_count">
+        <item quantity="one">%1$d قسمت</item>
+        <item quantity="other">%1$d قسمت</item>
+    </plurals>
+    <plurals name="downloads_group_track_count">
+        <item quantity="one">%1$d آهنگ</item>
+        <item quantity="other">%1$d آهنگ</item>
+    </plurals>
+    <string name="downloads_group_expand">باز کردن</string>
+    <string name="downloads_group_collapse">جمع کردن</string>
+    <string name="downloads_group_expanded">بازشده</string>
+    <string name="downloads_group_collapsed">جمع‌شده</string>
 
     <string name="downloads_storage_summary">%1$s استفاده شده · %2$s آزاد</string>
     <string name="downloads_storage_free">%1$s آزاد</string>

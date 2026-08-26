@@ -5,7 +5,25 @@
     <string name="downloads_wifi_only">Samo Wi-Fi</string>
     <string name="downloads_screen_title">Prenosi</string>
 
-    <string name="downloads_group_movies">Filmi</string>
+    <string name="downloads_section_movies">Filmi</string>
+    <string name="downloads_section_series">Serije</string>
+    <string name="downloads_section_music">Glasba</string>
+    <plurals name="downloads_group_episode_count">
+        <item quantity="one">%1$d epizoda</item>
+        <item quantity="two">%1$d epizodi</item>
+        <item quantity="few">%1$d epizode</item>
+        <item quantity="other">%1$d epizod</item>
+    </plurals>
+    <plurals name="downloads_group_track_count">
+        <item quantity="one">%1$d skladba</item>
+        <item quantity="two">%1$d skladbi</item>
+        <item quantity="few">%1$d skladbe</item>
+        <item quantity="other">%1$d skladb</item>
+    </plurals>
+    <string name="downloads_group_expand">Razširi</string>
+    <string name="downloads_group_collapse">Strni</string>
+    <string name="downloads_group_expanded">Razširjeno</string>
+    <string name="downloads_group_collapsed">Strnjeno</string>
 
     <string name="downloads_storage_summary">%1$s porabljeno · %2$s prosto</string>
     <string name="downloads_storage_free">%1$s prosto</string>

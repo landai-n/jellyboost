@@ -4,7 +4,21 @@
     <string name="downloads_tab_queue">সারি</string>
     <string name="downloads_wifi_only">শুধু Wi‑Fi</string>
     <string name="downloads_screen_title">ডাউনলোড</string>
-    <string name="downloads_group_movies">মুভি</string>
+    <string name="downloads_section_movies">মুভি</string>
+    <string name="downloads_section_series">সিরিজ</string>
+    <string name="downloads_section_music">সংগীত</string>
+    <plurals name="downloads_group_episode_count">
+        <item quantity="one">%1$dটি পর্ব</item>
+        <item quantity="other">%1$dটি পর্ব</item>
+    </plurals>
+    <plurals name="downloads_group_track_count">
+        <item quantity="one">%1$dটি ট্র্যাক</item>
+        <item quantity="other">%1$dটি ট্র্যাক</item>
+    </plurals>
+    <string name="downloads_group_expand">বিস্তারিত দেখান</string>
+    <string name="downloads_group_collapse">সংক্ষিপ্ত করুন</string>
+    <string name="downloads_group_expanded">বিস্তারিত দেখানো</string>
+    <string name="downloads_group_collapsed">সংক্ষিপ্ত করা</string>
     <string name="downloads_storage_summary">%1$s ব্যবহৃত · %2$s খালি</string>
     <string name="downloads_storage_free">%1$s খালি</string>
     <string name="downloads_stat_on_device">এই ডিভাইসে</string>

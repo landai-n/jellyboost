@@ -5,7 +5,21 @@
     <string name="downloads_wifi_only">صرف Wi‑Fi</string>
     <string name="downloads_screen_title">ڈاؤن لوڈز</string>
 
-    <string name="downloads_group_movies">فلمیں</string>
+    <string name="downloads_section_movies">فلمیں</string>
+    <string name="downloads_section_series">سیریز</string>
+    <string name="downloads_section_music">موسیقی</string>
+    <plurals name="downloads_group_episode_count">
+        <item quantity="one">%1$d قسط</item>
+        <item quantity="other">%1$d اقساط</item>
+    </plurals>
+    <plurals name="downloads_group_track_count">
+        <item quantity="one">%1$d ٹریک</item>
+        <item quantity="other">%1$d ٹریکس</item>
+    </plurals>
+    <string name="downloads_group_expand">پھیلائیں</string>
+    <string name="downloads_group_collapse">سمیٹیں</string>
+    <string name="downloads_group_expanded">پھیلایا ہوا</string>
+    <string name="downloads_group_collapsed">سمیٹا ہوا</string>
 
     <string name="downloads_storage_summary">%1$s استعمال شدہ · %2$s خالی</string>
     <string name="downloads_storage_free">%1$s خالی</string>

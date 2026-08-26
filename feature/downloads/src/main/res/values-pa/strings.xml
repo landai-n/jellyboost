@@ -5,7 +5,21 @@
     <string name="downloads_wifi_only">ਸਿਰਫ਼ Wi‑Fi</string>
     <string name="downloads_screen_title">ਡਾਊਨਲੋਡ</string>
 
-    <string name="downloads_group_movies">ਫ਼ਿਲਮਾਂ</string>
+    <string name="downloads_section_movies">ਫ਼ਿਲਮਾਂ</string>
+    <string name="downloads_section_series">ਸੀਰੀਜ਼</string>
+    <string name="downloads_section_music">ਸੰਗੀਤ</string>
+    <plurals name="downloads_group_episode_count">
+        <item quantity="one">%1$d ਐਪੀਸੋਡ</item>
+        <item quantity="other">%1$d ਐਪੀਸੋਡ</item>
+    </plurals>
+    <plurals name="downloads_group_track_count">
+        <item quantity="one">%1$d ਟਰੈਕ</item>
+        <item quantity="other">%1$d ਟਰੈਕ</item>
+    </plurals>
+    <string name="downloads_group_expand">ਖੋਲ੍ਹੋ</string>
+    <string name="downloads_group_collapse">ਸਮੇਟੋ</string>
+    <string name="downloads_group_expanded">ਖੋਲ੍ਹਿਆ ਹੋਇਆ</string>
+    <string name="downloads_group_collapsed">ਸਮੇਟਿਆ ਹੋਇਆ</string>
 
     <string name="downloads_storage_summary">%1$s ਵਰਤਿਆ · %2$s ਖਾਲੀ</string>
     <string name="downloads_storage_free">%1$s ਖਾਲੀ</string>

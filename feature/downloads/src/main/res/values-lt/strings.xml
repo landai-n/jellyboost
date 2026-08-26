@@ -5,7 +5,25 @@
     <string name="downloads_wifi_only">Tik Wi‑Fi</string>
     <string name="downloads_screen_title">Atsisiuntimai</string>
 
-    <string name="downloads_group_movies">Filmai</string>
+    <string name="downloads_section_movies">Filmai</string>
+    <string name="downloads_section_series">Serialai</string>
+    <string name="downloads_section_music">Muzika</string>
+    <plurals name="downloads_group_episode_count">
+        <item quantity="one">%1$d epizodas</item>
+        <item quantity="few">%1$d epizodai</item>
+        <item quantity="many">%1$d epizodų</item>
+        <item quantity="other">%1$d epizodų</item>
+    </plurals>
+    <plurals name="downloads_group_track_count">
+        <item quantity="one">%1$d takelis</item>
+        <item quantity="few">%1$d takeliai</item>
+        <item quantity="many">%1$d takelių</item>
+        <item quantity="other">%1$d takelių</item>
+    </plurals>
+    <string name="downloads_group_expand">Išskleisti</string>
+    <string name="downloads_group_collapse">Sutraukti</string>
+    <string name="downloads_group_expanded">Išskleista</string>
+    <string name="downloads_group_collapsed">Sutraukta</string>
 
     <string name="downloads_storage_summary">Naudota %1$s · laisva %2$s</string>
     <string name="downloads_storage_free">%1$s laisva</string>

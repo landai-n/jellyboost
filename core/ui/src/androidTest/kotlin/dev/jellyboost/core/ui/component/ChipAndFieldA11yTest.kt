@@ -1,17 +1,30 @@
 package dev.jellyboost.core.ui.component
 
 import androidx.activity.ComponentActivity
+import androidx.compose.foundation.layout.Column
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertHeightIsAtLeast
+import androidx.compose.ui.test.assertWidthIsAtLeast
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.unit.height
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.jellyboost.core.ui.a11y.AccessibilityChecks
+import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -139,11 +152,85 @@ class ChipAndFieldA11yTest {
         assertEquals(LABEL, field.config[SemanticsProperties.ContentDescription].single())
     }
 
+    @Test
+    fun aFieldWithATrailingButtonStandsExactlyAsTallAsOneWithout() {
+        rule.setContent {
+            JellyfinTheme {
+                Column {
+                    JellyfinTextField(
+                        value = ADDRESS,
+                        onValueChange = {},
+                        label = FieldLabel(text = LABEL),
+                    )
+                    JellyfinTextField(
+                        value = ADDRESS,
+                        onValueChange = {},
+                        label = FieldLabel(text = SECRET_LABEL),
+                        content = FieldContent.Password(),
+                        trailingIcon = {
+                            IconButton(onClick = {}) {
+                                Icon(imageVector = Icons.Filled.Visibility, contentDescription = REVEAL)
+                            }
+                        },
+                    )
+                }
+            }
+        }
+
+        val plain = rule.onNodeWithContentDescription(LABEL).getUnclippedBoundsInRoot()
+        val withButton = rule.onNodeWithContentDescription(SECRET_LABEL).getUnclippedBoundsInRoot()
+        // The 48dp target lays out inside the well; letting it measure the row instead made the
+        // password field visibly taller than the username field above it.
+        assertEquals(plain.height, withButton.height)
+        // The button's own node is the target — it carries the click and the semantics — so a
+        // 48dp frame drawn around a 40dp `IconButton` state layer measures 40dp to a11y tooling.
+        val reveal = rule.onNodeWithContentDescription(REVEAL)
+        reveal.assertHeightIsAtLeast(Dimens.MinTouchTarget)
+        reveal.assertWidthIsAtLeast(Dimens.MinTouchTarget)
+    }
+
+    @Test
+    fun aLeadingIconDoesNotChangeWhatTheTrailingButtonMeasures() {
+        rule.setContent {
+            JellyfinTheme {
+                Column {
+                    JellyfinTextField(
+                        value = ADDRESS,
+                        onValueChange = {},
+                        label = FieldLabel(text = LABEL),
+                    )
+                    JellyfinTextField(
+                        value = ADDRESS,
+                        onValueChange = {},
+                        label = FieldLabel(text = SEARCH_LABEL),
+                        leadingIcon = { Icon(imageVector = Icons.Filled.Search, contentDescription = null) },
+                        trailingIcon = {
+                            IconButton(onClick = {}) {
+                                Icon(imageVector = Icons.Filled.Close, contentDescription = CLEAR)
+                            }
+                        },
+                    )
+                }
+            }
+        }
+
+        val plain = rule.onNodeWithContentDescription(LABEL).getUnclippedBoundsInRoot()
+        val search = rule.onNodeWithContentDescription(SEARCH_LABEL).getUnclippedBoundsInRoot()
+        assertEquals(plain.height, search.height)
+        val clear = rule.onNodeWithContentDescription(CLEAR)
+        clear.assertHeightIsAtLeast(Dimens.MinTouchTarget)
+        clear.assertWidthIsAtLeast(Dimens.MinTouchTarget)
+    }
+
     private companion object {
         const val FILTER = "Unwatched"
         const val SHEET = "Filters"
         const val GENRE = "Sci-Fi"
         const val LABEL = "Server address"
+        const val SECRET_LABEL = "Password"
+        const val REVEAL = "Show password"
+        const val SEARCH_LABEL = "Search"
+        const val CLEAR = "Clear search"
         const val ADDRESS = "http://example.invalid:8096"
         const val FAILURE = "That server did not answer."
     }

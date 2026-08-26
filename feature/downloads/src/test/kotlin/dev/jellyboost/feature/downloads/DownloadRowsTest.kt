@@ -259,15 +259,26 @@ class DownloadRowsTest {
     fun `an episode inside its series group shows only the title`() {
         val episode = episode(series = "Pyjamasques", title = "Bibou et le ballon-lune")
 
-        episode.rowTitle(inSeriesGroup = true) shouldBe "Bibou et le ballon-lune"
+        episode.rowTitle(inGroup = true) shouldBe "Bibou et le ballon-lune"
     }
 
     @Test
-    fun `a film is unaffected by inSeriesGroup since films are never grouped`() {
+    fun `a track outside its album group shows album and title`() {
+        // The album lives in its own column, not the series one, so the prefix has to read both.
+        track(album = "Rumours", title = "Dreams").rowTitle() shouldBe "Rumours · Dreams"
+    }
+
+    @Test
+    fun `a track inside its album group shows only the title`() {
+        track(album = "Rumours", title = "Dreams").rowTitle(inGroup = true) shouldBe "Dreams"
+    }
+
+    @Test
+    fun `a film is unaffected by inGroup since films are never grouped`() {
         val film = episode(series = null, title = "Dune")
 
         film.rowTitle() shouldBe "Dune"
-        film.rowTitle(inSeriesGroup = true) shouldBe "Dune"
+        film.rowTitle(inGroup = true) shouldBe "Dune"
     }
 
     // ---- the percentage a queue row announces ----------------------------------------------------
@@ -315,6 +326,18 @@ class DownloadRowsTest {
         status = status,
         playbackPositionTicks = playbackPositionTicks,
         played = played,
+    )
+
+    private fun track(
+        album: String,
+        title: String,
+    ) = downloadItem(
+        itemId = "1",
+        title = title,
+        seriesName = null,
+        status = DownloadStatus.DOWNLOADED,
+        itemType = ItemType.AUDIO,
+        albumName = album,
     )
 
     @Suppress("LongParameterList")

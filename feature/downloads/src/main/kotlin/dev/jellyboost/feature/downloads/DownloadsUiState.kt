@@ -2,6 +2,7 @@ package dev.jellyboost.feature.downloads
 
 import dev.jellyboost.core.common.model.DownloadStatus
 import dev.jellyboost.data.downloads.model.DownloadItem
+import dev.jellyboost.data.downloads.model.DownloadKind
 import dev.jellyboost.data.downloads.model.StorageUsage
 
 enum class DownloadsTab {
@@ -10,21 +11,19 @@ enum class DownloadsTab {
 }
 
 /**
- * Tracks group under their **album**, not their artist, by the same mechanism episodes group under
- * their series: `DownloadEnqueuer` files a track's album in the same `seriesName` column an
- * episode's show goes in, and this screen only reads that column ([DownloadItem.seriesKey]).
+ * Tracks group under their **album**, episodes under their **series**, and the identity is
+ * [DownloadItem.groupKey] rather than the heading text: two shows of the same name, or an album and
+ * a series sharing one, must stay two groups.
+ *
+ * @property key also the fold state's identity — see [DownloadsUiState.expandedGroups].
+ * @property title empty for a group drawn without a heading, whose kind header already names it.
  */
 data class DownloadGroup(
+    val key: String,
     val title: String,
     val items: List<DownloadItem>,
-    /** A film's heading would repeat its own row's title verbatim ("Dune" over "Dune"). */
-    val isSeries: Boolean = false,
-    /**
-     * The single shared block gathering every standalone film once a series group also exists — see
-     * [toGroups]. [title] is **empty** for this group: its heading is a string resource resolved in
-     * Compose, which keeps the ViewModel free of Android resources.
-     */
-    val isMoviesSection: Boolean = false,
+    /** Series and albums fold; the films group is the MOVIES header's own list. */
+    val isCollapsible: Boolean,
 ) {
     /**
      * A `val`, never a `get()`: [DownloadsUiState.downloadedBytes] sums it across every group, so a
@@ -32,12 +31,28 @@ data class DownloadGroup(
      */
     val bytesOnDisk: Long = items.sumOf { it.bytesOnDisk }
 
+    val itemCount: Int = items.size
+
     internal fun itemOrNull(itemId: String): DownloadItem? = items.firstOrNull { it.itemId == itemId }
 }
 
+data class DownloadSection(
+    val kind: DownloadKind,
+    val groups: List<DownloadGroup>,
+)
+
+internal fun List<DownloadSection>.itemOrNull(itemId: String): DownloadItem? =
+    firstNotNullOfOrNull { section -> section.groups.firstNotNullOfOrNull { it.itemOrNull(itemId) } }
+
 data class DownloadsUiState(
     val selectedTab: DownloadsTab = DownloadsTab.DOWNLOADED,
-    val downloaded: List<DownloadGroup> = emptyList(),
+    val downloaded: List<DownloadSection> = emptyList(),
+    /**
+     * Expanded, not collapsed, so the default empty set *is* the folded default a fresh screen
+     * shows. Keys outlive the groups they name — a group whose last row was deleted leaves a stale
+     * key behind, and a membership test does not care.
+     */
+    val expandedGroups: Set<String> = emptySet(),
     val queue: List<DownloadItem> = emptyList(),
     /** Bytes per second, keyed by item id; a key is **absent** while that row is not moving. */
     val speeds: Map<String, Long> = emptyMap(),
@@ -67,7 +82,11 @@ data class DownloadsUiState(
 
     val isEmpty: Boolean = downloaded.isEmpty() && queue.isEmpty()
 
-    val downloadedBytes: Long = downloaded.sumOf { it.bytesOnDisk }
+    /** A single kind needs no label above it; the rows are already all of one sort. */
+    val showKindHeaders: Boolean = downloaded.size > 1
+
+    /** Every section, folded or not: the storage header reports what is on disk, not what is shown. */
+    val downloadedBytes: Long = downloaded.sumOf { section -> section.groups.sumOf { it.bytesOnDisk } }
 
     val pauseAllTargets: List<DownloadItem> = queue.filter { it.isPauseTarget }
 
@@ -192,7 +211,7 @@ data class QueueStats(
  * screen. Reaching this type means the projection answered, so `isLoading` is not a field.
  */
 internal data class DownloadsProjection(
-    val downloaded: List<DownloadGroup> = emptyList(),
+    val downloaded: List<DownloadSection> = emptyList(),
     val queue: List<DownloadItem> = emptyList(),
     val speeds: Map<String, Long> = emptyMap(),
     val progress: Map<String, Float> = emptyMap(),
@@ -202,11 +221,14 @@ internal data class DownloadsProjection(
 )
 
 /**
- * Survives the projection being stopped and restarted: which tab the user was on must not depend on
- * whether a Room query happens to be subscribed.
+ * Survives the projection being stopped and restarted: which tab the user was on, and which groups
+ * they unfolded, must not depend on whether a Room query happens to be subscribed. The fold state
+ * cannot live on [DownloadGroup] either — [DownloadGroupCache] hands back the same list instance
+ * while the finished rows are unchanged, and folding a per-group flag into it would defeat that.
  */
 internal data class LocalState(
     val selectedTab: DownloadsTab = DownloadsTab.DOWNLOADED,
+    val expandedGroups: Set<String> = emptySet(),
     val showCancelAllConfirmation: Boolean = false,
     val userMessage: DownloadsMessage? = null,
 )
@@ -215,6 +237,7 @@ internal fun DownloadsProjection.toUiState(local: LocalState): DownloadsUiState 
     DownloadsUiState(
         selectedTab = local.selectedTab,
         downloaded = downloaded,
+        expandedGroups = local.expandedGroups,
         queue = queue,
         speeds = speeds,
         progress = progress,
@@ -266,38 +289,60 @@ sealed interface DownloadsMessage {
 /**
  * Both tabs must keep coming from **one** Room query: a download moves between them by changing
  * status, and two independent queries would briefly show an item in neither tab, or in both.
+ *
+ * A row whose [DownloadItem.groupKey] is `null` still appears, in its kind's headerless catch-all:
+ * no download may drop out of the only list it is deletable from.
  */
-internal fun List<DownloadItem>.toGroups(): List<DownloadGroup> {
-    val (episodes, films) =
-        filter { it.status == DownloadStatus.DOWNLOADED }.partition { it.seriesKey != null }
+internal fun List<DownloadItem>.toSections(): List<DownloadSection> {
+    val byKind = filter { it.status == DownloadStatus.DOWNLOADED }.groupBy { it.kind }
+    return SECTION_ORDER.mapNotNull { kind ->
+        val rows = byKind[kind]?.takeIf { it.isNotEmpty() } ?: return@mapNotNull null
+        DownloadSection(
+            kind = kind,
+            groups = if (kind == DownloadKind.MOVIE) listOf(flatGroup(kind, rows)) else foldedGroups(kind, rows),
+        )
+    }
+}
 
-    val series =
-        episodes
-            .groupBy { requireNotNull(it.seriesKey) }
-            .map { (name, items) ->
-                DownloadGroup(title = name, items = items.sortedBy { it.title }, isSeries = true)
+/** The order the sections are drawn in, which is not the enum's to decide. */
+private val SECTION_ORDER = listOf(DownloadKind.MOVIE, DownloadKind.SERIES, DownloadKind.MUSIC)
+
+/** Empty [DownloadGroup.title]: the kind header above already names these rows. */
+private fun flatGroup(
+    kind: DownloadKind,
+    rows: List<DownloadItem>,
+): DownloadGroup =
+    DownloadGroup(
+        key = "flat-${kind.name}",
+        title = "",
+        items = rows.sortedBy { it.title.lowercase() },
+        isCollapsible = false,
+    )
+
+private fun foldedGroups(
+    kind: DownloadKind,
+    rows: List<DownloadItem>,
+): List<DownloadGroup> {
+    val (grouped, loose) = rows.partition { it.groupKey != null }
+    val folded =
+        grouped
+            .groupBy { requireNotNull(it.groupKey) }
+            .map { (key, items) ->
+                DownloadGroup(
+                    key = key,
+                    title = items.first().groupTitle.orEmpty(),
+                    items = items.sortedBy { it.title },
+                    isCollapsible = true,
+                )
             }.sortedBy { it.title.lowercase() }
 
-    if (series.isEmpty()) {
-        return films
-            .map { DownloadGroup(title = it.title, items = listOf(it)) }
-            .sortedBy { it.title.lowercase() }
-    }
-
-    if (films.isEmpty()) return series
-
-    return series +
-        DownloadGroup(
-            title = "",
-            items = films.sortedBy { it.title.lowercase() },
-            isMoviesSection = true,
-        )
+    return if (loose.isEmpty()) folded else folded + flatGroup(kind, loose)
 }
 
 /**
  * Returning the *same instance* while nothing changed is the point: the *Downloaded* tab does not
  * move during a transfer, but its flow emits two to six times a second, and a fresh never-equal
- * `List<DownloadGroup>` would recompose every visible finished row for no visible change.
+ * `List<DownloadSection>` would recompose every visible finished row for no visible change.
  *
  * The comparison is the whole item, deliberately, not a cheap id/status/bytes signature: the groups
  * hold the [DownloadItem]s the rows draw *from*, so a signature would strand a late artwork URL or a
@@ -307,15 +352,15 @@ internal fun List<DownloadItem>.toGroups(): List<DownloadGroup> {
  */
 internal class DownloadGroupCache {
     private var lastFinished: List<DownloadItem>? = null
-    private var groups: List<DownloadGroup> = emptyList()
+    private var sections: List<DownloadSection> = emptyList()
 
-    fun groups(items: List<DownloadItem>): List<DownloadGroup> {
+    fun sections(items: List<DownloadItem>): List<DownloadSection> {
         val finished = items.filter { it.status == DownloadStatus.DOWNLOADED }
         if (finished != lastFinished) {
             lastFinished = finished
-            groups = finished.toGroups()
+            sections = finished.toSections()
         }
-        return groups
+        return sections
     }
 }
 

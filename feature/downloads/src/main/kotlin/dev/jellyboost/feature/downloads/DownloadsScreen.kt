@@ -1,6 +1,7 @@
 package dev.jellyboost.feature.downloads
 
 import androidx.annotation.StringRes
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -34,6 +35,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
@@ -51,6 +53,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.pluralStringResource
@@ -61,6 +64,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -73,6 +77,7 @@ import dev.jellyboost.core.common.Separators
 import dev.jellyboost.core.common.formatBytes
 import dev.jellyboost.core.common.formatDurationSeconds
 import dev.jellyboost.core.common.model.DownloadStatus
+import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.ui.component.ConfirmDialog
 import dev.jellyboost.core.ui.component.EmptyState
@@ -88,6 +93,7 @@ import dev.jellyboost.core.ui.theme.LocalAppChromePadding
 import dev.jellyboost.core.ui.theme.glassSurface
 import dev.jellyboost.core.ui.theme.mSurface
 import dev.jellyboost.data.downloads.model.DownloadItem
+import dev.jellyboost.data.downloads.model.DownloadKind
 import dev.jellyboost.data.downloads.model.StorageUsage
 
 /**
@@ -145,6 +151,8 @@ data class DownloadsActions(
     val onMoveUp: (itemId: String) -> Unit,
     val onMoveDown: (itemId: String) -> Unit,
     val onSelectTab: (DownloadsTab) -> Unit,
+    /** Takes a [DownloadGroup.key], which outlives the group it names. */
+    val onToggleGroup: (key: String) -> Unit,
 )
 
 data class QueueBulkActions(
@@ -163,6 +171,7 @@ private fun downloadsActions(viewModel: DownloadsViewModel) =
         onMoveUp = viewModel::moveUp,
         onMoveDown = viewModel::moveDown,
         onSelectTab = viewModel::selectTab,
+        onToggleGroup = viewModel::toggleGroup,
     )
 
 private fun queueBulkActions(viewModel: DownloadsViewModel) =
@@ -201,7 +210,7 @@ fun DownloadsContent(
         var pendingDeleteId by rememberSaveable(state.selectedTab) { mutableStateOf<String?>(null) }
         val pendingDelete =
             remember(pendingDeleteId, state.downloaded) {
-                pendingDeleteId?.let { id -> state.downloaded.firstNotNullOfOrNull { it.itemOrNull(id) } }
+                pendingDeleteId?.let { id -> state.downloaded.itemOrNull(id) }
             }
 
         if (chromePinned(maxWidth, maxHeight)) {
@@ -279,7 +288,10 @@ private fun PinnedChromeLayout(
                         queueRows(state = state, actions = actions, bulk = bulk, wide = true)
                     } else {
                         downloadedRows(
-                            groups = state.downloaded,
+                            sections = state.downloaded,
+                            expandedGroups = state.expandedGroups,
+                            showKindHeaders = state.showKindHeaders,
+                            onToggleGroup = actions.onToggleGroup,
                             onDelete = onRequestDelete,
                             onPlay = onPlay,
                             compact = false,
@@ -321,7 +333,10 @@ private fun UnifiedScrollLayout(
         when (val body = state.body()) {
             DownloadsBody.DOWNLOADS ->
                 downloadedRows(
-                    groups = state.downloaded,
+                    sections = state.downloaded,
+                    expandedGroups = state.expandedGroups,
+                    showKindHeaders = state.showKindHeaders,
+                    onToggleGroup = actions.onToggleGroup,
                     onDelete = onRequestDelete,
                     onPlay = onPlay,
                     compact = !wide,
@@ -476,36 +491,72 @@ private fun DownloadsHeader(
  * @param onDelete *asks* for a delete rather than performing one: a `LazyListScope` extension is not
  *   a composition, so the confirmation state it feeds lives in [DownloadsContent].
  */
+@Suppress("LongParameterList")
 private fun LazyListScope.downloadedRows(
-    groups: List<DownloadGroup>,
+    sections: List<DownloadSection>,
+    expandedGroups: Set<String>,
+    showKindHeaders: Boolean,
+    onToggleGroup: (key: String) -> Unit,
     onDelete: (itemId: String) -> Unit,
     onPlay: (itemId: String, startPositionTicks: Long, item: JellyfinItem?) -> Unit,
     compact: Boolean,
 ) {
-    groups.forEach { group ->
-        // A lone film's heading would repeat its one row's title; the shared Movies group still
-        // needs one, or a film after a series' last episode reads as another of its episodes.
-        if (group.isSeries || group.isMoviesSection) {
-            item(
-                key = "header-${if (group.isMoviesSection) "movies-section" else group.title}",
-                contentType = DownloadsContentType.HEADER,
-            ) {
-                GroupHeader(group = group)
+    sections.forEach { section ->
+        if (showKindHeaders) {
+            item(key = "kind-${section.kind.name}", contentType = DownloadsContentType.KIND_HEADER) {
+                KindHeader(kind = section.kind)
             }
         }
-        items(
-            items = group.items,
-            key = { it.itemId },
-            contentType = { DownloadsContentType.DOWNLOADED_ROW },
-        ) { item ->
-            DownloadedRow(
-                item = item,
-                onDelete = { onDelete(item.itemId) },
-                onPlay = { onPlay(item.itemId, item.playbackStartTicks, item.item) },
-                inSeriesGroup = group.isSeries,
+        section.groups.forEach { group ->
+            downloadedGroup(
+                kind = section.kind,
+                group = group,
+                expanded = group.key in expandedGroups,
+                onToggleGroup = onToggleGroup,
+                onDelete = onDelete,
+                onPlay = onPlay,
                 compact = compact,
             )
         }
+    }
+}
+
+/** A folded collapsible group emits its header and nothing else. */
+@Suppress("LongParameterList")
+private fun LazyListScope.downloadedGroup(
+    kind: DownloadKind,
+    group: DownloadGroup,
+    expanded: Boolean,
+    onToggleGroup: (key: String) -> Unit,
+    onDelete: (itemId: String) -> Unit,
+    onPlay: (itemId: String, startPositionTicks: Long, item: JellyfinItem?) -> Unit,
+    compact: Boolean,
+) {
+    if (group.isCollapsible) {
+        item(key = "header-${group.key}", contentType = DownloadsContentType.HEADER) {
+            GroupHeader(
+                title = group.title,
+                kind = kind,
+                itemCount = group.itemCount,
+                bytesOnDisk = group.bytesOnDisk,
+                expanded = expanded,
+                onToggle = { onToggleGroup(group.key) },
+            )
+        }
+        if (!expanded) return
+    }
+    items(
+        items = group.items,
+        key = { it.itemId },
+        contentType = { DownloadsContentType.DOWNLOADED_ROW },
+    ) { item ->
+        DownloadedRow(
+            item = item,
+            onDelete = { onDelete(item.itemId) },
+            onPlay = { onPlay(item.itemId, item.playbackStartTicks, item.item) },
+            inGroup = group.isCollapsible,
+            compact = compact,
+        )
     }
 }
 
@@ -692,35 +743,122 @@ private fun CancelAllDialog(
     )
 }
 
+/**
+ * Uppercased in the UI locale and spoken sentence-case for the reasons [StatEyebrow] states; the
+ * section label is only ever drawn when more than one kind is on the tab.
+ */
 @Composable
-private fun GroupHeader(
-    group: DownloadGroup,
+private fun KindHeader(
+    kind: DownloadKind,
     modifier: Modifier = Modifier,
 ) {
+    val label = stringResource(kind.sectionTitleRes())
+    val locale = LocalConfiguration.current.locales[0]
+    Text(
+        text = label.uppercase(locale),
+        style = JellyfinTypeExtras.Eyebrow,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(
+                    start = Dimens.PanelPadding,
+                    end = Dimens.PanelPadding,
+                    top = Dimens.SpaceLarge,
+                    bottom = Dimens.SpaceExtraSmall,
+                ).semantics {
+                    heading()
+                    contentDescription = label
+                },
+    )
+}
+
+/**
+ * `internal` for the instrumented suite, which is the only gate that can see Compose semantics.
+ *
+ * [heightIn], never a fixed height: the row must grow with the font scale rather than clip, and its
+ * minimum is Material's touch target — the whole header is the toggle.
+ *
+ * @param kind decides the count's wording; only a collapsible group draws a header, so this is
+ *   never [DownloadKind.MOVIE].
+ */
+@Composable
+@Suppress("LongParameterList")
+internal fun GroupHeader(
+    title: String,
+    kind: DownloadKind,
+    itemCount: Int,
+    bytesOnDisk: Long,
+    expanded: Boolean,
+    onToggle: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val expandedState =
+        stringResource(if (expanded) R.string.downloads_group_expanded else R.string.downloads_group_collapsed)
+    val clickLabel =
+        stringResource(if (expanded) R.string.downloads_group_collapse else R.string.downloads_group_expand)
+    val chevronTurn by animateFloatAsState(
+        targetValue = if (expanded) CHEVRON_EXPANDED_DEGREES else 0f,
+        label = "downloadGroupChevron",
+    )
     Row(
         modifier =
             modifier
                 .fillMaxWidth()
-                .padding(horizontal = Dimens.PanelPadding, vertical = Dimens.SpaceSmall)
-                // One spoken node, and a heading so TalkBack can jump series to series.
-                .semantics(mergeDescendants = true) { heading() },
-        horizontalArrangement = Arrangement.SpaceBetween,
+                .heightIn(min = Dimens.MinTouchTarget)
+                // One spoken node, and a heading so TalkBack can jump group to group.
+                .semantics(mergeDescendants = true) {
+                    heading()
+                    stateDescription = expandedState
+                }.clickable(onClickLabel = clickLabel, role = Role.Button, onClick = onToggle)
+                .padding(horizontal = Dimens.PanelPadding, vertical = Dimens.SpaceSmall),
+        horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            // The Movies group carries no title of its own; its heading is a string resource,
-            // resolved here rather than baked into the ViewModel's state.
-            text = if (group.isMoviesSection) stringResource(R.string.downloads_group_movies) else group.title,
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onBackground,
+        Icon(
+            imageVector = Icons.Filled.ExpandMore,
+            // The state is spoken by the row's own stateDescription; a second node would repeat it.
+            contentDescription = null,
+            modifier = Modifier.size(GroupChevronSize).graphicsLayer { rotationZ = chevronTurn },
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Text(
-            text = formatBytes(group.bytesOnDisk),
+            text = title,
+            modifier = Modifier.weight(1f),
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onBackground,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Text(
+            text =
+                listOf(kind.itemCountText(itemCount), formatBytes(bytesOnDisk))
+                    .joinToString(Separators.DOT),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
+
+@StringRes
+private fun DownloadKind.sectionTitleRes(): Int =
+    when (this) {
+        DownloadKind.MOVIE -> R.string.downloads_section_movies
+        DownloadKind.SERIES -> R.string.downloads_section_series
+        DownloadKind.MUSIC -> R.string.downloads_section_music
+    }
+
+@Composable
+private fun DownloadKind.itemCountText(count: Int): String =
+    pluralStringResource(
+        if (this == DownloadKind.MUSIC) {
+            R.plurals.downloads_group_track_count
+        } else {
+            R.plurals.downloads_group_episode_count
+        },
+        count,
+        count,
+    )
 
 /** Replaced by [WideSummary] on a wide layout; keep the two in step. */
 @Composable
@@ -1062,6 +1200,7 @@ private fun SegmentedTab(
 
 private enum class DownloadsContentType {
     CHROME,
+    KIND_HEADER,
     HEADER,
     DOWNLOADED_ROW,
     QUEUE_ACTIONS,
@@ -1097,6 +1236,10 @@ private fun downloadsMessageText(message: DownloadsMessage): String =
             )
     }
 
+private val GroupChevronSize = 20.dp
+
+/** Points down folded, up unfolded. */
+private const val CHEVRON_EXPANDED_DEGREES = 180f
 private val StatPanelVerticalPadding = 18.dp
 private val StatPanelInnerGap = 6.dp
 private val UsageBarHeight = 6.dp
@@ -1166,6 +1309,100 @@ private fun DownloadsPreviewWide() {
     QueuePreview()
 }
 
+@Preview(
+    name = "Downloads — downloaded (three kinds, one group open)",
+    showBackground = true,
+    backgroundColor = 0xFF101010,
+    widthDp = 390,
+    heightDp = 740,
+)
+@Composable
+private fun DownloadsDownloadedPreview() {
+    JellyfinTheme {
+        DownloadsContent(
+            state =
+                DownloadsUiState(
+                    downloaded = downloadedPreviewSections(),
+                    // "Westworld" open, "Rumours" folded: the two states must be visible at once.
+                    expandedGroups = setOf("SERIES:Westworld"),
+                    storage = StorageUsage(usedBytes = 9_400_000_000L, availableBytes = 40_000_000_000L),
+                    isLoading = false,
+                ),
+            actions = previewActions(),
+            bulk = previewBulkActions(),
+            onPlay = { _, _, _ -> },
+            onWifiOnlyChange = {},
+        )
+    }
+}
+
+private fun downloadedPreviewSections(): List<DownloadSection> =
+    listOf(
+        finishedPreviewRow(id = "1", title = "Dune", type = ItemType.MOVIE, onDisk = 6_100_000_000L),
+        finishedPreviewRow(
+            id = "2",
+            title = "The Bicameral Mind",
+            type = ItemType.EPISODE,
+            seriesName = "Westworld",
+            onDisk = 2_100_000_000L,
+        ),
+        finishedPreviewRow(
+            id = "3",
+            title = "Chestnut",
+            type = ItemType.EPISODE,
+            seriesName = "Westworld",
+            onDisk = 1_900_000_000L,
+        ),
+        finishedPreviewRow(
+            id = "4",
+            title = "Dreams",
+            type = ItemType.AUDIO,
+            albumName = "Rumours",
+            onDisk = 24_000_000L,
+        ),
+    ).toSections()
+
+@Suppress("LongParameterList")
+private fun finishedPreviewRow(
+    id: String,
+    title: String,
+    type: ItemType,
+    onDisk: Long,
+    seriesName: String? = null,
+    albumName: String? = null,
+) = DownloadItem(
+    itemId = id,
+    title = title,
+    seriesName = seriesName,
+    status = DownloadStatus.DOWNLOADED,
+    bytesDownloaded = onDisk,
+    bytesTotal = onDisk,
+    bytesOnDisk = onDisk,
+    queuePosition = 0,
+    itemType = type,
+    albumName = albumName,
+)
+
+private fun previewActions() =
+    DownloadsActions(
+        onPause = {},
+        onResume = {},
+        onDelete = {},
+        onMoveUp = {},
+        onMoveDown = {},
+        onSelectTab = {},
+        onToggleGroup = {},
+    )
+
+private fun previewBulkActions() =
+    QueueBulkActions(
+        onPauseAll = {},
+        onResumeAll = {},
+        onCancelAll = {},
+        onConfirmCancelAll = {},
+        onDismissCancelAll = {},
+    )
+
 /** Keep the fixture title long: a short one does not truncate at 360dp, so it shows nothing. */
 @Composable
 private fun QueuePreview() {
@@ -1191,23 +1428,8 @@ private fun QueuePreview() {
                     storage = StorageUsage(usedBytes = 640_000_000L, availableBytes = 40_000_000_000L),
                     isLoading = false,
                 ),
-            actions =
-                DownloadsActions(
-                    onPause = {},
-                    onResume = {},
-                    onDelete = {},
-                    onMoveUp = {},
-                    onMoveDown = {},
-                    onSelectTab = {},
-                ),
-            bulk =
-                QueueBulkActions(
-                    onPauseAll = {},
-                    onResumeAll = {},
-                    onCancelAll = {},
-                    onConfirmCancelAll = {},
-                    onDismissCancelAll = {},
-                ),
+            actions = previewActions(),
+            bulk = previewBulkActions(),
             onPlay = { _, _, _ -> },
             onWifiOnlyChange = {},
         )

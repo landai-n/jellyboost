@@ -1,9 +1,13 @@
 package dev.jellyboost.feature.downloads
 
 import dev.jellyboost.core.common.model.DownloadStatus
+import dev.jellyboost.core.common.model.ItemType
+import dev.jellyboost.data.downloads.model.DownloadKind
 import dev.jellyboost.data.downloads.model.StorageUsage
+import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
+import java.util.UUID
 
 class DownloadsUiStateTest {
     @Test
@@ -136,14 +140,15 @@ class DownloadsUiStateTest {
     // ---- The precomputed chrome -----------------------------------------------------------------
 
     @Test
-    fun `downloaded bytes are summed once, across every group`() {
+    fun `downloaded bytes are summed once, across every section`() {
         val state =
             DownloadsUiState(
                 downloaded =
                     listOf(
-                        DownloadGroup(title = "Westworld", items = listOf(finished("1", 100L), finished("2", 200L))),
-                        DownloadGroup(title = "Dune", items = listOf(finished("3", 700L))),
-                    ),
+                        episode("1", "Chestnut", series = "Westworld", onDisk = 100L),
+                        episode("2", "The Original", series = "Westworld", onDisk = 200L),
+                        film("3", "Dune", onDisk = 700L),
+                    ).toSections(),
             )
 
         state.downloadedBytes shouldBe 1_000L
@@ -152,9 +157,150 @@ class DownloadsUiStateTest {
     @Test
     fun `a group's own size is the sum of its rows`() {
         DownloadGroup(
+            key = "SERIES:Westworld",
             title = "Westworld",
             items = listOf(finished("1", 100L), finished("2", 250L)),
+            isCollapsible = true,
         ).bytesOnDisk shouldBe 350L
+    }
+
+    // ---- the three sections ---------------------------------------------------------------------
+
+    @Test
+    fun `sections are always ordered movies, series, music`() {
+        val sections =
+            listOf(
+                track("1", "Dreams", album = "Rumours"),
+                episode("2", "Chestnut", series = "Westworld"),
+                film("3", "Dune"),
+            ).toSections()
+
+        sections.map { it.kind } shouldContainExactly
+            listOf(DownloadKind.MOVIE, DownloadKind.SERIES, DownloadKind.MUSIC)
+    }
+
+    @Test
+    fun `a kind with nothing downloaded gets no section at all`() {
+        val sections = listOf(film("1", "Dune"), track("2", "Dreams", album = "Rumours")).toSections()
+
+        sections.map { it.kind } shouldContainExactly listOf(DownloadKind.MOVIE, DownloadKind.MUSIC)
+    }
+
+    @Test
+    fun `one kind on the tab needs no label above it`() {
+        val state = DownloadsUiState(downloaded = listOf(film("1", "Dune"), film("2", "Arrival")).toSections())
+
+        state.downloaded.single().kind shouldBe DownloadKind.MOVIE
+        state.showKindHeaders shouldBe false
+    }
+
+    @Test
+    fun `a second kind brings the labels back`() {
+        val state =
+            DownloadsUiState(
+                downloaded = listOf(film("1", "Dune"), episode("2", "Chestnut", series = "Westworld")).toSections(),
+            )
+
+        state.showKindHeaders shouldBe true
+    }
+
+    @Test
+    fun `every film shares one group that never folds`() {
+        val sections = listOf(film("1", "Dune"), film("2", "Arrival")).toSections()
+
+        val films = sections.single().groups.single()
+        films.isCollapsible shouldBe false
+        films.title shouldBe ""
+        films.items.map { it.itemId } shouldContainExactly listOf("2", "1")
+    }
+
+    @Test
+    fun `a series and an album sharing a name stay two groups`() {
+        // Mutation check: keying groups on the heading text alone merges them into one.
+        val sections =
+            listOf(
+                episode("1", "Chestnut", series = "Rumours"),
+                track("2", "Dreams", album = "Rumours"),
+            ).toSections()
+
+        sections.map { it.kind } shouldContainExactly listOf(DownloadKind.SERIES, DownloadKind.MUSIC)
+        sections.flatMap { it.groups }.map { it.key } shouldContainExactly
+            listOf("SERIES:Rumours", "MUSIC:Rumours")
+    }
+
+    @Test
+    fun `two shows of the same name stay two groups, told apart by their heading id`() {
+        val first = UUID.fromString("00000000-0000-0000-0000-000000000001")
+        val second = UUID.fromString("00000000-0000-0000-0000-000000000002")
+        val sections =
+            listOf(
+                episode("1", "Chestnut", series = "Westworld", groupId = first),
+                episode("2", "The Original", series = "Westworld", groupId = second),
+            ).toSections()
+
+        val groups = sections.single().groups
+        groups.map { it.key } shouldContainExactly listOf(first.toString(), second.toString())
+        groups.map { it.title } shouldContainExactly listOf("Westworld", "Westworld")
+    }
+
+    @Test
+    fun `a track with no album lands in the music catch-all, which never folds`() {
+        val sections =
+            listOf(
+                track("1", "Dreams", album = "Rumours"),
+                track("2", "Stray", album = null),
+            ).toSections()
+
+        val groups = sections.single().groups
+        groups.map { it.title } shouldContainExactly listOf("Rumours", "")
+        groups.last().isCollapsible shouldBe false
+        groups.last().items.map { it.itemId } shouldContainExactly listOf("2")
+    }
+
+    @Test
+    fun `a legacy row with no type but a series name still appears, under that series`() {
+        // Nothing but the denormalised heading survives a wiped cache on a pre-column row, and no
+        // download may drop out of the only list it is deletable from.
+        val sections = listOf(episode("1", "Chestnut", series = "Westworld", type = null)).toSections()
+
+        val group = sections.single().groups.single()
+        sections.single().kind shouldBe DownloadKind.SERIES
+        group.key shouldBe "SERIES:Westworld"
+        group.items.map { it.itemId } shouldContainExactly listOf("1")
+    }
+
+    // ---- folding --------------------------------------------------------------------------------
+
+    @Test
+    fun `a fresh screen has every group folded`() {
+        DownloadsUiState().expandedGroups shouldBe emptySet()
+    }
+
+    @Test
+    fun `the size on the storage header does not depend on what is unfolded`() {
+        val rows =
+            listOf(
+                episode("1", "Chestnut", series = "Westworld", onDisk = 100L),
+                track("2", "Dreams", album = "Rumours", onDisk = 200L),
+            )
+        val folded = DownloadsUiState(downloaded = rows.toSections())
+        val unfolded =
+            DownloadsUiState(
+                downloaded = rows.toSections(),
+                expandedGroups = setOf("SERIES:Westworld", "MUSIC:Rumours"),
+            )
+
+        folded.downloadedBytes shouldBe 300L
+        unfolded.downloadedBytes shouldBe folded.downloadedBytes
+    }
+
+    @Test
+    fun `a row is found by id wherever its section is`() {
+        val sections =
+            listOf(film("1", "Dune"), track("2", "Dreams", album = "Rumours")).toSections()
+
+        sections.itemOrNull("2")?.title shouldBe "Dreams"
+        sections.itemOrNull("nobody") shouldBe null
     }
 
     @Test
@@ -227,6 +373,50 @@ class DownloadsUiStateTest {
         state.chrome.canResumeAll shouldBe true
         state.chrome.wifiOnly shouldBe false
     }
+
+    private fun film(
+        itemId: String,
+        title: String,
+        onDisk: Long = 0L,
+    ) = downloadItem(
+        itemId = itemId,
+        title = title,
+        status = DownloadStatus.DOWNLOADED,
+        bytesOnDisk = onDisk,
+        itemType = ItemType.MOVIE,
+    )
+
+    @Suppress("LongParameterList")
+    private fun episode(
+        itemId: String,
+        title: String,
+        series: String,
+        onDisk: Long = 0L,
+        type: ItemType? = ItemType.EPISODE,
+        groupId: UUID? = null,
+    ) = downloadItem(
+        itemId = itemId,
+        title = title,
+        seriesName = series,
+        status = DownloadStatus.DOWNLOADED,
+        bytesOnDisk = onDisk,
+        itemType = type,
+        groupId = groupId,
+    )
+
+    private fun track(
+        itemId: String,
+        title: String,
+        album: String?,
+        onDisk: Long = 0L,
+    ) = downloadItem(
+        itemId = itemId,
+        title = title,
+        status = DownloadStatus.DOWNLOADED,
+        bytesOnDisk = onDisk,
+        itemType = ItemType.AUDIO,
+        albumName = album,
+    )
 
     private fun finished(
         itemId: String,

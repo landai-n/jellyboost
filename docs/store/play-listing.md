@@ -19,7 +19,10 @@ Play Store titles are capped at **30 characters**.
 so it fits the cap with nothing to spare; re-count before any edit. App name first, relationship
 to Jellyfin stated plainly (helps with Play's unauthorized-content review, see below).
 `Jellyboost for Jellyfin` (23) stays as the fallback if the cap or policy ever forces a change.
-Still contingent on the Matrix naming answer for "Jellyboost" itself.
+The name itself is settled (user decision 2026-08-26): of Jellyfin's two live branding pages,
+the current one — jellyfin.org/docs/project/branding/ — expressly permits subcomponent names
+("Jelly"/"fin" + another word, e.g. "Jellyseer", "Audiofin"), and it is treated as the truth
+over the older page that discouraged the pattern.
 
 ## Short description
 

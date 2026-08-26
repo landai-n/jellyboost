@@ -3,6 +3,7 @@ package dev.jellyboost.data.downloads
 import dev.jellyboost.core.common.model.DownloadFileType
 import dev.jellyboost.core.common.model.DownloadQuality
 import dev.jellyboost.core.common.model.DownloadStatus
+import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.database.TransactionRunner
 import dev.jellyboost.core.database.entities.DownloadEntity
 import dev.jellyboost.core.database.entities.DownloadFileEntity
@@ -387,7 +388,10 @@ object DownloadFixtures {
         bakedAudioStreamIndex: Int? = null,
         directoryName: String = "Arrival (2016)",
         itemName: String = "Arrival",
+        itemType: ItemType? = null,
         seriesName: String? = null,
+        albumName: String? = null,
+        groupId: UUID? = null,
         updatedAt: Instant = NOW,
     ): DownloadEntity =
         DownloadEntity(
@@ -405,7 +409,10 @@ object DownloadFixtures {
             attemptCount = attemptCount,
             directoryName = directoryName,
             itemName = itemName,
+            itemType = itemType,
             seriesName = seriesName,
+            albumName = albumName,
+            groupId = groupId,
             createdAt = NOW,
             updatedAt = updatedAt,
         )

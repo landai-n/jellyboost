@@ -63,6 +63,7 @@ import java.util.UUID
  * has to become one download per episode rather than a row for the folder itself — the row that
  * produced *"The server couldn't send this download (error 400)"*.
  */
+@Suppress("LargeClass") // One class per enqueue rule would separate each rule from the fixtures it shares.
 class DownloadEnqueuerTest {
     private val api = mockk<DownloadApi>()
     private val itemDao = mockk<ItemDao>(relaxUnitFun = true)
@@ -185,6 +186,63 @@ class DownloadEnqueuerTest {
             // Denormalised on purpose: the delete cascade needs it after the item row is gone.
             row.directoryName shouldBe "Westworld - S01E02 - Chestnut"
             row.seriesName shouldBe "Westworld"
+        }
+
+    // ---- the grouping columns -------------------------------------------------------------------
+
+    @Test
+    fun `an episode records its show, its kind and its show's id`() =
+        runTest {
+            coEvery { api.getFullItems(any()) } returns AppResult.Success(listOf(episode()))
+            coEvery { api.getFullItems(listOf(uuid(10), uuid(11))) } returns AppResult.Success(emptyList())
+
+            enqueuer().enqueue(uuid(2), USER)
+
+            row.itemType shouldBe ItemType.EPISODE
+            row.seriesName shouldBe "Westworld"
+            row.albumName.shouldBeNull()
+            row.groupId shouldBe uuid(10)
+        }
+
+    @Test
+    fun `a track records its album and leaves the series column empty`() =
+        runTest {
+            givenAlbum(trackIds = listOf(uuid(30)))
+            coEvery { api.getFullItems(listOf(uuid(30))) } returns AppResult.Success(listOf(track()))
+
+            enqueuer().enqueue(uuid(40), USER)
+
+            // An album in the series column is a downloaded album and a downloaded show that no reader
+            // downstream — the sections, the size seeder — can tell apart.
+            row.itemType shouldBe ItemType.AUDIO
+            row.seriesName.shouldBeNull()
+            row.albumName shouldBe "Rumours"
+            row.groupId shouldBe uuid(40)
+        }
+
+    @Test
+    fun `a film records no heading at all`() =
+        runTest {
+            coEvery { api.getFullItems(any()) } returns AppResult.Success(listOf(movie()))
+
+            enqueuer().enqueue(uuid(1), USER)
+
+            row.itemType shouldBe ItemType.MOVIE
+            row.seriesName.shouldBeNull()
+            row.albumName.shouldBeNull()
+            row.groupId.shouldBeNull()
+        }
+
+    @Test
+    fun `a blank album is recorded as no album rather than as a heading of its own`() =
+        runTest {
+            givenAlbum(trackIds = listOf(uuid(30)))
+            coEvery { api.getFullItems(listOf(uuid(30))) } returns
+                AppResult.Success(listOf(track(album = "  ")))
+
+            enqueuer().enqueue(uuid(40), USER)
+
+            row.albumName.shouldBeNull()
         }
 
     @Test
@@ -836,11 +894,26 @@ class DownloadEnqueuerTest {
 
             enqueuer().enqueue(uuid(40), USER)
 
-            // The column the Downloaded tab groups by (`DownloadItem.seriesKey`): a track's heading is
+            // The column the Downloaded tab groups by (`DownloadItem.groupTitle`): a track's heading is
             // its album, the way an episode's is its show.
-            row.seriesName shouldBe "Rumours"
+            row.albumName shouldBe "Rumours"
             // And the directory is unique per track — two albums' *Intro* must not share one.
             row.directoryName shouldBe "Fleetwood Mac - Rumours - 04 - Go Your Own Way"
+        }
+
+    @Test
+    fun `a track never reaches the size seeder at all`() =
+        runTest {
+            downloadQuality.value = DownloadQuality.LOW
+            givenAlbum(trackIds = listOf(uuid(30)))
+            coEvery { api.getFullItems(listOf(uuid(30))) } returns AppResult.Success(listOf(track()))
+
+            enqueuer().enqueue(uuid(40), USER)
+
+            // `planQuality` stamps music `ORIGINAL` before any transcode branch, and the seeder only
+            // answers for a transcoded row — which is why moving albums out of `seriesName` costs the
+            // sibling-size lookups nothing.
+            coVerify(exactly = 0) { downloadDao.completedSiblings(any(), any(), any()) }
         }
 
     @Test

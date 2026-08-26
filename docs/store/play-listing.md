@@ -24,6 +24,11 @@ the current one — jellyfin.org/docs/project/branding/ — expressly permits su
 ("Jelly"/"fin" + another word, e.g. "Jellyseer", "Audiofin"), and it is treated as the truth
 over the older page that discouraged the pattern.
 
+## Privacy policy URL
+
+`https://landai-n.github.io/jellyboost/privacy-policy.html` — live (GitHub Pages), goes in
+the Console's store-listing privacy-policy field.
+
 ## Short description
 
 Play caps the short description at **80 characters**. Three candidates:

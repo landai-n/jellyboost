@@ -46,4 +46,10 @@
     <string name="settings_sign_out_delete_downloads">Bu cihazdaki indirmeleri de sil</string>
     <string name="settings_section_about">Hakkında</string>
     <string name="settings_version">Uygulama sürümü</string>
+    <string name="settings_source_code">Kaynak kodu</string>
+    <string name="settings_open_link_failed">Bu cihazda bağlantı açabilen bir uygulama yok.</string>
+    <string name="settings_licence">Lisans</string>
+    <string name="settings_licence_intro">Jellyboost özgür bir yazılımdır: GNU General Public License sürüm 3 veya sonraki herhangi bir sürümün koşulları altında kullanabilir, inceleyebilir, paylaşabilir ve değiştirebilirsiniz. Hiçbir garanti verilmez.</string>
+    <string name="settings_third_party">Üçüncü taraf lisansları</string>
+    <string name="settings_third_party_supporting">Bu uygulamanın kurulduğu açık kaynaklı bileşenler.</string>
 </resources>

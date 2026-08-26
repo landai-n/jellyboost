@@ -50,4 +50,10 @@
     <string name="settings_sign_out_delete_downloads">دانلودها از این دستگاه هم حذف شوند</string>
     <string name="settings_section_about">درباره برنامه</string>
     <string name="settings_version">نسخه برنامه</string>
+    <string name="settings_source_code">کد منبع</string>
+    <string name="settings_open_link_failed">هیچ برنامه‌ای روی این دستگاه نمی‌تواند پیوندها را باز کند.</string>
+    <string name="settings_licence">پروانه</string>
+    <string name="settings_licence_intro">Jellyboost نرم‌افزار آزاد است: می‌توانید آن را بر پایه شرایط GNU General Public License نسخه 3 یا هر نسخه بعدی به کار ببرید، مطالعه کنید، به اشتراک بگذارید و تغییر دهید. بدون هیچ ضمانتی عرضه می‌شود.</string>
+    <string name="settings_third_party">پروانه‌های شخص ثالث</string>
+    <string name="settings_third_party_supporting">مؤلفه‌های متن‌باز که این برنامه با آن‌ها ساخته شده است.</string>
 </resources>

@@ -52,4 +52,10 @@
     <string name="settings_sign_out_delete_downloads">Таксама выдаліць спампоўкі з гэтай прылады</string>
     <string name="settings_section_about">Пра праграму</string>
     <string name="settings_version">Версія праграмы</string>
+    <string name="settings_source_code">Зыходны код</string>
+    <string name="settings_open_link_failed">На гэтай прыладзе няма праграмы, якая можа адкрываць спасылкі.</string>
+    <string name="settings_licence">Ліцэнзія</string>
+    <string name="settings_licence_intro">Jellyboost — свабоднае праграмнае забеспячэнне: вы можаце карыстацца ім, вывучаць, распаўсюджваць і змяняць яго на ўмовах GNU General Public License версіі 3 або любой пазнейшай. Яно пастаўляецца без ніякіх гарантый.</string>
+    <string name="settings_third_party">Ліцэнзіі трэціх бакоў</string>
+    <string name="settings_third_party_supporting">Кампаненты з адкрытым зыходным кодам, з якіх сабрана гэта праграма.</string>
 </resources>

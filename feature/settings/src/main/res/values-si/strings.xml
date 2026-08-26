@@ -46,4 +46,10 @@
     <string name="settings_sign_out_delete_downloads">මෙම උපාංගයෙන් බාගත කිරීම් ද මකන්න</string>
     <string name="settings_section_about">යෙදුම ගැන</string>
     <string name="settings_version">යෙදුමේ අනුවාදය</string>
+    <string name="settings_source_code">මූලාශ්‍ර කේතය</string>
+    <string name="settings_open_link_failed">මෙම උපාංගයේ සබැඳි විවෘත කළ හැකි යෙදුමක් නැත.</string>
+    <string name="settings_licence">බලපත්‍රය</string>
+    <string name="settings_licence_intro">Jellyboost යනු නිදහස් මෘදුකාංගයකි: GNU General Public License අනුවාදය 3 හෝ ඉන් පසු ඕනෑම අනුවාදයක නියමයන් යටතේ ඔබට එය භාවිත කිරීමට, අධ්‍යයනය කිරීමට, බෙදාගැනීමට සහ වෙනස් කිරීමට හැකිය. එය කිසිදු වගකීමකින් තොරව සපයනු ලැබේ.</string>
+    <string name="settings_third_party">තෙවන පාර්ශ්ව බලපත්‍ර</string>
+    <string name="settings_third_party_supporting">මෙම යෙදුම ගොඩනගා ඇති විවෘත මූලාශ්‍ර සංරචක.</string>
 </resources>

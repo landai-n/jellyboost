@@ -22,6 +22,13 @@ object Routes {
     @Serializable
     data object Settings
 
+    /** The app's own licence, verbatim — GPL-3.0 §4 requires the binary to convey it. */
+    @Serializable
+    data object Licence
+
+    @Serializable
+    data object ThirdPartyLicences
+
     @Serializable
     data object ServerSetup
 

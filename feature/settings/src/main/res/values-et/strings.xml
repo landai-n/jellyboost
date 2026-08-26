@@ -50,4 +50,10 @@
     <string name="settings_sign_out_delete_downloads">Kustuta ka allalaadimised sellest seadmest</string>
     <string name="settings_section_about">Teave</string>
     <string name="settings_version">Rakenduse versioon</string>
+    <string name="settings_source_code">Lähtekood</string>
+    <string name="settings_open_link_failed">Selles seadmes pole rakendust, mis suudaks linke avada.</string>
+    <string name="settings_licence">Litsents</string>
+    <string name="settings_licence_intro">Jellyboost on vaba tarkvara: võid seda kasutada, uurida, jagada ja muuta GNU General Public License versiooni 3 või mis tahes hilisema versiooni tingimustel. Sellel puudub igasugune garantii.</string>
+    <string name="settings_third_party">Kolmandate osapoolte litsentsid</string>
+    <string name="settings_third_party_supporting">Avatud lähtekoodiga komponendid, millest see rakendus on ehitatud.</string>
 </resources>

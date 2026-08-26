@@ -46,4 +46,10 @@
     <string name="settings_sign_out_delete_downloads">Supprimer aussi les téléchargements de cet appareil</string>
     <string name="settings_section_about">À propos</string>
     <string name="settings_version">Version de l\'application</string>
+    <string name="settings_source_code">Code source</string>
+    <string name="settings_open_link_failed">Aucune application de cet appareil ne peut ouvrir de liens.</string>
+    <string name="settings_licence">Licence</string>
+    <string name="settings_licence_intro">Jellyboost est un logiciel libre : vous pouvez l\'utiliser, l\'étudier, le partager et le modifier selon les termes de la GNU General Public License, version 3 ou toute version ultérieure. Il est fourni sans aucune garantie.</string>
+    <string name="settings_third_party">Licences tierces</string>
+    <string name="settings_third_party_supporting">Les composants open source qui composent cette application.</string>
 </resources>

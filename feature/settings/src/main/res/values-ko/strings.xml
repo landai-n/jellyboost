@@ -49,4 +49,10 @@
     <string name="settings_sign_out_delete_downloads">이 기기의 다운로드도 함께 삭제</string>
     <string name="settings_section_about">정보</string>
     <string name="settings_version">앱 버전</string>
+    <string name="settings_source_code">소스 코드</string>
+    <string name="settings_open_link_failed">이 기기에서 링크를 열 수 있는 앱이 없습니다.</string>
+    <string name="settings_licence">라이선스</string>
+    <string name="settings_licence_intro">Jellyboost는 자유 소프트웨어입니다. GNU General Public License 버전 3 또는 그 이후 버전의 조건에 따라 사용, 연구, 공유, 수정할 수 있습니다. 어떠한 보증도 제공되지 않습니다.</string>
+    <string name="settings_third_party">서드파티 라이선스</string>
+    <string name="settings_third_party_supporting">이 앱을 이루는 오픈 소스 구성 요소입니다.</string>
 </resources>

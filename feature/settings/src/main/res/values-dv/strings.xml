@@ -50,4 +50,10 @@
     <string name="settings_sign_out_delete_downloads">މި ޑިވައިސްއިން ޑައުންލޯޑްތައްވެސް ފޮހެލާ</string>
     <string name="settings_section_about">އެޕާ ބެހޭ</string>
     <string name="settings_version">އެޕް ވަރޝަން</string>
+    <string name="settings_source_code">ސޯސް ކޯޑް</string>
+    <string name="settings_open_link_failed">މި ޑިވައިސްގައި ލިންކް ހުޅުވޭނެ އެއްވެސް އެޕެއް ނެތް.</string>
+    <string name="settings_licence">ލައިސަންސް</string>
+    <string name="settings_licence_intro">Jellyboost އަކީ މިނިވަން ސޮފްޓްވެއަރ އެކެވެ: GNU General Public License ވަރޝަން 3 ނުވަތަ އެއަށްފަހު އަންނަ ކޮންމެ ވަރޝަނެއްގެ ޝަރުތުތަކުގެ ދަށުން ބޭނުންކުރުމާއި، ދިރާސާކުރުމާއި، ހިއްސާކުރުމާއި، ބަދަލުކުރެވިދާނެއެވެ. މިއާއެކު އެއްވެސް ވޮރެންޓީއެއް ނުލިބެއެވެ.</string>
+    <string name="settings_third_party">ތިންވަނަ ފަރާތުގެ ލައިސަންސްތައް</string>
+    <string name="settings_third_party_supporting">މި އެޕް ބިނާކޮށްފައިވާ އޯޕަން ސޯސް ބައިތައް.</string>
 </resources>

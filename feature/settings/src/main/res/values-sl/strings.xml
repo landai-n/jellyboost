@@ -52,4 +52,10 @@
     <string name="settings_sign_out_delete_downloads">Izbriši tudi prenose s te naprave</string>
     <string name="settings_section_about">O aplikaciji</string>
     <string name="settings_version">Različica aplikacije</string>
+    <string name="settings_source_code">Izvorna koda</string>
+    <string name="settings_open_link_failed">V tej napravi ni aplikacije, ki bi znala odpirati povezave.</string>
+    <string name="settings_licence">Licenca</string>
+    <string name="settings_licence_intro">Jellyboost je prosta programska oprema: lahko jo uporabljate, preučujete, delite in spreminjate pod pogoji licence GNU General Public License različice 3 ali katere koli poznejše. Na voljo je brez kakršnega koli jamstva.</string>
+    <string name="settings_third_party">Licence tretjih oseb</string>
+    <string name="settings_third_party_supporting">Odprtokodne komponente, iz katerih je zgrajena ta aplikacija.</string>
 </resources>

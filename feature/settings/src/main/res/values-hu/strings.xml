@@ -50,4 +50,10 @@
     <string name="settings_sign_out_delete_downloads">A letöltések törlése erről az eszközről is</string>
     <string name="settings_section_about">Névjegy</string>
     <string name="settings_version">Az app verziója</string>
+    <string name="settings_source_code">Forráskód</string>
+    <string name="settings_open_link_failed">Ezen az eszközön egyetlen alkalmazás sem tud hivatkozásokat megnyitni.</string>
+    <string name="settings_licence">Licenc</string>
+    <string name="settings_licence_intro">A Jellyboost szabad szoftver: a GNU General Public License 3. vagy bármely későbbi változatának feltételei szerint használhatod, tanulmányozhatod, megoszthatod és módosíthatod. Mindenféle garancia nélkül érkezik.</string>
+    <string name="settings_third_party">Harmadik felek licencei</string>
+    <string name="settings_third_party_supporting">A nyílt forráskódú összetevők, amelyekből az alkalmazás felépül.</string>
 </resources>

@@ -78,6 +78,11 @@ jellyfinSdk = "1.8.12"
 okhttp = "5.4.0"
 coil = "3.4.0"
 
+# Third-party licence disclosure (GPL-3.0 distribution compliance). The Gradle plugin reads the
+# resolved dependency graph at build time and the Compose artifact renders it; both ship from the
+# same version, so they move together.
+aboutlibraries = "15.1.1"
+
 # Monitoring
 timber = "5.0.1"
 slf4jAndroid = "2.0.17-0"
@@ -104,6 +109,7 @@ room = { id = "androidx.room", version.ref = "androidxRoom" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlintPlugin" }
 baselineprofile = { id = "androidx.baselineprofile", version.ref = "androidxBenchmark" }
+aboutlibraries = { id = "com.mikepenz.aboutlibraries.plugin", version.ref = "aboutlibraries" }
 
 # Convention plugins provided by the `build-logic` included build
 jellyboost-android-application = { id = "jellyboost.android.application" }
@@ -209,6 +215,11 @@ jellyfin-sdk = { group = "org.jellyfin.sdk", name = "jellyfin-core", version.ref
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
 coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }
 coil-network-okhttp = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coil" }
+
+# Third-party licence disclosure. `aboutlibraries-core` parses the JSON the Gradle plugin emits;
+# `aboutlibraries-compose-m3` draws it with the same Material 3 the rest of the app uses.
+aboutlibraries-core = { group = "com.mikepenz", name = "aboutlibraries-core", version.ref = "aboutlibraries" }
+aboutlibraries-compose-m3 = { group = "com.mikepenz", name = "aboutlibraries-compose-m3", version.ref = "aboutlibraries" }
 
 # Monitoring
 timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }

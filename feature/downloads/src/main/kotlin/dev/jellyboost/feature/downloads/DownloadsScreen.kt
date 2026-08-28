@@ -536,6 +536,8 @@ private fun LazyListScope.downloadedGroup(
         item(key = "header-${group.key}", contentType = DownloadsContentType.HEADER) {
             GroupHeader(
                 title = group.title,
+                subtitle = group.subtitle,
+                artworkUrl = group.artworkUrl,
                 kind = kind,
                 itemCount = group.itemCount,
                 bytesOnDisk = group.bytesOnDisk,
@@ -545,6 +547,8 @@ private fun LazyListScope.downloadedGroup(
         }
         if (!expanded) return
     }
+    // An album's tracks all share the header's one cover, so repeating it down the list says nothing.
+    val showArtwork = !(group.isCollapsible && kind == DownloadKind.MUSIC)
     items(
         items = group.items,
         key = { it.itemId },
@@ -556,6 +560,7 @@ private fun LazyListScope.downloadedGroup(
             onPlay = { onPlay(item.itemId, item.playbackStartTicks, item.item) },
             inGroup = group.isCollapsible,
             compact = compact,
+            showArtwork = showArtwork,
         )
     }
 }
@@ -788,6 +793,9 @@ private fun KindHeader(
  *
  * @param kind decides the count's wording; only a collapsible group draws a header, so this is
  *   never [DownloadKind.MOVIE].
+ * @param subtitle the album's artist, drawn under the title. `null` keeps the header one line.
+ * @param artworkUrl the album cover, decorative: the merged row already speaks the title, the artist
+ *   and the count, and a second description would repeat one of them.
  */
 @Composable
 @Suppress("LongParameterList")
@@ -799,6 +807,8 @@ internal fun GroupHeader(
     expanded: Boolean,
     onToggle: () -> Unit,
     modifier: Modifier = Modifier,
+    subtitle: String? = null,
+    artworkUrl: String? = null,
 ) {
     val expandedState =
         stringResource(if (expanded) R.string.downloads_group_expanded else R.string.downloads_group_collapsed)
@@ -829,14 +839,27 @@ internal fun GroupHeader(
             modifier = Modifier.size(GroupChevronSize).graphicsLayer { rotationZ = chevronTurn },
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        Text(
-            text = title,
-            modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onBackground,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
+        if (artworkUrl != null) {
+            RowArtwork(imageUrl = artworkUrl, width = GroupArtworkSize, height = GroupArtworkSize)
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onBackground,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (subtitle != null) {
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
         Text(
             text =
                 listOf(kind.itemCountText(itemCount), formatBytes(bytesOnDisk))
@@ -1245,6 +1268,9 @@ private fun downloadsMessageText(message: DownloadsMessage): String =
 
 private val GroupChevronSize = 20.dp
 
+/** Square, unlike the 16:9 row art: an album cover is square and would otherwise be cropped. */
+private val GroupArtworkSize = 44.dp
+
 /** Points down folded, up unfolded. */
 private const val CHEVRON_EXPANDED_DEGREES = 180f
 private val StatPanelVerticalPadding = 18.dp
@@ -1365,7 +1391,18 @@ private fun downloadedPreviewSections(): List<DownloadSection> =
             title = "Dreams",
             type = ItemType.AUDIO,
             albumName = "Rumours",
+            artistName = "Fleetwood Mac",
+            imageUrl = "https://example.invalid/rumours.jpg",
             onDisk = 24_000_000L,
+        ),
+        finishedPreviewRow(
+            id = "5",
+            title = "Go Your Own Way",
+            type = ItemType.AUDIO,
+            albumName = "Rumours",
+            artistName = "Fleetwood Mac",
+            imageUrl = "https://example.invalid/rumours.jpg",
+            onDisk = 21_000_000L,
         ),
     ).toSections()
 
@@ -1377,6 +1414,8 @@ private fun finishedPreviewRow(
     onDisk: Long,
     seriesName: String? = null,
     albumName: String? = null,
+    artistName: String? = null,
+    imageUrl: String? = null,
 ) = DownloadItem(
     itemId = id,
     title = title,
@@ -1388,6 +1427,8 @@ private fun finishedPreviewRow(
     queuePosition = 0,
     itemType = type,
     albumName = albumName,
+    artistName = artistName,
+    item = imageUrl?.let { JellyfinItem(id = id, name = title, type = type, primaryImageUrl = it) },
 )
 
 private fun previewActions() =

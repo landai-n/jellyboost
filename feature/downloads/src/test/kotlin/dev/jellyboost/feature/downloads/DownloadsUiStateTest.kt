@@ -2,6 +2,7 @@ package dev.jellyboost.feature.downloads
 
 import dev.jellyboost.core.common.model.DownloadStatus
 import dev.jellyboost.core.common.model.ItemType
+import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.data.downloads.model.DownloadKind
 import dev.jellyboost.data.downloads.model.StorageUsage
 import io.kotest.matchers.collections.shouldBeEmpty
@@ -270,6 +271,64 @@ class DownloadsUiStateTest {
         group.items.map { it.itemId } shouldContainExactly listOf("1")
     }
 
+    // ---- what an album's header carries ----------------------------------------------------------
+
+    @Test
+    fun `an album header carries its artist and its cover`() {
+        val sections =
+            listOf(
+                track("1", "Dreams", album = "Rumours").copy(
+                    artistName = "Fleetwood Mac",
+                    item = albumArt("https://example.invalid/rumours.jpg"),
+                ),
+            ).toSections()
+
+        val group = sections.single().groups.single()
+        group.subtitle shouldBe "Fleetwood Mac"
+        group.artworkUrl shouldBe "https://example.invalid/rumours.jpg"
+    }
+
+    @Test
+    fun `one track missing its artist or cover does not blank the album's header`() {
+        // Metadata lands per row, so the first row is routinely the one still without it.
+        val sections =
+            listOf(
+                track("1", "Dreams", album = "Rumours"),
+                track("2", "Go Your Own Way", album = "Rumours").copy(
+                    artistName = "Fleetwood Mac",
+                    item = albumArt("https://example.invalid/rumours.jpg"),
+                ),
+            ).toSections()
+
+        val group = sections.single().groups.single()
+        group.subtitle shouldBe "Fleetwood Mac"
+        group.artworkUrl shouldBe "https://example.invalid/rumours.jpg"
+    }
+
+    @Test
+    fun `a series header carries neither, since an episode still belongs to its own row`() {
+        val sections =
+            listOf(
+                episode("1", "Chestnut", series = "Westworld").copy(
+                    artistName = "Fleetwood Mac",
+                    item = albumArt("https://example.invalid/chestnut.jpg"),
+                ),
+            ).toSections()
+
+        val group = sections.single().groups.single()
+        group.subtitle shouldBe null
+        group.artworkUrl shouldBe null
+    }
+
+    @Test
+    fun `an album nobody is credited on keeps a one-line header`() {
+        val sections = listOf(track("1", "Dreams", album = "Rumours")).toSections()
+
+        val group = sections.single().groups.single()
+        group.subtitle shouldBe null
+        group.artworkUrl shouldBe null
+    }
+
     // ---- the queue's own sections ----------------------------------------------------------------
 
     @Test
@@ -502,6 +561,9 @@ class DownloadsUiStateTest {
         bytesOnDisk = bytesOnDisk,
         queuePosition = 0,
     )
+
+    private fun albumArt(url: String) =
+        JellyfinItem(id = "art", name = "Rumours", type = ItemType.MUSIC_ALBUM, primaryImageUrl = url)
 
     private fun queuedEpisode(
         itemId: String,

@@ -44,7 +44,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.pluralStringResource
@@ -456,7 +455,10 @@ private fun RatingFact(
             tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.size(RatingStarSize),
         )
-        Text(text = formatRatingBadge(rating), style = RatingStyle, color = Color.White)
+        // Full `onSurface`, not the `onSurfaceVariant` its neighbours in the row use: the rating is
+        // the one fact carrying emphasis. `TitleLockup`'s rule — the scrim has reached the page by
+        // this row, so this is page ink, unlike the badge drawn on the artwork above.
+        Text(text = formatRatingBadge(rating), style = RatingStyle, color = MaterialTheme.colorScheme.onSurface)
     }
 }
 

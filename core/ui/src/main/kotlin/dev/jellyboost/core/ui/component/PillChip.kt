@@ -60,7 +60,8 @@ private val ChipLabel =
 
 /**
  * One value for both schemes: it *replaces* `onSurfaceVariant`'s own alpha rather than scaling it,
- * so the label is white@70% on the dark chip well (8.87:1) and black@70% on the light one (7.84:1).
+ * so the label is white@70% on the dark chip well (8.87:1) and `#1F2330`@70% on the light one
+ * (5.23:1).
  */
 private const val DISABLED_CHIP_ALPHA = 0.7f
 

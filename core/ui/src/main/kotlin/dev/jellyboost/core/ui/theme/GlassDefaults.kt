@@ -46,7 +46,7 @@ object GlassDefaults {
 
     val DarkHairline: Color = Color.White.copy(alpha = 0.09f)
 
-    /** Black@10% is 1.25:1 on `#F6F7F8` — the same seam strength [DarkHairline] has on `#101010`. */
+    /** Black@10% is 1.25:1 on `#EEF1F7` — the same seam strength [DarkHairline] has on `#101010`. */
     val LightHairline: Color = Color.Black.copy(alpha = 0.10f)
 
     val Hairline: Color
@@ -80,7 +80,7 @@ object GlassDefaults {
      */
     val DarkGhostBorder: Color = Color.White.copy(alpha = 0.40f)
 
-    /** The same 3:1, re-derived: black@40% is only 2.82:1 on `#F6F7F8`; 0.44 is 3.21:1, 3.24:1 on a card. */
+    /** The same 3:1, re-derived: black@40% is only 2.80:1 on `#EEF1F7`; 0.44 is 3.18:1, 3.24:1 on a card. */
     val LightGhostBorder: Color = Color.Black.copy(alpha = 0.44f)
 
     val GhostBorder: Color
@@ -97,9 +97,9 @@ object GlassDefaults {
 
     /**
      * The same 72%, additive instead of subtractive: the worst case flips to the *darkest* frame,
-     * where the page's near-white composites to rgb(177) and the light scheme's own ink reads
-     * 8.95:1 (`onBackground`) and 6.07:1 (`onSurfaceVariant`) on it. Over a white frame it is
-     * 18.10:1 / 9.07:1.
+     * where the page composites to rgb(171,174,178) and the light scheme's own ink reads 7.70:1
+     * (`onBackground`) and 4.53:1 (`onSurfaceVariant`) on it. Over a white frame it is 15.74:1 /
+     * 7.24:1. This is the ground `JellyfinLightColors.OnSurfaceVariant`'s alpha was derived against.
      */
     val LightChromeFill: Color = JellyfinLightColors.Background.copy(alpha = 0.72f)
 

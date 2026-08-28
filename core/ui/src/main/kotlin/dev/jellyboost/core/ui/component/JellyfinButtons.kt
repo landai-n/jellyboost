@@ -75,13 +75,13 @@ private val PrimaryPillDisabledContainer: Color
 
 /**
  * A disabled label is still text and owes 4.5:1 — a busy pill is all an auth screen is saying. 0.35
- * measured 3.20:1 on `#101010`; 0.48 is 5.00:1 there and 4.78:1 on `#202020`. Black is not white's
- * mirror: 0.48 of it is only 3.66:1 on `#F6F7F8`, so the light side runs at 0.60 — 5.62:1 on the
- * page, 5.74:1 on a card. The faint *container* is what reads as un-pressable, not the label.
+ * measured 3.20:1 on `#101010`; 0.48 is 5.00:1 there and 4.78:1 on `#202020`. Dark ink is not
+ * white's mirror: 0.48 of it is only 3.04:1 on `#EEF1F7`, so the light side runs at 0.65 — 5.08:1
+ * on the page, 5.34:1 on a card. The faint *container* is what reads as un-pressable, not the label.
  */
 private val PrimaryPillDisabledContent: Color
     @Composable @ReadOnlyComposable
-    get() = pageInk(darkAlpha = 0.48f, lightAlpha = 0.60f)
+    get() = pageInk(darkAlpha = 0.48f, lightAlpha = 0.65f)
 
 private val GhostPillContent: Color
     @Composable @ReadOnlyComposable
@@ -89,9 +89,9 @@ private val GhostPillContent: Color
 
 private val GhostPillDisabledContent: Color
     @Composable @ReadOnlyComposable
-    get() = pageInk(darkAlpha = 0.48f, lightAlpha = 0.60f)
+    get() = pageInk(darkAlpha = 0.48f, lightAlpha = 0.65f)
 
-/** 5.65:1 over `ChromeFill` on a white frame in dark, 6.18:1 over the light one on a black frame. */
+/** 5.65:1 over `ChromeFill` on a white frame in dark, 5.22:1 over the light one on a black frame. */
 internal const val GLASS_ICON_TINT_ALPHA = 0.8f
 
 val GlassIconTint: Color

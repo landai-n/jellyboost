@@ -16,26 +16,36 @@ line in the right place is most of the work.
 
 | role | dark (`JellyfinColors`) | light (`JellyfinLightColors`) |
 |---|---|---|
-| `background` | `#101010` | `#F6F7F8` |
+| `background` | `#101010` | `#EEF1F7` |
 | `surface` | `#202020` | `#FFFFFF` |
-| `surfaceVariant` | `#292929` | `#ECEEF0` |
-| `onBackground` / `onSurface` | `#FFFFFF` | `#101010` |
-| `onSurfaceVariant` | white@70% | black@72% |
+| `surfaceVariant` | `#292929` | `#E3E8F2` |
+| `onBackground` / `onSurface` | `#FFFFFF` | `#191B22` |
+| `onSurfaceVariant` | white@70% | `#1F2330`@78% |
 | `primary` | `#00A4DC` | `#00769E` |
 | `onPrimary` | `#000000` | `#FFFFFF` |
-| `secondary` | `#AA5CC3` | `#6B2F7F` |
+| `secondary` | `#AA5CC3` | `#9A4DB4` |
 | `error` / `onError` | `#CF6679` / `#000000` | `#B3261E` / `#FFFFFF` |
-| `outline` | `#6E6E6E` | `#858585` |
+| `outline` | `#6E6E6E` | `#788AB0` |
+
+The light column is the saved M14 design canvas's light-theme foundations
+(`design/foundations/colors-light.html`), with three values moved off the canvas's own hex where the
+measurement forbade it — each keeps the canvas's hue and moves only lightness or alpha, by the
+minimum `ContrastRatioTest` asks for (DECISIONS 2026-08-28).
 
 The light side is **not an inversion**. Two things fall out of that:
 
-- **A light page is a near-white ground with a *whiter* card on it.** The dark scheme lifts each
+- **A light page is a cool near-white ground with a *whiter* card on it.** The dark scheme lifts each
   layer by getting brighter; the light one cannot keep going up past white, so the page steps *down*
-  to `#F6F7F8` and the card stays `#FFFFFF`.
-- **The brand hues darken.** `#00A4DC` measures 2.67:1 on `#F6F7F8` and `#AA5CC3` 3.89:1, both under
-  the 4.5:1 that body text and links owe (WCAG 1.4.3). `#00769E` (4.79:1) and `#6B2F7F` (8.37:1) keep
-  the hue and saturation and clear it. The pinned brand primary (DECISIONS 2026-08-01) survives as an
-  *identity*; its hex cannot survive a ground it was never measured against.
+  to `#EEF1F7` and the card stays `#FFFFFF`.
+- **The brand blue darkens.** `#00A4DC` measures 2.53:1 on `#EEF1F7` and the canvas's own `#0089B8`
+  3.52:1, both under the 4.5:1 that body text and links owe (WCAG 1.4.3) — and white on a `#0089B8`
+  pill is 3.98:1. `#00769E` (4.54:1, and 5.14:1 under white) is the lightest point on that hue's ramp
+  that clears both. The canvas's `#9A4DB4` secondary clears it as drawn (4.53:1) and is untouched.
+  The pinned brand primary (DECISIONS 2026-08-01) survives as an *identity*; its hex cannot survive a
+  ground it was never measured against.
+- **The outline is a boundary, not a tint.** `outline` is what WCAG 1.4.11 asks 3:1 of, and the
+  canvas's `#D4DAE6` is a 1.24:1 seam. Its hue (220°) and saturation (26.5%) are kept and its
+  lightness taken from 86.7% to 58%: `#788AB0`, 3.06:1 on the page and 3.46:1 on a card.
 
 Every constant carries the arithmetic that chose it in its KDoc, and `ContrastRatioTest` pins both
 schemes — see [Tests](#tests).
@@ -64,13 +74,15 @@ every glass surface in the app reads it. Call sites never read it — they read 
 
 **`pageInk(darkAlpha, lightAlpha)`** takes two alphas rather than reusing one, because black loses
 far more contrast per unit of alpha over a light ground than white gains over a dark one. The
-disabled pill label is the worked example: 0.48 is 5.00:1 on `#101010` and only 3.66:1 on `#F6F7F8`,
-so the light side runs at 0.60 (5.62:1) to owe 1.4.3 the same 4.5:1.
+disabled pill label is the worked example: 0.48 is 5.00:1 on `#101010` and only 3.04:1 on `#EEF1F7`,
+so the light side runs at 0.65 (5.08:1) to owe 1.4.3 the same 4.5:1.
 
 **The worst case flips.** Chrome floats over arbitrary artwork, so the dark chrome fill is measured
 over a fully *white* frame — the brightest thing its subtractive tint can sit on. The light fill is
-additive, so its worst case is the *darkest* frame, where `#F6F7F8`@72% composites to rgb(177) and
-the light ink reads 8.95:1 on it. The test measures each side against its own worst case.
+additive, so its worst case is the *darkest* frame, where `#EEF1F7`@72% composites to rgb(171,174,178)
+and the light ink reads 7.70:1 on it. That ground is the binding constraint on `onSurfaceVariant`'s
+alpha — the canvas's 60% reads 3.06:1 there, 78% reads 4.53:1. The test measures each side against
+its own worst case.
 
 ---
 

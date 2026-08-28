@@ -55,15 +55,16 @@ private val FieldFill: Color
 
 /**
  * The app's only focus affordance, so it owes 3:1 (WCAG 1.4.11, and 2.4.7 while focused). 0.22
- * measured 1.97:1 on `#101010`; 0.42 is 4.09:1 there and 3.99:1 on `#202020`.
+ * measured 1.97:1 on `#101010`; 0.42 is 4.09:1 there and 3.99:1 on `#202020`. The light side needs
+ * 0.48 for the same 3:1 — 0.44 of the page's ink is 2.72:1 on `#EEF1F7`, 3.04:1 at 0.48.
  */
 private val FieldActiveBorder: Color
     @Composable @ReadOnlyComposable
-    get() = pageInk(darkAlpha = 0.42f, lightAlpha = 0.44f)
+    get() = pageInk(darkAlpha = 0.42f, lightAlpha = 0.48f)
 
 private val FieldPlaceholder: Color
     @Composable @ReadOnlyComposable
-    get() = pageInk(darkAlpha = 0.48f, lightAlpha = 0.60f)
+    get() = pageInk(darkAlpha = 0.48f, lightAlpha = 0.65f)
 
 private val FieldPadding = 14.dp
 

@@ -223,8 +223,11 @@ private val LightBottomNavOverArtwork = GlassDefaults.LightBottomNavFill over Da
 private val FieldWell = Color.White.copy(alpha = 0.04f) over Background
 private val ChipWell = Color.White.copy(alpha = 0.05f) over Background
 
-private val LightFieldWell = Color.Black.copy(alpha = 0.04f) over LightBackground
-private val LightChipWell = Color.Black.copy(alpha = 0.05f) over LightBackground
+private val LightFieldWell = JellyfinLightColors.OnBackground.copy(alpha = 0.04f) over LightBackground
+private val LightChipWell = JellyfinLightColors.OnBackground.copy(alpha = 0.05f) over LightBackground
+
+/** The bar's bulk-action pills are `glassSurface`d, so their ground is the glass fill over the page. */
+private val LightGlassWell = GlassDefaults.LightFill over LightBackground
 
 private val LightGlassIconTint = JellyfinLightColors.OnBackground.copy(alpha = GLASS_ICON_TINT_ALPHA)
 
@@ -342,7 +345,7 @@ private val CASES =
             foreground = Color.White.copy(alpha = 0.48f) over Surface,
             background = Surface,
             demand = Demand.Floor(NORMAL_TEXT, "WCAG 1.4.3"),
-            source = "DownloadsScreen.BULK_BUTTON_DISABLED_ALPHA, KDoc says 4.78:1",
+            source = "DownloadsScreen.BulkButtonDisabledContent, KDoc says 4.78:1",
         ),
         ContrastCase(
             name = "ghost button's border — its only edge",
@@ -651,63 +654,63 @@ private val CASES =
             foreground = JellyfinLightColors.OnSurface over LightSurface,
             background = LightSurface,
             demand = Demand.Floor(NORMAL_TEXT, "WCAG 1.4.3"),
-            source = "JellyfinLightColors.OnSurface #101010 on the white card — 19.03:1",
+            source = "JellyfinLightColors.OnSurface #191B22 on the white card — 17.20:1",
         ),
         ContrastCase(
             name = "light: onSurface body text on the page background",
             foreground = JellyfinLightColors.OnSurface over LightBackground,
             background = LightBackground,
             demand = Demand.Floor(NORMAL_TEXT, "WCAG 1.4.3"),
-            source = "JellyfinLightColors.OnSurface on Background — 17.74:1",
+            source = "JellyfinLightColors.OnSurface on Background — 15.20:1",
         ),
         ContrastCase(
             name = "light: onSurfaceVariant label text on surface",
             foreground = JellyfinLightColors.OnSurfaceVariant over LightSurface,
             background = LightSurface,
             demand = Demand.Floor(NORMAL_TEXT, "WCAG 1.4.3"),
-            source = "JellyfinLightColors.OnSurfaceVariant (black@72%), KDoc says 9.29:1",
+            source = "JellyfinLightColors.OnSurfaceVariant (#1F2330@78%), KDoc says 7.64:1",
         ),
         ContrastCase(
             name = "light: onSurfaceVariant label text on the page background",
             foreground = JellyfinLightColors.OnSurfaceVariant over LightBackground,
             background = LightBackground,
             demand = Demand.Floor(NORMAL_TEXT, "WCAG 1.4.3"),
-            source = "JellyfinLightColors.OnSurfaceVariant, KDoc says 8.98:1",
+            source = "JellyfinLightColors.OnSurfaceVariant, KDoc says 7.09:1",
         ),
         ContrastCase(
             name = "light: onSurfaceVariant label text on surfaceVariant",
             foreground = JellyfinLightColors.OnSurfaceVariant over LightSurfaceVariant,
             background = LightSurfaceVariant,
             demand = Demand.Floor(NORMAL_TEXT, "WCAG 1.4.3"),
-            source = "JellyfinLightColors.OnSurfaceVariant on SurfaceVariant — 8.61:1",
+            source = "JellyfinLightColors.OnSurfaceVariant on SurfaceVariant — 6.73:1",
         ),
         ContrastCase(
             name = "light: primary accent text on the page background",
             foreground = JellyfinLightColors.Primary over LightBackground,
             background = LightBackground,
             demand = Demand.Floor(NORMAL_TEXT, "WCAG 1.4.3"),
-            source = "JellyfinLightColors.Primary #00769E, KDoc says 4.79:1 (#00A4DC would be 2.67:1)",
+            source = "JellyfinLightColors.Primary #00769E, KDoc says 4.54:1 (the canvas's #0089B8 would be 3.52:1)",
         ),
         ContrastCase(
             name = "light: onPrimary content on a filled primary container",
             foreground = JellyfinLightColors.OnPrimary over LightPrimaryFill,
             background = LightPrimaryFill,
             demand = Demand.Floor(NORMAL_TEXT, "WCAG 1.4.3"),
-            source = "JellyfinLightColors.OnPrimary (white), KDoc says 5.14:1 (black would be 4.09:1)",
+            source = "JellyfinLightColors.OnPrimary (white), KDoc says 5.14:1 (black would be 4.09:1, #0089B8 3.98:1)",
         ),
         ContrastCase(
             name = "light: secondary brand hue as text on the page background",
             foreground = JellyfinLightColors.Secondary over LightBackground,
             background = LightBackground,
             demand = Demand.Floor(NORMAL_TEXT, "WCAG 1.4.3"),
-            source = "JellyfinLightColors.Secondary #6B2F7F, KDoc says 8.37:1 (#AA5CC3 would be 3.89:1)",
+            source = "JellyfinLightColors.Secondary #9A4DB4, KDoc says 4.53:1 (#AA5CC3 would be 3.69:1)",
         ),
         ContrastCase(
             name = "light: error colour as text on the page background",
             foreground = JellyfinLightColors.Error over LightBackground,
             background = LightBackground,
             demand = Demand.Floor(NORMAL_TEXT, "WCAG 1.4.3"),
-            source = "JellyfinLightColors.Error #B3261E, KDoc says 6.09:1",
+            source = "JellyfinLightColors.Error #B3261E, KDoc says 5.78:1",
         ),
         ContrastCase(
             name = "light: onError content on a filled error container",
@@ -721,42 +724,49 @@ private val CASES =
             foreground = JellyfinLightColors.Outline over LightBackground,
             background = LightBackground,
             demand = Demand.Floor(COMPONENT, "WCAG 1.4.11"),
-            source = "JellyfinLightColors.Outline #858585, KDoc says 3.44:1",
+            source = "JellyfinLightColors.Outline #788AB0, KDoc says 3.06:1 (the canvas's #D4DAE6 would be 1.24:1)",
         ),
         ContrastCase(
             name = "light: outline role against a card's surface",
             foreground = JellyfinLightColors.Outline over LightSurface,
             background = LightSurface,
             demand = Demand.Floor(COMPONENT, "WCAG 1.4.11"),
-            source = "JellyfinLightColors.Outline #858585, KDoc says 3.69:1",
+            source = "JellyfinLightColors.Outline #788AB0, KDoc says 3.46:1",
         ),
         ContrastCase(
             name = "light: primary pill label on its near-black fill",
             foreground = JellyfinLightColors.Background over LightPillFill,
             background = LightPillFill,
             demand = Demand.Floor(NORMAL_TEXT, "WCAG 1.4.3"),
-            source = "JellyfinButtons.PrimaryPillContent (background on onBackground) — 17.74:1",
+            source = "JellyfinButtons.PrimaryPillContent (background on onBackground) — 15.20:1",
         ),
         ContrastCase(
             name = "light: disabled pill label on the page background",
-            foreground = Color.Black.copy(alpha = 0.60f) over LightBackground,
+            foreground = JellyfinLightColors.OnBackground.copy(alpha = 0.65f) over LightBackground,
             background = LightBackground,
             demand = Demand.Floor(NORMAL_TEXT, "WCAG 1.4.3"),
-            source = "JellyfinButtons.PrimaryPillDisabledContent light side, KDoc says 5.62:1 (0.48 was 3.66:1)",
+            source = "JellyfinButtons.PrimaryPillDisabledContent light side, KDoc says 5.08:1 (0.48 was 3.04:1)",
         ),
         ContrastCase(
             name = "light: disabled pill label on a card's surface",
-            foreground = Color.Black.copy(alpha = 0.60f) over LightSurface,
+            foreground = JellyfinLightColors.OnBackground.copy(alpha = 0.65f) over LightSurface,
             background = LightSurface,
             demand = Demand.Floor(NORMAL_TEXT, "WCAG 1.4.3"),
-            source = "JellyfinButtons.PrimaryPillDisabledContent light side — 5.74:1",
+            source = "JellyfinButtons.PrimaryPillDisabledContent light side — 5.34:1",
+        ),
+        ContrastCase(
+            name = "light: disabled bulk-action label on the downloads bar",
+            foreground = JellyfinLightColors.OnBackground.copy(alpha = 0.65f) over LightGlassWell,
+            background = LightGlassWell,
+            demand = Demand.Floor(NORMAL_TEXT, "WCAG 1.4.3"),
+            source = "DownloadsScreen.BulkButtonDisabledContent light side — 5.23:1 (0.48 was 3.09:1)",
         ),
         ContrastCase(
             name = "light: ghost button's border — its only edge",
             foreground = GlassDefaults.LightGhostBorder over LightBackground,
             background = LightBackground,
             demand = Demand.Floor(COMPONENT, "WCAG 1.4.11"),
-            source = "GlassDefaults.LightGhostBorder, KDoc says 3.21:1 (black@40% was 2.82:1)",
+            source = "GlassDefaults.LightGhostBorder, KDoc says 3.18:1 (black@40% would be 2.80:1)",
         ),
         ContrastCase(
             name = "light: ghost button's border on a card",
@@ -767,66 +777,66 @@ private val CASES =
         ),
         ContrastCase(
             name = "light: focused field's border — the app's only focus indicator",
-            foreground = Color.Black.copy(alpha = 0.44f) over LightBackground,
+            foreground = JellyfinLightColors.OnBackground.copy(alpha = 0.48f) over LightBackground,
             background = LightBackground,
             demand = Demand.Floor(COMPONENT, "WCAG 1.4.11 / 2.4.7"),
-            source = "JellyfinTextField.FieldActiveBorder light side — 3.21:1",
+            source = "JellyfinTextField.FieldActiveBorder light side — 3.04:1 (0.44 was 2.72:1)",
         ),
         ContrastCase(
             name = "light: focused field's border on a card",
-            foreground = Color.Black.copy(alpha = 0.44f) over LightSurface,
+            foreground = JellyfinLightColors.OnBackground.copy(alpha = 0.48f) over LightSurface,
             background = LightSurface,
             demand = Demand.Floor(COMPONENT, "WCAG 1.4.11 / 2.4.7"),
-            source = "JellyfinTextField.FieldActiveBorder light side — 3.24:1",
+            source = "JellyfinTextField.FieldActiveBorder light side — 3.13:1",
         ),
         ContrastCase(
             name = "light: field placeholder text in its well",
-            foreground = Color.Black.copy(alpha = 0.60f) over LightFieldWell,
+            foreground = JellyfinLightColors.OnBackground.copy(alpha = 0.65f) over LightFieldWell,
             background = LightFieldWell,
             demand = Demand.Floor(NORMAL_TEXT, "WCAG 1.4.3"),
-            source = "JellyfinTextField.FieldPlaceholder over FieldFill, both light — 5.47:1",
+            source = "JellyfinTextField.FieldPlaceholder over FieldFill, both light — 4.92:1",
         ),
         ContrastCase(
             name = "light: unselected filter chip's label",
-            foreground = Color.Black over LightChipWell,
+            foreground = JellyfinLightColors.OnSurfaceVariant.copy(alpha = 1f) over LightChipWell,
             background = LightChipWell,
             demand = Demand.Floor(NORMAL_TEXT, "WCAG 1.4.3"),
-            source = "PillChip.ChipFill light side with opaque onSurfaceVariant content — 17.54:1",
+            source = "PillChip.ChipFill light side with opaque onSurfaceVariant content — 12.56:1",
         ),
         ContrastCase(
             name = "light: selected filter chip's label on its solid fill",
             foreground = JellyfinLightColors.Background over LightPillFill,
             background = LightPillFill,
             demand = Demand.Floor(NORMAL_TEXT, "WCAG 1.4.3"),
-            source = "PillChip.ChipSelectedContent on ChipSelectedFill, both light — 17.74:1",
+            source = "PillChip.ChipSelectedContent on ChipSelectedFill, both light — 15.20:1",
         ),
         ContrastCase(
             name = "light: informational chip's dimmed label",
-            foreground = Color.Black.copy(alpha = 0.7f) over LightChipWell,
+            foreground = JellyfinLightColors.OnSurfaceVariant.copy(alpha = 0.7f) over LightChipWell,
             background = LightChipWell,
             demand = Demand.Floor(NORMAL_TEXT, "WCAG 1.4.3"),
-            source = "PillChip.DISABLED_CHIP_ALPHA over ChipFill, both light, KDoc says 7.84:1",
+            source = "PillChip.DISABLED_CHIP_ALPHA over ChipFill, both light, KDoc says 5.23:1",
         ),
         ContrastCase(
             name = "light: error banner's message on its wash",
             foreground = JellyfinLightColors.Error over LightBannerWash,
             background = LightBannerWash,
             demand = Demand.Floor(NORMAL_TEXT, "WCAG 1.4.3"),
-            source = "ErrorBanner's light content is colorScheme.error itself, KDoc says 5.19:1",
+            source = "ErrorBanner's light content is colorScheme.error itself, KDoc says 4.93:1",
         ),
         ContrastCase(
             name = "light: detail header's resume track on the page background",
-            foreground = Color.Black.copy(alpha = 0.44f) over LightBackground,
+            foreground = JellyfinLightColors.OnBackground.copy(alpha = 0.48f) over LightBackground,
             background = LightBackground,
             demand = Demand.Floor(COMPONENT, "WCAG 1.4.11"),
-            source = "ItemDetailHeader.PROGRESS_TRACK_ALPHA_LIGHT, KDoc says 3.21:1 (0.40 was 2.82:1)",
+            source = "ItemDetailHeader.PROGRESS_TRACK_ALPHA_LIGHT, KDoc says 3.04:1 (0.44 was 2.72:1)",
         ),
         ContrastCase(
             name = "light: download queue row's progress track on its card",
-            foreground = Color.Black.copy(alpha = 0.44f) over LightSurface,
+            foreground = JellyfinLightColors.OnBackground.copy(alpha = 0.48f) over LightSurface,
             background = LightSurface,
             demand = Demand.Floor(COMPONENT, "WCAG 1.4.11"),
-            source = "DownloadRows.QUEUE_TRACK_ALPHA_LIGHT, KDoc says 3.24:1 (0.40 was 2.85:1)",
+            source = "DownloadRows.QUEUE_TRACK_ALPHA_LIGHT, KDoc says 3.13:1 (0.44 was 2.79:1)",
         ),
         ContrastCase(
             name = "light: storage usage bar's filled portion on its stat panel",
@@ -838,9 +848,9 @@ private val CASES =
         ContrastCase(
             // TODO(a11y): the light side of the same fourth track — one `pageInk` lightAlpha fixes both.
             name = "light: storage usage bar's unfilled track on its stat panel [KNOWN VIOLATION]",
-            foreground = Color.Black.copy(alpha = 0.12f) over LightSurface,
+            foreground = JellyfinLightColors.OnBackground.copy(alpha = 0.12f) over LightSurface,
             background = LightSurface,
-            demand = Demand.KnownViolation(recorded = 1.32, owed = COMPONENT),
+            demand = Demand.KnownViolation(recorded = 1.28, owed = COMPONENT),
             source = "DownloadsScreen.UsageBarTrackColor — pageInk(0.12) on the light side",
         ),
         ContrastCase(
@@ -848,28 +858,28 @@ private val CASES =
             foreground = JellyfinLightColors.OnBackground over LightChromeOverArtwork,
             background = LightChromeOverArtwork,
             demand = Demand.Floor(NORMAL_TEXT, "WCAG 1.4.3"),
-            source = "GlassDefaults.LightChromeFill, KDoc says 8.95:1",
+            source = "GlassDefaults.LightChromeFill, KDoc says 7.70:1",
         ),
         ContrastCase(
             name = "light: unselected top-nav tab label over the darkest artwork",
             foreground = JellyfinLightColors.OnSurfaceVariant over LightChromeOverArtwork,
             background = LightChromeOverArtwork,
             demand = Demand.Floor(NORMAL_TEXT, "WCAG 1.4.3"),
-            source = "GlassDefaults.LightChromeFill, KDoc says 6.07:1 — the light scheme's worst text case",
+            source = "GlassDefaults.LightChromeFill, KDoc says 4.53:1 — the light scheme's worst text case",
         ),
         ContrastCase(
             name = "light: bottom nav pill's label over the darkest artwork",
             foreground = JellyfinLightColors.OnBackground over LightBottomNavOverArtwork,
             background = LightBottomNavOverArtwork,
             demand = Demand.Floor(NORMAL_TEXT, "WCAG 1.4.3"),
-            source = "GlassDefaults.LightBottomNavFill — 8.95:1",
+            source = "GlassDefaults.LightBottomNavFill — 7.70:1",
         ),
         ContrastCase(
             name = "light: glass icon button's glyph over the darkest artwork",
             foreground = LightGlassIconTint over LightChromeOverArtwork,
             background = LightChromeOverArtwork,
             demand = Demand.Floor(COMPONENT, "WCAG 1.4.11"),
-            source = "JellyfinButtons.GlassIconTint light side over LightChromeFill, KDoc says 6.18:1",
+            source = "JellyfinButtons.GlassIconTint light side over LightChromeFill, KDoc says 5.22:1",
         ),
         ContrastCase(
             name = "light: glass surface hairline on the page background",
@@ -923,7 +933,7 @@ private val CASES =
             background = LightBackground,
             demand =
                 Demand.Exempt(
-                    recorded = 1.60,
+                    recorded = 1.59,
                     reason =
                         "the banner is a fill, an icon and a sentence; the border only holds the shape " +
                             "where the wash fades out",
@@ -963,13 +973,13 @@ private val MIRRORED_DECLARATIONS =
         "core/ui/src/main/kotlin/dev/jellyboost/core/ui/component/JellyfinButtons.kt" to
             "get() = MaterialTheme.colorScheme.background",
         "core/ui/src/main/kotlin/dev/jellyboost/core/ui/component/JellyfinButtons.kt" to
-            "get() = pageInk(darkAlpha = 0.48f, lightAlpha = 0.60f)",
+            "get() = pageInk(darkAlpha = 0.48f, lightAlpha = 0.65f)",
         "core/ui/src/main/kotlin/dev/jellyboost/core/ui/component/JellyfinTextField.kt" to
             "get() = pageInk(darkAlpha = 0.04f)",
         "core/ui/src/main/kotlin/dev/jellyboost/core/ui/component/JellyfinTextField.kt" to
-            "get() = pageInk(darkAlpha = 0.42f, lightAlpha = 0.44f)",
+            "get() = pageInk(darkAlpha = 0.42f, lightAlpha = 0.48f)",
         "core/ui/src/main/kotlin/dev/jellyboost/core/ui/component/JellyfinTextField.kt" to
-            "get() = pageInk(darkAlpha = 0.48f, lightAlpha = 0.60f)",
+            "get() = pageInk(darkAlpha = 0.48f, lightAlpha = 0.65f)",
         "core/ui/src/main/kotlin/dev/jellyboost/core/ui/component/PillChip.kt" to
             "private const val CHIP_FILL_ALPHA = 0.05f",
         "core/ui/src/main/kotlin/dev/jellyboost/core/ui/component/PillChip.kt" to
@@ -997,15 +1007,15 @@ private val MIRRORED_DECLARATIONS =
         "feature/detail/src/main/kotlin/dev/jellyboost/feature/detail/ItemDetailHeader.kt" to
             "private const val PROGRESS_TRACK_ALPHA = 0.40f",
         "feature/detail/src/main/kotlin/dev/jellyboost/feature/detail/ItemDetailHeader.kt" to
-            "private const val PROGRESS_TRACK_ALPHA_LIGHT = 0.44f",
+            "private const val PROGRESS_TRACK_ALPHA_LIGHT = 0.48f",
         "feature/downloads/src/main/kotlin/dev/jellyboost/feature/downloads/DownloadRows.kt" to
             "private const val QUEUE_TRACK_ALPHA = 0.40f",
         "feature/downloads/src/main/kotlin/dev/jellyboost/feature/downloads/DownloadRows.kt" to
-            "private const val QUEUE_TRACK_ALPHA_LIGHT = 0.44f",
+            "private const val QUEUE_TRACK_ALPHA_LIGHT = 0.48f",
         "feature/downloads/src/main/kotlin/dev/jellyboost/feature/downloads/DownloadsScreen.kt" to
             "get() = pageInk(darkAlpha = 0.12f)",
         "feature/downloads/src/main/kotlin/dev/jellyboost/feature/downloads/DownloadsScreen.kt" to
-            "private const val BULK_BUTTON_DISABLED_ALPHA = 0.48f",
+            "get() = pageInk(darkAlpha = 0.48f, lightAlpha = 0.65f)",
         // The two discs that stay literal because they are drawn on video and on album art.
         "player/src/main/kotlin/dev/jellyboost/player/ui/PlayerControls.kt" to
             "private val OVER_MEDIA_DISC = Color.White",

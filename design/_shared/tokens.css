@@ -36,25 +36,31 @@
   --backdrop-height: 220px;
   --badge-size: 20px;
 }
-/* The light scheme (JellyfinLightColors). Overrides only what changes: the accent gradient is brand
-   and identical in both, while every scrim and placeholder resolves against the active background.
-   The brand hues are darkened rather than reused — #00A4DC is 2.67:1 on #F6F7F8, under the 4.5:1
-   body text owes; the Kotlin KDocs carry the arithmetic for each one. */
+/* The light scheme (JellyfinLightColors) — the saved M14 canvas's light-theme foundations, with
+   three values moved off the canvas's own hex where it missed a ratio ContrastRatioTest pins: the
+   primary darkened along its hue (#0089B8 is 3.52:1 on the page, under the 4.5:1 body text owes),
+   the outline darkened the same way (#D4DAE6 is a 1.24:1 seam and cannot be a 3:1 boundary), and
+   onSurfaceVariant's alpha raised from .60 (3.06:1 on light chrome over a dark frame). The Kotlin
+   KDocs carry the arithmetic for each. Overrides only what changes: the accent gradient is brand
+   and identical in both schemes. */
 [data-theme="light"] {
-  --background: #F6F7F8;
+  --background: #EEF1F7;
   --surface: #FFFFFF;
-  --surface-variant: #ECEEF0;
+  --surface-variant: #E3E8F2;
   --primary: #00769E;
-  --secondary: #6B2F7F;
+  --secondary: #9A4DB4;
   --on-primary: #FFFFFF;
-  --on-background: #101010;
-  --on-surface: #101010;
-  --on-surface-variant: rgba(0, 0, 0, 0.72);
+  --on-background: #191B22;
+  --on-surface: #191B22;
+  --on-surface-variant: rgba(31, 35, 48, 0.78);
   --error: #B3261E;
-  --outline: #858585;
+  --outline: #788AB0;
 
-  --backdrop-scrim: linear-gradient(180deg, rgba(246, 247, 248, 0) 0%, rgba(246, 247, 248, .65) 60%, #F6F7F8 100%);
-  --image-placeholder: linear-gradient(135deg, #ECEEF0 0%, #FFFFFF 100%);
+  --backdrop-scrim: linear-gradient(180deg, rgba(238, 241, 247, 0) 0%, rgba(238, 241, 247, .65) 60%, #EEF1F7 100%);
+  --image-placeholder: linear-gradient(135deg, #E3E8F2 0%, #FFFFFF 100%);
+
+  background: var(--background);
+  color: var(--on-background);
 }
 body {
   margin: 0;
@@ -91,23 +97,9 @@ body {
   );
 }
 
-/* Light theme — set data-theme="light" on <html>, <body>, or any container. */
-[data-theme="light"] {
-  --background: #EEF1F7;
-  --surface: #FFFFFF;
-  --surface-variant: #E3E8F2;
-  --primary: #0089B8;
-  --secondary: #9A4DB4;
-  --on-background: #191B22;
-  --on-surface: #191B22;
-  --on-surface-variant: rgba(31, 35, 48, 0.60);
-  --error: #B3261E;
-  --outline: #D4DAE6;
-  --backdrop-scrim: linear-gradient(180deg, rgba(238, 241, 247, 0) 0%, rgba(238, 241, 247, .65) 60%, #EEF1F7 100%);
-  --image-placeholder: linear-gradient(135deg, #DCE2EE 0%, #EAEEF6 100%);
-  background: var(--background);
-  color: var(--on-background);
-}
+/* BrandGlow on a light page (JellyfinGradients.LightBrandGlow): the canvas's own .16/.10, not the
+   two-fifths the hero halo takes — this wash is the auth page's only decoration and has nothing
+   drawn through it. */
 [data-theme="light"] .brand-glow {
   background: radial-gradient(
     circle at 50% 8%,

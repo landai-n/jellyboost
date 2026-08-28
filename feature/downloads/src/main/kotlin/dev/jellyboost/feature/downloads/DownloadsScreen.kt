@@ -712,7 +712,7 @@ private fun QueueBulkButton(
     onClick: () -> Unit,
     contentColor: Color,
 ) {
-    val resolvedColor = if (enabled) contentColor else contentColor.copy(alpha = BULK_BUTTON_DISABLED_ALPHA)
+    val resolvedColor = if (enabled) contentColor else BulkButtonDisabledContent
     Row(
         modifier =
             Modifier
@@ -1308,9 +1308,14 @@ private val BulkButtonLabel = TextStyle(fontSize = 12.sp, fontWeight = FontWeigh
 
 /**
  * 0.48, not 0.35: the label is text with a 4.5:1 obligation — 3.20:1 at 0.35, 4.78:1 at 0.48 on
- * `#202020`. Matches `JellyfinButtons`' disabled pill content.
+ * `#202020`. Dark ink is not white's mirror, so the light side runs at 0.65: 0.48 of it is 3.09:1
+ * on the bar's light glass well, 5.23:1 at 0.65. The same pair `JellyfinButtons`' disabled pill
+ * content uses — the page's ink rather than the enabled label's own colour, which is what lets it
+ * carry a per-scheme alpha at all.
  */
-private const val BULK_BUTTON_DISABLED_ALPHA = 0.48f
+private val BulkButtonDisabledContent: Color
+    @Composable @ReadOnlyComposable
+    get() = pageInk(darkAlpha = 0.48f, lightAlpha = 0.65f)
 private val StatValue = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.W600)
 private val StatValueSmall = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.W600)
 private val StatSwitchLabel = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.W600)

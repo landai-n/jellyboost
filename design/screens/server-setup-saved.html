@@ -1,0 +1,89 @@
+<!-- @dsCard viewport="400x1000" group="Screens" name="Server setup — saved servers (portrait)" subtitle="Saved section above live discovery: merged 'On this network' card, offline saved card, discovered-only list filters out saved servers; first run renders no Saved section at all" -->
+<link rel="stylesheet" href="../_shared/modern.css">
+<style>
+  .phone{width:400px;min-height:1020px;margin:0 auto;position:relative;overflow:hidden}
+  .glow{position:absolute;inset:0 0 auto 0;height:420px}
+  .content{position:relative;padding:32px 24px;display:flex;flex-direction:column;gap:16px;box-sizing:border-box}
+  .hero{display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
+  .wordmark{font-size:30px;font-weight:700;letter-spacing:-.02em;color:#fff}
+  .tagline{font-size:13px;line-height:18px;color:var(--on-surface-variant)}
+  .title{font-size:22px;font-weight:600;letter-spacing:-.01em}
+  .eyebrow{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--on-surface-variant)}
+  .section-wrap{display:flex;flex-direction:column;gap:8px}
+  .field-wrap{display:flex;flex-direction:column;gap:8px}
+  .card{display:flex;align-items:center;gap:16px;padding:14px 16px;box-sizing:border-box}
+  .badge{width:38px;height:38px;border-radius:12px;background:rgba(0,164,220,.14);border:1px solid rgba(0,164,220,.30);flex:none;display:flex;align-items:center;justify-content:center;box-sizing:border-box}
+  .badge svg{width:18px;height:18px;fill:var(--primary)}
+  .badge.off{background:var(--glass-bg);border-color:var(--glass-line)}
+  .badge.off svg{fill:var(--icon-fg)}
+  .body{flex:1;min-width:0}
+  .sname{font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px}
+  .addr{font-size:12px;color:var(--on-surface-variant);margin-top:2px}
+  .live{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:999px;background:rgba(0,164,220,.14);border:1px solid rgba(0,164,220,.30);font-size:10px;font-weight:600;letter-spacing:.04em;color:var(--primary);white-space:nowrap}
+  .live .d{width:5px;height:5px;border-radius:50%;background:var(--primary);animation:lp 1.6s ease-in-out infinite}
+  @keyframes lp{0%,100%{opacity:1}50%{opacity:.35}}
+  .more{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none}
+  .more svg{width:18px;height:18px;fill:var(--on-surface-variant)}
+  .chev{margin-left:auto;color:var(--on-surface-variant);font-size:20px;flex:none}
+  .hint{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--on-surface-variant)}
+  .mini-spin{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.14);border-top-color:var(--primary);animation:m-spin 1s linear infinite;flex:none}
+  .note{font-size:11px;color:rgba(255,255,255,.45);line-height:16px}
+</style>
+<div class="phone">
+  <div class="glow brand-glow"></div>
+  <div class="content">
+    <div class="hero">
+      <svg width="88" height="88" viewBox="0 0 168 142">
+        <defs><linearGradient id="fin" gradientUnits="userSpaceOnUse" x1="4" y1="4" x2="164" y2="138"><stop offset="0" stop-color="#AA5CC3"/><stop offset="1" stop-color="#00A4DC"/></linearGradient></defs>
+        <path fill="url(#fin)" d="M164 4 C118 18, 78 52, 60 98 C54 112, 52 126, 54 138 C90 136, 124 112, 144 78 C158 54, 164 28, 164 4 Z"/>
+        <g stroke="url(#fin)" stroke-width="12" stroke-linecap="round" fill="none"><path d="M24 38 L74 38"/><path d="M10 72 L54 72"/><path d="M22 110 L42 110"/></g>
+      </svg>
+      <div class="wordmark">Jellyboost</div>
+      <div class="tagline">Your Jellyfin library, native on Android.</div>
+    </div>
+
+    <div class="title">Connect to server</div>
+
+    <div class="section-wrap">
+      <div class="eyebrow">Saved servers</div>
+      <div class="m-surface card">
+        <div class="badge"><svg viewBox="0 0 24 24"><path d="M4 3h16a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Zm3 4.5A1.5 1.5 0 1 0 7 4.5a1.5 1.5 0 0 0 0 3ZM4 14h16a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-5a1 1 0 0 1 1-1Zm3 4.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z"/></svg></div>
+        <div class="body">
+          <div class="sname">lighthouse <span class="live"><span class="d"></span>On this network</span></div>
+          <div class="addr">http://192.168.1.10:8096 · 2 accounts</div>
+        </div>
+        <div class="more"><svg viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg></div>
+      </div>
+      <div class="m-surface card">
+        <div class="badge off"><svg viewBox="0 0 24 24"><path d="M4 3h16a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Zm3 4.5A1.5 1.5 0 1 0 7 4.5a1.5 1.5 0 0 0 0 3ZM4 14h16a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-5a1 1 0 0 1 1-1Zm3 4.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z"/></svg></div>
+        <div class="body">
+          <div class="sname">haven</div>
+          <div class="addr">https://haven.example.net · Last used 2 days ago</div>
+        </div>
+        <div class="more"><svg viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg></div>
+      </div>
+    </div>
+
+    <div class="section-wrap">
+      <div class="eyebrow">Discovered on this network</div>
+      <div class="m-surface card">
+        <div class="badge"><svg viewBox="0 0 24 24"><path d="M4 3h16a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Zm3 4.5A1.5 1.5 0 1 0 7 4.5a1.5 1.5 0 0 0 0 3ZM4 14h16a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-5a1 1 0 0 1 1-1Zm3 4.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z"/></svg></div>
+        <div class="body">
+          <div class="sname">vault</div>
+          <div class="addr">http://192.168.1.72:8096</div>
+        </div>
+        <div class="chev">&#8250;</div>
+      </div>
+      <div class="hint"><div class="mini-spin"></div>Searching the local network…</div>
+    </div>
+
+    <div class="m-panel">
+      <div class="field-wrap">
+        <div class="eyebrow">Server address</div>
+        <div class="m-field">demo.jellyfin.org or 192.168.1.10:8096</div>
+      </div>
+      <div class="m-btn m-btn-disabled m-btn-block">Connect</div>
+    </div>
+    <div class="note">Saved list sits ABOVE discovery: ordered by last-used descending, the currently-connected server pinned first. Merge rule — lighthouse is saved AND broadcasting, so it renders once here with the live pill and is filtered out of Discovered; vault is discovery-only (chevron trailing, nothing saved yet). Saved cards trail an overflow button instead (menu / long-press &rarr; Forget, see components/saved-server-card.html). Tapping a saved card goes to its saved-accounts screen, not straight to Login. First run: with no ServerEntity rows the whole Saved section is absent and this screen collapses to the original server-setup.html.</div>
+  </div>
+</div>

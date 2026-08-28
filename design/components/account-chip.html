@@ -1,0 +1,41 @@
+<!-- @dsCard viewport="560x420" group="Components" name="Saved account chip" subtitle="Local UserEntity chip (NOT Login's live public-users row): fast-path, needs-re-auth badge, and long-press remove states" -->
+<link rel="stylesheet" href="../_shared/modern.css">
+<style>
+  body{padding:24px}
+  .col{max-width:460px;display:flex;flex-direction:column;gap:10px}
+  .caption{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--on-surface-variant);margin-bottom:2px}
+  .chip{display:flex;align-items:center;gap:12px;height:60px;padding:0 16px 0 10px;border-radius:999px;background:var(--glass-bg);border:1px solid var(--glass-line);box-sizing:border-box}
+  .av{width:40px;height:40px;border-radius:50%;position:relative;flex:none}
+  .av .face{width:100%;height:100%;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600}
+  .photo1{background:linear-gradient(160deg,#3a5f3f,#7fa06a 55%,#b0c4a0)}
+  .photo2{background:linear-gradient(200deg,#e8e4de,#c9a86a 60%,#8a6f4d)}
+  .letter{background:var(--primary);color:#101010}
+  .kb{position:absolute;right:-2px;bottom:-2px;width:16px;height:16px;border-radius:50%;background:var(--error);border:2px solid var(--background);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#101010;box-sizing:content-box}
+  .tx{flex:1;min-width:0}
+  .nm{font-size:14px;font-weight:600}
+  .sb{font-size:12px;color:var(--on-surface-variant);margin-top:1px}
+  .sb.err{color:var(--error-fg)}
+  .chev{color:var(--on-surface-variant);font-size:20px;flex:none}
+  .chip.removing{border-color:var(--error-line);background:var(--error-bg)}
+  .x{width:28px;height:28px;border-radius:50%;background:rgba(207,102,121,.16);border:1px solid var(--error-line);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--error-fg);flex:none}
+  .note{font-size:11px;color:rgba(255,255,255,.45);line-height:16px;margin-top:6px}
+</style>
+<div class="col">
+  <div class="caption">On this device</div>
+  <div class="chip">
+    <div class="av"><div class="face photo1"></div></div>
+    <div class="tx"><div class="nm">Sam</div><div class="sb">Last used today</div></div>
+    <div class="chev">&#8250;</div>
+  </div>
+  <div class="chip">
+    <div class="av"><div class="face photo2"></div><div class="kb">!</div></div>
+    <div class="tx"><div class="nm">Alex</div><div class="sb err">Signed out — tap to sign in again</div></div>
+    <div class="chev">&#8250;</div>
+  </div>
+  <div class="chip removing">
+    <div class="av"><div class="face letter">M</div></div>
+    <div class="tx"><div class="nm">Mika</div><div class="sb">Remove from this device?</div></div>
+    <div class="x">&#10005;</div>
+  </div>
+  <div class="note">Sourced from local UserEntity rows (accounts that signed in on THIS device before) — deliberately not Login&rsquo;s 88px avatar-ring row, which lists the server&rsquo;s live public users. Compact 60px glass pill, 40px avatar, two-line text; stacks full-width in screens. Three states: fast path — access token held, one tap switches (chevron trailing); needs re-auth — 16px error-filled &ldquo;!&rdquo; badge on the avatar + error-tinted subtitle, tap lands on Login/Quick Connect with the username prefilled; remove — long-press flips the chip to error-tinted &ldquo;Remove from this device?&rdquo; with an &times; confirm (second tap anywhere else cancels). Removing forgets the local token + row only; the server account is untouched.</div>
+</div>

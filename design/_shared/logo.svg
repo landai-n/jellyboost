@@ -1,18 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 168 142">
-  <!-- Jellyboost fin mark. Same geometry as the in-app vector
-       (feature/auth res/drawable/ic_jellyboost_logo.xml); logo/ic_launcher_foreground.svg
-       remains the source of truth. -->
+  
   <defs>
     <linearGradient id="fin" gradientUnits="userSpaceOnUse" x1="4" y1="4" x2="164" y2="138">
-      <stop offset="0" stop-color="#AA5CC3"/>
-      <stop offset="1" stop-color="#00A4DC"/>
+      <stop offset="0" stop-color="#AA5CC3"></stop>
+      <stop offset="1" stop-color="#00A4DC"></stop>
     </linearGradient>
   </defs>
-  <path fill="url(#fin)"
-        d="M164 4 C118 18, 78 52, 60 98 C54 112, 52 126, 54 138 C90 136, 124 112, 144 78 C158 54, 164 28, 164 4 Z"/>
+  <path fill="url(#fin)" d="M164 4 C118 18, 78 52, 60 98 C54 112, 52 126, 54 138 C90 136, 124 112, 144 78 C158 54, 164 28, 164 4 Z"></path>
   <g stroke="url(#fin)" stroke-width="12" stroke-linecap="round" fill="none">
-    <path d="M24 38 L74 38"/>
-    <path d="M10 72 L54 72"/>
-    <path d="M22 110 L42 110"/>
+    <path d="M24 38 L74 38"></path>
+    <path d="M10 72 L54 72"></path>
+    <path d="M22 110 L42 110"></path>
   </g>
 </svg>

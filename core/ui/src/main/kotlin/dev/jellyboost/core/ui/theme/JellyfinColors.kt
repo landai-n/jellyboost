@@ -25,50 +25,63 @@ internal object JellyfinColors {
 }
 
 /**
- * The light sibling of [JellyfinColors]. Not an inversion of it — a light page is built from a
- * near-white ground with a *white* card on top, where the dark scheme lifts each layer by getting
- * brighter, and the brand hues are darkened rather than reused because contrast runs the other way:
- * the same colour that clears 4.5:1 on `#101010` fails it on `#F6F7F8`.
+ * The light sibling of [JellyfinColors], from the saved M14 design canvas ("light-theme
+ * foundations", `design/foundations/colors-light.html`). Not an inversion of [JellyfinColors] — a
+ * light page is built from a cool blue-tinted ground with a *white* card on top, where the dark
+ * scheme lifts each layer by getting brighter.
+ *
+ * Every value here is the canvas's, except where the canvas's own choice misses a ratio
+ * `ContrastRatioTest` pins; those three keep the canvas hue and move only lightness or alpha, by
+ * the minimum the measurement asks for. Each carries its arithmetic below, as the dark palette does.
  */
 internal object JellyfinLightColors {
-    val Background = Color(0xFFF6F7F8)
+    /** The canvas's cool ground: blue-tinted, not the neutral `#F6F7F8` the branch first shipped. */
+    val Background = Color(0xFFEEF1F7)
 
     /** A card is *whiter* than the page, the mirror of the dark scheme's card being lighter than it. */
     val Surface = Color(0xFFFFFFFF)
 
-    val SurfaceVariant = Color(0xFFECEEF0)
+    val SurfaceVariant = Color(0xFFE3E8F2)
 
     /**
-     * The brand blue's own hue and saturation, taken down until it clears WCAG 1.4.3 the way
-     * `#00A4DC` does on the dark page (6.65:1). `#00A4DC` itself measures 2.67:1 on `#F6F7F8`; the
-     * eyeballed neighbour `#007CA8` is 4.40:1, still under the 4.5:1 body text owes. `#00769E` is
-     * 4.79:1 on the page and 5.14:1 on a white card, and white on it is 5.14:1 — see [OnPrimary].
+     * The canvas's `#0089B8`, darkened along its own hue until it clears WCAG 1.4.3 the way
+     * `#00A4DC` does on the dark page (6.65:1). `#0089B8` is 3.52:1 on the page and white on it is
+     * 3.98:1, both under the 4.5:1 body text and a filled pill owe; `#00A4DC` is 2.53:1. `#00769E`
+     * is the lightest point on that hue's ramp that clears both — 4.54:1 on the page, 5.14:1 on a
+     * white card, and white on it is 5.14:1 (see [OnPrimary]).
      */
     val Primary = Color(0xFF00769E)
 
-    /** `#AA5CC3`'s hue and saturation, taken down the same way: 8.37:1 on the page (`#AA5CC3` is 3.89:1). */
-    val Secondary = Color(0xFF6B2F7F)
+    /** The canvas's purple, adopted as drawn: 4.53:1 on the page, 5.13:1 on a card (`#AA5CC3` is 3.69:1). */
+    val Secondary = Color(0xFF9A4DB4)
 
     /** White, not black: on [Primary] white is 5.14:1 where black is 4.09:1. */
     val OnPrimary = Color(0xFFFFFFFF)
 
-    val OnBackground = Color(0xFF101010)
-    val OnSurface = Color(0xFF101010)
+    /** The canvas's blue-black ink: 15.20:1 on the page, 17.20:1 on a card. */
+    val OnBackground = Color(0xFF191B22)
+    val OnSurface = Color(0xFF191B22)
 
-    /** Black@72%, the mirror of the dark scheme's white@70%: 8.98:1 on the page, 9.29:1 on a card. */
-    val OnSurfaceVariant = Color(0xB8000000)
+    /**
+     * The canvas's `#1F2330` at a raised alpha. Its own 60% is 4.05:1 on the page and only 3.06:1
+     * on the light scheme's worst text ground — `GlassDefaults.LightChromeFill` over the darkest
+     * frame, rgb(171,174,178). 78% is the first step that clears 4.5:1 there (4.53:1); on the page
+     * it is 7.09:1, 7.64:1 on a card and 6.73:1 on [SurfaceVariant].
+     */
+    val OnSurfaceVariant = Color(0xC71F2330)
 
-    /** M3's own light error. 6.09:1 on the page, and white on it is 6.54:1. */
+    /** The canvas's error, which is M3's own light error. 5.78:1 on the page, and white on it is 6.54:1. */
     val Error = Color(0xFFB3261E)
 
     val OnError = Color(0xFFFFFFFF)
 
     /**
-     * [JellyfinColors.Outline]'s role, re-derived: 3:1 of a *meaningful* boundary (WCAG 1.4.11)
-     * against a light ground rather than a dark one. `#6E6E6E` would be 4.85:1 on the page but a
-     * harder line than the dark scheme draws; `#858585` is 3.44:1 on the page and 3.69:1 on a white
-     * card, which is where `#6E6E6E`'s 3.73:1 / 3.20:1 sits. Decorative seams are
+     * [JellyfinColors.Outline]'s role is a *meaningful* boundary, so WCAG 1.4.11 asks 3:1 of it —
+     * the same obligation the dark `#6E6E6E` was derived for. The canvas's `#D4DAE6` is a 1.24:1
+     * seam on the page and 1.40:1 on a card, which cannot carry that role, so its hue (220°) and
+     * saturation (26.5%) are kept and only its lightness moves, 86.7% → 58%. `#788AB0` is 3.06:1 on
+     * the page and 3.46:1 on a card, where `#6E6E6E`'s 3.73:1 / 3.20:1 sits. Decorative seams are
      * `GlassDefaults.Hairline`, not this.
      */
-    val Outline = Color(0xFF858585)
+    val Outline = Color(0xFF788AB0)
 }

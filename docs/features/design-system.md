@@ -10,13 +10,15 @@ the sync source; `design/_shared/tokens.css` restates the Kotlin tokens).
 
 - `JellyfinColors` — the dark palette (jellyfin-web dark: `#101010`/`#202020`/`#292929`,
   primary `#00A4DC`, secondary `#AA5CC3`, error `#CF6679`, outline `#6E6E6E`).
-- `JellyfinLightColors` — its light sibling (M14): `#F6F7F8` page, `#FFFFFF` card,
-  `#ECEEF0` surfaceVariant, `#101010` ink, `onSurfaceVariant` black@72%, error `#B3261E`,
-  outline `#858585`. Not an inversion — a light page is a near-white ground with a
-  *whiter* card on it — and the brand hues **darken** to `#00769E` / `#6B2F7F` because
-  `#00A4DC` measures 2.67:1 on `#F6F7F8` and `#AA5CC3` 3.89:1, under the 4.5:1 body text
-  and links owe. Every constant carries its arithmetic; `ContrastRatioTest` pins both
-  schemes. Which one is drawn: [`theme.md`](theme.md).
+- `JellyfinLightColors` — its light sibling (M14), from the saved design canvas's
+  light-theme foundations: `#EEF1F7` page, `#FFFFFF` card, `#E3E8F2` surfaceVariant,
+  `#191B22` ink, `onSurfaceVariant` `#1F2330`@78%, error `#B3261E`, outline `#788AB0`,
+  secondary `#9A4DB4`. Not an inversion — a light page is a cool near-white ground with a
+  *whiter* card on it — and the brand blue **darkens** to `#00769E` because `#00A4DC`
+  measures 2.53:1 on `#EEF1F7` and the canvas's own `#0089B8` 3.52:1, under the 4.5:1 body
+  text and links owe. The canvas's outline and `onSurfaceVariant` alpha moved for the same
+  reason (DECISIONS 2026-08-28). Every constant carries its arithmetic; `ContrastRatioTest`
+  pins both schemes. Which one is drawn: [`theme.md`](theme.md).
 - `GlassDefaults` (`GlassDefaults.kt`) — the glass language: white@6% fill, white@9% 1dp
   hairline, blur 18dp via **Haze 1.7.2** (`Modifier.glassSurface(shape, borderColor)`;
   `LocalHazeState` is provided by `AppScaffold` around the NavHost `hazeSource`; null →
@@ -27,7 +29,7 @@ the sync source; `design/_shared/tokens.css` restates the Kotlin tokens).
   hairline flips to **black**, so the two sides are not mirror images.
 - `PageInk.kt` — `pageInk(darkAlpha, lightAlpha)` for a translucent tint drawn on the page
   (hairline, well, progress track, disabled label). Two alphas, never one reused: 0.48 is
-  5.00:1 on `#101010` and 3.66:1 on `#F6F7F8`.
+  5.00:1 on `#101010` and 3.04:1 on `#EEF1F7`.
 - `JellyfinElevation.kt` — `cardShadow`/`popShadow` approximations (12dp/24dp, black@45/55%
   ambient+spot). Hairlines, not shadows, are the primary separators on `#101010`.
 - `JellyfinTypeExtras.kt` — bespoke roles outside the stock M3 scale: `Eyebrow` (11sp/600,

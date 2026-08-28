@@ -38,7 +38,7 @@ internal val ErrorBannerDarkContent: Color = Color(0xFFF0A3AE)
 
 /**
  * The lightening exists only because the dark scheme's wash is nearly black. On a light page the
- * same 10% wash is a pale pink and the light scheme's own `error` reads 5.19:1 on it, so the banner
+ * same 10% wash is a pale pink and the light scheme's own `error` reads 4.93:1 on it, so the banner
  * says its message in the colour it is about — a lightened red there would be the unreadable one.
  */
 val ErrorBannerContent: Color

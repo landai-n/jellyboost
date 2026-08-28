@@ -943,8 +943,8 @@ private val DownloadRingWidth = 2.dp
  */
 private const val PROGRESS_TRACK_ALPHA = 0.40f
 
-/** 0.40 of black is 2.82:1 on `#F6F7F8`, under WCAG 1.4.11's 3:1; 0.44 is 3.21:1. */
-private const val PROGRESS_TRACK_ALPHA_LIGHT = 0.44f
+/** 0.44 of the light page's ink is 2.72:1 on `#EEF1F7`, under WCAG 1.4.11's 3:1; 0.48 is 3.04:1. */
+private const val PROGRESS_TRACK_ALPHA_LIGHT = 0.48f
 
 private val RatingStyle =
     TextStyle(

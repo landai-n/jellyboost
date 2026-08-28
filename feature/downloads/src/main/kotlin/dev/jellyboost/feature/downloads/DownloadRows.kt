@@ -65,8 +65,8 @@ private val ROW_GAP_HALF = 5.dp
  */
 private const val QUEUE_TRACK_ALPHA = 0.40f
 
-/** 0.40 of black is 2.85:1 on a white card, under WCAG 1.4.11's 3:1; 0.44 is 3.24:1. */
-private const val QUEUE_TRACK_ALPHA_LIGHT = 0.44f
+/** 0.44 of the light page's ink is 2.79:1 on a white card, under WCAG 1.4.11's 3:1; 0.48 is 3.13:1. */
+private const val QUEUE_TRACK_ALPHA_LIGHT = 0.48f
 
 private val QueueTitleCompact = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.W500)
 private val QueueTitleWide = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.W500)

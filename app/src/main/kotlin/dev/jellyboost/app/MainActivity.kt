@@ -29,6 +29,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import dagger.hilt.android.AndroidEntryPoint
 import dev.jellyboost.core.network.model.SessionState
 import dev.jellyboost.core.ui.theme.JellyfinTheme
+import dev.jellyboost.core.ui.theme.resolvesDark
 import dev.jellyboost.player.cast.CastAvailability
 import dev.jellyboost.player.pip.PipController
 import dev.jellyboost.player.pip.PipState
@@ -57,24 +58,45 @@ class MainActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
         splashScreen.setKeepOnScreenCondition { viewModel.sessionState.value is SessionState.Unknown }
-        // The app is dark-only, but `SystemBarStyle.auto()` derives icon appearance from the
-        // *system's* night-mode setting — on a light-mode system it drew black icons over dark UI.
-        enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
-            navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
-        )
+        // Dark for the first frame, whatever the preference turns out to be: DataStore has not
+        // answered here, and the splash it draws over is dark-locked in themes.xml because nothing
+        // can read a preference before that window exists (docs/features/theme.md). `applyBarStyle`
+        // corrects the icons as soon as the preference lands.
+        applyBarStyle(dark = true)
         super.onCreate(savedInstanceState)
 
         observePictureInPictureReadiness()
         startCastStack()
 
         setContent {
-            JellyfinTheme {
+            val theme by viewModel.themePreference.collectAsStateWithLifecycle()
+            val dark = theme.mode.resolvesDark()
+            LaunchedEffect(dark) { applyBarStyle(dark) }
+
+            JellyfinTheme(themeMode = theme.mode, dynamicColor = theme.dynamicColor) {
                 NotificationPermissionRequest()
                 val sessionState by viewModel.sessionState.collectAsStateWithLifecycle()
                 JellyboostApp(sessionState = sessionState)
             }
         }
+    }
+
+    /**
+     * Never `SystemBarStyle.auto()`: it derives icon appearance from the *system's* night-mode
+     * setting, so a light-mode system drew black icons over this app's dark UI — the bug this call
+     * site has always existed to defeat. The app's own resolved scheme is the only input.
+     *
+     * Re-invoking `enableEdgeToEdge` is the supported way to change the appearance after `onCreate`;
+     * it is idempotent for the same style.
+     */
+    private fun applyBarStyle(dark: Boolean) {
+        val style =
+            if (dark) {
+                SystemBarStyle.dark(Color.TRANSPARENT)
+            } else {
+                SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
+            }
+        enableEdgeToEdge(statusBarStyle = style, navigationBarStyle = style)
     }
 
     /**

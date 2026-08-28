@@ -3,19 +3,21 @@
        transparent - the status bar tints it and discards colour entirely, so
        the gradient and the navy tile must not appear here.
 
-       Simplified for legibility at 24dp:
-         - third (shortest) trail removed; it collapsed to under 1dp
-         - remaining two trails respaced from y=116/150 to y=110/158 so they
-           don't visually merge
-         - trail stroke thickened from 12 to 24 source units, giving 2.4dp
-       Mark scaled 0.1, centred on (12,12); farthest point sits at radius
-       10.8dp inside the 12dp canvas. -->
-  <g transform="translate(-13.1 -2.9) scale(0.1)">
+       The mark is the launcher geometry (all three trails, original spacing
+       and 12-unit stroke), only flattened to white: brand fidelity was chosen
+       over the earlier hand-simplified two-trail variant. One deviation: the
+       third trail ends at x=212 instead of the launcher's 214, widening its
+       clearance from the fin from ~0.8dp to ~1.0dp so the gap survives
+       low-density rendering.
+       Mark scaled 0.1, centred on (12,12); farthest point (the blade tip) sits
+       at radius 10.4dp inside the 12dp canvas. -->
+  <g transform="translate(-13.6 -2.9) scale(0.1)">
     <path fill="#FFFFFF"
           d="M336 82 C290 96, 250 130, 232 176 C226 190, 224 204, 226 216 C262 214, 296 190, 316 156 C330 132, 336 106, 336 82 Z"/>
-    <g stroke="#FFFFFF" stroke-width="24" stroke-linecap="round" fill="none">
-      <path d="M190 110 L250 110"/>
-      <path d="M178 158 L222 158"/>
+    <g stroke="#FFFFFF" stroke-width="12" stroke-linecap="round" fill="none">
+      <path d="M196 116 L246 116"/>
+      <path d="M182 150 L226 150"/>
+      <path d="M194 188 L212 188"/>
     </g>
   </g>
 </svg>

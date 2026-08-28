@@ -102,6 +102,11 @@ usage optimization); the main (Fable) context orchestrates, reviews, and verifie
   never trust an agent's green-build claim.
 
 ## Workflow expectations
+- **Strong UI changes / new UI go through Claude Design first.** Before implementing a
+  new screen, a redesign, or any significant visual reshape, the design is settled on a
+  Claude Design canvas: either the orchestrator seeds one via the `/design` skill, or it
+  hands the user a ready-made prompt to run in Claude Design and waits for the result.
+  Implementation follows the saved canvas. Minor tweaks and non-visual work are exempt.
 - `/verify` before every commit (the pre-commit hook enforces it).
 - `/checkpoint` at least once per completed sub-task: verify → docs → small conventional commit
   (prefixes: feat/fix/refactor/test/docs/chore/build).

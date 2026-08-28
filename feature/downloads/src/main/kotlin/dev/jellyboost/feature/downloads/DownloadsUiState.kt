@@ -380,8 +380,9 @@ private fun foldedGroups(
  * `List<DownloadSection>` would recompose every visible finished row for no visible change.
  *
  * The comparison is the whole item, deliberately, not a cheap id/status/bytes signature: the groups
- * hold the [DownloadItem]s the rows draw *from*, so a signature would strand a late artwork URL or a
- * playback position from another screen until some unrelated write landed.
+ * hold the [DownloadItem]s the rows draw *from*, and the header now draws from them too, so a
+ * signature would strand a late artwork URL, an artist the backfill only just wrote, or a playback
+ * position from another screen until some unrelated write landed.
  *
  * One instance per subscription, and not thread-safe — as with [DownloadSpeedTracker].
  */

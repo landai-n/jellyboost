@@ -110,6 +110,16 @@ interface DownloadDao {
     suspend fun pending(): List<DownloadEntity>
 
     /**
+     * Every row the queue tab lists, in queue order — [pending] plus exactly the rows the engine
+     * cannot pick up. A reorder renumbers over **this**: renumbering [pending] alone left a failed row
+     * holding a stale `queuePosition` and drifting past the rows it was listed between. Renumbering
+     * the superset is invisible to [pending] and [nextRunnable], which keep their own relative order
+     * under any stable renumbering of a set that contains them.
+     */
+    @Query("SELECT * FROM downloads WHERE status != 'DOWNLOADED' ORDER BY queuePosition ASC")
+    suspend fun unfinished(): List<DownloadEntity>
+
+    /**
      * The `itemType IS NULL` test must stay in the statement: this runs on a background refresh while the
      * queue is writing, so reading the row first and deciding outside SQL would let an enqueue land in
      * between and have its columns overwritten from a stale server fetch.

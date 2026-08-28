@@ -94,6 +94,7 @@ class DownloadRepositoryImplTest {
         coEvery { deleter.delete(any()) } returns 0L
         coEvery { deleter.deleteAll(any()) } returns 0L
         coEvery { downloadDao.pending() } returns emptyList()
+        coEvery { downloadDao.unfinished() } returns emptyList()
         coEvery { downloadDao.get(any()) } returns null
         // The demote transaction answers "was the live transfer among the rows I took?"; most tests act
         // on rows the worker is not on, so the default answer is no.
@@ -808,7 +809,7 @@ class DownloadRepositoryImplTest {
     fun `moving an item renumbers the queue from zero`() =
         runTest {
             val moved = download(itemId = uuid(3), queuePosition = 7)
-            coEvery { downloadDao.pending() } returns
+            coEvery { downloadDao.unfinished() } returns
                 listOf(
                     download(itemId = uuid(1), queuePosition = 2),
                     download(itemId = uuid(2), queuePosition = 5),
@@ -816,7 +817,7 @@ class DownloadRepositoryImplTest {
                 )
             coEvery { downloadDao.get(uuid(3)) } returns moved
 
-            repository().move(uuid(3).toString(), position = 0)
+            repository().move(uuid(3).toString(), targetItemId = uuid(1).toString())
 
             // Gaps left by completed items would otherwise make "position" mean something other than
             // "place in the list".
@@ -826,16 +827,100 @@ class DownloadRepositoryImplTest {
         }
 
     @Test
-    fun `a position past the end of the queue clamps to the end`() =
+    fun `a row moved onto the last item lands at the end`() =
         runTest {
             val moved = download(itemId = uuid(1), queuePosition = 0)
-            coEvery { downloadDao.pending() } returns listOf(moved, download(itemId = uuid(2), queuePosition = 1))
+            coEvery { downloadDao.unfinished() } returns listOf(moved, download(itemId = uuid(2), queuePosition = 1))
             coEvery { downloadDao.get(uuid(1)) } returns moved
 
-            repository().move(uuid(1).toString(), position = 99)
+            repository().move(uuid(1).toString(), targetItemId = uuid(2).toString())
 
             coVerify { downloadDao.setQueuePosition(uuid(1), 1, NOW) }
             coVerify { downloadDao.setQueuePosition(uuid(2), 0, NOW) }
+        }
+
+    @Test
+    fun `the reorder renumbers the list the user sees, not the shorter one the engine reads`() =
+        runTest {
+            // Renumbering `pending()` left the failed row holding its old position while the rows
+            // around it were renumbered from zero, so it drifted past them for a move it took no part
+            // in. `unfinished()` is exactly the list the queue tab draws.
+            val moved = download(itemId = uuid(4), queuePosition = 8)
+            coEvery { downloadDao.unfinished() } returns
+                listOf(
+                    download(itemId = uuid(1), queuePosition = 5),
+                    download(itemId = uuid(2), status = DownloadStatus.ERROR, queuePosition = 6),
+                    download(itemId = uuid(3), queuePosition = 7),
+                    moved,
+                )
+            coEvery { downloadDao.get(uuid(4)) } returns moved
+
+            repository().move(uuid(4).toString(), targetItemId = uuid(1).toString())
+
+            coVerify { downloadDao.setQueuePosition(uuid(4), 0, NOW) }
+            coVerify { downloadDao.setQueuePosition(uuid(1), 1, NOW) }
+            // The failed row is renumbered with the rest, so it keeps its place between them.
+            coVerify { downloadDao.setQueuePosition(uuid(2), 2, NOW) }
+            coVerify { downloadDao.setQueuePosition(uuid(3), 3, NOW) }
+        }
+
+    @Test
+    fun `a failed row above the target does not turn the move into a no-op`() =
+        runTest {
+            // The trace: [failed, A, B], move B up onto A. Taking B's neighbour as an *index* into a
+            // list that omits the failed row named A's slot in a shorter list, and B was reinserted
+            // exactly where it already sat.
+            val moved = download(itemId = uuid(3), queuePosition = 7)
+            coEvery { downloadDao.unfinished() } returns
+                listOf(
+                    download(itemId = uuid(1), status = DownloadStatus.ERROR, queuePosition = 3),
+                    download(itemId = uuid(2), queuePosition = 5),
+                    moved,
+                )
+            coEvery { downloadDao.get(uuid(3)) } returns moved
+
+            repository().move(uuid(3).toString(), targetItemId = uuid(2).toString())
+
+            coVerify { downloadDao.setQueuePosition(uuid(1), 0, NOW) }
+            coVerify { downloadDao.setQueuePosition(uuid(3), 1, NOW) }
+            coVerify { downloadDao.setQueuePosition(uuid(2), 2, NOW) }
+        }
+
+    @Test
+    fun `a failed row between the movers does not send the mover to another row's place`() =
+        runTest {
+            // The trace: [trackA, failed film, film, trackB], move trackA down onto trackB.
+            val moved = download(itemId = uuid(1), queuePosition = 0)
+            coEvery { downloadDao.unfinished() } returns
+                listOf(
+                    moved,
+                    download(itemId = uuid(2), status = DownloadStatus.ERROR, queuePosition = 1),
+                    download(itemId = uuid(3), queuePosition = 2),
+                    download(itemId = uuid(4), queuePosition = 3),
+                )
+            coEvery { downloadDao.get(uuid(1)) } returns moved
+
+            repository().move(uuid(1).toString(), targetItemId = uuid(4).toString())
+
+            // The mover takes the target's place, and the two films keep their own order.
+            coVerify { downloadDao.setQueuePosition(uuid(2), 0, NOW) }
+            coVerify { downloadDao.setQueuePosition(uuid(3), 1, NOW) }
+            coVerify { downloadDao.setQueuePosition(uuid(4), 2, NOW) }
+            coVerify { downloadDao.setQueuePosition(uuid(1), 3, NOW) }
+        }
+
+    @Test
+    fun `a target that left the queue between the tap and the write moves nothing`() =
+        runTest {
+            // It finished or was deleted in between: there is no place left to take, and the row the
+            // user aimed at is already gone from the list they aimed at it in.
+            val moved = download(itemId = uuid(1), queuePosition = 0)
+            coEvery { downloadDao.unfinished() } returns listOf(moved)
+            coEvery { downloadDao.get(uuid(1)) } returns moved
+
+            repository().move(uuid(1).toString(), targetItemId = uuid(9).toString())
+
+            coVerify(exactly = 0) { downloadDao.setQueuePosition(any(), any(), any()) }
         }
 
     // ---- preferences ----------------------------------------------------------------------------

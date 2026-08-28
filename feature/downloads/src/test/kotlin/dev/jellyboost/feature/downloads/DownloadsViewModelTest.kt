@@ -588,7 +588,7 @@ class DownloadsViewModelTest {
     // ---- reordering -----------------------------------------------------------------------------
 
     @Test
-    fun `moving up asks for the position one nearer the front`() =
+    fun `moving up names the row one nearer the front, by id`() =
         runTest(dispatcher) {
             val second = item("2", "Second", status = DownloadStatus.QUEUED, position = 1)
             items.value = listOf(item("1", "First", status = DownloadStatus.QUEUED, position = 0), second)
@@ -598,7 +598,7 @@ class DownloadsViewModelTest {
             model.moveUp(second.itemId)
             advanceUntilIdle()
 
-            coVerify { downloads.move("2", 0) }
+            coVerify { downloads.move("2", "1") }
         }
 
     @Test
@@ -646,7 +646,7 @@ class DownloadsViewModelTest {
             model.moveUp("3")
             advanceUntilIdle()
 
-            coVerify { downloads.move("3", 0) }
+            coVerify { downloads.move("3", "1") }
         }
 
     @Test
@@ -664,7 +664,47 @@ class DownloadsViewModelTest {
             model.moveDown("1")
             advanceUntilIdle()
 
-            coVerify { downloads.move("1", 2) }
+            coVerify { downloads.move("1", "3") }
+        }
+
+    @Test
+    fun `a failed row above the movers does not cost the move`() =
+        runTest(dispatcher) {
+            // The screen lists failed rows; the queue the repository renumbers does not. Sending the
+            // neighbour's *index* here named a different row there, and this move became a no-op.
+            items.value =
+                listOf(
+                    queuedTrack("E", "Silver Springs", album = "Rumours").copy(status = DownloadStatus.ERROR),
+                    queuedTrack("1", "Dreams", album = "Rumours", position = 1),
+                    queuedTrack("2", "Go Your Own Way", album = "Rumours", position = 2),
+                )
+
+            val model = viewModel()
+            advanceUntilIdle()
+            model.moveUp("2")
+            advanceUntilIdle()
+
+            coVerify { downloads.move("2", "1") }
+        }
+
+    @Test
+    fun `a failed row between the movers does not aim the move at another section`() =
+        runTest(dispatcher) {
+            items.value =
+                listOf(
+                    queuedTrack("1", "Dreams", album = "Rumours"),
+                    item("E", "Arrival", status = DownloadStatus.ERROR, position = 1),
+                    item("M", "Dune", status = DownloadStatus.QUEUED, position = 2),
+                    queuedTrack("2", "Go Your Own Way", album = "Rumours", position = 3),
+                )
+
+            val model = viewModel()
+            advanceUntilIdle()
+            model.moveDown("1")
+            advanceUntilIdle()
+
+            // The other track, named outright — never the index that the failed row shifts.
+            coVerify { downloads.move("1", "2") }
         }
 
     @Test

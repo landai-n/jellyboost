@@ -204,11 +204,13 @@ class DownloadsViewModel
         /**
          * Up and down mean *within the row's own kind*, because that is the only movement the
          * sectioned queue can show: swapping with a neighbour of another kind leaves the row exactly
-         * where it was drawn and silently reorders two other sections instead. No same-kind
-         * neighbour in that direction is therefore a no-op, not a clamped move.
+         * where it was drawn and reorders another section instead. No same-kind neighbour in that
+         * direction is therefore a no-op, not a clamped move.
          *
-         * The index handed to the repository is the neighbour's index in the **flat** queue, which is
-         * what `move` reinserts against, and what leaves every other section's relative order alone.
+         * The neighbour travels to the repository as an **id**, never as its index here. This list is
+         * every unfinished row; the one the repository renumbers holds only the rows the engine can
+         * pick up, so a failed row anywhere above the target makes the same integer name two
+         * different rows — which silently turned a move into a no-op, and a no-op into a move.
          */
         private fun move(
             itemId: String,
@@ -222,7 +224,7 @@ class DownloadsViewModel
             val target = neighbours.firstOrNull { queue[it].kind == kind } ?: return
 
             viewModelScope.launch {
-                report(downloads.move(itemId, target), DownloadsMessage.ActionFailed)
+                report(downloads.move(itemId, queue[target].itemId), DownloadsMessage.ActionFailed)
             }
         }
 

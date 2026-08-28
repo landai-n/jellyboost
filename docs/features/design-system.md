@@ -8,13 +8,26 @@ the sync source; `design/_shared/tokens.css` restates the Kotlin tokens).
 
 ## Token layer (`core/ui/theme`)
 
-- `JellyfinColors` — unchanged palette (jellyfin-web dark: `#101010`/`#202020`/`#292929`,
-  primary `#00A4DC`, secondary `#AA5CC3`, error `#CF6679`, outline `#3C3C3C`).
+- `JellyfinColors` — the dark palette (jellyfin-web dark: `#101010`/`#202020`/`#292929`,
+  primary `#00A4DC`, secondary `#AA5CC3`, error `#CF6679`, outline `#6E6E6E`).
+- `JellyfinLightColors` — its light sibling (M14): `#F6F7F8` page, `#FFFFFF` card,
+  `#ECEEF0` surfaceVariant, `#101010` ink, `onSurfaceVariant` black@72%, error `#B3261E`,
+  outline `#858585`. Not an inversion — a light page is a near-white ground with a
+  *whiter* card on it — and the brand hues **darken** to `#00769E` / `#6B2F7F` because
+  `#00A4DC` measures 2.67:1 on `#F6F7F8` and `#AA5CC3` 3.89:1, under the 4.5:1 body text
+  and links owe. Every constant carries its arithmetic; `ContrastRatioTest` pins both
+  schemes. Which one is drawn: [`theme.md`](theme.md).
 - `GlassDefaults` (`GlassDefaults.kt`) — the glass language: white@6% fill, white@9% 1dp
   hairline, blur 18dp via **Haze 1.7.2** (`Modifier.glassSurface(shape, borderColor)`;
   `LocalHazeState` is provided by `AppScaffold` around the NavHost `hazeSource`; null →
   static fill, which is also the API < 31 story). `Modifier.mSurface(shape)` is the
-  opaque sibling: surface fill + white@6% hairline for cards/panels.
+  opaque sibling: surface fill + white@6% hairline for cards/panels. Every colour here is
+  a `Dark`/`Light` pair behind a `@Composable` accessor of the old name — light fill is
+  white@**55%** over the blur (6% of white over a near-white page is nothing) while every
+  hairline flips to **black**, so the two sides are not mirror images.
+- `PageInk.kt` — `pageInk(darkAlpha, lightAlpha)` for a translucent tint drawn on the page
+  (hairline, well, progress track, disabled label). Two alphas, never one reused: 0.48 is
+  5.00:1 on `#101010` and 3.66:1 on `#F6F7F8`.
 - `JellyfinElevation.kt` — `cardShadow`/`popShadow` approximations (12dp/24dp, black@45/55%
   ambient+spot). Hairlines, not shadows, are the primary separators on `#101010`.
 - `JellyfinTypeExtras.kt` — bespoke roles outside the stock M3 scale: `Eyebrow` (11sp/600,
@@ -28,15 +41,28 @@ the sync source; `design/_shared/tokens.css` restates the Kotlin tokens).
   `LibraryTileWidth/Height` 232/64, `CastHeadshotSize` 72, `DetailPosterWidth/Height`
   190/285, `RadiusXl` 20).
 - `JellyfinGradients` — adds `HeroHalo` (radial at 78%/18%) and `ScreenGlow`; existing
-  `BrandGlow`/`BrandGlowSide`/`BackdropScrim`/`ImagePlaceholder` unchanged.
+  `BrandGlow`/`BrandGlowSide`/`BackdropScrim`/`ImagePlaceholder` unchanged. The scrims and
+  the placeholder resolve against `MaterialTheme.colorScheme` rather than the static
+  palette — a scrim fading to `#101010` over a light page is a seam, not a transition —
+  and the halo/glow run at roughly two-fifths of their alpha on a light page, where the
+  same wash reads as a stain. The accent gradient is brand and identical in both schemes.
 
 ## Component layer (`core/ui/component`)
 
-- `JellyfinButtons.kt` — `PrimaryPillButton` (44dp pill, **white fill + #101010 content**;
-  `small`, `leadingIcon`, `loading` spinner), `GhostPillButton` (glass + white@12% border),
-  `GlassIconButton` (36dp glass circle; 44dp variant). `colorScheme.primary` deliberately
-  stays `#00A4DC` for progress/selection/links (DECISIONS 2026-08-01).
-- `PillChip.kt` — pill chips (selected = solid white) + `MPillBadge` mini outlined badge.
+- `JellyfinButtons.kt` — `PrimaryPillButton` (44dp pill, **`onBackground` fill +
+  `background` content**; `small`, `leadingIcon`, `loading` spinner), `GhostPillButton`
+  (glass + white@12% border), `GlassIconButton` (36dp glass circle; 44dp variant). The
+  pill's fill is the page's own ink inverted, which in the dark scheme *is* the white fill
+  + `#101010` content the refresh drew; on a light page it becomes a near-black pill rather
+  than white-on-white. Its five siblings follow the same rule (`PillChip`'s selected chip,
+  the downloads segmented tab, `MusicLibraryScreen`'s segment, and the selected-tab pills in
+  `GlassTopNav` / `GlassBottomNav`); the player's and NowPlaying's play discs stay
+  literal white, because they sit on video and album art. `colorScheme.primary` deliberately
+  stays `#00A4DC` in the dark scheme for progress/selection/links (DECISIONS 2026-08-01);
+  the light scheme darkens it to `#00769E` and Material You replaces it while the user has
+  that on (DECISIONS 2026-08-28).
+- `PillChip.kt` — pill chips (selected = the brand pill's inversion) + `MPillBadge` mini
+  outlined badge.
 - `JellyfinTextField.kt` — filled field (white@4%, 12dp radius, hairline → white@22% when
   focused/filled), uppercase caption label above the well, leading/trailing icon slots.
   The well is 50dp so a 48dp trailing target (password reveal, search clear) fits *inside*

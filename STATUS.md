@@ -35,7 +35,7 @@ Known issues:
   files under `build/` may carry future timestamps; nothing reads them (the commit gate
   compares only tracked `*.kt`/`*.kts`).
 
-## Next milestone: M14 — Breadth & theming (approved 2026-08-28; not started)
+## Current milestone: M14 — Breadth & theming (approved 2026-08-28; track 4 landed, gate green)
 
 Six tracks: multi-server & account switching (surfacing the schema-ready `ServerEntity`/
 `ServerAddressEntity`); collections (BoxSets); chapter UI in the player (markers + sheet from
@@ -43,6 +43,22 @@ the already-fetched `ChapterInfo`); light theme + Material You dynamic color; pi
 and horizontal swipe-seek gestures (with accessible equivalents); a styled ASS/SSA
 subtitle-rendering spike. Scope and DoD in `docs/PLAN.md` (M14); approval and exclusions in
 DECISIONS.md 2026-08-28. Tags `m14` only after the M11/M12/M13 device DoDs close.
+
+**Track 4 — light theme + dynamic colour (2026-08-28, landed on `m14/theme-subs`; device walk
+owed).** `JellyfinLightColors` beside `JellyfinColors`, `JellyfinTheme(themeMode, dynamicColor)`
+resolving `SYSTEM` through `isSystemInDarkTheme()` (which had zero call sites in the repo before
+this), Material You on API 31+ behind an opt-in that defaults off, and an *Appearance* section in
+Settings. The token layer no longer reads the static palette: `GlassDefaults` is `Dark`/`Light`
+pairs behind the old names, `pageInk(darkAlpha, lightAlpha)` carries every translucent page tint,
+and the gradients' scrims resolve against the active scheme. The brand pill became a semantic
+(`onBackground` filled, `background` on it) across all five siblings — pixel-identical in dark.
+Over-media surfaces (player scrims, card scrims, both play discs, `DownloadBadge`) and the
+dark-locked `themes.xml`/splash are permanent exceptions, listed in `docs/features/theme.md`.
+`ContrastRatioTest` gained a light counterpart for every asserted pair; seven new strings across
+all 69 locales. **Known issue:** `DownloadsScreen.UsageBarTrackColor` is a pre-existing sub-3:1
+progress track and is now frozen as a `KnownViolation` on *both* sides (1.45:1 dark, 1.32:1
+light) — one `pageInk` lightAlpha fixes both. **Owed:** the DoD walk (light and dynamic across
+every screen at fontScale 2.0), and `/adversarial-review` for the wave.
 
 ## Planned milestone: M13 — Music (approved 2026-08-05; all 6 phases landed, code complete; device DoD owed)
 

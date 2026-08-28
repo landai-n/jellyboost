@@ -64,5 +64,5 @@
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">სტილიზებული ASS სუბტიტრები</string>
-    <string name="settings_styled_ass_supporting">ხატავს ASS/SSA-ს libass-ით: შრიფტები, განლაგება და ეფექტები. ექსპერიმენტული; ამოქმედდება შემდეგ გაშვებულ ვიდეოზე.</string>
+    <string name="settings_styled_ass_supporting">ხატავს ASS/SSA-ს libass-ით: შრიფტები, განლაგება და ეფექტები. ექსპერიმენტული; ამოქმედდება შემდეგ გაშვებულ ვიდეოზე, როცა სხვა არაფერი უკრავს.</string>
 </resources>

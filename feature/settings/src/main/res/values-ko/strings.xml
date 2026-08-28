@@ -67,5 +67,5 @@
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">스타일이 적용된 ASS 자막</string>
-    <string name="settings_styled_ass_supporting">libass로 ASS/SSA를 그립니다(글꼴, 위치, 효과). 실험적 기능이며 다음에 재생하는 영상부터 적용됩니다.</string>
+    <string name="settings_styled_ass_supporting">libass로 ASS/SSA를 그립니다(글꼴, 위치, 효과). 실험적 기능이며 다른 재생이 없을 때 다음에 재생하는 영상부터 적용됩니다.</string>
 </resources>

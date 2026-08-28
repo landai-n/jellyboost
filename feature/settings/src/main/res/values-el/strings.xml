@@ -68,5 +68,5 @@
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Υπότιτλοι ASS με στυλ</string>
-    <string name="settings_styled_ass_supporting">Σχεδιάζει ASS/SSA με libass: γραμματοσειρές, τοποθέτηση και εφέ. Πειραματικό· ισχύει από το επόμενο βίντεο.</string>
+    <string name="settings_styled_ass_supporting">Σχεδιάζει ASS/SSA με libass: γραμματοσειρές, τοποθέτηση και εφέ. Πειραματικό· ισχύει από το επόμενο βίντεο, όταν δεν αναπαράγεται τίποτε άλλο.</string>
 </resources>

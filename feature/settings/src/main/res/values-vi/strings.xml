@@ -63,5 +63,5 @@
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Phụ đề ASS có định dạng</string>
-    <string name="settings_styled_ass_supporting">Vẽ ASS/SSA bằng libass: phông chữ, vị trí và hiệu ứng. Thử nghiệm; áp dụng cho video bạn mở tiếp theo.</string>
+    <string name="settings_styled_ass_supporting">Vẽ ASS/SSA bằng libass: phông chữ, vị trí và hiệu ứng. Thử nghiệm; áp dụng cho video bạn mở tiếp theo khi không có gì khác đang phát.</string>
 </resources>

@@ -67,5 +67,5 @@
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">带样式的 ASS 字幕</string>
-    <string name="settings_styled_ass_supporting">使用 libass 绘制 ASS/SSA：字体、定位与特效。实验性功能，下次播放视频时生效。</string>
+    <string name="settings_styled_ass_supporting">使用 libass 绘制 ASS/SSA：字体、定位与特效。实验性功能，在没有其他内容播放时，下次播放视频时生效。</string>
 </resources>

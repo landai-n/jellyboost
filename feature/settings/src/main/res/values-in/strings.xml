@@ -63,5 +63,5 @@
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Subtitle ASS bergaya</string>
-    <string name="settings_styled_ass_supporting">Menggambar ASS/SSA dengan libass: font, posisi, dan efek. Eksperimental; berlaku untuk video berikutnya yang Anda putar.</string>
+    <string name="settings_styled_ass_supporting">Menggambar ASS/SSA dengan libass: font, posisi, dan efek. Eksperimental; berlaku untuk video berikutnya yang Anda putar saat tidak ada yang sedang diputar.</string>
 </resources>

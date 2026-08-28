@@ -69,5 +69,5 @@
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Stilizirani ASS titlovi</string>
-    <string name="settings_styled_ass_supporting">Iscrtava ASS/SSA pomoću libassa: fontovi, položaj i efekti. Eksperimentalno; primjenjuje se na sljedeći pokrenuti videozapis.</string>
+    <string name="settings_styled_ass_supporting">Iscrtava ASS/SSA pomoću libassa: fontovi, položaj i efekti. Eksperimentalno; primjenjuje se na sljedeći pokrenuti videozapis kada se ništa drugo ne reproducira.</string>
 </resources>

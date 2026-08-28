@@ -70,5 +70,5 @@
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Štylizované titulky ASS</string>
-    <string name="settings_styled_ass_supporting">Vykresľuje ASS/SSA cez libass: písma, umiestnenie a efekty. Experimentálne; prejaví sa pri ďalšom spustenom videu.</string>
+    <string name="settings_styled_ass_supporting">Vykresľuje ASS/SSA cez libass: písma, umiestnenie a efekty. Experimentálne; prejaví sa pri ďalšom spustenom videu, keď nič iné nehrá.</string>
 </resources>

@@ -64,5 +64,5 @@
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">මෝස්තරගත ASS උපසිරැසි</string>
-    <string name="settings_styled_ass_supporting">libass මගින් ASS/SSA අඳියි: අකුරු, පිහිටීම සහ ප්‍රයෝග. පර්යේෂණාත්මකයි; ඔබ ඊළඟට ආරම්භ කරන වීඩියෝවට අදාළ වේ.</string>
+    <string name="settings_styled_ass_supporting">libass මගින් ASS/SSA අඳියි: අකුරු, පිහිටීම සහ ප්‍රයෝග. පර්යේෂණාත්මකයි; වෙනත් කිසිවක් වාදනය නොවන විට ඔබ ඊළඟට ආරම්භ කරන වීඩියෝවට අදාළ වේ.</string>
 </resources>

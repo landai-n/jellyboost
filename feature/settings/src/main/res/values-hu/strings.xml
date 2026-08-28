@@ -68,5 +68,5 @@
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Stílusos ASS feliratok</string>
-    <string name="settings_styled_ass_supporting">Az ASS/SSA-t libass rajzolja: betűtípusok, elhelyezés és effektek. Kísérleti; a következő elindított videótól érvényes.</string>
+    <string name="settings_styled_ass_supporting">Az ASS/SSA-t libass rajzolja: betűtípusok, elhelyezés és effektek. Kísérleti; a következő elindított videótól érvényes, ha semmi más nem szól.</string>
 </resources>

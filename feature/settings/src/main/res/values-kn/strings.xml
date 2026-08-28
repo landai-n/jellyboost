@@ -68,5 +68,5 @@
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">ಶೈಲಿಯುಳ್ಳ ASS ಉಪಶೀರ್ಷಿಕೆಗಳು</string>
-    <string name="settings_styled_ass_supporting">libass ಬಳಸಿ ASS/SSA ಅನ್ನು ಚಿತ್ರಿಸುತ್ತದೆ: ಫಾಂಟ್‌ಗಳು, ಸ್ಥಾನ ಮತ್ತು ಪರಿಣಾಮಗಳು. ಪ್ರಾಯೋಗಿಕ; ನೀವು ಪ್ರಾರಂಭಿಸುವ ಮುಂದಿನ ವೀಡಿಯೊಗೆ ಅನ್ವಯಿಸುತ್ತದೆ.</string>
+    <string name="settings_styled_ass_supporting">libass ಬಳಸಿ ASS/SSA ಅನ್ನು ಚಿತ್ರಿಸುತ್ತದೆ: ಫಾಂಟ್‌ಗಳು, ಸ್ಥಾನ ಮತ್ತು ಪರಿಣಾಮಗಳು. ಪ್ರಾಯೋಗಿಕ; ಬೇರೇನೂ ಪ್ಲೇ ಆಗದಿರುವಾಗ ನೀವು ಪ್ರಾರಂಭಿಸುವ ಮುಂದಿನ ವೀಡಿಯೊಗೆ ಅನ್ವಯಿಸುತ್ತದೆ.</string>
 </resources>

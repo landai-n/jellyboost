@@ -23,7 +23,7 @@
     <string name="settings_pip_supporting">Keep playing in a floating window when you leave the app.</string>
     <!-- "ASS/SSA" and "libass" are format and library names; never translated. -->
     <string name="settings_styled_ass">Styled ASS subtitles</string>
-    <string name="settings_styled_ass_supporting">Draws ASS/SSA with libass: fonts, positioning and effects. Experimental; applies to the next video you start.</string>
+    <string name="settings_styled_ass_supporting">Draws ASS/SSA with libass: fonts, positioning and effects. Experimental; applies to the next video you start with nothing else playing.</string>
 
     <!-- Downloads -->
     <string name="settings_section_downloads">Downloads</string>

@@ -68,5 +68,5 @@
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Stiliseeritud ASS-subtiitrid</string>
-    <string name="settings_styled_ass_supporting">Joonistab ASS/SSA libassiga: fondid, paigutus ja efektid. Katseline; rakendub järgmisele käivitatavale videole.</string>
+    <string name="settings_styled_ass_supporting">Joonistab ASS/SSA libassiga: fondid, paigutus ja efektid. Katseline; rakendub järgmisele käivitatavale videole, kui midagi muud ei mängi.</string>
 </resources>

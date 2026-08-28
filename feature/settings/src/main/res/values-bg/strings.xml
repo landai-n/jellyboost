@@ -68,5 +68,5 @@
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Стилизирани субтитри ASS</string>
-    <string name="settings_styled_ass_supporting">Изчертава ASS/SSA с libass: шрифтове, позициониране и ефекти. Експериментално; важи за следващото видео, което пуснете.</string>
+    <string name="settings_styled_ass_supporting">Изчертава ASS/SSA с libass: шрифтове, позициониране и ефекти. Експериментално; важи за следващото видео, което пуснете, когато нищо друго не се възпроизвежда.</string>
 </resources>

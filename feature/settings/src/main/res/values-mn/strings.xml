@@ -68,5 +68,5 @@
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Загварчилсан ASS хадмал</string>
-    <string name="settings_styled_ass_supporting">ASS/SSA-г libass-ээр зурна: фонт, байрлал, эффект. Туршилтын; дараагийн эхлүүлэх видеонд үйлчилнэ.</string>
+    <string name="settings_styled_ass_supporting">ASS/SSA-г libass-ээр зурна: фонт, байрлал, эффект. Туршилтын; өөр юу ч тоглогдоогүй үед дараагийн эхлүүлэх видеонд үйлчилнэ.</string>
 </resources>

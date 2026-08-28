@@ -41,6 +41,15 @@ data class DownloadSection(
     val groups: List<DownloadGroup>,
 )
 
+/**
+ * The queue's own kind split. Flat, not [DownloadGroup]s: nothing here folds, so a transfer in
+ * flight can never be hidden behind a header.
+ */
+data class QueueSection(
+    val kind: DownloadKind,
+    val items: List<DownloadItem>,
+)
+
 internal fun List<DownloadSection>.itemOrNull(itemId: String): DownloadItem? =
     firstNotNullOfOrNull { section -> section.groups.firstNotNullOfOrNull { it.itemOrNull(itemId) } }
 
@@ -84,6 +93,20 @@ data class DownloadsUiState(
 
     /** A single kind needs no label above it; the rows are already all of one sort. */
     val showKindHeaders: Boolean = downloaded.size > 1
+
+    /**
+     * [queue] itself stays the flat list — the stats, the bulk targets and the reorder arithmetic all
+     * read it, and a move's target index is an index into *it*.
+     */
+    val queueSections: List<QueueSection> =
+        queue.groupBy { it.kind }.let { byKind ->
+            SECTION_ORDER.mapNotNull { kind ->
+                byKind[kind]?.takeIf { it.isNotEmpty() }?.let { QueueSection(kind = kind, items = it) }
+            }
+        }
+
+    /** Mirrors [showKindHeaders]: one kind in the queue needs no label above it. */
+    val showQueueKindHeaders: Boolean = queueSections.size > 1
 
     /** Every section, folded or not: the storage header reports what is on disk, not what is shown. */
     val downloadedBytes: Long = downloaded.sumOf { section -> section.groups.sumOf { it.bytesOnDisk } }

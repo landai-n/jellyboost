@@ -599,20 +599,27 @@ private fun LazyListScope.queueRows(
             )
         }
     }
-    items(
-        items = state.queue,
-        key = { it.itemId },
-        contentType = { DownloadsContentType.QUEUE_ROW },
-    ) { item ->
-        QueueRow(
-            item = item,
-            // The ratcheted fraction; the row's own is a fallback only for an item the ratchet has
-            // not seen yet (the first frame after an enqueue).
-            progress = state.progress[item.itemId] ?: item.progress,
-            speedBytesPerSecond = state.speeds[item.itemId],
-            actions = actions,
-            compact = !wide,
-        )
+    state.queueSections.forEach { section ->
+        if (state.showQueueKindHeaders) {
+            item(key = "queue-kind-${section.kind.name}", contentType = DownloadsContentType.KIND_HEADER) {
+                KindHeader(kind = section.kind)
+            }
+        }
+        items(
+            items = section.items,
+            key = { it.itemId },
+            contentType = { DownloadsContentType.QUEUE_ROW },
+        ) { item ->
+            QueueRow(
+                item = item,
+                // The ratcheted fraction; the row's own is a fallback only for an item the ratchet
+                // has not seen yet (the first frame after an enqueue).
+                progress = state.progress[item.itemId] ?: item.progress,
+                speedBytesPerSecond = state.speeds[item.itemId],
+                actions = actions,
+                compact = !wide,
+            )
+        }
     }
 }
 

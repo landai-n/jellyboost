@@ -101,9 +101,15 @@ device profile's `hlsTextSubtitles` branch and `CastPlayerHandle` are deliberate
 side-loaded subtitles merge twice and its single prefix-strip would render nothing — by keeping
 those items on Media3's own parser. **Known issues:** libass-android #71 / androidx/media#2289
 (signs ~0.5 s late, closed upstream as *wont fix*) is an unfixable ceiling; ~+3 MB per ABI is paid
-whether the switch is on or not. **Owed:** the seven-check device walk in
-`docs/notes/m14-ass-libass-spike.md` — check (1), "visible at all on our SurfaceView path", is the
-Wholphin #1049 failure and is pass/fail for the whole feature. **Accepted staleness (review wave,
+whether the switch is on or not. **Device finding, fixed 2026-08-28:** check (1) passed — styled ASS
+*is* drawn on our `SurfaceView` path, so the Wholphin #1049 failure does not reproduce — but the
+words ran together. `ass-kt` 0.5.1's `libass.so` carries its CI build-tree fontconfig paths, so on a
+device fontconfig finds no configuration, loses `conf.d`, and cannot resolve the `sans-serif` that
+libass builds its entire fallback sort from; every codepoint then came from the first font in an
+arbitrary order that covered it, and U+0020 is covered by icon faces whose space advance is zero.
+`AssFontConfig` writes a `fonts.conf` and names it in `FONTCONFIG_FILE` before libass loads
+(DECISIONS 2026-08-28). **Owed:** checks (2)–(7) of the device walk in
+`docs/notes/m14-ass-libass-spike.md`, plus a spacing re-check on the same pass. **Accepted staleness (review wave,
 2026-08-28):** the preference is read once per player build, and a music or cast session keeps that
 player across the handover, so a toggle flipped there waits for the player to go. The switch now
 says "with nothing else playing" in all 70 string files rather than "the next video you start";

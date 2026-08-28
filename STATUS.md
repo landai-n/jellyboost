@@ -35,6 +35,15 @@ Known issues:
   files under `build/` may carry future timestamps; nothing reads them (the commit gate
   compares only tracked `*.kt`/`*.kts`).
 
+## Next milestone: M14 — Breadth & theming (approved 2026-08-28; not started)
+
+Six tracks: multi-server & account switching (surfacing the schema-ready `ServerEntity`/
+`ServerAddressEntity`); collections (BoxSets); chapter UI in the player (markers + sheet from
+the already-fetched `ChapterInfo`); light theme + Material You dynamic color; pinch-to-zoom
+and horizontal swipe-seek gestures (with accessible equivalents); a styled ASS/SSA
+subtitle-rendering spike. Scope and DoD in `docs/PLAN.md` (M14); approval and exclusions in
+DECISIONS.md 2026-08-28. Tags `m14` only after the M11/M12/M13 device DoDs close.
+
 ## Planned milestone: M13 — Music (approved 2026-08-05; all 6 phases landed, code complete; device DoD owed)
 
 **2026-08-28 — the downloads presentation wave.** Five user-directed changes in

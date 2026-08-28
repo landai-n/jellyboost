@@ -41,6 +41,7 @@ import dev.jellyboost.player.resolve.playbackResolveRequest
 import dev.jellyboost.player.segments.MediaSegment
 import dev.jellyboost.player.segments.MediaSegmentLoader
 import dev.jellyboost.player.segments.SegmentSkipDecision
+import dev.jellyboost.player.session.AssSubtitleSupport
 import dev.jellyboost.player.session.PlaybackSessionController
 import dev.jellyboost.player.session.PlayerEvent
 import dev.jellyboost.player.session.PlayerHandle
@@ -54,6 +55,7 @@ import dev.jellyboost.player.trickplay.TrickplayResolver
 import dev.jellyboost.player.upnext.UpNextController
 import dev.jellyboost.player.upnext.UpNextEpisode
 import dev.jellyboost.player.upnext.UpNextResolver
+import io.github.peerless2012.ass.media.AssHandler
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
@@ -97,6 +99,7 @@ internal class PlayerViewModel
         private val segmentLoader: MediaSegmentLoader,
         private val upNextResolver: UpNextResolver,
         private val preferences: AppPreferences,
+        assSubtitles: AssSubtitleSupport,
         private val pipController: PipController,
         private val connectionState: ConnectionStateProvider,
         syncPlayController: SyncPlayController,
@@ -146,6 +149,13 @@ internal class PlayerViewModel
 
         /** Not in [uiState]: a `Player` inside a data class would give it no meaningful equality. */
         internal val videoPlayer: StateFlow<Player?> = _videoPlayer.asStateFlow()
+
+        /**
+         * libass's overlay handle while it is driving, `null` otherwise. Not in [uiState] for the same
+         * reason [videoPlayer] is not, and separate from it because the two are read by different views:
+         * the player goes on the surface, this goes inside the surface's `SubtitleView`.
+         */
+        internal val assSubtitleHandler: StateFlow<AssHandler?> = assSubtitles.handler
 
         internal val pipState: StateFlow<PipState> = pipController.state
 

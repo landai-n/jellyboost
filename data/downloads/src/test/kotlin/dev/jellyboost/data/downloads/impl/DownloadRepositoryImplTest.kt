@@ -375,6 +375,79 @@ class DownloadRepositoryImplTest {
             }
         }
 
+    // ---- the season a series header draws --------------------------------------------------------
+
+    @Test
+    fun `an episode's row reaches the poster of the season it belongs to`() =
+        runTest {
+            // The season is a cached parent row of its own; the episode's own `primaryImageUrl` is
+            // the still its row draws, and can never stand in for it.
+            every { downloadDao.observeAll() } returns flowOf(listOf(DownloadWithFiles(download(), emptyList())))
+            givenCachedItems(ITEM_ROW, SEASON_ROW)
+            every { itemMapper.toDomainOrNull(ITEM_ROW, null) } returns EPISODE
+            every { itemMapper.toDomainOrNull(SEASON_ROW, null) } returns SEASON
+
+            repository().observeDownloads().test {
+                val row = awaitItem().single()
+                row.seasonArtworkUrl shouldBe SEASON_POSTER
+                row.item?.primaryImageUrl shouldBe "https://example.invalid/chestnut.jpg"
+                awaitComplete()
+            }
+        }
+
+    @Test
+    fun `a season row that has left the cache costs the poster, not the download`() =
+        runTest {
+            every { downloadDao.observeAll() } returns flowOf(listOf(DownloadWithFiles(download(), emptyList())))
+            givenCachedItems(ITEM_ROW)
+            every { itemMapper.toDomainOrNull(ITEM_ROW, null) } returns EPISODE
+
+            repository().observeDownloads().test {
+                val row = awaitItem().single()
+                row.seasonArtworkUrl.shouldBeNull()
+                row.item shouldBe EPISODE
+                awaitComplete()
+            }
+        }
+
+    @Test
+    fun `a season written after the screen opened reaches the rows already on it`() =
+        runTest {
+            // The metadata refresh writes the season parent long after the episode; the poster has
+            // to appear without the download row itself changing in any way.
+            val rows = MutableStateFlow(listOf(row(bytesOnDisk = 0L)))
+            every { downloadDao.observeAll() } returns rows
+            givenCachedItems(ITEM_ROW)
+            every { itemMapper.toDomainOrNull(ITEM_ROW, null) } returns EPISODE
+            every { itemMapper.toDomainOrNull(SEASON_ROW, null) } returns SEASON
+
+            repository(UnconfinedTestDispatcher(testScheduler)).observeDownloads().test {
+                awaitItem().single().seasonArtworkUrl.shouldBeNull()
+
+                givenCachedItems(ITEM_ROW, SEASON_ROW)
+                rows.value = listOf(row(bytesOnDisk = 1_000L))
+
+                awaitItem().single().seasonArtworkUrl shouldBe SEASON_POSTER
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `a list with no episode in it never asks for a season`() =
+        runTest {
+            every { downloadDao.observeAll() } returns flowOf(listOf(DownloadWithFiles(download(), emptyList())))
+            givenCachedItems(ITEM_ROW)
+            every { itemMapper.toDomainOrNull(ITEM_ROW, null) } returns MOVIE
+
+            repository().observeDownloads().test {
+                awaitItem().single().seasonArtworkUrl.shouldBeNull()
+                // One probe for the downloads and none for the seasons: a library of films must not
+                // pay a second query per emission for a join that can answer nothing.
+                coVerify(exactly = 1) { itemDao.getCacheKeys(any()) }
+                awaitComplete()
+            }
+        }
+
     // ---- what a progress write costs -------------------------------------------------------------
 
     @Test
@@ -1031,5 +1104,38 @@ class DownloadRepositoryImplTest {
             )
 
         val MOVIE = JellyfinItem(id = uuid(1).toString(), name = "Arrival", type = ItemType.MOVIE)
+
+        /** The season parent `DownloadedMetadataRefresher` and `DownloadEnqueuer` both cache. */
+        val SEASON_ROW =
+            ItemEntity(
+                id = uuid(2),
+                name = "Season 1",
+                sortName = "Season 1",
+                type = ItemType.SEASON,
+                source = ItemSource.DOWNLOAD,
+                cachedAt = NOW,
+                dto = "{}",
+            )
+
+        const val SEASON_POSTER = "https://example.invalid/westworld-s1.jpg"
+
+        val EPISODE =
+            JellyfinItem(
+                id = uuid(1).toString(),
+                name = "Chestnut",
+                type = ItemType.EPISODE,
+                seriesName = "Westworld",
+                seasonId = uuid(2).toString(),
+                seasonName = "Season 1",
+                primaryImageUrl = "https://example.invalid/chestnut.jpg",
+            )
+
+        val SEASON =
+            JellyfinItem(
+                id = uuid(2).toString(),
+                name = "Season 1",
+                type = ItemType.SEASON,
+                primaryImageUrl = SEASON_POSTER,
+            )
     }
 }

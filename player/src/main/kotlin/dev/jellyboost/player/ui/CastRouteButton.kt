@@ -5,6 +5,10 @@ import android.view.View
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Cast
+import androidx.compose.material.icons.filled.CastConnected
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -19,6 +23,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.mediarouter.app.MediaRouteButton
 import com.google.android.gms.cast.framework.CastButtonFactory
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dev.jellyboost.core.ui.component.GlassIconSize
+import dev.jellyboost.core.ui.component.GlassIconTint
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.glassSurface
@@ -75,7 +81,19 @@ fun CastRouteButton(
             modifier = Modifier.size(size).glassSurface(shape = CircleShape, tint = surfaceTint),
             contentAlignment = Alignment.Center,
         ) {
-            MediaRouteButtonHost(description = description, modifier = Modifier.size(size))
+            // The framework drawable obeys neither GlassIconSize nor GlassIconTint; description
+            // null — the native button above carries the spoken sentence and the tap.
+            Icon(
+                imageVector = if (connected != null) Icons.Filled.CastConnected else Icons.Filled.Cast,
+                contentDescription = null,
+                tint = GlassIconTint,
+                modifier = Modifier.size(GlassIconSize),
+            )
+            MediaRouteButtonHost(
+                description = description,
+                drawNative = false,
+                modifier = Modifier.size(size),
+            )
         }
     }
 }
@@ -91,11 +109,15 @@ fun CastRouteButton(
  * `MediaRouteActionProvider` behaviour), and it starts hidden on some MediaRouter versions.
  *
  * @param description set in `update`, not `factory`: it changes with the session.
+ * @param drawNative `false` hides the framework drawable with `alpha`, **never** `INVISIBLE` or
+ *   conditional composition — an `INVISIBLE` view is out of hit-testing, and this view must keep
+ *   the tap: it is what owns the chooser/controller dialogs and the route-discovery registration.
  */
 @Composable
 private fun MediaRouteButtonHost(
     description: String,
     modifier: Modifier = Modifier,
+    drawNative: Boolean = true,
 ) {
     AndroidView(
         modifier = modifier,
@@ -108,6 +130,7 @@ private fun MediaRouteButtonHost(
         update = { view ->
             view.contentDescription = description
             view.visibility = View.VISIBLE
+            view.alpha = if (drawNative) 1f else 0f
         },
     )
 }

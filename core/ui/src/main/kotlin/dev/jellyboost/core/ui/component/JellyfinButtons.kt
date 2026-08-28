@@ -81,7 +81,9 @@ private val PillIconSize = 18.dp
 
 private val PillIconSizeSmall = 16.dp
 
-private val GlassIconSize = 18.dp
+/** Public with [GlassIconTint]: a glyph drawn outside this file (the cast button, whose tap is a
+ * platform view) must share these or drift from the cluster it sits in. */
+val GlassIconSize = 18.dp
 
 private val PillSpinnerStroke = 2.dp
 

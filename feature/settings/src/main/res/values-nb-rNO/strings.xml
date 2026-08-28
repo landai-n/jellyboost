@@ -65,4 +65,8 @@
     <string name="settings_theme_dark">Mørkt</string>
     <string name="settings_dynamic_color">Bruk bakgrunnsfarger</string>
     <string name="settings_dynamic_color_supporting">Henter paletten fra bakgrunnsbildet ditt i stedet for Jellyfin-blåfargen.</string>
+
+    <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_styled_ass">Stiliserte ASS-undertekster</string>
+    <string name="settings_styled_ass_supporting">Tegner ASS/SSA med libass: skrifter, plassering og effekter. Eksperimentelt; gjelder neste video du starter.</string>
 </resources>

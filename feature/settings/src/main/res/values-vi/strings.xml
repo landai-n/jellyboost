@@ -60,4 +60,8 @@
     <string name="settings_theme_dark">Tối</string>
     <string name="settings_dynamic_color">Dùng màu hình nền</string>
     <string name="settings_dynamic_color_supporting">Lấy bảng màu từ hình nền của bạn thay cho màu xanh Jellyfin.</string>
+
+    <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_styled_ass">Phụ đề ASS có định dạng</string>
+    <string name="settings_styled_ass_supporting">Vẽ ASS/SSA bằng libass: phông chữ, vị trí và hiệu ứng. Thử nghiệm; áp dụng cho video bạn mở tiếp theo.</string>
 </resources>

@@ -65,4 +65,8 @@
     <string name="settings_theme_dark">गडद</string>
     <string name="settings_dynamic_color">वॉलपेपरचे रंग वापरा</string>
     <string name="settings_dynamic_color_supporting">Jellyfin च्या निळ्या रंगाऐवजी तुमच्या वॉलपेपरमधून रंग घेते.</string>
+
+    <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_styled_ass">शैलीदार ASS उपशीर्षके</string>
+    <string name="settings_styled_ass_supporting">libass वापरून ASS/SSA रेखाटते: फॉन्ट, स्थान आणि प्रभाव. प्रायोगिक; पुढील व्हिडिओपासून लागू होईल.</string>
 </resources>

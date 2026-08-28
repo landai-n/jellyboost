@@ -61,4 +61,8 @@
     <string name="settings_theme_dark">Escuro</string>
     <string name="settings_dynamic_color">Usar as cores do fundo</string>
     <string name="settings_dynamic_color_supporting">Usa a paleta do teu fundo em vez do azul do Jellyfin.</string>
+
+    <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_styled_ass">Legendas ASS estilizadas</string>
+    <string name="settings_styled_ass_supporting">Desenha ASS/SSA com libass: tipos de letra, posicionamento e efeitos. Experimental; aplica-se ao próximo vídeo que iniciar.</string>
 </resources>

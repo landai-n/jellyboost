@@ -85,6 +85,7 @@ fun SettingsScreen(
                 onIntroSkipMode = viewModel::setIntroSkipMode,
                 onOutroSkipMode = viewModel::setOutroSkipMode,
                 onPipOnLeave = viewModel::setPipOnLeave,
+                onStyledAssSubtitles = viewModel::setStyledAssSubtitles,
                 onWifiOnly = viewModel::setDownloadOverWifiOnly,
                 onDownloadQuality = viewModel::setDownloadQuality,
                 onStorageLocation = viewModel::setStorageLocation,
@@ -106,6 +107,7 @@ data class SettingsActions(
     val onIntroSkipMode: (SegmentSkipMode) -> Unit,
     val onOutroSkipMode: (SegmentSkipMode) -> Unit,
     val onPipOnLeave: (Boolean) -> Unit,
+    val onStyledAssSubtitles: (Boolean) -> Unit,
     val onWifiOnly: (Boolean) -> Unit,
     val onDownloadQuality: (DownloadQuality) -> Unit,
     val onStorageLocation: (String, Boolean) -> Unit,
@@ -154,7 +156,13 @@ fun SettingsContent(
                     onDynamicColor = actions.onDynamicColor,
                 )
                 HorizontalDivider()
-                PlaybackSection(state = state, actions = actions)
+                PlaybackSection(
+                    introSkipMode = state.introSkipMode,
+                    outroSkipMode = state.outroSkipMode,
+                    pipOnLeave = state.pipOnLeave,
+                    styledAssSubtitles = state.styledAssSubtitles,
+                    actions = actions,
+                )
                 HorizontalDivider()
                 DownloadsSection(state = state, actions = actions)
                 HorizontalDivider()
@@ -237,27 +245,40 @@ private fun AppearanceSection(
     }
 }
 
+/**
+ * Scalars rather than the whole `SettingsUiState`, matching [AppearanceSection]: nothing here
+ * changes while a storage tick does, and a state parameter would redraw the section anyway.
+ */
 @Composable
 private fun PlaybackSection(
-    state: SettingsUiState,
+    introSkipMode: SegmentSkipMode,
+    outroSkipMode: SegmentSkipMode,
+    pipOnLeave: Boolean,
+    styledAssSubtitles: Boolean,
     actions: SettingsActions,
 ) {
     SettingsSection(title = stringResource(R.string.settings_section_playback)) {
         SkipModeGroup(
             label = stringResource(R.string.settings_skip_intro),
-            selected = state.introSkipMode,
+            selected = introSkipMode,
             onSelect = actions.onIntroSkipMode,
         )
         SkipModeGroup(
             label = stringResource(R.string.settings_skip_outro),
-            selected = state.outroSkipMode,
+            selected = outroSkipMode,
             onSelect = actions.onOutroSkipMode,
         )
         SettingsSwitchRow(
             label = stringResource(R.string.settings_pip),
             supportingText = stringResource(R.string.settings_pip_supporting),
-            checked = state.pipOnLeave,
+            checked = pipOnLeave,
             onCheckedChange = actions.onPipOnLeave,
+        )
+        SettingsSwitchRow(
+            label = stringResource(R.string.settings_styled_ass),
+            supportingText = stringResource(R.string.settings_styled_ass_supporting),
+            checked = styledAssSubtitles,
+            onCheckedChange = actions.onStyledAssSubtitles,
         )
     }
 }
@@ -716,6 +737,7 @@ private fun SettingsPreview() {
                     onIntroSkipMode = {},
                     onOutroSkipMode = {},
                     onPipOnLeave = {},
+                    onStyledAssSubtitles = {},
                     onWifiOnly = {},
                     onDownloadQuality = {},
                     onStorageLocation = { _, _ -> },

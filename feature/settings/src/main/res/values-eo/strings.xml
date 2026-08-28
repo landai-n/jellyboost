@@ -61,4 +61,8 @@
     <string name="settings_theme_dark">Malhela</string>
     <string name="settings_dynamic_color">Uzi kolorojn de la fono</string>
     <string name="settings_dynamic_color_supporting">Prenas la paletron el via fonbildo anstataŭ la bluo de Jellyfin.</string>
+
+    <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_styled_ass">Stilaj ASS-subtekstoj</string>
+    <string name="settings_styled_ass_supporting">Desegnas ASS/SSA per libass: tiparoj, pozicio kaj efektoj. Eksperimenta; validas por la sekva video, kiun vi startigas.</string>
 </resources>

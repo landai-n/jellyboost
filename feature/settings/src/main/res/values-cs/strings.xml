@@ -67,4 +67,8 @@
     <string name="settings_theme_dark">Tmavý</string>
     <string name="settings_dynamic_color">Použít barvy tapety</string>
     <string name="settings_dynamic_color_supporting">Převezme paletu z vaší tapety místo modré barvy Jellyfinu.</string>
+
+    <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_styled_ass">Stylované titulky ASS</string>
+    <string name="settings_styled_ass_supporting">Vykresluje ASS/SSA pomocí libass: písma, umístění a efekty. Experimentální; projeví se u příštího spuštěného videa.</string>
 </resources>

@@ -414,4 +414,41 @@ class DataStoreAppPreferencesTest {
                 cancelAndIgnoreRemainingEvents()
             }
         }
+
+    @Test
+    fun `styled ASS subtitles default to off`() =
+        runTest {
+            // An install that never opens Settings keeps Media3's own SSA path, natives unloaded.
+            val preferences = DataStoreAppPreferences(dataStore(this))
+
+            preferences.styledAssSubtitles.first() shouldBe false
+        }
+
+    @Test
+    fun `turning styled ASS subtitles on survives a round trip through storage`() =
+        runTest {
+            val store = dataStore(this)
+
+            DataStoreAppPreferences(store).setStyledAssSubtitles(true)
+
+            DataStoreAppPreferences(store).styledAssSubtitles.first() shouldBe true
+        }
+
+    @Test
+    fun `emits every styled ASS subtitle change to observers`() =
+        runTest {
+            val preferences = DataStoreAppPreferences(dataStore(this))
+
+            preferences.styledAssSubtitles.test {
+                awaitItem() shouldBe false
+
+                preferences.setStyledAssSubtitles(true)
+                awaitItem() shouldBe true
+
+                preferences.setStyledAssSubtitles(false)
+                awaitItem() shouldBe false
+
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
 }

@@ -65,4 +65,8 @@
     <string name="settings_theme_dark">Күңгірт</string>
     <string name="settings_dynamic_color">Тұсқағаз түстерін пайдалану</string>
     <string name="settings_dynamic_color_supporting">Палитраны Jellyfin көгінің орнына тұсқағазыңыздан алады.</string>
+
+    <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_styled_ass">Мәнерленген ASS субтитрлері</string>
+    <string name="settings_styled_ass_supporting">ASS/SSA пішімін libass арқылы салады: қаріптер, орналасу және әсерлер. Эксперименттік; келесі бейнеден бастап қолданылады.</string>
 </resources>

@@ -66,4 +66,8 @@
     <string name="settings_theme_dark">Tumšs</string>
     <string name="settings_dynamic_color">Izmantot fona attēla krāsas</string>
     <string name="settings_dynamic_color_supporting">Paleti ņem no jūsu fona attēla, nevis Jellyfin zilās.</string>
+
+    <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_styled_ass">Stilizēti ASS subtitri</string>
+    <string name="settings_styled_ass_supporting">Zīmē ASS/SSA ar libass: fonti, novietojums un efekti. Eksperimentāls; attiecas uz nākamo palaisto video.</string>
 </resources>

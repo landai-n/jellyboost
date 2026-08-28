@@ -65,4 +65,8 @@
     <string name="settings_theme_dark">அடர்</string>
     <string name="settings_dynamic_color">வால்பேப்பர் நிறங்களைப் பயன்படுத்து</string>
     <string name="settings_dynamic_color_supporting">Jellyfin நீலத்திற்குப் பதிலாக உங்கள் வால்பேப்பரிலிருந்து நிறங்களை எடுக்கிறது.</string>
+
+    <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_styled_ass">வடிவமைக்கப்பட்ட ASS வசன வரிகள்</string>
+    <string name="settings_styled_ass_supporting">libass கொண்டு ASS/SSA ஐ வரையும்: எழுத்துருக்கள், இடம் மற்றும் விளைவுகள். சோதனை முறை; அடுத்து தொடங்கும் வீடியோவுக்குப் பொருந்தும்.</string>
 </resources>

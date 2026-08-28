@@ -61,4 +61,8 @@
     <string name="settings_theme_dark">Qaranlıq</string>
     <string name="settings_dynamic_color">Divar kağızı rənglərindən istifadə et</string>
     <string name="settings_dynamic_color_supporting">Palitranı Jellyfin mavisi əvəzinə divar kağızınızdan götürür.</string>
+
+    <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_styled_ass">Stilli ASS altyazıları</string>
+    <string name="settings_styled_ass_supporting">ASS/SSA-nı libass ilə çəkir: şriftlər, yerləşdirmə və effektlər. Eksperimentaldır; başlatdığınız növbəti videoya tətbiq olunur.</string>
 </resources>

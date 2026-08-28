@@ -69,4 +69,8 @@
     <string name="settings_theme_dark">داكن</string>
     <string name="settings_dynamic_color">استخدام ألوان الخلفية</string>
     <string name="settings_dynamic_color_supporting">يأخذ لوحة الألوان من خلفية شاشتك بدلاً من أزرق Jellyfin.</string>
+
+    <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_styled_ass">ترجمات ASS المنسّقة</string>
+    <string name="settings_styled_ass_supporting">يرسم ASS/SSA باستخدام libass: الخطوط والمواضع والمؤثرات. تجريبي؛ يسري على الفيديو التالي الذي تشغّله.</string>
 </resources>

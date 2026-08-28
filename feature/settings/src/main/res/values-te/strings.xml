@@ -65,4 +65,8 @@
     <string name="settings_theme_dark">ముదురు</string>
     <string name="settings_dynamic_color">వాల్‌పేపర్ రంగులను వాడు</string>
     <string name="settings_dynamic_color_supporting">Jellyfin నీలం బదులు మీ వాల్‌పేపర్ నుండి రంగులను తీసుకుంటుంది.</string>
+
+    <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_styled_ass">శైలితో కూడిన ASS ఉపశీర్షికలు</string>
+    <string name="settings_styled_ass_supporting">libass తో ASS/SSA ను గీస్తుంది: ఫాంట్‌లు, స్థానం, ప్రభావాలు. ప్రయోగాత్మకం; మీరు తర్వాత ప్రారంభించే వీడియోకు వర్తిస్తుంది.</string>
 </resources>

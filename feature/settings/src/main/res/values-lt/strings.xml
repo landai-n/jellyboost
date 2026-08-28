@@ -67,4 +67,8 @@
     <string name="settings_theme_dark">Tamsi</string>
     <string name="settings_dynamic_color">Naudoti darbalaukio fono spalvas</string>
     <string name="settings_dynamic_color_supporting">Paletę ima iš jūsų darbalaukio fono, o ne Jellyfin mėlynos.</string>
+
+    <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_styled_ass">Stilizuoti ASS subtitrai</string>
+    <string name="settings_styled_ass_supporting">Piešia ASS/SSA su libass: šriftai, padėtis ir efektai. Eksperimentinis; taikoma kitam paleistam vaizdo įrašui.</string>
 </resources>

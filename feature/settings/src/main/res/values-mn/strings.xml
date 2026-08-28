@@ -65,4 +65,8 @@
     <string name="settings_theme_dark">Бараан</string>
     <string name="settings_dynamic_color">Дэлгэцийн зургийн өнгийг ашиглах</string>
     <string name="settings_dynamic_color_supporting">Jellyfin-ий цэнхэрийн оронд дэлгэцийн зургаас өнгө авна.</string>
+
+    <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_styled_ass">Загварчилсан ASS хадмал</string>
+    <string name="settings_styled_ass_supporting">ASS/SSA-г libass-ээр зурна: фонт, байрлал, эффект. Туршилтын; дараагийн эхлүүлэх видеонд үйлчилнэ.</string>
 </resources>

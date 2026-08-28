@@ -48,6 +48,7 @@ class SettingsViewModelTest {
     private val forceOffline = MutableStateFlow(false)
     private val themeMode = MutableStateFlow(ThemeMode.SYSTEM)
     private val dynamicColorEnabled = MutableStateFlow(false)
+    private val styledAssSubtitles = MutableStateFlow(false)
     private val storage = MutableStateFlow(StorageUsage())
     private val storageLocations = MutableStateFlow(StorageLocations())
     private val sessionState = MutableStateFlow<SessionState>(SessionState.Unknown)
@@ -70,6 +71,7 @@ class SettingsViewModelTest {
         every { appPreferences.forceOffline } returns forceOffline
         every { appPreferences.themeMode } returns themeMode
         every { appPreferences.dynamicColorEnabled } returns dynamicColorEnabled
+        every { appPreferences.styledAssSubtitles } returns styledAssSubtitles
         every { sessionRepository.sessionState } returns sessionState
         every { downloads.observeStorage() } returns storage
         every { downloads.observeStorageLocations() } returns storageLocations
@@ -89,6 +91,7 @@ class SettingsViewModelTest {
             forceOffline.value = true
             themeMode.value = ThemeMode.LIGHT
             dynamicColorEnabled.value = true
+            styledAssSubtitles.value = true
             storage.value = StorageUsage(usedBytes = 100L, availableBytes = 900L, rootPath = "/sdcard")
 
             viewModel().uiState.test {
@@ -103,6 +106,7 @@ class SettingsViewModelTest {
                 state.forceOffline shouldBe true
                 state.themeMode shouldBe ThemeMode.LIGHT
                 state.dynamicColorEnabled shouldBe true
+                state.styledAssSubtitles shouldBe true
                 state.storage.usedBytes shouldBe 100L
                 state.storage.rootPath shouldBe "/sdcard"
                 cancelAndIgnoreRemainingEvents()
@@ -164,6 +168,26 @@ class SettingsViewModelTest {
             advanceUntilIdle()
 
             coVerify(exactly = 1) { appPreferences.setDynamicColorEnabled(true) }
+        }
+
+    @Test
+    fun `the styled ASS switch writes through to the preference store`() =
+        runTest(dispatcher) {
+            val model = viewModel()
+
+            model.setStyledAssSubtitles(true)
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) { appPreferences.setStyledAssSubtitles(true) }
+        }
+
+    @Test
+    fun `styled ASS subtitles start off`() =
+        runTest(dispatcher) {
+            viewModel().uiState.test {
+                awaitItem().styledAssSubtitles shouldBe false
+                cancelAndIgnoreRemainingEvents()
+            }
         }
 
     @Test

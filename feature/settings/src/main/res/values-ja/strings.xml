@@ -64,4 +64,8 @@
     <string name="settings_theme_dark">ダーク</string>
     <string name="settings_dynamic_color">壁紙の色を使う</string>
     <string name="settings_dynamic_color_supporting">Jellyfin のブルーではなく、壁紙から配色を取り込みます。</string>
+
+    <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_styled_ass">スタイル付き ASS 字幕</string>
+    <string name="settings_styled_ass_supporting">libass で ASS/SSA を描画します（フォント、配置、エフェクト）。実験的機能で、次に再生する動画から有効になります。</string>
 </resources>

@@ -84,6 +84,10 @@ class ConnectionStateProviderTest {
 
             override suspend fun setDynamicColorEnabled(enabled: Boolean) = Unit
 
+            override val styledAssSubtitles: Flow<Boolean> = MutableStateFlow(false)
+
+            override suspend fun setStyledAssSubtitles(enabled: Boolean) = Unit
+
             override val maxStreamingBitrate: Flow<Int?> = MutableStateFlow(null)
 
             override suspend fun setMaxStreamingBitrate(bitrate: Int?) = Unit

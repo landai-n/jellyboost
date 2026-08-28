@@ -81,6 +81,17 @@ interface AppPreferences {
     suspend fun setDynamicColorEnabled(enabled: Boolean)
 
     /**
+     * Renders ASS/SSA through libass instead of Media3's own `SsaParser`, which keeps only alignment,
+     * a couple of colours, size and bold/italic and drops fonts, positioning, karaoke and animation.
+     *
+     * Defaults to **off**, and is read once while the player is built — a change reaches the next
+     * playback, not the one on screen.
+     */
+    val styledAssSubtitles: Flow<Boolean>
+
+    suspend fun setStyledAssSubtitles(enabled: Boolean)
+
+    /**
      * Not a user setting and not surfaced in Settings: the player's bandwidth detector writes it after a
      * successful measurement and reads it back on a fresh start as a **prior** for Auto quality. `null` means
      * nothing learned yet, which degrades to uncapped behaviour.

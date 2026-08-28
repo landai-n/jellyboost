@@ -61,4 +61,8 @@
     <string name="settings_theme_dark">Sombre</string>
     <string name="settings_dynamic_color">Utiliser les couleurs du fond d\'écran</string>
     <string name="settings_dynamic_color_supporting">Prend la palette de votre fond d\'écran au lieu du bleu de Jellyfin.</string>
+
+    <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_styled_ass">Sous-titres ASS stylisés</string>
+    <string name="settings_styled_ass_supporting">Dessine l\'ASS/SSA avec libass : polices, positionnement et effets. Expérimental ; s\'applique à la prochaine vidéo lancée.</string>
 </resources>

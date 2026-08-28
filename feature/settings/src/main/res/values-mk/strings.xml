@@ -65,4 +65,8 @@
     <string name="settings_theme_dark">Темна</string>
     <string name="settings_dynamic_color">Користи бои од тапетот</string>
     <string name="settings_dynamic_color_supporting">Ја зема палетата од твојот тапет наместо сината на Jellyfin.</string>
+
+    <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_styled_ass">Стилизирани ASS титлови</string>
+    <string name="settings_styled_ass_supporting">Ги црта ASS/SSA со libass: фонтови, позиционирање и ефекти. Експериментално; важи за следното видео што ќе го пуштите.</string>
 </resources>

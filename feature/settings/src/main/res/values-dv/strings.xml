@@ -65,4 +65,8 @@
     <string name="settings_theme_dark">އަނދިރި</string>
     <string name="settings_dynamic_color">ވޯލްޕޭޕަރުގެ ކުލަތައް ބޭނުންކުރޭ</string>
     <string name="settings_dynamic_color_supporting">Jellyfin ނޫކުލައިގެ ބަދަލުގައި ތިޔަ ވޯލްޕޭޕަރުން ކުލަ ނަގާ.</string>
+
+    <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_styled_ass">ސްޓައިލްކުރެވިފައިވާ ASS ސަބްޓައިޓަލް</string>
+    <string name="settings_styled_ass_supporting">libass ބޭނުންކޮށްގެން ASS/SSA ކުރަހާ: ފޮންޓް، ޕޮޒިޝަން އަދި އެފެކްޓް. ތަޖުރިބާކުރަނިވި؛ ދެން ފަށާ ވީޑިއޯއަށް އަސަރުކުރާނެ.</string>
 </resources>

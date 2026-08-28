@@ -61,4 +61,8 @@
     <string name="settings_theme_dark">Iluna</string>
     <string name="settings_dynamic_color">Erabili horma-paperaren koloreak</string>
     <string name="settings_dynamic_color_supporting">Paleta zure horma-paperetik hartzen du Jellyfinen urdinaren ordez.</string>
+
+    <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_styled_ass">Estiloa duten ASS azpitituluak</string>
+    <string name="settings_styled_ass_supporting">ASS/SSA libass-ekin marrazten du: letra-tipoak, kokapena eta efektuak. Esperimentala; abiaraziko duzun hurrengo bideoari aplikatzen zaio.</string>
 </resources>

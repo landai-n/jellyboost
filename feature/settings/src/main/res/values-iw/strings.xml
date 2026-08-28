@@ -67,4 +67,8 @@
     <string name="settings_theme_dark">כהה</string>
     <string name="settings_dynamic_color">שימוש בצבעי הרקע</string>
     <string name="settings_dynamic_color_supporting">לוקח את לוח הצבעים מתמונת הרקע שלך במקום הכחול של Jellyfin.</string>
+
+    <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_styled_ass">כתוביות ASS מעוצבות</string>
+    <string name="settings_styled_ass_supporting">מצייר ASS/SSA באמצעות libass: גופנים, מיקום ואפקטים. ניסיוני; חל על הסרטון הבא שתפעיל.</string>
 </resources>

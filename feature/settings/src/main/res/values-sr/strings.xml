@@ -66,4 +66,8 @@
     <string name="settings_theme_dark">Тамна</string>
     <string name="settings_dynamic_color">Користи боје позадине</string>
     <string name="settings_dynamic_color_supporting">Узима палету са ваше позадине уместо Jellyfin плаве.</string>
+
+    <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_styled_ass">Стилизовани ASS титлови</string>
+    <string name="settings_styled_ass_supporting">Исцртава ASS/SSA помоћу libass: фонтови, позиција и ефекти. Експериментално; важи за следећи покренути видео.</string>
 </resources>

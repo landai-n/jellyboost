@@ -451,6 +451,7 @@ internal class DownloadRepositoryImpl
                     errorMessage = row.download.errorMessage,
                     itemType = row.download.itemType,
                     albumName = row.download.albumName,
+                    artistName = row.download.artistName,
                     groupId = row.download.groupId,
                     item = items[row.download.itemId],
                 )

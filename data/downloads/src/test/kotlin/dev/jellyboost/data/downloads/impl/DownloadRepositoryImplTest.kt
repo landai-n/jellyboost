@@ -63,6 +63,9 @@ import java.time.ZoneOffset
  * unlinking files, restart it after).
  */
 @OptIn(ExperimentalCoroutinesApi::class)
+// The repository's whole surface is one class under one mock harness; splitting the cases across files
+// would duplicate that harness rather than shorten anything.
+@Suppress("LargeClass")
 class DownloadRepositoryImplTest {
     private val downloadDao = mockk<DownloadDao>(relaxUnitFun = true)
     private val itemDao = mockk<ItemDao>()
@@ -242,6 +245,27 @@ class DownloadRepositoryImplTest {
                 row.itemId shouldBe uuid(1).toString()
                 row.item shouldBe MOVIE
                 row.bytesOnDisk shouldBe 900L
+                awaitComplete()
+            }
+        }
+
+    @Test
+    fun `a track's grouping columns reach the row that draws its heading`() =
+        runTest {
+            val track =
+                download(
+                    itemType = ItemType.AUDIO,
+                    albumName = "Rumours",
+                    artistName = "Fleetwood Mac",
+                    groupId = uuid(40),
+                )
+            every { downloadDao.observeAll() } returns flowOf(listOf(DownloadWithFiles(track, emptyList())))
+
+            repository().observeDownloads().test {
+                val row = awaitItem().single()
+                row.albumName shouldBe "Rumours"
+                row.artistLine shouldBe "Fleetwood Mac"
+                row.groupId shouldBe uuid(40)
                 awaitComplete()
             }
         }

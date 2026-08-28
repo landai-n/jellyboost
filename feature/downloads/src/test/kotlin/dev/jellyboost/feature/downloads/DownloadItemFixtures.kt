@@ -27,6 +27,7 @@ internal fun downloadItem(
     errorMessage: String? = null,
     itemType: ItemType? = null,
     albumName: String? = null,
+    artistName: String? = null,
     groupId: UUID? = null,
     item: JellyfinItem? = null,
 ) = DownloadItem(
@@ -44,6 +45,7 @@ internal fun downloadItem(
     errorMessage = errorMessage,
     itemType = itemType,
     albumName = albumName,
+    artistName = artistName,
     groupId = groupId,
     item = item,
 )

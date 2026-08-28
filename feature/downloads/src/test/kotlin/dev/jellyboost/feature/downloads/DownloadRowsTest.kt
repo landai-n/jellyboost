@@ -281,6 +281,38 @@ class DownloadRowsTest {
         film.rowTitle(inGroup = true) shouldBe "Dune"
     }
 
+    // ---- who a track is credited to (schema v12) -------------------------------------------------
+
+    @Test
+    fun `the column is the credit, since it survives a wiped item cache`() {
+        val row = track(album = "Rumours", title = "Dreams").copy(artistName = "Fleetwood Mac")
+
+        row.artistLine shouldBe "Fleetwood Mac"
+    }
+
+    @Test
+    fun `a row written before the column falls back to the cached item's artists`() {
+        val row = track(album = "Rumours", title = "Dreams").copy(item = audioItem("Fleetwood Mac"))
+
+        row.artistLine shouldBe "Fleetwood Mac"
+    }
+
+    @Test
+    fun `several credited artists are joined into one line`() {
+        val row =
+            track(album = "Rumours", title = "Dreams")
+                .copy(item = audioItem("Fleetwood Mac", "Various Artists"))
+
+        row.artistLine shouldBe "Fleetwood Mac, Various Artists"
+    }
+
+    @Test
+    fun `a row with neither a column nor a cached item is credited to nobody`() {
+        // A blank column must read as absent too, or a header would draw an empty second line.
+        track(album = "Rumours", title = "Dreams").copy(artistName = "  ").artistLine shouldBe null
+        track(album = "Rumours", title = "Dreams").artistLine shouldBe null
+    }
+
     // ---- the percentage a queue row announces ----------------------------------------------------
 
     @Test
@@ -327,6 +359,9 @@ class DownloadRowsTest {
         playbackPositionTicks = playbackPositionTicks,
         played = played,
     )
+
+    private fun audioItem(vararg artists: String) =
+        JellyfinItem(id = "1", name = "Dreams", type = ItemType.AUDIO, artists = artists.toList())
 
     private fun track(
         album: String,

@@ -16,7 +16,7 @@ on disk plus Room rows; tapping Play on a downloaded item still takes the online
 |---|---|
 | Detail screen | *Download* enqueues; the same button then reads *Cancel* / *Remove* / *Retry* and shows live progress. On a **season or series** it enqueues the episodes underneath (see [Containers](#containers-a-season-is-its-episodes)). |
 | Every item card | `DownloadBadge` — queued, downloading (ring), paused, downloaded (tick), failed. |
-| Downloads tab | *Downloaded* (three ordered sections — MOVIES, SERIES, MUSIC — see [Sections and folding](#sections-and-folding)) and *Queue* (progress, speed, ETA, pause/resume/cancel/reorder per row, plus a *Pause all* / *Resume all* / *Cancel all* bar above the list, no grouping), with a storage header and the Wi-Fi-only toggle. |
+| Downloads tab | *Downloaded* (three ordered sections — MOVIES, SERIES, MUSIC — see [Sections and folding](#sections-and-folding)) and *Queue* (the same three sections, never folded; progress, speed, ETA, pause/resume/cancel/reorder per row, plus a *Pause all* / *Resume all* / *Cancel all* bar above the list), with a storage header and the Wi-Fi-only toggle. |
 | Notification | Foreground, per-item progress, Pause and Cancel actions. |
 | Offline | Every downloaded item appears in the offline home / library / search, because the pipeline writes `ItemEntity(source = DOWNLOAD)` rows (M6 reads exactly those). |
 
@@ -320,6 +320,13 @@ Inside a section:
   carrying the title, the item count and the size ("8 episodes · 6.1 GB"). The whole header is the
   toggle — `Role.Button`, an expand/collapse click label, an expanded/collapsed `stateDescription`,
   and a chevron rotated by `animateFloatAsState`.
+- An **album** header also carries the cover and the artist, and its track rows then draw no artwork
+  of their own: every one of them was the same cover the header already shows. Both are taken from
+  the first row that has one (`DownloadGroup.subtitle` / `artworkUrl`), so a track still waiting on
+  its metadata refresh cannot blank the header. A **series** header carries neither, deliberately: an
+  episode still differs per row and belongs to that row. Loose tracks in the catch-all keep their own
+  art, having no header to carry it. The cover is decorative — the merged header already speaks the
+  title, the artist and the count.
 - A series or album row whose heading identity is missing joins a **headerless catch-all** at the
   end of its own section, drawn like the films group. No download may drop out of the only list it
   is deletable from.
@@ -338,6 +345,24 @@ simply stays in the set; nothing reads it.
 
 The storage header sums **every** section, folded or not: it reports what is on disk, not what is
 unfolded.
+
+The *Queue* tab takes the **same three sections in the same order**, under the same kind label and by
+the same one-kind-needs-no-label rule (`DownloadsUiState.queueSections`, `showQueueKindHeaders`).
+Nothing there folds — a transfer in flight must never be hidden behind a header — which is why a
+queue section is a flat `QueueSection` rather than a `DownloadGroup`. The flat `queue` list stays
+exactly as it was: the queue stats, the bulk-action targets and the reorder arithmetic all index into
+it.
+
+Reorder is therefore **within a section**: up and down move a row to the nearest neighbour *of its
+own kind*, and a row with no such neighbour in that direction does not move at all. Swapping with a
+neighbour of another kind would leave the row exactly where it was drawn and reorder two other
+sections instead. The index handed to `DownloadRepository.move` is still that neighbour's index in
+the flat queue, which is what leaves every other section's relative order intact.
+
+A queue row stacks **title / progress / status** at both widths; only the type scale differs. The
+status is the size·speed·ETA string, long enough to starve the title down to a few characters when
+the two shared a line on a portrait tablet — which is wide enough to get the non-compact tier. The
+row's `clearAndSetSemantics` description carries title, percent and status as one sentence.
 
 ---
 
@@ -429,7 +454,7 @@ migration.
 
 ---
 
-## Schema (Room v4)
+## Schema (Room v12)
 
 `downloads` — pk `itemId` (one download per item):
 
@@ -441,15 +466,23 @@ migration.
 | `bytesDownloaded` / `bytesTotal` | the single source of truth for progress |
 | `queuePosition` | ordering |
 | `directoryName`, `itemName`, `seriesName` | denormalised: the queue renders before the item row exists, and the cascade needs the directory *after* it is gone |
+| `itemType`, `albumName`, `artistName`, `groupId` | what the row **is** and where it files, each fact in its own column (v11 and v12). All nullable with no default: `NULL` is every row written before them, and the read path folds those back onto the cached item |
 | `errorMessage` | so the queue tab can say *why* |
 | `createdAt` / `updatedAt` | |
+
+`DownloadedMetadataRefresher` fills those four in on rows that predate them, through **SQL-guarded**
+`UPDATE`s rather than a read-then-write: the pass runs while the queue is writing. The grouping
+columns go through `WHERE itemType IS NULL`; `artistName` needs a **second** statement guarded on
+`WHERE artistName IS NULL`, because it is younger than the first guard and a row stamped in between
+has an `itemType` the grouping statement would refuse. Both fill a column once and never overwrite an
+enqueue's value.
 
 `download_files` — surrogate `id`, FK `itemId` → `downloads` **ON DELETE CASCADE**, unique index on
 `(itemId, type, streamIndex, tileIndex)` (which makes re-planning idempotent), plus `type`,
 `tileWidth`, `fileName`, `path`, `url`, `bytesDownloaded`, `bytesTotal`, `status`.
 
-v3 → v4 is a purely additive `@AutoMigration`; an existing install keeps its cached items and its
-pending user-data rows.
+Every bump on this table is purely additive and therefore an `@AutoMigration`; an existing install
+keeps its cached items, its pending user-data rows and its download queue.
 
 ---
 
@@ -477,10 +510,11 @@ delete do not.
 | `DownloadedMetadataRefresherTest` | when it fires (app start online, the return of the connection, never while offline, once per stretch, re-armed by losing it, no API call with nothing downloaded); what it writes (`source = DOWNLOAD`, parents, batching at 50, `cachedAt` preserved for an existing row and stamped for a new one); what it survives (a failing fetch, one failing batch of several, a remotely deleted item, a failing parent fetch, no session, an unreadable table, a failing write); and the file top-up (each pass offering its fresh DTOs, parents excluded, nothing offered when the fetch failed, a failing top-up not costing the metadata write) |
 | `DownloadDeleterTest` | file-before-rows ordering, the surviving-parent set, user-data prune |
 | `DownloadRepositoryImplTest` | status → badge mapping, mutation ordering, reordering |
-| `DownloadsViewModelTest` | tab split, sectioning (films first, series after, albums in their own section), folding (every group starts collapsed, one toggle moves one key, an unfolded group survives the projection stopping, the storage figure ignores what is unfolded), actions, reorder bounds, the queue-wide actions (which statuses each one touches, the transcode message, the cancel-all confirmation) |
-| `DownloadsUiStateTest` | queue aggregates and the precomputed chrome; the fixed MOVIES/SERIES/MUSIC order, empty sections omitted, `showKindHeaders` off for a single kind, the one non-folding films group, a series and an album sharing a name staying two groups, two same-named shows told apart by their heading id, the headerless catch-all, and a legacy row with no type still appearing under its series |
+| `DownloadsViewModelTest` | tab split, sectioning (films first, series after, albums in their own section), folding (every group starts collapsed, one toggle moves one key, an unfolded group survives the projection stopping, the storage figure ignores what is unfolded), actions, reorder within a section (a different-kind neighbour skipped in both directions, a no-op at either section edge), the queue-wide actions (which statuses each one touches, the transcode message, the cancel-all confirmation) |
+| `DownloadsUiStateTest` | queue aggregates and the precomputed chrome; the fixed MOVIES/SERIES/MUSIC order on both tabs, empty sections omitted, `showKindHeaders` / `showQueueKindHeaders` off for a single kind, the flat queue left untouched, in-section queue order preserved, the one non-folding films group, an album header's artist and cover (and one row missing them not blanking it, and a series header carrying neither), a series and an album sharing a name staying two groups, two same-named shows told apart by their heading id, the headerless catch-all, and a legacy row with no type still appearing under its series |
 | `DownloadGroupCacheTest` | the same list instance back while only queue rows moved; every field a row draws from invalidating it |
-| `DownloadRowsTest` | the size shown and how it is worded, ETA, pause/resume eligibility, playback start position, row titles (the group prefix dropped inside a group, for albums as well as series), the announced percentage |
+| `DownloadRowsTest` | the size shown and how it is worded, ETA, pause/resume eligibility, playback start position, row titles (the group prefix dropped inside a group, for albums as well as series), `artistLine`'s column → cached-item order, the announced percentage |
+| `SchemaMigrationTest` | every bump purely additive over the last, and each new column nullable-or-defaulted — which is what keeps it an `@AutoMigration` |
 | `DownloadSpeedTrackerTest` | derived speed, smoothing, restarts, stopped items |
 
 `FileDownloader` is tested against an OkHttp `Interceptor` returning canned responses — no server,

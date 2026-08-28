@@ -117,7 +117,8 @@ internal class DownloadRepositoryImpl
         override fun observeDownloads(): Flow<List<DownloadItem>> =
             flow {
                 val metadata = DownloadMetadataCache(itemDao, itemMapper)
-                emitAll(downloadDao.observeAll().map { rows -> toDownloadItems(rows, metadata) })
+                val seasons = SeasonArtworkCache(itemDao, itemMapper)
+                emitAll(downloadDao.observeAll().map { rows -> toDownloadItems(rows, metadata, seasons) })
             }
                 // `observeAll` is a `@Transaction` over two tables, so one throttled progress update
                 // re-emits it two or three times — once for the file row, once for the item row.
@@ -447,17 +448,21 @@ internal class DownloadRepositoryImpl
 
         /**
          * Joins download rows to the cached items they belong to — one lookup for the whole list, since
-         * the Downloads screen re-reads on every throttled progress write.
+         * the Downloads screen re-reads on every throttled progress write. The seasons the episodes
+         * belong to are a **second** batched lookup over the same cached table, not a query per row.
          */
         private suspend fun toDownloadItems(
             rows: List<DownloadWithFiles>,
             metadata: DownloadMetadataCache,
+            seasons: SeasonArtworkCache,
         ): List<DownloadItem> {
-            // Asked even for an empty list, which is what lets the cache forget a deleted download.
+            // Both asked even for an empty list, which is what lets the caches forget a deleted download.
             val items = metadata.itemsFor(rows.map { it.download.itemId })
+            val seasonArtwork = seasons.artworkFor(items.values)
             if (rows.isEmpty()) return emptyList()
 
             return rows.map { row ->
+                val item = items[row.download.itemId]
                 DownloadItem(
                     itemId = row.download.itemId.toString(),
                     title = row.download.itemName,
@@ -475,7 +480,8 @@ internal class DownloadRepositoryImpl
                     albumName = row.download.albumName,
                     artistName = row.download.artistName,
                     groupId = row.download.groupId,
-                    item = items[row.download.itemId],
+                    item = item,
+                    seasonArtworkUrl = item?.seasonId?.let(seasonArtwork::get),
                 )
             }
         }
@@ -498,10 +504,14 @@ internal class DownloadRepositoryImpl
 /**
  * The parsed metadata of the downloaded items, kept across the emissions of one subscription.
  *
- * `cachedAt` is the whole key: it is bumped by every write to an `items` row and by nothing else, so
- * an entry survives exactly as long as the blob it was decoded from. [ItemDao.getCacheKeys] reads that
- * column *without* the `dto` blob, which is what makes the steady state of a transfer one narrow query
- * per emission instead of a full re-parse.
+ * `revisedAt` is the whole key, and **not** `cachedAt`: two writers deliberately carry a row's old
+ * `cachedAt` across an in-place rewrite to keep the offline "recently downloaded" order still
+ * (`DownloadedMetadataRefresher.store`, `BrowseCacheWriter.mergeRows`), so a memo keyed on it would
+ * hold a decoded blob that no longer exists — a replaced poster tag or a renamed season would never
+ * reach an open screen. `revisedAt` is stamped by every upsert path, so an entry survives exactly as
+ * long as the blob it was decoded from. [ItemDao.getCacheKeys] reads both columns *without* the `dto`
+ * blob, which is what makes the steady state of a transfer one narrow query per emission instead of a
+ * full re-parse.
  *
  * A failed parse is cached as a `null` item rather than dropped, or a corrupt blob would be re-decoded
  * on every progress write. Not thread-safe by design — see [DownloadRepositoryImpl.observeDownloads].
@@ -526,11 +536,11 @@ private class DownloadMetadataCache(
         }
 
         val keys = itemDao.getCacheKeys(ids)
-        val stale = keys.filter { parsed[it.id]?.cachedAt != it.cachedAt }.map { it.id }
+        val stale = keys.filter { parsed[it.id]?.revisedAt != it.revisedAt }.map { it.id }
 
         if (stale.isNotEmpty()) {
             itemDao.getItems(stale).forEach { entity ->
-                parsed[entity.id] = CachedMetadata(entity.cachedAt, itemMapper.toDomainOrNull(entity))
+                parsed[entity.id] = CachedMetadata(entity.revisedAt, itemMapper.toDomainOrNull(entity))
             }
         }
 
@@ -544,9 +554,43 @@ private class DownloadMetadataCache(
 }
 
 private class CachedMetadata(
-    val cachedAt: Instant,
+    val revisedAt: Instant,
     val item: JellyfinItem?,
 )
+
+/**
+ * The poster of every season the downloaded episodes belong to, keyed by the `seasonId` the episode
+ * itself carries. The season is a cached parent row of its own — `DownloadedMetadataRefresher` and
+ * `DownloadEnqueuer` both write it — so resolving it here is a join, not a network read.
+ *
+ * A second [DownloadMetadataCache] rather than the item one: that cache evicts every id it was not
+ * just asked for, and the seasons are not downloads. It therefore inherits that cache's `revisedAt`
+ * key, which is what makes a season **rewritten in place** by the metadata refresh — new poster tag,
+ * renamed season, same `cachedAt` — reach a screen that is already open. Both probes are
+ * `getCacheKeys`, which reads no blob, so the steady state of a transfer stays two narrow queries per
+ * emission and no parse — the same bargain the item join makes, and the reason a header's poster
+ * costs nothing on the two-to-six-writes-a-second progress path.
+ */
+private class SeasonArtworkCache(
+    itemDao: ItemDao,
+    itemMapper: ItemEntityMapper,
+) {
+    private val metadata = DownloadMetadataCache(itemDao, itemMapper)
+
+    /** `seasonId` as the episode spells it → the season's primary image; absent where either is gone. */
+    suspend fun artworkFor(items: Collection<JellyfinItem>): Map<String, String> {
+        // Parsed once per distinct season, and the raw id is kept: it is what the episode is keyed by,
+        // so the lookup never has to agree with `UUID.toString()` about formatting.
+        val ids =
+            items
+                .mapNotNullTo(LinkedHashSet()) { item -> item.seasonId }
+                .mapNotNull { raw -> raw.toUuidOrNull()?.let { raw to it } }
+        val seasons = metadata.itemsFor(ids.map { (_, id) -> id })
+        return buildMap {
+            ids.forEach { (raw, id) -> seasons[id]?.primaryImageUrl?.let { put(raw, it) } }
+        }
+    }
+}
 
 /**
  * The coarse shape of the download table. Byte counts are deliberately absent: they are the part that

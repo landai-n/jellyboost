@@ -101,6 +101,42 @@ class DownloadGroupCacheTest {
     }
 
     @Test
+    fun `a season poster arriving regroups, since a series header draws it`() {
+        // The season's own row is written by the metadata refresh, long after the episode; a
+        // signature of ids, statuses and byte counts would leave the header posterless until some
+        // unrelated write came along. Same reason as the artist above, on the other kind's header.
+        val withoutPoster = episode("1", series = "Westworld")
+        val first = cache.sections(listOf(withoutPoster))
+
+        val second =
+            cache.sections(
+                listOf(withoutPoster.copy(seasonArtworkUrl = "https://example.invalid/westworld-s1.jpg")),
+            )
+
+        second shouldNotBeSameInstanceAs first
+        val group = second.single().groups.single()
+        group.artworkUrl shouldBe "https://example.invalid/westworld-s1.jpg"
+        group.subtitle shouldBe "Season 1"
+    }
+
+    @Test
+    fun `a season name arriving regroups, since a series header draws it too`() {
+        // The sibling of the poster case: the header states a name *and* a poster, and they reach the
+        // row by different routes — the name rides the episode's own item, the poster the season's.
+        // Only one of them being pinned would leave the other free to be optimised away.
+        val withoutSeason = episode("1", series = "Westworld").copy(item = null)
+        val first = cache.sections(listOf(withoutSeason))
+
+        val second = cache.sections(listOf(episode("1", series = "Westworld")))
+
+        second shouldNotBeSameInstanceAs first
+        val before = first.single().groups.single()
+        val after = second.single().groups.single()
+        before.subtitle shouldBe null
+        after.subtitle shouldBe "Season 1"
+    }
+
+    @Test
     fun `a rename regroups, since the tab is ordered by title`() {
         val first = cache.sections(listOf(finished("1")))
         val second = cache.sections(listOf(finished("1").copy(title = "Renamed")))
@@ -130,6 +166,29 @@ class DownloadGroupCacheTest {
         queuePosition = 0,
         itemType = ItemType.AUDIO,
         albumName = album,
+    )
+
+    private fun episode(
+        itemId: String,
+        series: String,
+    ) = DownloadItem(
+        itemId = itemId,
+        title = "Episode $itemId",
+        seriesName = series,
+        status = DownloadStatus.DOWNLOADED,
+        bytesDownloaded = 100L,
+        bytesTotal = 100L,
+        bytesOnDisk = 100L,
+        queuePosition = 0,
+        itemType = ItemType.EPISODE,
+        item =
+            JellyfinItem(
+                id = itemId,
+                name = "Episode $itemId",
+                type = ItemType.EPISODE,
+                seasonName = "Season 1",
+                parentIndexNumber = 1,
+            ),
     )
 
     private fun finished(

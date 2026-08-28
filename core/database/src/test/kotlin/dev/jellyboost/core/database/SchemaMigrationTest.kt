@@ -215,6 +215,42 @@ class SchemaMigrationTest {
         indices(12, "downloads") shouldBe indices(11, "downloads")
     }
 
+    @Test
+    fun `v12 to v13 adds the revision column to items and touches nothing else`() {
+        val before = columns(12, "items")
+        val after = columns(13, "items")
+
+        (after.keys - before.keys) shouldContainExactly setOf("revisedAt")
+    }
+
+    @Test
+    fun `v12 to v13 drops no column and changes no type`() {
+        val before = columns(12, "items")
+        val after = columns(13, "items")
+
+        (before.keys - after.keys).shouldBeEmpty()
+        before.forEach { (name, column) -> after.getValue(name) shouldBe column }
+    }
+
+    @Test
+    fun `revisedAt is NOT NULL with a SQL default, which is what keeps the bump automatic`() {
+        val column = columns(13, "items").getValue("revisedAt")
+
+        column.affinity shouldBe "INTEGER"
+        column.notNull shouldBe true
+        // The epoch: "this row's blob was last replaced at some unrecorded time", which is the honest
+        // reading of every row written before v13 and earlier than any real write can be — so the
+        // first rewrite after the upgrade invalidates whatever memo was holding it.
+        column.defaultValue shouldBe "0"
+    }
+
+    @Test
+    fun `v13 adds no table, removes none, and adds no index`() {
+        tables(13) shouldContainExactly tables(12)
+        // Read only through `WHERE id IN (…)`, which the primary key already answers.
+        indices(13, "items") shouldBe indices(12, "items")
+    }
+
     private data class Column(
         val affinity: String,
         val notNull: Boolean,

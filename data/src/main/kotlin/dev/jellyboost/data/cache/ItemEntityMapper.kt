@@ -44,7 +44,10 @@ class ItemEntityMapper
         /**
          * @param source browse-cache callers must go through [BrowseCacheWriter], which enforces
          *   that a download is never demoted.
-         * @param cachedAt also the "recently downloaded" ordering key.
+         * @param cachedAt also the "recently downloaded" ordering key, and the write time this row is
+         *   stamped `revisedAt` with. The two writers that preserve a previous `cachedAt` do so with a
+         *   `copy` that leaves `revisedAt` alone, which is how every upsert path ends up recording when
+         *   the blob was actually replaced — the one thing a metadata memo can trust.
          */
         fun toEntity(
             dto: BaseItemDto,
@@ -59,6 +62,7 @@ class ItemEntityMapper
                 type = dto.type.toItemType(),
                 source = source,
                 cachedAt = cachedAt,
+                revisedAt = cachedAt,
                 productionYear = dto.productionYear,
                 premiereDate = dto.premiereDate?.toSdkInstant(),
                 communityRating = dto.communityRating,

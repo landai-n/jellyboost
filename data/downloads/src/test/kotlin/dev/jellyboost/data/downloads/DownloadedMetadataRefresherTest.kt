@@ -259,6 +259,21 @@ class DownloadedMetadataRefresherTest {
         }
 
     @Test
+    fun `an existing row still records that this pass replaced its blob`() =
+        runTest {
+            givenDownloads(uuid(1))
+            coEvery { itemDao.getCacheKeys(listOf(uuid(1))) } returns
+                listOf(ItemCacheKey(uuid(1), ItemSource.DOWNLOAD, DOWNLOADED_AT))
+
+            refresher().refresh()
+
+            // The other half of the case above: the preserved `cachedAt` is exactly why a memo cannot
+            // key on it, and `revisedAt` is what tells an open Downloads screen the blob it decoded
+            // is gone. Both must hold at once, on the same row.
+            upserted.captured.single().revisedAt shouldBe REFRESHED_AT
+        }
+
+    @Test
     fun `a row this pass creates is stamped with the current time`() =
         runTest {
             coEvery { downloadDao.allItemIds() } returns listOf(uuid(2))
@@ -637,6 +652,9 @@ class DownloadedMetadataRefresherTest {
         type = ItemType.MOVIE,
         source = source,
         cachedAt = cachedAt,
+        // Mirrors the real mapper, which stamps both from the write time it is handed: the whole
+        // point of `store`'s `copy` is that it moves one of them back and leaves this one alone.
+        revisedAt = cachedAt,
         dto = "{}",
     )
 

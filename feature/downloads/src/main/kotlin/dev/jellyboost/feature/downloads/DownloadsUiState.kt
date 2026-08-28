@@ -1,5 +1,6 @@
 package dev.jellyboost.feature.downloads
 
+import dev.jellyboost.core.common.Separators
 import dev.jellyboost.core.common.model.DownloadStatus
 import dev.jellyboost.data.downloads.model.DownloadItem
 import dev.jellyboost.data.downloads.model.DownloadKind
@@ -24,11 +25,15 @@ data class DownloadGroup(
     val items: List<DownloadItem>,
     /** Series and albums fold; the films group is the MOVIES header's own list. */
     val isCollapsible: Boolean,
-    /** The second header line — an album's artist. `null` leaves the header one line, as before. */
+    /**
+     * The second header line — an album's artist, a series' season(s). `null` leaves the header one
+     * line, as before.
+     */
     val subtitle: String? = null,
     /**
-     * Cover art for the header. Only an album has one worth hoisting: every track shares the same
-     * cover, while an episode still differs per row and belongs to that row.
+     * Cover art for the header: an album's own cover, a series' **season poster**. Never the artwork
+     * of a row, which for an episode is a still that differs per row and belongs to that row — which
+     * is why a series' episode rows keep drawing theirs while an album's tracks do not.
      */
     val artworkUrl: String? = null,
 ) {
@@ -359,20 +364,79 @@ private fun foldedGroups(
         grouped
             .groupBy { requireNotNull(it.groupKey) }
             .map { (key, items) ->
+                val sorted = items.sortedBy { it.title }
+                // Read off the sorted rows so the header is a function of the group alone: taking the
+                // unsorted ones would let Room's row order decide which of two equally-eligible
+                // posters the header gets.
+                val seasons = if (music) SeasonHeader.NONE else sorted.seasonHeader()
                 DownloadGroup(
                     key = key,
                     title = items.first().groupTitle.orEmpty(),
-                    items = items.sortedBy { it.title },
+                    items = sorted,
                     isCollapsible = true,
                     // The first row that has one, not the first row: a single track whose artist or
                     // artwork has not been refreshed yet must not blank the whole album's header.
-                    subtitle = if (music) items.firstNotNullOfOrNull { it.artistLine } else null,
-                    artworkUrl = if (music) items.firstNotNullOfOrNull { it.item?.primaryImageUrl } else null,
+                    subtitle = if (music) items.firstNotNullOfOrNull { it.artistLine } else seasons.line,
+                    artworkUrl =
+                        if (music) items.firstNotNullOfOrNull { it.item?.primaryImageUrl } else seasons.artworkUrl,
                 )
             }.sortedBy { it.title.lowercase() }
 
     return if (loose.isEmpty()) folded else folded + flatGroup(kind, loose)
 }
+
+/** What a series header draws where an album header draws its artist and its cover. */
+private class SeasonHeader(
+    val line: String?,
+    val artworkUrl: String?,
+) {
+    companion object {
+        val NONE = SeasonHeader(line = null, artworkUrl = null)
+    }
+}
+
+/**
+ * The seasons these episodes belong to, as the header states them.
+ *
+ * The line is the server's own `seasonName`, never a `"Season $n"` composed here: the server has
+ * already localised it, and composing one would be a string invisible to the `MissingTranslation`
+ * gate and owed a 69-locale pass. A group is keyed by **series**, so it can hold several seasons —
+ * their distinct names are joined in season order (the episode's `parentIndexNumber`, unnumbered
+ * last), and the poster is the **lowest-numbered** season's: one thumbnail cannot stand for four, so
+ * the choice is made canonical rather than incidental. Explicitly *not* "whichever season the list
+ * opens with" — the rows below are ordered by episode title, so that would hand the header a
+ * different poster every time an episode is added or deleted. A row whose season the cache cannot
+ * name contributes neither, so a group no row's season reached keeps exactly the one-line header it
+ * had before this existed.
+ */
+private fun List<DownloadItem>.seasonHeader(): SeasonHeader {
+    val refs =
+        mapNotNull { row ->
+            val item = row.item ?: return@mapNotNull null
+            val name = item.seasonName?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
+            SeasonRef(name = name, number = item.parentIndexNumber, artworkUrl = row.seasonArtworkUrl)
+        }
+    if (refs.isEmpty()) return SeasonHeader.NONE
+
+    val ordered =
+        refs
+            .groupBy { it.name }
+            .entries
+            .sortedWith(compareBy(nullsLast()) { (_, season) -> season.firstNotNullOfOrNull { it.number } })
+    return SeasonHeader(
+        line = ordered.joinToString(Separators.DOT) { (name, _) -> name },
+        // The first row of that season that has one, not that season's first row: the join answers
+        // per row, so a row whose own item is still unparsed carries no poster while its sibling of
+        // the same season already does.
+        artworkUrl = ordered.first().value.firstNotNullOfOrNull { it.artworkUrl },
+    )
+}
+
+private class SeasonRef(
+    val name: String,
+    val number: Int?,
+    val artworkUrl: String?,
+)
 
 /**
  * Returning the *same instance* while nothing changed is the point: the *Downloaded* tab does not

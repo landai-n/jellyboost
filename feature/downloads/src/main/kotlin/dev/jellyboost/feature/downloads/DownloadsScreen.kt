@@ -797,9 +797,12 @@ private fun KindHeader(
  *
  * @param kind decides the count's wording; only a collapsible group draws a header, so this is
  *   never [DownloadKind.MOVIE].
- * @param subtitle the album's artist, drawn under the title. `null` keeps the header one line.
- * @param artworkUrl the album cover, decorative: the merged row already speaks the title, the artist
- *   and the count, and a second description would repeat one of them.
+ * @param subtitle the album's artist or the series' season(s), drawn under the title. `null` keeps
+ *   the header one line.
+ * @param artworkUrl the album cover or the season poster, decorative: the merged row already speaks
+ *   the title, the subtitle and the count, and a second description would repeat one of them. Drawn
+ *   at one square size for both, so a portrait poster is centre-cropped rather than given the
+ *   header a second geometry.
  */
 @Composable
 @Suppress("LongParameterList")
@@ -1377,11 +1380,17 @@ private fun DownloadsDownloadedPreview() {
 private fun downloadedPreviewSections(): List<DownloadSection> =
     listOf(
         finishedPreviewRow(id = "1", title = "Dune", type = ItemType.MOVIE, onDisk = 6_100_000_000L),
+        // Both episodes of one season, each with its own still: the header's poster and the rows'
+        // stills must be visibly different images, which is the whole reason series rows keep theirs.
         finishedPreviewRow(
             id = "2",
             title = "The Bicameral Mind",
             type = ItemType.EPISODE,
             seriesName = "Westworld",
+            seasonName = "Season 1",
+            seasonNumber = 1,
+            imageUrl = "https://example.invalid/bicameral-mind.jpg",
+            seasonArtworkUrl = "https://example.invalid/westworld-s1.jpg",
             onDisk = 2_100_000_000L,
         ),
         finishedPreviewRow(
@@ -1389,6 +1398,10 @@ private fun downloadedPreviewSections(): List<DownloadSection> =
             title = "Chestnut",
             type = ItemType.EPISODE,
             seriesName = "Westworld",
+            seasonName = "Season 1",
+            seasonNumber = 1,
+            imageUrl = "https://example.invalid/chestnut.jpg",
+            seasonArtworkUrl = "https://example.invalid/westworld-s1.jpg",
             onDisk = 1_900_000_000L,
         ),
         finishedPreviewRow(
@@ -1421,6 +1434,9 @@ private fun finishedPreviewRow(
     albumName: String? = null,
     artistName: String? = null,
     imageUrl: String? = null,
+    seasonName: String? = null,
+    seasonNumber: Int? = null,
+    seasonArtworkUrl: String? = null,
 ) = DownloadItem(
     itemId = id,
     title = title,
@@ -1433,7 +1449,20 @@ private fun finishedPreviewRow(
     itemType = type,
     albumName = albumName,
     artistName = artistName,
-    item = imageUrl?.let { JellyfinItem(id = id, name = title, type = type, primaryImageUrl = it) },
+    item =
+        if (imageUrl == null && seasonName == null) {
+            null
+        } else {
+            JellyfinItem(
+                id = id,
+                name = title,
+                type = type,
+                primaryImageUrl = imageUrl,
+                seasonName = seasonName,
+                parentIndexNumber = seasonNumber,
+            )
+        },
+    seasonArtworkUrl = seasonArtworkUrl,
 )
 
 private fun previewActions() =

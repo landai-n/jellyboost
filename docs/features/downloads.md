@@ -323,10 +323,37 @@ Inside a section:
 - An **album** header also carries the cover and the artist, and its track rows then draw no artwork
   of their own: every one of them was the same cover the header already shows. Both are taken from
   the first row that has one (`DownloadGroup.subtitle` / `artworkUrl`), so a track still waiting on
-  its metadata refresh cannot blank the header. A **series** header carries neither, deliberately: an
-  episode still differs per row and belongs to that row. Loose tracks in the catch-all keep their own
-  art, having no header to carry it. The cover is decorative — the merged header already speaks the
-  title, the artist and the count.
+  its metadata refresh cannot blank the header.
+- A **series** header carries the same two slots, filled from the season instead: the **season
+  poster** and the **season name**. Its episode rows keep their own artwork, which is the difference
+  from an album — an episode still differs per row and belongs to that row, while a track's cover
+  was the header's all along. The name is the server's own `seasonName`, never a `"Season $n"`
+  composed in the client: the server has already localised it, and composing one would be a string
+  invisible to the `MissingTranslation` gate and owed a 69-locale pass. A group is keyed by
+  **series**, so it can hold several seasons — the distinct names are then joined with `·` in season
+  order (`parentIndexNumber`, unnumbered last) and the poster is the **lowest-numbered** season's.
+  Deliberately not "whichever season the list opens with": the rows below are ordered by episode
+  title, so that rule would hand the header a different poster whenever an episode is added or
+  deleted. A group no row's season reached keeps exactly the one-line header it
+  had before. Both thumbnails are drawn at one square size, so a portrait season poster is
+  centre-cropped rather than giving the header a second geometry.
+- The season's poster is **not** on the episode item (`primaryImageUrl` there is the still). It is
+  resolved at the data layer, by `DownloadRepositoryImpl`'s `SeasonArtworkCache`, onto
+  `DownloadItem.seasonArtworkUrl` — one batched lookup over the cached season rows that
+  `DownloadedMetadataRefresher` and `DownloadEnqueuer` both write, memoised on `items.revisedAt`
+  exactly like the item join beside it, so a transfer's two-to-six emissions a second cost one extra
+  narrow `getCacheKeys` and no blob parse. A list with no episode in it makes no season query at all,
+  and a season row that has left the cache degrades to a header without a poster, never to a wrong
+  one.
+- The memo's key is **`revisedAt`, not `cachedAt`** — the distinction is the whole reason the column
+  exists (v13, see DECISIONS 2026-08-28). `cachedAt` orders the offline "recently downloaded" rows,
+  so both the metadata refresh and the browse write-through deliberately carry a row's old value
+  across an in-place rewrite; a memo keyed on it would never notice the commonest delivery path of
+  all, where the enqueue caches a lean season row and the refresh later replaces it with the real
+  artwork. `revisedAt` is stamped by every upsert path — all three route through
+  `ItemEntityMapper.toEntity` — so it records when a blob was actually replaced.
+- Loose tracks in the catch-all keep their own art, having no header to carry it. The header
+  thumbnail is decorative — the merged header already speaks the title, the subtitle and the count.
 - A series or album row whose heading identity is missing joins a **headerless catch-all** at the
   end of its own section, drawn like the films group. No download may drop out of the only list it
   is deletable from.
@@ -520,12 +547,12 @@ delete do not.
 | `DownloadErrorCopyTest` | every failure maps to user copy; SDK internals never reach the row |
 | `DownloadEnqueuerTest` | full re-fetch, parent caching, `source = DOWNLOAD`, queue position, re-enqueue |
 | `SubtitleSidecarTopUpTest` | a finished transcode gaining the sidecars it was downloaded without; the media file never being among the fetches; the fetched file recorded as downloaded with its bytes; a failed sidecar retried on its existing row and under its existing name; a row whose file vanished re-fetched; a complete sidecar left alone; an `ORIGINAL` download given nothing; a row still in the queue left to the queue; a bitmap track never repaired; one sidecar failing not costing the next; an unavailable volume and a folder item survived |
-| `DownloadedMetadataRefresherTest` | when it fires (app start online, the return of the connection, never while offline, once per stretch, re-armed by losing it, no API call with nothing downloaded); what it writes (`source = DOWNLOAD`, parents, batching at 50, `cachedAt` preserved for an existing row and stamped for a new one); what it survives (a failing fetch, one failing batch of several, a remotely deleted item, a failing parent fetch, no session, an unreadable table, a failing write); and the file top-up (each pass offering its fresh DTOs, parents excluded, nothing offered when the fetch failed, a failing top-up not costing the metadata write) |
+| `DownloadedMetadataRefresherTest` | when it fires (app start online, the return of the connection, never while offline, once per stretch, re-armed by losing it, no API call with nothing downloaded); what it writes (`source = DOWNLOAD`, parents, batching at 50, `cachedAt` preserved for an existing row and stamped for a new one, `revisedAt` advanced on that same preserved row); what it survives (a failing fetch, one failing batch of several, a remotely deleted item, a failing parent fetch, no session, an unreadable table, a failing write); and the file top-up (each pass offering its fresh DTOs, parents excluded, nothing offered when the fetch failed, a failing top-up not costing the metadata write) |
 | `DownloadDeleterTest` | file-before-rows ordering, the surviving-parent set, user-data prune |
-| `DownloadRepositoryImplTest` | status → badge mapping, mutation ordering, reordering |
+| `DownloadRepositoryImplTest` | status → badge mapping, mutation ordering, reordering, the season join (a wiped season row answering `null`, a season written later reaching rows already on screen, no episode meaning no query) |
 | `DownloadsViewModelTest` | tab split, sectioning (films first, series after, albums in their own section), folding (every group starts collapsed, one toggle moves one key, an unfolded group survives the projection stopping, the storage figure ignores what is unfolded), actions, reorder within a section (a different-kind neighbour skipped in both directions, a no-op at either section edge), the queue-wide actions (which statuses each one touches, the transcode message, the cancel-all confirmation) |
-| `DownloadsUiStateTest` | queue aggregates and the precomputed chrome; the fixed MOVIES/SERIES/MUSIC order on both tabs, empty sections omitted, `showKindHeaders` / `showQueueKindHeaders` off for a single kind, the flat queue left untouched, in-section queue order preserved, the one non-folding films group, an album header's artist and cover (and one row missing them not blanking it, and a series header carrying neither), a series and an album sharing a name staying two groups, two same-named shows told apart by their heading id, the headerless catch-all, and a legacy row with no type still appearing under its series |
-| `DownloadGroupCacheTest` | the same list instance back while only queue rows moved; every field a row draws from invalidating it |
+| `DownloadsUiStateTest` | queue aggregates and the precomputed chrome; the fixed MOVIES/SERIES/MUSIC order on both tabs, empty sections omitted, `showKindHeaders` / `showQueueKindHeaders` off for a single kind, the flat queue left untouched, in-section queue order preserved, the one non-folding films group, an album header's artist and cover (and one row missing them not blanking it, and neither the artist column nor a row's own artwork reaching a series header), a series header's season line and season poster (the row keeping its own still, several seasons joined in season order with the lowest-numbered one's poster, an unnumbered season last, one row missing its season not blanking it, the poster taken from the first row of its season that has one, a cached-away season costing the poster but not the line, and no season at all keeping the one-line header), a series and an album sharing a name staying two groups, two same-named shows told apart by their heading id, the headerless catch-all, and a legacy row with no type still appearing under its series |
+| `DownloadGroupCacheTest` | the same list instance back while only queue rows moved; every field a row draws from invalidating it — including the three a header draws and nothing else does: an album's artist, and a series' season name and season poster |
 | `DownloadRowsTest` | the size shown and how it is worded, ETA, pause/resume eligibility, playback start position, row titles (the group prefix dropped inside a group, for albums as well as series), `artistLine`'s column → cached-item order, the announced percentage |
 | `SchemaMigrationTest` | every bump purely additive over the last, and each new column nullable-or-defaulted — which is what keeps it an `@AutoMigration` |
 | `DownloadSpeedTrackerTest` | derived speed, smoothing, restarts, stopped items |

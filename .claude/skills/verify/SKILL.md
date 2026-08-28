@@ -25,7 +25,8 @@ declaring the task done.
    ```bash
    python3 scripts/check_docs.py && python3 scripts/check_identifiers.py && \
    python3 scripts/check_patterns.py && python3 scripts/check_redaction.py && \
-   python3 scripts/check_a11y_scaffolding.py && python3 scripts/check_build_entrypoint.py
+   python3 scripts/check_a11y_scaffolding.py && python3 scripts/check_build_entrypoint.py && \
+   python3 scripts/check_schema_export.py
    ```
 
    `check_patterns.py` is a ratchet: if it flags a file you changed, fix the code rather

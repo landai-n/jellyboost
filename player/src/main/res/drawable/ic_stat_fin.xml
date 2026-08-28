@@ -6,9 +6,11 @@
     must not depend on the Compose `:core:ui`).
 
     Flat white on transparent: the status bar tints it and discards colour entirely, so
-    neither the gradient nor the navy tile may appear here. Simplified for legibility at
-    24dp — the third, shortest trail is dropped (it collapsed to under 1dp) and the
-    remaining two are respaced and thickened so they do not visually merge.
+    neither the gradient nor the navy tile may appear here. The geometry is the launcher
+    mark (all three trails, original spacing and stroke) — brand fidelity over the earlier
+    hand-simplified two-trail variant; the one deviation is the third trail ending at
+    x=212 instead of 214, widening its clearance from the fin to ~1.0dp so the gap
+    survives low-density rendering.
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
@@ -18,20 +20,25 @@
     <group
         android:scaleX="0.1"
         android:scaleY="0.1"
-        android:translateX="-13.1"
+        android:translateX="-13.6"
         android:translateY="-2.9">
         <path
             android:fillColor="#FFFFFF"
             android:pathData="M336,82 C290,96 250,130 232,176 C226,190 224,204 226,216 C262,214 296,190 316,156 C330,132 336,106 336,82 Z" />
         <path
-            android:pathData="M190,110 L250,110"
+            android:pathData="M196,116 L246,116"
             android:strokeColor="#FFFFFF"
             android:strokeLineCap="round"
-            android:strokeWidth="24" />
+            android:strokeWidth="12" />
         <path
-            android:pathData="M178,158 L222,158"
+            android:pathData="M182,150 L226,150"
             android:strokeColor="#FFFFFF"
             android:strokeLineCap="round"
-            android:strokeWidth="24" />
+            android:strokeWidth="12" />
+        <path
+            android:pathData="M194,188 L212,188"
+            android:strokeColor="#FFFFFF"
+            android:strokeLineCap="round"
+            android:strokeWidth="12" />
     </group>
 </vector>

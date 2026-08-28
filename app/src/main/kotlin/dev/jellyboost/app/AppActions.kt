@@ -73,8 +73,6 @@ internal fun AppActions(
             status = chrome.connectionState.toStatus(),
             onClick = actions.onConnectionStatusClick,
         )
-        // Draws nothing until a receiver is discovered, but the view stays attached regardless —
-        // that is what keeps route discovery running.
         CastRouteButton(
             modifier = Modifier.size(Dimens.MinTouchTarget),
             glassContainer = true,

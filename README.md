@@ -31,7 +31,7 @@ in [`STATUS.md`](STATUS.md).
 
 ## Building
 
-Requirements: JDK 21 and the Android SDK (compileSdk 36, minSdk 26).
+Requirements: JDK 21 and the Android SDK (compileSdk 37.1, minSdk 26).
 
 ```bash
 # Sets JAVA_HOME (openjdk@21) and ANDROID_HOME
@@ -42,6 +42,11 @@ source ../env.sh
 ./gradlew ktlintCheck detekt     # formatting + static analysis
 ./gradlew testDebugUnitTest      # unit tests (JUnit 5)
 ```
+
+This repository builds with plain `./gradlew` as above. Project tooling instead invokes
+`gradlew-remote`, a thin local wrapper (kept outside the repo) that adds the environment
+setup and optional delegation of the build to another machine — outside contributors
+don't need it.
 
 The debug build uses the application id `dev.jellyboost.app.debug`, so it can be installed
 alongside a release build.

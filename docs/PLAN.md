@@ -11,7 +11,7 @@ The official jellyfin-android app is a WebView wrapper around jellyfin-web with 
 - **Offline browse scope:** downloaded items only (cached parents of downloaded items still open, e.g. series page of a downloaded episode).
 - **User-data sync conflict:** most-recent-wins — compare `lastPlayedDate` before pushing; keep newer position.
 - **Navigation:** bottom nav bar Home / Libraries / Search / Downloads; Settings behind top-bar avatar.
-- **minSdk 26, compile/targetSdk 36**, Java toolchain 21 (env: `source "../env.sh"`), desugaring on.
+- **minSdk 26, compile/targetSdk 36**, Java toolchain 21 (env set by `gradlew-remote`, or `source "../env.sh"` for plain `./gradlew`), desugaring on.
 - jellyfin-android code is **reference only** (esp. DeviceProfileBuilder, download engine, MediaSourceResolver quirks) — reimplemented in the new architecture, not ported wholesale.
 
 ## Governance: plan adherence & divergence log (HARD REQUIREMENT)
@@ -27,7 +27,7 @@ Every agent working on implementation MUST check each non-trivial decision again
 4. `Stop → stop-gate.sh` (exit 2, respect `stop_hook_active`): block turn end when uncommitted Kotlin/doc changes + stale verify (→ /verify then /checkpoint), or dirty tree older than ~45 min since last commit (→ /checkpoint).
 
 **Skills** (`.claude/skills/<name>/SKILL.md`):
-- `/verify` — `./gradlew ktlintCheck detekt testDebugUnitTest assembleDebug`; fix failures, never weaken tests to pass (use /diverge if a test is wrong); touch `.claude/state/last-verify` on green.
+- `/verify` — `gradlew-remote ktlintCheck detekt testDebugUnitTest :app:lintDebug assembleDebug` (`gradlew-remote` is the build entry point: an out-of-tree wrapper that sets the env itself and delegates to a build host when reachable — see DECISIONS.md 2026-08-28); fix failures, never weaken tests to pass (use /diverge if a test is wrong); touch `.claude/state/last-verify` on green.
 - `/checkpoint` — /verify → KDoc new/changed public APIs → update `docs/features/<feature>.md` + STATUS.md → small conventional commit.
 - `/diverge` — append DECISIONS.md entry BEFORE the diverging change.
 - `/milestone` — start: restate DoD into STATUS.md; finish: full manual DoD verification on device (adb), /verify, docs, commit + `git tag m<N>`.

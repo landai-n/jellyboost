@@ -12,6 +12,29 @@ device walk, and expect its downloads and database not to carry over. Full gate 
 the rename: ktlint + detekt + unit tests + `assembleDebug` + `assembleRelease` all green,
 baseline profile still compiles into the release APK (`assets/dexopt/baseline.prof`).
 
+## Build infrastructure: `gradlew-remote` delegation to a build host (2026-08-28)
+
+Every documented Gradle invocation now goes through `gradlew-remote`, an out-of-tree
+wrapper (beside `env.sh`) that runs the build on a workstation over rsync+SSH when it is
+reachable and falls back to the local `./gradlew` otherwise; device-bound tasks
+(`install*`, `connected*`, baseline profile) always run locally. The milestone install
+step is now remote `:app:assembleDebug` + local `adb install -r` (debug keystores are
+synchronized between the machines). `scripts/check_build_entrypoint.py` pins the verify
+skill, `CLAUDE.md`, and `docs/PLAN.md` to one shared, bare-command entry point. See
+DECISIONS.md 2026-08-28.
+
+Known issues:
+- Under delegation the local `build/` dirs go stale, so an ad-hoc **local** device task
+  pays a cold local build; the milestone flow avoids this via the pulled APK.
+- The remote work area (`/var/tmp` on the build host) accumulates per-worktree build
+  dirs; the provisioning script's `--gc` mode prunes ones untouched for 14 days.
+- The build host's filesystem is case-sensitive (ext4); a wrong-case import that
+  compiles on the Mac's APFS fails remotely. That is the stricter, correct behavior —
+  but it can look like "the remote is broken" the first time it happens.
+- The build host's clock runs ~84 s ahead of the Mac (no sudo to fix NTP there). Pulled
+  files under `build/` may carry future timestamps; nothing reads them (the commit gate
+  compares only tracked `*.kt`/`*.kts`).
+
 ## Planned milestone: M13 — Music (approved 2026-08-05; all 6 phases landed, code complete; device DoD owed)
 
 **2026-08-26 — the password field is the same height as the username field, this time

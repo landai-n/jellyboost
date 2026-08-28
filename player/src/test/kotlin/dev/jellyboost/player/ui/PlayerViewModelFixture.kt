@@ -117,8 +117,8 @@ internal abstract class PlayerViewModelFixture {
             every { styledAssSubtitles } returns flowOf(false)
         }
 
-    /** Off, so the handler flow stays null and no native library is ever asked for. */
-    protected val assSubtitles = AssSubtitleSupport(preferences, CoroutineScope(dispatcher))
+    /** Off, so the handler flow stays null and neither the native library nor the context is touched. */
+    protected val assSubtitles = AssSubtitleSupport(mockk(relaxed = true), preferences, CoroutineScope(dispatcher))
 
     protected val source =
         PlayerFixtures.remoteSource(

@@ -42,12 +42,14 @@ the sync source; `design/_shared/tokens.css` restates the Kotlin tokens).
   (`PillHeight` 44/36, `PanelRadius` 16, `OverlayInset` 10, `InsetProgressHeight` 3,
   `LibraryTileWidth/Height` 232/64, `CastHeadshotSize` 72, `DetailPosterWidth/Height`
   190/285, `RadiusXl` 20).
-- `JellyfinGradients` — adds `HeroHalo` (radial at 78%/18%) and `ScreenGlow`; existing
-  `BrandGlow`/`BrandGlowSide`/`BackdropScrim`/`ImagePlaceholder` unchanged. The scrims and
-  the placeholder resolve against `MaterialTheme.colorScheme` rather than the static
-  palette — a scrim fading to `#101010` over a light page is a seam, not a transition —
-  and the halo/glow run at roughly two-fifths of their alpha on a light page, where the
-  same wash reads as a stain. The accent gradient is brand and identical in both schemes.
+- `JellyfinGradients` — adds `HeroHalo` (radial at 78%/18%) and `ScreenGlow` beside
+  `BrandGlow`/`BrandGlowSide`/`BackdropScrim`/`ImagePlaceholder`. All six resolve against the
+  active scheme: the scrims and the placeholder read `MaterialTheme.colorScheme` — a scrim
+  fading to `#101010` over a light page is a seam, not a transition — the halo and the screen
+  glow run at roughly two-fifths of their alpha on a light page, where the same wash reads as
+  a stain, and the two brand glows take the saved canvas's own light pair (.16/.10), which is
+  nearly full strength because the auth page has nothing drawn through them. Each is two
+  prebuilt brushes behind an accessor, so the modifier element still compares equal. The accent gradient is brand and identical in both schemes.
 
 ## Component layer (`core/ui/component`)
 

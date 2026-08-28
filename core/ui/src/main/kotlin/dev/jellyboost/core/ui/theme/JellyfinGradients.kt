@@ -6,7 +6,10 @@ import android.graphics.RadialGradient
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.CacheDrawScope
+import androidx.compose.ui.draw.DrawResult
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -73,8 +76,52 @@ object JellyfinGradients {
      * A [ShaderBrush], not `Brush.radialGradient`: the radius must derive from the *measured*
      * height, or the fade is still visible where the box ends and reads as a hard seam across the
      * background (seen on the tablet in landscape, where a width-driven radius dwarfed the height).
+     *
+     * Two prebuilt instances rather than a brush built per composition: `Modifier.background`
+     * compares the brush by identity, so a fresh one per call would re-materialise the node on
+     * every recomposition of the auth screen.
      */
-    val BrandGlow: Brush =
+    val BrandGlow: Brush
+        @Composable @ReadOnlyComposable
+        get() = if (LocalIsLightTheme.current) LightBrandGlow else DarkBrandGlow
+
+    /**
+     * Fill a full-bleed box with this: the radius is sized to reach zero before any interior edge,
+     * so a smaller box cuts the gradient mid-fade and leaves a seam.
+     */
+    val BrandGlowSide: Brush
+        @Composable @ReadOnlyComposable
+        get() = if (LocalIsLightTheme.current) LightBrandGlowSide else DarkBrandGlowSide
+
+    private val DarkBrandGlow: Brush = brandGlow(BRAND_GLOW_CENTER_ALPHA, BRAND_GLOW_MID_ALPHA)
+
+    private val LightBrandGlow: Brush = brandGlow(BRAND_GLOW_CENTER_ALPHA_LIGHT, BRAND_GLOW_MID_ALPHA_LIGHT)
+
+    private val DarkBrandGlowSide: Brush = brandGlowSide(BRAND_GLOW_CENTER_ALPHA, BRAND_GLOW_MID_ALPHA)
+
+    private val LightBrandGlowSide: Brush =
+        brandGlowSide(BRAND_GLOW_CENTER_ALPHA_LIGHT, BRAND_GLOW_MID_ALPHA_LIGHT)
+
+    internal const val BRAND_GLOW_CENTER_ALPHA = 0.20f
+    internal const val BRAND_GLOW_MID_ALPHA = 0.09f
+
+    /**
+     * The saved design canvas gives the light page its own pair (`tokens.css`'s
+     * `[data-theme="light"] .brand-glow`), and it is *not* the two-fifths [heroHalo] takes: this
+     * wash is the auth page's whole decoration with nothing drawn through it, so it keeps almost
+     * its full strength and only the blue half rises to hold the cooler ground.
+     */
+    internal const val BRAND_GLOW_CENTER_ALPHA_LIGHT = 0.16f
+
+    internal const val BRAND_GLOW_MID_ALPHA_LIGHT = 0.10f
+
+    /** Where the purple centre has become the blue mid-stop, as a fraction of the radius. */
+    private const val BRAND_GLOW_MID_STOP = 0.45f
+
+    private fun brandGlow(
+        centerAlpha: Float,
+        midAlpha: Float,
+    ): Brush =
         object : ShaderBrush() {
             private val centerYFraction = 0.08f
 
@@ -83,23 +130,17 @@ object JellyfinGradients {
                 return RadialGradientShader(
                     center = Offset(x = size.width / 2f, y = centerY),
                     radius = size.height - centerY,
-                    colors =
-                        listOf(
-                            JellyfinColors.Secondary.copy(alpha = 0.20f),
-                            JellyfinColors.Primary.copy(alpha = 0.09f),
-                            Color.Transparent,
-                        ),
-                    colorStops = listOf(0f, 0.45f, 1f),
+                    colors = brandGlowColors(centerAlpha, midAlpha),
+                    colorStops = listOf(0f, BRAND_GLOW_MID_STOP, 1f),
                     tileMode = TileMode.Clamp,
                 )
             }
         }
 
-    /**
-     * Fill a full-bleed box with this: the radius is sized to reach zero before any interior edge,
-     * so a smaller box cuts the gradient mid-fade and leaves a seam.
-     */
-    val BrandGlowSide: Brush =
+    private fun brandGlowSide(
+        centerAlpha: Float,
+        midAlpha: Float,
+    ): Brush =
         object : ShaderBrush() {
             private val centerXFraction = 0.28f
 
@@ -109,16 +150,21 @@ object JellyfinGradients {
                 RadialGradientShader(
                     center = Offset(x = size.width * centerXFraction, y = 0f),
                     radius = size.width * radiusFraction,
-                    colors =
-                        listOf(
-                            JellyfinColors.Secondary.copy(alpha = 0.20f),
-                            JellyfinColors.Primary.copy(alpha = 0.09f),
-                            Color.Transparent,
-                        ),
-                    colorStops = listOf(0f, 0.45f, 1f),
+                    colors = brandGlowColors(centerAlpha, midAlpha),
+                    colorStops = listOf(0f, BRAND_GLOW_MID_STOP, 1f),
                     tileMode = TileMode.Clamp,
                 )
         }
+
+    private fun brandGlowColors(
+        centerAlpha: Float,
+        midAlpha: Float,
+    ): List<Color> =
+        listOf(
+            JellyfinColors.Secondary.copy(alpha = centerAlpha),
+            JellyfinColors.Primary.copy(alpha = midAlpha),
+            Color.Transparent,
+        )
 
     internal const val HERO_HALO_CENTER_X_FRACTION = 0.78f
 
@@ -185,29 +231,36 @@ fun Modifier.screenGlow(): Modifier {
         } else {
             JellyfinGradients.SCREEN_GLOW_ALPHA
         }
-    return drawWithCache {
-        val paint =
-            Paint().apply {
-                isDither = true
-                shader =
-                    RadialGradient(
-                        size.width * JellyfinGradients.SCREEN_GLOW_CENTER_X_FRACTION,
-                        0f,
-                        size.width * JellyfinGradients.SCREEN_GLOW_RADIUS_FRACTION,
-                        intArrayOf(
-                            JellyfinColors.Secondary.copy(alpha = alpha).toArgb(),
-                            android.graphics.Color.TRANSPARENT,
-                        ),
-                        floatArrayOf(0f, JellyfinGradients.SCREEN_GLOW_FADE_STOP),
-                        android.graphics.Shader.TileMode.CLAMP,
-                    )
-            }
-        onDrawBehind {
-            drawIntoCanvas { canvas ->
-                canvas.nativeCanvas.drawRect(0f, 0f, size.width, size.height, paint)
+    // Remembered on the alpha the lambda now captures: a fresh lambda per recomposition makes the
+    // `drawWithCache` element compare unequal, and its setter throws away the very `Paint` and
+    // native shader this factory exists to keep (`GlassDefaults.glassSurface` carries the same rule).
+    val onBuildDrawCache: CacheDrawScope.() -> DrawResult =
+        remember(alpha) {
+            {
+                val paint =
+                    Paint().apply {
+                        isDither = true
+                        shader =
+                            RadialGradient(
+                                size.width * JellyfinGradients.SCREEN_GLOW_CENTER_X_FRACTION,
+                                0f,
+                                size.width * JellyfinGradients.SCREEN_GLOW_RADIUS_FRACTION,
+                                intArrayOf(
+                                    JellyfinColors.Secondary.copy(alpha = alpha).toArgb(),
+                                    android.graphics.Color.TRANSPARENT,
+                                ),
+                                floatArrayOf(0f, JellyfinGradients.SCREEN_GLOW_FADE_STOP),
+                                android.graphics.Shader.TileMode.CLAMP,
+                            )
+                    }
+                onDrawBehind {
+                    drawIntoCanvas { canvas ->
+                        canvas.nativeCanvas.drawRect(0f, 0f, size.width, size.height, paint)
+                    }
+                }
             }
         }
-    }
+    return drawWithCache(onBuildDrawCache)
 }
 
 /**
@@ -219,8 +272,9 @@ fun Modifier.screenGlow(): Modifier {
  * ellipse the fade completes at ~83% of the box height; the top and end edges that still clip it
  * are window edges with no page beyond them.
  *
- * Dithered framework [Paint] for [screenGlow]'s reason. [RadialGradient] cannot express an ellipse,
- * hence the local matrix scaling the circular shader about its own centre.
+ * Dithered framework [Paint] for [screenGlow]'s reason, and its `remember` for [screenGlow]'s reason.
+ * [RadialGradient] cannot express an ellipse, hence the local matrix scaling the circular shader
+ * about its own centre.
  */
 @Composable
 fun Modifier.heroHalo(): Modifier {
@@ -229,36 +283,44 @@ fun Modifier.heroHalo(): Modifier {
         if (light) JellyfinGradients.HERO_HALO_CENTER_ALPHA_LIGHT else JellyfinGradients.HERO_HALO_CENTER_ALPHA
     val midAlpha =
         if (light) JellyfinGradients.HERO_HALO_MID_ALPHA_LIGHT else JellyfinGradients.HERO_HALO_MID_ALPHA
-    return drawWithCache {
-        val centerX = size.width * JellyfinGradients.HERO_HALO_CENTER_X_FRACTION
-        val centerY = size.height * JellyfinGradients.HERO_HALO_CENTER_Y_FRACTION
-        val radiusX = size.width * JellyfinGradients.HERO_HALO_RADIUS_X_FRACTION
-        val radiusY = size.height * JellyfinGradients.HERO_HALO_RADIUS_Y_FRACTION
-        val paint =
-            Paint().apply {
-                isDither = true
-                shader =
-                    RadialGradient(
-                        centerX,
-                        centerY,
-                        radiusX,
-                        intArrayOf(
-                            JellyfinColors.Secondary.copy(alpha = centerAlpha).toArgb(),
-                            JellyfinColors.Primary.copy(alpha = midAlpha).toArgb(),
-                            android.graphics.Color.TRANSPARENT,
-                        ),
-                        floatArrayOf(0f, JellyfinGradients.HERO_HALO_MID_STOP, JellyfinGradients.HERO_HALO_FADE_STOP),
-                        android.graphics.Shader.TileMode.CLAMP,
-                    ).apply {
-                        setLocalMatrix(
-                            Matrix().apply { setScale(1f, radiusY / radiusX, centerX, centerY) },
-                        )
+    val onBuildDrawCache: CacheDrawScope.() -> DrawResult =
+        remember(centerAlpha, midAlpha) {
+            {
+                val centerX = size.width * JellyfinGradients.HERO_HALO_CENTER_X_FRACTION
+                val centerY = size.height * JellyfinGradients.HERO_HALO_CENTER_Y_FRACTION
+                val radiusX = size.width * JellyfinGradients.HERO_HALO_RADIUS_X_FRACTION
+                val radiusY = size.height * JellyfinGradients.HERO_HALO_RADIUS_Y_FRACTION
+                val paint =
+                    Paint().apply {
+                        isDither = true
+                        shader =
+                            RadialGradient(
+                                centerX,
+                                centerY,
+                                radiusX,
+                                intArrayOf(
+                                    JellyfinColors.Secondary.copy(alpha = centerAlpha).toArgb(),
+                                    JellyfinColors.Primary.copy(alpha = midAlpha).toArgb(),
+                                    android.graphics.Color.TRANSPARENT,
+                                ),
+                                floatArrayOf(
+                                    0f,
+                                    JellyfinGradients.HERO_HALO_MID_STOP,
+                                    JellyfinGradients.HERO_HALO_FADE_STOP,
+                                ),
+                                android.graphics.Shader.TileMode.CLAMP,
+                            ).apply {
+                                setLocalMatrix(
+                                    Matrix().apply { setScale(1f, radiusY / radiusX, centerX, centerY) },
+                                )
+                            }
                     }
-            }
-        onDrawBehind {
-            drawIntoCanvas { canvas ->
-                canvas.nativeCanvas.drawRect(0f, 0f, size.width, size.height, paint)
+                onDrawBehind {
+                    drawIntoCanvas { canvas ->
+                        canvas.nativeCanvas.drawRect(0f, 0f, size.width, size.height, paint)
+                    }
+                }
             }
         }
-    }
+    return drawWithCache(onBuildDrawCache)
 }

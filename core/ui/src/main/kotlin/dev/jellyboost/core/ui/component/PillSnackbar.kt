@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarData
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarVisuals
@@ -34,6 +33,16 @@ import dev.jellyboost.core.ui.theme.popShadow
 
 /** Near-solid rather than glass: blurring what is behind a message only makes it harder to read. */
 private val SnackbarContainer = Color(color = 0xFF202020).copy(alpha = 0.92f)
+
+/**
+ * The pill stays dark in both schemes — a message pill inverts the page it interrupts, the
+ * M3-snackbar convention — so its contents pin to over-dark ink rather than following the scheme:
+ * scheme ink on the light side is near-black on near-black.
+ */
+private val SnackbarContent = Color.White
+
+/** The dark-side brand accent, 4.56:1 against the pill at its lightest (over the light page). */
+private val SnackbarAction = Color(color = 0xFF00A4DC)
 
 private val SnackbarHorizontalPadding = 18.dp
 
@@ -78,14 +87,14 @@ fun PillSnackbar(
                 .popShadow(CircleShape)
                 .clip(CircleShape)
                 .background(color = SnackbarContainer, shape = CircleShape)
-                .border(GlassDefaults.HairlineWidth, GlassDefaults.Hairline, CircleShape)
+                .border(GlassDefaults.HairlineWidth, GlassDefaults.DarkHairline, CircleShape)
                 .padding(horizontal = SnackbarHorizontalPadding),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = snackbarData.visuals.message,
             style = SnackbarLabel,
-            color = MaterialTheme.colorScheme.onSurface,
+            color = SnackbarContent,
             textAlign = TextAlign.Center,
             maxLines = SNACKBAR_MAX_LINES,
             overflow = TextOverflow.Ellipsis,
@@ -109,7 +118,7 @@ fun PillSnackbar(
                 Text(
                     text = actionLabel,
                     style = SnackbarActionLabel,
-                    color = MaterialTheme.colorScheme.primary,
+                    color = SnackbarAction,
                     maxLines = 1,
                     modifier = Modifier.padding(horizontal = ActionPadding),
                 )

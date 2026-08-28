@@ -29,6 +29,11 @@ dependencies {
     implementation(libs.androidx.media3.cast)
     implementation(libs.jellyfin.media3.ffmpeg.decoder)
 
+    // Styled ASS/SSA (M14 track 6), behind a default-off preference. `media3-effect` is pinned
+    // alongside it so the whole Media3 graph stays on one version.
+    implementation(libs.libass.media)
+    implementation(libs.androidx.media3.effect)
+
     // Chromecast. `media3-cast` brings the last three transitively; they are declared because
     // this module names their types directly (CastContext/CastOptions, MediaRouteButton, and the
     // AppCompat theme the MediaRouter dialogs need).

@@ -31,6 +31,10 @@
 #     constructors (including androidx.media3.decoder.ffmpeg.FfmpegAudioRenderer, which is what
 #     EXTENSION_RENDERER_MODE_PREFER instantiates), and org.jellyfin.media3:media3-ffmpeg-decoder
 #     keeps its own JNI entry points (`native <methods>` + FfmpegAudioDecoder.growOutputBuffer).
+#   * libass (io.github.peerless2012:ass-kt) — the AAR's own proguard.txt keeps Ass, AssTrack,
+#     AssRender, AssFrame, AssTex and AssEvent whole, which is every type the JNI layer resolves
+#     by name. `ass-media`, the Media3 extension on top of it, ships an *empty* proguard.txt —
+#     hence the one rule below.
 #   * OkHttp — okhttp ships its -dontwarn set for the optional Conscrypt/BouncyCastle/JSR-305
 #     compile-only dependencies.
 #   * Navigation — navigation-common keeps Navigator subclasses and RuntimeVisibleAnnotations.
@@ -88,6 +92,20 @@
 # surface and a future SDK bump could route one of them through reflective (de)serialisation. The
 # whole model tree is data classes we serialise anyway, so keeping it costs little.
 -keep class org.jellyfin.sdk.model.** { *; }
+
+
+# ---------------------------------------------------------------------------
+# libass MKV support — two MatroskaExtractor fields read reflectively
+# ---------------------------------------------------------------------------
+# io.github.peerless2012.ass.media.extractor.AssMatroskaExtractor reaches into its superclass for
+# `extractorOutput` and `subtitleSample` via Class.getDeclaredField, in a *static* initialiser: a
+# rename or a shrink turns the first embedded-ASS MKV into an ExceptionInInitializerError, in
+# release builds only, on a path debug never exercises. ass-media's proguard.txt is empty, so
+# nothing keeps them but this. Both field names verified present in media3 1.9.0.
+-keepclassmembers class androidx.media3.extractor.mkv.MatroskaExtractor {
+    private androidx.media3.extractor.ExtractorOutput extractorOutput;
+    private androidx.media3.common.util.ParsableByteArray subtitleSample;
+}
 
 
 # ---------------------------------------------------------------------------

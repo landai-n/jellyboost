@@ -60,6 +60,11 @@ haze = "1.7.2"
 # Media
 media3 = "1.9.0"
 jellyfinMedia3Ffmpeg = "1.9.0+1"
+# M14 track 6: libass under Media3 (styled ASS/SSA). 0.5.1's POM declares media3 1.8.0, so it
+# resolves against our 1.9.0 without moving the pin the ffmpeg decoder holds down (DECISIONS.md
+# 2026-07-28, 2026-08-28). It pulls `media3-effect`, which is why that module is declared here too:
+# left implicit it would resolve at 1.8.0 while everything else sits at 1.9.0.
+libassAndroid = "0.5.1"
 # M12 Chromecast. The GMS Cast framework is pinned to exactly what media3-cast 1.9.0's POM
 # declares — CastPlayer talks to it directly, so the two move together, not independently.
 playServicesCast = "22.1.0"
@@ -202,6 +207,11 @@ androidx-media3-transformer = { group = "androidx.media3", name = "media3-transf
 # M12: `CastPlayer` — an `androidx.media3.common.Player` talking to a Cast receiver.
 androidx-media3-cast = { group = "androidx.media3", name = "media3-cast", version.ref = "media3" }
 jellyfin-media3-ffmpeg-decoder = { group = "org.jellyfin.media3", name = "media3-ffmpeg-decoder", version.ref = "jellyfinMedia3Ffmpeg" }
+# M14 track 6. `ass-media` is the Media3 extension (renderers/parser/overlay); `ass-kt` rides in
+# transitively and carries libass itself, one `libass.so` per ABI.
+libass-media = { group = "io.github.peerless2012", name = "ass-media", version.ref = "libassAndroid" }
+# Declared only to hold `ass-media`'s transitive `media3-effect` at the same version as the rest.
+androidx-media3-effect = { group = "androidx.media3", name = "media3-effect", version.ref = "media3" }
 
 # Cast (M12) — all confined to `:player`'s `cast/` package so a GMS-less device never
 # class-loads one of these types.

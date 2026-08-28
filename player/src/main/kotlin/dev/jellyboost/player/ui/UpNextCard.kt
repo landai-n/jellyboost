@@ -31,6 +31,7 @@ import dev.jellyboost.core.ui.component.GhostPillButton
 import dev.jellyboost.core.ui.component.GlassIconButton
 import dev.jellyboost.core.ui.component.JellyfinAsyncImage
 import dev.jellyboost.core.ui.theme.Dimens
+import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.core.ui.theme.glassSurface
 import dev.jellyboost.player.R
@@ -60,8 +61,12 @@ internal fun UpNextCard(
                 // A cap, not a size: content wraps inside it, so fontScale 2.0 grows the card
                 // downwards rather than off-screen (WCAG 1.4.4). Keep the pill on its own row.
                 .widthIn(max = CARD_MAX_WIDTH)
-                .glassSurface(shape = RoundedCornerShape(Dimens.CardCornerRadius), tint = VIDEO_GLASS_FILL)
-                .padding(Dimens.SpaceMedium),
+                .glassSurface(
+                    shape = RoundedCornerShape(Dimens.CardCornerRadius),
+                    // Dark edge with the dark fill: both sit on the film, not on the page.
+                    borderColor = GlassDefaults.DarkHairline,
+                    tint = VIDEO_GLASS_FILL,
+                ).padding(Dimens.SpaceMedium),
         verticalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
     ) {
         Row(
@@ -99,6 +104,10 @@ internal fun UpNextCard(
             modifier = Modifier.align(Alignment.End),
             small = true,
             leadingIcon = Icons.Filled.SkipNext,
+            // Drawn inside this card's own dark glass, so it takes the over-media set too.
+            tint = VIDEO_GLASS_FILL,
+            contentColor = Color.White,
+            borderColor = GlassDefaults.DarkGhostBorder,
         )
     }
 }

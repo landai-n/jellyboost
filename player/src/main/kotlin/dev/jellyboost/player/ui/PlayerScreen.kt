@@ -397,7 +397,9 @@ private fun WaitingForGroupOverlay(
                 .background(color = OVERLAY_SCRIM, shape = RoundedCornerShape(Dimens.PanelRadius))
                 .border(
                     width = GlassDefaults.HairlineWidth,
-                    color = GlassDefaults.Hairline,
+                    // The dark hairline explicitly: this panel's fill is literal black over the
+                    // film, so a page-scheme edge would be black on black in the light theme.
+                    color = GlassDefaults.DarkHairline,
                     shape = RoundedCornerShape(Dimens.PanelRadius),
                 ).padding(Dimens.SpaceExtraLarge),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -467,8 +469,11 @@ private fun SkipSegmentButton(
         modifier = modifier,
         small = true,
         leadingIcon = Icons.Filled.SkipNext,
-        // Over raw video with no controls scrim behind it: the flat dark fill, not white@6%.
+        // Over raw video with no controls scrim behind it: the flat dark fill, not white@6% —
+        // and with it the ink and edge, which cannot follow a page this pill is never drawn on.
         tint = VIDEO_GLASS_FILL,
+        contentColor = Color.White,
+        borderColor = GlassDefaults.DarkGhostBorder,
     )
 }
 

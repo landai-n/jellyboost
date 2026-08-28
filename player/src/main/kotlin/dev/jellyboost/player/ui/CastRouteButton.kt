@@ -47,6 +47,9 @@ import javax.inject.Inject
  * is now attached unconditionally.
  *
  * @param size diameter of the glass circle; [modifier] carries the frame around it.
+ * @param tint and [borderColor] travel with [surfaceTint]: drawn over the film frame this glyph is
+ *   on something dark in both schemes, so it stops following the page's ink the way its neighbours
+ *   in the player's top bar already do. Over page chrome the defaults are correct.
  */
 @Composable
 fun CastRouteButton(
@@ -54,6 +57,8 @@ fun CastRouteButton(
     glassContainer: Boolean = false,
     size: Dp = Dimens.PillHeightSmall,
     surfaceTint: Color = GlassDefaults.Fill,
+    tint: Color = GlassIconTint,
+    borderColor: Color = GlassDefaults.Hairline,
 ) {
     val viewModel: CastRouteButtonViewModel = hiltViewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -78,7 +83,10 @@ fun CastRouteButton(
 
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         Box(
-            modifier = Modifier.size(size).glassSurface(shape = CircleShape, tint = surfaceTint),
+            modifier =
+                Modifier
+                    .size(size)
+                    .glassSurface(shape = CircleShape, borderColor = borderColor, tint = surfaceTint),
             contentAlignment = Alignment.Center,
         ) {
             // The framework drawable obeys neither GlassIconSize nor GlassIconTint; description
@@ -86,7 +94,7 @@ fun CastRouteButton(
             Icon(
                 imageVector = if (connected != null) Icons.Filled.CastConnected else Icons.Filled.Cast,
                 contentDescription = null,
-                tint = GlassIconTint,
+                tint = tint,
                 modifier = Modifier.size(GlassIconSize),
             )
             MediaRouteButtonHost(

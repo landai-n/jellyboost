@@ -35,7 +35,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -74,6 +73,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.jellyboost.core.ui.component.GlassIconButton
 import dev.jellyboost.core.ui.theme.Dimens
+import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.core.ui.theme.glassSurface
 import dev.jellyboost.player.PlayMethod
@@ -175,6 +175,10 @@ private fun TopBar(
                 glassContainer = true,
                 size = CHROME_BUTTON,
                 surfaceTint = VIDEO_GLASS_FILL,
+                // The back button's treatment, one slot along: full white over a moving image,
+                // and the dark edge that goes with the dark fill.
+                tint = Color.White,
+                borderColor = GlassDefaults.DarkHairline,
             )
         }
     }
@@ -220,7 +224,7 @@ private fun TitleStack(
  */
 @Composable
 private fun TagPill(text: String) {
-    val primary = MaterialTheme.colorScheme.primary
+    val primary = OVER_MEDIA_ACCENT
     // From the configuration, not `Locale.getDefault()`: the latter is read once and never observed,
     // so a language switch would keep casing by the old locale (lint: `NonObservableLocale`).
     val locale = LocalConfiguration.current.locales[0]
@@ -297,7 +301,10 @@ private fun SeekButton(
 ) {
     Button(
         onClick = onClick,
-        modifier = Modifier.size(SEEK_BUTTON).glassSurface(CircleShape, tint = VIDEO_GLASS_FILL),
+        modifier =
+            Modifier
+                .size(SEEK_BUTTON)
+                .glassSurface(CircleShape, borderColor = GlassDefaults.DarkHairline, tint = VIDEO_GLASS_FILL),
         shape = CircleShape,
         colors =
             ButtonDefaults.buttonColors(
@@ -726,7 +733,7 @@ private fun ScrubberTrack(
                 Modifier
                     .fillMaxWidth(fraction.coerceIn(0f, 1f))
                     .fillMaxHeight()
-                    .background(MaterialTheme.colorScheme.primary),
+                    .background(OVER_MEDIA_ACCENT),
         )
     }
 }
@@ -780,7 +787,7 @@ private fun SheetChip(
                 modifier =
                     Modifier
                         .size(CHIP_HEIGHT)
-                        .glassSurface(CircleShape, tint = VIDEO_GLASS_FILL)
+                        .glassSurface(CircleShape, borderColor = GlassDefaults.DarkHairline, tint = VIDEO_GLASS_FILL)
                         .clickable(role = Role.Button, onClick = onClick)
                         .then(state),
                 contentAlignment = Alignment.Center,
@@ -806,7 +813,7 @@ private fun SheetChip(
                     // A *minimum*, not a fixed height: at accessibility font scales the 12sp label is
                     // taller than the 32dp capsule, and a hard `height` clipped the word.
                     .heightIn(min = CHIP_HEIGHT)
-                    .glassSurface(CircleShape, tint = VIDEO_GLASS_FILL)
+                    .glassSurface(CircleShape, borderColor = GlassDefaults.DarkHairline, tint = VIDEO_GLASS_FILL)
                     .clickable(role = Role.Button, onClick = onClick)
                     .then(state)
                     .padding(horizontal = CHIP_PADDING),
@@ -865,6 +872,14 @@ private val SCRIM = Color.Black.copy(alpha = 0.62f)
  * surface of every glass control over the film. Shared with `PlayerScreen`.
  */
 internal val VIDEO_GLASS_FILL = Color.Black.copy(alpha = 0.6f)
+
+/**
+ * The brand blue as a literal, for the two accents drawn over the film — the speed/method tag's fill
+ * and the seek bar's played portion. `colorScheme.primary` would darken them to the light scheme's
+ * `#00769E` (or the wallpaper's, under Material You) over a frame that is dark in both schemes,
+ * which is the same reason the discs and scrims above stay literal.
+ */
+private val OVER_MEDIA_ACCENT = Color(0xFF00A4DC)
 
 // --- Top bar -----------------------------------------------------------------------------------
 

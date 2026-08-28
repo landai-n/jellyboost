@@ -107,15 +107,73 @@ and `subtitleSample` reflectively from a **static** initialiser, and `ass-media`
 empty — unkept, the first embedded-ASS MKV would be an `ExceptionInInitializerError` in release
 builds only.
 
+## Found on device and fixed — no spaces between words (2026-08-28)
+
+The first device run answered check (1) in the affirmative — styled ASS *is* drawn on the production
+`PlayerView`/`SurfaceView` path at `OVERLAY_OPEN_GL`, so the Wholphin #1049 failure does not
+reproduce here — and immediately produced a second finding: **the words ran together.** Glyphs,
+colours, outlines and positions were all correct; only the inter-word gaps were missing.
+
+**Root cause: `ass-kt` 0.5.1 ships a `libass.so` whose fontconfig has no configuration it can find
+on a device.** The binary carries its build-tree paths verbatim —
+`.../lib_ass/.cxx/RelWithDebInfo/<hash>/<abi>/etc/fonts`, `.../share/fontconfig/conf.avail` and
+`.../var/cache/fontconfig`, all under the CI runner's home directory. None exists on Android, so
+fontconfig logs *"No usable fontconfig configuration file found, using fallback"* and falls back to
+a built-in document that lists `/system/fonts` and `/product/fonts` — but **no `conf.d` at all**,
+and a cache directory that is equally absent.
+
+Losing `conf.d` loses the generic-family rules, and `sans-serif` is precisely what libass asks for.
+`AssKt.c` calls `ass_set_fonts(renderer, NULL, "sans-serif", ASS_FONTPROVIDER_FONTCONFIG, NULL, 1)`,
+and libass's fontconfig provider builds its entire fallback list once, by running `FcFontSort` over a
+pattern whose only family is `sans-serif` (`ass_fontconfig.c: cache_fallbacks`). With no alias to
+resolve it, that sort degenerates into an arbitrary ordering of every font on the device;
+`get_fallback` then serves each codepoint from the first entry in that order which covers it. Letters
+are covered only by real text fonts, so they still come out right — which is why the rendering looked
+correct. **U+0020 is covered by nearly everything installed**, including icon and clock faces whose
+space advance is zero, so every inter-word gap was measured against whichever of those sorted first.
+
+`default_font` is `NULL` in that same call, so libass has no last-resort font file either; there is
+nothing below the broken sort to catch this.
+
+**Fix: give fontconfig a configuration that exists.** `AssFontConfig` writes a small `fonts.conf`
+into the app's `filesDir` and names it in `FONTCONFIG_FILE` (via `android.system.Os.setenv`) from
+`AssSubtitleSupport.createHandler()` — before anything can load libass, because that variable is read
+once, inside the `ass_set_fonts` call `AssHandler` makes when it builds its renderer. The file
+carries three things:
+
+1. the Android font directories (`/system/fonts`, `/product/fonts`, `/system_ext/fonts`,
+   `/system/font`, `/data/fonts`; fontconfig ignores the absent ones);
+2. **the `sans-serif` alias** — `Roboto`, `Noto Sans`, `Droid Sans`, `DejaVu Sans` — which is the
+   load-bearing part: it is what turns `cache_fallbacks`' arbitrary sort into a real one;
+3. a `cachedir` under the app's `cacheDir`, which is writable, so a session's first subtitle no
+   longer pays an uncached scan of `/system/fonts`.
+
+Same remedy, same platform gap, as ffmpeg-kit's `FFmpegKitConfig.setFontconfigConfigurationPath`:
+Android ships no fontconfig configuration, and a library that assumes one has to be handed one.
+
+Two things this deliberately is **not**: a bundled fallback font (unnecessary — `/system/fonts` is
+present and readable, only unreachable through a broken sort), and a library bump (0.5.1 is the
+latest release; nothing upstream since it touches fonts, and libass-android has no issue reporting
+this). No sibling: `sans-serif` is the only generic family libass ever asks fontconfig for, both as
+`family_default` and as the `cache_fallbacks` pattern. Attached MKV fonts are unaffected — they
+reach libass through `ass_add_font` and its embedded provider, which never consults fontconfig.
+
+`AssFontConfigTest` pins the document's directories, the alias and its preference order, the writable
+cache directory, the rewrite-only-on-change behaviour, and — as a source check, since an `AssHandler`
+cannot be built off a device — that the environment is set *before* the handler that reads it.
+
 ## Device checklist — still owed
 
 Nothing below has run on hardware. Until it has, the switch stays default-off and this feature is
 experimental.
 
-1. **Visible at all.** Styled ASS actually drawn on the production `PlayerView`/`SurfaceView` path at
-   `OVERLAY_OPEN_GL`. This is the Wholphin #1049 failure — its first integration was reverted because
-   ASS was completely invisible in direct-rendering / hardware-overlay mode — and it is pass/fail for
-   the whole feature.
+1. ~~**Visible at all.**~~ **Passed 2026-08-28.** Styled ASS is drawn on the production
+   `PlayerView`/`SurfaceView` path at `OVERLAY_OPEN_GL`; the Wholphin #1049 failure — its first
+   integration was reverted because ASS was completely invisible in direct-rendering /
+   hardware-overlay mode — does not reproduce here. The same run found the missing inter-word spaces
+   fixed above, so **re-check spacing while walking the rest**: real gaps between words, and the
+   default font a style whose family is absent falls back to (it should now be Roboto rather than
+   whatever sorted first).
 2. **Embedded MKV.** A direct-play H.264 MKV with an embedded ASS track: attached fonts, animation
    and karaoke all rendering.
 3. **External sidecar.** A downloaded item's `.ass` sidecar rendering identically, with the

@@ -522,7 +522,8 @@ it, `io.github.peerless2012:ass-media` renders the file with libass itself, at
 
 | Class | Responsibility |
 |---|---|
-| `session/AssSubtitleSupport` | `@Singleton`. Reads `styledAssSubtitles`, creates the `AssHandler`, forces `System.loadLibrary` while a fallback is still possible, publishes the handler for the UI, and releases it. |
+| `session/AssSubtitleSupport` | `@Singleton`. Reads `styledAssSubtitles`, installs the fontconfig configuration, creates the `AssHandler`, forces `System.loadLibrary` while a fallback is still possible, publishes the handler for the UI, and releases it. |
+| `session/AssFontConfig` | The `fonts.conf` libass is pointed at through `FONTCONFIG_FILE`, because the one compiled into `ass-kt` names CI build-tree paths that cannot exist on a device. |
 | `session/AssMergeCompat` | `styledAssSurvivesMerge(spec)` — whether libass's one-prefix track lookup can survive how this item's source is merged. |
 
 Three wiring points, all wrapping rather than replacing:
@@ -536,6 +537,16 @@ Three wiring points, all wrapping rather than replacing:
   beside Media3's own cue output, and removes exactly that view again when the handler goes.
 - Nothing else moves: the device profile, `PlaybackInfoResolver`, `ExoMediaSourceFactory`,
   `MediaItems` and `TrackSelectionController` are all format-agnostic and unchanged.
+
+**Fonts.** `ass-kt` 0.5.1 ships a `libass.so` whose fontconfig looks for `fonts.conf` under the CI
+runner's home directory, so on a device fontconfig finds nothing, falls back to a document with no
+`conf.d`, and can no longer resolve `sans-serif` — the one family libass builds its entire fallback
+sort from. Every codepoint then comes from the first font in an arbitrary order that covers it, which
+is right for letters and wrong for U+0020: icon and clock faces cover the space and give it a zero
+advance, so words run together while everything else looks correct. `AssFontConfig` writes a
+`fonts.conf` naming the Android font directories, the `sans-serif` alias and a writable cache
+directory, and `createHandler` sets `FONTCONFIG_FILE` to it before anything can load libass. Failing
+that leaves the platform's defaults in place and is logged, not fatal. See DECISIONS.md, 2026-08-28.
 
 **When it takes effect.** There is one process-wide `ExoPlayer` and the preference is read once per
 *player build*, which is the only moment the renderers, the extractors and the subtitle parser can be

@@ -549,10 +549,14 @@ private fun LazyListScope.downloadedGroup(
     }
     // An album's tracks all share the header's one cover, so repeating it down the list says nothing.
     val showArtwork = !(group.isCollapsible && kind == DownloadKind.MUSIC)
+    // Two node shapes, so two content types: one pool holding both would hand a recycled artless row
+    // to a row that needs an image node, and Lazy layout would rebuild it from scratch anyway.
+    val rowContentType =
+        if (showArtwork) DownloadsContentType.DOWNLOADED_ROW else DownloadsContentType.DOWNLOADED_ROW_ARTLESS
     items(
         items = group.items,
         key = { it.itemId },
-        contentType = { DownloadsContentType.DOWNLOADED_ROW },
+        contentType = { rowContentType },
     ) { item ->
         DownloadedRow(
             item = item,
@@ -1233,6 +1237,7 @@ private enum class DownloadsContentType {
     KIND_HEADER,
     HEADER,
     DOWNLOADED_ROW,
+    DOWNLOADED_ROW_ARTLESS,
     QUEUE_ACTIONS,
     QUEUE_ROW,
     STATE,

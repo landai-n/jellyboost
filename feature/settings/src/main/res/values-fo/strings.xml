@@ -68,5 +68,5 @@
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Stílaðir ASS-undirtekstir</string>
-    <string name="settings_styled_ass_supporting">Tekna ASS/SSA við libass: stavasnið, staðseting og brellur. Royndarført; virkar á næsta video, tú byrjar.</string>
+    <string name="settings_styled_ass_supporting">Tekna ASS/SSA við libass: stavasnið, staðseting og brellur. Royndarført; virkar á næsta video, tú byrjar, tá einki annað spælir.</string>
 </resources>

@@ -70,5 +70,5 @@
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Oblikovani podnapisi ASS</string>
-    <string name="settings_styled_ass_supporting">ASS/SSA izriše z libass: pisave, postavitev in učinki. Poskusno; velja za naslednji zagnani videoposnetek.</string>
+    <string name="settings_styled_ass_supporting">ASS/SSA izriše z libass: pisave, postavitev in učinki. Poskusno; velja za naslednji zagnani videoposnetek, ko se ne predvaja nič drugega.</string>
 </resources>

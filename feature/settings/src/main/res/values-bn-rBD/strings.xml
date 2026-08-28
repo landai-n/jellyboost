@@ -64,5 +64,5 @@
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">স্টাইলযুক্ত ASS সাবটাইটেল</string>
-    <string name="settings_styled_ass_supporting">libass দিয়ে ASS/SSA আঁকে: ফন্ট, অবস্থান ও এফেক্ট। পরীক্ষামূলক; পরের বার ভিডিও চালু করলে কার্যকর হবে।</string>
+    <string name="settings_styled_ass_supporting">libass দিয়ে ASS/SSA আঁকে: ফন্ট, অবস্থান ও এফেক্ট। পরীক্ষামূলক; অন্য কিছু না চললে পরের বার ভিডিও চালু করলে কার্যকর হবে।</string>
 </resources>

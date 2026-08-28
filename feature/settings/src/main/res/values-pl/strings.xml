@@ -70,5 +70,5 @@
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Stylizowane napisy ASS</string>
-    <string name="settings_styled_ass_supporting">Rysuje ASS/SSA za pomocą libass: czcionki, pozycjonowanie i efekty. Eksperymentalne; działa od następnego odtwarzanego wideo.</string>
+    <string name="settings_styled_ass_supporting">Rysuje ASS/SSA za pomocą libass: czcionki, pozycjonowanie i efekty. Eksperymentalne; działa od następnego odtwarzanego wideo, gdy nic innego nie jest odtwarzane.</string>
 </resources>

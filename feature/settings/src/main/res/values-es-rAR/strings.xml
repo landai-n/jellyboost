@@ -64,5 +64,5 @@
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Subtítulos ASS con estilo</string>
-    <string name="settings_styled_ass_supporting">Dibuja ASS/SSA con libass: fuentes, posición y efectos. Experimental; se aplica al próximo video que inicies.</string>
+    <string name="settings_styled_ass_supporting">Dibuja ASS/SSA con libass: fuentes, posición y efectos. Experimental; se aplica al próximo video que inicies cuando no haya nada más en reproducción.</string>
 </resources>

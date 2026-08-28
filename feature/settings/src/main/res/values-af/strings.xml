@@ -68,5 +68,5 @@
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Gestileerde ASS-onderskrifte</string>
-    <string name="settings_styled_ass_supporting">Teken ASS/SSA met libass: lettertipes, plasing en effekte. Eksperimenteel; geld vir die volgende video wat jy begin.</string>
+    <string name="settings_styled_ass_supporting">Teken ASS/SSA met libass: lettertipes, plasing en effekte. Eksperimenteel; geld vir die volgende video wat jy begin as niks anders speel nie.</string>
 </resources>

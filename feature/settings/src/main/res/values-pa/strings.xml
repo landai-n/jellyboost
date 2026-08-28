@@ -68,5 +68,5 @@
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">ਸਟਾਈਲ ਵਾਲੇ ASS ਸਬਟਾਈਟਲ</string>
-    <string name="settings_styled_ass_supporting">libass ਨਾਲ ASS/SSA ਬਣਾਉਂਦਾ ਹੈ: ਫੌਂਟ, ਸਥਿਤੀ ਅਤੇ ਪ੍ਰਭਾਵ। ਪ੍ਰਯੋਗਾਤਮਕ; ਅਗਲੀ ਵਾਰ ਵੀਡੀਓ ਚਲਾਉਣ \'ਤੇ ਲਾਗੂ ਹੋਵੇਗਾ।</string>
+    <string name="settings_styled_ass_supporting">libass ਨਾਲ ASS/SSA ਬਣਾਉਂਦਾ ਹੈ: ਫੌਂਟ, ਸਥਿਤੀ ਅਤੇ ਪ੍ਰਭਾਵ। ਪ੍ਰਯੋਗਾਤਮਕ; ਜਦੋਂ ਹੋਰ ਕੁਝ ਨਾ ਚੱਲ ਰਿਹਾ ਹੋਵੇ, ਅਗਲੀ ਵਾਰ ਵੀਡੀਓ ਚਲਾਉਣ \'ਤੇ ਲਾਗੂ ਹੋਵੇਗਾ।</string>
 </resources>

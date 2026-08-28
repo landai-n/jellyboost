@@ -64,5 +64,5 @@
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Legendas ASS estilizadas</string>
-    <string name="settings_styled_ass_supporting">Desenha ASS/SSA com libass: tipos de letra, posicionamento e efeitos. Experimental; aplica-se ao próximo vídeo que iniciar.</string>
+    <string name="settings_styled_ass_supporting">Desenha ASS/SSA com libass: tipos de letra, posicionamento e efeitos. Experimental; aplica-se ao próximo vídeo que iniciar quando nada mais estiver em reprodução.</string>
 </resources>

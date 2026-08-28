@@ -68,5 +68,5 @@
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">اسٹائل شدہ ASS سب ٹائٹلز</string>
-    <string name="settings_styled_ass_supporting">libass کے ذریعے ASS/SSA بناتا ہے: فونٹس، جگہ اور اثرات۔ تجرباتی؛ اگلی بار ویڈیو چلانے پر لاگو ہوگا۔</string>
+    <string name="settings_styled_ass_supporting">libass کے ذریعے ASS/SSA بناتا ہے: فونٹس، جگہ اور اثرات۔ تجرباتی؛ جب کچھ اور نہ چل رہا ہو تو اگلی بار ویڈیو چلانے پر لاگو ہوگا۔</string>
 </resources>

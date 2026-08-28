@@ -72,5 +72,5 @@
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">ترجمات ASS المنسّقة</string>
-    <string name="settings_styled_ass_supporting">يرسم ASS/SSA باستخدام libass: الخطوط والمواضع والمؤثرات. تجريبي؛ يسري على الفيديو التالي الذي تشغّله.</string>
+    <string name="settings_styled_ass_supporting">يرسم ASS/SSA باستخدام libass: الخطوط والمواضع والمؤثرات. تجريبي؛ يسري على الفيديو التالي الذي تشغّله عندما لا يكون هناك تشغيل آخر جارٍ.</string>
 </resources>

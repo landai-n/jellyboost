@@ -68,5 +68,5 @@
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">வடிவமைக்கப்பட்ட ASS வசன வரிகள்</string>
-    <string name="settings_styled_ass_supporting">libass கொண்டு ASS/SSA ஐ வரையும்: எழுத்துருக்கள், இடம் மற்றும் விளைவுகள். சோதனை முறை; அடுத்து தொடங்கும் வீடியோவுக்குப் பொருந்தும்.</string>
+    <string name="settings_styled_ass_supporting">libass கொண்டு ASS/SSA ஐ வரையும்: எழுத்துருக்கள், இடம் மற்றும் விளைவுகள். சோதனை முறை; வேறு எதுவும் இயங்காதபோது அடுத்து தொடங்கும் வீடியோவுக்குப் பொருந்தும்.</string>
 </resources>

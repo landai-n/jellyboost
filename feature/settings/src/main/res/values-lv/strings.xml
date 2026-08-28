@@ -69,5 +69,5 @@
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Stilizēti ASS subtitri</string>
-    <string name="settings_styled_ass_supporting">Zīmē ASS/SSA ar libass: fonti, novietojums un efekti. Eksperimentāls; attiecas uz nākamo palaisto video.</string>
+    <string name="settings_styled_ass_supporting">Zīmē ASS/SSA ar libass: fonti, novietojums un efekti. Eksperimentāls; attiecas uz nākamo palaisto video, kad nekas cits netiek atskaņots.</string>
 </resources>

@@ -57,9 +57,12 @@ not — androidx/media#723), rasterised off the UI thread, roughly half the memo
 `OVERLAY_CANVAS`.
 
 Because there is exactly one process-wide `ExoPlayer`, the preference is read **once per player
-build**. `ExoPlayerHandle` builds lazily and releases at session teardown, so a change in Settings
-reaches the next playback and not the one on screen — which is what the switch's supporting text
-says.
+build**. `ExoPlayerHandle` builds lazily and releases only when the video session ends *and* the
+playback service is gone, so a change in Settings never reaches the playback on screen, and reaches
+the next one only if the player was rebuilt in between. A live music session (or a cast session)
+keeps the same instance alive across the handover deliberately, so a toggle flipped there waits —
+which is why the switch says "with nothing else playing". The accepted staleness and the rejected
+rebuild are recorded in DECISIONS 2026-08-28.
 
 `CastPlayerHandle` is untouched and unreachable from any of this: it is a separate `PlayerHandle`
 with no local surface, and a receiver renders its own subtitles.

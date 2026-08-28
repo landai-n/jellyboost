@@ -64,5 +64,5 @@
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Estiloa duten ASS azpitituluak</string>
-    <string name="settings_styled_ass_supporting">ASS/SSA libass-ekin marrazten du: letra-tipoak, kokapena eta efektuak. Esperimentala; abiaraziko duzun hurrengo bideoari aplikatzen zaio.</string>
+    <string name="settings_styled_ass_supporting">ASS/SSA libass-ekin marrazten du: letra-tipoak, kokapena eta efektuak. Esperimentala; abiaraziko duzun hurrengo bideoari aplikatzen zaio, beste ezer erreproduzitzen ari ez denean.</string>
 </resources>

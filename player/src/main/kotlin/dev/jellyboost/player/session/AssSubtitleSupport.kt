@@ -22,9 +22,14 @@ import javax.inject.Singleton
  * libass under Media3, behind the default-off `styledAssSubtitles` preference.
  *
  * The preference is read **once per player build**, because that is the only moment the renderers,
- * the extractors and the subtitle parser can be chosen: `ExoPlayerHandle` builds its player lazily
- * and releases it at session teardown, so a change in Settings reaches the next playback and not the
- * one on screen. The setting's supporting text says exactly that.
+ * the extractors and the subtitle parser can be chosen. `ExoPlayerHandle` builds its player lazily
+ * and releases it only when the video session ends *and* the playback service is gone, so a change in
+ * Settings never reaches the playback on screen — and reaches the next one only if the player was
+ * rebuilt in between. A music session keeps the same instance across the handover on purpose
+ * (`MusicPlaybackController.relinquishToOther` releases the *adapter*, not the player), so a toggle
+ * flipped while music is loaded waits for the player to go. The setting's supporting text says
+ * "with nothing else playing" for that reason; `AssPreferenceStalenessTest` pins the shape, and
+ * DECISIONS 2026-08-28 records why the rebuild was not taken.
  *
  * `OVERLAY_OPEN_GL` matches jellyfin-androidtv: full animation, HDR-safe (unlike the `EFFECTS_*`
  * modes, androidx/media#723), and it rasterises on its own thread instead of the UI one.

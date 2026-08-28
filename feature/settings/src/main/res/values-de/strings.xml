@@ -68,5 +68,5 @@
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Formatierte ASS-Untertitel</string>
-    <string name="settings_styled_ass_supporting">Zeichnet ASS/SSA mit libass: Schriften, Positionierung und Effekte. Experimentell; gilt ab dem nächsten Video.</string>
+    <string name="settings_styled_ass_supporting">Zeichnet ASS/SSA mit libass: Schriften, Positionierung und Effekte. Experimentell; gilt ab dem nächsten Video, wenn nichts anderes läuft.</string>
 </resources>

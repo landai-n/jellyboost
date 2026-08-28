@@ -537,9 +537,23 @@ Three wiring points, all wrapping rather than replacing:
 - Nothing else moves: the device profile, `PlaybackInfoResolver`, `ExoMediaSourceFactory`,
   `MediaItems` and `TrackSelectionController` are all format-agnostic and unchanged.
 
-**When it takes effect.** There is one process-wide `ExoPlayer`, built lazily and released at session
-teardown, so the preference is read once per player build: a change reaches the *next* playback, not
-the one on screen. The switch's supporting text says so.
+**When it takes effect.** There is one process-wide `ExoPlayer` and the preference is read once per
+*player build*, which is the only moment the renderers, the extractors and the subtitle parser can be
+chosen. So a change never reaches the playback on screen — and it reaches the next one only if the
+player is rebuilt in between.
+
+The player is released when the video session ends *and* the playback service is gone. A music
+session keeps both alive: `MusicPlaybackController.relinquishToOther` hands the player over with
+`release()`, not `stopAndRelease()`, because the claimant prepares on that same instance
+(pinned by `MusicPlaybackControllerTest`'s handover case). So a toggle flipped while music is loaded
+does not reach the video that follows it; it waits for the player to go. Casting holds it the same
+way — `releaseSession` skips the release while a receiver has the film.
+
+That is why the switch's supporting text says "applies to the next video you start with nothing else
+playing" rather than "the next video you start". Rebuilding the player at video-prepare time was
+considered and rejected: the live `MediaSession` is built around the instance, so a rebuild means
+re-pointing the session under a foreground notification — for a default-off experimental toggle whose
+device walk is still owed (DECISIONS 2026-08-28).
 
 **When it steps aside.**
 

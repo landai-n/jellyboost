@@ -67,5 +67,5 @@
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">有樣式嘅 ASS 字幕</string>
-    <string name="settings_styled_ass_supporting">用 libass 畫 ASS/SSA：字體、位置同特效。實驗性功能；下次播片先生效。</string>
+    <string name="settings_styled_ass_supporting">用 libass 畫 ASS/SSA：字體、位置同特效。實驗性功能；冇其他嘢播緊嗰陣，下次播片先生效。</string>
 </resources>

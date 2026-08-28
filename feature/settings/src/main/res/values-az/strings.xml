@@ -64,5 +64,5 @@
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Stilli ASS altyazıları</string>
-    <string name="settings_styled_ass_supporting">ASS/SSA-nı libass ilə çəkir: şriftlər, yerləşdirmə və effektlər. Eksperimentaldır; başlatdığınız növbəti videoya tətbiq olunur.</string>
+    <string name="settings_styled_ass_supporting">ASS/SSA-nı libass ilə çəkir: şriftlər, yerləşdirmə və effektlər. Eksperimentaldır; başqa heç nə oxudulmadıqda başlatdığınız növbəti videoya tətbiq olunur.</string>
 </resources>

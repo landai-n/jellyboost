@@ -68,5 +68,5 @@
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Мәнерленген ASS субтитрлері</string>
-    <string name="settings_styled_ass_supporting">ASS/SSA пішімін libass арқылы салады: қаріптер, орналасу және әсерлер. Эксперименттік; келесі бейнеден бастап қолданылады.</string>
+    <string name="settings_styled_ass_supporting">ASS/SSA пішімін libass арқылы салады: қаріптер, орналасу және әсерлер. Эксперименттік; басқа ештеңе ойнатылмаған кезде келесі бейнеден бастап қолданылады.</string>
 </resources>

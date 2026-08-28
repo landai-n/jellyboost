@@ -68,5 +68,5 @@
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Titra ASS të stilizuara</string>
-    <string name="settings_styled_ass_supporting">Vizaton ASS/SSA me libass: shkronjat, pozicionimin dhe efektet. Eksperimentale; zbatohet te videoja tjetër që nisni.</string>
+    <string name="settings_styled_ass_supporting">Vizaton ASS/SSA me libass: shkronjat, pozicionimin dhe efektet. Eksperimentale; zbatohet te videoja tjetër që nisni kur nuk po luhet asgjë tjetër.</string>
 </resources>

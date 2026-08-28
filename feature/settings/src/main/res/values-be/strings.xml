@@ -70,5 +70,5 @@
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Стылізаваныя субцітры ASS</string>
-    <string name="settings_styled_ass_supporting">Малюе ASS/SSA праз libass: шрыфты, размяшчэнне і эфекты. Эксперыментальна; дзейнічае для наступнага відэа.</string>
+    <string name="settings_styled_ass_supporting">Малюе ASS/SSA праз libass: шрыфты, размяшчэнне і эфекты. Эксперыментальна; дзейнічае для наступнага відэа, калі нічога іншага не прайграецца.</string>
 </resources>

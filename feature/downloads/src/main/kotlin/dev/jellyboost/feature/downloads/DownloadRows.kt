@@ -260,6 +260,10 @@ private fun OneTierQueueRow(
  *
  * The four action buttons must stay **siblings** of this column, not descendants, so each keeps its
  * own stop and label.
+ *
+ * The status shares no line with the title at either width: the size·speed·ETA string is long enough
+ * to starve the title down to a few characters on a portrait tablet, which is wide enough to take
+ * the non-compact treatment. Only the type scale still differs by [compact].
  */
 @Composable
 private fun QueueRowText(
@@ -285,45 +289,21 @@ private fun QueueRowText(
         modifier = modifier.clearAndSetSemantics { contentDescription = description },
         verticalArrangement = Arrangement.spacedBy(Dimens.SpaceExtraSmall),
     ) {
-        if (compact) {
-            Text(
-                text = item.rowTitle(),
-                style = QueueTitleCompact,
-                color = MaterialTheme.colorScheme.onBackground,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            QueueTrack(progress = progress, fillColor = trackFillColor)
-            Text(
-                text = statusText,
-                style = QueueStatusCompact,
-                color = statusColor,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-        } else {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
-                verticalAlignment = Alignment.Bottom,
-            ) {
-                Text(
-                    text = item.rowTitle(),
-                    style = QueueTitleWide,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f, fill = false),
-                )
-                Text(
-                    text = statusText,
-                    style = QueueStatusWide,
-                    color = statusColor,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-            QueueTrack(progress = progress, fillColor = trackFillColor)
-        }
+        Text(
+            text = item.rowTitle(),
+            style = if (compact) QueueTitleCompact else QueueTitleWide,
+            color = MaterialTheme.colorScheme.onBackground,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        QueueTrack(progress = progress, fillColor = trackFillColor)
+        Text(
+            text = statusText,
+            style = if (compact) QueueStatusCompact else QueueStatusWide,
+            color = statusColor,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 

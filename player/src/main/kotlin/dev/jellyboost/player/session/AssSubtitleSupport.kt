@@ -1,7 +1,10 @@
 package dev.jellyboost.player.session
 
+import android.content.Context
+import android.system.Os
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.jellyboost.core.common.di.ApplicationScope
 import dev.jellyboost.core.common.runCatchingUnlessCancelled
 import dev.jellyboost.core.datastore.AppPreferences
@@ -42,6 +45,7 @@ import javax.inject.Singleton
 internal class AssSubtitleSupport
     @Inject
     constructor(
+        @ApplicationContext private val context: Context,
         preferences: AppPreferences,
         @ApplicationScope scope: CoroutineScope,
     ) {
@@ -67,6 +71,7 @@ internal class AssSubtitleSupport
          */
         fun createHandler(): AssHandler? {
             if (!enabled.value) return null
+            installFontConfig()
             return runCatchingUnlessCancelled {
                 val handler = AssHandler(AssRenderType.OVERLAY_OPEN_GL)
                 handler.ass
@@ -74,6 +79,25 @@ internal class AssSubtitleSupport
             }.onFailure { error ->
                 Timber.w(error, "libass is unavailable here; ASS/SSA falls back to Media3's own renderer")
             }.getOrNull()
+        }
+
+        /**
+         * Points fontconfig at a configuration that exists, **before** anything can load libass:
+         * `FONTCONFIG_FILE` is read once, inside the `ass_set_fonts` call that `AssHandler` makes
+         * when it builds its renderer, and nothing re-reads it afterwards. [AssFontConfig] carries
+         * the defect this works around.
+         *
+         * A failure here is permanent for the process and not fatal — libass keeps the platform's
+         * unusable fontconfig defaults, which is the behaviour that shipped before this — so it is
+         * logged and playback continues rather than dropping styled subtitles altogether.
+         */
+        private fun installFontConfig() {
+            runCatchingUnlessCancelled {
+                val config = AssFontConfig.install(filesDir = context.filesDir, cacheDir = context.cacheDir)
+                Os.setenv(AssFontConfig.ENVIRONMENT_VARIABLE, config.absolutePath, true)
+            }.onFailure { error ->
+                Timber.w(error, "libass keeps the platform's fontconfig defaults; word spacing may collapse")
+            }
         }
 
         /** Called once the player exists: the handler listens to it for tracks, video size and clock. */

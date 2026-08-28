@@ -52,4 +52,13 @@
     <string name="settings_licence_intro">Jellyboost özgür bir yazılımdır: GNU General Public License sürüm 3 veya sonraki herhangi bir sürümün koşulları altında kullanabilir, inceleyebilir, paylaşabilir ve değiştirebilirsiniz. Hiçbir garanti verilmez.</string>
     <string name="settings_third_party">Üçüncü taraf lisansları</string>
     <string name="settings_third_party_supporting">Bu uygulamanın kurulduğu açık kaynaklı bileşenler.</string>
+
+    <!-- Appearance -->
+    <string name="settings_section_appearance">Görünüm</string>
+    <string name="settings_theme">Tema</string>
+    <string name="settings_theme_system">Cihazı izle</string>
+    <string name="settings_theme_light">Açık</string>
+    <string name="settings_theme_dark">Koyu</string>
+    <string name="settings_dynamic_color">Duvar kağıdı renklerini kullan</string>
+    <string name="settings_dynamic_color_supporting">Paleti Jellyfin mavisi yerine duvar kağıdınızdan alır.</string>
 </resources>

@@ -56,4 +56,13 @@
     <string name="settings_licence_intro">Jellyboost е свободен софтуер: можете да го използвате, изучавате, споделяте и променяте според условията на GNU General Public License, версия 3 или която и да е по-късна версия. Разпространява се без никаква гаранция.</string>
     <string name="settings_third_party">Лицензи на трети страни</string>
     <string name="settings_third_party_supporting">Компонентите с отворен код, от които е изградено това приложение.</string>
+
+    <!-- Appearance -->
+    <string name="settings_section_appearance">Външен вид</string>
+    <string name="settings_theme">Тема</string>
+    <string name="settings_theme_system">Като устройството</string>
+    <string name="settings_theme_light">Светла</string>
+    <string name="settings_theme_dark">Тъмна</string>
+    <string name="settings_dynamic_color">Използване на цветовете на тапета</string>
+    <string name="settings_dynamic_color_supporting">Взема палитрата от тапета ви вместо синьото на Jellyfin.</string>
 </resources>

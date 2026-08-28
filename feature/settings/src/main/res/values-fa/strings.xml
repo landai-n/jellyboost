@@ -56,4 +56,13 @@
     <string name="settings_licence_intro">Jellyboost نرم‌افزار آزاد است: می‌توانید آن را بر پایه شرایط GNU General Public License نسخه 3 یا هر نسخه بعدی به کار ببرید، مطالعه کنید، به اشتراک بگذارید و تغییر دهید. بدون هیچ ضمانتی عرضه می‌شود.</string>
     <string name="settings_third_party">پروانه‌های شخص ثالث</string>
     <string name="settings_third_party_supporting">مؤلفه‌های متن‌باز که این برنامه با آن‌ها ساخته شده است.</string>
+
+    <!-- Appearance -->
+    <string name="settings_section_appearance">ظاهر</string>
+    <string name="settings_theme">پوسته</string>
+    <string name="settings_theme_system">پیروی از دستگاه</string>
+    <string name="settings_theme_light">روشن</string>
+    <string name="settings_theme_dark">تیره</string>
+    <string name="settings_dynamic_color">استفاده از رنگ‌های تصویر زمینه</string>
+    <string name="settings_dynamic_color_supporting">پالت را به جای آبی Jellyfin از تصویر زمینه شما می‌گیرد.</string>
 </resources>

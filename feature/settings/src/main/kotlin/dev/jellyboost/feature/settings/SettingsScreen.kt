@@ -3,6 +3,7 @@ package dev.jellyboost.feature.settings
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -45,6 +46,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.jellyboost.core.common.formatBytes
 import dev.jellyboost.core.common.model.DownloadQuality
 import dev.jellyboost.core.common.model.SegmentSkipMode
+import dev.jellyboost.core.common.model.ThemeMode
 import dev.jellyboost.core.ui.component.ConfirmDialog
 import dev.jellyboost.core.ui.component.GhostPillButton
 import dev.jellyboost.core.ui.component.JellyboostAlertDialog
@@ -87,6 +89,8 @@ fun SettingsScreen(
                 onDownloadQuality = viewModel::setDownloadQuality,
                 onStorageLocation = viewModel::setStorageLocation,
                 onForceOffline = viewModel::setForceOffline,
+                onThemeMode = viewModel::setThemeMode,
+                onDynamicColor = viewModel::setDynamicColorEnabled,
                 onSignOut = viewModel::signOut,
             ),
         onBack = onBack,
@@ -106,6 +110,8 @@ data class SettingsActions(
     val onDownloadQuality: (DownloadQuality) -> Unit,
     val onStorageLocation: (String, Boolean) -> Unit,
     val onForceOffline: (Boolean) -> Unit,
+    val onThemeMode: (ThemeMode) -> Unit,
+    val onDynamicColor: (Boolean) -> Unit,
     /** `true` also removes every downloaded file before the session ends. */
     val onSignOut: (Boolean) -> Unit,
 )
@@ -141,6 +147,13 @@ fun SettingsContent(
             Column(
                 modifier = Modifier.widthIn(max = SettingsContentMaxWidth),
             ) {
+                AppearanceSection(
+                    themeMode = state.themeMode,
+                    dynamicColorEnabled = state.dynamicColorEnabled,
+                    onThemeMode = actions.onThemeMode,
+                    onDynamicColor = actions.onDynamicColor,
+                )
+                HorizontalDivider()
                 PlaybackSection(state = state, actions = actions)
                 HorizontalDivider()
                 DownloadsSection(state = state, actions = actions)
@@ -186,6 +199,43 @@ private fun SettingsHeader(
 }
 
 internal val SettingsContentMaxWidth: Dp = 640.dp
+
+/**
+ * Scalars rather than the whole `SettingsUiState`: this section redraws on a theme change, and a
+ * state parameter would also redraw it on every storage tick.
+ *
+ * The dynamic-colour row is **absent**, not disabled, below API 31 — the platform has no wallpaper
+ * palette there, so the switch would be a control with nothing behind it.
+ */
+@Composable
+private fun AppearanceSection(
+    themeMode: ThemeMode,
+    dynamicColorEnabled: Boolean,
+    onThemeMode: (ThemeMode) -> Unit,
+    onDynamicColor: (Boolean) -> Unit,
+) {
+    SettingsSection(title = stringResource(R.string.settings_section_appearance)) {
+        val groupLabel = stringResource(R.string.settings_theme)
+        SettingsChoiceGroup(label = groupLabel) {
+            ThemeMode.entries.forEach { mode ->
+                SettingsChoiceRow(
+                    groupLabel = groupLabel,
+                    label = stringResource(mode.labelRes()),
+                    selected = mode == themeMode,
+                    onSelect = { onThemeMode(mode) },
+                )
+            }
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            SettingsSwitchRow(
+                label = stringResource(R.string.settings_dynamic_color),
+                supportingText = stringResource(R.string.settings_dynamic_color_supporting),
+                checked = dynamicColorEnabled,
+                onCheckedChange = onDynamicColor,
+            )
+        }
+    }
+}
 
 @Composable
 private fun PlaybackSection(
@@ -600,6 +650,13 @@ private fun DownloadQuality.labelRes(): Int =
         DownloadQuality.LOW -> R.string.settings_quality_low
     }
 
+private fun ThemeMode.labelRes(): Int =
+    when (this) {
+        ThemeMode.SYSTEM -> R.string.settings_theme_system
+        ThemeMode.LIGHT -> R.string.settings_theme_light
+        ThemeMode.DARK -> R.string.settings_theme_dark
+    }
+
 private fun SegmentSkipMode.labelRes(): Int =
     when (this) {
         SegmentSkipMode.OFF -> R.string.settings_skip_mode_off
@@ -615,6 +672,8 @@ private val PreviewState =
         downloadOverWifiOnly = true,
         downloadQuality = DownloadQuality.MEDIUM,
         forceOffline = false,
+        themeMode = ThemeMode.SYSTEM,
+        dynamicColorEnabled = false,
         storage =
             StorageUsage(
                 usedBytes = 12_300_000_000L,
@@ -661,6 +720,8 @@ private fun SettingsPreview() {
                     onDownloadQuality = {},
                     onStorageLocation = { _, _ -> },
                     onForceOffline = {},
+                    onThemeMode = {},
+                    onDynamicColor = {},
                     onSignOut = {},
                 ),
             onBack = {},

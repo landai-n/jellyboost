@@ -58,4 +58,13 @@
     <string name="settings_licence_intro">Jellyboost je svobodný software: můžete jej používat, studovat, sdílet a měnit podle podmínek licence GNU General Public License verze 3 nebo kterékoli pozdější. Je poskytován bez jakékoli záruky.</string>
     <string name="settings_third_party">Licence třetích stran</string>
     <string name="settings_third_party_supporting">Open source komponenty, ze kterých je tato aplikace sestavena.</string>
+
+    <!-- Appearance -->
+    <string name="settings_section_appearance">Vzhled</string>
+    <string name="settings_theme">Motiv</string>
+    <string name="settings_theme_system">Podle zařízení</string>
+    <string name="settings_theme_light">Světlý</string>
+    <string name="settings_theme_dark">Tmavý</string>
+    <string name="settings_dynamic_color">Použít barvy tapety</string>
+    <string name="settings_dynamic_color_supporting">Převezme paletu z vaší tapety místo modré barvy Jellyfinu.</string>
 </resources>

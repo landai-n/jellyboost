@@ -56,4 +56,13 @@
     <string name="settings_licence_intro">Jellyboost er frí ritbúnaður: tú mást brúka, kanna, deila og broyta hann eftir treytunum í GNU General Public License útgávu 3 ella eini seinni útgávu. Hann kemur uttan nakra ábyrgd.</string>
     <string name="settings_third_party">Loyvi frá triðjapørtum</string>
     <string name="settings_third_party_supporting">Tey opnu keldukotu-lutir, sum hetta appið er bygt av.</string>
+
+    <!-- Appearance -->
+    <string name="settings_section_appearance">Útsjónd</string>
+    <string name="settings_theme">Tema</string>
+    <string name="settings_theme_system">Fylg tólinum</string>
+    <string name="settings_theme_light">Ljóst</string>
+    <string name="settings_theme_dark">Myrkt</string>
+    <string name="settings_dynamic_color">Brúka litir úr veggbílætinum</string>
+    <string name="settings_dynamic_color_supporting">Tekur litirnar úr veggbílætinum í staðin fyri Jellyfin-bláa.</string>
 </resources>

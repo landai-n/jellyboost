@@ -6,6 +6,7 @@ import dev.jellyboost.core.common.AppError
 import dev.jellyboost.core.common.AppResult
 import dev.jellyboost.core.common.model.DownloadQuality
 import dev.jellyboost.core.common.model.SegmentSkipMode
+import dev.jellyboost.core.common.model.ThemeMode
 import dev.jellyboost.core.datastore.AppPreferences
 import dev.jellyboost.core.network.SessionRepository
 import dev.jellyboost.core.network.model.SessionState
@@ -45,6 +46,8 @@ class SettingsViewModelTest {
     private val downloadOverWifiOnly = MutableStateFlow(true)
     private val downloadQuality = MutableStateFlow(DownloadQuality.ORIGINAL)
     private val forceOffline = MutableStateFlow(false)
+    private val themeMode = MutableStateFlow(ThemeMode.SYSTEM)
+    private val dynamicColorEnabled = MutableStateFlow(false)
     private val storage = MutableStateFlow(StorageUsage())
     private val storageLocations = MutableStateFlow(StorageLocations())
     private val sessionState = MutableStateFlow<SessionState>(SessionState.Unknown)
@@ -65,6 +68,8 @@ class SettingsViewModelTest {
         every { appPreferences.downloadOverWifiOnly } returns downloadOverWifiOnly
         every { appPreferences.downloadQuality } returns downloadQuality
         every { appPreferences.forceOffline } returns forceOffline
+        every { appPreferences.themeMode } returns themeMode
+        every { appPreferences.dynamicColorEnabled } returns dynamicColorEnabled
         every { sessionRepository.sessionState } returns sessionState
         every { downloads.observeStorage() } returns storage
         every { downloads.observeStorageLocations() } returns storageLocations
@@ -82,6 +87,8 @@ class SettingsViewModelTest {
             downloadOverWifiOnly.value = false
             downloadQuality.value = DownloadQuality.LOW
             forceOffline.value = true
+            themeMode.value = ThemeMode.LIGHT
+            dynamicColorEnabled.value = true
             storage.value = StorageUsage(usedBytes = 100L, availableBytes = 900L, rootPath = "/sdcard")
 
             viewModel().uiState.test {
@@ -94,6 +101,8 @@ class SettingsViewModelTest {
                 state.downloadOverWifiOnly shouldBe false
                 state.downloadQuality shouldBe DownloadQuality.LOW
                 state.forceOffline shouldBe true
+                state.themeMode shouldBe ThemeMode.LIGHT
+                state.dynamicColorEnabled shouldBe true
                 state.storage.usedBytes shouldBe 100L
                 state.storage.rootPath shouldBe "/sdcard"
                 cancelAndIgnoreRemainingEvents()
@@ -133,6 +142,41 @@ class SettingsViewModelTest {
             advanceUntilIdle()
 
             coVerify(exactly = 1) { appPreferences.setDownloadQuality(DownloadQuality.MEDIUM) }
+        }
+
+    @Test
+    fun `the theme picker writes through to the preference store`() =
+        runTest(dispatcher) {
+            val model = viewModel()
+
+            model.setThemeMode(ThemeMode.DARK)
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) { appPreferences.setThemeMode(ThemeMode.DARK) }
+        }
+
+    @Test
+    fun `the dynamic colour switch writes through to the preference store`() =
+        runTest(dispatcher) {
+            val model = viewModel()
+
+            model.setDynamicColorEnabled(true)
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) { appPreferences.setDynamicColorEnabled(true) }
+        }
+
+    @Test
+    fun `a theme mode changed upstream is picked up while the screen is open`() =
+        runTest(dispatcher) {
+            viewModel().uiState.test {
+                awaitItem().themeMode shouldBe ThemeMode.SYSTEM
+
+                themeMode.value = ThemeMode.LIGHT
+
+                awaitItem().themeMode shouldBe ThemeMode.LIGHT
+                cancelAndIgnoreRemainingEvents()
+            }
         }
 
     @Test

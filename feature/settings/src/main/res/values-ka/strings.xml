@@ -52,4 +52,13 @@
     <string name="settings_licence_intro">Jellyboost თავისუფალი პროგრამაა: შეგიძლიათ გამოიყენოთ, შეისწავლოთ, გააზიაროთ და შეცვალოთ იგი GNU General Public License-ის მე-3 ან ნებისმიერი შემდგომი ვერსიის პირობებით. იგი გარანტიის გარეშე მოგეწოდებათ.</string>
     <string name="settings_third_party">მესამე მხარის ლიცენზიები</string>
     <string name="settings_third_party_supporting">ღია კოდის კომპონენტები, რომლებზეც ეს აპია აგებული.</string>
+
+    <!-- Appearance -->
+    <string name="settings_section_appearance">იერსახე</string>
+    <string name="settings_theme">თემა</string>
+    <string name="settings_theme_system">მოწყობილობის მიხედვით</string>
+    <string name="settings_theme_light">ღია</string>
+    <string name="settings_theme_dark">მუქი</string>
+    <string name="settings_dynamic_color">ფონის ფერების გამოყენება</string>
+    <string name="settings_dynamic_color_supporting">პალიტრას თქვენი ფონიდან იღებს Jellyfin-ის ლურჯის ნაცვლად.</string>
 </resources>

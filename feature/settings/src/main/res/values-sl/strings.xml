@@ -58,4 +58,13 @@
     <string name="settings_licence_intro">Jellyboost je prosta programska oprema: lahko jo uporabljate, preučujete, delite in spreminjate pod pogoji licence GNU General Public License različice 3 ali katere koli poznejše. Na voljo je brez kakršnega koli jamstva.</string>
     <string name="settings_third_party">Licence tretjih oseb</string>
     <string name="settings_third_party_supporting">Odprtokodne komponente, iz katerih je zgrajena ta aplikacija.</string>
+
+    <!-- Appearance -->
+    <string name="settings_section_appearance">Videz</string>
+    <string name="settings_theme">Tema</string>
+    <string name="settings_theme_system">Sledi napravi</string>
+    <string name="settings_theme_light">Svetla</string>
+    <string name="settings_theme_dark">Temna</string>
+    <string name="settings_dynamic_color">Uporabi barve ozadja</string>
+    <string name="settings_dynamic_color_supporting">Paleto vzame z vašega ozadja namesto Jellyfinove modre.</string>
 </resources>

@@ -7,6 +7,7 @@ import dev.jellyboost.core.common.AppResult
 import dev.jellyboost.core.common.di.ApplicationScope
 import dev.jellyboost.core.common.model.DownloadQuality
 import dev.jellyboost.core.common.model.SegmentSkipMode
+import dev.jellyboost.core.common.model.ThemeMode
 import dev.jellyboost.core.datastore.AppPreferences
 import dev.jellyboost.core.network.SessionRepository
 import dev.jellyboost.core.network.model.SessionState
@@ -55,6 +56,8 @@ class SettingsViewModel
                     downloadOverWifiOnly = prefs.downloadOverWifiOnly,
                     downloadQuality = prefs.downloadQuality,
                     forceOffline = prefs.forceOffline,
+                    themeMode = prefs.themeMode,
+                    dynamicColorEnabled = prefs.dynamicColorEnabled,
                     storage = storage,
                     storageLocations = locations,
                     account = session.toAccountInfo(),
@@ -117,6 +120,15 @@ class SettingsViewModel
             viewModelScope.launch { appPreferences.setForceOffline(enabled) }
         }
 
+        fun setThemeMode(mode: ThemeMode) {
+            viewModelScope.launch { appPreferences.setThemeMode(mode) }
+        }
+
+        /** Ignored by the theme below API 31; the row that calls this is not drawn there. */
+        fun setDynamicColorEnabled(enabled: Boolean) {
+            viewModelScope.launch { appPreferences.setDynamicColorEnabled(enabled) }
+        }
+
         /**
          * The deletes run **before** the sign-out: signing out clears the credentials, and files
          * deleted afterwards would be orphaned rows nobody can re-download without logging back in.
@@ -151,8 +163,8 @@ class SettingsViewModel
         }
 
         /**
-         * `combine` tops out at five typed flows and the state needs ten sources, so the preferences
-         * fold into one intermediate rather than dropping to the `Array<Any?>` overload.
+         * `combine` tops out at five typed flows and the state needs twelve sources, so the
+         * preferences fold into one intermediate rather than dropping to the `Array<Any?>` overload.
          */
         private fun preferences(): Flow<Preferences> =
             combine(
@@ -172,7 +184,15 @@ class SettingsViewModel
                     )
                 },
                 appPreferences.downloadQuality,
-            ) { rest, quality -> rest.copy(downloadQuality = quality) }
+                appPreferences.themeMode,
+                appPreferences.dynamicColorEnabled,
+            ) { rest, quality, themeMode, dynamicColor ->
+                rest.copy(
+                    downloadQuality = quality,
+                    themeMode = themeMode,
+                    dynamicColorEnabled = dynamicColor,
+                )
+            }
 
         private data class Preferences(
             val introSkipMode: SegmentSkipMode,
@@ -181,6 +201,8 @@ class SettingsViewModel
             val downloadOverWifiOnly: Boolean,
             val forceOffline: Boolean,
             val downloadQuality: DownloadQuality = DownloadQuality.ORIGINAL,
+            val themeMode: ThemeMode = ThemeMode.SYSTEM,
+            val dynamicColorEnabled: Boolean = false,
         )
 
         private companion object {

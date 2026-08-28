@@ -58,4 +58,13 @@
     <string name="settings_licence_intro">Jellyboost yra laisva programinė įranga: galite ją naudoti, tirti, dalytis ja ir ją keisti pagal GNU General Public License 3 arba bet kurios vėlesnės versijos sąlygas. Ji teikiama be jokios garantijos.</string>
     <string name="settings_third_party">Trečiųjų šalių licencijos</string>
     <string name="settings_third_party_supporting">Atvirojo kodo komponentai, iš kurių sudaryta ši programa.</string>
+
+    <!-- Appearance -->
+    <string name="settings_section_appearance">Išvaizda</string>
+    <string name="settings_theme">Tema</string>
+    <string name="settings_theme_system">Kaip įrenginyje</string>
+    <string name="settings_theme_light">Šviesi</string>
+    <string name="settings_theme_dark">Tamsi</string>
+    <string name="settings_dynamic_color">Naudoti darbalaukio fono spalvas</string>
+    <string name="settings_dynamic_color_supporting">Paletę ima iš jūsų darbalaukio fono, o ne Jellyfin mėlynos.</string>
 </resources>

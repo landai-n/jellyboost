@@ -56,4 +56,13 @@
     <string name="settings_licence_intro">Jellyboost ಮುಕ್ತ ತಂತ್ರಾಂಶ: GNU General Public License ಆವೃತ್ತಿ 3 ಅಥವಾ ನಂತರದ ಯಾವುದೇ ಆವೃತ್ತಿಯ ನಿಯಮಗಳ ಅಡಿಯಲ್ಲಿ ನೀವು ಅದನ್ನು ಬಳಸಬಹುದು, ಅಧ್ಯಯನ ಮಾಡಬಹುದು, ಹಂಚಿಕೊಳ್ಳಬಹುದು ಮತ್ತು ಬದಲಾಯಿಸಬಹುದು. ಇದು ಯಾವುದೇ ಖಾತರಿ ಇಲ್ಲದೆ ಬರುತ್ತದೆ.</string>
     <string name="settings_third_party">ಮೂರನೇ ವ್ಯಕ್ತಿಯ ಪರವಾನಗಿಗಳು</string>
     <string name="settings_third_party_supporting">ಈ ಅಪ್ಲಿಕೇಶನ್ ನಿರ್ಮಿಸಲಾದ ಮುಕ್ತ ಮೂಲ ಘಟಕಗಳು.</string>
+
+    <!-- Appearance -->
+    <string name="settings_section_appearance">ಗೋಚರತೆ</string>
+    <string name="settings_theme">ಥೀಮ್</string>
+    <string name="settings_theme_system">ಸಾಧನವನ್ನು ಅನುಸರಿಸಿ</string>
+    <string name="settings_theme_light">ತಿಳಿ</string>
+    <string name="settings_theme_dark">ಗಾಢ</string>
+    <string name="settings_dynamic_color">ವಾಲ್‌ಪೇಪರ್ ಬಣ್ಣಗಳನ್ನು ಬಳಸಿ</string>
+    <string name="settings_dynamic_color_supporting">Jellyfin ನೀಲಿಯ ಬದಲಿಗೆ ನಿಮ್ಮ ವಾಲ್‌ಪೇಪರ್‌ನಿಂದ ಬಣ್ಣಗಳನ್ನು ತೆಗೆದುಕೊಳ್ಳುತ್ತದೆ.</string>
 </resources>

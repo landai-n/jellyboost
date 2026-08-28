@@ -52,4 +52,13 @@
     <string name="settings_licence_intro">Malayang software ang Jellyboost: maaari mo itong gamitin, pag-aralan, ibahagi, at baguhin sa ilalim ng mga tuntunin ng GNU General Public License, bersyon 3 o anumang mas bagong bersyon. Wala itong anumang warranty.</string>
     <string name="settings_third_party">Mga lisensya ng third party</string>
     <string name="settings_third_party_supporting">Ang mga open source na bahagi kung saan ginawa ang app na ito.</string>
+
+    <!-- Appearance -->
+    <string name="settings_section_appearance">Anyo</string>
+    <string name="settings_theme">Tema</string>
+    <string name="settings_theme_system">Sundan ang device</string>
+    <string name="settings_theme_light">Maliwanag</string>
+    <string name="settings_theme_dark">Madilim</string>
+    <string name="settings_dynamic_color">Gamitin ang mga kulay ng wallpaper</string>
+    <string name="settings_dynamic_color_supporting">Kinukuha ang palette mula sa iyong wallpaper sa halip na ang asul ng Jellyfin.</string>
 </resources>

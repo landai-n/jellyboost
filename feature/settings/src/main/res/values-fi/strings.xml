@@ -56,4 +56,13 @@
     <string name="settings_licence_intro">Jellyboost on vapaa ohjelmisto: saat käyttää, tutkia, jakaa ja muuttaa sitä GNU General Public License -lisenssin version 3 tai minkä tahansa myöhemmän version ehdoilla. Se toimitetaan ilman mitään takuuta.</string>
     <string name="settings_third_party">Kolmansien osapuolten lisenssit</string>
     <string name="settings_third_party_supporting">Avoimen lähdekoodin osat, joista tämä sovellus on rakennettu.</string>
+
+    <!-- Appearance -->
+    <string name="settings_section_appearance">Ulkoasu</string>
+    <string name="settings_theme">Teema</string>
+    <string name="settings_theme_system">Seuraa laitetta</string>
+    <string name="settings_theme_light">Vaalea</string>
+    <string name="settings_theme_dark">Tumma</string>
+    <string name="settings_dynamic_color">Käytä taustakuvan värejä</string>
+    <string name="settings_dynamic_color_supporting">Ottaa paletin taustakuvastasi Jellyfinin sinisen sijaan.</string>
 </resources>

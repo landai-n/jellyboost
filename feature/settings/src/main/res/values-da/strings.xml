@@ -56,4 +56,13 @@
     <string name="settings_licence_intro">Jellyboost er fri software: du må bruge, studere, dele og ændre den efter vilkårene i GNU General Public License version 3 eller enhver senere version. Den leveres uden nogen garanti.</string>
     <string name="settings_third_party">Tredjepartslicenser</string>
     <string name="settings_third_party_supporting">De open source-komponenter, appen er bygget af.</string>
+
+    <!-- Appearance -->
+    <string name="settings_section_appearance">Udseende</string>
+    <string name="settings_theme">Tema</string>
+    <string name="settings_theme_system">Følg enheden</string>
+    <string name="settings_theme_light">Lyst</string>
+    <string name="settings_theme_dark">Mørkt</string>
+    <string name="settings_dynamic_color">Brug tapetets farver</string>
+    <string name="settings_dynamic_color_supporting">Tager paletten fra dit tapet i stedet for Jellyfins blå.</string>
 </resources>

@@ -56,4 +56,13 @@
     <string name="settings_licence_intro">Jellyboost — еркін бағдарламалық жасақтама: оны GNU General Public License лицензиясының 3-нұсқасы немесе кез келген кейінгі нұсқасы шарттары бойынша пайдалануға, зерттеуге, таратуға және өзгертуге болады. Ол ешқандай кепілдіксіз беріледі.</string>
     <string name="settings_third_party">Үшінші тарап лицензиялары</string>
     <string name="settings_third_party_supporting">Осы қолданба құрастырылған ашық бастапқы кодты құрамдастар.</string>
+
+    <!-- Appearance -->
+    <string name="settings_section_appearance">Сыртқы түрі</string>
+    <string name="settings_theme">Тақырып</string>
+    <string name="settings_theme_system">Құрылғы бойынша</string>
+    <string name="settings_theme_light">Ашық</string>
+    <string name="settings_theme_dark">Күңгірт</string>
+    <string name="settings_dynamic_color">Тұсқағаз түстерін пайдалану</string>
+    <string name="settings_dynamic_color_supporting">Палитраны Jellyfin көгінің орнына тұсқағазыңыздан алады.</string>
 </resources>

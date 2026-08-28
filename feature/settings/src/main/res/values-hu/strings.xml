@@ -56,4 +56,13 @@
     <string name="settings_licence_intro">A Jellyboost szabad szoftver: a GNU General Public License 3. vagy bármely későbbi változatának feltételei szerint használhatod, tanulmányozhatod, megoszthatod és módosíthatod. Mindenféle garancia nélkül érkezik.</string>
     <string name="settings_third_party">Harmadik felek licencei</string>
     <string name="settings_third_party_supporting">A nyílt forráskódú összetevők, amelyekből az alkalmazás felépül.</string>
+
+    <!-- Appearance -->
+    <string name="settings_section_appearance">Megjelenés</string>
+    <string name="settings_theme">Téma</string>
+    <string name="settings_theme_system">Eszköz követése</string>
+    <string name="settings_theme_light">Világos</string>
+    <string name="settings_theme_dark">Sötét</string>
+    <string name="settings_dynamic_color">Háttérkép színeinek használata</string>
+    <string name="settings_dynamic_color_supporting">A palettát a háttérképedből veszi a Jellyfin kékje helyett.</string>
 </resources>

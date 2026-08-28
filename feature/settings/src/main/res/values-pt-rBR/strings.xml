@@ -52,4 +52,13 @@
     <string name="settings_licence_intro">O Jellyboost é software livre: você pode usá-lo, estudá-lo, compartilhá-lo e alterá-lo nos termos da GNU General Public License, versão 3 ou qualquer versão posterior. Ele vem sem nenhuma garantia.</string>
     <string name="settings_third_party">Licenças de terceiros</string>
     <string name="settings_third_party_supporting">Os componentes de código aberto com que este app foi construído.</string>
+
+    <!-- Appearance -->
+    <string name="settings_section_appearance">Aparência</string>
+    <string name="settings_theme">Tema</string>
+    <string name="settings_theme_system">Seguir o dispositivo</string>
+    <string name="settings_theme_light">Claro</string>
+    <string name="settings_theme_dark">Escuro</string>
+    <string name="settings_dynamic_color">Usar as cores do papel de parede</string>
+    <string name="settings_dynamic_color_supporting">Usa a paleta do seu papel de parede em vez do azul do Jellyfin.</string>
 </resources>

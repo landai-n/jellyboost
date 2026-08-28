@@ -56,4 +56,13 @@
     <string name="settings_licence_intro">Jellyboost бол чөлөөт програм хангамж: та үүнийг GNU General Public License-ийн 3 дугаар хувилбар буюу түүнээс хойшхи аль ч хувилбарын нөхцлийн дагуу ашиглаж, судалж, түгээж, өөрчилж болно. Ямар ч баталгаагүйгээр нийлүүлэгддэг.</string>
     <string name="settings_third_party">Гуравдагч талын лицензүүд</string>
     <string name="settings_third_party_supporting">Энэ аппыг бүтээсэн нээлттэй эхийн бүрэлдэхүүн хэсгүүд.</string>
+
+    <!-- Appearance -->
+    <string name="settings_section_appearance">Харагдац</string>
+    <string name="settings_theme">Загвар</string>
+    <string name="settings_theme_system">Төхөөрөмжийг дагах</string>
+    <string name="settings_theme_light">Цайвар</string>
+    <string name="settings_theme_dark">Бараан</string>
+    <string name="settings_dynamic_color">Дэлгэцийн зургийн өнгийг ашиглах</string>
+    <string name="settings_dynamic_color_supporting">Jellyfin-ий цэнхэрийн оронд дэлгэцийн зургаас өнгө авна.</string>
 </resources>

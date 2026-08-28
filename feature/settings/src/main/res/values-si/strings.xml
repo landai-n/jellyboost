@@ -52,4 +52,13 @@
     <string name="settings_licence_intro">Jellyboost යනු නිදහස් මෘදුකාංගයකි: GNU General Public License අනුවාදය 3 හෝ ඉන් පසු ඕනෑම අනුවාදයක නියමයන් යටතේ ඔබට එය භාවිත කිරීමට, අධ්‍යයනය කිරීමට, බෙදාගැනීමට සහ වෙනස් කිරීමට හැකිය. එය කිසිදු වගකීමකින් තොරව සපයනු ලැබේ.</string>
     <string name="settings_third_party">තෙවන පාර්ශ්ව බලපත්‍ර</string>
     <string name="settings_third_party_supporting">මෙම යෙදුම ගොඩනගා ඇති විවෘත මූලාශ්‍ර සංරචක.</string>
+
+    <!-- Appearance -->
+    <string name="settings_section_appearance">පෙනුම</string>
+    <string name="settings_theme">තේමාව</string>
+    <string name="settings_theme_system">උපාංගය අනුගමනය කරන්න</string>
+    <string name="settings_theme_light">ලා</string>
+    <string name="settings_theme_dark">තද</string>
+    <string name="settings_dynamic_color">බිතුපත් වර්ණ භාවිතා කරන්න</string>
+    <string name="settings_dynamic_color_supporting">Jellyfin නිල් වෙනුවට ඔබේ බිතුපතෙන් වර්ණ ලබා ගනී.</string>
 </resources>

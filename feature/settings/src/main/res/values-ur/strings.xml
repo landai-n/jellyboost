@@ -56,4 +56,13 @@
     <string name="settings_licence_intro">Jellyboost آزاد سافٹ ویئر ہے: آپ اسے GNU General Public License ورژن 3 یا اس کے بعد کے کسی بھی ورژن کی شرائط کے تحت استعمال، مطالعہ، شیئر اور تبدیل کر سکتے ہیں۔ یہ بغیر کسی وارنٹی کے فراہم کیا جاتا ہے۔</string>
     <string name="settings_third_party">فریق ثالث کے لائسنس</string>
     <string name="settings_third_party_supporting">وہ اوپن سورس اجزاء جن سے یہ ایپ بنی ہے۔</string>
+
+    <!-- Appearance -->
+    <string name="settings_section_appearance">ظاہری شکل</string>
+    <string name="settings_theme">تھیم</string>
+    <string name="settings_theme_system">ڈیوائس کے مطابق</string>
+    <string name="settings_theme_light">ہلکا</string>
+    <string name="settings_theme_dark">گہرا</string>
+    <string name="settings_dynamic_color">وال پیپر کے رنگ استعمال کریں</string>
+    <string name="settings_dynamic_color_supporting">Jellyfin کے نیلے رنگ کے بجائے آپ کے وال پیپر سے رنگ لیتا ہے۔</string>
 </resources>

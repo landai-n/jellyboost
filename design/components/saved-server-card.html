@@ -1,0 +1,66 @@
+<!-- @dsCard viewport="560x720" group="Components" name="Saved server card" subtitle="Local ServerEntity card: merged live state ('On this network' pill), offline state (neutral badge, last-used line), overflow menu + forget-confirm dialog with the delete-downloads checkbox precedent" -->
+<link rel="stylesheet" href="../_shared/modern.css">
+<style>
+  body{padding:24px}
+  .col{max-width:460px;display:flex;flex-direction:column;gap:10px}
+  .eyebrow{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--on-surface-variant);margin-bottom:2px}
+  .card{display:flex;align-items:center;gap:16px;padding:14px 16px;box-sizing:border-box;position:relative}
+  .badge{width:38px;height:38px;border-radius:var(--radius-md);background:rgba(0,164,220,.14);border:1px solid rgba(0,164,220,.30);display:flex;align-items:center;justify-content:center;flex:none;box-sizing:border-box}
+  .badge svg{width:18px;height:18px;fill:var(--primary)}
+  .badge.off{background:var(--glass-bg);border-color:var(--glass-line)}
+  .badge.off svg{fill:var(--icon-fg)}
+  .body{flex:1;min-width:0}
+  .name{font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px}
+  .addr{font-size:12px;color:var(--on-surface-variant);margin-top:2px}
+  .live{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:999px;background:rgba(0,164,220,.14);border:1px solid rgba(0,164,220,.30);font-size:10px;font-weight:600;letter-spacing:.04em;color:var(--primary);white-space:nowrap}
+  .live .d{width:5px;height:5px;border-radius:50%;background:var(--primary);animation:lp 1.6s ease-in-out infinite}
+  @keyframes lp{0%,100%{opacity:1}50%{opacity:.35}}
+  .more{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none}
+  .more svg{width:18px;height:18px;fill:var(--on-surface-variant)}
+  .menu{position:absolute;right:12px;top:56px;z-index:2;min-width:200px;border-radius:var(--radius-md);background:rgba(32,32,32,.96);border:1px solid var(--glass-line);box-shadow:var(--elev-pop);padding:6px;box-sizing:border-box}
+  .mi{display:flex;align-items:center;gap:12px;height:40px;padding:0 12px;border-radius:8px;font-size:14px;font-weight:500}
+  .mi svg{width:18px;height:18px;fill:var(--icon-fg);flex:none}
+  .mi.danger{color:var(--error-fg)}
+  .mi.danger svg{fill:var(--error-fg)}
+  .dialog{border-radius:var(--radius-lg);background:var(--surface);border:1px solid var(--glass-line);box-shadow:var(--elev-pop);padding:20px;display:flex;flex-direction:column;gap:14px;box-sizing:border-box}
+  .dtitle{font-size:18px;font-weight:600;letter-spacing:-.01em}
+  .dbody{font-size:13px;line-height:19px;color:var(--on-surface-variant)}
+  .chk{display:flex;align-items:center;gap:12px;font-size:13px}
+  .box{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--line-strong);flex:none;box-sizing:border-box}
+  .dactions{display:flex;justify-content:flex-end;gap:8px}
+  .dbtn-danger{background:rgba(207,102,121,.14);border:1px solid var(--error-line);color:var(--error-fg)}
+  .note{font-size:11px;color:rgba(255,255,255,.45);line-height:16px;margin-top:6px}
+</style>
+<div class="col">
+  <div class="eyebrow">Saved servers</div>
+  <div class="card m-surface">
+    <div class="badge"><svg viewBox="0 0 24 24"><path d="M4 3h16a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Zm3 4.5A1.5 1.5 0 1 0 7 4.5a1.5 1.5 0 0 0 0 3ZM4 14h16a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-5a1 1 0 0 1 1-1Zm3 4.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z"/></svg></div>
+    <div class="body">
+      <div class="name">lighthouse <span class="live"><span class="d"></span>On this network</span></div>
+      <div class="addr">http://192.168.1.10:8096 · 2 accounts</div>
+    </div>
+    <div class="more"><svg viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg></div>
+  </div>
+  <div class="card m-surface" style="margin-bottom:64px">
+    <div class="badge off"><svg viewBox="0 0 24 24"><path d="M4 3h16a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Zm3 4.5A1.5 1.5 0 1 0 7 4.5a1.5 1.5 0 0 0 0 3ZM4 14h16a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-5a1 1 0 0 1 1-1Zm3 4.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z"/></svg></div>
+    <div class="body">
+      <div class="name">haven</div>
+      <div class="addr">https://haven.example.net · Last used 2 days ago</div>
+    </div>
+    <div class="more" style="background:var(--glass-bg);border:1px solid var(--glass-line)"><svg viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg></div>
+    <div class="menu">
+      <div class="mi"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>Sign in as someone else</div>
+      <div class="mi danger"><svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>Forget this server</div>
+    </div>
+  </div>
+  <div class="dialog">
+    <div class="dtitle">Forget haven?</div>
+    <div class="dbody">Removes this server and its saved sign-ins from this device. Nothing changes on the server itself.</div>
+    <div class="chk"><div class="box"></div>Also delete downloads from this server</div>
+    <div class="dactions">
+      <div class="m-btn m-btn-sm m-btn-ghost">Cancel</div>
+      <div class="m-btn m-btn-sm dbtn-danger">Forget</div>
+    </div>
+  </div>
+  <div class="note">Same anatomy as the Discovered card, sourced from local ServerEntity. Merge rule: a saved server that is also broadcasting renders ONE card in the Saved section (never duplicated in Discovered) — its badge stays primary-tinted and a pulsing &ldquo;On this network&rdquo; pill sits after the name. A saved server not currently reachable drops to the neutral glass badge and shows &ldquo;Last used&hellip;&rdquo; instead of liveness. Trailing slot is a 32px overflow button (replaces the chevron; the card body itself is the tap target). Overflow — or long-press anywhere on the card — opens the menu; Forget always confirms via the dialog, which reuses the sign-out dialog&rsquo;s delete-downloads checkbox (unchecked by default: downloads are shared-device). Order: most recently used first; the currently-connected server pins to the top.</div>
+</div>

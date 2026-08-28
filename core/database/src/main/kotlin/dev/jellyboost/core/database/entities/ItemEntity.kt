@@ -1,5 +1,6 @@
 package dev.jellyboost.core.database.entities
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
@@ -30,7 +31,12 @@ enum class ItemSource {
  * collation, so a `BINARY` one is never used by the `COLLATE NOCASE` sorts — pure write amplification.
  *
  * @property cachedAt doubles as the "recently downloaded" ordering for the offline home rows, which is why
- *   a browse write-through must not bump it on a [ItemSource.DOWNLOAD] row.
+ *   a browse write-through must not bump it on a [ItemSource.DOWNLOAD] row. It is therefore **not** a
+ *   freshness key — see [revisedAt], which exists because it is not.
+ * @property revisedAt when this row was last written, stamped by every upsert path. Separate from
+ *   [cachedAt] precisely because two writers deliberately preserve that one across an in-place rewrite
+ *   (`DownloadedMetadataRefresher.store` and `BrowseCacheWriter.mergeRows`), so a memo keyed on it can
+ *   never see a replaced blob. Anything caching a decoded [dto] keys on this instead.
  */
 @Entity(
     tableName = "items",
@@ -53,6 +59,14 @@ data class ItemEntity(
     val type: ItemType,
     val source: ItemSource,
     val cachedAt: Instant,
+    /**
+     * `NOT NULL` with a SQL default of `0` (the epoch), which is what keeps the v12 → v13 bump an
+     * `@AutoMigration`. That default is also the honest reading of a row written before the column: its
+     * blob was last replaced at some unrecorded time, and any real write is after 1970, so the first
+     * rewrite invalidates every memo that was holding it.
+     */
+    @ColumnInfo(defaultValue = "0")
+    val revisedAt: Instant = Instant.EPOCH,
     val productionYear: Int? = null,
     val premiereDate: Instant? = null,
     val communityRating: Float? = null,
@@ -80,10 +94,15 @@ data class ItemEntity(
     val dto: String,
 )
 
+/**
+ * @property cachedAt the recency the write-through must preserve on a download row.
+ * @property revisedAt the freshness key a metadata memo compares; see [ItemEntity.revisedAt].
+ */
 data class ItemCacheKey(
     val id: UUID,
     val source: ItemSource,
     val cachedAt: Instant,
+    val revisedAt: Instant = Instant.EPOCH,
 )
 
 /**

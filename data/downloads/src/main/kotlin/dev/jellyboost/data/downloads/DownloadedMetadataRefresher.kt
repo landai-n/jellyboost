@@ -188,7 +188,9 @@ class DownloadedMetadataRefresher
                     unique.map { dto ->
                         val row = mapper.toEntity(dto, ItemSource.DOWNLOAD, now)
                         // Keeping the original timestamp is what stops a bulk repair from
-                        // reordering the offline "recently downloaded" rows.
+                        // reordering the offline "recently downloaded" rows. `revisedAt` is
+                        // deliberately left at `now`: it is the key every metadata memo compares,
+                        // and this is exactly the rewrite it has to notice.
                         existing[dto.id]?.let { row.copy(cachedAt = it.cachedAt) } ?: row
                     }
 

@@ -75,6 +75,31 @@ to a device walk:** a portrait season poster centre-cropped square in the header
 multi-season show's joined season line at fontScale 2.0, and the header's one
 spoken TalkBack sentence now that it carries a season.
 
+**2026-08-28 — `items.revisedAt` (v12 → v13), from the adversarial review of that
+branch.** The metadata memo behind the Downloads list keyed on `cachedAt` under a
+comment claiming every write bumps it. Two writers deliberately do **not** — the
+refresh and the browse write-through carry the old `cachedAt` across an in-place
+rewrite, to keep the offline "recently downloaded" order still — so a season
+replaced with its real artwork after the enqueue cached a lean row never reached
+an open screen. Fixed at the data layer: a new `revisedAt` column stamped by every
+upsert path (all three route through `ItemEntityMapper.toEntity`), `cachedAt` left
+to its one job, and the memo re-keyed. Database v12 → v13, still an
+`@AutoMigration`, `NOT NULL` with a SQL default of `0`. This healed the **item**
+cache's identical bug, not only the new season one. Five smaller review findings
+fixed alongside: a false "the list opens with it" rationale for the header's
+poster (behaviour unchanged, reason corrected), and four missing pins — the
+season join's steady-state cost, a season *name* arriving, and the per-season
+poster fallback. **Owed to a device walk:** the v12→v13 upgrade without a wipe,
+and a season poster appearing on an open Downloads screen after a metadata
+refresh.
+
+Known issue found while doing it: `gradlew-remote` pulls back only
+`build/{outputs,reports,test-results}`, so a Room **schema export** — which Room
+writes into the source tree at `core/database/schemas/` — never returns from the
+build host. A schema-bumping change must run the export locally
+(`JB_LOCAL_ONLY=1 gradlew-remote :core:database:compileDebugKotlin`) or the new
+`N.json` is silently absent from the commit while the remote gate still passes.
+
 **2026-08-26 — the password field is the same height as the username field, this time
 for real.** The 2026-08-21 fix (`7f4066cf`) wrapped the trailing slot in
 `requiredSize(MinTouchTarget)`, which ignores incoming constraints but still *reports*

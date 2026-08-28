@@ -65,4 +65,8 @@
     <string name="settings_theme_dark">Tumma</string>
     <string name="settings_dynamic_color">Käytä taustakuvan värejä</string>
     <string name="settings_dynamic_color_supporting">Ottaa paletin taustakuvastasi Jellyfinin sinisen sijaan.</string>
+
+    <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_styled_ass">Tyylitellyt ASS-tekstitykset</string>
+    <string name="settings_styled_ass_supporting">Piirtää ASS/SSA:n libassilla: fontit, sijoittelu ja tehosteet. Kokeellinen; vaikuttaa seuraavaan käynnistettävään videoon.</string>
 </resources>

@@ -53,6 +53,7 @@ class SettingsViewModel
                     introSkipMode = prefs.introSkipMode,
                     outroSkipMode = prefs.outroSkipMode,
                     pipOnLeave = prefs.pipOnLeave,
+                    styledAssSubtitles = prefs.styledAssSubtitles,
                     downloadOverWifiOnly = prefs.downloadOverWifiOnly,
                     downloadQuality = prefs.downloadQuality,
                     forceOffline = prefs.forceOffline,
@@ -130,6 +131,15 @@ class SettingsViewModel
         }
 
         /**
+         * Deliberately not retroactive: `ExoPlayerHandle` reads this while it builds the player, so a
+         * change reaches the next playback rather than the one on screen. The row's supporting text
+         * says so.
+         */
+        fun setStyledAssSubtitles(enabled: Boolean) {
+            viewModelScope.launch { appPreferences.setStyledAssSubtitles(enabled) }
+        }
+
+        /**
          * The deletes run **before** the sign-out: signing out clears the credentials, and files
          * deleted afterwards would be orphaned rows nobody can re-download without logging back in.
          *
@@ -163,7 +173,7 @@ class SettingsViewModel
         }
 
         /**
-         * `combine` tops out at five typed flows and the state needs twelve sources, so the
+         * `combine` tops out at five typed flows and the state needs thirteen sources, so the
          * preferences fold into one intermediate rather than dropping to the `Array<Any?>` overload.
          */
         private fun preferences(): Flow<Preferences> =
@@ -186,11 +196,13 @@ class SettingsViewModel
                 appPreferences.downloadQuality,
                 appPreferences.themeMode,
                 appPreferences.dynamicColorEnabled,
-            ) { rest, quality, themeMode, dynamicColor ->
+                appPreferences.styledAssSubtitles,
+            ) { rest, quality, themeMode, dynamicColor, styledAss ->
                 rest.copy(
                     downloadQuality = quality,
                     themeMode = themeMode,
                     dynamicColorEnabled = dynamicColor,
+                    styledAssSubtitles = styledAss,
                 )
             }
 
@@ -203,6 +215,7 @@ class SettingsViewModel
             val downloadQuality: DownloadQuality = DownloadQuality.ORIGINAL,
             val themeMode: ThemeMode = ThemeMode.SYSTEM,
             val dynamicColorEnabled: Boolean = false,
+            val styledAssSubtitles: Boolean = false,
         )
 
         private companion object {

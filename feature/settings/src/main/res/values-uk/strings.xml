@@ -67,4 +67,8 @@
     <string name="settings_theme_dark">Темна</string>
     <string name="settings_dynamic_color">Використовувати кольори шпалер</string>
     <string name="settings_dynamic_color_supporting">Бере палітру з ваших шпалер замість синього кольору Jellyfin.</string>
+
+    <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_styled_ass">Стилізовані субтитри ASS</string>
+    <string name="settings_styled_ass_supporting">Малює ASS/SSA через libass: шрифти, розташування та ефекти. Експериментально; діє з наступного запущеного відео.</string>
 </resources>

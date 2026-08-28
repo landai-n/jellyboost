@@ -65,4 +65,8 @@
     <string name="settings_theme_dark">Tume</string>
     <string name="settings_dynamic_color">Kasuta taustapildi värve</string>
     <string name="settings_dynamic_color_supporting">Võtab paleti sinu taustapildilt Jellyfini sinise asemel.</string>
+
+    <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_styled_ass">Stiliseeritud ASS-subtiitrid</string>
+    <string name="settings_styled_ass_supporting">Joonistab ASS/SSA libassiga: fondid, paigutus ja efektid. Katseline; rakendub järgmisele käivitatavale videole.</string>
 </resources>

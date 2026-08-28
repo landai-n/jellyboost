@@ -117,6 +117,13 @@ class DataStoreAppPreferences
             dataStore.edit { it[DYNAMIC_COLOR_ENABLED] = enabled }
         }
 
+        override val styledAssSubtitles: Flow<Boolean> =
+            preference { it[STYLED_ASS_SUBTITLES] ?: DEFAULT_STYLED_ASS_SUBTITLES }
+
+        override suspend fun setStyledAssSubtitles(enabled: Boolean) {
+            dataStore.edit { it[STYLED_ASS_SUBTITLES] = enabled }
+        }
+
         // A non-positive stored value reads as "never measured": sending a zero or negative cap to the
         // server is worse than sending none.
         override val maxStreamingBitrate: Flow<Int?> =
@@ -153,6 +160,7 @@ class DataStoreAppPreferences
             val MAX_STREAMING_BITRATE = intPreferencesKey(PreferenceKeys.MAX_STREAMING_BITRATE)
             val THEME_MODE = stringPreferencesKey(PreferenceKeys.THEME_MODE)
             val DYNAMIC_COLOR_ENABLED = booleanPreferencesKey(PreferenceKeys.DYNAMIC_COLOR_ENABLED)
+            val STYLED_ASS_SUBTITLES = booleanPreferencesKey(PreferenceKeys.STYLED_ASS_SUBTITLES)
 
             const val DEFAULT_WIFI_ONLY = true
 
@@ -161,5 +169,7 @@ class DataStoreAppPreferences
             const val DEFAULT_PIP_ON_LEAVE = true
 
             const val DEFAULT_DYNAMIC_COLOR = false
+
+            const val DEFAULT_STYLED_ASS_SUBTITLES = false
         }
     }

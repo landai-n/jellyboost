@@ -62,4 +62,8 @@
     <string name="settings_theme_dark">Întunecat</string>
     <string name="settings_dynamic_color">Folosește culorile imaginii de fundal</string>
     <string name="settings_dynamic_color_supporting">Preia paleta din imaginea ta de fundal în loc de albastrul Jellyfin.</string>
+
+    <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_styled_ass">Subtitrări ASS stilizate</string>
+    <string name="settings_styled_ass_supporting">Desenează ASS/SSA cu libass: fonturi, poziționare și efecte. Experimental; se aplică următorului videoclip pornit.</string>
 </resources>

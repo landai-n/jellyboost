@@ -61,4 +61,8 @@
     <string name="settings_theme_dark">Madilim</string>
     <string name="settings_dynamic_color">Gamitin ang mga kulay ng wallpaper</string>
     <string name="settings_dynamic_color_supporting">Kinukuha ang palette mula sa iyong wallpaper sa halip na ang asul ng Jellyfin.</string>
+
+    <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_styled_ass">May-estilong ASS na subtitle</string>
+    <string name="settings_styled_ass_supporting">Iginuguhit ang ASS/SSA gamit ang libass: mga font, posisyon, at effect. Eksperimental; iniaaplay sa susunod na video na sisimulan mo.</string>
 </resources>

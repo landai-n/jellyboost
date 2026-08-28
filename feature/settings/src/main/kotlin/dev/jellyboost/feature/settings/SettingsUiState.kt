@@ -14,6 +14,8 @@ data class SettingsUiState(
     val introSkipMode: SegmentSkipMode = SegmentSkipMode.SHOW_BUTTON,
     val outroSkipMode: SegmentSkipMode = SegmentSkipMode.SHOW_BUTTON,
     val pipOnLeave: Boolean = true,
+    /** Read when the player is built, so the switch describes the *next* video, not the one playing. */
+    val styledAssSubtitles: Boolean = false,
     val downloadOverWifiOnly: Boolean = true,
     /** What future downloads are fetched at; the running queue keeps whatever it was enqueued with. */
     val downloadQuality: DownloadQuality = DownloadQuality.ORIGINAL,

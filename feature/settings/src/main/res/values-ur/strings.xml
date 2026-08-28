@@ -65,4 +65,8 @@
     <string name="settings_theme_dark">گہرا</string>
     <string name="settings_dynamic_color">وال پیپر کے رنگ استعمال کریں</string>
     <string name="settings_dynamic_color_supporting">Jellyfin کے نیلے رنگ کے بجائے آپ کے وال پیپر سے رنگ لیتا ہے۔</string>
+
+    <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_styled_ass">اسٹائل شدہ ASS سب ٹائٹلز</string>
+    <string name="settings_styled_ass_supporting">libass کے ذریعے ASS/SSA بناتا ہے: فونٹس، جگہ اور اثرات۔ تجرباتی؛ اگلی بار ویڈیو چلانے پر لاگو ہوگا۔</string>
 </resources>

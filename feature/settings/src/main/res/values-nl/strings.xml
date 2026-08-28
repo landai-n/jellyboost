@@ -65,4 +65,8 @@
     <string name="settings_theme_dark">Donker</string>
     <string name="settings_dynamic_color">Achtergrondkleuren gebruiken</string>
     <string name="settings_dynamic_color_supporting">Neemt het palet van je achtergrond in plaats van het Jellyfin-blauw.</string>
+
+    <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_styled_ass">Opgemaakte ASS-ondertitels</string>
+    <string name="settings_styled_ass_supporting">Tekent ASS/SSA met libass: lettertypen, positionering en effecten. Experimenteel; geldt voor de volgende video die je start.</string>
 </resources>

@@ -60,4 +60,8 @@
     <string name="settings_theme_dark">Gelap</string>
     <string name="settings_dynamic_color">Gunakan warna wallpaper</string>
     <string name="settings_dynamic_color_supporting">Mengambil palet dari wallpaper Anda alih-alih biru Jellyfin.</string>
+
+    <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_styled_ass">Subtitle ASS bergaya</string>
+    <string name="settings_styled_ass_supporting">Menggambar ASS/SSA dengan libass: font, posisi, dan efek. Eksperimental; berlaku untuk video berikutnya yang Anda putar.</string>
 </resources>

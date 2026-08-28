@@ -60,4 +60,8 @@
     <string name="settings_theme_dark">มืด</string>
     <string name="settings_dynamic_color">ใช้สีจากวอลเปเปอร์</string>
     <string name="settings_dynamic_color_supporting">ใช้ชุดสีจากวอลเปเปอร์ของคุณแทนสีน้ำเงินของ Jellyfin</string>
+
+    <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_styled_ass">คำบรรยาย ASS แบบมีสไตล์</string>
+    <string name="settings_styled_ass_supporting">วาด ASS/SSA ด้วย libass: ฟอนต์ ตำแหน่ง และเอฟเฟกต์ อยู่ระหว่างทดลอง มีผลกับวิดีโอที่คุณเริ่มเล่นครั้งถัดไป</string>
 </resources>

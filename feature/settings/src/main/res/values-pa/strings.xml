@@ -65,4 +65,8 @@
     <string name="settings_theme_dark">ਗੂੜ੍ਹਾ</string>
     <string name="settings_dynamic_color">ਵਾਲਪੇਪਰ ਦੇ ਰੰਗ ਵਰਤੋ</string>
     <string name="settings_dynamic_color_supporting">Jellyfin ਦੇ ਨੀਲੇ ਦੀ ਬਜਾਏ ਤੁਹਾਡੇ ਵਾਲਪੇਪਰ ਤੋਂ ਰੰਗ ਲੈਂਦਾ ਹੈ।</string>
+
+    <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_styled_ass">ਸਟਾਈਲ ਵਾਲੇ ASS ਸਬਟਾਈਟਲ</string>
+    <string name="settings_styled_ass_supporting">libass ਨਾਲ ASS/SSA ਬਣਾਉਂਦਾ ਹੈ: ਫੌਂਟ, ਸਥਿਤੀ ਅਤੇ ਪ੍ਰਭਾਵ। ਪ੍ਰਯੋਗਾਤਮਕ; ਅਗਲੀ ਵਾਰ ਵੀਡੀਓ ਚਲਾਉਣ \'ਤੇ ਲਾਗੂ ਹੋਵੇਗਾ।</string>
 </resources>

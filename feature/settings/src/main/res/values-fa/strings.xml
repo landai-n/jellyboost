@@ -65,4 +65,8 @@
     <string name="settings_theme_dark">تیره</string>
     <string name="settings_dynamic_color">استفاده از رنگ‌های تصویر زمینه</string>
     <string name="settings_dynamic_color_supporting">پالت را به جای آبی Jellyfin از تصویر زمینه شما می‌گیرد.</string>
+
+    <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_styled_ass">زیرنویس‌های ASS سبک‌دار</string>
+    <string name="settings_styled_ass_supporting">ASS/SSA را با libass می‌کشد: قلم‌ها، موقعیت و جلوه‌ها. آزمایشی؛ از ویدیوی بعدی اعمال می‌شود.</string>
 </resources>

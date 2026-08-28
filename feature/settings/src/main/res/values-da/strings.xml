@@ -65,4 +65,8 @@
     <string name="settings_theme_dark">Mørkt</string>
     <string name="settings_dynamic_color">Brug tapetets farver</string>
     <string name="settings_dynamic_color_supporting">Tager paletten fra dit tapet i stedet for Jellyfins blå.</string>
+
+    <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_styled_ass">Stiliserede ASS-undertekster</string>
+    <string name="settings_styled_ass_supporting">Tegner ASS/SSA med libass: skrifttyper, placering og effekter. Eksperimentelt; gælder den næste video, du starter.</string>
 </resources>

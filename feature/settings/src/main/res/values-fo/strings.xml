@@ -65,4 +65,8 @@
     <string name="settings_theme_dark">Myrkt</string>
     <string name="settings_dynamic_color">Brúka litir úr veggbílætinum</string>
     <string name="settings_dynamic_color_supporting">Tekur litirnar úr veggbílætinum í staðin fyri Jellyfin-bláa.</string>
+
+    <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_styled_ass">Stílaðir ASS-undirtekstir</string>
+    <string name="settings_styled_ass_supporting">Tekna ASS/SSA við libass: stavasnið, staðseting og brellur. Royndarført; virkar á næsta video, tú byrjar.</string>
 </resources>

@@ -65,4 +65,8 @@
     <string name="settings_theme_dark">E errët</string>
     <string name="settings_dynamic_color">Përdor ngjyrat e sfondit</string>
     <string name="settings_dynamic_color_supporting">Merr paletën nga sfondi yt në vend të së kaltrës së Jellyfin.</string>
+
+    <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_styled_ass">Titra ASS të stilizuara</string>
+    <string name="settings_styled_ass_supporting">Vizaton ASS/SSA me libass: shkronjat, pozicionimin dhe efektet. Eksperimentale; zbatohet te videoja tjetër që nisni.</string>
 </resources>

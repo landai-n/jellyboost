@@ -67,4 +67,8 @@
     <string name="settings_theme_dark">Ciemny</string>
     <string name="settings_dynamic_color">Użyj kolorów tapety</string>
     <string name="settings_dynamic_color_supporting">Pobiera paletę z twojej tapety zamiast błękitu Jellyfin.</string>
+
+    <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_styled_ass">Stylizowane napisy ASS</string>
+    <string name="settings_styled_ass_supporting">Rysuje ASS/SSA za pomocą libass: czcionki, pozycjonowanie i efekty. Eksperymentalne; działa od następnego odtwarzanego wideo.</string>
 </resources>

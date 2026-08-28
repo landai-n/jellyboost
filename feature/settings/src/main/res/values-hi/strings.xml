@@ -69,4 +69,8 @@
     <string name="settings_theme_dark">गहरा</string>
     <string name="settings_dynamic_color">वॉलपेपर के रंग इस्तेमाल करें</string>
     <string name="settings_dynamic_color_supporting">Jellyfin के नीले रंग के बजाय आपके वॉलपेपर से रंग लेता है।</string>
+
+    <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_styled_ass">स्टाइल वाले ASS उपशीर्षक</string>
+    <string name="settings_styled_ass_supporting">libass से ASS/SSA बनाता है: फ़ॉन्ट, स्थिति और प्रभाव। प्रायोगिक; अगली बार वीडियो चलाने पर लागू होगा।</string>
 </resources>

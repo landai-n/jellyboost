@@ -64,4 +64,8 @@
     <string name="settings_theme_dark">深色</string>
     <string name="settings_dynamic_color">使用桌布顏色</string>
     <string name="settings_dynamic_color_supporting">用你嘅桌布配色，唔用 Jellyfin 藍。</string>
+
+    <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_styled_ass">有樣式嘅 ASS 字幕</string>
+    <string name="settings_styled_ass_supporting">用 libass 畫 ASS/SSA：字體、位置同特效。實驗性功能；下次播片先生效。</string>
 </resources>

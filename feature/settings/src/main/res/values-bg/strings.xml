@@ -65,4 +65,8 @@
     <string name="settings_theme_dark">Тъмна</string>
     <string name="settings_dynamic_color">Използване на цветовете на тапета</string>
     <string name="settings_dynamic_color_supporting">Взема палитрата от тапета ви вместо синьото на Jellyfin.</string>
+
+    <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_styled_ass">Стилизирани субтитри ASS</string>
+    <string name="settings_styled_ass_supporting">Изчертава ASS/SSA с libass: шрифтове, позициониране и ефекти. Експериментално; важи за следващото видео, което пуснете.</string>
 </resources>

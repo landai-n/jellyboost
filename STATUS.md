@@ -70,9 +70,24 @@ Over-media surfaces (player scrims, card scrims, both play discs, `DownloadBadge
 dark-locked `themes.xml`/splash are permanent exceptions, listed in `docs/features/theme.md`.
 `ContrastRatioTest` gained a light counterpart for every asserted pair; seven new strings across
 all 69 locales. **Known issue:** `DownloadsScreen.UsageBarTrackColor` is a pre-existing sub-3:1
-progress track and is now frozen as a `KnownViolation` on *both* sides (1.45:1 dark, 1.32:1
+progress track and is now frozen as a `KnownViolation` on *both* sides (1.45:1 dark, 1.28:1
 light) — one `pageInk` lightAlpha fixes both. **Owed:** the DoD walk (light and dynamic across
-every screen at fontScale 2.0), and `/adversarial-review` for the wave.
+every screen at fontScale 2.0).
+
+**Track 4 — the review wave (2026-08-28).** `/adversarial-review` ran over the branch and its
+confirmed findings are fixed. (1) **The light palette is now the saved canvas's**, not the
+implementation-derived one main's merge left beside it: `#EEF1F7` ground, `#191B22` ink, `#E3E8F2`
+surfaceVariant, `#9A4DB4` secondary, with primary, outline and `onSurfaceVariant`'s alpha moved off
+the canvas's own values by the minimum the pinned ratios ask for (DECISIONS 2026-08-28). Every
+dependent KDoc, `tokens.css`, the canvas's colour card and the `pageInk` light alphas (.60 → .65
+text, .44 → .48 component) follow. (2) **What is drawn on the film frame stopped following the
+page** — the skip pill's ink and edge, the cast glyph, every hairline on `VIDEO_GLASS_FILL`, the
+up-next card and the two brand accents were taking light-scheme values over black glass; the
+over-media call sites now pin them and `ContrastRatioTest` mirrors the call sites. (3) The
+styled-ASS switch's copy is honest about the music handover (track 6 below). (4) `JellyfinTheme`
+remembers the dynamic scheme, and the three draw-cache lambdas remember what they capture.
+(5) The two brand glows got their light pair, the disabled bulk-action label its light alpha and
+test case, and `settings.md` its missing Playback row.
 
 **Track 6 — styled ASS/SSA (2026-08-28, landed on `m14/theme-subs`; device walk owed).** Spike
 verdict: feasible with **no player-engine swap**, so it is implemented rather than only recorded.
@@ -88,7 +103,12 @@ those items on Media3's own parser. **Known issues:** libass-android #71 / andro
 (signs ~0.5 s late, closed upstream as *wont fix*) is an unfixable ceiling; ~+3 MB per ABI is paid
 whether the switch is on or not. **Owed:** the seven-check device walk in
 `docs/notes/m14-ass-libass-spike.md` — check (1), "visible at all on our SurfaceView path", is the
-Wholphin #1049 failure and is pass/fail for the whole feature.
+Wholphin #1049 failure and is pass/fail for the whole feature. **Accepted staleness (review wave,
+2026-08-28):** the preference is read once per player build, and a music or cast session keeps that
+player across the handover, so a toggle flipped there waits for the player to go. The switch now
+says "with nothing else playing" in all 70 string files rather than "the next video you start";
+rebuilding the player would mean re-pointing the live `MediaSession`, which is not a change to make
+before the walk (DECISIONS 2026-08-28).
 
 ## Planned milestone: M13 — Music (approved 2026-08-05; all 6 phases landed, code complete; device DoD owed)
 

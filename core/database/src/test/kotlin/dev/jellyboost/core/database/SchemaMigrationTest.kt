@@ -182,6 +182,39 @@ class SchemaMigrationTest {
         indices(11, "downloads") shouldBe indices(10, "downloads")
     }
 
+    @Test
+    fun `v11 to v12 adds the artist column and touches nothing else`() {
+        val before = columns(11, "downloads")
+        val after = columns(12, "downloads")
+
+        (after.keys - before.keys) shouldContainExactly setOf("artistName")
+    }
+
+    @Test
+    fun `v11 to v12 drops no column and changes no type`() {
+        val before = columns(11, "downloads")
+        val after = columns(12, "downloads")
+
+        (before.keys - after.keys).shouldBeEmpty()
+        before.forEach { (name, column) -> after.getValue(name) shouldBe column }
+    }
+
+    @Test
+    fun `artistName is nullable with no default, which is what keeps the bump automatic`() {
+        val column = columns(12, "downloads").getValue("artistName")
+
+        column.affinity shouldBe "TEXT"
+        column.notNull shouldBe false
+        // NULL on every row written before v12, which is what sends the read path to the cached item.
+        column.defaultValue shouldBe null
+    }
+
+    @Test
+    fun `v12 adds no table, removes none, and adds no index`() {
+        tables(12) shouldContainExactly tables(11)
+        indices(12, "downloads") shouldBe indices(11, "downloads")
+    }
+
     private data class Column(
         val affinity: String,
         val notNull: Boolean,

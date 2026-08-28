@@ -31,6 +31,8 @@ data class DownloadItem(
     val errorMessage: String? = null,
     val itemType: ItemType? = null,
     val albumName: String? = null,
+    /** A track's album artist as the download row recorded it; see [artistLine]. */
+    val artistName: String? = null,
     /** The heading's stable identity; two shows of the same name are the case it exists for. */
     val groupId: UUID? = null,
     val item: JellyfinItem? = null,
@@ -67,6 +69,20 @@ data class DownloadItem(
                 ItemType.AUDIO, ItemType.MUSIC_ALBUM -> DownloadKind.MUSIC
                 else -> if (seriesName != null || albumName != null) DownloadKind.SERIES else DownloadKind.MOVIE
             }
+
+    /**
+     * Who to credit under an album heading, resolved column → cached item, the same order [kind] uses:
+     * the column is the only answer left once the item cache is wiped, and the cached item is the only
+     * one for a row written before the column existed.
+     *
+     * Inside the fallback, album artist before track artists — the order both writers use, so a row
+     * that predates the column is credited exactly as the same row would be if enqueued today.
+     */
+    val artistLine: String?
+        get() =
+            artistName?.takeIf { it.isNotBlank() }
+                ?: item?.albumArtist?.takeIf { it.isNotBlank() }
+                ?: item?.artists?.joinToString(", ")?.takeIf { it.isNotBlank() }
 
     /** The heading these rows appear under; `null` for a film, which would only repeat its own title. */
     val groupTitle: String? get() = (seriesName ?: albumName)?.takeIf { it.isNotBlank() }

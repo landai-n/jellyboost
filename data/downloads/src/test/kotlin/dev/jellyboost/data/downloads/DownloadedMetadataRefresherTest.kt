@@ -80,7 +80,8 @@ class DownloadedMetadataRefresherTest {
         coEvery { downloadDao.allItemIds() } returns emptyList()
         coEvery { itemDao.getCacheKeys(any()) } returns emptyList()
         coEvery { itemDao.upsert(capture(upserted)) } just Runs
-        coEvery { downloadDao.backfillGrouping(any(), any(), any(), any(), any()) } just Runs
+        coEvery { downloadDao.backfillGrouping(any(), any(), any(), any(), any(), any()) } just Runs
+        coEvery { downloadDao.backfillArtist(any(), any()) } just Runs
         coEvery { sidecars.topUp(any()) } returns 0
         // `toEntity` is overloaded (items and library views), so the argument types are explicit.
         every { mapper.toEntity(any<BaseItemDto>(), any<ItemSource>(), any<Instant>()) } answers {
@@ -305,8 +306,54 @@ class DownloadedMetadataRefresherTest {
 
             // Without this write the row stays a downloaded album that reads as a downloaded show.
             coVerify {
-                downloadDao.backfillGrouping(uuid(30), ItemType.AUDIO, null, "Rumours", uuid(40))
+                downloadDao.backfillGrouping(uuid(30), ItemType.AUDIO, null, "Rumours", "Fleetwood Mac", uuid(40))
             }
+        }
+
+    @Test
+    fun `a track stamped before the artist column existed still gets its artist`() =
+        runTest {
+            coEvery { downloadDao.allItemIds() } returns listOf(uuid(30))
+            coEvery { api.getFullItems(listOf(uuid(30))) } returns AppResult.Success(listOf(track()))
+            coEvery { api.getFullItems(listOf(uuid(40), uuid(50))) } returns
+                AppResult.Success(listOf(album(), artist()))
+
+            refresher().refresh()
+
+            // Such a row has an `itemType`, so the grouping statement's own guard skips it entirely and
+            // only the `artistName IS NULL` one can reach it.
+            coVerify { downloadDao.backfillArtist(uuid(30), "Fleetwood Mac") }
+        }
+
+    @Test
+    fun `a track that names no artist at all writes no artist rather than a blank one`() =
+        runTest {
+            coEvery { downloadDao.allItemIds() } returns listOf(uuid(30))
+            coEvery { api.getFullItems(listOf(uuid(30))) } returns
+                AppResult.Success(listOf(track(albumArtist = "   ", albumArtistId = null)))
+            coEvery { api.getFullItems(listOf(uuid(40))) } returns AppResult.Success(listOf(album()))
+
+            refresher().refresh()
+
+            coVerify { downloadDao.backfillArtist(uuid(30), null) }
+        }
+
+    @Test
+    fun `a blank album artist falls through to the artists here too, or the credit never lands`() =
+        runTest {
+            // The sibling of `DownloadEnqueuer.toDownloadRow`'s own per-operand test: writing null
+            // here is permanent, since `backfillArtist`'s `artistName IS NULL` guard re-derives the
+            // same null on every later pass.
+            coEvery { downloadDao.allItemIds() } returns listOf(uuid(30))
+            coEvery { api.getFullItems(listOf(uuid(30))) } returns
+                AppResult.Success(
+                    listOf(track(albumArtist = "   ", albumArtistId = null, artists = listOf("Fleetwood Mac"))),
+                )
+            coEvery { api.getFullItems(listOf(uuid(40))) } returns AppResult.Success(listOf(album()))
+
+            refresher().refresh()
+
+            coVerify { downloadDao.backfillArtist(uuid(30), "Fleetwood Mac") }
         }
 
     @Test
@@ -320,7 +367,7 @@ class DownloadedMetadataRefresherTest {
             refresher().refresh()
 
             coVerify {
-                downloadDao.backfillGrouping(uuid(2), ItemType.EPISODE, "Westworld", null, uuid(10))
+                downloadDao.backfillGrouping(uuid(2), ItemType.EPISODE, "Westworld", null, null, uuid(10))
             }
         }
 
@@ -334,8 +381,10 @@ class DownloadedMetadataRefresherTest {
 
             refresher().refresh()
 
-            coVerify(exactly = 0) { downloadDao.backfillGrouping(uuid(10), any(), any(), any(), any()) }
-            coVerify(exactly = 0) { downloadDao.backfillGrouping(uuid(11), any(), any(), any(), any()) }
+            coVerify(exactly = 0) { downloadDao.backfillGrouping(uuid(10), any(), any(), any(), any(), any()) }
+            coVerify(exactly = 0) { downloadDao.backfillGrouping(uuid(11), any(), any(), any(), any(), any()) }
+            coVerify(exactly = 0) { downloadDao.backfillArtist(uuid(10), any()) }
+            coVerify(exactly = 0) { downloadDao.backfillArtist(uuid(11), any()) }
         }
 
     @Test
@@ -358,22 +407,32 @@ class DownloadedMetadataRefresherTest {
             // The guard is applied here the way the statement applies it — the module has no Room
             // instance to run the real SQL against.
             val row =
-                download(itemId = uuid(30), itemType = ItemType.AUDIO, albumName = "Rumours", groupId = uuid(40))
+                download(
+                    itemId = uuid(30),
+                    itemType = ItemType.AUDIO,
+                    albumName = "Rumours",
+                    artistName = "Fleetwood Mac",
+                    groupId = uuid(40),
+                )
             var stored = row
-            coEvery { downloadDao.backfillGrouping(any(), any(), any(), any(), any()) } answers {
+            coEvery { downloadDao.backfillGrouping(any(), any(), any(), any(), any(), any()) } answers {
                 if (stored.itemType == null) {
                     stored =
                         stored.copy(
                             itemType = secondArg(),
                             seriesName = thirdArg(),
                             albumName = arg(3),
-                            groupId = arg(4),
+                            artistName = arg(4),
+                            groupId = arg(5),
                         )
                 }
             }
+            coEvery { downloadDao.backfillArtist(any(), any()) } answers {
+                if (stored.artistName == null) stored = stored.copy(artistName = secondArg())
+            }
             coEvery { downloadDao.allItemIds() } returns listOf(uuid(30))
             coEvery { api.getFullItems(listOf(uuid(30))) } returns
-                AppResult.Success(listOf(track(album = "Rumours (Remastered)")))
+                AppResult.Success(listOf(track(album = "Rumours (Remastered)", albumArtist = "Various Artists")))
             coEvery { api.getFullItems(listOf(uuid(40), uuid(50))) } returns
                 AppResult.Success(listOf(album(), artist()))
 

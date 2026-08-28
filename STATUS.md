@@ -37,6 +37,28 @@ Known issues:
 
 ## Planned milestone: M13 — Music (approved 2026-08-05; all 6 phases landed, code complete; device DoD owed)
 
+**2026-08-28 — the downloads presentation wave.** Five user-directed changes in
+one pass. The download row now records its **artist** (`artistName`, Room v11 →
+v12, still an `@AutoMigration`; the metadata refresh backfills older rows through
+a second `WHERE artistName IS NULL` statement, because the column is younger than
+the grouping guard and that guard can no longer reach those rows). On it, a music
+group header draws the **album cover and the artist**, and its track rows drop the
+artwork they were all repeating — series groups are unchanged, an episode still
+belonging to its own row. The *Queue* tab gains the *Downloaded* tab's
+**MOVIES/SERIES/MUSIC sections**, with nothing folding (an active transfer must
+never be hidden); reorder now moves a row to its nearest same-kind neighbour, so
+an arrow means something under a header. The queue row's **status line no longer
+shares the title's line** — the size·speed·ETA string was starving the title on a
+portrait tablet, which is wide enough to get the non-compact tier. And the **cast
+button is drawn in every state but `Unavailable`**, instead of holding an invisible
+48dp hole in the action cluster whenever no receiver is discoverable. No new
+strings. Full gate + all four python guardrails green on every commit; DECISIONS
+entry of the same date. **Owed to a device walk:** the v11→v12 upgrade without a
+wipe, an album's artist appearing after a metadata refresh on a row that predates
+the column, the sectioned queue's reorder arrows under TalkBack, the queue row at
+fontScale 2.0 in portrait, and the cast button's chooser opening with no receiver
+on the network.
+
 **2026-08-26 — the password field is the same height as the username field, this time
 for real.** The 2026-08-21 fix (`7f4066cf`) wrapped the trailing slot in
 `requiredSize(MinTouchTarget)`, which ignores incoming constraints but still *reports*

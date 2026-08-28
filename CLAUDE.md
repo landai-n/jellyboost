@@ -105,6 +105,14 @@ usage optimization); the main (Fable) context orchestrates, reviews, and verifie
 - `/verify` before every commit (the pre-commit hook enforces it).
 - `/checkpoint` at least once per completed sub-task: verify → docs → small conventional commit
   (prefixes: feat/fix/refactor/test/docs/chore/build).
+- `/adversarial-review` at the end of every feature/fix wave, before its branch merges to
+  main (or before the wave's final checkpoint when working directly on main): the
+  multi-agent semantic review gate. Division of labour is strict to avoid duplicated
+  checks — `/verify` and the guardrail scripts own everything mechanical; this gate owns
+  only the audit-checklist classes no tool catches (its skill file carries the ownership
+  table). Orchestrator-run, so the hook cannot enforce it: treat "merged without review"
+  like "committed without verify". Docs-only or purely mechanical waves may skip it,
+  stated explicitly.
 - `/milestone` to start/finish a milestone (DoD verification on a real device, `git tag m<N>`).
 - `/document-feature` when adding or materially changing a feature
   (`docs/features/<name>.md`, `docs/ARCHITECTURE.md`).

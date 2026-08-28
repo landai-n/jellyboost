@@ -9,6 +9,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import app.cash.turbine.test
 import dev.jellyboost.core.common.model.DownloadQuality
 import dev.jellyboost.core.common.model.SegmentSkipMode
+import dev.jellyboost.core.common.model.ThemeMode
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -314,6 +315,101 @@ class DataStoreAppPreferencesTest {
 
                 preferences.setOutroSkipMode(SegmentSkipMode.OFF)
                 awaitItem() shouldBe SegmentSkipMode.OFF
+
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `the theme mode defaults to following the system`() =
+        runTest {
+            val preferences = DataStoreAppPreferences(dataStore(this))
+
+            preferences.themeMode.first() shouldBe ThemeMode.SYSTEM
+        }
+
+    @Test
+    fun `a theme mode survives a round trip through storage`() =
+        runTest {
+            val store = dataStore(this)
+
+            DataStoreAppPreferences(store).setThemeMode(ThemeMode.LIGHT)
+
+            DataStoreAppPreferences(store).themeMode.first() shouldBe ThemeMode.LIGHT
+        }
+
+    @Test
+    fun `an unrecognised stored theme mode degrades to following the system`() =
+        runTest {
+            val store = dataStore(this)
+            // What a downgrade looks like: a name only a newer build knows.
+            store.edit { it[stringPreferencesKey(PreferenceKeys.THEME_MODE)] = "MIDNIGHT" }
+
+            DataStoreAppPreferences(store).themeMode.first() shouldBe ThemeMode.SYSTEM
+        }
+
+    @Test
+    fun `emits every theme mode change to observers`() =
+        runTest {
+            val preferences = DataStoreAppPreferences(dataStore(this))
+
+            preferences.themeMode.test {
+                awaitItem() shouldBe ThemeMode.SYSTEM
+
+                preferences.setThemeMode(ThemeMode.DARK)
+                awaitItem() shouldBe ThemeMode.DARK
+
+                preferences.setThemeMode(ThemeMode.LIGHT)
+                awaitItem() shouldBe ThemeMode.LIGHT
+
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `dynamic colour defaults to off`() =
+        runTest {
+            // The brand primary is pinned by decision; Material You is something the user opts into.
+            val preferences = DataStoreAppPreferences(dataStore(this))
+
+            preferences.dynamicColorEnabled.first() shouldBe false
+        }
+
+    @Test
+    fun `turning dynamic colour on survives a round trip through storage`() =
+        runTest {
+            val store = dataStore(this)
+
+            DataStoreAppPreferences(store).setDynamicColorEnabled(true)
+
+            DataStoreAppPreferences(store).dynamicColorEnabled.first() shouldBe true
+        }
+
+    @Test
+    fun `the two appearance preferences do not interfere with each other`() =
+        runTest {
+            val preferences = DataStoreAppPreferences(dataStore(this))
+
+            preferences.setThemeMode(ThemeMode.LIGHT)
+            preferences.setDynamicColorEnabled(true)
+
+            preferences.themeMode.first() shouldBe ThemeMode.LIGHT
+            preferences.dynamicColorEnabled.first() shouldBe true
+        }
+
+    @Test
+    fun `emits every dynamic colour change to observers`() =
+        runTest {
+            val preferences = DataStoreAppPreferences(dataStore(this))
+
+            preferences.dynamicColorEnabled.test {
+                awaitItem() shouldBe false
+
+                preferences.setDynamicColorEnabled(true)
+                awaitItem() shouldBe true
+
+                preferences.setDynamicColorEnabled(false)
+                awaitItem() shouldBe false
 
                 cancelAndIgnoreRemainingEvents()
             }

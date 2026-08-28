@@ -26,4 +26,7 @@ object PreferenceKeys {
     const val SEGMENT_SKIP_INTRO = "segment_skip_intro"
     const val SEGMENT_SKIP_OUTRO = "segment_skip_outro"
     const val PIP_ON_LEAVE = "pip_on_leave"
+
+    const val THEME_MODE = "theme_mode"
+    const val DYNAMIC_COLOR_ENABLED = "dynamic_color_enabled"
 }

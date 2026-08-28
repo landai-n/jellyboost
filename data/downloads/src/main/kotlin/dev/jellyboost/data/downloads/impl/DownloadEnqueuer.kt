@@ -306,6 +306,7 @@ internal class DownloadEnqueuer
                 itemType = type.toItemType(),
                 seriesName = seriesName,
                 albumName = album?.takeIf { it.isNotBlank() },
+                artistName = (albumArtist ?: artists?.joinToString(", "))?.takeIf { it.isNotBlank() },
                 groupId = seriesId ?: albumId,
                 errorMessage = null,
                 createdAt = existing?.createdAt ?: now,

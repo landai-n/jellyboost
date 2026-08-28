@@ -217,7 +217,40 @@ class DownloadEnqueuerTest {
             row.itemType shouldBe ItemType.AUDIO
             row.seriesName.shouldBeNull()
             row.albumName shouldBe "Rumours"
+            row.artistName shouldBe "Fleetwood Mac"
             row.groupId shouldBe uuid(40)
+        }
+
+    @Test
+    fun `a track with no album artist is credited to the artists it does name`() =
+        runTest {
+            givenAlbum(trackIds = listOf(uuid(30)))
+            coEvery { api.getFullItems(listOf(uuid(30))) } returns
+                AppResult.Success(
+                    listOf(
+                        track(
+                            albumArtist = null,
+                            albumArtistId = null,
+                            artists = listOf("Fleetwood Mac", "Various Artists"),
+                        ),
+                    ),
+                )
+
+            enqueuer().enqueue(uuid(40), USER)
+
+            row.artistName shouldBe "Fleetwood Mac, Various Artists"
+        }
+
+    @Test
+    fun `a blank album artist is recorded as no artist rather than as an empty credit`() =
+        runTest {
+            givenAlbum(trackIds = listOf(uuid(30)))
+            coEvery { api.getFullItems(listOf(uuid(30))) } returns
+                AppResult.Success(listOf(track(albumArtist = "  ", albumArtistId = null)))
+
+            enqueuer().enqueue(uuid(40), USER)
+
+            row.artistName.shouldBeNull()
         }
 
     @Test
@@ -230,6 +263,7 @@ class DownloadEnqueuerTest {
             row.itemType shouldBe ItemType.MOVIE
             row.seriesName.shouldBeNull()
             row.albumName.shouldBeNull()
+            row.artistName.shouldBeNull()
             row.groupId.shouldBeNull()
         }
 

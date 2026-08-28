@@ -32,6 +32,8 @@ import java.util.UUID
  *   that keeps the retry policy bounded. *Resume* clears it, so a user-initiated attempt starts fresh.
  * @property itemType what this row is. `null` on a row written before the column existed, which every
  *   reader has to fold back onto the cached item.
+ * @property artistName a track's album artist. `null` on a non-music row and on one written before the
+ *   column existed, so every reader has to fold back onto the cached item.
  * @property groupId the stable identity of the heading these rows file under — an episode's `seriesId`, a
  *   track's `albumId`, `null` for a film. Two shows of the same name are the case it exists for.
  * @property bakedAudioStreamIndex the **absolute** `MediaStream.index` of the one audio track a transcoded
@@ -74,6 +76,7 @@ data class DownloadEntity(
     /** An episode's series, and only that: a track's album goes in [albumName]. */
     val seriesName: String? = null,
     val albumName: String? = null,
+    val artistName: String? = null,
     val groupId: UUID? = null,
     val errorMessage: String? = null,
     val createdAt: Instant,

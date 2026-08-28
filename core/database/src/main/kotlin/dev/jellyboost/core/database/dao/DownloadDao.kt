@@ -117,16 +117,31 @@ interface DownloadDao {
     @Query(
         """
         UPDATE downloads
-        SET itemType = :type, seriesName = :seriesName, albumName = :albumName, groupId = :groupId
+        SET itemType = :type, seriesName = :seriesName, albumName = :albumName,
+            artistName = :artistName, groupId = :groupId
         WHERE itemId = :itemId AND itemType IS NULL
         """,
     )
+    @Suppress("LongParameterList")
     suspend fun backfillGrouping(
         itemId: UUID,
         type: ItemType,
         seriesName: String?,
         albumName: String?,
+        artistName: String?,
         groupId: UUID?,
+    )
+
+    /**
+     * The artist column is younger than [backfillGrouping]'s guard, so every row stamped between the two
+     * has an `itemType` and no artist and would never be reached by that statement. The `artistName IS
+     * NULL` test is what keeps this from overwriting a value an enqueue wrote: it fills the column once
+     * and never again.
+     */
+    @Query("UPDATE downloads SET artistName = :artistName WHERE itemId = :itemId AND artistName IS NULL")
+    suspend fun backfillArtist(
+        itemId: UUID,
+        artistName: String?,
     )
 
     @Upsert

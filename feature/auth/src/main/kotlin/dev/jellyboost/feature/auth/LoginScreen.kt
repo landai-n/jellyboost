@@ -35,6 +35,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -76,6 +77,7 @@ import dev.jellyboost.core.ui.component.PrimaryPillButton
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTheme
+import dev.jellyboost.core.ui.theme.pageInk
 import java.util.UUID
 import dev.jellyboost.core.ui.R as CoreUiR
 
@@ -134,7 +136,9 @@ private val QuickConnectDigitStyle =
         // Tabular figures: varying digit widths would make the boxes wobble character to character.
         fontFeatureSettings = "tnum",
     )
-private val QuickConnectDigitFill = Color.White.copy(alpha = 0.05f)
+private val QuickConnectDigitFill: Color
+    @Composable @ReadOnlyComposable
+    get() = pageInk(darkAlpha = 0.05f)
 
 @Composable
 fun LoginScreen(
@@ -497,7 +501,7 @@ private fun PublicUserAvatar(
         if (selected) {
             MaterialTheme.colorScheme.primary
         } else {
-            Color.White.copy(alpha = AVATAR_RING_UNSELECTED_ALPHA)
+            pageInk(darkAlpha = AVATAR_RING_UNSELECTED_ALPHA)
         }
 
     Column(
@@ -604,7 +608,7 @@ private fun QuickConnectDialog(
                             modifier = Modifier.size(16.dp),
                             strokeWidth = 2.dp,
                             color = MaterialTheme.colorScheme.primary,
-                            trackColor = Color.White.copy(alpha = 0.14f),
+                            trackColor = pageInk(darkAlpha = 0.14f),
                         )
                         Text(
                             text = stringResource(R.string.login_quick_connect_waiting),
@@ -660,7 +664,11 @@ private fun QuickConnectDigitBox(
                 .border(width = GlassDefaults.HairlineWidth, color = GlassDefaults.Hairline, shape = shape),
         contentAlignment = Alignment.Center,
     ) {
-        Text(text = digit.toString(), style = QuickConnectDigitStyle, color = Color.White)
+        Text(
+            text = digit.toString(),
+            style = QuickConnectDigitStyle,
+            color = MaterialTheme.colorScheme.onBackground,
+        )
     }
 }
 

@@ -151,7 +151,9 @@ private fun TopNavTab(
                 .clip(CircleShape)
                 .selectable(selected = selected, onClick = onClick, role = Role.Tab)
                 .background(
-                    color = if (selected) Color.White else Color.Transparent,
+                    // The brand pill's rule: the page's own ink filled, the page written on it. In
+                    // the dark scheme that is the white pill the refresh drew, unchanged.
+                    color = if (selected) MaterialTheme.colorScheme.onBackground else Color.Transparent,
                     shape = CircleShape,
                 ).padding(horizontal = TabHorizontalPadding),
         horizontalArrangement = Arrangement.spacedBy(TabIconGap),

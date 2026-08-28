@@ -323,7 +323,7 @@ private fun BufferingDisc() {
         modifier =
             Modifier
                 .size(PLAY_BUTTON)
-                .background(Color.White, CircleShape)
+                .background(OVER_MEDIA_DISC, CircleShape)
                 .semantics {
                     contentDescription = label
                     liveRegion = LiveRegionMode.Polite
@@ -349,7 +349,7 @@ private fun PlayPauseButton(
         shape = CircleShape,
         colors =
             ButtonDefaults.buttonColors(
-                containerColor = Color.White,
+                containerColor = OVER_MEDIA_DISC,
                 contentColor = PLAY_GLYPH,
             ),
         contentPadding = PaddingValues(0.dp),
@@ -914,7 +914,13 @@ private val PLAY_BUTTON = 68.dp
 
 private val PLAY_ICON = 30.dp
 
-/** The glyph on the white disc: the app background colour, as everywhere else in the refresh. */
+/**
+ * The one pill in the app that does not follow the colour scheme. It sits on the video frame, which
+ * is letterboxed black in both themes, so the disc stays white and its glyph stays `#101010`
+ * whatever Settings is set to — the same reason the scrims above are literal black.
+ */
+private val OVER_MEDIA_DISC = Color.White
+
 private val PLAY_GLYPH = Color(0xFF101010)
 
 // --- Bottom bar --------------------------------------------------------------------------------

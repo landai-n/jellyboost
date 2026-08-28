@@ -639,7 +639,7 @@ private fun PlayPauseButton(
         onClick = onClick,
         modifier = Modifier.size(PlayButtonSize),
         shape = CircleShape,
-        colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = PlayGlyphColor),
+        colors = ButtonDefaults.buttonColors(containerColor = OverMediaDisc, contentColor = PlayGlyphColor),
         contentPadding = PaddingValues(0.dp),
     ) {
         Icon(
@@ -701,6 +701,13 @@ private val ArtworkSizeCompact = 320.dp
 private val ArtworkSizeWide = 360.dp
 private val PlayButtonSize = 72.dp
 private val PlayIconSize = 32.dp
+
+/**
+ * `PlayerControls.OVER_MEDIA_DISC`'s sibling: this disc sits on the album artwork, which is a
+ * photograph in both themes, so it stays white with a `#101010` glyph whatever Settings is set to.
+ */
+private val OverMediaDisc = Color.White
+
 private val PlayGlyphColor = Color(0xFF101010)
 
 private val NowPlayingArtistStyle = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.W500)

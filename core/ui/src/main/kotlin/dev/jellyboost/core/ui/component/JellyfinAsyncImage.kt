@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Movie
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -19,12 +20,15 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import dev.jellyboost.core.ui.theme.JellyfinGradients
+import dev.jellyboost.core.ui.theme.pageInk
 
 /** One size everywhere, from card to backdrop. */
 private val PlaceholderGlyphSize = 30.dp
 
 /** Quieter than `onSurfaceVariant`: a placeholder reads as absence, not as a picture. */
-private val PlaceholderGlyphTint = Color.White.copy(alpha = 0.35f)
+private val PlaceholderGlyphTint: Color
+    @Composable @ReadOnlyComposable
+    get() = pageInk(darkAlpha = 0.35f)
 
 /**
  * Takes an already-built URL: assembling them is the data layer's job, so `:core:ui` stays free of

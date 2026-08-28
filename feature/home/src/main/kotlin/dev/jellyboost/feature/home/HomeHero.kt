@@ -252,7 +252,9 @@ private fun HeroTitle(
     Text(
         text = title,
         style = if (expanded) JellyfinTypeExtras.HeroTitleExpanded else JellyfinTypeExtras.HeroTitleCompact,
-        color = Color.White,
+        // Not over the artwork: `BackdropScrim` has already faded to the page colour by this row,
+        // which is why the eyebrow beside it is `onSurfaceVariant` rather than a dimmed white.
+        color = MaterialTheme.colorScheme.onBackground,
         maxLines = maxLines,
         overflow = TextOverflow.Ellipsis,
         modifier = modifier.semantics { contentDescription = title },

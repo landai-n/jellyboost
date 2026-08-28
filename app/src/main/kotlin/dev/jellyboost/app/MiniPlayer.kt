@@ -29,6 +29,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -53,6 +54,7 @@ import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.core.ui.theme.glassSurface
+import dev.jellyboost.core.ui.theme.pageInk
 import dev.jellyboost.core.ui.theme.popShadow
 
 /**
@@ -259,7 +261,9 @@ private val ArtSize = 44.dp
 
 private val ProgressLineHeight = 2.dp
 
-private val ProgressTrackColor = Color.White.copy(alpha = 0.12f)
+private val ProgressTrackColor: Color
+    @Composable @ReadOnlyComposable
+    get() = pageInk(darkAlpha = 0.12f)
 
 private val TitleStyle = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.W600)
 

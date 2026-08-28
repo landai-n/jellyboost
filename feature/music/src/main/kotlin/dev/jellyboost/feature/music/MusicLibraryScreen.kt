@@ -171,8 +171,8 @@ private fun MusicLibrarySegment(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // The app background `#101010`, not `Color.Black`: `GlassBottomNav` and `DownloadsTabRow` both
-    // put the page colour on the selected white pill.
+    // The page colour, not `Color.Black`: `GlassBottomNav` and `DownloadsTabRow` both put the page
+    // on the selected pill, whose fill is the page's own ink.
     val contentColor =
         if (selected) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.onSurfaceVariant
     Box(
@@ -181,7 +181,10 @@ private fun MusicLibrarySegment(
                 .height(Dimens.PillHeightSmall)
                 .clip(CircleShape)
                 .selectable(selected = selected, onClick = onClick, role = Role.Tab)
-                .background(color = if (selected) Color.White else Color.Transparent, shape = CircleShape),
+                .background(
+                    color = if (selected) MaterialTheme.colorScheme.onBackground else Color.Transparent,
+                    shape = CircleShape,
+                ),
         contentAlignment = Alignment.Center,
     ) {
         Text(text = label, style = TabLabelStyle, color = contentColor, maxLines = 1, overflow = TextOverflow.Ellipsis)

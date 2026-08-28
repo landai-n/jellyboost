@@ -3,7 +3,9 @@ package dev.jellyboost.core.ui.theme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -19,25 +21,71 @@ import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
 import dev.chrisbanes.haze.hazeEffect
 
+/**
+ * Every colour here comes in a `Dark`/`Light` pair behind a `@Composable` accessor of the old name,
+ * so a call site keeps reading [Fill] and gets the scheme it is drawn in. The pairs are what
+ * `ContrastRatioTest` measures, which is why they stay reachable by name.
+ *
+ * The two sides are **not** mirror images. A glass *fill* gets lighter in both schemes — white@6%
+ * lifts a surface off a dark page, white@55% is what lifts one off a light page — while every
+ * *hairline* flips to black, because an edge is drawn by darkening a light ground.
+ */
 object GlassDefaults {
-    val Fill: Color = Color.White.copy(alpha = 0.06f)
+    val DarkFill: Color = Color.White.copy(alpha = 0.06f)
 
-    val Hairline: Color = Color.White.copy(alpha = 0.09f)
+    /**
+     * Far heavier than [DarkFill], and it has to be: 6% of white over a near-white page is nothing,
+     * where 6% of white over `#101010` is already a visible lift. 55% over the blur is what makes a
+     * light glass surface read as a surface.
+     */
+    val LightFill: Color = Color.White.copy(alpha = 0.55f)
+
+    val Fill: Color
+        @Composable @ReadOnlyComposable
+        get() = if (LocalIsLightTheme.current) LightFill else DarkFill
+
+    val DarkHairline: Color = Color.White.copy(alpha = 0.09f)
+
+    /** Black@10% is 1.25:1 on `#F6F7F8` — the same seam strength [DarkHairline] has on `#101010`. */
+    val LightHairline: Color = Color.Black.copy(alpha = 0.10f)
+
+    val Hairline: Color
+        @Composable @ReadOnlyComposable
+        get() = if (LocalIsLightTheme.current) LightHairline else DarkHairline
 
     val HairlineWidth: Dp = 1.dp
 
     val BlurRadius: Dp = 18.dp
 
-    val ArtworkInnerHairline: Color = Color.White.copy(alpha = 0.07f)
+    val DarkArtworkInnerHairline: Color = Color.White.copy(alpha = 0.07f)
 
-    val PanelHairline: Color = Color.White.copy(alpha = 0.06f)
+    val LightArtworkInnerHairline: Color = Color.Black.copy(alpha = 0.07f)
+
+    val ArtworkInnerHairline: Color
+        @Composable @ReadOnlyComposable
+        get() = if (LocalIsLightTheme.current) LightArtworkInnerHairline else DarkArtworkInnerHairline
+
+    val DarkPanelHairline: Color = Color.White.copy(alpha = 0.06f)
+
+    val LightPanelHairline: Color = Color.Black.copy(alpha = 0.06f)
+
+    val PanelHairline: Color
+        @Composable @ReadOnlyComposable
+        get() = if (LocalIsLightTheme.current) LightPanelHairline else DarkPanelHairline
 
     /**
      * A ghost button's whole visual boundary, so WCAG 1.4.11 asks 3:1 of it: on `#101010` white
      * needs α ≥ 0.333 (0.12 measured 1.38:1). 0.40 is 3.82:1, and 3.75:1 for ghost pills on
      * `#202020`. The other hairlines are seams on surfaces that already have a fill, hence lower.
      */
-    val GhostBorder: Color = Color.White.copy(alpha = 0.40f)
+    val DarkGhostBorder: Color = Color.White.copy(alpha = 0.40f)
+
+    /** The same 3:1, re-derived: black@40% is only 2.82:1 on `#F6F7F8`; 0.44 is 3.21:1, 3.24:1 on a card. */
+    val LightGhostBorder: Color = Color.Black.copy(alpha = 0.44f)
+
+    val GhostBorder: Color
+        @Composable @ReadOnlyComposable
+        get() = if (LocalIsLightTheme.current) LightGhostBorder else DarkGhostBorder
 
     /**
      * Chrome floats over arbitrary artwork, so its tint must be *dark* enough to be subtractive:
@@ -45,14 +93,32 @@ object GlassDefaults {
      * text owes; at 72% it composites to rgb(83), 7.70:1 white and 4.77:1 for `onSurfaceVariant`.
      * In-content glass keeps [Fill] — it sits on artwork the card already scrimmed.
      */
-    val ChromeFill: Color = JellyfinColors.Background.copy(alpha = 0.72f)
+    val DarkChromeFill: Color = JellyfinColors.Background.copy(alpha = 0.72f)
+
+    /**
+     * The same 72%, additive instead of subtractive: the worst case flips to the *darkest* frame,
+     * where the page's near-white composites to rgb(177) and the light scheme's own ink reads
+     * 8.95:1 (`onBackground`) and 6.07:1 (`onSurfaceVariant`) on it. Over a white frame it is
+     * 18.10:1 / 9.07:1.
+     */
+    val LightChromeFill: Color = JellyfinLightColors.Background.copy(alpha = 0.72f)
+
+    val ChromeFill: Color
+        @Composable @ReadOnlyComposable
+        get() = if (LocalIsLightTheme.current) LightChromeFill else DarkChromeFill
 
     /**
      * Same value and same arithmetic as [ChromeFill], kept separate: a scrim behind a glass surface
      * is not part of the sampled backdrop, so if the top bars ever gain a real scrim the bottom
      * pill still cannot have one and this tint stays its only contrast lever.
      */
-    val BottomNavFill: Color = JellyfinColors.Background.copy(alpha = 0.72f)
+    val DarkBottomNavFill: Color = JellyfinColors.Background.copy(alpha = 0.72f)
+
+    val LightBottomNavFill: Color = JellyfinLightColors.Background.copy(alpha = 0.72f)
+
+    val BottomNavFill: Color
+        @Composable @ReadOnlyComposable
+        get() = if (LocalIsLightTheme.current) LightBottomNavFill else DarkBottomNavFill
 
     /**
      * Downscaled blur is visible as texture on the physical panel even when screenshot analysis
@@ -64,13 +130,16 @@ object GlassDefaults {
     /**
      * `backgroundColor` must name the real app background, not transparent: Haze composites the
      * blurred backdrop over it, and transparent washes a surface over empty screen towards black.
+     * It reads the *active* scheme, so a light page does not get a surface washed towards `#101010`.
      */
+    @Composable
+    @ReadOnlyComposable
     fun style(
         tint: Color = Fill,
         blurRadius: Dp = BlurRadius,
     ): HazeStyle =
         HazeStyle(
-            backgroundColor = JellyfinColors.Background,
+            backgroundColor = MaterialTheme.colorScheme.background,
             tint = HazeTint(tint),
             blurRadius = blurRadius,
         )
@@ -109,9 +178,10 @@ fun Modifier.glassSurface(
         remember(inputScale) {
             { this.inputScale = inputScale }
         }
+    val style = GlassDefaults.style(tint = tint)
     val backdrop =
         if (hazeState != null) {
-            Modifier.hazeEffect(state = hazeState, style = GlassDefaults.style(tint = tint), block = effect)
+            Modifier.hazeEffect(state = hazeState, style = style, block = effect)
         } else {
             Modifier.background(color = tint, shape = shape)
         }
@@ -121,6 +191,7 @@ fun Modifier.glassSurface(
 }
 
 /** [glassSurface] without the blur, for cards and panels that sit over other cards. */
+@Composable
 fun Modifier.mSurface(
     surfaceColor: Color,
     radius: Dp = Dimens.CardCornerRadius,

@@ -24,6 +24,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -46,16 +47,23 @@ import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
+import dev.jellyboost.core.ui.theme.pageInk
 
-private val FieldFill = Color.White.copy(alpha = 0.04f)
+private val FieldFill: Color
+    @Composable @ReadOnlyComposable
+    get() = pageInk(darkAlpha = 0.04f)
 
 /**
  * The app's only focus affordance, so it owes 3:1 (WCAG 1.4.11, and 2.4.7 while focused). 0.22
  * measured 1.97:1 on `#101010`; 0.42 is 4.09:1 there and 3.99:1 on `#202020`.
  */
-private val FieldActiveBorder = Color.White.copy(alpha = 0.42f)
+private val FieldActiveBorder: Color
+    @Composable @ReadOnlyComposable
+    get() = pageInk(darkAlpha = 0.42f, lightAlpha = 0.44f)
 
-private val FieldPlaceholder = Color.White.copy(alpha = 0.48f)
+private val FieldPlaceholder: Color
+    @Composable @ReadOnlyComposable
+    get() = pageInk(darkAlpha = 0.48f, lightAlpha = 0.60f)
 
 private val FieldPadding = 14.dp
 

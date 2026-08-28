@@ -39,6 +39,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
@@ -74,6 +75,7 @@ import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinGradients
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
+import dev.jellyboost.core.ui.theme.pageInk
 import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 import dev.jellyboost.core.ui.R as CoreUiR
@@ -118,9 +120,13 @@ private const val SERVER_BADGE_BORDER_ALPHA = 0.30f
 private val ServerBadgeBorderWidth = 1.dp
 private val ServerBadgeIconSize = 18.dp
 
-private val TrackColor = Color.White.copy(alpha = 0.14f)
+private val TrackColor: Color
+    @Composable @ReadOnlyComposable
+    get() = pageInk(darkAlpha = 0.14f)
 
-private val ProgressTrackColor = Color.White.copy(alpha = 0.12f)
+private val ProgressTrackColor: Color
+    @Composable @ReadOnlyComposable
+    get() = pageInk(darkAlpha = 0.12f)
 
 private val ConnectingProgressHeight = 4.dp
 
@@ -200,7 +206,7 @@ private fun BrandHero() {
         Text(
             text = stringResource(R.string.auth_app_name),
             style = JellyfinTypeExtras.Wordmark,
-            color = Color.White,
+            color = MaterialTheme.colorScheme.onBackground,
         )
         Text(
             text = stringResource(R.string.server_setup_tagline),

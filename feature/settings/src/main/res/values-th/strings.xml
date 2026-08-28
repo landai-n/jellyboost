@@ -51,4 +51,13 @@
     <string name="settings_licence_intro">Jellyboost เป็นซอฟต์แวร์เสรี คุณสามารถใช้ ศึกษา แบ่งปัน และแก้ไขได้ภายใต้เงื่อนไขของ GNU General Public License เวอร์ชัน 3 หรือเวอร์ชันใดก็ตามที่ใหม่กว่า โดยไม่มีการรับประกันใด ๆ</string>
     <string name="settings_third_party">สัญญาอนุญาตของบุคคลที่สาม</string>
     <string name="settings_third_party_supporting">ส่วนประกอบโอเพนซอร์สที่ใช้สร้างแอปนี้</string>
+
+    <!-- Appearance -->
+    <string name="settings_section_appearance">ลักษณะ</string>
+    <string name="settings_theme">ธีม</string>
+    <string name="settings_theme_system">ตามอุปกรณ์</string>
+    <string name="settings_theme_light">สว่าง</string>
+    <string name="settings_theme_dark">มืด</string>
+    <string name="settings_dynamic_color">ใช้สีจากวอลเปเปอร์</string>
+    <string name="settings_dynamic_color_supporting">ใช้ชุดสีจากวอลเปเปอร์ของคุณแทนสีน้ำเงินของ Jellyfin</string>
 </resources>

@@ -53,4 +53,13 @@
     <string name="settings_licence_intro">Jellyboost este software liber: îl poți folosi, studia, distribui și modifica în termenii licenței GNU General Public License, versiunea 3 sau orice versiune ulterioară. Este oferit fără nicio garanție.</string>
     <string name="settings_third_party">Licențe terțe</string>
     <string name="settings_third_party_supporting">Componentele open source din care este construită această aplicație.</string>
+
+    <!-- Appearance -->
+    <string name="settings_section_appearance">Aspect</string>
+    <string name="settings_theme">Temă</string>
+    <string name="settings_theme_system">Urmează dispozitivul</string>
+    <string name="settings_theme_light">Luminos</string>
+    <string name="settings_theme_dark">Întunecat</string>
+    <string name="settings_dynamic_color">Folosește culorile imaginii de fundal</string>
+    <string name="settings_dynamic_color_supporting">Preia paleta din imaginea ta de fundal în loc de albastrul Jellyfin.</string>
 </resources>

@@ -55,4 +55,13 @@
     <string name="settings_licence_intro">Jellyboost は自由ソフトウェアです。GNU General Public License バージョン 3 またはそれ以降のいずれかのバージョンの条件のもとで、使用、研究、共有、変更ができます。いかなる保証もありません。</string>
     <string name="settings_third_party">サードパーティ ライセンス</string>
     <string name="settings_third_party_supporting">このアプリを構成するオープンソースのコンポーネントです。</string>
+
+    <!-- Appearance -->
+    <string name="settings_section_appearance">外観</string>
+    <string name="settings_theme">テーマ</string>
+    <string name="settings_theme_system">デバイスに合わせる</string>
+    <string name="settings_theme_light">ライト</string>
+    <string name="settings_theme_dark">ダーク</string>
+    <string name="settings_dynamic_color">壁紙の色を使う</string>
+    <string name="settings_dynamic_color_supporting">Jellyfin のブルーではなく、壁紙から配色を取り込みます。</string>
 </resources>

@@ -52,4 +52,13 @@
     <string name="settings_licence_intro">Jellyboost একটি মুক্ত সফটওয়্যার: GNU General Public License সংস্করণ 3 বা পরবর্তী যেকোনো সংস্করণের শর্ত অনুযায়ী আপনি এটি ব্যবহার, অধ্যয়ন, বিতরণ ও পরিবর্তন করতে পারেন। এটি কোনো ওয়ারেন্টি ছাড়াই দেওয়া হয়।</string>
     <string name="settings_third_party">তৃতীয় পক্ষের লাইসেন্স</string>
     <string name="settings_third_party_supporting">এই অ্যাপটি যেসব ওপেন সোর্স উপাদান দিয়ে তৈরি।</string>
+
+    <!-- Appearance -->
+    <string name="settings_section_appearance">চেহারা</string>
+    <string name="settings_theme">থিম</string>
+    <string name="settings_theme_system">ডিভাইস অনুসরণ করুন</string>
+    <string name="settings_theme_light">হালকা</string>
+    <string name="settings_theme_dark">গাঢ়</string>
+    <string name="settings_dynamic_color">ওয়ালপেপারের রং ব্যবহার করুন</string>
+    <string name="settings_dynamic_color_supporting">Jellyfin-এর নীল রঙের বদলে আপনার ওয়ালপেপার থেকে রং নেয়।</string>
 </resources>

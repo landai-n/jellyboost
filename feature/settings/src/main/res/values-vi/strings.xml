@@ -51,4 +51,13 @@
     <string name="settings_licence_intro">Jellyboost là phần mềm tự do: bạn có thể dùng, nghiên cứu, chia sẻ và thay đổi nó theo các điều khoản của GNU General Public License, phiên bản 3 hoặc bất kỳ phiên bản nào sau đó. Phần mềm được cung cấp mà không có bảo hành nào.</string>
     <string name="settings_third_party">Giấy phép của bên thứ ba</string>
     <string name="settings_third_party_supporting">Các thành phần mã nguồn mở tạo nên ứng dụng này.</string>
+
+    <!-- Appearance -->
+    <string name="settings_section_appearance">Giao diện</string>
+    <string name="settings_theme">Chủ đề</string>
+    <string name="settings_theme_system">Theo thiết bị</string>
+    <string name="settings_theme_light">Sáng</string>
+    <string name="settings_theme_dark">Tối</string>
+    <string name="settings_dynamic_color">Dùng màu hình nền</string>
+    <string name="settings_dynamic_color_supporting">Lấy bảng màu từ hình nền của bạn thay cho màu xanh Jellyfin.</string>
 </resources>

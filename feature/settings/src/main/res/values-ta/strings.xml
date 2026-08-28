@@ -56,4 +56,13 @@
     <string name="settings_licence_intro">Jellyboost ஒரு கட்டற்ற மென்பொருள்: GNU General Public License பதிப்பு 3 அல்லது அதற்குப் பிந்தைய எந்தப் பதிப்பின் நிபந்தனைகளின் கீழும் நீங்கள் இதைப் பயன்படுத்தலாம், ஆய்வு செய்யலாம், பகிரலாம், மாற்றலாம். இது எந்த உத்தரவாதமும் இன்றி வழங்கப்படுகிறது.</string>
     <string name="settings_third_party">மூன்றாம் தரப்பு உரிமங்கள்</string>
     <string name="settings_third_party_supporting">இந்தப் பயன்பாடு உருவாக்கப்பட்ட திறந்த மூல கூறுகள்.</string>
+
+    <!-- Appearance -->
+    <string name="settings_section_appearance">தோற்றம்</string>
+    <string name="settings_theme">தீம்</string>
+    <string name="settings_theme_system">சாதனத்தைப் பின்பற்று</string>
+    <string name="settings_theme_light">வெளிர்</string>
+    <string name="settings_theme_dark">அடர்</string>
+    <string name="settings_dynamic_color">வால்பேப்பர் நிறங்களைப் பயன்படுத்து</string>
+    <string name="settings_dynamic_color_supporting">Jellyfin நீலத்திற்குப் பதிலாக உங்கள் வால்பேப்பரிலிருந்து நிறங்களை எடுக்கிறது.</string>
 </resources>

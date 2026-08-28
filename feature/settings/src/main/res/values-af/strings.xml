@@ -56,4 +56,13 @@
     <string name="settings_licence_intro">Jellyboost is vrye sagteware: jy mag dit gebruik, bestudeer, deel en verander onder die voorwaardes van die GNU General Public License, weergawe 3 of enige latere weergawe. Dit kom sonder enige waarborg.</string>
     <string name="settings_third_party">Derdeparty-lisensies</string>
     <string name="settings_third_party_supporting">Die oopbron-komponente waarmee hierdie program gebou is.</string>
+
+    <!-- Appearance -->
+    <string name="settings_section_appearance">Voorkoms</string>
+    <string name="settings_theme">Tema</string>
+    <string name="settings_theme_system">Volg die toestel</string>
+    <string name="settings_theme_light">Lig</string>
+    <string name="settings_theme_dark">Donker</string>
+    <string name="settings_dynamic_color">Gebruik muurpapierkleure</string>
+    <string name="settings_dynamic_color_supporting">Neem die palet uit jou muurpapier in plaas van die Jellyfin-blou.</string>
 </resources>

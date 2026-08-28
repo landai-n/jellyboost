@@ -56,4 +56,13 @@
     <string name="settings_licence_intro">Jellyboost އަކީ މިނިވަން ސޮފްޓްވެއަރ އެކެވެ: GNU General Public License ވަރޝަން 3 ނުވަތަ އެއަށްފަހު އަންނަ ކޮންމެ ވަރޝަނެއްގެ ޝަރުތުތަކުގެ ދަށުން ބޭނުންކުރުމާއި، ދިރާސާކުރުމާއި، ހިއްސާކުރުމާއި، ބަދަލުކުރެވިދާނެއެވެ. މިއާއެކު އެއްވެސް ވޮރެންޓީއެއް ނުލިބެއެވެ.</string>
     <string name="settings_third_party">ތިންވަނަ ފަރާތުގެ ލައިސަންސްތައް</string>
     <string name="settings_third_party_supporting">މި އެޕް ބިނާކޮށްފައިވާ އޯޕަން ސޯސް ބައިތައް.</string>
+
+    <!-- Appearance -->
+    <string name="settings_section_appearance">ސިފަ</string>
+    <string name="settings_theme">ތީމް</string>
+    <string name="settings_theme_system">ޑިވައިސްއާ އެއްގޮތަށް</string>
+    <string name="settings_theme_light">އަލި</string>
+    <string name="settings_theme_dark">އަނދިރި</string>
+    <string name="settings_dynamic_color">ވޯލްޕޭޕަރުގެ ކުލަތައް ބޭނުންކުރޭ</string>
+    <string name="settings_dynamic_color_supporting">Jellyfin ނޫކުލައިގެ ބަދަލުގައި ތިޔަ ވޯލްޕޭޕަރުން ކުލަ ނަގާ.</string>
 </resources>

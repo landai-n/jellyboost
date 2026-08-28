@@ -2,6 +2,7 @@ package dev.jellyboost.feature.settings
 
 import dev.jellyboost.core.common.model.DownloadQuality
 import dev.jellyboost.core.common.model.SegmentSkipMode
+import dev.jellyboost.core.common.model.ThemeMode
 import dev.jellyboost.data.downloads.model.StorageLocations
 import dev.jellyboost.data.downloads.model.StorageUsage
 
@@ -17,6 +18,9 @@ data class SettingsUiState(
     /** What future downloads are fetched at; the running queue keeps whatever it was enqueued with. */
     val downloadQuality: DownloadQuality = DownloadQuality.ORIGINAL,
     val forceOffline: Boolean = false,
+    val themeMode: ThemeMode = ThemeMode.SYSTEM,
+    /** Ignored below API 31, where the row is not drawn at all. */
+    val dynamicColorEnabled: Boolean = false,
     val storage: StorageUsage = StorageUsage(),
     val storageLocations: StorageLocations = StorageLocations(),
     val account: AccountInfo? = null,

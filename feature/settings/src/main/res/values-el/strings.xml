@@ -56,4 +56,13 @@
     <string name="settings_licence_intro">Το Jellyboost είναι ελεύθερο λογισμικό: μπορείτε να το χρησιμοποιείτε, να το μελετάτε, να το μοιράζεστε και να το τροποποιείτε υπό τους όρους της GNU General Public License, έκδοση 3 ή οποιαδήποτε μεταγενέστερη. Διατίθεται χωρίς καμία εγγύηση.</string>
     <string name="settings_third_party">Άδειες τρίτων</string>
     <string name="settings_third_party_supporting">Τα στοιχεία ανοικτού κώδικα από τα οποία είναι φτιαγμένη η εφαρμογή.</string>
+
+    <!-- Appearance -->
+    <string name="settings_section_appearance">Εμφάνιση</string>
+    <string name="settings_theme">Θέμα</string>
+    <string name="settings_theme_system">Παρακολούθηση συσκευής</string>
+    <string name="settings_theme_light">Ανοιχτό</string>
+    <string name="settings_theme_dark">Σκούρο</string>
+    <string name="settings_dynamic_color">Χρήση χρωμάτων ταπετσαρίας</string>
+    <string name="settings_dynamic_color_supporting">Παίρνει την παλέτα από την ταπετσαρία σας αντί για το μπλε του Jellyfin.</string>
 </resources>

@@ -60,4 +60,13 @@
     <string name="settings_licence_intro">Jellyboost برنامج حر: يمكنك استخدامه ودراسته ومشاركته وتغييره وفق شروط رخصة GNU General Public License، الإصدار 3 أو أي إصدار لاحق. ويأتي دون أي ضمان.</string>
     <string name="settings_third_party">تراخيص الأطراف الثالثة</string>
     <string name="settings_third_party_supporting">المكوّنات مفتوحة المصدر التي بُني بها هذا التطبيق.</string>
+
+    <!-- Appearance -->
+    <string name="settings_section_appearance">المظهر</string>
+    <string name="settings_theme">السمة</string>
+    <string name="settings_theme_system">اتباع الجهاز</string>
+    <string name="settings_theme_light">فاتح</string>
+    <string name="settings_theme_dark">داكن</string>
+    <string name="settings_dynamic_color">استخدام ألوان الخلفية</string>
+    <string name="settings_dynamic_color_supporting">يأخذ لوحة الألوان من خلفية شاشتك بدلاً من أزرق Jellyfin.</string>
 </resources>

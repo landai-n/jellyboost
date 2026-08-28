@@ -52,4 +52,13 @@
     <string name="settings_licence_intro">Jellyboost software librea da: erabili, aztertu, partekatu eta alda dezakezu GNU General Public License lizentziaren 3. bertsioaren edo ondorengo edozein bertsioren baldintzen arabera. Ez du inolako bermerik.</string>
     <string name="settings_third_party">Hirugarrenen lizentziak</string>
     <string name="settings_third_party_supporting">Aplikazio hau eraikitzeko erabili diren kode irekiko osagaiak.</string>
+
+    <!-- Appearance -->
+    <string name="settings_section_appearance">Itxura</string>
+    <string name="settings_theme">Gaia</string>
+    <string name="settings_theme_system">Jarraitu gailuari</string>
+    <string name="settings_theme_light">Argia</string>
+    <string name="settings_theme_dark">Iluna</string>
+    <string name="settings_dynamic_color">Erabili horma-paperaren koloreak</string>
+    <string name="settings_dynamic_color_supporting">Paleta zure horma-paperetik hartzen du Jellyfinen urdinaren ordez.</string>
 </resources>

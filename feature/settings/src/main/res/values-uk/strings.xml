@@ -58,4 +58,13 @@
     <string name="settings_licence_intro">Jellyboost — вільне програмне забезпечення: ви можете використовувати, вивчати, поширювати та змінювати його на умовах GNU General Public License версії 3 або будь-якої пізнішої. Воно постачається без жодних гарантій.</string>
     <string name="settings_third_party">Ліцензії третіх сторін</string>
     <string name="settings_third_party_supporting">Компоненти з відкритим кодом, з яких зібрано цей застосунок.</string>
+
+    <!-- Appearance -->
+    <string name="settings_section_appearance">Вигляд</string>
+    <string name="settings_theme">Тема</string>
+    <string name="settings_theme_system">Як на пристрої</string>
+    <string name="settings_theme_light">Світла</string>
+    <string name="settings_theme_dark">Темна</string>
+    <string name="settings_dynamic_color">Використовувати кольори шпалер</string>
+    <string name="settings_dynamic_color_supporting">Бере палітру з ваших шпалер замість синього кольору Jellyfin.</string>
 </resources>

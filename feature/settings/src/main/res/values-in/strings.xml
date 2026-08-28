@@ -51,4 +51,13 @@
     <string name="settings_licence_intro">Jellyboost adalah perangkat lunak bebas: kamu boleh menggunakan, mempelajari, membagikan, dan mengubahnya berdasarkan ketentuan GNU General Public License versi 3 atau versi mana pun setelahnya. Disediakan tanpa jaminan apa pun.</string>
     <string name="settings_third_party">Lisensi pihak ketiga</string>
     <string name="settings_third_party_supporting">Komponen sumber terbuka yang membangun aplikasi ini.</string>
+
+    <!-- Appearance -->
+    <string name="settings_section_appearance">Tampilan</string>
+    <string name="settings_theme">Tema</string>
+    <string name="settings_theme_system">Ikuti perangkat</string>
+    <string name="settings_theme_light">Terang</string>
+    <string name="settings_theme_dark">Gelap</string>
+    <string name="settings_dynamic_color">Gunakan warna wallpaper</string>
+    <string name="settings_dynamic_color_supporting">Mengambil palet dari wallpaper Anda alih-alih biru Jellyfin.</string>
 </resources>

@@ -1,16 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!--
-        The app is dark-only by design (jellyfin-web dark theme is the reference).
-        Compose owns all in-app colours; this theme only covers the window background
-        and the pre-Compose splash frame.
+        Dark-locked, deliberately and permanently, even though the app gained a light scheme in
+        M14: Compose owns every in-app colour, and this theme covers only the window background
+        and the pre-Compose splash frame — both of which draw before DataStore can say which
+        scheme the user picked (docs/features/theme.md). MainActivity corrects the system-bar
+        icons as soon as the preference resolves; this is the frame before that.
 
         AppCompat-derived, and for one reason only: the Cast chooser/controller dialogs are
         DialogFragments hosted by this activity, so MediaRouter themes them from *this* theme
         and AppCompatDialog then requires the AppCompatTheme attributes to be there. Nothing
         else in the app is AppCompat — no AppCompat views, no AppCompatActivity. NOT the
-        DayNight variant: the app is always dark whatever the system is set to, exactly as the
-        splash theme below explains.
+        DayNight variant: a values-night split here would re-theme those Cast dialogs on the
+        *system's* night setting rather than the app's own, which is the wrong input.
     -->
     <style name="Theme.Jellyboost" parent="Theme.AppCompat.NoActionBar">
         <item name="android:windowBackground">@color/background</item>
@@ -28,7 +30,7 @@
         <item name="postSplashScreenTheme">@style/Theme.Jellyboost</item>
         <!--
             Theme.SplashScreen's DayNight parent otherwise follows the SYSTEM's light/dark setting
-            (android:Theme.DeviceDefault.DayNight), independently of the app's own always-dark theme.
+            (android:Theme.DeviceDefault.DayNight), independently of this app's own theme preference.
             On a system in light mode that draws dark status-bar icons over our dark splash background
             for the brief window before postSplashScreenTheme takes over. Force it dark to match.
         -->

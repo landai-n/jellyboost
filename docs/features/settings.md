@@ -13,6 +13,7 @@ through `:core:network`, and asks `:data:downloads` for the storage figures and 
 
 | Section | Rows |
 |---|---|
+| Appearance | *Theme* — a three-way picker over `ThemeMode` (`SYSTEM` / `LIGHT` / `DARK`); *Use wallpaper colours* — Material You, **absent below API 31** rather than disabled, because there is no wallpaper palette to derive from there. See [`theme.md`](theme.md). |
 | Playback | *Skip intro* and *Skip outro* — three-way pickers over `SegmentSkipMode` (`OFF` / `SHOW_BUTTON` / `AUTO_SKIP`); *Picture-in-picture* — enter a floating window when leaving the app mid-playback. |
 | Downloads | *Wi-Fi only* — pause transfers on metered networks; *Download quality*; a storage line reporting used/free bytes and where the files live; *Storage location* — one option per mounted volume (internal storage, SD card), shown only on a device that has more than one. |
 | Connectivity | *Offline mode* — the same force-offline preference the home overflow toggles and the offline banner reports. |
@@ -33,7 +34,7 @@ JellyfinNavHost
                                                onBack = popBackStack, onHome = navigateHome)
                                      │
                                      ▼
-                            SettingsViewModel  ── AppPreferences        (6 keys, read + write)
+                            SettingsViewModel  ── AppPreferences        (8 keys, read + write)
                                      │         ── SessionRepository     (sessionState, signOut)
                                      │         └─ DownloadRepository    (observeStorage, observeStorageLocations,
                                      │                                   setStorageLocation, observeDownloads, delete)
@@ -42,6 +43,7 @@ JellyfinNavHost
                                      │
                                      ▼
                             SettingsContent  (stateless; previewable)
+                               ├── AppearanceSection
                                ├── PlaybackSection
                                ├── DownloadsSection
                                ├── ConnectivitySection
@@ -52,9 +54,9 @@ JellyfinNavHost
 
 | File | Responsibility |
 |---|---|
-| `SettingsViewModel.kt` | The projection and the five setters; owns the sign-out ordering. |
+| `SettingsViewModel.kt` | The projection and the seven setters; owns the sign-out ordering. |
 | `SettingsUiState.kt` | `SettingsUiState` and `AccountInfo`. |
-| `SettingsScreen.kt` | `Scaffold` + `TopAppBar`, the five sections, the sign-out dialog, the source-code intent, the preview. |
+| `SettingsScreen.kt` | `Scaffold` + `TopAppBar`, the six sections, the sign-out dialog, the source-code intent, the preview. |
 | `SettingsRows.kt` | The row vocabulary — section, switch row, choice group/row, info row, action row — plus `formatBytes`. |
 | `LicenceViewModel.kt` | Reads `res/raw/gpl_3_0.txt` off the IO dispatcher and reflows it into paragraphs (`licenceBlocks`). |
 | `LicenceScreen.kt` | The app's own licence: a translated sentence, then the untranslated document. |
@@ -254,7 +256,7 @@ later, it is a `SessionRepository` change first.
 
 | Suite | Covers |
 |---|---|
-| `SettingsViewModelTest` | each of the six preferences read back from the store and written through by its setter; a preference changed upstream reaching an open screen; the storage volumes reaching the state and a card removed while the screen is open; a switch passing the user's agreement through, and a refused switch leaving the state alone; `LoggedIn` vs `LoggedOut` account info; delete-then-sign-out ordering (`coVerifyOrder`); no deletes when the box is unchecked; a failed delete still signing out; a screen popped mid-sign-out (`viewModelScope` cancelled) still deleting and signing out; the busy flag going up on the first ask and staying up |
+| `SettingsViewModelTest` | each of the eight preferences read back from the store and written through by its setter; a preference changed upstream reaching an open screen; the storage volumes reaching the state and a card removed while the screen is open; a switch passing the user's agreement through, and a refused switch leaving the state alone; `LoggedIn` vs `LoggedOut` account info; delete-then-sign-out ordering (`coVerifyOrder`); no deletes when the box is unchecked; a failed delete still signing out; a screen popped mid-sign-out (`viewModelScope` cancelled) still deleting and signing out; the busy flag going up on the first ask and staying up; the theme mode and the dynamic-colour flag reaching the state, writing through, and a mode changed upstream reaching an open screen |
 | `SessionRepositoryTest` | (`:core:network`) a caller cancelled mid-goodbye still clearing the credentials and reaching `LoggedOut`; a server that never answers costing the sign-out `SERVER_GOODBYE_TIMEOUT` rather than the session; a hook that hangs being cut short the same way |
 | `LicenceViewModelTest` | the bundled text reaching the screen as paragraphs; an unreadable raw resource leaving the screen empty rather than taking the process down; the packaged copy being byte-identical to the repository's `LICENSE` |
 | `LicenceBlocksTest` | headings standing alone, hard-wrapped prose joining, blank lines separating, and the whole document surviving the reflow word for word |

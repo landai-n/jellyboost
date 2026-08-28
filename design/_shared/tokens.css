@@ -11,7 +11,7 @@
   --on-surface: #FFFFFF;
   --on-surface-variant: rgba(255, 255, 255, 0.70);
   --error: #CF6679;
-  --outline: #3C3C3C;
+  --outline: #6E6E6E;
 
   --accent-gradient: linear-gradient(90deg, #AA5CC3 0%, #00A4DC 100%);
   --accent-gradient-diagonal: linear-gradient(135deg, #AA5CC3 0%, #00A4DC 100%);
@@ -35,6 +35,26 @@
   --thumb-width: 232px;
   --backdrop-height: 220px;
   --badge-size: 20px;
+}
+/* The light scheme (JellyfinLightColors). Overrides only what changes: the accent gradient is brand
+   and identical in both, while every scrim and placeholder resolves against the active background.
+   The brand hues are darkened rather than reused — #00A4DC is 2.67:1 on #F6F7F8, under the 4.5:1
+   body text owes; the Kotlin KDocs carry the arithmetic for each one. */
+[data-theme="light"] {
+  --background: #F6F7F8;
+  --surface: #FFFFFF;
+  --surface-variant: #ECEEF0;
+  --primary: #00769E;
+  --secondary: #6B2F7F;
+  --on-primary: #FFFFFF;
+  --on-background: #101010;
+  --on-surface: #101010;
+  --on-surface-variant: rgba(0, 0, 0, 0.72);
+  --error: #B3261E;
+  --outline: #858585;
+
+  --backdrop-scrim: linear-gradient(180deg, rgba(246, 247, 248, 0) 0%, rgba(246, 247, 248, .65) 60%, #F6F7F8 100%);
+  --image-placeholder: linear-gradient(135deg, #ECEEF0 0%, #FFFFFF 100%);
 }
 body {
   margin: 0;

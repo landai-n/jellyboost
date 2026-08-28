@@ -62,7 +62,7 @@ All in `player/src/main/kotlin/dev/jellyboost/player/cast/` unless stated.
 | `CastMediaSpec` / `CastTrackSpec` / `CastMetadata` | The plain data in between — no GMS type appears in it. |
 | `CastMediaItemConverter` | Mechanical `MediaInfo` / `MediaTrack` / `MediaQueueItem` assembly. Media3's `DefaultMediaItemConverter` ignores `subtitleConfigurations` entirely, which is most of what casting a Jellyfin item is. |
 | `deviceprofile/CastDeviceProfile` | The static, conservative profile a cast `PlaybackInfo` is negotiated against. |
-| `ui/CastRouteButton` (in `player/ui/`) | `MediaRouteButton` in a `ContextThemeWrapper` over an AppCompat theme overlay, sourcing its own state; draws nothing and loads no GMS class while `Unavailable`. Placed on `AppTopBar` and in the player's controls. |
+| `ui/CastRouteButton` (in `player/ui/`) | `MediaRouteButton` in a `ContextThemeWrapper` over an AppCompat theme overlay, sourcing its own state; draws nothing and loads no GMS class while `Unavailable`, and is drawn in every other state — `NoDevices` included, so the action cluster keeps its shape and a tap opens the chooser. Placed on `AppTopBar` and in the player's controls. |
 | `ui/PlayerCastBridge` (in `player/ui/`) | The player's half: `isCasting`, the state the screen draws, the two transfer edges. It **is** the `CastPlaybackHost` — `PlayerViewModel` is public and cannot implement it directly. |
 
 ## The negotiation, end to end

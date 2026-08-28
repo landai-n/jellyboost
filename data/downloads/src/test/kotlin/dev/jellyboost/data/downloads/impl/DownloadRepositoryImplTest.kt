@@ -20,6 +20,7 @@ import dev.jellyboost.core.network.SessionRepository
 import dev.jellyboost.core.network.model.SessionState
 import dev.jellyboost.data.cache.ItemEntityMapper
 import dev.jellyboost.data.downloads.DownloadFixtures.NOW
+import dev.jellyboost.data.downloads.DownloadFixtures.directTransactionRunner
 import dev.jellyboost.data.downloads.DownloadFixtures.download
 import dev.jellyboost.data.downloads.DownloadFixtures.file
 import dev.jellyboost.data.downloads.DownloadFixtures.uuid
@@ -972,6 +973,7 @@ class DownloadRepositoryImplTest {
             preferences = preferences,
             sessionRepository = sessionRepository,
             clock = clock,
+            transactionRunner = directTransactionRunner,
             ioDispatcher = ioDispatcher,
             appScope = backgroundScope,
         )

@@ -7,6 +7,7 @@ import dev.jellyboost.core.common.di.IoDispatcher
 import dev.jellyboost.core.common.model.DownloadState
 import dev.jellyboost.core.common.model.DownloadStatus
 import dev.jellyboost.core.common.model.JellyfinItem
+import dev.jellyboost.core.database.TransactionRunner
 import dev.jellyboost.core.database.dao.DownloadDao
 import dev.jellyboost.core.database.dao.ItemDao
 import dev.jellyboost.core.database.entities.DownloadProgress
@@ -76,6 +77,7 @@ internal class DownloadRepositoryImpl
         private val preferences: AppPreferences,
         private val sessionRepository: SessionRepository,
         private val clock: Clock,
+        private val transactionRunner: TransactionRunner,
         @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
         @ApplicationScope private val appScope: CoroutineScope,
     ) : DownloadRepository {
@@ -367,20 +369,27 @@ internal class DownloadRepositoryImpl
             targetItemId: String,
         ): AppResult<Unit> =
             mutate(itemId) { id ->
-                val targetId = targetItemId.toUuidOrNull() ?: return@mutate
-                val queue = downloadDao.unfinished()
-                // The target's index in the snapshot *including* the moved row is the index the moved
-                // row must end up at, whichever direction it travels.
-                val target = queue.indexOfFirst { it.itemId == targetId }.takeIf { it >= 0 } ?: return@mutate
+                // One transaction, per the read-decide-write rule: the identity guard and the
+                // renumber both resolve against this snapshot, and a row changing status between
+                // the read and the last write would split the list the guard promised to keep.
+                transactionRunner.inTransaction {
+                    val targetId = targetItemId.toUuidOrNull() ?: return@inTransaction
+                    val queue = downloadDao.unfinished()
+                    // Resolved before the moved row leaves the list: dropping it first would shift
+                    // every index below it and land a downward move one place short.
+                    val target =
+                        queue.indexOfFirst { it.itemId == targetId }.takeIf { it >= 0 }
+                            ?: return@inTransaction
 
-                val reordered = queue.filter { it.itemId != id }.toMutableList()
-                downloadDao.get(id)?.let { reordered.add(target.coerceAtMost(reordered.size), it) }
+                    val reordered = queue.filter { it.itemId != id }.toMutableList()
+                    downloadDao.get(id)?.let { reordered.add(target.coerceAtMost(reordered.size), it) }
 
-                val now = clock.instant()
-                // Renumbered from zero on every move: gaps left by completed or deleted items would
-                // otherwise make "position" mean something other than "place in the list".
-                reordered.forEachIndexed { index, row ->
-                    if (row.queuePosition != index) downloadDao.setQueuePosition(row.itemId, index, now)
+                    val now = clock.instant()
+                    // Renumbered from zero on every move: gaps left by completed or deleted items
+                    // would otherwise make "position" mean something other than "place in the list".
+                    reordered.forEachIndexed { index, row ->
+                        if (row.queuePosition != index) downloadDao.setQueuePosition(row.itemId, index, now)
+                    }
                 }
             }
 

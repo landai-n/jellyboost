@@ -232,6 +232,7 @@ class CancelThenRedownloadScenarioTest {
             preferences = preferences,
             sessionRepository = sessionRepository,
             clock = clock,
+            transactionRunner = DownloadFixtures.directTransactionRunner,
             ioDispatcher = UnconfinedTestDispatcher(testScheduler),
             appScope = backgroundScope,
         )

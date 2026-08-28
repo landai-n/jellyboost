@@ -59,6 +59,22 @@ the column, the sectioned queue's reorder arrows under TalkBack, the queue row a
 fontScale 2.0 in portrait, and the cast button's chooser opening with no receiver
 on the network.
 
+**2026-08-28 — the series header joins that treatment.** A folded **series** group
+now draws the **season's poster** where a music group draws its cover and the
+**season name** where it draws the artist; its episode rows keep their own stills,
+which is where the parallel with an album stops. The name is the server's own
+`seasonName` — already localized, so **no new strings** and no 69-locale pass. A
+group is keyed by series, so several seasons join with `·` in season order and the
+poster is the first of them. The poster is not on the episode item (that is the
+still): `DownloadRepositoryImpl` resolves it from the cached **season parent** row
+through a second memoised lookup onto `DownloadItem.seasonArtworkUrl` — one extra
+narrow `getCacheKeys` per emission, none at all for a list with no episode in it,
+and a wiped season row degrades to a header without a poster. Full gate + all six
+python guardrails green on every commit; DECISIONS entry of the same date. **Owed
+to a device walk:** a portrait season poster centre-cropped square in the header, a
+multi-season show's joined season line at fontScale 2.0, and the header's one
+spoken TalkBack sentence now that it carries a season.
+
 **2026-08-26 — the password field is the same height as the username field, this time
 for real.** The 2026-08-21 fix (`7f4066cf`) wrapped the trailing slot in
 `requiredSize(MinTouchTarget)`, which ignores incoming constraints but still *reports*

@@ -30,6 +30,7 @@ internal fun downloadItem(
     artistName: String? = null,
     groupId: UUID? = null,
     item: JellyfinItem? = null,
+    seasonArtworkUrl: String? = null,
 ) = DownloadItem(
     itemId = itemId,
     title = title,
@@ -48,4 +49,5 @@ internal fun downloadItem(
     artistName = artistName,
     groupId = groupId,
     item = item,
+    seasonArtworkUrl = seasonArtworkUrl,
 )

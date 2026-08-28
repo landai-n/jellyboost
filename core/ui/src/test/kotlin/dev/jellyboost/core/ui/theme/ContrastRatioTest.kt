@@ -560,6 +560,47 @@ private val CASES =
             source = "PlayerScreen.DIM_ALPHA over OVERLAY_SCRIM, KDoc says 4.69:1 (was 0.7 at 3.76:1)",
         ),
         ContrastCase(
+            name = "skip intro/outro pill's label over a bright film frame",
+            foreground = Color.White over VideoGlassFill,
+            background = VideoGlassFill,
+            demand = Demand.Floor(NORMAL_TEXT, "WCAG 1.4.3"),
+            source = "PlayerScreen.SkipSegmentButton's contentColor — 5.74:1 (the light ink would be 2.99:1)",
+        ),
+        ContrastCase(
+            name = "skip intro/outro pill's edge over a bright film frame",
+            foreground = GlassDefaults.DarkGhostBorder over VideoGlassFill,
+            background = VideoGlassFill,
+            demand =
+                Demand.Exempt(
+                    recorded = 2.28,
+                    reason =
+                        "over media the pill has a solid dark fill that is itself 5.74:1 from the " +
+                            "frame, so this edge is a seam on a filled surface rather than the only " +
+                            "boundary it is on the page — where the same token owes and clears 3:1",
+                ),
+            source = "GlassDefaults.DarkGhostBorder over VIDEO_GLASS_FILL (the light one would be 2.01:1)",
+        ),
+        ContrastCase(
+            name = "cast glyph over a bright film frame",
+            foreground = Color.White over VideoGlassFill,
+            background = VideoGlassFill,
+            demand = Demand.Floor(COMPONENT, "WCAG 1.4.11"),
+            source =
+                "CastRouteButton's tint from PlayerControls.TopBar — 5.74:1 " +
+                    "(GlassIconTint's light side would be 2.50:1)",
+        ),
+        ContrastCase(
+            name = "glass hairline over a bright film frame",
+            foreground = GlassDefaults.DarkHairline over VideoGlassFill,
+            background = VideoGlassFill,
+            demand =
+                Demand.Exempt(
+                    recorded = 1.22,
+                    reason = "the same seam-on-a-filled-surface exemption the page hairline carries",
+                ),
+            source = "GlassDefaults.DarkHairline over VIDEO_GLASS_FILL (the light one would be 1.17:1)",
+        ),
+        ContrastCase(
             name = "casting label over the dimmed artwork",
             foreground = Color.White over CastBackdrop,
             background = CastBackdrop,
@@ -1016,6 +1057,18 @@ private val MIRRORED_DECLARATIONS =
             "get() = pageInk(darkAlpha = 0.12f)",
         "feature/downloads/src/main/kotlin/dev/jellyboost/feature/downloads/DownloadsScreen.kt" to
             "get() = pageInk(darkAlpha = 0.48f, lightAlpha = 0.65f)",
+        // The over-media treatment the light scheme made load-bearing: a surface on the film frame
+        // takes its ink, its edge and its accent from the dark side, whatever the page is doing.
+        "player/src/main/kotlin/dev/jellyboost/player/ui/PlayerControls.kt" to
+            "private val OVER_MEDIA_ACCENT = Color(0xFF00A4DC)",
+        "player/src/main/kotlin/dev/jellyboost/player/ui/PlayerControls.kt" to
+            "borderColor = GlassDefaults.DarkHairline,",
+        "player/src/main/kotlin/dev/jellyboost/player/ui/PlayerScreen.kt" to
+            "borderColor = GlassDefaults.DarkGhostBorder,",
+        "player/src/main/kotlin/dev/jellyboost/player/ui/PlayerScreen.kt" to
+            "color = GlassDefaults.DarkHairline,",
+        "player/src/main/kotlin/dev/jellyboost/player/ui/UpNextCard.kt" to
+            "borderColor = GlassDefaults.DarkHairline,",
         // The two discs that stay literal because they are drawn on video and on album art.
         "player/src/main/kotlin/dev/jellyboost/player/ui/PlayerControls.kt" to
             "private val OVER_MEDIA_DISC = Color.White",

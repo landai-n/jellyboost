@@ -158,6 +158,9 @@ fun PrimaryPillButton(
 /**
  * @param tint a pill floating over raw video (the player's skip offer) must pass a dark fill —
  *   there is no backdrop there for the blur to pull down.
+ * @param contentColor and [borderColor] travel with [tint]: a pill on the film frame is drawn on
+ *   something dark in *both* schemes, so its ink and its edge stop following the page. Passing the
+ *   fill alone is the half-fix that leaves near-black text and a near-black edge on black glass.
  * @param loading only swaps the leading glyph for a spinner — the caller still disables the pill.
  */
 @Composable
@@ -169,6 +172,8 @@ fun GhostPillButton(
     small: Boolean = false,
     leadingIcon: ImageVector? = null,
     tint: Color = GlassDefaults.Fill,
+    contentColor: Color = if (enabled) GhostPillContent else GhostPillDisabledContent,
+    borderColor: Color = GlassDefaults.GhostBorder,
     loading: Boolean = false,
     progress: Float? = null,
     leadingIconTint: Color? = null,
@@ -177,9 +182,9 @@ fun GhostPillButton(
         onClick = onClick,
         enabled = enabled,
         height = if (small) Dimens.PillHeightSmall else Dimens.PillHeight,
-        surface = Modifier.glassSurface(shape = CircleShape, borderColor = GlassDefaults.GhostBorder, tint = tint),
+        surface = Modifier.glassSurface(shape = CircleShape, borderColor = borderColor, tint = tint),
         contentPadding = pillContentPadding(small),
-        contentColor = if (enabled) GhostPillContent else GhostPillDisabledContent,
+        contentColor = contentColor,
         stateDescription = busyStateDescription(loading),
         modifier = modifier,
     ) {

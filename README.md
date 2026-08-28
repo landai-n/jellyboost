@@ -22,10 +22,11 @@ in [`STATUS.md`](STATUS.md).
   transcode — backed by a real device capability profile, the Jellyfin ffmpeg decoder, and
   automatic decoder-failure fallback. If your server can serve it, Jellyboost plays it, and the
   player tells you which method it's using.
-- **Downloads with a quality selector.** Pick the quality for a download — the original file or a
-  smaller server-side re-encode — right from the download action, so a season that would not fit
-  on the device at full quality still can. The queue has pause, resume, reorder, per-item progress
-  with speed and ETA, and storage management down to the volume.
+- **Downloads with a quality setting.** Choose what downloads fetch — the exact original file, or
+  a smaller server-side re-encode on the same High/Medium/Low steps as the streaming quality
+  picker — so a season that would not fit on the device at full quality still can. The queue has
+  pause, resume, reorder, per-item progress with speed and ETA, and storage management down to
+  the volume.
 - **Offline that behaves like online.** Resume positions, next-up, search, trickplay scrubbing,
   subtitles and multiple audio languages all work from disk exactly as they do streaming — and
   your watch state syncs back with most-recent-wins conflict resolution, so neither device nor

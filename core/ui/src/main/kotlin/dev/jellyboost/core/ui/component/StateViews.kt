@@ -15,6 +15,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -23,6 +24,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
@@ -217,17 +219,23 @@ private fun MessageState(
 @Composable
 private fun Modifier.dashedPanel(): Modifier {
     val borderColor = DashedBorderColor
-    return this.drawBehind {
-        val stroke = Stroke(width = 1.dp.toPx(), pathEffect = dashEffect(DashLength.toPx(), DashGap.toPx()))
-        val inset = stroke.width / 2f
-        drawRoundRect(
-            color = borderColor,
-            topLeft = Offset(inset, inset),
-            size = Size(size.width - stroke.width, size.height - stroke.width),
-            cornerRadius = CornerRadius(Dimens.PanelRadius.toPx()),
-            style = stroke,
-        )
-    }
+    // Remembered on the colour the lambda captures: a fresh lambda per recomposition makes the
+    // `drawBehind` element compare unequal and re-materialises the node (JellyfinGradients' rule).
+    val onDraw: DrawScope.() -> Unit =
+        remember(borderColor) {
+            {
+                val stroke = Stroke(width = 1.dp.toPx(), pathEffect = dashEffect(DashLength.toPx(), DashGap.toPx()))
+                val inset = stroke.width / 2f
+                drawRoundRect(
+                    color = borderColor,
+                    topLeft = Offset(inset, inset),
+                    size = Size(size.width - stroke.width, size.height - stroke.width),
+                    cornerRadius = CornerRadius(Dimens.PanelRadius.toPx()),
+                    style = stroke,
+                )
+            }
+        }
+    return this.drawBehind(onDraw)
 }
 
 private fun dashEffect(

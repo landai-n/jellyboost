@@ -13,6 +13,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -108,13 +109,23 @@ fun JellyfinTheme(
 ) {
     val dark = themeMode.resolvesDark()
     val context = LocalContext.current
+    // `remember`, and it is not an optimisation: `resolvesDark()` reads `LocalConfiguration` under
+    // SYSTEM, which the manifest's `configChanges` list turns into a recomposition of this function
+    // on every rotation, PiP transition and split-screen drag step. `dynamicDark/LightColorScheme`
+    // would then allocate a fresh `ColorScheme` — ~65 `system_*` lookups and a tonal palette — and
+    // `ColorScheme` has no `equals`, so the new identity would compare unequal in `MaterialTheme`'s
+    // *static* `LocalColorScheme` and disable skipping for the whole app below it. The two brand
+    // schemes are singletons and never had that problem. Keyed on the context because a wallpaper
+    // change recreates the activity, which is what re-derives the palette.
     val colorScheme =
-        when {
-            dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->
-                if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+        remember(dark, dynamicColor, context) {
+            when {
+                dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->
+                    if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
 
-            dark -> JellyfinDarkColorScheme
-            else -> JellyfinLightColorScheme
+                dark -> JellyfinDarkColorScheme
+                else -> JellyfinLightColorScheme
+            }
         }
 
     CompositionLocalProvider(LocalIsLightTheme provides !dark) {

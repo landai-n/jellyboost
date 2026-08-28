@@ -22,6 +22,7 @@ import dev.jellyboost.player.resolve.ExoMediaSourceFactory
 import dev.jellyboost.player.resolve.PlaybackSourceResolver
 import dev.jellyboost.player.segments.MediaSegment
 import dev.jellyboost.player.segments.MediaSegmentLoader
+import dev.jellyboost.player.session.AssSubtitleSupport
 import dev.jellyboost.player.session.FakePlayerHandle
 import dev.jellyboost.player.session.PlaybackSessionController
 import dev.jellyboost.player.syncplay.SyncPlayController
@@ -33,6 +34,7 @@ import dev.jellyboost.player.upnext.UpNextResolver
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.BufferOverflow
@@ -112,7 +114,11 @@ internal abstract class PlayerViewModelFixture {
             every { introSkipMode } returns flowOf(SegmentSkipMode.SHOW_BUTTON)
             every { outroSkipMode } returns flowOf(SegmentSkipMode.SHOW_BUTTON)
             every { pipOnLeave } returns flowOf(true)
+            every { styledAssSubtitles } returns flowOf(false)
         }
+
+    /** Off, so the handler flow stays null and no native library is ever asked for. */
+    protected val assSubtitles = AssSubtitleSupport(preferences, CoroutineScope(dispatcher))
 
     protected val source =
         PlayerFixtures.remoteSource(
@@ -175,6 +181,7 @@ internal abstract class PlayerViewModelFixture {
             segmentLoader = segmentLoader,
             upNextResolver = upNextResolver,
             preferences = preferences,
+            assSubtitles = assSubtitles,
             pipController = pipController,
             connectionState = connectionState,
             syncPlayController = syncPlayController,

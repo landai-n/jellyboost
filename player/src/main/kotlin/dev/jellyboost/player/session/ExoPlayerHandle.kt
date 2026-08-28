@@ -9,12 +9,18 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DataSource
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.RenderersFactory
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.source.MergingMediaSource
+import androidx.media3.extractor.DefaultExtractorsFactory
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.jellyboost.player.model.PlaybackMediaItemSpec
 import dev.jellyboost.player.model.PlaybackMediaSource
 import dev.jellyboost.player.model.PlaybackSnapshot
+import io.github.peerless2012.ass.media.AssHandler
+import io.github.peerless2012.ass.media.factory.AssRenderersFactory
+import io.github.peerless2012.ass.media.kt.withAssMkvSupport
+import io.github.peerless2012.ass.media.parser.AssSubtitleParserFactory
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asSharedFlow
 import timber.log.Timber
@@ -28,6 +34,9 @@ import javax.inject.Singleton
  *   `DeviceProfileBuilder`: it is what makes the advertised AC3/DTS/TrueHD actually decodable.
  * - `setEnableDecoderFallback(true)` only covers a decoder that fails to *initialise*; the
  *   mid-stream case is `DecoderFallbackHandler`'s.
+ * - libass wraps rather than replaces: [AssSubtitleSupport] hands back a handler only when the
+ *   preference is on and the natives load, and everything below falls through to the same
+ *   `DefaultRenderersFactory` and the same `DefaultMediaSourceFactory` as before.
  *
  * The player UI drives this instance directly rather than through a `MediaController`.
  */
@@ -39,6 +48,7 @@ internal class ExoPlayerHandle
         @ApplicationContext private val context: Context,
         private val dataSourceFactory: DataSource.Factory,
         private val serviceState: PlaybackServiceState,
+        private val assSubtitles: AssSubtitleSupport,
     ) : PlayerHandle {
         private val _events = playerEventFlow()
 
@@ -52,6 +62,13 @@ internal class ExoPlayerHandle
          */
         private val mediaSourceFactory = DefaultMediaSourceFactory(dataSourceFactory)
 
+        /**
+         * The factory the player itself was built with. Identical to [mediaSourceFactory] unless
+         * libass is driving, in which case it also carries the ASS parser and the MKV extractor that
+         * reads attached fonts. Rebuilt with the player, `null` while none exists.
+         */
+        private var styledAssMediaSourceFactory: DefaultMediaSourceFactory? = null
+
         override val player: Player? get() = exoPlayer
 
         private val listener = playerEventListener(emit = { _events.tryEmit(it) })
@@ -62,18 +79,37 @@ internal class ExoPlayerHandle
          */
         fun requirePlayer(): ExoPlayer = exoPlayer ?: buildPlayer().also { exoPlayer = it }
 
+        /**
+         * The same factory as [mediaSourceFactory] plus libass: the parser claims `text/x-ssa` and
+         * leaves every other subtitle format to Media3's default, and `withAssMkvSupport` swaps in the
+         * Matroska extractor that hands attached fonts to the renderer. The `DataSource.Factory` is
+         * still ours, so the auth headers survive.
+         */
+        private fun assAwareMediaSourceFactory(handler: AssHandler): DefaultMediaSourceFactory {
+            val parserFactory = AssSubtitleParserFactory(handler)
+            return DefaultMediaSourceFactory(
+                dataSourceFactory,
+                DefaultExtractorsFactory().withAssMkvSupport(parserFactory, handler),
+            ).setSubtitleParserFactory(parserFactory)
+        }
+
         private fun buildPlayer(): ExoPlayer {
-            val renderersFactory =
+            val defaultRenderers =
                 DefaultRenderersFactory(context)
                     .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
                     .setEnableDecoderFallback(true)
+            val assHandler = assSubtitles.createHandler()
+            styledAssMediaSourceFactory = assHandler?.let(::assAwareMediaSourceFactory)
+            val renderersFactory: RenderersFactory =
+                assHandler?.let { AssRenderersFactory(it, defaultRenderers) } ?: defaultRenderers
 
             return ExoPlayer
                 .Builder(context, renderersFactory)
-                .setMediaSourceFactory(mediaSourceFactory)
+                .setMediaSourceFactory(styledAssMediaSourceFactory ?: mediaSourceFactory)
                 .setUsePlatformDiagnostics(false)
                 .build()
                 .apply {
+                    assHandler?.let { assSubtitles.attach(it, this) }
                     addListener(listener)
                     setAudioAttributes(
                         AudioAttributes
@@ -124,13 +160,27 @@ internal class ExoPlayerHandle
             }
         }
 
-        /** The main source and its audio sidecars, in the child order [prepare] documents. */
+        /**
+         * The main source and its audio sidecars, in the child order [prepare] documents.
+         *
+         * The children are built by the *plain* factory whenever libass could not survive the second
+         * merge ([styledAssSurvivesMerge]) — otherwise its parser would consume the ASS samples and
+         * nothing would reach the screen at all.
+         */
         @Suppress("SpreadOperator")
         private fun PlaybackMediaItemSpec.toMergedSource(): MergingMediaSource {
+            val factory =
+                styledAssMediaSourceFactory
+                    ?.takeIf { styledAssSurvivesMerge(this) }
+                    ?: mediaSourceFactory.also {
+                        if (styledAssMediaSourceFactory != null) {
+                            Timber.i("%s is merged twice; ASS/SSA stays on Media3's own renderer", mediaId)
+                        }
+                    }
             val children =
                 buildList {
-                    add(mediaSourceFactory.createMediaSource(toMediaItem()))
-                    audioSidecars.mapTo(this) { mediaSourceFactory.createMediaSource(it.toMediaItem()) }
+                    add(factory.createMediaSource(toMediaItem()))
+                    audioSidecars.mapTo(this) { factory.createMediaSource(it.toMediaItem()) }
                 }
             Timber.d("Merging %d audio sidecars into %s", audioSidecars.size, mediaId)
             return MergingMediaSource(
@@ -205,8 +255,12 @@ internal class ExoPlayerHandle
             }
             val player = exoPlayer ?: return
             exoPlayer = null
+            styledAssMediaSourceFactory = null
             player.removeListener(listener)
             player.release()
+            // After the player: the handler is one of its listeners, and libass frees native memory
+            // the renderers were still reading from until `release` returned.
+            assSubtitles.release()
             Timber.d("Released the shared ExoPlayer")
         }
 

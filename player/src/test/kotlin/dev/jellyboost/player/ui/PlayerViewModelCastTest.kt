@@ -102,6 +102,7 @@ internal class PlayerViewModelCastTest : PlayerViewModelFixture() {
             segmentLoader = segmentLoader,
             upNextResolver = upNextResolver,
             preferences = preferences,
+            assSubtitles = assSubtitles,
             pipController = pipController,
             connectionState = connectionState,
             syncPlayController = syncPlayController,

@@ -207,9 +207,12 @@ androidx-media3-transformer = { group = "androidx.media3", name = "media3-transf
 # M12: `CastPlayer` — an `androidx.media3.common.Player` talking to a Cast receiver.
 androidx-media3-cast = { group = "androidx.media3", name = "media3-cast", version.ref = "media3" }
 jellyfin-media3-ffmpeg-decoder = { group = "org.jellyfin.media3", name = "media3-ffmpeg-decoder", version.ref = "jellyfinMedia3Ffmpeg" }
-# M14 track 6. `ass-media` is the Media3 extension (renderers/parser/overlay); `ass-kt` rides in
-# transitively and carries libass itself, one `libass.so` per ABI.
+# M14 track 6. `ass-media` is the Media3 extension (renderers/parser/overlay); `ass-kt` carries
+# libass itself, one `libass.so` per ABI. It arrives transitively too, and is declared because
+# `AssSubtitleSupport` names its `Ass` type to force `System.loadLibrary` while it can still fall
+# back — a transitive-only artifact is on the runtime classpath but not the compile one.
 libass-media = { group = "io.github.peerless2012", name = "ass-media", version.ref = "libassAndroid" }
+libass-kt = { group = "io.github.peerless2012", name = "ass-kt", version.ref = "libassAndroid" }
 # Declared only to hold `ass-media`'s transitive `media3-effect` at the same version as the rest.
 androidx-media3-effect = { group = "androidx.media3", name = "media3-effect", version.ref = "media3" }
 

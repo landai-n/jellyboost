@@ -29,6 +29,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -80,6 +81,8 @@ import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.player.R
 import dev.jellyboost.player.syncplay.ui.SyncPlayGroupSheet
 import dev.jellyboost.player.syncplay.ui.SyncPlayQueueSheet
+import io.github.peerless2012.ass.media.AssHandler
+import io.github.peerless2012.ass.media.widget.AssSubtitleView
 import kotlinx.coroutines.delay
 import timber.log.Timber
 
@@ -111,6 +114,7 @@ internal fun PlayerScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val player by viewModel.videoPlayer.collectAsStateWithLifecycle()
+    val assSubtitleHandler by viewModel.assSubtitleHandler.collectAsStateWithLifecycle()
     val pipState by viewModel.pipState.collectAsStateWithLifecycle()
     // Hoisted above the controls and above the auto-hide: a panel held inside the control bar would
     // be disposed mid-selection by the bar's own `AnimatedVisibility`.
@@ -210,7 +214,11 @@ internal fun PlayerScreen(
         if (state.cast.isCasting) {
             CastingBackdrop(state = state, modifier = Modifier.fillMaxSize())
         } else {
-            VideoSurface(player = player, modifier = Modifier.fillMaxSize())
+            VideoSurface(
+                player = player,
+                assSubtitleHandler = assSubtitleHandler,
+                modifier = Modifier.fillMaxSize(),
+            )
         }
 
         // A positive `if`, never an early `return@Box`: a return in a layout scope silently swallows
@@ -624,11 +632,17 @@ private fun rememberTouchExplorationEnabled(): Boolean {
 @UnstableApi
 private fun VideoSurface(
     player: Player?,
+    assSubtitleHandler: AssHandler?,
     modifier: Modifier = Modifier,
 ) {
+    // Tracks what is *inside* the PlayerView, so it shares the view's lifetime rather than the
+    // composition's: `factory` builds a fresh PlayerView whenever this composable re-enters.
+    val attached = remember { mutableStateOf<AttachedAssOverlay?>(null) }
+
     AndroidView(
         modifier = modifier.clearAndSetSemantics { },
         factory = { context ->
+            attached.value = null
             PlayerView(context).apply {
                 useController = false
                 keepScreenOn = true
@@ -636,9 +650,43 @@ private fun VideoSurface(
                 setBackgroundColor(android.graphics.Color.BLACK)
             }
         },
-        update = { view -> view.player = player },
-        onRelease = { view -> view.player = null },
+        update = { view ->
+            view.player = player
+            view.applyAssOverlay(assSubtitleHandler, attached)
+        },
+        onRelease = { view ->
+            view.player = null
+            view.applyAssOverlay(null, attached)
+        },
     )
+}
+
+@UnstableApi
+private class AttachedAssOverlay(
+    val handler: AssHandler,
+    val view: AssSubtitleView,
+)
+
+/**
+ * libass draws into its own view **inside** Media3's `SubtitleView`, which sits above the video
+ * surface in the `PlayerView` hierarchy — the built-in cue output stays a sibling and keeps
+ * rendering every format libass does not claim.
+ *
+ * Idempotent, and it removes only the view it added: the released handler's native memory is gone,
+ * so drawing from it would be a crash, while `removeAllViews` would take Media3's own cue output
+ * down with it.
+ */
+@UnstableApi
+private fun PlayerView.applyAssOverlay(
+    handler: AssHandler?,
+    attached: MutableState<AttachedAssOverlay?>,
+) {
+    val current = attached.value
+    if (current?.handler === handler) return
+    val host = subtitleView ?: return
+    current?.let { host.removeView(it.view) }
+    attached.value =
+        handler?.let { AttachedAssOverlay(it, AssSubtitleView(host.context, it).also(host::addView)) }
 }
 
 /**

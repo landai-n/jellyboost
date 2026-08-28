@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
@@ -75,6 +76,15 @@ import kotlinx.coroutines.launch
  * The bars are animated rather than switched because `isTopLevel` flips the instant `navigate()` is
  * called, a whole [NAV_TRANSITION_MILLIS] before the page cross-fade ends; the chrome is fed the last
  * *top-level* destination so the selected-tab pill does not blink off halfway through the fade.
+ *
+ * **This frame is the app's ground.** Nothing else paints `colorScheme.background`: screens draw
+ * their own cards and chrome onto whatever is behind them, and until this fill existed that was the
+ * window background, which `themes.xml` locks dark because it is painted before Compose or DataStore
+ * exist. A light scheme therefore drew light-page ink onto a near-black window. The fill sits below
+ * the `hazeSource` node exactly as the window did, so glass still samples page content and composites
+ * it over `GlassDefaults.style`'s `backgroundColor` — the same role — when the page is empty there.
+ * The player is the one screen that must not take it, and does not: `PlayerScreen` fills itself with
+ * literal black for its letterbox.
  *
  * The nav host is the app's only `hazeSource` — every glass surface samples it through
  * [LocalHazeState]. The source is detached on the player: video is a `SurfaceView` composited by the
@@ -149,7 +159,15 @@ internal fun AppScaffold(
             )
         }
 
-    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+    BoxWithConstraints(
+        modifier =
+            Modifier
+                .fillMaxSize()
+                // Deliberately only the fill, not a `Surface`: a Surface would also provide
+                // `LocalContentColor`, moving what an unstyled `Text` draws from black to
+                // `onBackground` in both schemes — a separate change, and not one to make blind.
+                .background(MaterialTheme.colorScheme.background),
+    ) {
         val bottomNav = useBottomNav(maxWidth)
         val chromePadding =
             chromePadding(isTopLevel = isTopLevel, bottomNav = bottomNav, showMiniPlayer = showMiniPlayer)

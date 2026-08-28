@@ -113,8 +113,42 @@ preference can be read.
 | Everything *drawn on* those fills: the skip intro/outro pill's ink and edge, the cast glyph, the up-next card and its play pill, the SyncPlay waiting panel's edge, every hairline on `VIDEO_GLASS_FILL`, and `PlayerControls.OVER_MEDIA_ACCENT` (the speed/method tag and the seek bar's played portion) | a fill pinned without its ink is the half-fix: black@80% on black@60% is invisible whatever the fill is doing. The over-media call sites pass `Color.White` / `GlassDefaults.Dark*` / the literal brand blue explicitly, and `ContrastRatioTest`'s mirror list pins the call sites, not just the tokens. |
 | `MediaCardArtwork`'s four scrims and its white-on-scrim text, `DownloadBadge` | always drawn over artwork the card has already scrimmed. |
 | `JellyfinElevation.cardShadow` / `popShadow` | shadows are black-based in light UI too. Deliberately unchanged, recorded here so a future audit does not read it as a missed sibling. |
-| `themes.xml` — `Theme.Jellyboost` and `Theme.Jellyboost.Starting` | **the permanent exception.** Both draw before Compose exists and before DataStore can answer, so there is nothing to read a preference from. `Theme.Jellyboost.Starting` additionally force-sets `windowLightStatusBar=false` to stop `Theme.SplashScreen`'s DayNight parent following the *system* independently of the app. A light-mode user therefore sees one dark splash frame. Closing this would mean a synchronous `SharedPreferences` mirror of a DataStore key, kept in step by hand, to save a frame. |
+| `themes.xml` — `Theme.Jellyboost` and `Theme.Jellyboost.Starting` | **the permanent exception.** Both draw before Compose exists and before DataStore can answer, so there is nothing to read a preference from. `Theme.Jellyboost.Starting` additionally force-sets `windowLightStatusBar=false` to stop `Theme.SplashScreen`'s DayNight parent following the *system* independently of the app. A light-mode user therefore sees one dark splash frame, and nothing after it: the ground below is Compose's, not this (see [The ground](#the-ground)). Closing the frame would mean a synchronous `SharedPreferences` mirror of a DataStore key, kept in step by hand, to save a frame. |
 | `colors.xml`'s `launcher_background` | the brand navy the mark was drawn against, not the app background — its own comment already warns against conflating the two. |
+
+---
+
+## The ground
+
+`AppScaffold`'s outer `BoxWithConstraints` fills with `colorScheme.background`, and it is the only
+place in the app that paints that role. Everything else — cards, chrome, scrims — draws *onto*
+whatever is behind it.
+
+Until that fill existed the thing behind it was the window background, which `themes.xml` locks to
+`#101010` for the reason the table above gives. In the dark scheme those two are the same colour
+(`@color/background` is `#FF101010`, `JellyfinColors.Background` is `0xFF101010`), which is why the
+gap was invisible for the whole of the theming track: the light scheme drew light-page ink — the
+brand pill's near-black content, `pageInk`, `onBackground` — onto a near-black window on every
+screen that paints no fill of its own. `MusicLibraryScreen`'s M3 `Scaffold` was the one screen that
+did, through its default `containerColor`, and it looked like the odd one out because it was the
+only one right.
+
+Three properties of the fill are load-bearing:
+
+- **Below the `hazeSource`, exactly where the window background was.** Glass surfaces sample the nav
+  host's recorded layer, not this; where the page is empty behind one, Haze composites the blur over
+  `GlassDefaults.style`'s `backgroundColor`, which is the same role. Nothing about the blur moves.
+- **A fill, not a `Surface`.** A root `Surface` would also provide `LocalContentColor` as
+  `onBackground`, changing what an unstyled `Text` or `Icon` draws from `Color.Black` to the scheme's
+  ink in *both* schemes. That may well be an improvement, but it is a different change and one only a
+  device walk can clear.
+- **The player opts out by painting its own.** `PlayerScreen` fills with literal `Color.Black`, so a
+  letterbox never shows the page ground. The auth screens paint `colorScheme.background` themselves
+  and simply agree with it.
+
+`AppGroundTest` pins all three: the frame paints the role once, `themes.xml` still declares the
+dark-locked window background (and there is still no `values-night` to make it follow the system),
+and the player still fills itself.
 
 ---
 

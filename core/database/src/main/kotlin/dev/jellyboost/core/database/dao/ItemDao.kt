@@ -23,7 +23,8 @@ interface ItemDao {
     @Upsert
     suspend fun upsert(items: List<ItemEntity>)
 
-    @Query("SELECT id, source, cachedAt FROM items WHERE id IN (:ids)")
+    /** Deliberately without `dto`: this is what lets a memo check freshness without decoding a blob. */
+    @Query("SELECT id, source, cachedAt, revisedAt FROM items WHERE id IN (:ids)")
     suspend fun getCacheKeys(ids: List<UUID>): List<ItemCacheKey>
 
     /** Deliberately unfiltered by source: cached parents of downloads must open offline. */

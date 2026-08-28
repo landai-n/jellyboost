@@ -144,6 +144,11 @@ internal class BrowseCacheWriter
                 val row = mapper.toEntity(dto, ItemSource.BROWSE_CACHE, now)
                 val previous = existing[dto.id]
                 if (previous?.source == ItemSource.DOWNLOAD) {
+                    // `revisedAt` is not carried over with `cachedAt`: it is the freshness key a
+                    // metadata memo compares, and this write does replace the row. A preserved rich
+                    // blob then costs one re-decode of identical bytes, which `distinctUntilChanged`
+                    // absorbs — the opposite mistake, a memo holding a blob that is gone, does not
+                    // resolve itself at all.
                     row.copy(
                         source = ItemSource.DOWNLOAD,
                         cachedAt = previous.cachedAt,

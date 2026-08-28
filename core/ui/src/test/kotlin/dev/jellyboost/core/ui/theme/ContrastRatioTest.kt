@@ -231,6 +231,12 @@ private val LightGlassWell = GlassDefaults.LightFill over LightBackground
 
 private val LightGlassIconTint = JellyfinLightColors.OnBackground.copy(alpha = GLASS_ICON_TINT_ALPHA)
 
+/**
+ * The message pill inverts the page in both schemes; its lightest — the binding ground for its
+ * over-dark ink — is the near-solid dark fill composited over the light page.
+ */
+private val SnackbarPill = Color(0xFF202020).copy(alpha = 0.92f) over LightBackground
+
 private val BannerWash = JellyfinColors.Error.copy(alpha = 0.10f) over Background
 private val LightBannerWash = JellyfinLightColors.Error.copy(alpha = 0.10f) over LightBackground
 
@@ -981,6 +987,20 @@ private val CASES =
                 ),
             source = "ErrorBanner.BANNER_BORDER_ALPHA on the light error",
         ),
+        ContrastCase(
+            name = "snackbar message on the pill at its lightest",
+            foreground = Color.White over SnackbarPill,
+            background = SnackbarPill,
+            demand = Demand.Floor(NORMAL_TEXT, "WCAG 1.4.3"),
+            source = "PillSnackbar.SnackbarContent on SnackbarContainer over the light page — 13.05:1",
+        ),
+        ContrastCase(
+            name = "snackbar action on the pill at its lightest",
+            foreground = Color(0xFF00A4DC) over SnackbarPill,
+            background = SnackbarPill,
+            demand = Demand.Floor(NORMAL_TEXT, "WCAG 1.4.3"),
+            source = "PillSnackbar.SnackbarAction on SnackbarContainer over the light page — 4.56:1",
+        ),
     )
 
 /**
@@ -989,6 +1009,12 @@ private val CASES =
  */
 private val MIRRORED_DECLARATIONS =
     listOf(
+        "core/ui/src/main/kotlin/dev/jellyboost/core/ui/component/PillSnackbar.kt" to
+            "private val SnackbarContainer = Color(color = 0xFF202020).copy(alpha = 0.92f)",
+        "core/ui/src/main/kotlin/dev/jellyboost/core/ui/component/PillSnackbar.kt" to
+            "private val SnackbarContent = Color.White",
+        "core/ui/src/main/kotlin/dev/jellyboost/core/ui/component/PillSnackbar.kt" to
+            "private val SnackbarAction = Color(color = 0xFF00A4DC)",
         "player/src/main/kotlin/dev/jellyboost/player/ui/PlayerControls.kt" to
             "private val SCRIM = Color.Black.copy(alpha = 0.62f)",
         "player/src/main/kotlin/dev/jellyboost/player/ui/PlayerControls.kt" to

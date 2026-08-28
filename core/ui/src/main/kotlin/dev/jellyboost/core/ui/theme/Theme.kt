@@ -12,6 +12,7 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -76,6 +77,20 @@ private val JellyfinShapes =
 internal val LocalIsLightTheme = staticCompositionLocalOf { false }
 
 /**
+ * Whether this mode draws the dark scheme *right now*. Public, and the only place the question is
+ * answered: the window's system-bar icon appearance is set outside the composition [JellyfinTheme]
+ * establishes, and a second `when` over [ThemeMode] there is how the two would drift apart.
+ */
+@Composable
+@ReadOnlyComposable
+fun ThemeMode.resolvesDark(): Boolean =
+    when (this) {
+        ThemeMode.DARK -> true
+        ThemeMode.LIGHT -> false
+        ThemeMode.SYSTEM -> isSystemInDarkTheme()
+    }
+
+/**
  * @param dynamicColor Material You. It replaces the brand primary while it is on, which is why it
  *   defaults to off (DECISIONS 2026-08-01, 2026-08-28) — and why it is ignored below API 31, where
  *   the platform has no wallpaper palette to derive from.
@@ -91,12 +106,7 @@ fun JellyfinTheme(
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit,
 ) {
-    val dark =
-        when (themeMode) {
-            ThemeMode.DARK -> true
-            ThemeMode.LIGHT -> false
-            ThemeMode.SYSTEM -> isSystemInDarkTheme()
-        }
+    val dark = themeMode.resolvesDark()
     val context = LocalContext.current
     val colorScheme =
         when {

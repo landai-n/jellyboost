@@ -1,6 +1,8 @@
 package dev.jellyboost.app
 
 import app.cash.turbine.test
+import dev.jellyboost.core.common.model.ThemeMode
+import dev.jellyboost.core.datastore.AppPreferences
 import dev.jellyboost.core.network.SessionRepository
 import dev.jellyboost.core.network.model.SessionState
 import io.kotest.matchers.shouldBe
@@ -25,31 +27,36 @@ class MainViewModelTest {
 
     private val sessionFlow = MutableStateFlow<SessionState>(SessionState.Unknown)
     private val sessionRepository = mockk<SessionRepository>(relaxed = true)
+    private val themeMode = MutableStateFlow(ThemeMode.SYSTEM)
+    private val dynamicColorEnabled = MutableStateFlow(false)
+    private val appPreferences = mockk<AppPreferences>(relaxed = true)
 
     @BeforeEach
     fun setUp() {
         every { sessionRepository.sessionState } returns sessionFlow
+        every { appPreferences.themeMode } returns themeMode
+        every { appPreferences.dynamicColorEnabled } returns dynamicColorEnabled
     }
 
     @Test
     @DisplayName("session restore is kicked off exactly once, when the ViewModel is created")
     fun restoresTheSessionOnce() =
         runTest {
-            val viewModel = MainViewModel(sessionRepository)
+            val model = viewModel()
             advanceUntilIdle()
 
             coVerify(exactly = 1) { sessionRepository.restoreSession() }
-            viewModel.sessionState.value shouldBe SessionState.Unknown
+            model.sessionState.value shouldBe SessionState.Unknown
         }
 
     @Test
     @DisplayName("the repository's session state is passed straight through")
     fun passesSessionStateThrough() =
         runTest {
-            val viewModel = MainViewModel(sessionRepository)
+            val model = viewModel()
             advanceUntilIdle()
 
-            viewModel.sessionState.test {
+            model.sessionState.test {
                 awaitItem() shouldBe SessionState.Unknown
 
                 sessionFlow.value = LOGGED_IN
@@ -61,7 +68,28 @@ class MainViewModelTest {
             }
         }
 
+    @Test
+    @DisplayName("the theme preference starts at the store's own default, then follows it")
+    fun exposesTheThemePreference() =
+        runTest {
+            val model = viewModel()
+            advanceUntilIdle()
+
+            model.themePreference.test {
+                awaitItem() shouldBe ThemePreference(mode = ThemeMode.SYSTEM, dynamicColor = false)
+
+                themeMode.value = ThemeMode.LIGHT
+                awaitItem() shouldBe ThemePreference(mode = ThemeMode.LIGHT, dynamicColor = false)
+
+                dynamicColorEnabled.value = true
+                awaitItem() shouldBe ThemePreference(mode = ThemeMode.LIGHT, dynamicColor = true)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
     // Sign-out belongs to `:feature:settings`; `SettingsViewModelTest` covers it.
+
+    private fun viewModel() = MainViewModel(sessionRepository, appPreferences)
 
     private companion object {
         val LOGGED_IN =

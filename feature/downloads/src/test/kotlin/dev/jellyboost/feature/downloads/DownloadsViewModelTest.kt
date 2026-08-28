@@ -629,6 +629,78 @@ class DownloadsViewModelTest {
             coVerify(exactly = 0) { downloads.move(any(), any()) }
         }
 
+    @Test
+    fun `moving up skips a neighbour of another kind and lands on the nearest of its own`() =
+        runTest(dispatcher) {
+            // The queue is drawn under kind headers, so swapping with the film in between would
+            // leave the track exactly where it was and reorder the films section instead.
+            items.value =
+                listOf(
+                    queuedTrack("1", "Dreams", album = "Rumours"),
+                    item("2", "Dune", status = DownloadStatus.QUEUED, position = 1),
+                    queuedTrack("3", "Go Your Own Way", album = "Rumours", position = 2),
+                )
+
+            val model = viewModel()
+            advanceUntilIdle()
+            model.moveUp("3")
+            advanceUntilIdle()
+
+            coVerify { downloads.move("3", 0) }
+        }
+
+    @Test
+    fun `moving down skips a neighbour of another kind too`() =
+        runTest(dispatcher) {
+            items.value =
+                listOf(
+                    queuedTrack("1", "Dreams", album = "Rumours"),
+                    item("2", "Dune", status = DownloadStatus.QUEUED, position = 1),
+                    queuedTrack("3", "Go Your Own Way", album = "Rumours", position = 2),
+                )
+
+            val model = viewModel()
+            advanceUntilIdle()
+            model.moveDown("1")
+            advanceUntilIdle()
+
+            coVerify { downloads.move("1", 2) }
+        }
+
+    @Test
+    fun `a row at the top of its own section does not move, even with rows above it`() =
+        runTest(dispatcher) {
+            items.value =
+                listOf(
+                    item("1", "Dune", status = DownloadStatus.QUEUED),
+                    queuedTrack("2", "Dreams", album = "Rumours", position = 1),
+                )
+
+            val model = viewModel()
+            advanceUntilIdle()
+            model.moveUp("2")
+            advanceUntilIdle()
+
+            coVerify(exactly = 0) { downloads.move(any(), any()) }
+        }
+
+    @Test
+    fun `a row at the bottom of its own section does not move, even with rows below it`() =
+        runTest(dispatcher) {
+            items.value =
+                listOf(
+                    queuedTrack("1", "Dreams", album = "Rumours"),
+                    item("2", "Dune", status = DownloadStatus.QUEUED, position = 1),
+                )
+
+            val model = viewModel()
+            advanceUntilIdle()
+            model.moveDown("1")
+            advanceUntilIdle()
+
+            coVerify(exactly = 0) { downloads.move(any(), any()) }
+        }
+
     // ---- a collapsed projection ------------------------------------------------------------------
 
     /** `isLoading` starts `true` and only a first emission clears it, so a throw would hang it. */
@@ -835,6 +907,20 @@ class DownloadsViewModelTest {
         status: DownloadStatus,
         position: Int = 0,
     ) = item(id, title, status = status, position = position, quality = DownloadQuality.LOW)
+
+    private fun queuedTrack(
+        id: String,
+        title: String,
+        album: String,
+        position: Int = 0,
+    ) = downloadItem(
+        itemId = id,
+        title = title,
+        status = DownloadStatus.QUEUED,
+        queuePosition = position,
+        itemType = ItemType.AUDIO,
+        albumName = album,
+    )
 
     private fun track(
         id: String,

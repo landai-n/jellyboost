@@ -194,22 +194,32 @@ class DownloadsViewModel
         }
 
         fun moveUp(itemId: String) {
-            move(itemId, offset = -1)
+            move(itemId, forward = false)
         }
 
         fun moveDown(itemId: String) {
-            move(itemId, offset = 1)
+            move(itemId, forward = true)
         }
 
+        /**
+         * Up and down mean *within the row's own kind*, because that is the only movement the
+         * sectioned queue can show: swapping with a neighbour of another kind leaves the row exactly
+         * where it was drawn and silently reorders two other sections instead. No same-kind
+         * neighbour in that direction is therefore a no-op, not a clamped move.
+         *
+         * The index handed to the repository is the neighbour's index in the **flat** queue, which is
+         * what `move` reinserts against, and what leaves every other section's relative order alone.
+         */
         private fun move(
             itemId: String,
-            offset: Int,
+            forward: Boolean,
         ) {
             val queue = uiState.value.queue
             val index = queue.indexOfFirst { it.itemId == itemId }
             if (index < 0) return
-            val target = (index + offset).coerceIn(0, queue.lastIndex)
-            if (target == index) return
+            val kind = queue[index].kind
+            val neighbours = if (forward) (index + 1)..queue.lastIndex else (index - 1) downTo 0
+            val target = neighbours.firstOrNull { queue[it].kind == kind } ?: return
 
             viewModelScope.launch {
                 report(downloads.move(itemId, target), DownloadsMessage.ActionFailed)

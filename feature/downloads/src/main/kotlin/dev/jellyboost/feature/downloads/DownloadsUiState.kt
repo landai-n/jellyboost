@@ -24,6 +24,13 @@ data class DownloadGroup(
     val items: List<DownloadItem>,
     /** Series and albums fold; the films group is the MOVIES header's own list. */
     val isCollapsible: Boolean,
+    /** The second header line — an album's artist. `null` leaves the header one line, as before. */
+    val subtitle: String? = null,
+    /**
+     * Cover art for the header. Only an album has one worth hoisting: every track shares the same
+     * cover, while an episode still differs per row and belongs to that row.
+     */
+    val artworkUrl: String? = null,
 ) {
     /**
      * A `val`, never a `get()`: [DownloadsUiState.downloadedBytes] sums it across every group, so a
@@ -347,6 +354,7 @@ private fun foldedGroups(
     rows: List<DownloadItem>,
 ): List<DownloadGroup> {
     val (grouped, loose) = rows.partition { it.groupKey != null }
+    val music = kind == DownloadKind.MUSIC
     val folded =
         grouped
             .groupBy { requireNotNull(it.groupKey) }
@@ -356,6 +364,10 @@ private fun foldedGroups(
                     title = items.first().groupTitle.orEmpty(),
                     items = items.sortedBy { it.title },
                     isCollapsible = true,
+                    // The first row that has one, not the first row: a single track whose artist or
+                    // artwork has not been refreshed yet must not blank the whole album's header.
+                    subtitle = if (music) items.firstNotNullOfOrNull { it.artistLine } else null,
+                    artworkUrl = if (music) items.firstNotNullOfOrNull { it.item?.primaryImageUrl } else null,
                 )
             }.sortedBy { it.title.lowercase() }
 

@@ -77,8 +77,11 @@ private val CardSubtitle = TextStyle(fontSize = 12.sp)
  *   batch-selection mode for the click to conflict with, unlike `:feature:detail`'s episode rows.
  * @param compact must stay [QueueRow]'s own width class, or switching tabs shifts the text columns
  *   and row height out from under the user.
+ * @param showArtwork `false` inside an album group, whose header already carries the one cover every
+ *   track shares. A loose track has no header to carry it, so it keeps its own.
  */
 @Composable
+@Suppress("LongParameterList")
 internal fun DownloadedRow(
     item: DownloadItem,
     onDelete: () -> Unit,
@@ -86,6 +89,7 @@ internal fun DownloadedRow(
     modifier: Modifier = Modifier,
     inGroup: Boolean = false,
     compact: Boolean = false,
+    showArtwork: Boolean = true,
 ) {
     Row(
         modifier =
@@ -102,11 +106,13 @@ internal fun DownloadedRow(
         horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        RowArtwork(
-            imageUrl = item.item?.primaryImageUrl,
-            width = if (compact) ROW_ART_WIDTH_COMPACT else ROW_ART_WIDTH_WIDE,
-            height = if (compact) ROW_ART_HEIGHT_COMPACT else ROW_ART_HEIGHT_WIDE,
-        )
+        if (showArtwork) {
+            RowArtwork(
+                imageUrl = item.item?.primaryImageUrl,
+                width = if (compact) ROW_ART_WIDTH_COMPACT else ROW_ART_WIDTH_WIDE,
+                height = if (compact) ROW_ART_HEIGHT_COMPACT else ROW_ART_HEIGHT_WIDE,
+            )
+        }
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
@@ -399,7 +405,7 @@ private fun QueueRowActions(
 
 /** Takes the URL, not the row: a `DownloadItem` would recompose it on every progress write. */
 @Composable
-private fun RowArtwork(
+internal fun RowArtwork(
     imageUrl: String?,
     width: Dp,
     height: Dp,

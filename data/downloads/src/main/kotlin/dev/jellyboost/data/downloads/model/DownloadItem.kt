@@ -36,6 +36,14 @@ data class DownloadItem(
     /** The heading's stable identity; two shows of the same name are the case it exists for. */
     val groupId: UUID? = null,
     val item: JellyfinItem? = null,
+    /**
+     * The poster of the season this episode belongs to, joined to the cached season row by the data
+     * layer. **Not** [item]'s own `primaryImageUrl`, which is the episode still — a series header
+     * draws this, its episode rows draw that. `null` for anything that is not an episode, for an
+     * episode whose season the server never named, and for one whose season row has left the item
+     * cache: a header without a poster is the degraded form, never a wrong poster.
+     */
+    val seasonArtworkUrl: String? = null,
 ) {
     /**
      * The projection when there is one, the ceiling otherwise. Clamped here as well as where it is

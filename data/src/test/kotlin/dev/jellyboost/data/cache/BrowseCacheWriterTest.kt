@@ -131,6 +131,10 @@ class BrowseCacheWriterTest {
             // The offline "Latest" rows order by cachedAt: bumping it reorders them on every online
             // home-screen load.
             upserted.captured.single().cachedAt shouldBe downloadedAt
+            // `revisedAt` is not carried over with it: this write does replace the row, and a memo
+            // holding the old blob has to be told. A preserved rich blob then costs one identical
+            // re-decode, which is the cheap direction to be wrong in.
+            upserted.captured.single().revisedAt shouldBe NOW
         }
 
     @Test

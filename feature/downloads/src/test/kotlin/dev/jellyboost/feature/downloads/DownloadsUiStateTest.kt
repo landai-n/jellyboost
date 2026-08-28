@@ -11,6 +11,9 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import java.util.UUID
 
+// One state class's derivations over one set of fixtures; splitting the cases across files would
+// duplicate those fixtures rather than shorten anything.
+@Suppress("LargeClass")
 class DownloadsUiStateTest {
     @Test
     fun `an empty queue has nothing to sum and reads as idle`() {
@@ -306,7 +309,9 @@ class DownloadsUiStateTest {
     }
 
     @Test
-    fun `a series header carries neither, since an episode still belongs to its own row`() {
+    fun `a series header takes neither the artist column nor the row's own artwork`() {
+        // The two the album header reads are wrong answers here: an episode is credited to nobody,
+        // and its `primaryImageUrl` is the still that belongs to its own row.
         val sections =
             listOf(
                 episode("1", "Chestnut", series = "Westworld").copy(
@@ -323,6 +328,159 @@ class DownloadsUiStateTest {
     @Test
     fun `an album nobody is credited on keeps a one-line header`() {
         val sections = listOf(track("1", "Dreams", album = "Rumours")).toSections()
+
+        val group = sections.single().groups.single()
+        group.subtitle shouldBe null
+        group.artworkUrl shouldBe null
+    }
+
+    // ---- what a series' header carries -----------------------------------------------------------
+
+    @Test
+    fun `a series header carries its season and that season's poster`() {
+        val sections =
+            listOf(
+                episode(
+                    "1",
+                    "Chestnut",
+                    series = "Westworld",
+                    season = "Season 1",
+                    seasonNumber = 1,
+                    seasonArtworkUrl = "https://example.invalid/westworld-s1.jpg",
+                ),
+            ).toSections()
+
+        val group = sections.single().groups.single()
+        // The server's own wording, not a "Season $n" composed here and owed 69 translations.
+        group.subtitle shouldBe "Season 1"
+        group.artworkUrl shouldBe "https://example.invalid/westworld-s1.jpg"
+    }
+
+    @Test
+    fun `the header's poster is the season's, and the row keeps its own still`() {
+        val sections =
+            listOf(
+                episode(
+                    "1",
+                    "Chestnut",
+                    series = "Westworld",
+                    season = "Season 1",
+                    seasonNumber = 1,
+                    imageUrl = "https://example.invalid/chestnut.jpg",
+                    seasonArtworkUrl = "https://example.invalid/westworld-s1.jpg",
+                ),
+            ).toSections()
+
+        val group = sections.single().groups.single()
+        group.artworkUrl shouldBe "https://example.invalid/westworld-s1.jpg"
+        // Why series rows are not stripped of their artwork the way an album's tracks are.
+        group.items
+            .single()
+            .item
+            ?.primaryImageUrl shouldBe "https://example.invalid/chestnut.jpg"
+    }
+
+    @Test
+    fun `several seasons under one series are joined in season order`() {
+        // The group is keyed by the *series*, so one header can be asked to stand for several
+        // seasons. Sorted by title, these two arrive in the reverse of their season order.
+        val sections =
+            listOf(
+                episode(
+                    "1",
+                    "Chestnut",
+                    series = "Westworld",
+                    season = "Season 2",
+                    seasonNumber = 2,
+                    seasonArtworkUrl = "https://example.invalid/westworld-s2.jpg",
+                ),
+                episode(
+                    "2",
+                    "The Bicameral Mind",
+                    series = "Westworld",
+                    season = "Season 1",
+                    seasonNumber = 1,
+                    seasonArtworkUrl = "https://example.invalid/westworld-s1.jpg",
+                ),
+            ).toSections()
+
+        val group = sections.single().groups.single()
+        group.subtitle shouldBe "Season 1 · Season 2"
+        // One thumbnail cannot stand for two, so the choice is the lowest-numbered season — never
+        // whichever the list opens with, which the title sort makes a different season entirely.
+        group.items.first().itemId shouldBe "1"
+        group.artworkUrl shouldBe "https://example.invalid/westworld-s1.jpg"
+    }
+
+    @Test
+    fun `a season the server left unnumbered is named after the numbered ones`() {
+        val sections =
+            listOf(
+                episode("1", "A Special", series = "Westworld", season = "Specials"),
+                episode("2", "Chestnut", series = "Westworld", season = "Season 1", seasonNumber = 1),
+            ).toSections()
+
+        val group = sections.single().groups.single()
+        group.subtitle shouldBe "Season 1 · Specials"
+    }
+
+    @Test
+    fun `one episode still missing its season does not blank the series header`() {
+        // Metadata lands per row, so the first row is routinely the one still without it.
+        val sections =
+            listOf(
+                episode("1", "Chestnut", series = "Westworld"),
+                episode(
+                    "2",
+                    "The Bicameral Mind",
+                    series = "Westworld",
+                    season = "Season 1",
+                    seasonNumber = 1,
+                    seasonArtworkUrl = "https://example.invalid/westworld-s1.jpg",
+                ),
+            ).toSections()
+
+        val group = sections.single().groups.single()
+        group.subtitle shouldBe "Season 1"
+        group.artworkUrl shouldBe "https://example.invalid/westworld-s1.jpg"
+    }
+
+    @Test
+    fun `a season's poster comes from the first row of that season that has one`() {
+        // The season join answers per row, so two rows of one season disagree about its poster
+        // whenever one of their own items is still unparsed.
+        val sections =
+            listOf(
+                episode("1", "Chestnut", series = "Westworld", season = "Season 1", seasonNumber = 1),
+                episode(
+                    "2",
+                    "The Bicameral Mind",
+                    series = "Westworld",
+                    season = "Season 1",
+                    seasonNumber = 1,
+                    seasonArtworkUrl = "https://example.invalid/westworld-s1.jpg",
+                ),
+            ).toSections()
+
+        val group = sections.single().groups.single()
+        group.items.first().itemId shouldBe "1"
+        group.subtitle shouldBe "Season 1"
+        group.artworkUrl shouldBe "https://example.invalid/westworld-s1.jpg"
+    }
+
+    @Test
+    fun `a season whose row has left the cache costs the poster, not the season line`() {
+        val sections =
+            listOf(episode("1", "Chestnut", series = "Westworld", season = "Season 1", seasonNumber = 1)).toSections()
+
+        val group = sections.single().groups.single()
+        group.subtitle shouldBe "Season 1"
+        group.artworkUrl shouldBe null
+    }
+
+    @Test
+    fun `a series no row's season reached keeps the one-line header it had before`() {
+        val sections = listOf(episode("1", "Chestnut", series = "Westworld")).toSections()
 
         val group = sections.single().groups.single()
         group.subtitle shouldBe null
@@ -524,6 +682,10 @@ class DownloadsUiStateTest {
         onDisk: Long = 0L,
         type: ItemType? = ItemType.EPISODE,
         groupId: UUID? = null,
+        season: String? = null,
+        seasonNumber: Int? = null,
+        imageUrl: String? = null,
+        seasonArtworkUrl: String? = null,
     ) = downloadItem(
         itemId = itemId,
         title = title,
@@ -532,6 +694,21 @@ class DownloadsUiStateTest {
         bytesOnDisk = onDisk,
         itemType = type,
         groupId = groupId,
+        // No cached item at all is the case a wiped cache leaves, and the default here.
+        item =
+            if (season == null && imageUrl == null) {
+                null
+            } else {
+                JellyfinItem(
+                    id = itemId,
+                    name = title,
+                    type = ItemType.EPISODE,
+                    primaryImageUrl = imageUrl,
+                    seasonName = season,
+                    parentIndexNumber = seasonNumber,
+                )
+            },
+        seasonArtworkUrl = seasonArtworkUrl,
     )
 
     private fun track(

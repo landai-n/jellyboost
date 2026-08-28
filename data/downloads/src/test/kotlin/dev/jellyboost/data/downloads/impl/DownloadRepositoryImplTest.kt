@@ -119,12 +119,13 @@ class DownloadRepositoryImplTest {
 
     /**
      * Stands the two item reads the download list makes up over one set of rows: `getCacheKeys` says
-     * which blobs are still current and `getItems` hands over only the ones that are not.
+     * which blobs are still current and `getItems` hands over only the ones that are not. The key
+     * carries `revisedAt` as the real query does — that, not `cachedAt`, is what the memo compares.
      */
     private fun givenCachedItems(vararg rows: ItemEntity) {
         coEvery { itemDao.getCacheKeys(any()) } answers {
             val ids = firstArg<List<java.util.UUID>>().toSet()
-            rows.filter { it.id in ids }.map { ItemCacheKey(it.id, it.source, it.cachedAt) }
+            rows.filter { it.id in ids }.map { ItemCacheKey(it.id, it.source, it.cachedAt, it.revisedAt) }
         }
         coEvery { itemDao.getItems(any()) } answers {
             val ids = firstArg<List<java.util.UUID>>().toSet()
@@ -375,6 +376,159 @@ class DownloadRepositoryImplTest {
             }
         }
 
+    // ---- the season a series header draws --------------------------------------------------------
+
+    @Test
+    fun `an episode's row reaches the poster of the season it belongs to`() =
+        runTest {
+            // The season is a cached parent row of its own; the episode's own `primaryImageUrl` is
+            // the still its row draws, and can never stand in for it.
+            every { downloadDao.observeAll() } returns flowOf(listOf(DownloadWithFiles(download(), emptyList())))
+            givenCachedItems(ITEM_ROW, SEASON_ROW)
+            every { itemMapper.toDomainOrNull(ITEM_ROW, null) } returns EPISODE
+            every { itemMapper.toDomainOrNull(SEASON_ROW, null) } returns SEASON
+
+            repository().observeDownloads().test {
+                val row = awaitItem().single()
+                row.seasonArtworkUrl shouldBe SEASON_POSTER
+                row.item?.primaryImageUrl shouldBe "https://example.invalid/chestnut.jpg"
+                awaitComplete()
+            }
+        }
+
+    @Test
+    fun `a season row that has left the cache costs the poster, not the download`() =
+        runTest {
+            every { downloadDao.observeAll() } returns flowOf(listOf(DownloadWithFiles(download(), emptyList())))
+            givenCachedItems(ITEM_ROW)
+            every { itemMapper.toDomainOrNull(ITEM_ROW, null) } returns EPISODE
+
+            repository().observeDownloads().test {
+                val row = awaitItem().single()
+                row.seasonArtworkUrl.shouldBeNull()
+                row.item shouldBe EPISODE
+                awaitComplete()
+            }
+        }
+
+    @Test
+    fun `a season written after the screen opened reaches the rows already on it`() =
+        runTest {
+            // The metadata refresh writes the season parent long after the episode; the poster has
+            // to appear without the download row itself changing in any way.
+            val rows = MutableStateFlow(listOf(row(bytesOnDisk = 0L)))
+            every { downloadDao.observeAll() } returns rows
+            givenCachedItems(ITEM_ROW)
+            every { itemMapper.toDomainOrNull(ITEM_ROW, null) } returns EPISODE
+            every { itemMapper.toDomainOrNull(SEASON_ROW, null) } returns SEASON
+
+            repository(UnconfinedTestDispatcher(testScheduler)).observeDownloads().test {
+                awaitItem().single().seasonArtworkUrl.shouldBeNull()
+
+                givenCachedItems(ITEM_ROW, SEASON_ROW)
+                rows.value = listOf(row(bytesOnDisk = 1_000L))
+
+                awaitItem().single().seasonArtworkUrl shouldBe SEASON_POSTER
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `a season rewritten in place reaches the screen, though its cachedAt did not move`() =
+        runTest {
+            // The delivery path this exists for: the enqueue caches a lean season row, the metadata
+            // refresh later *rewrites* it with the real artwork — and deliberately carries the old
+            // `cachedAt` over, to keep the offline "recently downloaded" order still. A memo keyed on
+            // `cachedAt` would hold the first poster for the life of the subscription.
+            val replaced = SEASON.copy(primaryImageUrl = REPLACED_SEASON_POSTER)
+            val rewritten = SEASON_ROW.copy(dto = "{\"v\":2}", revisedAt = NOW.plusSeconds(60))
+            val rows = MutableStateFlow(listOf(row(bytesOnDisk = 0L)))
+            every { downloadDao.observeAll() } returns rows
+            givenCachedItems(ITEM_ROW, SEASON_ROW)
+            every { itemMapper.toDomainOrNull(ITEM_ROW, null) } returns EPISODE
+            every { itemMapper.toDomainOrNull(SEASON_ROW, null) } returns SEASON
+            every { itemMapper.toDomainOrNull(rewritten, null) } returns replaced
+
+            repository(UnconfinedTestDispatcher(testScheduler)).observeDownloads().test {
+                awaitItem().single().seasonArtworkUrl shouldBe SEASON_POSTER
+
+                givenCachedItems(ITEM_ROW, rewritten)
+                rows.value = listOf(row(bytesOnDisk = 1_000L))
+
+                awaitItem().single().seasonArtworkUrl shouldBe REPLACED_SEASON_POSTER
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `a progress write does not re-parse the season it did not change`() =
+        runTest {
+            // The season join rides the same flow as the item join, so it pays the same bill: a
+            // transfer writes progress twice a second, and decoding the season's blob on each would
+            // be the very cost the memo exists to avoid.
+            val rows = MutableStateFlow(listOf(row(bytesOnDisk = 0L)))
+            every { downloadDao.observeAll() } returns rows
+            givenCachedItems(ITEM_ROW, SEASON_ROW)
+            every { itemMapper.toDomainOrNull(ITEM_ROW, null) } returns EPISODE
+            every { itemMapper.toDomainOrNull(SEASON_ROW, null) } returns SEASON
+
+            repository(UnconfinedTestDispatcher(testScheduler)).observeDownloads().test {
+                awaitItem()
+
+                repeat(PROGRESS_WRITES) { written ->
+                    rows.value = listOf(row(bytesOnDisk = (written + 1) * 1_000L))
+                    awaitItem()
+                }
+
+                verify(exactly = 1) { itemMapper.toDomainOrNull(SEASON_ROW, null) }
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `an episode costs one extra key probe per emission and no extra row read`() =
+        runTest {
+            // What the season join is allowed to cost in the steady state of a transfer: one narrow
+            // `getCacheKeys` for the downloads and one for the seasons, and `getItems` only where a
+            // `revisedAt` actually moved — which across these writes it never does.
+            val rows = MutableStateFlow(listOf(row(bytesOnDisk = 0L)))
+            every { downloadDao.observeAll() } returns rows
+            givenCachedItems(ITEM_ROW, SEASON_ROW)
+            every { itemMapper.toDomainOrNull(ITEM_ROW, null) } returns EPISODE
+            every { itemMapper.toDomainOrNull(SEASON_ROW, null) } returns SEASON
+
+            repository(UnconfinedTestDispatcher(testScheduler)).observeDownloads().test {
+                awaitItem()
+
+                repeat(PROGRESS_WRITES) { written ->
+                    rows.value = listOf(row(bytesOnDisk = (written + 1) * 1_000L))
+                    awaitItem()
+                }
+
+                val emissions = PROGRESS_WRITES + 1
+                coVerify(exactly = 2 * emissions) { itemDao.getCacheKeys(any()) }
+                // One for the download, one for its season — on the first emission only.
+                coVerify(exactly = 2) { itemDao.getItems(any()) }
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `a list with no episode in it never asks for a season`() =
+        runTest {
+            every { downloadDao.observeAll() } returns flowOf(listOf(DownloadWithFiles(download(), emptyList())))
+            givenCachedItems(ITEM_ROW)
+            every { itemMapper.toDomainOrNull(ITEM_ROW, null) } returns MOVIE
+
+            repository().observeDownloads().test {
+                awaitItem().single().seasonArtworkUrl.shouldBeNull()
+                // One probe for the downloads and none for the seasons: a library of films must not
+                // pay a second query per emission for a join that can answer nothing.
+                coVerify(exactly = 1) { itemDao.getCacheKeys(any()) }
+                awaitComplete()
+            }
+        }
+
     // ---- what a progress write costs -------------------------------------------------------------
 
     @Test
@@ -402,11 +556,13 @@ class DownloadRepositoryImplTest {
         }
 
     @Test
-    fun `a rewritten item row is read again`() =
+    fun `a rewritten item row is read again, though its cachedAt deliberately did not move`() =
         runTest {
-            // `cachedAt` is bumped by every write to an items row, which is exactly when the memoised
-            // metadata stops describing what is stored.
-            val refreshed = ITEM_ROW.copy(name = "Arrival (remastered)", cachedAt = NOW.plusSeconds(60))
+            // The refresh rewrites in place and *preserves* `cachedAt`, to keep the offline
+            // "recently downloaded" order still. `revisedAt` is what moves, and it is the only
+            // signal that the memoised metadata has stopped describing what is stored.
+            val refreshed =
+                ITEM_ROW.copy(name = "Arrival (remastered)", revisedAt = NOW.plusSeconds(60))
             val rows = MutableStateFlow(listOf(row(bytesOnDisk = 0L)))
             every { downloadDao.observeAll() } returns rows
             givenCachedItems(ITEM_ROW)
@@ -1027,9 +1183,46 @@ class DownloadRepositoryImplTest {
                 type = ItemType.MOVIE,
                 source = ItemSource.DOWNLOAD,
                 cachedAt = NOW,
+                revisedAt = NOW,
                 dto = "{}",
             )
 
         val MOVIE = JellyfinItem(id = uuid(1).toString(), name = "Arrival", type = ItemType.MOVIE)
+
+        /** The season parent `DownloadedMetadataRefresher` and `DownloadEnqueuer` both cache. */
+        val SEASON_ROW =
+            ItemEntity(
+                id = uuid(2),
+                name = "Season 1",
+                sortName = "Season 1",
+                type = ItemType.SEASON,
+                source = ItemSource.DOWNLOAD,
+                cachedAt = NOW,
+                revisedAt = NOW,
+                dto = "{}",
+            )
+
+        const val SEASON_POSTER = "https://example.invalid/westworld-s1.jpg"
+
+        const val REPLACED_SEASON_POSTER = "https://example.invalid/westworld-s1-v2.jpg"
+
+        val EPISODE =
+            JellyfinItem(
+                id = uuid(1).toString(),
+                name = "Chestnut",
+                type = ItemType.EPISODE,
+                seriesName = "Westworld",
+                seasonId = uuid(2).toString(),
+                seasonName = "Season 1",
+                primaryImageUrl = "https://example.invalid/chestnut.jpg",
+            )
+
+        val SEASON =
+            JellyfinItem(
+                id = uuid(2).toString(),
+                name = "Season 1",
+                type = ItemType.SEASON,
+                primaryImageUrl = SEASON_POSTER,
+            )
     }
 }

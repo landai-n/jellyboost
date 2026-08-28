@@ -176,6 +176,9 @@ class ItemEntityMapperTest {
 
         row.source shouldBe ItemSource.DOWNLOAD
         row.cachedAt shouldBe cachedAt
+        // Every upsert path builds its rows here, so stamping the write time in one place is what
+        // makes `revisedAt` a freshness key the metadata memos can actually trust.
+        row.revisedAt shouldBe cachedAt
         row.parentId shouldBe MOVIES_LIBRARY
     }
 

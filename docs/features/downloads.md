@@ -355,9 +355,22 @@ it.
 
 Reorder is therefore **within a section**: up and down move a row to the nearest neighbour *of its
 own kind*, and a row with no such neighbour in that direction does not move at all. Swapping with a
-neighbour of another kind would leave the row exactly where it was drawn and reorder two other
-sections instead. The index handed to `DownloadRepository.move` is still that neighbour's index in
-the flat queue, which is what leaves every other section's relative order intact.
+neighbour of another kind would leave the row exactly where it was drawn and reorder another section
+instead.
+
+That neighbour reaches `DownloadRepository.move` as an **id, never as an index**. There are two queue
+orderings, and they are not the same list: the screen's is every unfinished row (`toQueue()`, failed
+and cancelled included), while the one `move` renumbers is `DownloadDao.pending()` — only the rows
+the engine can pick up. One failed row above the target is enough to make the same integer name two
+different rows, which turned a move into a no-op in one direction and aimed it at a stranger in the
+other. `move` therefore resolves the target's index against **its own** `pending()` snapshot, and the
+id doubles as the guard: a target that finished, failed or was cancelled in between is no longer in
+that snapshot, there is no place left to take, and nothing is written.
+
+The invariant that holds is: **the moved row ends up where the named row was, and the rows the
+renumber covers keep their relative order.** It does not extend to rows outside that set — a failed
+row keeps its old `queuePosition` while the pending rows are renumbered from zero, so its place
+relative to them can shift. That predates the sections and is unchanged by them.
 
 A queue row stacks **title / progress / status** at both widths; only the type scale differs. The
 status is the size·speed·ETA string, long enough to starve the title down to a few characters when

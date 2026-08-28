@@ -353,15 +353,28 @@ internal class DownloadRepositoryImpl
             }
         }
 
+        /**
+         * `unfinished()`, not `pending()`: this must renumber exactly the list the user reordered, or
+         * the rows the engine skips keep a stale position and drift past the ones they were listed
+         * between. The target arrives as an **id** for the same reason — the caller cannot index into
+         * a snapshot it does not hold — and the id doubles as the guard: a target that finished or was
+         * deleted between the tap and this read is absent here, there is no place left to take, and
+         * nothing is written. A no-op rather than a failure, since the row aimed at is already gone
+         * from the list it was aimed at in.
+         */
         override suspend fun move(
             itemId: String,
-            position: Int,
+            targetItemId: String,
         ): AppResult<Unit> =
             mutate(itemId) { id ->
-                val pending = downloadDao.pending().filter { it.itemId != id }
-                val target = position.coerceIn(0, pending.size)
-                val reordered = pending.toMutableList()
-                downloadDao.get(id)?.let { reordered.add(target, it) }
+                val targetId = targetItemId.toUuidOrNull() ?: return@mutate
+                val queue = downloadDao.unfinished()
+                // The target's index in the snapshot *including* the moved row is the index the moved
+                // row must end up at, whichever direction it travels.
+                val target = queue.indexOfFirst { it.itemId == targetId }.takeIf { it >= 0 } ?: return@mutate
+
+                val reordered = queue.filter { it.itemId != id }.toMutableList()
+                downloadDao.get(id)?.let { reordered.add(target.coerceAtMost(reordered.size), it) }
 
                 val now = clock.instant()
                 // Renumbered from zero on every move: gaps left by completed or deleted items would

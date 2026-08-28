@@ -144,6 +144,6 @@ internal fun castDeviceStateOf(
         CastState.CONNECTING -> CastDeviceState.Connecting
         CastState.CONNECTED -> CastDeviceState.Connected(deviceName)
         // An unknown code means the stack is up, so NoDevices rather than Unavailable: the button
-        // hides for now instead of for good.
+        // is drawn and can be tapped instead of being withheld for good.
         else -> CastDeviceState.NoDevices
     }

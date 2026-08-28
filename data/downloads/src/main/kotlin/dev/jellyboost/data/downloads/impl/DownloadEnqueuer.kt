@@ -306,6 +306,11 @@ internal class DownloadEnqueuer
                 itemType = type.toItemType(),
                 seriesName = seriesName,
                 albumName = album?.takeIf { it.isNotBlank() },
+                // Blankness is tested per operand: a whitespace `albumArtist` is not an answer, and
+                // testing the elvis result would let it swallow the credited artists for good.
+                artistName =
+                    albumArtist?.takeIf { it.isNotBlank() }
+                        ?: artists?.joinToString(", ")?.takeIf { it.isNotBlank() },
                 groupId = seriesId ?: albumId,
                 errorMessage = null,
                 createdAt = existing?.createdAt ?: now,

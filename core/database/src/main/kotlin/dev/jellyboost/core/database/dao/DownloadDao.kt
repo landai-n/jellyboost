@@ -110,6 +110,16 @@ interface DownloadDao {
     suspend fun pending(): List<DownloadEntity>
 
     /**
+     * Every row the queue tab lists, in queue order — [pending] plus exactly the rows the engine
+     * cannot pick up. A reorder renumbers over **this**: renumbering [pending] alone left a failed row
+     * holding a stale `queuePosition` and drifting past the rows it was listed between. Renumbering
+     * the superset is invisible to [pending] and [nextRunnable], which keep their own relative order
+     * under any stable renumbering of a set that contains them.
+     */
+    @Query("SELECT * FROM downloads WHERE status != 'DOWNLOADED' ORDER BY queuePosition ASC")
+    suspend fun unfinished(): List<DownloadEntity>
+
+    /**
      * The `itemType IS NULL` test must stay in the statement: this runs on a background refresh while the
      * queue is writing, so reading the row first and deciding outside SQL would let an enqueue land in
      * between and have its columns overwritten from a stale server fetch.
@@ -117,16 +127,31 @@ interface DownloadDao {
     @Query(
         """
         UPDATE downloads
-        SET itemType = :type, seriesName = :seriesName, albumName = :albumName, groupId = :groupId
+        SET itemType = :type, seriesName = :seriesName, albumName = :albumName,
+            artistName = :artistName, groupId = :groupId
         WHERE itemId = :itemId AND itemType IS NULL
         """,
     )
+    @Suppress("LongParameterList")
     suspend fun backfillGrouping(
         itemId: UUID,
         type: ItemType,
         seriesName: String?,
         albumName: String?,
+        artistName: String?,
         groupId: UUID?,
+    )
+
+    /**
+     * The artist column is younger than [backfillGrouping]'s guard, so every row stamped between the two
+     * has an `itemType` and no artist and would never be reached by that statement. The `artistName IS
+     * NULL` test is what keeps this from overwriting a value an enqueue wrote: it fills the column once
+     * and never again.
+     */
+    @Query("UPDATE downloads SET artistName = :artistName WHERE itemId = :itemId AND artistName IS NULL")
+    suspend fun backfillArtist(
+        itemId: UUID,
+        artistName: String?,
     )
 
     @Upsert

@@ -85,9 +85,16 @@ interface DownloadRepository {
      */
     suspend fun delete(itemId: String): AppResult<Long>
 
-    /** Moves a pending item to [position] in the queue, renumbering the rest. */
+    /**
+     * Moves [itemId] into the queue place [targetItemId] holds, renumbering the rest.
+     *
+     * A **target id, not an index**: the caller's list and the queue this renumbers are different
+     * projections of the table — the screen shows every unfinished row, this one orders the rows the
+     * engine can actually pick up — so the same integer names two different rows. Only identity
+     * survives the gap. A target that is no longer pending leaves the queue untouched.
+     */
     suspend fun move(
         itemId: String,
-        position: Int,
+        targetItemId: String,
     ): AppResult<Unit>
 }

@@ -588,7 +588,7 @@ class DownloadsViewModelTest {
     // ---- reordering -----------------------------------------------------------------------------
 
     @Test
-    fun `moving up asks for the position one nearer the front`() =
+    fun `moving up names the row one nearer the front, by id`() =
         runTest(dispatcher) {
             val second = item("2", "Second", status = DownloadStatus.QUEUED, position = 1)
             items.value = listOf(item("1", "First", status = DownloadStatus.QUEUED, position = 0), second)
@@ -598,7 +598,7 @@ class DownloadsViewModelTest {
             model.moveUp(second.itemId)
             advanceUntilIdle()
 
-            coVerify { downloads.move("2", 0) }
+            coVerify { downloads.move("2", "1") }
         }
 
     @Test
@@ -624,6 +624,118 @@ class DownloadsViewModelTest {
             val model = viewModel()
             advanceUntilIdle()
             model.moveDown(last.itemId)
+            advanceUntilIdle()
+
+            coVerify(exactly = 0) { downloads.move(any(), any()) }
+        }
+
+    @Test
+    fun `moving up skips a neighbour of another kind and lands on the nearest of its own`() =
+        runTest(dispatcher) {
+            // The queue is drawn under kind headers, so swapping with the film in between would
+            // leave the track exactly where it was and reorder the films section instead.
+            items.value =
+                listOf(
+                    queuedTrack("1", "Dreams", album = "Rumours"),
+                    item("2", "Dune", status = DownloadStatus.QUEUED, position = 1),
+                    queuedTrack("3", "Go Your Own Way", album = "Rumours", position = 2),
+                )
+
+            val model = viewModel()
+            advanceUntilIdle()
+            model.moveUp("3")
+            advanceUntilIdle()
+
+            coVerify { downloads.move("3", "1") }
+        }
+
+    @Test
+    fun `moving down skips a neighbour of another kind too`() =
+        runTest(dispatcher) {
+            items.value =
+                listOf(
+                    queuedTrack("1", "Dreams", album = "Rumours"),
+                    item("2", "Dune", status = DownloadStatus.QUEUED, position = 1),
+                    queuedTrack("3", "Go Your Own Way", album = "Rumours", position = 2),
+                )
+
+            val model = viewModel()
+            advanceUntilIdle()
+            model.moveDown("1")
+            advanceUntilIdle()
+
+            coVerify { downloads.move("1", "3") }
+        }
+
+    @Test
+    fun `a failed row above the movers does not cost the move`() =
+        runTest(dispatcher) {
+            // The screen lists failed rows; the queue the repository renumbers does not. Sending the
+            // neighbour's *index* here named a different row there, and this move became a no-op.
+            items.value =
+                listOf(
+                    queuedTrack("E", "Silver Springs", album = "Rumours").copy(status = DownloadStatus.ERROR),
+                    queuedTrack("1", "Dreams", album = "Rumours", position = 1),
+                    queuedTrack("2", "Go Your Own Way", album = "Rumours", position = 2),
+                )
+
+            val model = viewModel()
+            advanceUntilIdle()
+            model.moveUp("2")
+            advanceUntilIdle()
+
+            coVerify { downloads.move("2", "1") }
+        }
+
+    @Test
+    fun `a failed row between the movers does not aim the move at another section`() =
+        runTest(dispatcher) {
+            items.value =
+                listOf(
+                    queuedTrack("1", "Dreams", album = "Rumours"),
+                    item("E", "Arrival", status = DownloadStatus.ERROR, position = 1),
+                    item("M", "Dune", status = DownloadStatus.QUEUED, position = 2),
+                    queuedTrack("2", "Go Your Own Way", album = "Rumours", position = 3),
+                )
+
+            val model = viewModel()
+            advanceUntilIdle()
+            model.moveDown("1")
+            advanceUntilIdle()
+
+            // The other track, named outright — never the index that the failed row shifts.
+            coVerify { downloads.move("1", "2") }
+        }
+
+    @Test
+    fun `a row at the top of its own section does not move, even with rows above it`() =
+        runTest(dispatcher) {
+            items.value =
+                listOf(
+                    item("1", "Dune", status = DownloadStatus.QUEUED),
+                    queuedTrack("2", "Dreams", album = "Rumours", position = 1),
+                )
+
+            val model = viewModel()
+            advanceUntilIdle()
+            model.moveUp("2")
+            advanceUntilIdle()
+
+            coVerify(exactly = 0) { downloads.move(any(), any()) }
+        }
+
+    @Test
+    fun `a row at the bottom of its own section does not move, even with rows below it`() =
+        runTest(dispatcher) {
+            items.value =
+                listOf(
+                    queuedTrack("1", "Dreams", album = "Rumours"),
+                    item("2", "Dune", status = DownloadStatus.QUEUED, position = 1),
+                )
+
+            val model = viewModel()
+            advanceUntilIdle()
+            model.moveDown("1")
             advanceUntilIdle()
 
             coVerify(exactly = 0) { downloads.move(any(), any()) }
@@ -835,6 +947,20 @@ class DownloadsViewModelTest {
         status: DownloadStatus,
         position: Int = 0,
     ) = item(id, title, status = status, position = position, quality = DownloadQuality.LOW)
+
+    private fun queuedTrack(
+        id: String,
+        title: String,
+        album: String,
+        position: Int = 0,
+    ) = downloadItem(
+        itemId = id,
+        title = title,
+        status = DownloadStatus.QUEUED,
+        queuePosition = position,
+        itemType = ItemType.AUDIO,
+        albumName = album,
+    )
 
     private fun track(
         id: String,

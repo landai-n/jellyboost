@@ -2,8 +2,10 @@ package dev.jellyboost.feature.downloads
 
 import dev.jellyboost.core.common.model.DownloadStatus
 import dev.jellyboost.core.common.model.ItemType
+import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.data.downloads.model.DownloadKind
 import dev.jellyboost.data.downloads.model.StorageUsage
+import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
@@ -269,6 +271,134 @@ class DownloadsUiStateTest {
         group.items.map { it.itemId } shouldContainExactly listOf("1")
     }
 
+    // ---- what an album's header carries ----------------------------------------------------------
+
+    @Test
+    fun `an album header carries its artist and its cover`() {
+        val sections =
+            listOf(
+                track("1", "Dreams", album = "Rumours").copy(
+                    artistName = "Fleetwood Mac",
+                    item = albumArt("https://example.invalid/rumours.jpg"),
+                ),
+            ).toSections()
+
+        val group = sections.single().groups.single()
+        group.subtitle shouldBe "Fleetwood Mac"
+        group.artworkUrl shouldBe "https://example.invalid/rumours.jpg"
+    }
+
+    @Test
+    fun `one track missing its artist or cover does not blank the album's header`() {
+        // Metadata lands per row, so the first row is routinely the one still without it.
+        val sections =
+            listOf(
+                track("1", "Dreams", album = "Rumours"),
+                track("2", "Go Your Own Way", album = "Rumours").copy(
+                    artistName = "Fleetwood Mac",
+                    item = albumArt("https://example.invalid/rumours.jpg"),
+                ),
+            ).toSections()
+
+        val group = sections.single().groups.single()
+        group.subtitle shouldBe "Fleetwood Mac"
+        group.artworkUrl shouldBe "https://example.invalid/rumours.jpg"
+    }
+
+    @Test
+    fun `a series header carries neither, since an episode still belongs to its own row`() {
+        val sections =
+            listOf(
+                episode("1", "Chestnut", series = "Westworld").copy(
+                    artistName = "Fleetwood Mac",
+                    item = albumArt("https://example.invalid/chestnut.jpg"),
+                ),
+            ).toSections()
+
+        val group = sections.single().groups.single()
+        group.subtitle shouldBe null
+        group.artworkUrl shouldBe null
+    }
+
+    @Test
+    fun `an album nobody is credited on keeps a one-line header`() {
+        val sections = listOf(track("1", "Dreams", album = "Rumours")).toSections()
+
+        val group = sections.single().groups.single()
+        group.subtitle shouldBe null
+        group.artworkUrl shouldBe null
+    }
+
+    // ---- the queue's own sections ----------------------------------------------------------------
+
+    @Test
+    fun `the queue takes the same fixed order as the downloaded tab`() {
+        val state =
+            DownloadsUiState(
+                queue =
+                    listOf(
+                        queuedTrack("1", album = "Rumours"),
+                        queuedEpisode("2", series = "Westworld"),
+                        queued("3"),
+                    ),
+            )
+
+        state.queueSections.map { it.kind } shouldContainExactly
+            listOf(DownloadKind.MOVIE, DownloadKind.SERIES, DownloadKind.MUSIC)
+    }
+
+    @Test
+    fun `a queue section keeps its rows in the order the queue put them`() {
+        // The list arrives sorted by `queuePosition`; grouping must not re-sort it, or the arrows
+        // would move rows against the order they are drawn in.
+        val state =
+            DownloadsUiState(
+                queue =
+                    listOf(
+                        queuedEpisode("1", series = "Westworld"),
+                        queued("2"),
+                        queuedEpisode("3", series = "Westworld"),
+                    ),
+            )
+
+        state.queueSections
+            .single { it.kind == DownloadKind.SERIES }
+            .items
+            .map { it.itemId } shouldContainExactly listOf("1", "3")
+    }
+
+    @Test
+    fun `one kind in the queue needs no label above it`() {
+        val state = DownloadsUiState(queue = listOf(queued("1"), queued("2")))
+
+        state.queueSections.single().kind shouldBe DownloadKind.MOVIE
+        state.showQueueKindHeaders shouldBe false
+    }
+
+    @Test
+    fun `a second kind in the queue brings the labels back`() {
+        val state = DownloadsUiState(queue = listOf(queued("1"), queuedTrack("2", album = "Rumours")))
+
+        state.showQueueKindHeaders shouldBe true
+    }
+
+    @Test
+    fun `an empty queue has no sections and no labels`() {
+        val state = DownloadsUiState(queue = emptyList())
+
+        state.queueSections.shouldBeEmpty()
+        state.showQueueKindHeaders shouldBe false
+    }
+
+    @Test
+    fun `the flat queue is untouched, since the stats and the reorder arithmetic read it`() {
+        val rows = listOf(queuedTrack("1", album = "Rumours"), queued("2"))
+        val state = DownloadsUiState(queue = rows)
+
+        state.queue shouldContainExactly rows
+        state.queueStats.itemCount shouldBe 2
+    }
+
     // ---- folding --------------------------------------------------------------------------------
 
     @Test
@@ -431,6 +561,19 @@ class DownloadsUiStateTest {
         bytesOnDisk = bytesOnDisk,
         queuePosition = 0,
     )
+
+    private fun albumArt(url: String) =
+        JellyfinItem(id = "art", name = "Rumours", type = ItemType.MUSIC_ALBUM, primaryImageUrl = url)
+
+    private fun queuedEpisode(
+        itemId: String,
+        series: String,
+    ) = queued(itemId).copy(seriesName = series, itemType = ItemType.EPISODE)
+
+    private fun queuedTrack(
+        itemId: String,
+        album: String,
+    ) = queued(itemId).copy(albumName = album, itemType = ItemType.AUDIO)
 
     private fun paused(itemId: String) = queued(itemId).copy(status = DownloadStatus.PAUSED)
 

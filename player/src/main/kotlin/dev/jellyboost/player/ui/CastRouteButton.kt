@@ -33,11 +33,12 @@ import javax.inject.Inject
  * holds** — the guard that lets one APK ship to devices without them. Every GMS type sits in
  * [MediaRouteButtonHost], which such a device never calls.
  *
- * [CastDeviceState.NoDevices] must *hide* the view, never compose it out: an attached
- * `MediaRouteButton` is what registers the `MediaRouter` callback that requests route discovery, so
- * composing it out is a chicken-and-egg — no button, no discovery, no button. It also has to be
- * hidden by us: the bare view does not auto-hide (that is `MediaRouteActionProvider` behaviour).
- * `INVISIBLE` not `GONE`, so the view stays laid out but out of hit-testing.
+ * Every other state draws the same button, [CastDeviceState.NoDevices] included: it is one of a
+ * cluster of equal-sized actions, and a button that comes and goes with what happens to be on the
+ * network leaves a hole in that cluster. Tapping it with nothing discovered opens the chooser, which
+ * says so itself. This also removes the old chicken-and-egg risk outright — an attached
+ * `MediaRouteButton` is what registers the `MediaRouter` callback requesting route discovery, and it
+ * is now attached unconditionally.
  *
  * @param size diameter of the glass circle; [modifier] carries the frame around it.
  */
@@ -52,7 +53,6 @@ fun CastRouteButton(
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     if (state == CastDeviceState.Unavailable) return
-    val hasReceivers = state != CastDeviceState.NoDevices
     // The connected name reuses the sentence the casting backdrop draws, so both say the same thing.
     val connected = state as? CastDeviceState.Connected
     val description =
@@ -66,33 +66,16 @@ fun CastRouteButton(
         }
 
     if (!glassContainer) {
-        MediaRouteButtonHost(
-            visible = hasReceivers,
-            description = description,
-            modifier = modifier.size(CastButtonSize),
-        )
+        MediaRouteButtonHost(description = description, modifier = modifier.size(CastButtonSize))
         return
     }
 
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         Box(
-            modifier =
-                Modifier
-                    .size(size)
-                    .then(
-                        if (hasReceivers) {
-                            Modifier.glassSurface(shape = CircleShape, tint = surfaceTint)
-                        } else {
-                            Modifier
-                        },
-                    ),
+            modifier = Modifier.size(size).glassSurface(shape = CircleShape, tint = surfaceTint),
             contentAlignment = Alignment.Center,
         ) {
-            MediaRouteButtonHost(
-                visible = hasReceivers,
-                description = description,
-                modifier = Modifier.size(size),
-            )
+            MediaRouteButtonHost(description = description, modifier = Modifier.size(size))
         }
     }
 }
@@ -104,12 +87,13 @@ fun CastRouteButton(
  * attributes from its context, and this app's window theme is a bare frame around Compose.
  * `CastButtonFactory` requires an initialised `CastContext`, which the caller's guard guarantees.
  *
- * @param visible `VISIBLE`/`INVISIBLE` only — never `GONE`, never conditional composition.
+ * The visibility is set by us on every update: the bare view does not manage its own (that is
+ * `MediaRouteActionProvider` behaviour), and it starts hidden on some MediaRouter versions.
+ *
  * @param description set in `update`, not `factory`: it changes with the session.
  */
 @Composable
 private fun MediaRouteButtonHost(
-    visible: Boolean,
     description: String,
     modifier: Modifier = Modifier,
 ) {
@@ -123,7 +107,7 @@ private fun MediaRouteButtonHost(
         },
         update = { view ->
             view.contentDescription = description
-            view.visibility = if (visible) View.VISIBLE else View.INVISIBLE
+            view.visibility = View.VISIBLE
         },
     )
 }

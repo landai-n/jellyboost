@@ -84,6 +84,23 @@ class DownloadGroupCacheTest {
     }
 
     @Test
+    fun `an artist arriving regroups, since an album header draws it`() {
+        // The backfill lands the artist long after the row itself; a signature of ids, statuses and
+        // byte counts would leave the header crediting nobody until some unrelated write came along.
+        val withoutArtist = track("1", album = "Rumours")
+        val first = cache.sections(listOf(withoutArtist))
+
+        val second = cache.sections(listOf(withoutArtist.copy(artistName = "Fleetwood Mac")))
+
+        second shouldNotBeSameInstanceAs first
+        second
+            .single()
+            .groups
+            .single()
+            .subtitle shouldBe "Fleetwood Mac"
+    }
+
+    @Test
     fun `a rename regroups, since the tab is ordered by title`() {
         val first = cache.sections(listOf(finished("1")))
         val second = cache.sections(listOf(finished("1").copy(title = "Renamed")))
@@ -98,6 +115,22 @@ class DownloadGroupCacheTest {
     }
 
     private fun List<DownloadSection>.rows() = flatMap { section -> section.groups.flatMap { it.items } }
+
+    private fun track(
+        itemId: String,
+        album: String,
+    ) = DownloadItem(
+        itemId = itemId,
+        title = "Track $itemId",
+        seriesName = null,
+        status = DownloadStatus.DOWNLOADED,
+        bytesDownloaded = 100L,
+        bytesTotal = 100L,
+        bytesOnDisk = 100L,
+        queuePosition = 0,
+        itemType = ItemType.AUDIO,
+        albumName = album,
+    )
 
     private fun finished(
         itemId: String,

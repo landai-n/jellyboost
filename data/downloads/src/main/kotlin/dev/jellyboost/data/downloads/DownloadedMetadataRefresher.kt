@@ -205,18 +205,25 @@ class DownloadedMetadataRefresher
          * Fills in the grouping columns of rows written before they existed — including moving a track's
          * album out of `seriesName`, which held both facts. The `itemType IS NULL` guard lives in the
          * statement, so a row an enqueue has already stamped is never rewritten from this pass's fetch.
+         *
+         * The artist goes through a second statement as well: a row stamped between the grouping columns
+         * and the artist column has an `itemType`, so the first write skips it and only the
+         * `artistName IS NULL` guard can reach it.
          */
         private suspend fun backfillGrouping(dtos: List<BaseItemDto>) {
             try {
                 dtos.forEach { dto ->
                     val type = dto.type.toItemType()
+                    val artistName = dto.artistName()
                     downloadDao.backfillGrouping(
                         itemId = dto.id,
                         type = type,
                         seriesName = dto.seriesName?.takeIf { it.isNotBlank() },
                         albumName = dto.album?.takeIf { it.isNotBlank() },
+                        artistName = artistName,
                         groupId = dto.seriesId ?: dto.albumId,
                     )
+                    downloadDao.backfillArtist(itemId = dto.id, artistName = artistName)
                 }
             } catch (cancellation: CancellationException) {
                 throw cancellation
@@ -224,6 +231,16 @@ class DownloadedMetadataRefresher
                 Timber.w(error, "Could not backfill the grouping of %d downloaded item(s)", dtos.size)
             }
         }
+
+        /**
+         * Mirrors `DownloadEnqueuer.toDownloadRow`, or a refresh would disagree with the enqueue —
+         * blankness tested per operand included: a whitespace `albumArtist` that swallowed the
+         * credited artists would be stamped `null`, and `backfillArtist`'s `artistName IS NULL` guard
+         * would re-derive that same `null` on every pass thereafter.
+         */
+        private fun BaseItemDto.artistName(): String? =
+            albumArtist?.takeIf { it.isNotBlank() }
+                ?: artists?.joinToString(", ")?.takeIf { it.isNotBlank() }
 
         private companion object {
             /** Well under any URL limit at 36 characters an id. */

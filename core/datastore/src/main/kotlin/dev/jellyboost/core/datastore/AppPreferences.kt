@@ -2,6 +2,7 @@ package dev.jellyboost.core.datastore
 
 import dev.jellyboost.core.common.model.DownloadQuality
 import dev.jellyboost.core.common.model.SegmentSkipMode
+import dev.jellyboost.core.common.model.ThemeMode
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -61,6 +62,23 @@ interface AppPreferences {
     val pipOnLeave: Flow<Boolean>
 
     suspend fun setPipOnLeave(enabled: Boolean)
+
+    /**
+     * Defaults to [ThemeMode.SYSTEM]: the device's own light/dark setting is an answer the user already gave
+     * once for every app, and an app that overrides it by default is the one that looks wrong.
+     */
+    val themeMode: Flow<ThemeMode>
+
+    suspend fun setThemeMode(mode: ThemeMode)
+
+    /**
+     * Material You: the scheme is derived from the wallpaper (API 31+) instead of the Jellyfin palette.
+     * Defaults to **off** — the brand primary is pinned by a decision the user opts out of, not into
+     * (DECISIONS 2026-08-01, superseded while this is on).
+     */
+    val dynamicColorEnabled: Flow<Boolean>
+
+    suspend fun setDynamicColorEnabled(enabled: Boolean)
 
     /**
      * Not a user setting and not surfaced in Settings: the player's bandwidth detector writes it after a

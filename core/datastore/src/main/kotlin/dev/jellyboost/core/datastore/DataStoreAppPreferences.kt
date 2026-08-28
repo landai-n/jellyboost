@@ -9,6 +9,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import dev.jellyboost.core.common.model.DownloadQuality
 import dev.jellyboost.core.common.model.SegmentSkipMode
+import dev.jellyboost.core.common.model.ThemeMode
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -102,6 +103,20 @@ class DataStoreAppPreferences
             dataStore.edit { it[PIP_ON_LEAVE] = enabled }
         }
 
+        // A stored name this build does not know decodes to SYSTEM, which is what a fresh install gets.
+        override val themeMode: Flow<ThemeMode> = preference { ThemeMode.fromNameOrDefault(it[THEME_MODE]) }
+
+        override suspend fun setThemeMode(mode: ThemeMode) {
+            dataStore.edit { it[THEME_MODE] = mode.name }
+        }
+
+        override val dynamicColorEnabled: Flow<Boolean> =
+            preference { it[DYNAMIC_COLOR_ENABLED] ?: DEFAULT_DYNAMIC_COLOR }
+
+        override suspend fun setDynamicColorEnabled(enabled: Boolean) {
+            dataStore.edit { it[DYNAMIC_COLOR_ENABLED] = enabled }
+        }
+
         // A non-positive stored value reads as "never measured": sending a zero or negative cap to the
         // server is worse than sending none.
         override val maxStreamingBitrate: Flow<Int?> =
@@ -136,11 +151,15 @@ class DataStoreAppPreferences
             val SEGMENT_SKIP_OUTRO = stringPreferencesKey(PreferenceKeys.SEGMENT_SKIP_OUTRO)
             val PIP_ON_LEAVE = booleanPreferencesKey(PreferenceKeys.PIP_ON_LEAVE)
             val MAX_STREAMING_BITRATE = intPreferencesKey(PreferenceKeys.MAX_STREAMING_BITRATE)
+            val THEME_MODE = stringPreferencesKey(PreferenceKeys.THEME_MODE)
+            val DYNAMIC_COLOR_ENABLED = booleanPreferencesKey(PreferenceKeys.DYNAMIC_COLOR_ENABLED)
 
             const val DEFAULT_WIFI_ONLY = true
 
             val DEFAULT_SKIP_MODE = SegmentSkipMode.SHOW_BUTTON
 
             const val DEFAULT_PIP_ON_LEAVE = true
+
+            const val DEFAULT_DYNAMIC_COLOR = false
         }
     }

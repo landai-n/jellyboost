@@ -3,6 +3,7 @@ package dev.jellyboost.core.network.connectivity
 import app.cash.turbine.test
 import dev.jellyboost.core.common.model.DownloadQuality
 import dev.jellyboost.core.common.model.SegmentSkipMode
+import dev.jellyboost.core.common.model.ThemeMode
 import dev.jellyboost.core.datastore.AppPreferences
 import dev.jellyboost.core.network.ConnectionState
 import dev.jellyboost.core.network.SessionStateHolder
@@ -74,6 +75,14 @@ class ConnectionStateProviderTest {
             override val pipOnLeave: Flow<Boolean> = MutableStateFlow(true)
 
             override suspend fun setPipOnLeave(enabled: Boolean) = Unit
+
+            override val themeMode: Flow<ThemeMode> = MutableStateFlow(ThemeMode.SYSTEM)
+
+            override suspend fun setThemeMode(mode: ThemeMode) = Unit
+
+            override val dynamicColorEnabled: Flow<Boolean> = MutableStateFlow(false)
+
+            override suspend fun setDynamicColorEnabled(enabled: Boolean) = Unit
 
             override val maxStreamingBitrate: Flow<Int?> = MutableStateFlow(null)
 

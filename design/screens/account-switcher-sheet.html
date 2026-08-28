@@ -1,0 +1,147 @@
+<!-- @dsCard viewport="1260x800" group="Screens" name="Account switcher sheet — states" subtitle="Bottom sheet off Settings ▸ Switch account: (server → accounts) list grouped by server, switch-in-progress with everything else disabled, expired-token failure falling through to re-auth; 'Add another server' escape hatch" -->
+<link rel="stylesheet" href="../_shared/modern.css">
+<style>
+  body{padding:24px 0}
+  .grid{display:flex;justify-content:center;gap:28px}
+  .frame-wrap{display:flex;flex-direction:column;gap:10px}
+  .flabel{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--on-surface-variant);text-align:center}
+  .phone{width:380px;height:680px;position:relative;overflow:hidden;border-radius:24px;border:1px solid var(--hairline);background:var(--background)}
+  .behind{position:absolute;inset:0;padding:20px 24px;opacity:.35;filter:blur(1px)}
+  .brow{height:56px;border-radius:16px;background:var(--surface);border:1px solid var(--hairline);margin-bottom:10px}
+  .scrim{position:absolute;inset:0;background:rgba(0,0,0,.5)}
+  .sheet{position:absolute;left:0;right:0;bottom:0;border-radius:24px 24px 0 0;background:rgba(28,28,28,.97);border:1px solid var(--glass-line);border-bottom:none;box-shadow:var(--elev-pop);padding:10px 20px 20px;box-sizing:border-box;display:flex;flex-direction:column;gap:12px}
+  .grab{width:36px;height:4px;border-radius:2px;background:rgba(255,255,255,.22);margin:0 auto}
+  .shead{font-size:17px;font-weight:600;letter-spacing:-.01em}
+  .srv{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--on-surface-variant);margin-top:2px}
+  .srv svg{width:14px;height:14px;fill:var(--primary);flex:none}
+  .rows{display:flex;flex-direction:column;gap:8px}
+  .arow{display:flex;align-items:center;gap:12px;height:56px;padding:0 14px 0 8px;border-radius:999px;background:var(--glass-bg);border:1px solid var(--glass-line);box-sizing:border-box}
+  .arow.dim{opacity:.4}
+  .av{width:38px;height:38px;border-radius:50%;position:relative;flex:none}
+  .av .face{width:100%;height:100%;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600}
+  .photo1{background:linear-gradient(160deg,#3a5f3f,#7fa06a 55%,#b0c4a0)}
+  .photo2{background:linear-gradient(200deg,#e8e4de,#c9a86a 60%,#8a6f4d)}
+  .letter{background:var(--primary);color:#101010}
+  .letter2{background:var(--secondary);color:#101010}
+  .kb{position:absolute;right:-2px;bottom:-2px;width:15px;height:15px;border-radius:50%;background:var(--error);border:2px solid rgba(28,28,28,1);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#101010;box-sizing:content-box}
+  .tx{flex:1;min-width:0}
+  .nm{font-size:14px;font-weight:600}
+  .sb{font-size:11px;color:var(--on-surface-variant);margin-top:1px}
+  .sb.err{color:var(--error-fg)}
+  .cur{display:flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;background:var(--fill-strong);color:var(--on-fill-strong);font-size:11px;font-weight:600;flex:none}
+  .cur svg{width:12px;height:12px;fill:currentColor}
+  .spin{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.14);border-top-color:var(--primary);animation:m-spin 1s linear infinite;flex:none}
+  .addrow{display:flex;align-items:center;justify-content:center;gap:8px;height:48px;border-radius:999px;background:var(--glass-bg);border:1px dashed var(--ghost-line);font-size:13px;font-weight:600}
+  .addrow svg{width:16px;height:16px;fill:var(--icon-fg)}
+  .foot{font-size:11px;color:rgba(255,255,255,.45);text-align:center;line-height:15px}
+  .banner{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:var(--radius-md);background:var(--error-bg);border:1px solid var(--error-line);font-size:12px;line-height:17px;color:var(--error-fg)}
+  .banner svg{width:16px;height:16px;fill:var(--error-fg);flex:none;margin-top:1px}
+  .note{max-width:1200px;margin:20px auto 0;font-size:11px;color:rgba(255,255,255,.45);line-height:16px}
+</style>
+<div class="grid">
+  <div class="frame-wrap">
+    <div class="flabel">1 · Sheet open</div>
+    <div class="phone">
+      <div class="behind"><div class="brow"></div><div class="brow"></div><div class="brow"></div><div class="brow"></div></div>
+      <div class="scrim"></div>
+      <div class="sheet">
+        <div class="grab"></div>
+        <div class="shead">Switch account</div>
+        <div class="srv"><svg viewBox="0 0 24 24"><path d="M4 3h16a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1ZM4 14h16a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-5a1 1 0 0 1 1-1Z"/></svg>lighthouse</div>
+        <div class="rows">
+          <div class="arow">
+            <div class="av"><div class="face photo1"></div></div>
+            <div class="tx"><div class="nm">Sam</div></div>
+            <div class="cur"><svg viewBox="0 0 24 24"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg>Current</div>
+          </div>
+          <div class="arow">
+            <div class="av"><div class="face photo2"></div><div class="kb">!</div></div>
+            <div class="tx"><div class="nm">Alex</div><div class="sb err">Signed out — needs sign-in</div></div>
+          </div>
+          <div class="arow">
+            <div class="av"><div class="face letter">M</div></div>
+            <div class="tx"><div class="nm">Mika</div></div>
+          </div>
+        </div>
+        <div class="srv"><svg viewBox="0 0 24 24"><path d="M4 3h16a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1ZM4 14h16a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-5a1 1 0 0 1 1-1Z"/></svg>haven</div>
+        <div class="rows">
+          <div class="arow">
+            <div class="av"><div class="face letter2">C</div></div>
+            <div class="tx"><div class="nm">Casey</div><div class="sb">Last used 2 days ago</div></div>
+          </div>
+        </div>
+        <div class="addrow"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>Add another server</div>
+        <div class="foot">Downloads on this device are shared across accounts.</div>
+      </div>
+    </div>
+  </div>
+  <div class="frame-wrap">
+    <div class="flabel">2 · Switch in progress</div>
+    <div class="phone">
+      <div class="behind"><div class="brow"></div><div class="brow"></div><div class="brow"></div><div class="brow"></div></div>
+      <div class="scrim"></div>
+      <div class="sheet">
+        <div class="grab"></div>
+        <div class="shead">Switch account</div>
+        <div class="srv"><svg viewBox="0 0 24 24"><path d="M4 3h16a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1ZM4 14h16a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-5a1 1 0 0 1 1-1Z"/></svg>lighthouse</div>
+        <div class="rows">
+          <div class="arow dim">
+            <div class="av"><div class="face photo1"></div></div>
+            <div class="tx"><div class="nm">Sam</div></div>
+            <div class="cur"><svg viewBox="0 0 24 24"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg>Current</div>
+          </div>
+          <div class="arow" style="border-color:var(--line-strong)">
+            <div class="av"><div class="face letter">M</div></div>
+            <div class="tx"><div class="nm">Mika</div><div class="sb">Switching&hellip;</div></div>
+            <div class="spin"></div>
+          </div>
+          <div class="arow dim">
+            <div class="av"><div class="face photo2"></div><div class="kb">!</div></div>
+            <div class="tx"><div class="nm">Alex</div><div class="sb err">Signed out — needs sign-in</div></div>
+          </div>
+        </div>
+        <div class="srv" style="opacity:.4"><svg viewBox="0 0 24 24"><path d="M4 3h16a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1ZM4 14h16a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-5a1 1 0 0 1 1-1Z"/></svg>haven</div>
+        <div class="rows">
+          <div class="arow dim">
+            <div class="av"><div class="face letter2">C</div></div>
+            <div class="tx"><div class="nm">Casey</div><div class="sb">Last used 2 days ago</div></div>
+          </div>
+        </div>
+        <div class="addrow" style="opacity:.4"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>Add another server</div>
+        <div class="foot">Downloads on this device are shared across accounts.</div>
+      </div>
+    </div>
+  </div>
+  <div class="frame-wrap">
+    <div class="flabel">3 · Failure — token expired</div>
+    <div class="phone">
+      <div class="behind"><div class="brow"></div><div class="brow"></div><div class="brow"></div><div class="brow"></div></div>
+      <div class="scrim"></div>
+      <div class="sheet">
+        <div class="grab"></div>
+        <div class="shead">Switch account</div>
+        <div class="banner"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>lighthouse signed Mika out. Sign in again to finish switching.</div>
+        <div class="srv"><svg viewBox="0 0 24 24"><path d="M4 3h16a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1ZM4 14h16a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-5a1 1 0 0 1 1-1Z"/></svg>lighthouse</div>
+        <div class="rows">
+          <div class="arow">
+            <div class="av"><div class="face photo1"></div></div>
+            <div class="tx"><div class="nm">Sam</div></div>
+            <div class="cur"><svg viewBox="0 0 24 24"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg>Current</div>
+          </div>
+          <div class="arow" style="border-color:var(--error-line)">
+            <div class="av"><div class="face letter">M</div><div class="kb">!</div></div>
+            <div class="tx"><div class="nm">Mika</div><div class="sb err">Signed out — needs sign-in</div></div>
+            <div class="m-btn m-btn-sm m-btn-ghost" style="flex:none">Sign in</div>
+          </div>
+          <div class="arow">
+            <div class="av"><div class="face photo2"></div><div class="kb">!</div></div>
+            <div class="tx"><div class="nm">Alex</div><div class="sb err">Signed out — needs sign-in</div></div>
+          </div>
+        </div>
+        <div class="addrow"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>Add another server</div>
+        <div class="foot">Downloads on this device are shared across accounts.</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="note">Entry point: Settings &#9656; Switch account (also long-press on the identity row). Sheet lists every saved account grouped by server; the active account carries the white &ldquo;Current&rdquo; pill (selected-pill vocabulary). Switching is sign-out + sign-in under the hood, so the tapped row shows an inline spinner while every other control disables (frame 2); success dismisses the sheet into the post-switch Home moment (screens/switch-edge-cases.html). If the held token turns out expired (frame 3), the row flips to the error-badged needs-sign-in state with an inline &ldquo;Sign in&rdquo; pill that opens Login prefilled — the user stays signed in as Sam until re-auth succeeds. &ldquo;Add another server&rdquo; leaves to Server setup. The downloads footnote appears only here (the one place users wonder). On tablets the same content renders as a centered modal at 480dp.</div>

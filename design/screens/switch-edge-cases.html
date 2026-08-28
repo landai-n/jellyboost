@@ -1,0 +1,95 @@
+<!-- @dsCard viewport="1260x800" group="Screens" name="Switching — edge cases" subtitle="Confirm-and-stop dialog when switching mid-playback, and the post-switch Home moment: identity snackbar + Continue Watching re-skinning to the new user" -->
+<link rel="stylesheet" href="../_shared/modern.css">
+<style>
+  body{padding:24px 0}
+  .grid{display:flex;justify-content:center;gap:28px;align-items:flex-start}
+  .frame-wrap{display:flex;flex-direction:column;gap:10px}
+  .flabel{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--on-surface-variant);text-align:center}
+  .phone{width:380px;height:680px;position:relative;overflow:hidden;border-radius:24px;border:1px solid var(--hairline);background:var(--background)}
+  .player-bg{position:absolute;inset:0;background:linear-gradient(165deg,#2c2a3a 0%,#4a3a5f 46%,#7a5f9a 100%)}
+  .player-scrim{position:absolute;inset:0;background:rgba(0,0,0,.62)}
+  .dialog{position:absolute;left:24px;right:24px;top:50%;transform:translateY(-50%);border-radius:var(--radius-lg);background:var(--surface);border:1px solid var(--glass-line);box-shadow:var(--elev-pop);padding:20px;display:flex;flex-direction:column;gap:14px;box-sizing:border-box}
+  .dtitle{font-size:18px;font-weight:600;letter-spacing:-.01em}
+  .dbody{font-size:13px;line-height:19px;color:var(--on-surface-variant)}
+  .dactions{display:flex;justify-content:flex-end;gap:8px}
+  .hero{position:relative;height:340px;overflow:hidden}
+  .hero-art{position:absolute;inset:0;background:linear-gradient(165deg,#3a2a2c 0%,#5f3a4a 46%,#9a5f6f 100%)}
+  .hero-halo{position:absolute;inset:0;background:radial-gradient(120% 90% at 78% 18%,rgba(170,92,195,.35) 0%,rgba(0,164,220,.16) 42%,rgba(0,0,0,0) 72%)}
+  .hero-scrim{position:absolute;inset:0;background:var(--backdrop-scrim)}
+  .hero-copy{position:absolute;left:0;right:0;bottom:0;padding:18px;box-sizing:border-box;display:flex;flex-direction:column;gap:10px}
+  .hero-title{font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1.12}
+  .hero-meta{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--on-surface-variant)}
+  .hero-pills{display:flex;gap:10px}
+  .hero-pills .m-btn{flex:1;height:40px}
+  .content{display:flex;flex-direction:column;gap:16px;padding:18px 0 0}
+  .sk-row{display:flex;gap:12px;padding:0 16px;overflow:hidden}
+  .sk{width:200px;height:112px;border-radius:var(--radius-md);flex:none;background:linear-gradient(100deg,rgba(255,255,255,.05) 40%,rgba(255,255,255,.10) 50%,rgba(255,255,255,.05) 60%);background-size:200% 100%;animation:sh 1.4s linear infinite;border:1px solid var(--hairline)}
+  @keyframes sh{to{background-position:-200% 0}}
+  .sk-lines{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+  .sk-l{height:10px;border-radius:5px;background:rgba(255,255,255,.06)}
+  .snack{position:absolute;left:20px;right:20px;bottom:96px;display:flex;align-items:center;gap:12px;padding:10px 16px 10px 10px;border-radius:999px;background:rgba(32,32,32,.94);border:1px solid rgba(255,255,255,.09);box-shadow:var(--elev-pop)}
+  .snack .sav{width:32px;height:32px;border-radius:50%;background:var(--primary);color:#101010;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex:none}
+  .snack .stx{font-size:13px;font-weight:500}
+  .snack .stx b{font-weight:600}
+  .nav-pill{position:absolute;left:20px;right:20px;bottom:20px;height:56px;box-sizing:border-box;display:flex;align-items:center;justify-content:space-around;padding:0 8px;border-radius:999px;box-shadow:var(--elev-pop)}
+  .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;color:rgba(255,255,255,.7)}
+  .nav-item svg{width:20px;height:20px;fill:currentColor}
+  .nav-item span{font-size:10px;font-weight:500}
+  .nav-item.selected{flex:none;flex-direction:row;gap:7px;background:#fff;color:#101010;padding:8px 16px;border-radius:999px}
+  .nav-item.selected span{font-size:12px;font-weight:600}
+  .m-section-title{padding:0 16px}
+  .note{max-width:1200px;margin:20px auto 0;font-size:11px;color:rgba(255,255,255,.45);line-height:16px}
+</style>
+<div class="grid">
+  <div class="frame-wrap">
+    <div class="flabel">1 · Switching while playing</div>
+    <div class="phone">
+      <div class="player-bg"></div>
+      <div class="player-scrim"></div>
+      <div class="dialog">
+        <div class="dtitle">Switch to Mika?</div>
+        <div class="dbody">Playback will stop. Sam&rsquo;s spot in The Bicameral Mind is saved on lighthouse.</div>
+        <div class="dactions">
+          <div class="m-btn m-btn-sm m-btn-ghost">Cancel</div>
+          <div class="m-btn m-btn-sm m-btn-primary">Stop &amp; switch</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="frame-wrap">
+    <div class="flabel">2 · Post-switch Home moment</div>
+    <div class="phone">
+      <div class="hero">
+        <div class="hero-art"></div>
+        <div class="hero-halo"></div>
+        <div class="hero-scrim"></div>
+        <div class="hero-copy">
+          <div class="m-eyebrow"><div class="dot"></div><span>CONTINUE WATCHING</span></div>
+          <div class="hero-title">Severance</div>
+          <div class="hero-meta"><span>S2 · E4</span><div class="m-pill">TV-MA</div><span>31m left</span></div>
+          <div class="hero-pills">
+            <div class="m-btn m-btn-primary"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><span>Resume</span></div>
+            <div class="m-btn m-btn-ghost"><span>Details</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="m-section">
+          <div class="m-section-title">Continue Watching</div>
+          <div class="sk-row">
+            <div><div class="sk"></div><div class="sk-lines"><div class="sk-l" style="width:120px"></div><div class="sk-l" style="width:80px"></div></div></div>
+            <div><div class="sk"></div><div class="sk-lines"><div class="sk-l" style="width:100px"></div><div class="sk-l" style="width:64px"></div></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="snack"><div class="sav">M</div><div class="stx">Now watching as <b>Mika</b> · lighthouse</div></div>
+      <div class="nav-pill m-glass">
+        <div class="nav-item selected"><svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>Home</span></div>
+        <div class="nav-item"><svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 9l-5 3V8z"/></svg><span>Libraries</span></div>
+        <div class="nav-item"><svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg><span>Search</span></div>
+        <div class="nav-item"><svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg><span>Downloads</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="note">Frame 1 — any instant switch path (chip, sheet row) interposes this dialog when video or music is playing: ghost Cancel + white-fill &ldquo;Stop &amp; switch&rdquo;; the copy names whose progress is saved and where, since per-account watch state survives switching. No downloads mention here — downloads aren&rsquo;t affected and the user isn&rsquo;t thinking about them. Frame 2 — the identity change made legible on arrival: a transient snackbar (mini avatar + &ldquo;Now watching as&hellip;&rdquo;, 4s) above the nav, hero already showing the NEW user&rsquo;s Continue Watching pick, remaining rows shimmer-skeleton while the new user&rsquo;s resume/next-up data loads. The Downloads tab is untouched by the switch — shared-device model — and stays silent about it.</div>

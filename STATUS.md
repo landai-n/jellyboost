@@ -37,12 +37,26 @@ Known issues:
 
 ## Current milestone: M14 — Breadth & theming (approved 2026-08-28; tracks 4 and 6 landed, gate green)
 
-Six tracks: multi-server & account switching (surfacing the schema-ready `ServerEntity`/
+Six tracks: multi-server & account switching (surfacing `ServerEntity`/
 `ServerAddressEntity`); collections (BoxSets); chapter UI in the player (markers + sheet from
 the already-fetched `ChapterInfo`); light theme + Material You dynamic color; pinch-to-zoom
 and horizontal swipe-seek gestures (with accessible equivalents); a styled ASS/SSA
 subtitle-rendering spike. Scope and DoD in `docs/PLAN.md` (M14); approval and exclusions in
 DECISIONS.md 2026-08-28. Tags `m14` only after the M11/M12/M13 device DoDs close.
+
+**Track 1 status (2026-08-28):** Claude Design canvas DONE and mirrored to `design/`
+(saved-server + saved-accounts screens, account-switcher sheet, extended Settings ▸
+Account, switch edge cases, `account-chip`/`saved-server-card` components — plus track
+4's light-theme foundations/tokens and a light Home variant, delivered on the same
+canvas). Not yet designed: the brief's surface (6), the Downloads tab's foreign-server
+row states — needs a follow-up canvas pass before that part is implemented. Brief:
+`docs/notes/m14-multiserver-design-brief.md`. An offline-coupling code trace corrected
+PLAN.md's "schema-ready" claim (DECISIONS 2026-08-28): the offline layer — unkeyed
+`getPendingSync()` drain, serverId-less `downloads`/`items`, queue, refresher, switch
+hygiene — is single-identity, so the brief's backend workstream is enlarged and is a hard
+prerequisite before any switching UI ships. The Downloads tab keeps the shared-device
+union view; foreign-server rows stay playable, get a provenance label only once a second
+server's downloads exist, and unfinished ones hold as "Waiting for <server>".
 
 **Track 4 — light theme + dynamic colour (2026-08-28, landed on `m14/theme-subs`; device walk
 owed).** `JellyfinLightColors` beside `JellyfinColors`, `JellyfinTheme(themeMode, dynamicColor)`

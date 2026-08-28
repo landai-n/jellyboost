@@ -1,0 +1,69 @@
+<!-- @dsCard viewport="400x780" group="Screens" name="Settings — Account section (portrait)" subtitle="Extended Account panel: identity row + Switch account (opens the bottom-sheet switcher) + Manage servers (opens Server setup) + Sign out; sign-out keeps its delete-downloads dialog" -->
+<link rel="stylesheet" href="../_shared/modern.css">
+<style>
+  .phone{width:400px;min-height:800px;margin:0 auto;position:relative;overflow:hidden}
+  .topbar{display:flex;align-items:center;gap:14px;padding:20px 24px 8px}
+  .back{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--glass-bg);border:1px solid var(--glass-line);color:var(--icon-fg);font-size:20px;flex:none}
+  .stitle{font-size:24px;font-weight:700;letter-spacing:-.02em}
+  .content{padding:16px 24px 32px;display:flex;flex-direction:column;gap:20px;box-sizing:border-box}
+  .group{display:flex;flex-direction:column;gap:8px}
+  .eyebrow{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--on-surface-variant)}
+  .panel{background:var(--surface);border:1px solid var(--hairline);border-radius:var(--radius-lg);overflow:hidden}
+  .row{display:flex;align-items:center;gap:14px;padding:14px 16px;box-sizing:border-box}
+  .row + .row{border-top:1px solid var(--hairline)}
+  .ic{width:36px;height:36px;border-radius:50%;background:var(--glass-bg);border:1px solid var(--glass-line);display:flex;align-items:center;justify-content:center;flex:none;box-sizing:border-box}
+  .ic svg{width:18px;height:18px;fill:var(--icon-fg)}
+  .ic.danger{background:var(--error-bg);border-color:var(--error-line)}
+  .ic.danger svg{fill:var(--error-fg)}
+  .av{width:44px;height:44px;border-radius:50%;flex:none;background:linear-gradient(160deg,#3a5f3f,#7fa06a 55%,#b0c4a0)}
+  .tx{flex:1;min-width:0}
+  .nm{font-size:15px;font-weight:600}
+  .nm.danger{color:var(--error-fg)}
+  .sb{font-size:12px;color:var(--on-surface-variant);margin-top:2px}
+  .chev{color:var(--on-surface-variant);font-size:20px;flex:none}
+  .note{font-size:11px;color:rgba(255,255,255,.45);line-height:16px}
+</style>
+<div class="phone">
+  <div class="topbar"><div class="back">&#8249;</div><div class="stitle">Settings</div></div>
+  <div class="content">
+    <div class="group">
+      <div class="eyebrow">Account</div>
+      <div class="panel">
+        <div class="row">
+          <div class="av"></div>
+          <div class="tx"><div class="nm">Sam</div><div class="sb">lighthouse · http://192.168.1.10:8096</div></div>
+        </div>
+        <div class="row">
+          <div class="ic"><svg viewBox="0 0 24 24"><path d="M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z"/></svg></div>
+          <div class="tx"><div class="nm">Switch account</div><div class="sb">4 accounts on 2 servers</div></div>
+          <div class="chev">&#8250;</div>
+        </div>
+        <div class="row">
+          <div class="ic"><svg viewBox="0 0 24 24"><path d="M4 3h16a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Zm3 4.5A1.5 1.5 0 1 0 7 4.5a1.5 1.5 0 0 0 0 3ZM4 14h16a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-5a1 1 0 0 1 1-1Zm3 4.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z"/></svg></div>
+          <div class="tx"><div class="nm">Manage servers</div><div class="sb">lighthouse, haven</div></div>
+          <div class="chev">&#8250;</div>
+        </div>
+        <div class="row">
+          <div class="ic danger"><svg viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg></div>
+          <div class="tx"><div class="nm danger">Sign out</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="group">
+      <div class="eyebrow">Playback</div>
+      <div class="panel">
+        <div class="row">
+          <div class="ic"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+          <div class="tx"><div class="nm">Player</div><div class="sb">Quality, subtitles, audio</div></div>
+          <div class="chev">&#8250;</div>
+        </div>
+        <div class="row">
+          <div class="ic"><svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg></div>
+          <div class="tx"><div class="nm">Downloads</div><div class="sb">Storage, quality, Wi-Fi only</div></div>
+          <div class="chev">&#8250;</div>
+        </div>
+      </div>
+    </div>
+    <div class="note">The identity row stays read-only (avatar + user + server, merged into one row). Two new actionable rows: Switch account opens the bottom-sheet switcher (screens/account-switcher-sheet.html); Manage servers opens Server setup in its saved-servers form. Sign out keeps the existing confirm dialog with its &ldquo;Also delete my downloads&rdquo; checkbox — switching accounts never shows that dialog, only explicit sign-out does. Tablet renders the same list constrained to a 560dp column; no separate landscape artboard.</div>
+  </div>
+</div>

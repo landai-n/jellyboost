@@ -4438,3 +4438,33 @@ Seeded from the approved plan; listed for traceability, no divergence:
 - **Colours are named rather than defaulted:** `LibraryDefaults.libraryColors()` derives the dialog background, the version chip and the content colour from `libraryBackgroundColor`. Setting that to `Color.Transparent`, so the app's own background shows through, would make the dialog and the chip invisible; all four are therefore passed explicitly. The confirm button takes `android.R.string.ok`, the platform's translated one — the library's own default is the literal string `OK`.
 - **Reason:** the app is GPL-3.0 and is headed for the Play Store. §4 requires the licence to be conveyed with the binary, §6 requires the corresponding source to be offered, and the dozens of Apache-2.0 AndroidX artifacts in the bundle each require their notice. None of the three had any surface in the app.
 - **Tests:** seven added, none weakened. `LicenceViewModelTest` — the bundled text reaching the screen as paragraphs; an unreadable resource leaving the screen empty rather than taking the process down (permanent, not transient: a packaged resource that will not read will not read on a retry); and the byte-identity pin above. `LicenceBlocksTest` — headings standing alone, hard-wrapped prose joining, blank lines separating, and the whole 35 KB document surviving the reflow word for word. The three new rows are Compose semantics, which no unit test here can see; `:feature:settings` stays on `a11y-scaffolding-allowlist.json` and that debt is unchanged rather than newly incurred.
+## 2026-08-28 — the build entry point becomes `gradlew-remote`, a delegating wrapper living outside the repo
+- **Scope:** `.claude/skills/verify/SKILL.md`, `.claude/skills/milestone/SKILL.md`,
+  `CLAUDE.md` (Build environment, subagent note), `README.md`, `docs/PLAN.md:14,30`,
+  new `scripts/check_build_entrypoint.py` wired into `/verify` and
+  `.claude/hooks/pre-commit-gate.sh`. The wrapper itself, its provisioning script, and
+  every host detail live outside the repo, next to `env.sh`.
+- **Plan said:** `docs/PLAN.md:30` — "`/verify` — `./gradlew ktlintCheck detekt
+  testDebugUnitTest assembleDebug`; fix failures, never weaken tests to pass (use /diverge
+  if a test is wrong); touch `.claude/state/last-verify` on green." And `docs/PLAN.md:14` —
+  "Java toolchain 21 (env: `source \"../env.sh\"`)". The milestone skill's install step
+  named `adb install`/`./gradlew installDebug`.
+- **Done instead:** every documented Gradle invocation goes through `gradlew-remote`, a
+  wrapper that sources `env.sh` itself (resolving the main checkout via git's common dir,
+  which also fixes `source "../env.sh"` being silently broken from worktrees), runs the
+  build on a workstation over rsync+SSH when one is reachable, and `exec`s the local
+  `./gradlew` otherwise. Device-bound tasks (`install*`, `connected*`, baseline profile)
+  always run locally. The milestone install step becomes remote `:app:assembleDebug` +
+  local `adb install -r` of the pulled APK — debug-keystore parity between the two
+  machines is part of provisioning, so the signatures match. A new gate,
+  `scripts/check_build_entrypoint.py`, asserts the verify skill, `CLAUDE.md`, and
+  `docs/PLAN.md` all name the same single entry point and that its name can never be a
+  hostname or path.
+- **Reason:** builds move to a much larger machine when it is on the LAN, without giving
+  up offline work. The identifier rule (governance #5) forbids the workstation's
+  host/user/IP anywhere in the tree, which forces the wrapper, its config, and its setup
+  notes out of the repo; the repo learns exactly one neutral token, the command name. The
+  wrapper streams remote Gradle output verbatim (one remote→local path substitution, which
+  cannot touch a verdict line), so the `/verify` doctrine — judge only by
+  `BUILD SUCCESSFUL`/`BUILD FAILED` — and the mtime-based commit gate are unaffected: the
+  push only reads the tree, and the pull writes only under gitignored `build/` outputs.

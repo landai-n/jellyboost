@@ -28,8 +28,10 @@ A milestone is **NOT finished** if any DoD item fails — do not fudge this.
 2. Walk the DoD's **manual verification** on a real/emulated device via `adb`:
    - For each check the DoD implies (e.g. "installs and shows dark themed empty screen",
      "airplane-mode toggle swaps app within ~1s", "2GB movie resumes from byte offset after
-     app kill"), perform it (install via `adb install`/`./gradlew installDebug`, drive the
-     device/emulator, inspect logs/`adb shell` state as needed) and record **pass/fail**
+     app kill"), perform it (build with `gradlew-remote :app:assembleDebug`, then
+     `adb install -r app/build/outputs/apk/debug/app-debug.apk` — the build host and this
+     machine share a debug keystore, so the APK installs over a locally-built one; drive
+     the device/emulator, inspect logs/`adb shell` state as needed) and record **pass/fail**
      for each one explicitly.
    - If anything fails, fix it (or `/diverge` if the DoD item itself is wrong) and re-walk
      the failed checks — do not mark the milestone finished with an outstanding failure.
@@ -38,7 +40,7 @@ A milestone is **NOT finished** if any DoD item fails — do not fudge this.
 
    ```bash
    adb shell input keyevent KEYCODE_WAKEUP   # the OEM ROM refuses installs with the screen off
-   source "../env.sh" && ./gradlew connectedDebugAndroidTest
+   gradlew-remote connectedDebugAndroidTest
    ```
 
    These are the ATF + Compose-semantics tests that hold the 2026-08-05 accessibility audit's

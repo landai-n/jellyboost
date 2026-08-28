@@ -65,13 +65,21 @@ Distilled from the 2026-07…2026-08 audits; the recidivist classes:
   `/verify`, the pre-commit hook, or CI in the same commit that adds it.
 
 ## Build environment
-- Always `source "../env.sh"` first (sets JAVA_HOME=openjdk@21, ANDROID_HOME).
-- Build: `./gradlew assembleDebug`
-- Quality: `./gradlew ktlintCheck detekt testDebugUnitTest :app:lintDebug`
+- **`gradlew-remote` is the Gradle entry point — use it everywhere instead of `./gradlew`.**
+  It sets the toolchain environment itself (no `source "../env.sh"` needed, and it resolves
+  correctly from a worktree, where that relative path never did), runs the build on a
+  configured build host when one is reachable, and falls back to the local `./gradlew`
+  transparently when it is not. Tasks that need the attached tablet (`install*`,
+  `connected*`, baseline profile) always run locally. Setup for a new machine lives outside
+  the repo, next to `env.sh`.
+- Build: `gradlew-remote assembleDebug`
+- Quality: `gradlew-remote ktlintCheck detekt testDebugUnitTest :app:lintDebug`
   (`:app:lintDebug` is the accessibility gate — severities in `config/lint/lint.xml`.)
 - Instrumented a11y suite (device only, milestone DoD — not part of `/verify`):
-  `./gradlew connectedDebugAndroidTest`.
-- Install: `./gradlew installDebug` (device/emulator via adb).
+  `gradlew-remote connectedDebugAndroidTest`.
+- Install: `gradlew-remote installDebug` (device/emulator via adb; always local).
+- If `gradlew-remote` is not installed on this machine, `source "../env.sh" && ./gradlew …`
+  from the repo root is the equivalent — but never use it to route around a wrapper failure.
 
 ## Test device
 A tablet is connected via adb and available for installs, instrumented tests, and
@@ -88,7 +96,8 @@ usage optimization); the main (Fable) context orchestrates, reviews, and verifie
 - `model: "sonnet"` — mechanical work from a precise spec: boilerplate, DAOs/entities,
   tests from templates, UI from an established design system, docs.
 - Every subagent prompt must include the governance rules above (check `docs/PLAN.md`,
-  log divergences in `DECISIONS.md`, never weaken tests) and the build-env note.
+  log divergences in `DECISIONS.md`, never weaken tests) and the build-env note
+  (`gradlew-remote` is the entry point; never substitute bare `./gradlew`).
 - The orchestrator independently verifies results (`/verify`) before committing —
   never trust an agent's green-build claim.
 

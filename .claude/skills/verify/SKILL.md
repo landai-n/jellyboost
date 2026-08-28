@@ -13,7 +13,7 @@ declaring the task done.
 1. From the repo root, run:
 
    ```bash
-   source "../env.sh" && ./gradlew ktlintCheck detekt testDebugUnitTest :app:lintDebug assembleDebug
+   gradlew-remote ktlintCheck detekt testDebugUnitTest :app:lintDebug assembleDebug
    ```
 
    Judge the result ONLY by the explicit `BUILD SUCCESSFUL` / `BUILD FAILED` line in the
@@ -25,7 +25,7 @@ declaring the task done.
    ```bash
    python3 scripts/check_docs.py && python3 scripts/check_identifiers.py && \
    python3 scripts/check_patterns.py && python3 scripts/check_redaction.py && \
-   python3 scripts/check_a11y_scaffolding.py
+   python3 scripts/check_a11y_scaffolding.py && python3 scripts/check_build_entrypoint.py
    ```
 
    `check_patterns.py` is a ratchet: if it flags a file you changed, fix the code rather
@@ -65,6 +65,15 @@ declaring the task done.
 
 ## Notes
 
+- **`gradlew-remote` is the project's Gradle entry point.** It sets the build environment
+  itself (no `source "../env.sh"` needed — and it resolves correctly from a worktree, where
+  that relative path never did), runs the build on the configured build host when one is
+  reachable, and falls back to the local `./gradlew` otherwise; device-bound tasks always
+  run locally. It never prints anything resembling a build verdict, so judge the run by
+  Gradle's own `BUILD SUCCESSFUL` / `BUILD FAILED` line exactly as before. If the command
+  is not on PATH, this machine hasn't been set up — see the setup notes beside `env.sh`.
+  Never substitute a bare `./gradlew` to route around a wrapper failure: that silently
+  skips the environment setup.
 - **`:app:lintDebug` is the accessibility gate** (accessibility audit 2026-08-05, CR-7).
   Severities live in `config/lint/lint.xml`, one file for all 17 modules: the a11y checks
   are errors, the four issue families the project has never enforced are warnings, and an
@@ -73,7 +82,8 @@ declaring the task done.
   library in one analysis pass (~80s cold, ~2s when nothing changed).
 - The **instrumented** accessibility suite (`*/src/androidTest`) is *not* part of this
   gate — it needs a connected device. Run it at milestone DoD instead:
-  `./gradlew connectedDebugAndroidTest` (wake the tablet's screen first).
+  `gradlew-remote connectedDebugAndroidTest` (wake the tablet's screen first; the wrapper
+  runs device-bound tasks locally).
 
 - This is what the `pre-commit-gate.sh` hook checks for before allowing `git commit`, and
   what `session-start.sh` reports as stale/fresh at the start of a session. Running this

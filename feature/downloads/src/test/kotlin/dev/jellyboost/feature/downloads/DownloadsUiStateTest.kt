@@ -11,6 +11,9 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import java.util.UUID
 
+// One state class's derivations over one set of fixtures; splitting the cases across files would
+// duplicate those fixtures rather than shorten anything.
+@Suppress("LargeClass")
 class DownloadsUiStateTest {
     @Test
     fun `an empty queue has nothing to sum and reads as idle`() {
@@ -403,7 +406,9 @@ class DownloadsUiStateTest {
 
         val group = sections.single().groups.single()
         group.subtitle shouldBe "Season 1 · Season 2"
-        // One thumbnail cannot stand for two; the first season is what the unfolded list opens with.
+        // One thumbnail cannot stand for two, so the choice is the lowest-numbered season — never
+        // whichever the list opens with, which the title sort makes a different season entirely.
+        group.items.first().itemId shouldBe "1"
         group.artworkUrl shouldBe "https://example.invalid/westworld-s1.jpg"
     }
 
@@ -436,6 +441,29 @@ class DownloadsUiStateTest {
             ).toSections()
 
         val group = sections.single().groups.single()
+        group.subtitle shouldBe "Season 1"
+        group.artworkUrl shouldBe "https://example.invalid/westworld-s1.jpg"
+    }
+
+    @Test
+    fun `a season's poster comes from the first row of that season that has one`() {
+        // The season join answers per row, so two rows of one season disagree about its poster
+        // whenever one of their own items is still unparsed.
+        val sections =
+            listOf(
+                episode("1", "Chestnut", series = "Westworld", season = "Season 1", seasonNumber = 1),
+                episode(
+                    "2",
+                    "The Bicameral Mind",
+                    series = "Westworld",
+                    season = "Season 1",
+                    seasonNumber = 1,
+                    seasonArtworkUrl = "https://example.invalid/westworld-s1.jpg",
+                ),
+            ).toSections()
+
+        val group = sections.single().groups.single()
+        group.items.first().itemId shouldBe "1"
         group.subtitle shouldBe "Season 1"
         group.artworkUrl shouldBe "https://example.invalid/westworld-s1.jpg"
     }

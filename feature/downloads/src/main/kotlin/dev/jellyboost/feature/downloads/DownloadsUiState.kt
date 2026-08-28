@@ -365,7 +365,9 @@ private fun foldedGroups(
             .groupBy { requireNotNull(it.groupKey) }
             .map { (key, items) ->
                 val sorted = items.sortedBy { it.title }
-                // Read off the sorted rows, so the header describes the list in the order it opens in.
+                // Read off the sorted rows so the header is a function of the group alone: taking the
+                // unsorted ones would let Room's row order decide which of two equally-eligible
+                // posters the header gets.
                 val seasons = if (music) SeasonHeader.NONE else sorted.seasonHeader()
                 DownloadGroup(
                     key = key,
@@ -400,10 +402,12 @@ private class SeasonHeader(
  * already localised it, and composing one would be a string invisible to the `MissingTranslation`
  * gate and owed a 69-locale pass. A group is keyed by **series**, so it can hold several seasons —
  * their distinct names are joined in season order (the episode's `parentIndexNumber`, unnumbered
- * last), and the poster is the **first** of them: one thumbnail cannot stand for four, and the first
- * season is the one the unfolded list opens with. A row whose season the cache cannot name
- * contributes neither, so a group no row's season reached keeps exactly the one-line header it had
- * before this existed.
+ * last), and the poster is the **lowest-numbered** season's: one thumbnail cannot stand for four, so
+ * the choice is made canonical rather than incidental. Explicitly *not* "whichever season the list
+ * opens with" — the rows below are ordered by episode title, so that would hand the header a
+ * different poster every time an episode is added or deleted. A row whose season the cache cannot
+ * name contributes neither, so a group no row's season reached keeps exactly the one-line header it
+ * had before this existed.
  */
 private fun List<DownloadItem>.seasonHeader(): SeasonHeader {
     val refs =
@@ -421,8 +425,9 @@ private fun List<DownloadItem>.seasonHeader(): SeasonHeader {
             .sortedWith(compareBy(nullsLast()) { (_, season) -> season.firstNotNullOfOrNull { it.number } })
     return SeasonHeader(
         line = ordered.joinToString(Separators.DOT) { (name, _) -> name },
-        // The first row of that season that has one: a poster lands per row with the metadata
-        // refresh, so the first row is routinely the one still without it.
+        // The first row of that season that has one, not that season's first row: the join answers
+        // per row, so a row whose own item is still unparsed carries no poster while its sibling of
+        // the same season already does.
         artworkUrl = ordered.first().value.firstNotNullOfOrNull { it.artworkUrl },
     )
 }

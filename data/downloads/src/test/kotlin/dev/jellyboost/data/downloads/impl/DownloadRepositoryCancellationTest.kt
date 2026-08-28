@@ -7,6 +7,7 @@ import dev.jellyboost.core.network.SessionRepository
 import dev.jellyboost.core.network.model.SessionState
 import dev.jellyboost.data.cache.ItemEntityMapper
 import dev.jellyboost.data.downloads.DownloadFixtures.NOW
+import dev.jellyboost.data.downloads.DownloadFixtures.directTransactionRunner
 import dev.jellyboost.data.downloads.DownloadFixtures.uuid
 import dev.jellyboost.data.downloads.storage.DownloadStorage
 import dev.jellyboost.data.downloads.storage.DownloadVolume
@@ -141,6 +142,7 @@ class DownloadRepositoryCancellationTest {
             preferences = preferences,
             sessionRepository = sessionRepository,
             clock = clock,
+            transactionRunner = directTransactionRunner,
             ioDispatcher = ioDispatcher,
             appScope = backgroundScope,
         )

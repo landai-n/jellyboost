@@ -35,7 +35,7 @@ Known issues:
   files under `build/` may carry future timestamps; nothing reads them (the commit gate
   compares only tracked `*.kt`/`*.kts`).
 
-## Current milestone: M14 — Breadth & theming (approved 2026-08-28; track 4 landed, gate green)
+## Current milestone: M14 — Breadth & theming (approved 2026-08-28; tracks 4 and 6 landed, gate green)
 
 Six tracks: multi-server & account switching (surfacing the schema-ready `ServerEntity`/
 `ServerAddressEntity`); collections (BoxSets); chapter UI in the player (markers + sheet from
@@ -59,6 +59,22 @@ all 69 locales. **Known issue:** `DownloadsScreen.UsageBarTrackColor` is a pre-e
 progress track and is now frozen as a `KnownViolation` on *both* sides (1.45:1 dark, 1.32:1
 light) — one `pageInk` lightAlpha fixes both. **Owed:** the DoD walk (light and dynamic across
 every screen at fontScale 2.0), and `/adversarial-review` for the wave.
+
+**Track 6 — styled ASS/SSA (2026-08-28, landed on `m14/theme-subs`; device walk owed).** Spike
+verdict: feasible with **no player-engine swap**, so it is implemented rather than only recorded.
+`io.github.peerless2012:ass-media` 0.5.1 on the existing Media3 1.9.0 — no bump: the library's own
+POM declares 1.8.0, and `media3-ffmpeg-decoder` still publishes nothing past `1.9.0+1`.
+`AssSubtitleSupport` (`:player`, `@Singleton`) reads a default-off `styledAssSubtitles` preference
+and hands `ExoPlayerHandle` an `AssHandler` at `OVERLAY_OPEN_GL`; the renderers factory, the
+media-source factory and the `PlayerView`'s `SubtitleView` are all *wrapped*, never replaced. The
+device profile's `hlsTextSubtitles` branch and `CastPlayerHandle` are deliberately untouched.
+`styledAssSurvivesMerge` guards the one shape the module cannot follow — audio sidecars plus
+side-loaded subtitles merge twice and its single prefix-strip would render nothing — by keeping
+those items on Media3's own parser. **Known issues:** libass-android #71 / androidx/media#2289
+(signs ~0.5 s late, closed upstream as *wont fix*) is an unfixable ceiling; ~+3 MB per ABI is paid
+whether the switch is on or not. **Owed:** the seven-check device walk in
+`docs/notes/m14-ass-libass-spike.md` — check (1), "visible at all on our SurfaceView path", is the
+Wholphin #1049 failure and is pass/fail for the whole feature.
 
 ## Planned milestone: M13 — Music (approved 2026-08-05; all 6 phases landed, code complete; device DoD owed)
 

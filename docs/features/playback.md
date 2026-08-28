@@ -198,8 +198,9 @@ fetches one. Two knock-on rules:
   in that positional count — Jellyfin builds renditions only for text streams, and a graphical one
   left in the count would push every text track after it onto the wrong rendition.
 
-SSA/ASS reaching a transcode are converted to WebVTT and lose their styling; ExoPlayer's SSA
-renderer ignores most of it anyway. Background and measurements:
+SSA/ASS reaching a transcode are converted to WebVTT and lose their styling; Media3's own SSA
+renderer ignores most of it anyway, and libass (below) cannot help here — ASS never reaches the
+client on this path. Background and measurements:
 docs/notes/subtitle-drift-hls-delivery-spike.md.
 
 ## Decoder fallback
@@ -235,8 +236,9 @@ throughput measurement taken against the server — see `auto-quality.md` and DE
 - Offline playback from downloads — M8. `PlaybackMediaSource` is already a sealed type with the
   local variant's shape in mind, and the `DefaultDataSource` wrapper already resolves `file://`
   and `content://` URIs.
-- A persisted preference for the ASS/SSA toggle and the default quality — M9 settings. Both are
-  parameters today (see DECISIONS.md, 2026-07-28).
+- A persisted preference for the device profile's ASS/SSA *delivery* toggle and the default quality
+  — M9 settings. Both are parameters today (see DECISIONS.md, 2026-07-28). The M14 preference below
+  chooses the **renderer**, not the delivery method.
 
 <!-- BEGIN: Player polish (M9) -->
 
@@ -503,3 +505,54 @@ remote-only: a file on disk started no encoder. Leaving the group mid-film sends
 report and then goes quiet, while playback carries on solo. Every local position write is untouched
 in all of these cases. See DECISIONS.md, 2026-07-30.
 <!-- END: SyncPlay (M11) -->
+
+<!-- BEGIN: Styled ASS/SSA (M14 track 6) -->
+
+## Styled ASS/SSA — libass under Media3
+
+**Default off, experimental.** Settings → Playback → *Styled ASS subtitles* turns it on, and the
+device checklist in [`../notes/m14-ass-libass-spike.md`](../notes/m14-ass-libass-spike.md) is still
+owed before it can be anything else.
+
+What it changes. Without it, ASS/SSA is direct-played and drawn by Media3's `SsaParser`, which keeps
+alignment, two colours, font *size*, bold/italic/underline/strikeout and `\pos` / `\move` / `\an` —
+and drops font family, karaoke, animation, clipping, rotation, margins and MKV font attachments. With
+it, `io.github.peerless2012:ass-media` renders the file with libass itself, at
+`AssRenderType.OVERLAY_OPEN_GL`.
+
+| Class | Responsibility |
+|---|---|
+| `session/AssSubtitleSupport` | `@Singleton`. Reads `styledAssSubtitles`, creates the `AssHandler`, forces `System.loadLibrary` while a fallback is still possible, publishes the handler for the UI, and releases it. |
+| `session/AssMergeCompat` | `styledAssSurvivesMerge(spec)` — whether libass's one-prefix track lookup can survive how this item's source is merged. |
+
+Three wiring points, all wrapping rather than replacing:
+
+- `ExoPlayerHandle.buildPlayer` wraps its `DefaultRenderersFactory` in `AssRenderersFactory` (which
+  *appends* a `NoSampleRenderer`; the ordinary `TextRenderer` stays) and builds a second
+  `DefaultMediaSourceFactory` carrying `AssSubtitleParserFactory` and
+  `DefaultExtractorsFactory().withAssMkvSupport(...)`, so embedded MKV ASS and its attached fonts are
+  read. Our `DataSource.Factory` is still underneath, so auth headers survive.
+- `PlayerScreen`'s `VideoSurface` adds an `AssSubtitleView` inside the `PlayerView`'s `SubtitleView`,
+  beside Media3's own cue output, and removes exactly that view again when the handler goes.
+- Nothing else moves: the device profile, `PlaybackInfoResolver`, `ExoMediaSourceFactory`,
+  `MediaItems` and `TrackSelectionController` are all format-agnostic and unchanged.
+
+**When it takes effect.** There is one process-wide `ExoPlayer`, built lazily and released at session
+teardown, so the preference is read once per player build: a change reaches the *next* playback, not
+the one on screen. The switch's supporting text says so.
+
+**When it steps aside.**
+
+- libass fails to load (missing ABI, refused GL stack) → warning, and Media3's `SsaParser` renders as
+  before. Permanent for the process; there is a working alternative, so it never fails the playback.
+- The item is merged twice — audio sidecars *and* side-loaded subtitles — where libass's single
+  `childIndex:` strip cannot match its own track. `styledAssSurvivesMerge` routes those through the
+  plain media-source factory: unstyled, but on screen rather than missing.
+- The stream is a transcode. Its subtitles are in-manifest VTT by design; ASS never arrives.
+- Casting. `CastPlayerHandle` has no local surface and never reaches any of this; the receiver draws
+  its own subtitles.
+
+**Cost.** ~+3 MB per ABI, paid whether or not the switch is on — the `.so` is packaged, it is simply
+never loaded. See DECISIONS.md, 2026-08-28.
+
+<!-- END: Styled ASS/SSA (M14 track 6) -->

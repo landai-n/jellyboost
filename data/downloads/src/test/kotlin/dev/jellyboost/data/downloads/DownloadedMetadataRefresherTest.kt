@@ -339,6 +339,24 @@ class DownloadedMetadataRefresherTest {
         }
 
     @Test
+    fun `a blank album artist falls through to the artists here too, or the credit never lands`() =
+        runTest {
+            // The sibling of `DownloadEnqueuer.toDownloadRow`'s own per-operand test: writing null
+            // here is permanent, since `backfillArtist`'s `artistName IS NULL` guard re-derives the
+            // same null on every later pass.
+            coEvery { downloadDao.allItemIds() } returns listOf(uuid(30))
+            coEvery { api.getFullItems(listOf(uuid(30))) } returns
+                AppResult.Success(
+                    listOf(track(albumArtist = "   ", albumArtistId = null, artists = listOf("Fleetwood Mac"))),
+                )
+            coEvery { api.getFullItems(listOf(uuid(40))) } returns AppResult.Success(listOf(album()))
+
+            refresher().refresh()
+
+            coVerify { downloadDao.backfillArtist(uuid(30), "Fleetwood Mac") }
+        }
+
+    @Test
     fun `a legacy episode row is stamped with its kind and its show's id`() =
         runTest {
             coEvery { downloadDao.allItemIds() } returns listOf(uuid(2))

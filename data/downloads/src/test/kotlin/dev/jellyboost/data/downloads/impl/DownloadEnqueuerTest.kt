@@ -254,6 +254,23 @@ class DownloadEnqueuerTest {
         }
 
     @Test
+    fun `a blank album artist falls through to the artists, rather than swallowing them`() =
+        runTest {
+            // Blankness has to be tested per operand: testing it after the elvis lets whitespace win
+            // outright, and the refresh's `artistName IS NULL` guard then re-derives that same null
+            // on every pass, so the credit never appears at all.
+            givenAlbum(trackIds = listOf(uuid(30)))
+            coEvery { api.getFullItems(listOf(uuid(30))) } returns
+                AppResult.Success(
+                    listOf(track(albumArtist = "  ", albumArtistId = null, artists = listOf("Fleetwood Mac"))),
+                )
+
+            enqueuer().enqueue(uuid(40), USER)
+
+            row.artistName shouldBe "Fleetwood Mac"
+        }
+
+    @Test
     fun `a film records no heading at all`() =
         runTest {
             coEvery { api.getFullItems(any()) } returns AppResult.Success(listOf(movie()))

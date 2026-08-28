@@ -307,6 +307,24 @@ class DownloadRowsTest {
     }
 
     @Test
+    fun `the cached item's album artist outranks its track artists, as it does on the way in`() {
+        // The writers try `albumArtist` first; a fallback that read only `artists` would credit a
+        // compilation's guest to the whole album.
+        val row =
+            track(album = "Rumours", title = "Dreams")
+                .copy(item = audioItem("Various Artists", albumArtist = "Fleetwood Mac"))
+
+        row.artistLine shouldBe "Fleetwood Mac"
+    }
+
+    @Test
+    fun `a cached item with only an album artist is still credited`() {
+        val row = track(album = "Rumours", title = "Dreams").copy(item = audioItem(albumArtist = "Fleetwood Mac"))
+
+        row.artistLine shouldBe "Fleetwood Mac"
+    }
+
+    @Test
     fun `a row with neither a column nor a cached item is credited to nobody`() {
         // A blank column must read as absent too, or a header would draw an empty second line.
         track(album = "Rumours", title = "Dreams").copy(artistName = "  ").artistLine shouldBe null
@@ -360,8 +378,16 @@ class DownloadRowsTest {
         played = played,
     )
 
-    private fun audioItem(vararg artists: String) =
-        JellyfinItem(id = "1", name = "Dreams", type = ItemType.AUDIO, artists = artists.toList())
+    private fun audioItem(
+        vararg artists: String,
+        albumArtist: String? = null,
+    ) = JellyfinItem(
+        id = "1",
+        name = "Dreams",
+        type = ItemType.AUDIO,
+        albumArtist = albumArtist,
+        artists = artists.toList(),
+    )
 
     private fun track(
         album: String,

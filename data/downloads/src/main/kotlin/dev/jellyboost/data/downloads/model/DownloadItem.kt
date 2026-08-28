@@ -74,10 +74,14 @@ data class DownloadItem(
      * Who to credit under an album heading, resolved column → cached item, the same order [kind] uses:
      * the column is the only answer left once the item cache is wiped, and the cached item is the only
      * one for a row written before the column existed.
+     *
+     * Inside the fallback, album artist before track artists — the order both writers use, so a row
+     * that predates the column is credited exactly as the same row would be if enqueued today.
      */
     val artistLine: String?
         get() =
             artistName?.takeIf { it.isNotBlank() }
+                ?: item?.albumArtist?.takeIf { it.isNotBlank() }
                 ?: item?.artists?.joinToString(", ")?.takeIf { it.isNotBlank() }
 
     /** The heading these rows appear under; `null` for a film, which would only repeat its own title. */

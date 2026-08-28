@@ -232,9 +232,15 @@ class DownloadedMetadataRefresher
             }
         }
 
-        /** Mirrors `DownloadEnqueuer.toDownloadRow`, or a refresh would disagree with the enqueue. */
+        /**
+         * Mirrors `DownloadEnqueuer.toDownloadRow`, or a refresh would disagree with the enqueue —
+         * blankness tested per operand included: a whitespace `albumArtist` that swallowed the
+         * credited artists would be stamped `null`, and `backfillArtist`'s `artistName IS NULL` guard
+         * would re-derive that same `null` on every pass thereafter.
+         */
         private fun BaseItemDto.artistName(): String? =
-            (albumArtist ?: artists?.joinToString(", "))?.takeIf { it.isNotBlank() }
+            albumArtist?.takeIf { it.isNotBlank() }
+                ?: artists?.joinToString(", ")?.takeIf { it.isNotBlank() }
 
         private companion object {
             /** Well under any URL limit at 36 characters an id. */

@@ -26,6 +26,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -70,6 +71,7 @@ import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.core.ui.theme.LocalAppChromePadding
+import dev.jellyboost.core.ui.theme.pageInk
 import dev.jellyboost.core.ui.R as CoreUiR
 
 @Composable
@@ -483,7 +485,9 @@ private val QuickAccessChipPadding = 14.dp
 
 private val QuickAccessChipIconSize = 16.dp
 
-private val QuickAccessChipIconTint = Color.White.copy(alpha = 0.75f)
+private val QuickAccessChipIconTint: Color
+    @Composable @ReadOnlyComposable
+    get() = pageInk(darkAlpha = 0.75f)
 
 private val QuickAccessChipLabel =
     TextStyle(

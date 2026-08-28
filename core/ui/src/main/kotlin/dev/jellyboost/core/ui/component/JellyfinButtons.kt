@@ -20,9 +20,11 @@ import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,6 +46,7 @@ import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.core.ui.theme.glassSurface
+import dev.jellyboost.core.ui.theme.pageInk
 
 // None of the three is an M3 `Button` on purpose: `Button` delegates to `Surface`, which applies
 // `minimumInteractiveComponentSize()` *inside* the caller's chain, so a `.size(36.dp).glassSurface()`
@@ -52,24 +55,48 @@ import dev.jellyboost.core.ui.theme.glassSurface
 // size, then the click target inside the visual's clip. The frame still reserves
 // Dimens.MinTouchTarget on both axes, so a row of these is 48dp tall around a 36dp circle.
 
-private val PrimaryPillContainer = Color.White
+/**
+ * The brand pill is the page's own ink, inverted — `onBackground` filled, `background` written on
+ * it. In the dark scheme those *are* the white fill and `#101010` content the refresh drew
+ * (DECISIONS 2026-08-01), so nothing moves there; a light page gets a near-black pill instead of a
+ * white one on white. The player's play disc is the deliberate exception: it sits on video.
+ */
+private val PrimaryPillContainer: Color
+    @Composable @ReadOnlyComposable
+    get() = MaterialTheme.colorScheme.onBackground
 
-private val PrimaryPillContent = Color(0xFF101010)
+private val PrimaryPillContent: Color
+    @Composable @ReadOnlyComposable
+    get() = MaterialTheme.colorScheme.background
 
-private val PrimaryPillDisabledContainer = Color.White.copy(alpha = 0.07f)
+private val PrimaryPillDisabledContainer: Color
+    @Composable @ReadOnlyComposable
+    get() = pageInk(darkAlpha = 0.07f)
 
 /**
  * A disabled label is still text and owes 4.5:1 — a busy pill is all an auth screen is saying. 0.35
- * measured 3.20:1 on `#101010`; 0.48 is 5.00:1 there and 4.78:1 on `#202020`. The faint *container*
- * is what reads as un-pressable, not the label.
+ * measured 3.20:1 on `#101010`; 0.48 is 5.00:1 there and 4.78:1 on `#202020`. Black is not white's
+ * mirror: 0.48 of it is only 3.66:1 on `#F6F7F8`, so the light side runs at 0.60 — 5.62:1 on the
+ * page, 5.74:1 on a card. The faint *container* is what reads as un-pressable, not the label.
  */
-private val PrimaryPillDisabledContent = Color.White.copy(alpha = 0.48f)
+private val PrimaryPillDisabledContent: Color
+    @Composable @ReadOnlyComposable
+    get() = pageInk(darkAlpha = 0.48f, lightAlpha = 0.60f)
 
-private val GhostPillContent = Color.White
+private val GhostPillContent: Color
+    @Composable @ReadOnlyComposable
+    get() = MaterialTheme.colorScheme.onBackground
 
-private val GhostPillDisabledContent = Color.White.copy(alpha = 0.48f)
+private val GhostPillDisabledContent: Color
+    @Composable @ReadOnlyComposable
+    get() = pageInk(darkAlpha = 0.48f, lightAlpha = 0.60f)
 
-val GlassIconTint: Color = Color.White.copy(alpha = 0.8f)
+/** 5.65:1 over `ChromeFill` on a white frame in dark, 6.18:1 over the light one on a black frame. */
+internal const val GLASS_ICON_TINT_ALPHA = 0.8f
+
+val GlassIconTint: Color
+    @Composable @ReadOnlyComposable
+    get() = pageInk(darkAlpha = GLASS_ICON_TINT_ALPHA)
 
 private val PillHorizontalPadding = 22.dp
 

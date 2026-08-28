@@ -87,6 +87,7 @@ import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
 import dev.jellyboost.core.ui.theme.glassSurface
 import dev.jellyboost.core.ui.theme.heroHalo
+import dev.jellyboost.core.ui.theme.pageInk
 import dev.jellyboost.core.ui.theme.popShadow
 import dev.jellyboost.core.ui.R as CoreUiR
 
@@ -296,7 +297,9 @@ private fun TitleLockup(
         Text(
             text = title,
             style = if (expanded) JellyfinTypeExtras.HeroTitleExpanded else JellyfinTypeExtras.HeroTitleCompact,
-            color = Color.White,
+            // `HomeHero.HeroTitle`'s rule: the scrim has faded to the page colour by this row, so
+            // this is page ink, not the over-artwork white the rating badge above still uses.
+            color = MaterialTheme.colorScheme.onBackground,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             // The page's only heading — TalkBack's heading-jump has nowhere else to land. The
@@ -480,7 +483,7 @@ private fun ProgressLine(
         progress = { progress },
         modifier = modifier.fillMaxWidth().height(Dimens.InsetProgressHeight),
         color = MaterialTheme.colorScheme.primary,
-        trackColor = Color.White.copy(alpha = PROGRESS_TRACK_ALPHA),
+        trackColor = pageInk(darkAlpha = PROGRESS_TRACK_ALPHA, lightAlpha = PROGRESS_TRACK_ALPHA_LIGHT),
         drawStopIndicator = {},
     )
 }
@@ -937,6 +940,9 @@ private val DownloadRingWidth = 2.dp
  * WCAG 1.4.11 asks 3:1 of the unfilled track: white@22% is 1.97:1 on `#101010`, white@40% is 3.82:1.
  */
 private const val PROGRESS_TRACK_ALPHA = 0.40f
+
+/** 0.40 of black is 2.82:1 on `#F6F7F8`, under WCAG 1.4.11's 3:1; 0.44 is 3.21:1. */
+private const val PROGRESS_TRACK_ALPHA_LIGHT = 0.44f
 
 private val RatingStyle =
     TextStyle(

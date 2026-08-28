@@ -44,6 +44,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -92,6 +93,7 @@ import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
 import dev.jellyboost.core.ui.theme.LocalAppChromePadding
 import dev.jellyboost.core.ui.theme.glassSurface
 import dev.jellyboost.core.ui.theme.mSurface
+import dev.jellyboost.core.ui.theme.pageInk
 import dev.jellyboost.data.downloads.model.DownloadItem
 import dev.jellyboost.data.downloads.model.DownloadKind
 import dev.jellyboost.data.downloads.model.StorageUsage
@@ -1219,8 +1221,11 @@ private fun SegmentedTab(
                 .heightIn(min = Dimens.PillHeightSmall)
                 .clip(CircleShape)
                 .selectable(selected = selected, onClick = onClick, role = Role.Tab)
-                .background(color = if (selected) Color.White else Color.Transparent, shape = CircleShape)
-                .padding(
+                // The brand pill's rule (JellyfinButtons): the page's ink filled, the page on it.
+                .background(
+                    color = if (selected) MaterialTheme.colorScheme.onBackground else Color.Transparent,
+                    shape = CircleShape,
+                ).padding(
                     horizontal = if (wide) SegmentedTabHorizontalPaddingWide else SegmentedTabHorizontalPaddingCompact,
                 ),
         contentAlignment = Alignment.Center,
@@ -1285,12 +1290,16 @@ private val StatPanelVerticalPadding = 18.dp
 private val StatPanelInnerGap = 6.dp
 private val UsageBarHeight = 6.dp
 private val UsageBarRadius = 3.dp
-private val UsageBarTrackColor = Color.White.copy(alpha = 0.12f)
+private val UsageBarTrackColor: Color
+    @Composable @ReadOnlyComposable
+    get() = pageInk(darkAlpha = 0.12f)
 private val SegmentedTabBarPadding = 4.dp
 private val SegmentedTabGap = 2.dp
 private val SegmentedTabHorizontalPaddingCompact = 12.dp
 private val SegmentedTabHorizontalPaddingWide = 20.dp
-private val SegmentedSelectedContent = Color(0xFF101010)
+private val SegmentedSelectedContent: Color
+    @Composable @ReadOnlyComposable
+    get() = MaterialTheme.colorScheme.background
 private val SegmentedTabLabel = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.W500)
 private val BulkButtonHorizontalPadding = 14.dp
 private val BulkButtonVerticalPadding = 8.dp

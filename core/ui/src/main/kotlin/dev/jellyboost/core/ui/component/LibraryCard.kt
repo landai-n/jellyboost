@@ -18,6 +18,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,12 +41,15 @@ import dev.jellyboost.core.ui.R
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.core.ui.theme.glassSurface
+import dev.jellyboost.core.ui.theme.pageInk
 
 private val GlyphWellSize = 36.dp
 
 private val GlyphWellRadius = 10.dp
 
-private val GlyphWellFill = Color.White.copy(alpha = 0.06f)
+private val GlyphWellFill: Color
+    @Composable @ReadOnlyComposable
+    get() = pageInk(darkAlpha = 0.06f)
 
 private val GlyphSize = 18.dp
 

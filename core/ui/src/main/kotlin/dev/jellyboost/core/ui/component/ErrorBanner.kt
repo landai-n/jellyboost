@@ -14,6 +14,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -27,12 +28,22 @@ import androidx.compose.ui.unit.sp
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTheme
+import dev.jellyboost.core.ui.theme.LocalIsLightTheme
 
 /**
  * Lightened rather than `colorScheme.error` itself: that colour is tuned to be read as a fill, and
  * at 13sp on a 10%-alpha wash of itself it fails a contrast check.
  */
-val ErrorBannerContent: Color = Color(0xFFF0A3AE)
+internal val ErrorBannerDarkContent: Color = Color(0xFFF0A3AE)
+
+/**
+ * The lightening exists only because the dark scheme's wash is nearly black. On a light page the
+ * same 10% wash is a pale pink and the light scheme's own `error` reads 5.19:1 on it, so the banner
+ * says its message in the colour it is about — a lightened red there would be the unreadable one.
+ */
+val ErrorBannerContent: Color
+    @Composable @ReadOnlyComposable
+    get() = if (LocalIsLightTheme.current) MaterialTheme.colorScheme.error else ErrorBannerDarkContent
 
 private const val BANNER_FILL_ALPHA = 0.10f
 

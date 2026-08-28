@@ -18,7 +18,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
@@ -103,7 +102,8 @@ private fun RowScope.BottomNavItem(
         Row(
             modifier =
                 base
-                    .background(color = Color.White, shape = CircleShape)
+                    // GlassTopNav's selected tab, same rule: onBackground filled, background on it.
+                    .background(color = MaterialTheme.colorScheme.onBackground, shape = CircleShape)
                     .padding(horizontal = SelectedHorizontalPadding, vertical = SelectedVerticalPadding),
             horizontalArrangement = Arrangement.spacedBy(SelectedIconGap),
             verticalAlignment = Alignment.CenterVertically,
@@ -129,18 +129,19 @@ private fun RowScope.BottomNavItem(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(UnselectedIconGap),
         ) {
-            // Full white, not `onSurfaceVariant`'s white@70%: over a bright frame the muted white
+            // Full `onBackground`, not `onSurfaceVariant`'s 70%: over a bright frame the muted ink
             // composited under 3:1 even on the darkened fill. Shape is what marks the selection.
+            val unselectedContent = MaterialTheme.colorScheme.onBackground
             Icon(
                 imageVector = tab.icon,
                 contentDescription = null,
-                tint = Color.White,
+                tint = unselectedContent,
                 modifier = Modifier.size(ItemIconSize),
             )
             Text(
                 text = label,
                 style = UnselectedLabel,
-                color = Color.White,
+                color = unselectedContent,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )

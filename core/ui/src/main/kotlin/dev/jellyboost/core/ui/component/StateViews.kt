@@ -14,6 +14,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -37,16 +38,21 @@ import androidx.compose.ui.unit.sp
 import dev.jellyboost.core.ui.R
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinTheme
+import dev.jellyboost.core.ui.theme.pageInk
 
 private val SpinnerSize = 36.dp
 
 private val SpinnerStroke = 3.dp
 
-private val SpinnerTrack = Color.White.copy(alpha = 0.14f)
+private val SpinnerTrack: Color
+    @Composable @ReadOnlyComposable
+    get() = pageInk(darkAlpha = 0.14f)
 
 private val StateGlyphSize = 36.dp
 
-private val StateGlyphTint = Color.White.copy(alpha = 0.45f)
+private val StateGlyphTint: Color
+    @Composable @ReadOnlyComposable
+    get() = pageInk(darkAlpha = 0.45f)
 
 private val StateMessage =
     TextStyle(
@@ -58,7 +64,9 @@ private val StatePanelMaxWidth = 420.dp
 
 private val DashedPanelPadding = 28.dp
 
-private val DashedBorderColor = Color.White.copy(alpha = 0.12f)
+private val DashedBorderColor: Color
+    @Composable @ReadOnlyComposable
+    get() = pageInk(darkAlpha = 0.12f)
 
 private val DashLength = 6.dp
 
@@ -206,18 +214,21 @@ private fun MessageState(
 }
 
 /** Drawn, not composed: Compose has no dashed `BorderStroke`. */
-private fun Modifier.dashedPanel(): Modifier =
-    this.drawBehind {
+@Composable
+private fun Modifier.dashedPanel(): Modifier {
+    val borderColor = DashedBorderColor
+    return this.drawBehind {
         val stroke = Stroke(width = 1.dp.toPx(), pathEffect = dashEffect(DashLength.toPx(), DashGap.toPx()))
         val inset = stroke.width / 2f
         drawRoundRect(
-            color = DashedBorderColor,
+            color = borderColor,
             topLeft = Offset(inset, inset),
             size = Size(size.width - stroke.width, size.height - stroke.width),
             cornerRadius = CornerRadius(Dimens.PanelRadius.toPx()),
             style = stroke,
         )
     }
+}
 
 private fun dashEffect(
     dash: Float,

@@ -42,6 +42,7 @@ import dev.jellyboost.core.ui.component.GlassIconButton
 import dev.jellyboost.core.ui.component.JellyfinAsyncImage
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.mSurface
+import dev.jellyboost.core.ui.theme.pageInk
 import dev.jellyboost.data.downloads.model.DownloadItem
 import dev.jellyboost.data.downloads.model.SizeCertainty
 import kotlin.math.roundToInt
@@ -63,6 +64,9 @@ private val ROW_GAP_HALF = 5.dp
  * there and 3.75:1 on a card's `#202020`.
  */
 private const val QUEUE_TRACK_ALPHA = 0.40f
+
+/** 0.40 of black is 2.85:1 on a white card, under WCAG 1.4.11's 3:1; 0.44 is 3.24:1. */
+private const val QUEUE_TRACK_ALPHA_LIGHT = 0.44f
 
 private val QueueTitleCompact = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.W500)
 private val QueueTitleWide = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.W500)
@@ -321,7 +325,7 @@ private fun QueueTrack(
         progress = { progress },
         modifier = modifier.fillMaxWidth().height(Dimens.InsetProgressHeight),
         color = fillColor,
-        trackColor = Color.White.copy(alpha = QUEUE_TRACK_ALPHA),
+        trackColor = pageInk(darkAlpha = QUEUE_TRACK_ALPHA, lightAlpha = QUEUE_TRACK_ALPHA_LIGHT),
         drawStopIndicator = {},
     )
 }

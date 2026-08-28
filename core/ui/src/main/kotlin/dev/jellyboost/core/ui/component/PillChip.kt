@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,12 +31,22 @@ import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
+import dev.jellyboost.core.ui.theme.pageInk
 
-private val ChipFill = Color.White.copy(alpha = 0.05f)
+private const val CHIP_FILL_ALPHA = 0.05f
 
-private val ChipSelectedFill = Color.White
+private val ChipFill: Color
+    @Composable @ReadOnlyComposable
+    get() = pageInk(darkAlpha = CHIP_FILL_ALPHA)
 
-private val ChipSelectedContent = Color(0xFF101010)
+/** The selected chip is the brand pill's inversion, same as `JellyfinButtons.PrimaryPillContainer`. */
+private val ChipSelectedFill: Color
+    @Composable @ReadOnlyComposable
+    get() = MaterialTheme.colorScheme.onBackground
+
+private val ChipSelectedContent: Color
+    @Composable @ReadOnlyComposable
+    get() = MaterialTheme.colorScheme.background
 
 private val ChipHorizontalPadding = 14.dp
 
@@ -47,6 +58,10 @@ private val ChipLabel =
         fontWeight = FontWeight.W500,
     )
 
+/**
+ * One value for both schemes: it *replaces* `onSurfaceVariant`'s own alpha rather than scaling it,
+ * so the label is white@70% on the dark chip well (8.87:1) and black@70% on the light one (7.84:1).
+ */
 private const val DISABLED_CHIP_ALPHA = 0.7f
 
 private val MPillHorizontalPadding = 8.dp

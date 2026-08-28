@@ -28,7 +28,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -54,6 +53,7 @@ import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
 import dev.jellyboost.core.ui.theme.mSurface
+import dev.jellyboost.core.ui.theme.pageInk
 import dev.jellyboost.player.R
 import dev.jellyboost.player.syncplay.SyncPlayLaunchRequest
 import dev.jellyboost.player.syncplay.SyncPlayMessage
@@ -373,7 +373,7 @@ private fun JoiningRow() {
             modifier = Modifier.size(Dimens.SpaceLarge),
             color = MaterialTheme.colorScheme.primary,
             strokeWidth = SPINNER_STROKE,
-            trackColor = Color.White.copy(alpha = SPINNER_TRACK_ALPHA),
+            trackColor = pageInk(darkAlpha = SPINNER_TRACK_ALPHA),
         )
         Text(text = stringResource(R.string.player_syncplay_groups_joining))
     }

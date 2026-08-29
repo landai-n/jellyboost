@@ -1,9 +1,14 @@
 package dev.jellyboost.core.ui.theme
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.staticCompositionLocalOf
 
 /**
@@ -34,3 +39,23 @@ class ChromeBackdrop {
  * [ChromeBackdrop.overMedia] state inside it, which invalidates only the readers of that state.
  */
 val LocalChromeBackdrop = staticCompositionLocalOf { ChromeBackdrop() }
+
+/**
+ * The screen half of [ChromeBackdrop]: it lives here rather than in the screen so that the clearing
+ * on dispose — the part every other screen depends on and no screen can see — has one implementation
+ * and one test (`ChromeBackdropTest`).
+ *
+ * @param overMedia read inside the effect, not at the call site, so a screen can hand over a
+ *   `derivedStateOf` without recomposing itself each time the answer flips.
+ */
+@Composable
+fun ReportChromeBackdrop(overMedia: () -> Boolean) {
+    val backdrop = LocalChromeBackdrop.current
+    val current by rememberUpdatedState(overMedia)
+    LaunchedEffect(backdrop) {
+        snapshotFlow { current() }.collect(backdrop::reportOverMedia)
+    }
+    DisposableEffect(backdrop) {
+        onDispose { backdrop.reportOverMedia(false) }
+    }
+}

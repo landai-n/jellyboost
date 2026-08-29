@@ -82,8 +82,9 @@ internal fun HomeHero(
         )
 
         if (wide) {
+            val railTucks = !portrait && OverMedia.artworkDissolvesIntoPage
             // The fade goes under the copy: a tall overview must never be the thing that fades out.
-            if (OverMedia.artworkDissolvesIntoPage) {
+            if (railTucks) {
                 HeroRailFade(modifier = Modifier.align(Alignment.BottomStart))
             }
             WideHeroCopy(
@@ -91,6 +92,7 @@ internal fun HomeHero(
                 heroHeight = height,
                 fontScale = fontScale,
                 portrait = portrait,
+                railTucks = railTucks,
                 onResume = onResume,
                 onDetails = onDetails,
                 modifier = Modifier.align(Alignment.TopStart),
@@ -193,11 +195,12 @@ private fun WideHeroCopy(
     heroHeight: Dp,
     fontScale: Float,
     portrait: Boolean,
+    railTucks: Boolean,
     onResume: () -> Unit,
     onDetails: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val bottomInset = wideHeroCopyBottomInset(OverMedia.artworkDissolvesIntoPage)
+    val bottomInset = wideHeroCopyBottomInset(railTucksIn = railTucks)
     val showSecondary =
         wideHeroShowsSecondary(heroHeight = heroHeight, fontScale = fontScale, bottomInset = bottomInset)
 
@@ -490,12 +493,12 @@ internal fun wideHeroCopyHeight(
 ): Dp = (heroHeight - wideHeroCopyTopInset(heroHeight) - bottomInset).coerceAtLeast(0.dp)
 
 /**
- * The rail's overlap where the rows climb into the banner; a plain margin where the light ramp ends
- * the banner on a hard edge and nothing climbs in — holding the overlap there squeezes the copy by
- * 48dp and leaves the same 48dp as a dead scrimmed band under the buttons.
+ * The rail's overlap where the rows climb into the banner (landscape, dissolving artwork); a plain
+ * margin everywhere else — holding the overlap where nothing climbs in squeezes the copy by 48dp
+ * and leaves the same 48dp as a dead band under the buttons.
  */
-internal fun wideHeroCopyBottomInset(artworkDissolvesIntoPage: Boolean): Dp =
-    if (artworkDissolvesIntoPage) HeroRailOverlap else Dimens.SpaceExtraLarge
+internal fun wideHeroCopyBottomInset(railTucksIn: Boolean): Dp =
+    if (railTucksIn) HeroRailOverlap else Dimens.SpaceExtraLarge
 
 private const val WIDE_COPY_TOP_FRACTION = 0.26f
 
@@ -509,9 +512,10 @@ private val WideCopyMaxWidth = 420.dp
 internal val WideCopyEdge = Dimens.SpaceExtraLarge + WideCopyMaxWidth
 
 /**
- * How far the content rows overlap the wide banner — where the artwork dissolves into the page
- * ([OverMedia.artworkDissolvesIntoPage]); under the light ramp the rows start at the banner's edge
- * instead, and the copy's bottom inset shrinks with them ([wideHeroCopyBottomInset]).
+ * How far the content rows overlap the wide banner — on the landscape layout where the artwork
+ * dissolves into the page ([OverMedia.artworkDissolvesIntoPage]). Portrait starts the rows below
+ * the banner in both schemes (the portrait mocks' shape), and the copy's bottom inset shrinks with
+ * them ([wideHeroCopyBottomInset]).
  */
 internal val HeroRailOverlap = 48.dp
 

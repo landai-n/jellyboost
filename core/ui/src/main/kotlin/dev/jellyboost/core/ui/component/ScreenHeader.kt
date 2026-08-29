@@ -32,18 +32,18 @@ import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
 
 /**
- * Both Back *and* Home: a pushed destination shows no tab bar to escape through.
- *
  * `ItemDetailScreen.OverlayNav` is a fourth copy of this shape, deliberately not a caller — it
  * draws no title and puts Home at the end of the row, so folding it in would mean a boolean
  * choosing where Home goes.
  *
+ * @param onHome `null` leaves Back as the header's only leading control. Two adjacent glass circles
+ *   read as one affordance while doing different things, and Home is reachable from the nav bar.
  * @param surfaceTint see [GlassDefaults.ChromeFill] for a header over bright artwork.
  */
 @Composable
 fun ScreenHeader(
     onBack: () -> Unit,
-    onHome: () -> Unit,
+    onHome: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues =
         PaddingValues(horizontal = Dimens.HeaderPadding, vertical = Dimens.SpaceSmall),
@@ -66,12 +66,14 @@ fun ScreenHeader(
             onClick = onBack,
             surfaceTint = surfaceTint,
         )
-        GlassIconButton(
-            icon = Icons.Filled.Home,
-            contentDescription = stringResource(R.string.action_home),
-            onClick = onHome,
-            surfaceTint = surfaceTint,
-        )
+        if (onHome != null) {
+            GlassIconButton(
+                icon = Icons.Filled.Home,
+                contentDescription = stringResource(R.string.action_home),
+                onClick = onHome,
+                surfaceTint = surfaceTint,
+            )
+        }
         Column(
             modifier = Modifier.weight(1f).padding(start = Dimens.SpaceExtraSmall),
             content = title,

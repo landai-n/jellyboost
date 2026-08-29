@@ -37,7 +37,6 @@
     </plurals>
     <string name="settings_storage_switch_confirm">Dzēst un pārslēgt</string>
 
-    <string name="settings_section_connectivity">Savienojamība</string>
     <string name="settings_offline_mode">Bezsaistes režīms</string>
     <string name="settings_offline_mode_supporting">Rādīt tikai to saturu, kas jau ir šajā ierīcē.</string>
 
@@ -70,4 +69,13 @@
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Stilizēti ASS subtitri</string>
     <string name="settings_styled_ass_supporting">Zīmē ASS/SSA ar libass: fonti, novietojums un efekti. Eksperimentāls; attiecas uz nākamo palaisto video, kad nekas cits netiek atskaņots.</string>
+    <string name="settings_hub_state_on">%1$s ieslēgts</string>
+    <string name="settings_hub_state_off">%1$s izslēgts</string>
+    <string name="settings_hub_storage_used">%1$s šajā ierīcē</string>
+    <string name="settings_eyebrow_during_playback">Atskaņošanas laikā</string>
+    <string name="settings_eyebrow_subtitles">Subtitri</string>
+    <string name="settings_eyebrow_on_this_device">Šajā ierīcē</string>
+    <string name="settings_eyebrow_over_the_network">Caur tīklu</string>
+    <string name="settings_eyebrow_quality">Kvalitāte</string>
+    <string name="settings_section_network">Tīkls</string>
 </resources>

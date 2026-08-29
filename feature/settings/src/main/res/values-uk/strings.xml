@@ -38,7 +38,6 @@
     </plurals>
     <string name="settings_storage_switch_confirm">Видалити і перемкнути</string>
 
-    <string name="settings_section_connectivity">З’єднання</string>
     <string name="settings_offline_mode">Автономний режим</string>
     <string name="settings_offline_mode_supporting">Показувати лише медіа, які вже є на цьому пристрої.</string>
 
@@ -71,4 +70,13 @@
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Стилізовані субтитри ASS</string>
     <string name="settings_styled_ass_supporting">Малює ASS/SSA через libass: шрифти, розташування та ефекти. Експериментально; діє з наступного запущеного відео, коли нічого іншого не відтворюється.</string>
+    <string name="settings_hub_state_on">%1$s увімкнено</string>
+    <string name="settings_hub_state_off">%1$s вимкнено</string>
+    <string name="settings_hub_storage_used">%1$s на цьому пристрої</string>
+    <string name="settings_eyebrow_during_playback">Під час відтворення</string>
+    <string name="settings_eyebrow_subtitles">Субтитри</string>
+    <string name="settings_eyebrow_on_this_device">На цьому пристрої</string>
+    <string name="settings_eyebrow_over_the_network">Через мережу</string>
+    <string name="settings_eyebrow_quality">Якість</string>
+    <string name="settings_section_network">Мережа</string>
 </resources>

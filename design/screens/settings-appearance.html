@@ -1,0 +1,115 @@
+<!-- @dsCard viewport="400x680" group="Screens" name="Settings — Appearance (portrait, light)" subtitle="Category detail page drawn under data-theme=&quot;light&quot; — the page a user opens to change the theme is the one that must resolve in both. One panel, no eyebrow — a section heading only earns its place on a page with more than one section. Theme group + wallpaper colours, absent (not disabled) below API 31." -->
+<link rel="stylesheet" href="../_shared/modern.css">
+<style>
+  * { box-sizing:border-box; }
+  body { margin:0; }
+  /* Only token this sheet adds: the muted rationale-note ink the other screens inline. */
+  :root { --note-fg:rgba(255,255,255,.45); }
+  [data-theme="light"] { --note-fg:rgba(31,35,48,.55); }
+  .screen { width:400px; min-height:680px; margin:0 auto; }
+
+    .screen{position:relative;background:var(--background);color:var(--on-background);overflow:hidden}
+    .glow{position:absolute;left:0;right:0;top:0;height:320px;pointer-events:none}
+
+    /* ScreenHeader: HeaderPadding 20dp gutter, 8dp gaps, 36dp GlassIconButtons, ScreenTitle 28sp/W700/-.02em */
+    .hdr{position:relative;display:flex;align-items:center;gap:8px;padding:24px 20px 8px}
+    .iconbtn{width:36px;height:36px;border-radius:50%;background:var(--glass-bg);border:1px solid var(--glass-line);display:flex;align-items:center;justify-content:center;flex:none}
+    .iconbtn svg{width:18px;height:18px;fill:var(--icon-fg)}
+    .htitle{font-size:28px;font-weight:700;letter-spacing:-.02em;padding-left:4px}
+
+    /* ScreenPadding 16dp gutter under a 20dp header — the app's two gutters, deliberately unequal */
+    .content{position:relative;padding:8px 16px 32px;display:flex;flex-direction:column;gap:24px}
+    .sec{display:flex;flex-direction:column;gap:8px}
+    .eyebrow{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--on-surface-variant);padding-left:4px}
+    .panel{background:var(--surface);border:1px solid var(--hairline);border-radius:16px;overflow:hidden}
+
+    .row{display:flex;align-items:center;gap:14px;padding:14px 16px;min-height:48px}
+    .row+.row,.grp+.row,.row+.grp,.grp+.grp,.inforow+.row,.row+.inforow,.grp+.inforow,.inforow+.grp,.caption+.grp,.caption+.row{border-top:1px solid var(--hairline)}
+    .ic{width:36px;height:36px;border-radius:50%;background:var(--glass-bg);border:1px solid var(--glass-line);display:flex;align-items:center;justify-content:center;flex:none}
+    .ic svg{width:18px;height:18px;fill:var(--icon-fg)}
+    .ic.danger{background:var(--error-bg);border-color:var(--error-line)}
+    .ic.danger svg{fill:var(--error-fg)}
+    .tx{flex:1;min-width:0}
+    .nm{font-size:15px;font-weight:600;line-height:20px}
+    .nm.danger{color:var(--error-fg)}
+    .sb{font-size:12px;line-height:16px;color:var(--on-surface-variant);margin-top:2px}
+    .chev{width:20px;height:20px;flex:none;fill:var(--on-surface-variant)}
+    .av{width:44px;height:44px;border-radius:50%;flex:none;background:linear-gradient(160deg,#3a5f3f,#7fa06a 55%,#b0c4a0)}
+
+    /* Switch is inert; the row owns the toggle (SettingsRows.kt invariant) */
+    .sw{width:42px;height:24px;border-radius:12px;background:var(--track);position:relative;flex:none}
+    .sw::after{content:"";position:absolute;width:20px;height:20px;border-radius:50%;background:var(--outline);top:2px;left:2px}
+    .sw.on{background:var(--primary)}
+    .sw.on::after{background:#ffffff;left:20px}
+
+    /* Choice group: unchanged from SettingsRows.kt — muted labelLarge caption, one row per
+       option, radio trailing, whole row selectable inside a selectableGroup */
+    .grpcap{font-size:14px;font-weight:500;line-height:20px;color:var(--on-surface-variant);padding:12px 16px 4px}
+    .crow{display:flex;align-items:center;gap:14px;padding:6px 16px;min-height:48px}
+    .radio{width:20px;height:20px;border-radius:50%;border:2px solid var(--outline);flex:none;position:relative}
+    .radio.sel{border-color:var(--primary)}
+    .radio.sel::after{content:"";position:absolute;inset:3px;border-radius:50%;background:var(--primary)}
+    .grp{display:flex;flex-direction:column;padding-bottom:8px}
+
+    .inforow{display:flex;flex-direction:column;gap:2px;padding:14px 16px}
+    .infolbl{font-size:12px;line-height:16px;color:var(--on-surface-variant)}
+    .infoval{font-size:15px;font-weight:600;line-height:20px}
+    .bar{height:6px;border-radius:3px;background:var(--track);overflow:hidden;margin-top:10px}
+    .barfill{height:100%;border-radius:3px;background:var(--primary)}
+
+    .pill{padding:2px 8px;border-radius:6px;border:1px solid var(--outline);font-size:11px;font-weight:600;letter-spacing:.04em;color:var(--on-surface-variant);flex:none}
+    .planned{opacity:.58}
+    .caption{font-size:12px;line-height:16px;color:var(--on-surface-variant);padding:0 16px 14px}
+    .note{font-size:11px;line-height:16px;color:var(--note-fg)}
+    .note b{color:var(--on-surface-variant);font-weight:600}
+    .ghost{display:flex;align-items:center;justify-content:center;height:44px;border-radius:999px;background:var(--glass-bg);border:1px solid var(--ghost-line);font-size:14px;font-weight:600;color:var(--on-background)}
+  
+    /* Two-pane, >=840dp: the rail is the hub, the pane is the open category */
+    .tablet{position:relative;display:flex;background:var(--background);color:var(--on-background);overflow:hidden}
+    .rail{width:340px;flex:none;border-right:1px solid var(--hairline);display:flex;flex-direction:column;position:relative}
+    .raillist{display:flex;flex-direction:column;gap:2px;padding:8px 12px 24px}
+    .railrow{display:flex;align-items:center;gap:14px;padding:12px 12px;min-height:48px;border-radius:12px;border:1px solid transparent}
+    .railrow.sel{background:var(--glass-bg);border-color:var(--glass-line)}
+    .pane{flex:1;min-width:0;position:relative;display:flex;flex-direction:column}
+    .panehdr{padding:24px 24px 4px;font-size:22px;font-weight:700;letter-spacing:-.02em}
+    .panebody{padding:12px 24px 24px;display:flex;flex-direction:column;gap:24px;max-width:688px}
+
+    /* Anatomy sheet */
+    .sheet{background:var(--background);color:var(--on-background);padding:28px 32px 32px;display:flex;flex-direction:column;gap:22px}
+    .sheettitle{font-size:24px;font-weight:700;letter-spacing:-.02em}
+    .spec{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+    .specitem{display:flex;flex-direction:column;gap:8px}
+    .speclbl{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--on-surface-variant)}
+  </style>
+<body data-theme="light">
+<div class="screen" data-theme="light">
+  <div class="glow"></div>
+
+  <div class="hdr">
+    <div class="iconbtn"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></div>
+    <div class="htitle">Appearance</div>
+  </div>
+
+  <div class="content">
+    <div class="sec">
+      <div class="panel">
+        <div class="grp">
+          <div class="grpcap">Theme</div>
+          <div class="crow"><div class="tx"><div class="nm">Follow the device</div></div><div class="radio sel"></div></div>
+          <div class="crow"><div class="tx"><div class="nm">Light</div></div><div class="radio"></div></div>
+          <div class="crow"><div class="tx"><div class="nm">Dark</div></div><div class="radio"></div></div>
+        </div>
+        <div class="row">
+          <div class="tx">
+            <div class="nm">Use wallpaper colours</div>
+            <div class="sb">Take the palette from your wallpaper instead of the Jellyfin blue.</div>
+          </div>
+          <div class="sw on"></div>
+        </div>
+        <div class="caption">Android 12 and later only. On older devices the row is absent, not disabled &mdash; there is no wallpaper palette behind it.</div>
+      </div>
+    </div>
+
+    <div class="note">Drawn in the <b>light</b> scheme on purpose: this is the one page a user opens to change the theme, so it is the page that must be right in both. Values are JellyfinLightColors as shipped &mdash; #EEF1F7 ground, #FFFFFF panels, #00769E primary, rgba(31,35,48,.78) supporting text, all of which already clear ContrastRatioTest. Flip the theme chip above this artboard to check the dark half. <b>No eyebrow:</b> a section heading only earns its place on a page carrying more than one section &mdash; here the screen title already says what the panel is, and an eyebrow reading &ldquo;Theme&rdquo; above a group captioned &ldquo;Theme&rdquo; says it twice. Network, Account and About are single-section pages for the same reason.</div>
+  </div>
+</div>

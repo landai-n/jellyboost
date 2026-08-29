@@ -36,7 +36,6 @@
     </plurals>
     <string name="settings_storage_switch_confirm">Löschen und wechseln</string>
 
-    <string name="settings_section_connectivity">Konnektivität</string>
     <string name="settings_offline_mode">Offlinemodus</string>
     <string name="settings_offline_mode_supporting">Nur Medien anzeigen, die bereits auf diesem Gerät sind.</string>
 
@@ -69,4 +68,13 @@
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Formatierte ASS-Untertitel</string>
     <string name="settings_styled_ass_supporting">Zeichnet ASS/SSA mit libass: Schriften, Positionierung und Effekte. Experimentell; gilt ab dem nächsten Video, wenn nichts anderes läuft.</string>
+    <string name="settings_hub_state_on">%1$s an</string>
+    <string name="settings_hub_state_off">%1$s aus</string>
+    <string name="settings_hub_storage_used">%1$s auf diesem Gerät</string>
+    <string name="settings_eyebrow_during_playback">Während der Wiedergabe</string>
+    <string name="settings_eyebrow_subtitles">Untertitel</string>
+    <string name="settings_eyebrow_on_this_device">Auf diesem Gerät</string>
+    <string name="settings_eyebrow_over_the_network">Über das Netzwerk</string>
+    <string name="settings_eyebrow_quality">Qualität</string>
+    <string name="settings_section_network">Netzwerk</string>
 </resources>

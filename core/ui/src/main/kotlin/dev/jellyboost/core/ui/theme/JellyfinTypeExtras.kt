@@ -64,6 +64,18 @@ object JellyfinTypeExtras {
             letterSpacing = (-0.02).em,
         )
 
+    /**
+     * The title of a pane that sits *beside* a rail rather than under a status bar, so it is a step
+     * down from [ScreenTitle]: on a two-pane settings window the rail already carries the screen's
+     * own 30sp title, and two 28sp headings side by side read as two screens.
+     */
+    val PaneTitle: TextStyle =
+        TextStyle(
+            fontSize = 22.sp,
+            fontWeight = FontWeight.W700,
+            letterSpacing = (-0.02).em,
+        )
+
     val ScreenTitleLarge: TextStyle =
         TextStyle(
             fontSize = 30.sp,

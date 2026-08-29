@@ -35,7 +35,6 @@
     </plurals>
     <string name="settings_storage_switch_confirm">삭제하고 전환</string>
 
-    <string name="settings_section_connectivity">연결</string>
     <string name="settings_offline_mode">오프라인 모드</string>
     <string name="settings_offline_mode_supporting">이 기기에 이미 있는 미디어만 표시합니다.</string>
 
@@ -68,4 +67,13 @@
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">스타일이 적용된 ASS 자막</string>
     <string name="settings_styled_ass_supporting">libass로 ASS/SSA를 그립니다(글꼴, 위치, 효과). 실험적 기능이며 다른 재생이 없을 때 다음에 재생하는 영상부터 적용됩니다.</string>
+    <string name="settings_hub_state_on">%1$s 켜짐</string>
+    <string name="settings_hub_state_off">%1$s 꺼짐</string>
+    <string name="settings_hub_storage_used">이 기기에서 %1$s</string>
+    <string name="settings_eyebrow_during_playback">재생 중</string>
+    <string name="settings_eyebrow_subtitles">자막</string>
+    <string name="settings_eyebrow_on_this_device">이 기기</string>
+    <string name="settings_eyebrow_over_the_network">네트워크를 통해</string>
+    <string name="settings_eyebrow_quality">화질</string>
+    <string name="settings_section_network">네트워크</string>
 </resources>

@@ -36,7 +36,6 @@
     </plurals>
     <string name="settings_storage_switch_confirm">Verwijderen en wisselen</string>
 
-    <string name="settings_section_connectivity">Connectiviteit</string>
     <string name="settings_offline_mode">Offlinemodus</string>
     <string name="settings_offline_mode_supporting">Toon alleen media die al op dit apparaat staat.</string>
 
@@ -69,4 +68,13 @@
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Opgemaakte ASS-ondertitels</string>
     <string name="settings_styled_ass_supporting">Tekent ASS/SSA met libass: lettertypen, positionering en effecten. Experimenteel; geldt voor de volgende video die je start als er niets anders speelt.</string>
+    <string name="settings_hub_state_on">%1$s aan</string>
+    <string name="settings_hub_state_off">%1$s uit</string>
+    <string name="settings_hub_storage_used">%1$s op dit apparaat</string>
+    <string name="settings_eyebrow_during_playback">Tijdens afspelen</string>
+    <string name="settings_eyebrow_subtitles">Ondertitels</string>
+    <string name="settings_eyebrow_on_this_device">Op dit apparaat</string>
+    <string name="settings_eyebrow_over_the_network">Via het netwerk</string>
+    <string name="settings_eyebrow_quality">Kwaliteit</string>
+    <string name="settings_section_network">Netwerk</string>
 </resources>

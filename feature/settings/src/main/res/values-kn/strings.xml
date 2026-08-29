@@ -36,7 +36,6 @@
     </plurals>
     <string name="settings_storage_switch_confirm">ಅಳಿಸಿ ಮತ್ತು ಬದಲಿಸಿ</string>
 
-    <string name="settings_section_connectivity">ಸಂಪರ್ಕ</string>
     <string name="settings_offline_mode">ಆಫ್‌ಲೈನ್ ಮೋಡ್</string>
     <string name="settings_offline_mode_supporting">ಈಗಾಗಲೇ ಈ ಸಾಧನದಲ್ಲಿರುವ ಮಾಧ್ಯಮವನ್ನು ಮಾತ್ರ ತೋರಿಸಿ.</string>
 
@@ -69,4 +68,13 @@
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">ಶೈಲಿಯುಳ್ಳ ASS ಉಪಶೀರ್ಷಿಕೆಗಳು</string>
     <string name="settings_styled_ass_supporting">libass ಬಳಸಿ ASS/SSA ಅನ್ನು ಚಿತ್ರಿಸುತ್ತದೆ: ಫಾಂಟ್‌ಗಳು, ಸ್ಥಾನ ಮತ್ತು ಪರಿಣಾಮಗಳು. ಪ್ರಾಯೋಗಿಕ; ಬೇರೇನೂ ಪ್ಲೇ ಆಗದಿರುವಾಗ ನೀವು ಪ್ರಾರಂಭಿಸುವ ಮುಂದಿನ ವೀಡಿಯೊಗೆ ಅನ್ವಯಿಸುತ್ತದೆ.</string>
+    <string name="settings_hub_state_on">%1$s ಆನ್</string>
+    <string name="settings_hub_state_off">%1$s ಆಫ್</string>
+    <string name="settings_hub_storage_used">ಈ ಸಾಧನದಲ್ಲಿ %1$s</string>
+    <string name="settings_eyebrow_during_playback">ಪ್ಲೇಬ್ಯಾಕ್ ಸಮಯದಲ್ಲಿ</string>
+    <string name="settings_eyebrow_subtitles">ಉಪಶೀರ್ಷಿಕೆಗಳು</string>
+    <string name="settings_eyebrow_on_this_device">ಈ ಸಾಧನದಲ್ಲಿ</string>
+    <string name="settings_eyebrow_over_the_network">ನೆಟ್‌ವರ್ಕ್ ಮೂಲಕ</string>
+    <string name="settings_eyebrow_quality">ಗುಣಮಟ್ಟ</string>
+    <string name="settings_section_network">ನೆಟ್‌ವರ್ಕ್</string>
 </resources>

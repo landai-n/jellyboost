@@ -36,7 +36,6 @@
     </plurals>
     <string name="settings_storage_switch_confirm">Избриши и премести</string>
 
-    <string name="settings_section_connectivity">Поврзување</string>
     <string name="settings_offline_mode">Офлајн режим</string>
     <string name="settings_offline_mode_supporting">Прикажувај само медиуми кои веќе се на овој уред.</string>
 
@@ -69,4 +68,13 @@
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Стилизирани ASS титлови</string>
     <string name="settings_styled_ass_supporting">Ги црта ASS/SSA со libass: фонтови, позиционирање и ефекти. Експериментално; важи за следното видео што ќе го пуштите кога ништо друго не се репродуцира.</string>
+    <string name="settings_hub_state_on">%1$s вклучено</string>
+    <string name="settings_hub_state_off">%1$s исклучено</string>
+    <string name="settings_hub_storage_used">%1$s на овој уред</string>
+    <string name="settings_eyebrow_during_playback">За време на репродукција</string>
+    <string name="settings_eyebrow_subtitles">Титлови</string>
+    <string name="settings_eyebrow_on_this_device">На овој уред</string>
+    <string name="settings_eyebrow_over_the_network">Преку мрежата</string>
+    <string name="settings_eyebrow_quality">Квалитет</string>
+    <string name="settings_section_network">Мрежа</string>
 </resources>

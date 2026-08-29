@@ -33,7 +33,6 @@
         <item quantity="other">Les téléchargements ne peuvent pas encore être déplacés entre emplacements, donc les %1$d déjà présents sur cet appareil seront supprimés. Vous pourrez les retélécharger vers le nouvel emplacement.</item>
     </plurals>
     <string name="settings_storage_switch_confirm">Supprimer et changer</string>
-    <string name="settings_section_connectivity">Connectivité</string>
     <string name="settings_offline_mode">Mode hors ligne</string>
     <string name="settings_offline_mode_supporting">N\'afficher que les contenus déjà présents sur cet appareil.</string>
     <string name="settings_section_account">Compte</string>
@@ -65,4 +64,13 @@
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Sous-titres ASS stylisés</string>
     <string name="settings_styled_ass_supporting">Dessine l\'ASS/SSA avec libass : polices, positionnement et effets. Expérimental ; s\'applique à la prochaine vidéo lancée lorsque rien d\'autre n\'est en cours de lecture.</string>
+    <string name="settings_hub_state_on">%1$s activé</string>
+    <string name="settings_hub_state_off">%1$s désactivé</string>
+    <string name="settings_hub_storage_used">%1$s sur cet appareil</string>
+    <string name="settings_eyebrow_during_playback">Pendant la lecture</string>
+    <string name="settings_eyebrow_subtitles">Sous-titres</string>
+    <string name="settings_eyebrow_on_this_device">Sur cet appareil</string>
+    <string name="settings_eyebrow_over_the_network">Sur le réseau</string>
+    <string name="settings_eyebrow_quality">Qualité</string>
+    <string name="settings_section_network">Réseau</string>
 </resources>

@@ -33,7 +33,6 @@
         <item quantity="other">Downloads can\'t be moved between locations yet, so the %1$d already on this device will be deleted. You can download them again to the new location.</item>
     </plurals>
     <string name="settings_storage_switch_confirm">Delete and switch</string>
-    <string name="settings_section_connectivity">Connectivity</string>
     <string name="settings_offline_mode">Offline mode</string>
     <string name="settings_offline_mode_supporting">Only show media that is already on this device.</string>
     <string name="settings_section_account">Account</string>
@@ -65,4 +64,13 @@
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Styled ASS subtitles</string>
     <string name="settings_styled_ass_supporting">Draws ASS/SSA with libass: fonts, positioning and effects. Experimental; applies to the next video you start with nothing else playing.</string>
+    <string name="settings_hub_state_on">%1$s on</string>
+    <string name="settings_hub_state_off">%1$s off</string>
+    <string name="settings_hub_storage_used">%1$s on this device</string>
+    <string name="settings_eyebrow_during_playback">During playback</string>
+    <string name="settings_eyebrow_subtitles">Subtitles</string>
+    <string name="settings_eyebrow_on_this_device">On this device</string>
+    <string name="settings_eyebrow_over_the_network">Over the network</string>
+    <string name="settings_eyebrow_quality">Quality</string>
+    <string name="settings_section_network">Network</string>
 </resources>

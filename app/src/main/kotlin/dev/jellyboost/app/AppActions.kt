@@ -26,6 +26,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
@@ -62,16 +64,19 @@ internal data class AppChromeActions(
 /**
  * Bar order is fixed: connection status, Cast, SyncPlay groups, overflow.
  *
- * @param overMedia the row is floating over a screen's full-bleed artwork, so its glass and its
- *   glyphs pin to [OverMedia] in both schemes rather than following the page they are not on.
+ * @param ground how far the row has travelled from the page's glass to the artwork's — `0` on a
+ *   page, `1` floating over full-bleed artwork, and in between only while the two grounds are
+ *   crossing. It is a fraction rather than a flag so the circles do not repaint in one frame under
+ *   a screen the user is still watching fade.
  */
 @Composable
 internal fun AppActions(
     chrome: AppChromeState,
     actions: AppChromeActions,
     modifier: Modifier = Modifier,
-    overMedia: Boolean = false,
+    ground: Float = 0f,
 ) {
+    val glass = rememberChromeGlass(ground)
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(ActionGap),
@@ -80,29 +85,90 @@ internal fun AppActions(
         ConnectionStatusAction(
             status = chrome.connectionState.toStatus(),
             onClick = actions.onConnectionStatusClick,
-            overMedia = overMedia,
+            glass = glass,
         )
         CastRouteButton(
             modifier = Modifier.size(Dimens.MinTouchTarget),
             glassContainer = true,
             size = Dimens.PillHeightSmall,
-            surfaceTint = if (overMedia) OverMedia.ChromeFill else GlassDefaults.ChromeFill,
-            tint = if (overMedia) OverMedia.GlassContent else GlassIconTint,
-            borderColor = if (overMedia) OverMedia.ChromeBorder else GlassDefaults.Hairline,
+            surfaceTint = glass.fill,
+            tint = glass.content,
+            borderColor = glass.border,
         )
         SyncPlayGroupsAction(
             hasActiveGroup = chrome.hasActiveSyncPlayGroup,
             onClick = actions.onOpenSyncPlayGroups,
-            overMedia = overMedia,
+            glass = glass,
         )
         AppOverflowMenu(
             forceOffline = chrome.connectionState == ConnectionState.OFFLINE_FORCED,
             onNavigateToSettings = actions.onNavigateToSettings,
             onSetForceOffline = actions.onSetForceOffline,
-            overMedia = overMedia,
+            glass = glass,
         )
     }
 }
+
+/**
+ * The chrome's drawn colours at a given [ground]. One value rather than five call-site branches, so
+ * a circle cannot end up with the artwork's fill and the page's glyph — `GhostPillButton`'s
+ * half-fix, on the other axis.
+ */
+@Immutable
+internal data class ChromeGlass(
+    val fill: Color,
+    val border: Color,
+    val content: Color,
+    val error: Color,
+)
+
+@Composable
+private fun rememberChromeGlass(ground: Float): ChromeGlass {
+    val pageFill = GlassDefaults.ChromeFill
+    val pageBorder = GlassDefaults.Hairline
+    val pageContent = GlassIconTint
+    val pageError = MaterialTheme.colorScheme.error
+    return remember(ground, pageFill, pageBorder, pageContent, pageError) {
+        chromeGlassAt(
+            ground = ground,
+            pageFill = pageFill,
+            pageBorder = pageBorder,
+            pageContent = pageContent,
+            pageError = pageError,
+        )
+    }
+}
+
+/** Extracted so `ChromeGlassTest` can pin both ends and the midpoint without a device. */
+internal fun chromeGlassAt(
+    ground: Float,
+    pageFill: Color,
+    pageBorder: Color,
+    pageContent: Color,
+    pageError: Color,
+): ChromeGlass =
+    ChromeGlass(
+        fill = blend(pageFill, OverMedia.ChromeFill, ground),
+        border = blend(pageBorder, OverMedia.ChromeBorder, ground),
+        content = blend(pageContent, OverMedia.GlassContent, ground),
+        error = blend(pageError, OverMedia.ErrorAccent, ground),
+    )
+
+/**
+ * The two resting states are returned as themselves rather than as a lerp of themselves: `lerp`
+ * round-trips through Oklab, so at rest the chrome would sit a rounding error away from the token it
+ * is supposed to be drawing.
+ */
+private fun blend(
+    page: Color,
+    overMedia: Color,
+    ground: Float,
+): Color =
+    when {
+        ground <= 0f -> page
+        ground >= 1f -> overMedia
+        else -> lerp(page, overMedia, ground)
+    }
 
 /**
  * Zero on purpose: each action's [Dimens.MinTouchTarget] frame around a [Dimens.PillHeightSmall]
@@ -123,7 +189,7 @@ internal fun AppActionCluster(
     chrome: AppChromeState,
     actions: AppChromeActions,
     modifier: Modifier = Modifier,
-    overMedia: Boolean = false,
+    ground: Float = 0f,
 ) {
     AppActions(
         chrome = chrome,
@@ -134,7 +200,7 @@ internal fun AppActionCluster(
             modifier
                 .windowInsetsPadding(TopChromeInsets)
                 .padding(top = ActionClusterTopGap, end = ActionClusterEndPadding),
-        overMedia = overMedia,
+        ground = ground,
     )
 }
 
@@ -143,24 +209,17 @@ internal fun AppActionCluster(
 private fun ConnectionStatusAction(
     status: ConnectionStatus?,
     onClick: () -> Unit,
-    overMedia: Boolean,
+    glass: ChromeGlass,
 ) {
     if (status == null) return
 
-    val forced = status == ConnectionStatus.FORCED
     GlassIconButton(
         icon = status.icon(),
         contentDescription = stringResource(status.messageRes),
         onClick = onClick,
-        overMedia = overMedia,
-        tint =
-            when {
-                overMedia && forced -> OverMedia.GlassContent
-                overMedia -> OverMedia.ErrorAccent
-                forced -> MaterialTheme.colorScheme.onSurfaceVariant
-                else -> MaterialTheme.colorScheme.error
-            },
-        surfaceTint = if (overMedia) OverMedia.ChromeFill else GlassDefaults.ChromeFill,
+        tint = if (status == ConnectionStatus.FORCED) glass.content else glass.error,
+        surfaceTint = glass.fill,
+        borderColor = glass.border,
     )
 }
 
@@ -173,7 +232,7 @@ private fun ConnectionStatusAction(
 private fun SyncPlayGroupsAction(
     hasActiveGroup: Boolean,
     onClick: () -> Unit,
-    overMedia: Boolean,
+    glass: ChromeGlass,
 ) {
     Box(contentAlignment = Alignment.Center) {
         GlassIconButton(
@@ -183,8 +242,9 @@ private fun SyncPlayGroupsAction(
                     if (hasActiveGroup) R.string.syncplay_groups_action_active else R.string.syncplay_groups_action,
                 ),
             onClick = onClick,
-            overMedia = overMedia,
-            surfaceTint = if (overMedia) OverMedia.ChromeFill else GlassDefaults.ChromeFill,
+            tint = glass.content,
+            surfaceTint = glass.fill,
+            borderColor = glass.border,
         )
         if (hasActiveGroup) {
             Badge(
@@ -202,7 +262,7 @@ private fun AppOverflowMenu(
     forceOffline: Boolean,
     onNavigateToSettings: () -> Unit,
     onSetForceOffline: (Boolean) -> Unit,
-    overMedia: Boolean,
+    glass: ChromeGlass,
 ) {
     var expanded by remember { mutableStateOf(false) }
     val offlineStateDescription =
@@ -215,8 +275,9 @@ private fun AppOverflowMenu(
             icon = Icons.Filled.MoreVert,
             contentDescription = stringResource(R.string.home_more_options),
             onClick = { expanded = true },
-            overMedia = overMedia,
-            surfaceTint = if (overMedia) OverMedia.ChromeFill else GlassDefaults.ChromeFill,
+            tint = glass.content,
+            surfaceTint = glass.fill,
+            borderColor = glass.border,
         )
 
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {

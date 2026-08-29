@@ -28,13 +28,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -53,7 +50,10 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.compose.currentStateAsState
 import dev.jellyboost.core.common.model.CollectionKind
 import dev.jellyboost.core.common.model.HomeSectionType
 import dev.jellyboost.core.common.model.ItemType
@@ -74,13 +74,12 @@ import dev.jellyboost.core.ui.component.ThumbCard
 import dev.jellyboost.core.ui.component.libraryIcon
 import dev.jellyboost.core.ui.text.episodeNumberLabel
 import dev.jellyboost.core.ui.text.resolve
-import dev.jellyboost.core.ui.theme.ChromeBackdrop
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.core.ui.theme.LocalAppChromePadding
-import dev.jellyboost.core.ui.theme.LocalChromeBackdrop
 import dev.jellyboost.core.ui.theme.OverMedia
+import dev.jellyboost.core.ui.theme.ReportChromeBackdrop
 import dev.jellyboost.core.ui.theme.pageInk
 import dev.jellyboost.core.ui.R as CoreUiR
 
@@ -168,7 +167,6 @@ private fun HomeRows(
         val listState = rememberLazyListState()
         val heroHeight = heroHeight(wide = wide, viewportHeight = maxHeight, fontScale = fontScale)
         ChromeOverHeroEffect(
-            chromeBackdrop = LocalChromeBackdrop.current,
             listState = listState,
             heroHeight = if (hero == null) 0.dp else heroHeight,
             chrome = chrome,
@@ -250,18 +248,24 @@ private fun LazyListScope.sectionRows(
  * question, not a destination one: the moment the hero's foot passes the chrome's, the ground under
  * the bars is page again and the glass must go back to following the scheme.
  *
+ * The lifecycle term is the other half of that. `onDispose` alone is too late on a tab switch: the
+ * outgoing screen stays composed for the whole `NAV_TRANSITION_MILLIS` cross-fade, so the chrome
+ * would hold the hero's dark glass over the *incoming* page and snap at the end. An entry drops out
+ * of `RESUMED` when the transition starts, which is exactly when the artwork stops being what the
+ * bars are over.
+ *
  * `derivedStateOf` so the per-pixel scroll and the animating chrome inset move a boolean rather than
- * a recomposition, and `onDispose` so leaving Home — or Home losing its hero — cannot strand the
- * frame in the over-media state.
+ * a recomposition.
  */
 @Composable
 private fun ChromeOverHeroEffect(
-    chromeBackdrop: ChromeBackdrop,
     listState: LazyListState,
     heroHeight: Dp,
     chrome: PaddingValues,
     density: Density,
 ) {
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    val lifecycleState by lifecycle.currentStateAsState()
     val overMedia =
         remember(listState, heroHeight, chrome, density) {
             derivedStateOf {
@@ -272,12 +276,7 @@ private fun ChromeOverHeroEffect(
                     }
             }
         }
-    LaunchedEffect(chromeBackdrop, overMedia) {
-        snapshotFlow { overMedia.value }.collect(chromeBackdrop::reportOverMedia)
-    }
-    DisposableEffect(chromeBackdrop) {
-        onDispose { chromeBackdrop.reportOverMedia(false) }
-    }
+    ReportChromeBackdrop { lifecycleState.isAtLeast(Lifecycle.State.RESUMED) && overMedia.value }
 }
 
 /**

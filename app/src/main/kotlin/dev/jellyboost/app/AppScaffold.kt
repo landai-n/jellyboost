@@ -2,6 +2,7 @@ package dev.jellyboost.app
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -35,6 +36,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
@@ -231,7 +233,7 @@ internal fun AppScaffold(
                 AppActionCluster(
                     chrome = chrome,
                     actions = chromeActions,
-                    overMedia = chromeBackdrop.overMedia,
+                    ground = chromeGroundProgress(chromeBackdrop.overMedia),
                 )
             }
 
@@ -358,6 +360,11 @@ private fun MusicMessageEffect(snackbarHostState: SnackbarHostState) {
  * into the very surfaces it protects, and inside a `hazeEffect` it would be sampling an effect
  * rather than a backdrop, which Haze does not do.
  *
+ * A crossfade of the two bands rather than a swapped brush: the page band and the over-media one are
+ * different ramps and lerping their stops would be a third ramp neither was calibrated as, while an
+ * `if` puts a near-black band over a light page in a single frame. Each side keeps its exact
+ * calibration and only the alphas move.
+ *
  * @param overMedia the band has landed on a screen's full-bleed artwork rather than on its page, so
  *   it takes the pinned dark ink: darkening the page's own colour over a picture is a white haze on
  *   the light side, which is the reading the saved canvas rejected.
@@ -368,16 +375,47 @@ private fun TopChromeScrim(
     overMedia: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    val brush =
-        if (overMedia) JellyfinGradients.OverMediaTopChromeScrim else JellyfinGradients.TopChromeScrim
-    Box(
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .height(height)
-                .background(brush),
-    )
+    val ground = chromeGroundProgress(overMedia)
+    Box(modifier = modifier.fillMaxWidth().height(height)) {
+        if (ground < 1f) {
+            Box(
+                modifier =
+                    Modifier
+                        .matchParentSize()
+                        .alpha(1f - ground)
+                        .background(JellyfinGradients.TopChromeScrim),
+            )
+        }
+        if (ground > 0f) {
+            Box(
+                modifier =
+                    Modifier
+                        .matchParentSize()
+                        .alpha(ground)
+                        .background(JellyfinGradients.OverMediaTopChromeScrim),
+            )
+        }
+    }
 }
+
+/**
+ * How far the chrome has travelled from the page's ground to the artwork's. One clock for every
+ * consumer — same target, same spec — so the band and the cluster's circles cannot cross at
+ * different speeds and leave a frame where one has arrived and the other has not.
+ */
+@Composable
+internal fun chromeGroundProgress(overMedia: Boolean): Float {
+    val progress by
+        animateFloatAsState(
+            targetValue = if (overMedia) 1f else 0f,
+            animationSpec = tween(CHROME_GROUND_MILLIS),
+            label = "chromeGround",
+        )
+    return progress
+}
+
+/** Half the nav transition: the ground under the bars has changed by the time the page has. */
+private const val CHROME_GROUND_MILLIS = NAV_TRANSITION_MILLIS / 2
 
 /**
  * How much of a screen the chrome covers, published through [LocalAppChromePadding].

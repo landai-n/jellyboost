@@ -223,7 +223,9 @@ private fun OverlayNav(
         horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // ChromeFill, not the default Fill: these float over bright movie artwork.
+        // ChromeFill, not the default Fill: these float over bright movie artwork — and over the
+        // page once it has scrolled, which is why they are not `overMedia`. Both schemes' chrome
+        // tint is derived against the darkest frame *and* the page, so neither ground breaks it.
         GlassIconButton(
             icon = Icons.AutoMirrored.Filled.ArrowBack,
             contentDescription = stringResource(CoreUiR.string.action_back),

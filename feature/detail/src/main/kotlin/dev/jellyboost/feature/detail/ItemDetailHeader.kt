@@ -84,6 +84,7 @@ import dev.jellyboost.core.ui.text.subtitleLine
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
+import dev.jellyboost.core.ui.theme.OverMedia
 import dev.jellyboost.core.ui.theme.glassSurface
 import dev.jellyboost.core.ui.theme.heroHalo
 import dev.jellyboost.core.ui.theme.pageInk
@@ -123,12 +124,13 @@ internal fun DetailHero(
     } else {
         Column(modifier = modifier.fillMaxWidth()) {
             Box(modifier = Modifier.fillMaxWidth().height(backdropHeight)) {
-                DetailBackdrop(item = item, height = backdropHeight, halo = false)
+                DetailBackdrop(item = item, height = backdropHeight, stage = false)
                 TitleLockup(
                     item = item,
                     downloadState = downloadState,
                     downloadedBytes = downloadedBytes,
                     expanded = false,
+                    overMedia = true,
                     onNavigateToItemId = onNavigateToItemId,
                     modifier =
                         Modifier
@@ -162,6 +164,9 @@ internal fun DetailHero(
 /**
  * The poster's overlap must stay a top padding, never a negative offset: inside a `LazyColumn` item
  * a negative offset draws outside the item's bounds and is clipped away by the row above.
+ *
+ * Poster and facts cross the backdrop's bottom edge, so this is the app's only backdrop whose scrim
+ * must still reach the page colour and whose lockup stays scheme ink ([DetailBackdrop]'s `stage`).
  */
 @Composable
 private fun WideStage(
@@ -176,7 +181,7 @@ private fun WideStage(
 ) {
     Box(modifier = modifier.fillMaxWidth()) {
         Box(modifier = Modifier.fillMaxWidth().height(backdropHeight)) {
-            DetailBackdrop(item = item, height = backdropHeight, halo = true)
+            DetailBackdrop(item = item, height = backdropHeight, stage = true)
         }
 
         Row(
@@ -204,6 +209,7 @@ private fun WideStage(
                     downloadState = downloadState,
                     downloadedBytes = downloadedBytes,
                     expanded = true,
+                    overMedia = false,
                     onNavigateToItemId = onNavigateToItemId,
                 )
                 ProgressLine(item = item)
@@ -220,17 +226,19 @@ private fun WideStage(
     }
 }
 
+/** @param stage the wide layout's — see [WideStage] for what its two answers change. */
 @Composable
 private fun DetailBackdrop(
     item: JellyfinItem,
     height: Dp,
-    halo: Boolean,
+    stage: Boolean,
 ) {
     BackdropHeader(
         imageUrl = item.backdropImageUrl ?: item.thumbImageUrl ?: item.primaryImageUrl,
         height = height,
+        dissolvesIntoPage = stage,
     )
-    if (halo) {
+    if (stage) {
         Box(modifier = Modifier.fillMaxSize().heroHalo())
     }
 }
@@ -269,13 +277,18 @@ private fun DetailPoster(
     )
 }
 
-/** @param expanded the wide/landscape size of the title (44sp rather than 34sp). */
+/**
+ * @param expanded the wide/landscape size of the title (44sp rather than 34sp).
+ * @param overMedia the lockup sits wholly inside the backdrop, which is dark-scrimmed in both
+ *   schemes — true for every layout but [WideStage]'s, whose lockup crosses the artwork's foot.
+ */
 @Composable
 private fun TitleLockup(
     item: JellyfinItem,
     downloadState: DownloadState,
     downloadedBytes: Long?,
     expanded: Boolean,
+    overMedia: Boolean,
     onNavigateToItemId: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -287,7 +300,7 @@ private fun TitleLockup(
             Text(
                 text = eyebrow.drawn,
                 style = JellyfinTypeExtras.Eyebrow,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = if (overMedia) OverMedia.Eyebrow else MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.semantics { contentDescription = eyebrow.spoken },
             )
         }
@@ -296,9 +309,7 @@ private fun TitleLockup(
         Text(
             text = title,
             style = if (expanded) JellyfinTypeExtras.HeroTitleExpanded else JellyfinTypeExtras.HeroTitleCompact,
-            // `HomeHero.HeroTitle`'s rule: the scrim has faded to the page colour by this row, so
-            // this is page ink, not the over-artwork white the rating badge above still uses.
-            color = MaterialTheme.colorScheme.onBackground,
+            color = if (overMedia) OverMedia.Title else MaterialTheme.colorScheme.onBackground,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             // The page's only heading — TalkBack's heading-jump has nowhere else to land. The
@@ -314,15 +325,24 @@ private fun TitleLockup(
             Text(
                 text = subtitle,
                 style = SubtitleStyle,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = if (overMedia) OverMedia.Meta else MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
         }
 
-        EpisodeOriginChips(item = item, onNavigateToItemId = onNavigateToItemId)
+        EpisodeOriginChips(
+            item = item,
+            onNavigateToItemId = onNavigateToItemId,
+            overMedia = overMedia,
+        )
 
-        MetaRow(item = item, downloadState = downloadState, downloadedBytes = downloadedBytes)
+        MetaRow(
+            item = item,
+            downloadState = downloadState,
+            downloadedBytes = downloadedBytes,
+            overMedia = overMedia,
+        )
     }
 }
 
@@ -336,6 +356,7 @@ internal fun EpisodeOriginChips(
     item: JellyfinItem,
     onNavigateToItemId: (String) -> Unit,
     modifier: Modifier = Modifier,
+    overMedia: Boolean = false,
 ) {
     if (item.type != ItemType.EPISODE) return
 
@@ -361,6 +382,7 @@ internal fun EpisodeOriginChips(
                     Modifier
                         .widthIn(max = OriginChipMaxWidth)
                         .semantics(mergeDescendants = true) { contentDescription = description },
+                overMedia = overMedia,
             )
         }
         if (seasonId != null && seasonNumber != null) {
@@ -370,6 +392,7 @@ internal fun EpisodeOriginChips(
                 text = label,
                 onClick = { onNavigateToItemId(seasonId) },
                 modifier = Modifier.semantics(mergeDescendants = true) { contentDescription = description },
+                overMedia = overMedia,
             )
         }
     }
@@ -388,6 +411,7 @@ internal fun EpisodeOriginChips(
 private fun MetaRow(
     item: JellyfinItem,
     downloadState: DownloadState,
+    overMedia: Boolean,
     modifier: Modifier = Modifier,
     downloadedBytes: Long? = null,
 ) {
@@ -408,17 +432,30 @@ private fun MetaRow(
         verticalArrangement = Arrangement.spacedBy(Dimens.SpaceExtraSmall),
     ) {
         item.communityRating?.let { rating ->
-            RatingFact(rating = rating, modifier = Modifier.align(Alignment.CenterVertically))
+            RatingFact(
+                rating = rating,
+                overMedia = overMedia,
+                modifier = Modifier.align(Alignment.CenterVertically),
+            )
         }
         item.productionYear?.let { year ->
-            MetaText(text = year.toString(), modifier = Modifier.align(Alignment.CenterVertically))
+            MetaText(
+                text = year.toString(),
+                overMedia = overMedia,
+                modifier = Modifier.align(Alignment.CenterVertically),
+            )
         }
         item.officialRating?.let { certificate ->
-            MPillBadge(text = certificate, modifier = Modifier.align(Alignment.CenterVertically))
+            MPillBadge(
+                text = certificate,
+                modifier = Modifier.align(Alignment.CenterVertically),
+                overMedia = overMedia,
+            )
         }
         if (facts.isNotEmpty()) {
             MetaText(
                 text = facts.joinToString(Separators.DOT),
+                overMedia = overMedia,
                 modifier = Modifier.align(Alignment.CenterVertically),
             )
         }
@@ -442,6 +479,7 @@ internal fun metaRowDescription(
 @Composable
 private fun RatingFact(
     rating: Float,
+    overMedia: Boolean,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -452,25 +490,29 @@ private fun RatingFact(
         Icon(
             imageVector = Icons.Filled.Star,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
+            tint = if (overMedia) OverMedia.Accent else MaterialTheme.colorScheme.primary,
             modifier = Modifier.size(RatingStarSize),
         )
-        // Full `onSurface`, not the `onSurfaceVariant` its neighbours in the row use: the rating is
-        // the one fact carrying emphasis. `TitleLockup`'s rule — the scrim has reached the page by
-        // this row, so this is page ink, unlike the badge drawn on the artwork above.
-        Text(text = formatRatingBadge(rating), style = RatingStyle, color = MaterialTheme.colorScheme.onSurface)
+        // Full-strength ink, not the dimmed one its neighbours in the row use: the rating is the one
+        // fact carrying emphasis.
+        Text(
+            text = formatRatingBadge(rating),
+            style = RatingStyle,
+            color = if (overMedia) OverMedia.Title else MaterialTheme.colorScheme.onSurface,
+        )
     }
 }
 
 @Composable
 private fun MetaText(
     text: String,
+    overMedia: Boolean,
     modifier: Modifier = Modifier,
 ) {
     Text(
         text = text,
         style = MetaStyle,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        color = if (overMedia) OverMedia.Meta else MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = modifier,
     )
 }

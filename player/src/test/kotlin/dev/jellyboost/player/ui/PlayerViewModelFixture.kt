@@ -44,6 +44,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.RegisterExtension
 
@@ -182,6 +183,7 @@ internal abstract class PlayerViewModelFixture {
                 PlaybackSessionController(
                     resolver = resolver,
                     mediaSourceFactory = mediaSourceFactory,
+                    ioDispatcher = UnconfinedTestDispatcher(),
                     playerHandle = playerHandle,
                     reporter = reporter,
                 ),

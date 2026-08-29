@@ -11,6 +11,7 @@ import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.unit.dp
@@ -105,20 +106,23 @@ class SettingsCategoryPagesA11yTest {
     }
 
     @Test
-    fun theSubtitleSizeCaptionIsDrawnButNotSpokenTwice() {
-        // The group's supporting line is a visual aid: it is `clearAndSetSemantics`, and the rows
-        // below it pass `supportingText = null`, so it is never read out as part of a row.
+    fun theSubtitleSizeCaptionIsSpokenOnceAndNotFoldedIntoEveryRow() {
+        // No row repeats this caveat, so silencing it loses the app's only statement that the two
+        // settings do not touch a libass-drawn track; folding it into the rows says it five times.
         rule.setContent { Page(SettingsPane.PLAYBACK) }
 
         val group = rule.activity.getString(R.string.settings_subtitle_size)
         val option = rule.activity.getString(R.string.settings_subtitle_size_large)
         val caption = rule.activity.getString(R.string.settings_subtitle_appearance_supporting)
 
+        // Over Text, not ContentDescription: a `Text` publishes only the former, so the description
+        // matcher holds whether or not the node is cleared.
+        rule.onAllNodesWithText(caption).assertCountEquals(1)
         rule
             .onNodeWithContentDescription(
                 choiceRowDescription(group, option, supportingText = null, actionHint = null),
             ).assertExists()
-        rule.onNodeWithContentDescription(caption, substring = true).assertDoesNotExist()
+        rule.onAllNodesWithContentDescription(caption, substring = true).assertCountEquals(0)
     }
 
     @Test

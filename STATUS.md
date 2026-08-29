@@ -37,6 +37,26 @@ Known issues:
 
 ## Current milestone: M14 — Breadth & theming (approved 2026-08-28; tracks 4 and 6 landed, gate green; Settings hub landed on `m14/settings-hub`)
 
+**Subtitle appearance: size and background for the subtitles the app draws itself (2026-08-29, on
+`main`; adversarial review run, device walk owed).** Two preferences in Settings › Playback ›
+Subtitles, above the styled-ASS switch: **Text size** (Follow the device / Small / Normal / Large /
+Larger) and **Background** (Follow the device / None / Translucent / Solid), persisted in DataStore
+and applied to Media3's `SubtitleView` in `PlayerScreen`'s `VideoSurface` — in `update`, so a change
+reaches the cue already on screen. Both default to **Follow the device**, which is `PlayerView`
+untouched (`setUserDefaultTextSize`/`setUserDefaultStyle`, i.e. Android's `CaptioningManager`): any
+other default would silently override a caption size a user set in accessibility settings. They do
+**not** touch a libass-drawn ASS track, which keeps the sizes its own script declares; the group's
+caption says so, and is spoken. New `core/common/model/SubtitleAppearance.kt`; 11 strings across all
+70 files. Reasoning: DECISIONS.md 2026-08-29 (fourth and sixth entries),
+`docs/features/playback.md`, `docs/features/settings.md`.
+
+Known issues / owed:
+- **Device walk owed** — the four background options over a bright frame, and the size ramp at
+  fontScale 2.0, have been reasoned about but not seen on the tablet.
+- **The a11y case for the spoken group caption compiles but has never executed** — the tablet
+  refuses instrumented test APKs (the OEM ROM's "Install via USB" restriction), so it is owed to
+  milestone DoD.
+
 **Downloads: the Wi-Fi switch moves out, a conditional notice moves in (2026-08-29, branch
 `m14/downloads-wifi-notice`; adversarial review and device walk owed).** The Downloads screen's
 always-on *Wi-Fi only* toggle is **deleted** — it and Settings › Downloads wrote the same DataStore

@@ -36,6 +36,7 @@ import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -89,6 +90,7 @@ internal class PlayerViewModelCastTest : PlayerViewModelFixture() {
                 PlaybackSessionController(
                     resolver = resolver,
                     mediaSourceFactory = mediaSourceFactory,
+                    ioDispatcher = UnconfinedTestDispatcher(),
                     playerHandle = routing,
                     reporter = reporter,
                     // Must be the same holder the coordinator writes: the controller re-checks it at

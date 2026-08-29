@@ -101,9 +101,27 @@ across the artwork's foot, and glass over *unscrimmed* artwork takes the chrome 
 canvas's 42% in-lockup fill (2.85:1 versus 7.70:1 for white). Whether the app frame's chrome is over
 artwork is threaded through a new `ChromeBackdrop`, written by `HomeScreen` from the list's scroll —
 it is not a theme bit. Ten new `ContrastRatioTest` cases; the ghost pill's over-media edge keeps
-white@40% because the canvas's white@22% measures 2.04:1. **Owed:** this is part of track 4's DoD
+white@40% because the canvas's white@22% measures 2.03:1. **Owed:** this is part of track 4's DoD
 walk — check the hero, the detail header and the action cluster in light at fontScale 2.0, on a
 bright backdrop and on a dark one.
+
+**Track 4 — the image-territory review wave (2026-08-29).** `/adversarial-review` ran over the wave
+above; nine confirmed findings are fixed (DECISIONS 2026-08-29). The root one: the ramps put their
+full strength at a *fraction* of the banner while the lockup they protect is measured in dp and
+climbs the picture with the font scale, so the copy sat 100–220dp above the plateau the new contrast
+cases were pinned at — ~2.2:1 for the compact eyebrow on a white backdrop, thinner than the dark ramp
+it replaced. `BackdropScrim` and `WideHeroScrim` are now `Modifier.backdropScrim(copyZone)` and
+`Modifier.wideHeroWash(copyEdge)` over the measured size, holding the canvas's own .78 from the
+lockup's ceiling down and past the copy column's far edge; the wash's fraction stops were the same
+flaw in **both** schemes and it is RTL-mirrored now. No canvas value moved — only the geometry.
+`BackdropScrimGeometryTest` pins that geometry, `ChromeGlassTest` the chrome's two grounds, and the
+instrumented `ChromeBackdropTest` the cleared-on-dispose guarantee that three docs asserted and
+nothing tested. Also: the chrome's ground swap is lifecycle-gated and tweened rather than a one-frame
+`if` at the end of a 300ms cross-fade; `OverMedia.ErrorAccent` moved off `#CF6679` (2.15:1 on chrome
+over a white frame) to `#F0A3AE` (3.89:1); `UpNextCard`'s Close circle pins its fill and edge, not
+just its glyph; and the over-media chip edge moved to the ghost pill's white@40%. **Known issue:**
+`ChromeBackdropTest` is instrumented, so `/verify` cannot see it — the unit source sets carry no
+Compose runtime host.
 
 **Track 6 — styled ASS/SSA (2026-08-28, landed on `m14/theme-subs`; device walk owed).** Spike
 verdict: feasible with **no player-engine swap**, so it is implemented rather than only recorded.

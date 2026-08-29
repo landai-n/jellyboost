@@ -23,7 +23,7 @@
   --error-bg:rgba(207,102,121,.10);
   --error-line:rgba(207,102,121,.28);
   --error-fg:#F0A3AE;
-  --scrim-h-gradient:linear-gradient(90deg,rgba(16,16,16,.94) 0%,rgba(16,16,16,.72) 38%,rgba(16,16,16,0) 70%);
+  --scrim-h-gradient:linear-gradient(90deg,rgba(16,16,16,.94) 0%,rgba(16,16,16,.78) 47%,rgba(16,16,16,0) 75%);
 }
 [data-theme="light"]{
   --glass-bg:rgba(255,255,255,.62);
@@ -45,7 +45,10 @@
   --error-bg:rgba(179,38,30,.07);
   --error-line:rgba(179,38,30,.22);
   --error-fg:#A8241C;
-  --scrim-h-gradient:linear-gradient(90deg,rgba(238,241,247,.94) 0%,rgba(238,241,247,.72) 38%,rgba(238,241,247,0) 70%);
+  /* Image territory: pinned ink, not the page colour, and the plateau holds past the copy column's
+     far edge instead of at a fraction of the window (Modifier.wideHeroWash). 468px/748px of a
+     1000px card is where this card's percentages come from — the app measures them in dp. */
+  --scrim-h-gradient:linear-gradient(90deg,rgba(12,14,20,.94) 0%,rgba(12,14,20,.78) 47%,rgba(12,14,20,0) 75%);
 }
 [data-theme="light"] .m-glass,[data-theme="light"] .m-tabs{box-shadow:0 2px 10px rgba(46,54,92,.08)}
 [data-theme="light"] .m-chip{background:rgba(255,255,255,.75);border-color:rgba(46,54,92,.12)}

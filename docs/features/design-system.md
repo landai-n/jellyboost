@@ -43,17 +43,20 @@ the sync source; `design/_shared/tokens.css` restates the Kotlin tokens).
   `LibraryTileWidth/Height` 232/64, `CastHeadshotSize` 72, `DetailPosterWidth/Height`
   190/285, `RadiusXl` 20).
 - `JellyfinGradients` — adds `HeroHalo` (radial at 78%/18%) and `ScreenGlow` beside
-  `BrandGlow`/`BrandGlowSide`/`BackdropScrim`/`StageScrim`/`ImagePlaceholder`. What each
-  resolves against is decided by *what it is drawn on*, not by the scheme alone
+  `BrandGlow`/`BrandGlowSide`/`StageScrim`/`ImagePlaceholder`, plus the two measured-size
+  modifiers `backdropScrim(copyZone)` and `wideHeroWash(copyEdge)`. What each resolves
+  against is decided by *what it is drawn on*, not by the scheme alone
   (`docs/features/theme.md` ▸ *Image territory*). On the **page**: the placeholder and
   `StageScrim` read `MaterialTheme.colorScheme`, the screen glow runs at roughly two-fifths
   of its alpha on a light page where the same wash reads as a stain, and the two brand glows
   take the saved canvas's own light pair (.16/.10) — nearly full strength, because the auth
-  page has nothing drawn through them. On **artwork**: `BackdropScrim`'s light branch,
-  `WideHeroScrim` and `OverMediaTopChromeScrim` ride `OverMedia.ScrimInk` and the halo keeps
-  its dark .35/.16 in both schemes, because image territory is dark either way. Each is a
-  prebuilt brush behind an accessor, so the modifier element still compares equal. The accent
-  gradient is brand and identical in both schemes.
+  page has nothing drawn through them. On **artwork**: the two scrim modifiers' light branch
+  and `OverMediaTopChromeScrim` ride `OverMedia.ScrimInk` and the halo keeps its dark .35/.16
+  in both schemes, because image territory is dark either way. The page-side ones are
+  prebuilt brushes behind an accessor so the modifier element still compares equal; the two
+  scrims are `drawWithCache` modifiers because their geometry is dp against a measured size —
+  a stop expressed as a fraction of the box protects a fraction, and a lockup is dp. The
+  accent gradient is brand and identical in both schemes.
 
 ## Component layer (`core/ui/component`)
 

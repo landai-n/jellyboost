@@ -302,7 +302,9 @@ private fun LazyListScope.heroRow(
 ) {
     if (hero == null) return
     item(key = SECTION_HERO, contentType = ROW_HERO) {
-        val overlaps = wide && OverMedia.artworkDissolvesIntoPage
+        // The rail tuck is the landscape mock's device, not the dark theme's: portrait starts the
+        // rows below the banner in both schemes, so their layouts stay identical.
+        val overlaps = wide && !portrait && OverMedia.artworkDissolvesIntoPage
         HomeHero(
             item = hero,
             wide = wide,

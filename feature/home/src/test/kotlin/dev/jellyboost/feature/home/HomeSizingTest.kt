@@ -87,8 +87,8 @@ class HomeSizingTest {
 
     @Test
     fun `the light banner returns the rail's reservation to the copy, keeping only a margin`() {
-        wideHeroCopyBottomInset(artworkDissolvesIntoPage = true) shouldBe HeroRailOverlap
-        wideHeroCopyBottomInset(artworkDissolvesIntoPage = false) shouldBe 24.dp
+        wideHeroCopyBottomInset(railTucksIn = true) shouldBe HeroRailOverlap
+        wideHeroCopyBottomInset(railTucksIn = false) shouldBe 24.dp
         // The mocks' banner: 400 - 104 nav inset - 24 margin, the 48dp band no rail climbs into
         // handed back to the copy instead of sitting dead under the buttons.
         wideHeroCopyHeight(400.dp, bottomInset = wideHeroCopyBottomInset(false)).value shouldBe

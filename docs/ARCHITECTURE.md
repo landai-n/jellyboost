@@ -23,7 +23,7 @@ and `ItemEntity` never cross a repository boundary.
 |---|---|
 | `:core:database` | `ItemEntity` + `ItemSource` (`items`), `LibraryViewEntity` (`library_views`), `ItemDao`, `LibraryViewDao`, enum/list converters. Schema **v3** via `@AutoMigration(2, 3)` (purely additive, exported). |
 | `:core:datastore` | `AppPreferences` + `DataStoreAppPreferences` (the `forceOffline` setting) and the singleton preferences `DataStore`. |
-| `:core:network` | `connectivity/` — `ConnectivityMonitor`, `ServerReachabilityProbe`, `ServerProbeApi`, `ConnectionStateProvider`. Plus `@ApplicationScope` (process-lifetime `CoroutineScope`) and `ApiClientProvider.useAddress`. |
+| `:core:network` | `connectivity/` — `ConnectivityMonitor` (`hasNetwork` **and** `isMetered`, derived from one shared default-network registration), `ServerReachabilityProbe`, `ServerProbeApi`, `ConnectionStateProvider`. Plus `@ApplicationScope` (process-lifetime `CoroutineScope`) and `ApiClientProvider.useAddress`. |
 | `:data` | `OfflineJellyfinRepository`, `DelegatingJellyfinRepository` (**now the `JellyfinRepository` binding**), `cache/ItemEntityMapper`, `cache/BrowseCacheWriter`; `OnlineJellyfinRepository` gained write-through. |
 | `:app` | `ConnectionViewModel`; `AppScaffold` + the floating chrome it draws over the nav host — `GlassBottomNav` (<560dp), `GlassTopNav` (≥560dp), `AppActionCluster` (the compact layout's app-wide actions), `AppActions`/`ConnectionStatus`/`AppChrome`. The chrome reserves no space; it publishes its footprint as `core/ui`'s `LocalAppChromePadding`, which top-level screens add to their scrollable `contentPadding`. |
 

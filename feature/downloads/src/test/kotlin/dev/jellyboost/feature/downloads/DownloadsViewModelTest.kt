@@ -44,6 +44,7 @@ class DownloadsViewModelTest {
     private val items = MutableStateFlow<List<DownloadItem>>(emptyList())
     private val storage = MutableStateFlow(StorageUsage())
     private val wifiOnly = MutableStateFlow(true)
+    private val onMeteredNetwork = MutableStateFlow(false)
 
     @RegisterExtension
     val mainDispatcher = MainDispatcherExtension(dispatcher)
@@ -53,6 +54,7 @@ class DownloadsViewModelTest {
         every { downloads.observeDownloads() } returns items
         every { downloads.observeStorage() } returns storage
         every { downloads.wifiOnly } returns wifiOnly
+        every { downloads.onMeteredNetwork } returns onMeteredNetwork
         coEvery { downloads.pause(any()) } returns AppResult.Success(Unit)
         coEvery { downloads.resume(any()) } returns AppResult.Success(Unit)
         coEvery { downloads.delete(any()) } returns AppResult.Success(0L)
@@ -328,6 +330,8 @@ class DownloadsViewModelTest {
     @Test
     fun `the Wi-Fi toggle writes through to the repository`() =
         runTest(dispatcher) {
+            // Still the notice's action, now that the screen carries no switch: `onAllowCellular`
+            // is `setWifiOnly(false)`, so this stays the path the user's tap takes.
             val model = viewModel()
             advanceUntilIdle()
 
@@ -335,6 +339,36 @@ class DownloadsViewModelTest {
             advanceUntilIdle()
 
             coVerify { downloads.setWifiOnly(false) }
+        }
+
+    @Test
+    fun `the metered signal reaches the state and, with Wi-Fi only on, pauses the queue for Wi-Fi`() =
+        runTest(dispatcher) {
+            items.value = listOf(item("1", "Dune", status = DownloadStatus.QUEUED))
+            wifiOnly.value = true
+            onMeteredNetwork.value = true
+
+            val model = viewModel()
+            advanceUntilIdle()
+
+            model.uiState.value.onMeteredNetwork shouldBe true
+            model.uiState.value.chrome.queuePausedForWifi shouldBe true
+        }
+
+    @Test
+    fun `leaving the metered network clears the notice without any other action`() =
+        runTest(dispatcher) {
+            items.value = listOf(item("1", "Dune", status = DownloadStatus.QUEUED))
+            onMeteredNetwork.value = true
+
+            val model = viewModel()
+            advanceUntilIdle()
+            model.uiState.value.chrome.queuePausedForWifi shouldBe true
+
+            onMeteredNetwork.value = false
+            advanceUntilIdle()
+
+            model.uiState.value.chrome.queuePausedForWifi shouldBe false
         }
 
     // ---- queue-wide actions ----------------------------------------------------------------------

@@ -46,6 +46,16 @@ interface DownloadRepository {
     suspend fun setWifiOnly(enabled: Boolean)
 
     /**
+     * `true` while the network the device would use right now is metered. Paired with [wifiOnly] it is
+     * what lets a screen say *why* a queue is standing still rather than only that it is; `false` when
+     * there is no network at all, so an offline device never reads as "waiting for Wi-Fi".
+     *
+     * The `Flow` half of a deliberate pair — the synchronous one-shot is
+     * `engine/MeteredConnection.isMetered()`, internal to this module. See its KDoc for why both exist.
+     */
+    val onMeteredNetwork: Flow<Boolean>
+
+    /**
      * Re-fetches [itemId] in full, caches it and its parents as downloaded, queues it and makes sure
      * the queue is running. A container — season, series, album, artist, playlist — is expanded into
      * one download per child in the server's own order, skipping what is already on the device, so

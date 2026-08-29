@@ -37,6 +37,38 @@ Known issues:
 
 ## Current milestone: M14 — Breadth & theming (approved 2026-08-28; tracks 4 and 6 landed, gate green; Settings hub landed on `m14/settings-hub`)
 
+**Downloads: the Wi-Fi switch moves out, a conditional notice moves in (2026-08-29, branch
+`m14/downloads-wifi-notice`; adversarial review and device walk owed).** The Downloads screen's
+always-on *Wi-Fi only* toggle is **deleted** — it and Settings › Downloads wrote the same DataStore
+key, so it was a duplicated control, and Settings is now its sole owner. In its place, a
+`WaitingForWifiNotice` drawn above the tab row in **both** the compact and the wide layout, and only
+while the preference is *currently* the reason nothing is moving: Wi-Fi-only on **and** the device on
+a metered network **and** at least one row in `QUEUED`/`DOWNLOADING`. A user-paused or failed row
+never raises it. Its action, *Turn off Wi-Fi only*, names the Settings row and flips the same
+persistent preference. Title+body are one merged **politely** live node; the button stays a separate
+focusable 48dp target.
+
+Under it, `ConnectivityMonitor` gains `isMetered`, derived with `hasNetwork` from **one** shared
+`registerDefaultNetworkCallback` (both facts live in the same `NetworkCapabilities`), and is `false`
+while there is no network at all — an offline device gets the offline banner, not a Wi-Fi wait.
+It reaches the screen through `DownloadRepository.onMeteredNetwork`, so `:feature:downloads` keeps
+its deliberate no-`:core:network` edge. `engine/MeteredConnection`'s synchronous one-shot is
+unchanged and now cross-referenced in both directions. Three strings added and three removed across
+all 70 files. Reasoning: DECISIONS.md 2026-08-29 (third entry),
+`docs/features/downloads.md` § *Waiting for Wi-Fi*.
+
+Known issues / owed:
+- ~~**`AndroidConnectivityMonitor` has no unit test.**~~ DONE — `AndroidConnectivityMonitorTest`,
+  8 cases, no Robolectric: MockK already mocks framework classes here (`LicenceViewModelTest`
+  precedent), so the callback is captured and driven directly. Covers the metered/unmetered seeds,
+  an absent network, a transport with no `NET_CAPABILITY_INTERNET`, Wi-Fi→cellular, `onLost`, the
+  null-`ConnectivityManager` fallback, and that both flows share **one** registration. Mutation-checked.
+- **No instrumented case for the notice.** `:feature:downloads` has no `androidTest` source set (it
+  is still on `scripts/a11y-scaffolding-allowlist.json`); the polite live region and the 48dp target
+  belong with the suite that allowlist entry owes.
+- **Device walk owed** — the notice at fontScale 2.0, and both layout branches on the tablet.
+- `/adversarial-review` has not run over the branch; it must before the merge.
+
 **Settings redesign — hub + category pages (2026-08-29, branch `m14/settings-hub`; adversarial
 review and device walk owed).** The flat six-section scroll becomes a **category hub** (identity row
 plus Playback / Downloads / Appearance / Network / About, each row summarised by that category's

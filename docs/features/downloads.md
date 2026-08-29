@@ -16,7 +16,7 @@ on disk plus Room rows; tapping Play on a downloaded item still takes the online
 |---|---|
 | Detail screen | *Download* enqueues; the same button then reads *Cancel* / *Remove* / *Retry* and shows live progress. On a **season or series** it enqueues the episodes underneath (see [Containers](#containers-a-season-is-its-episodes)). |
 | Every item card | `DownloadBadge` — queued, downloading (ring), paused, downloaded (tick), failed. |
-| Downloads tab | *Downloaded* (three ordered sections — MOVIES, SERIES, MUSIC — see [Sections and folding](#sections-and-folding)) and *Queue* (the same three sections, never folded; progress, speed, ETA, pause/resume/cancel/reorder per row, plus a *Pause all* / *Resume all* / *Cancel all* bar above the list), with a storage header and the Wi-Fi-only toggle. |
+| Downloads tab | *Downloaded* (three ordered sections — MOVIES, SERIES, MUSIC — see [Sections and folding](#sections-and-folding)) and *Queue* (the same three sections, never folded; progress, speed, ETA, pause/resume/cancel/reorder per row, plus a *Pause all* / *Resume all* / *Cancel all* bar above the list), with a storage header and — only while the preference is currently what is holding the queue still — a [waiting-for-Wi-Fi notice](#waiting-for-wi-fi). The Wi-Fi-only **switch** lives in Settings › Downloads, and nowhere else. |
 | Notification | Foreground, per-item progress, Pause and Cancel actions. |
 | Offline | Every downloaded item appears in the offline home / library / search, because the pipeline writes `ItemEntity(source = DOWNLOAD)` rows (M6 reads exactly those). |
 
@@ -77,10 +77,52 @@ DownloadRepository.enqueue(itemId)
 | `DownloadNotifier` | `:data:downloads` | The foreground notification and its Pause / Cancel actions. |
 | `DownloadActionReceiver` | `:data:downloads` | Backs those two actions. |
 | `DownloadDeleter` | `:data:downloads` | The delete cascade. |
-| `DownloadsViewModel` / `DownloadsScreen` | `:feature:downloads` | The two tabs, the storage header, the Wi-Fi-only toggle. |
+| `DownloadsViewModel` / `DownloadsScreen` | `:feature:downloads` | The two tabs, the storage header, the waiting-for-Wi-Fi notice. |
 | `DownloadSpeedTracker` | `:feature:downloads` | Derives bytes/second from successive Room emissions (no speed column exists). |
 | `DownloadRows.etaSeconds` | `:feature:downloads` | Whole seconds left from the smoothed speed and `displayTotalBytes`; hidden when the speed is unknown, the transfer is stalled, or the estimate exceeds 24 h. Worded `~X left` on a `CEILING` total, since the ETA is exactly as approximate as the size behind it. A queue/downloaded row whose `quality.isTranscoded` also appends a `Transcoded` marker to its status/size line. |
 | `formatDurationSeconds` | `:core:common` | The shared duration formatter (`45 s` / `3 min` / `1 h 20 min`, minutes ceil'd), beside `formatBytes` per ARCH-11. |
+
+---
+
+## Waiting for Wi-Fi
+
+The Downloads screen carries **no download preference**. The Wi-Fi-only switch is Settings ›
+Downloads' alone; two controls over one DataStore key was a duplicated control, not two states, and
+the screen the queue is on is the wrong place to keep a setting the user changes once.
+
+What the screen does carry is a notice, drawn above the tab row in **both** the compact and the wide
+layout, and only while all three of these hold at once
+(`DownloadsUiState.queuePausedForWifi`):
+
+| | |
+|---|---|
+| the preference is on | `wifiOnly` — `AppPreferences.downloadOverWifiOnly` |
+| the device is on a metered network | `onMeteredNetwork` — `DownloadRepository.onMeteredNetwork`, which is `ConnectivityMonitor.isMetered` |
+| something is actually held back | `wifiBlockedCount > 0` — rows in `QUEUED` or `DOWNLOADING`, and no other status |
+
+The status set is the whole claim. `PAUSED` is a *user* decision and `ERROR` is a failure; neither is
+waiting for a network, and counting either would let the notice tell the user the connection is the
+reason when it is not. A download stopped by leaving Wi-Fi goes back to `QUEUED`, which is exactly
+the status WorkManager's `UNMETERED` constraint parks work in and resumes it from — so `QUEUED` and
+the in-flight `DOWNLOADING` are the two that count.
+
+`ConnectivityMonitor.isMetered` is **`false` when there is no network at all**: "not on a metered
+network" is the honest answer when there is no network to be metered, and a notice claiming the
+queue is waiting for Wi-Fi on a fully offline device would be a lie. An offline device gets the
+offline banner instead.
+
+The notice is not `ErrorBanner` — nothing failed, and a red failure surface would overstate a wait
+that resolves by itself. Its title and body are one merged, **politely** live node (the network
+changed under the user, so it must announce itself; politely, because unlike the missing-storage-volume
+warning in Settings, nothing is being lost right now). Its action is a separate focusable
+`TextButton` reading *Turn off Wi-Fi only* — it names the Settings row and flips the same persistent
+preference, so it must not read as a one-time exception.
+
+**Two answers to "is this metered" coexist in `:data:downloads`, deliberately.**
+`DownloadRepository.onMeteredNetwork` is the `Flow` a reacting UI needs;
+`engine/MeteredConnection.isMetered()` is a synchronous one-shot for `SubtitleSidecarTopUp`, which
+runs on the application scope outside the worker's constraint and has to decide once before it
+starts. Each KDoc names the other.
 
 ---
 

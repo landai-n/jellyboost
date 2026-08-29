@@ -2,7 +2,9 @@
 <resources>
     <string name="downloads_tab_downloaded">ڈاؤن لوڈ شدہ</string>
     <string name="downloads_tab_queue">قطار</string>
-    <string name="downloads_wifi_only">صرف Wi‑Fi</string>
+    <string name="downloads_wifi_wait_title">Wi‑Fi کا انتظار</string>
+    <string name="downloads_wifi_wait_body">موبائل ڈیٹا کنکشن پر قطار روک دی گئی ہے۔</string>
+    <string name="downloads_wifi_wait_action">صرف Wi‑Fi بند کریں</string>
     <string name="downloads_screen_title">ڈاؤن لوڈز</string>
 
     <string name="downloads_section_movies">فلمیں</string>
@@ -25,14 +27,12 @@
     <string name="downloads_storage_free">%1$s خالی</string>
     <string name="downloads_stat_on_device">اس ڈیوائس پر</string>
     <string name="downloads_stat_queue">قطار</string>
-    <string name="downloads_stat_network">نیٹ ورک</string>
     <string name="downloads_stat_free_of">%2$s میں سے %1$s خالی</string>
     <plurals name="downloads_stat_queue_items">
         <item quantity="one">%1$d آئٹم · %2$s</item>
         <item quantity="other">%1$d آئٹمز · %2$s</item>
     </plurals>
     <string name="downloads_stat_eta_about">تقریباً %1$s باقی</string>
-    <string name="downloads_stat_network_helper">موبائل ڈیٹا پر خودکار طور پر موقوف ہو جاتا ہے</string>
     <string name="downloads_usage_storage_label">استعمال شدہ اسٹوریج</string>
     <string name="downloads_usage_queue_label">قطار کی پیش رفت</string>
     <string name="downloads_queue_row_description">%1$s، %2$d%%، %3$s</string>

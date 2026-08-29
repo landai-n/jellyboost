@@ -2,7 +2,9 @@
 <resources>
     <string name="downloads_tab_downloaded">ডাউনলোড হয়েছে</string>
     <string name="downloads_tab_queue">সারি</string>
-    <string name="downloads_wifi_only">শুধু Wi‑Fi</string>
+    <string name="downloads_wifi_wait_title">Wi‑Fi-এর অপেক্ষায়</string>
+    <string name="downloads_wifi_wait_body">এই মোবাইল ডেটা সংযোগে সারিটি বিরতিতে রয়েছে।</string>
+    <string name="downloads_wifi_wait_action">“শুধু Wi‑Fi” বন্ধ করুন</string>
     <string name="downloads_screen_title">ডাউনলোড</string>
     <string name="downloads_section_movies">সিনেমা</string>
     <string name="downloads_section_series">সিরিজ</string>
@@ -23,14 +25,12 @@
     <string name="downloads_storage_free">%1$s খালি</string>
     <string name="downloads_stat_on_device">এই ডিভাইসে</string>
     <string name="downloads_stat_queue">সারি</string>
-    <string name="downloads_stat_network">নেটওয়ার্ক</string>
     <string name="downloads_stat_free_of">%2$s এর মধ্যে %1$s খালি</string>
     <plurals name="downloads_stat_queue_items">
         <item quantity="one">%1$dটি আইটেম · %2$s</item>
         <item quantity="other">%1$dটি আইটেম · %2$s</item>
     </plurals>
     <string name="downloads_stat_eta_about">প্রায় %1$s বাকি</string>
-    <string name="downloads_stat_network_helper">মোবাইল ডেটাতে স্বয়ংক্রিয়ভাবে বিরত থাকে</string>
     <string name="downloads_usage_storage_label">ব্যবহৃত স্টোরেজ</string>
     <string name="downloads_usage_queue_label">সারির অগ্রগতি</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>

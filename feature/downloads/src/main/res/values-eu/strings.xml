@@ -2,7 +2,9 @@
 <resources>
     <string name="downloads_tab_downloaded">Deskargatuta</string>
     <string name="downloads_tab_queue">Ilara</string>
-    <string name="downloads_wifi_only">Wi‑Fi bidez soilik</string>
+    <string name="downloads_wifi_wait_title">Wi‑Fi zain</string>
+    <string name="downloads_wifi_wait_body">Ilara pausatuta dago datu mugikorren konexio honetan.</string>
+    <string name="downloads_wifi_wait_action">Desaktibatu Wi‑Fi bidez soilik</string>
     <string name="downloads_screen_title">Deskargak</string>
     <string name="downloads_section_movies">Filmak</string>
     <string name="downloads_section_series">Seriak</string>
@@ -23,14 +25,12 @@
     <string name="downloads_storage_free">%1$s libre</string>
     <string name="downloads_stat_on_device">Gailu honetan</string>
     <string name="downloads_stat_queue">Ilara</string>
-    <string name="downloads_stat_network">Sarea</string>
     <string name="downloads_stat_free_of">%2$s-tik %1$s libre</string>
     <plurals name="downloads_stat_queue_items">
         <item quantity="one">%1$d elementu · %2$s</item>
         <item quantity="other">%1$d elementu · %2$s</item>
     </plurals>
     <string name="downloads_stat_eta_about">gutxi gorabehera %1$s falta</string>
-    <string name="downloads_stat_network_helper">Datu mugikorretan automatikoki pausatzen da</string>
     <string name="downloads_usage_storage_label">Erabilitako biltegiratzea</string>
     <string name="downloads_usage_queue_label">Ilararen aurrerapena</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>

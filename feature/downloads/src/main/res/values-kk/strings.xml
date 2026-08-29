@@ -2,7 +2,9 @@
 <resources>
     <string name="downloads_tab_downloaded">Жүктелгендер</string>
     <string name="downloads_tab_queue">Кезек</string>
-    <string name="downloads_wifi_only">Тек Wi-Fi</string>
+    <string name="downloads_wifi_wait_title">Wi-Fi күтілуде</string>
+    <string name="downloads_wifi_wait_body">Кезек осы мобильдік байланыста кідіртілді.</string>
+    <string name="downloads_wifi_wait_action">«Тек Wi-Fi» өшіру</string>
     <string name="downloads_screen_title">Жүктеулер</string>
 
     <string name="downloads_section_movies">Фильмдер</string>
@@ -25,14 +27,12 @@
     <string name="downloads_storage_free">%1$s бос</string>
     <string name="downloads_stat_on_device">Бұл құрылғыда</string>
     <string name="downloads_stat_queue">Кезек</string>
-    <string name="downloads_stat_network">Желі</string>
     <string name="downloads_stat_free_of">%2$s ішінен %1$s бос</string>
     <plurals name="downloads_stat_queue_items">
         <item quantity="one">%1$d элемент · %2$s</item>
         <item quantity="other">%1$d элемент · %2$s</item>
     </plurals>
     <string name="downloads_stat_eta_about">шамамен %1$s қалды</string>
-    <string name="downloads_stat_network_helper">Мобильдік деректерде автоматты түрде тоқтатылады</string>
     <string name="downloads_usage_storage_label">Қолданылған жад</string>
     <string name="downloads_usage_queue_label">Кезектің барысы</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>

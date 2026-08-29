@@ -2,7 +2,9 @@
 <resources>
     <string name="downloads_tab_downloaded">డౌన్‌లోడ్ చేసినవి</string>
     <string name="downloads_tab_queue">క్యూ</string>
-    <string name="downloads_wifi_only">Wi‑Fi మాత్రమే</string>
+    <string name="downloads_wifi_wait_title">Wi‑Fi కోసం వేచి ఉంది</string>
+    <string name="downloads_wifi_wait_body">మొబైల్ డేటా కనెక్షన్‌లో క్యూ పాజ్ చేయబడింది.</string>
+    <string name="downloads_wifi_wait_action">Wi‑Fi మాత్రమే ఆఫ్ చేయండి</string>
     <string name="downloads_screen_title">డౌన్‌లోడ్‌లు</string>
 
     <string name="downloads_section_movies">సినిమాలు</string>
@@ -25,14 +27,12 @@
     <string name="downloads_storage_free">%1$s ఖాళీగా ఉంది</string>
     <string name="downloads_stat_on_device">ఈ పరికరంలో</string>
     <string name="downloads_stat_queue">క్యూ</string>
-    <string name="downloads_stat_network">నెట్‌వర్క్</string>
     <string name="downloads_stat_free_of">%2$s లో %1$s ఖాళీగా ఉంది</string>
     <plurals name="downloads_stat_queue_items">
         <item quantity="one">%1$d అంశం · %2$s</item>
         <item quantity="other">%1$d అంశాలు · %2$s</item>
     </plurals>
     <string name="downloads_stat_eta_about">సుమారు %1$s మిగిలి ఉంది</string>
-    <string name="downloads_stat_network_helper">మొబైల్ డేటాలో స్వయంచాలకంగా పాజ్ అవుతుంది</string>
     <string name="downloads_usage_storage_label">ఉపయోగించిన నిల్వ</string>
     <string name="downloads_usage_queue_label">క్యూ పురోగతి</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>

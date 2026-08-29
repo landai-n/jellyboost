@@ -19,13 +19,23 @@ import dev.jellyboost.core.ui.R
 /** `S1 · E4`, or `E4` when the season number is unknown; `null` when there is no episode number. */
 @Composable
 fun JellyfinItem.episodeNumberLabel(): String? {
-    val episode = indexNumber ?: return null
-    val season = parentIndexNumber
+    val (season, episode) = episodeNumbering() ?: return null
     return if (season != null) {
         stringResource(R.string.media_episode_label, season, episode)
     } else {
         stringResource(R.string.media_episode_label_short, episode)
     }
+}
+
+/**
+ * A track's [JellyfinItem.indexNumber] is its position on a disc and its
+ * [JellyfinItem.parentIndexNumber] the disc number, so an ungated reading of the two labels a music
+ * item "S1 · E14".
+ */
+internal fun JellyfinItem.episodeNumbering(): Pair<Int?, Int>? {
+    if (type != ItemType.EPISODE) return null
+    val episode = indexNumber ?: return null
+    return parentIndexNumber to episode
 }
 
 /**

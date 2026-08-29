@@ -20,11 +20,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinGradients
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.core.ui.theme.OverMedia
+import dev.jellyboost.core.ui.theme.backdropScrim
 
 /**
  * Centre-cropped whatever the source ratio: callers' URLs fall back to a 2:3 poster, a realistic
@@ -36,6 +38,8 @@ import dev.jellyboost.core.ui.theme.OverMedia
  *   the page colour under it, so the scrim fades to the page ([JellyfinGradients.StageScrim]).
  *   Left `false`, the artwork ends on a hard edge and stays dark-scrimmed in both schemes, which is
  *   why anything this draws on it is [OverMedia]'s ink rather than the scheme's.
+ * @param copyZone how far above the artwork's foot the lockup drawn on it reaches — see
+ *   [Modifier.backdropScrim]. Ignored when [dissolvesIntoPage], which carries no over-media copy.
  */
 @Composable
 fun BackdropHeader(
@@ -45,6 +49,7 @@ fun BackdropHeader(
     subtitle: String? = null,
     height: Dp = Dimens.BackdropHeight,
     dissolvesIntoPage: Boolean = false,
+    copyZone: Dp = 0.dp,
     actions: @Composable BoxScope.() -> Unit = {},
 ) {
     Box(
@@ -63,13 +68,12 @@ fun BackdropHeader(
         )
 
         val scrim =
-            if (dissolvesIntoPage) JellyfinGradients.StageScrim else JellyfinGradients.BackdropScrim
-        Box(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .background(scrim),
-        )
+            if (dissolvesIntoPage) {
+                Modifier.background(JellyfinGradients.StageScrim)
+            } else {
+                Modifier.backdropScrim(copyZone = copyZone)
+            }
+        Box(modifier = Modifier.fillMaxSize().then(scrim))
 
         if (title != null) {
             BackdropTitle(

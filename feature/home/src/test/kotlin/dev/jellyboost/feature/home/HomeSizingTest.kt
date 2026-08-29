@@ -101,6 +101,38 @@ class HomeSizingTest {
     }
 
     @Test
+    fun `the copy zone is the lockup's own height, which is what the scrim's plateau is anchored to`() {
+        // The mocks' banner at scale 1.0: two 20dp paddings, three 12dp gaps, 155dp of text.
+        compactHeroCopyZone(heroHeight = 460.dp).value shouldBe (231f plusOrMinus TOLERANCE)
+        // And at 2.0, where the lockup has grown by its whole text height and climbed the picture.
+        compactHeroCopyZone(heroHeight = 615.dp, fontScale = 2f).value shouldBe (386f plusOrMinus TOLERANCE)
+    }
+
+    @Test
+    fun `the copy zone sheds with the lockup rather than claiming room the copy gave up`() {
+        val banner = heroHeight(wide = false, viewportHeight = 360.dp)
+
+        compactHeroShowsSecondary(banner) shouldBe false
+        compactHeroCopyZone(banner).value shouldBe (176f plusOrMinus TOLERANCE)
+    }
+
+    @Test
+    fun `the copy zone never claims more of the banner than the lockup can occupy`() {
+        listOf(1f, 1.3f, 1.6f, 2f).forEach { scale ->
+            listOf(360.dp, 460.dp, 615.dp, 800.dp).forEach { banner ->
+                val zone = compactHeroCopyZone(heroHeight = banner, fontScale = scale)
+                (zone.value > 0f) shouldBe true
+            }
+        }
+    }
+
+    @Test
+    fun `the wash holds its plateau past the copy column, not past a fraction of the window`() {
+        // 24dp of padding plus the 420dp cap the column reaches on every wide window.
+        WideCopyEdge.value shouldBe (444f plusOrMinus TOLERANCE)
+    }
+
+    @Test
     fun `a phone-landscape banner drops the compact lockup's secondary lines`() {
         val banner = heroHeight(wide = false, viewportHeight = 360.dp)
 

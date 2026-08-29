@@ -46,10 +46,11 @@ import dev.jellyboost.core.ui.component.PrimaryPillButton
 import dev.jellyboost.core.ui.component.describeParts
 import dev.jellyboost.core.ui.text.episodeNumberLabel
 import dev.jellyboost.core.ui.theme.Dimens
-import dev.jellyboost.core.ui.theme.JellyfinGradients
 import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
 import dev.jellyboost.core.ui.theme.OverMedia
+import dev.jellyboost.core.ui.theme.backdropScrim
 import dev.jellyboost.core.ui.theme.heroHalo
+import dev.jellyboost.core.ui.theme.wideHeroWash
 import dev.jellyboost.core.ui.R as CoreUiR
 
 /**
@@ -73,7 +74,11 @@ internal fun HomeHero(
     // `clipToBounds` is the backstop: nothing the banner draws may land on the rows below it, at
     // layouts the copy blocks' height bounds were not computed for.
     Box(modifier = modifier.fillMaxWidth().height(height).clipToBounds()) {
-        HeroBackdrop(item = item, wide = wide)
+        HeroBackdrop(
+            item = item,
+            wide = wide,
+            copyZone = if (wide) 0.dp else compactHeroCopyZone(heroHeight = height, fontScale = fontScale),
+        )
 
         if (wide) {
             // The fade goes under the copy: a tall overview must never be the thing that fades out.
@@ -101,11 +106,17 @@ internal fun HomeHero(
     }
 }
 
-/** `backdrop → thumb → primary` is `ThumbCard`'s fallback order — keep them in step. */
+/**
+ * `backdrop → thumb → primary` is `ThumbCard`'s fallback order — keep them in step.
+ *
+ * @param copyZone zero on the wide layout: its copy is top-inset and left-anchored, so the wash and
+ *   not the vertical ramp is the ground under it.
+ */
 @Composable
 private fun HeroBackdrop(
     item: JellyfinItem,
     wide: Boolean,
+    copyZone: Dp,
 ) {
     JellyfinAsyncImage(
         url = item.backdropImageUrl ?: item.thumbImageUrl ?: item.primaryImageUrl,
@@ -115,9 +126,9 @@ private fun HeroBackdrop(
         placeholderIcon = Icons.Outlined.Movie,
     )
     Box(modifier = Modifier.fillMaxSize().heroHalo())
-    Box(modifier = Modifier.fillMaxSize().background(JellyfinGradients.BackdropScrim))
+    Box(modifier = Modifier.fillMaxSize().backdropScrim(copyZone = copyZone))
     if (wide) {
-        Box(modifier = Modifier.fillMaxSize().background(JellyfinGradients.WideHeroScrim))
+        Box(modifier = Modifier.fillMaxSize().wideHeroWash(copyEdge = WideCopyEdge))
     }
 }
 
@@ -364,6 +375,33 @@ internal val WideLockupText = 175.dp
 private val WideCondensedLockupText = 144.dp
 
 /**
+ * Everything the lockup occupies above the banner's foot — its text at the current scale plus the
+ * fixed frame around it. It is what the scrim's plateau is anchored to (`Modifier.backdropScrim`),
+ * so it is the honest ceiling of the copy zone rather than a fraction of the banner: at scale 1.0 on
+ * a 460dp banner it is 231dp (the copy starts halfway down), and at 2.0 it is 386dp of a 615dp one.
+ *
+ * Deliberately the *two-line* title's height even where [compactHeroTitleMaxLines] has dropped to
+ * one: over-measuring the copy zone only starts the plateau higher, which is the safe direction.
+ */
+internal fun compactHeroCopyZone(
+    heroHeight: Dp,
+    fontScale: Float = 1f,
+): Dp {
+    val scale = 1f + textGrowth(fontScale)
+    return if (compactHeroShowsSecondary(heroHeight = heroHeight, fontScale = fontScale)) {
+        CompactLockupFrame + CompactLockupText * scale
+    } else {
+        CompactCondensedLockupFrame + CompactCondensedLockupText * scale
+    }
+}
+
+/** Two 20dp paddings and the three gaps between four blocks. */
+private val CompactLockupFrame = CompactCopyPadding * 2 + Dimens.SpaceMedium * 3
+
+/** The same once the eyebrow and metadata line are shed: two blocks, one gap. */
+private val CompactCondensedLockupFrame = CompactCopyPadding * 2 + Dimens.SpaceMedium
+
+/**
  * The full lockup is ~230dp against a landscape phone's ~216dp banner; without the two secondary
  * lines it needs ~176dp. The threshold carries slack over 230dp so the boundary does not thrash.
  */
@@ -434,6 +472,13 @@ internal fun wideHeroCopyHeight(heroHeight: Dp): Dp =
 private const val WIDE_COPY_TOP_FRACTION = 0.26f
 
 private val WideCopyMaxWidth = 420.dp
+
+/**
+ * The copy column's far edge, and therefore how far the wash has to hold its plateau. In **dp**,
+ * because the column is: the padding is fixed and [WideCopyMaxWidth] is a cap the column reaches on
+ * every window the wide layout runs at (the narrowest is 600dp, which leaves it 552dp to fill).
+ */
+internal val WideCopyEdge = Dimens.SpaceExtraLarge + WideCopyMaxWidth
 
 /**
  * How far the content rows overlap the wide banner — where the artwork dissolves into the page

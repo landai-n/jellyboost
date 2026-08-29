@@ -22,6 +22,10 @@ import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
 
 object JellyfinGradients {
     val Accent: Brush =
@@ -35,41 +39,12 @@ object JellyfinGradients {
         )
 
     /**
-     * The scrim over a hero or a detail backdrop, and the app's statement of the canvas's doctrine
-     * (`design/screens/home-light.html`): **image territory is dark-scrimmed in both schemes**, and
-     * a light page begins at the artwork's bottom edge rather than being faded into.
-     *
-     * The dark ramp still ends on the real `colorScheme.background`, because there the page colour
-     * *is* the ink — that also keeps a dynamic-colour dark page seamless. The light ramp cannot do
-     * the same: a scrim fading to `#EEF1F7` milks the picture out and leaves everything drawn on it
-     * with no ground, so the light side rides [OverMedia.ScrimInk] instead and hands the copy on it
-     * over-media white rather than scheme ink.
-     *
-     * Where the page's *own* content is drawn across the artwork's bottom edge there is no edge to
-     * begin at — that is [StageScrim], not this.
-     */
-    val BackdropScrim: Brush
-        @Composable @ReadOnlyComposable
-        get() =
-            if (LocalIsLightTheme.current) {
-                LightBackdropScrim
-            } else {
-                val background = MaterialTheme.colorScheme.background
-                Brush.verticalGradient(
-                    colors =
-                        listOf(
-                            Color.Transparent,
-                            background.copy(alpha = 0.65f),
-                            background,
-                        ),
-                )
-            }
-
-    /**
-     * [BackdropScrim] for artwork the page overlaps rather than abuts — the wide detail stage, whose
-     * poster and facts column are drawn across the backdrop's bottom edge in scheme ink. Scheme ink
-     * needs the page's own colour under it, so here the light ramp does fade to the page: the eased
-     * one, because white at the dark ramp's alphas fogs a picture where black shades it.
+     * [Modifier.backdropScrim] for artwork the page overlaps rather than abuts — the wide detail
+     * stage, whose poster and facts column are drawn across the backdrop's bottom edge in scheme
+     * ink. Scheme ink needs the page's own colour under it, so here the light ramp does fade to the
+     * page: the eased one, because white at the dark ramp's alphas fogs a picture where black
+     * shades it. Nothing over-media is drawn on it, so it has no copy zone to hold and stays a
+     * plain fraction ramp.
      */
     val StageScrim: Brush
         @Composable @ReadOnlyComposable
@@ -96,17 +71,6 @@ object JellyfinGradients {
                 )
             }
         }
-
-    /** The canvas's own ramp: nothing until 42%, then down to 78% at the artwork's foot. */
-    private val LightBackdropScrim: Brush =
-        Brush.verticalGradient(
-            colorStops =
-                arrayOf(
-                    0f to Color.Transparent,
-                    BACKDROP_INK_MID_STOP to OverMedia.ScrimInk.copy(alpha = BACKDROP_INK_MID_ALPHA),
-                    1f to OverMedia.ScrimInk.copy(alpha = BACKDROP_INK_FOOT_ALPHA),
-                ),
-        )
 
     /**
      * Strong on purpose: section titles scroll behind the brand mark and still read through
@@ -139,42 +103,6 @@ object JellyfinGradients {
                 )
             }
         }
-
-    /**
-     * The wide hero's left-edge wash: near-solid under the copy, transparent before the artwork's
-     * focal right half. Lives here, not in the hero, because it takes the same doctrine as
-     * [BackdropScrim] — dark ink over the picture in both schemes, and never the page colour on the
-     * light side, since the copy it grounds is over-media white either way.
-     *
-     * The stops are one set, not two: only the colour differed between the schemes, and it no longer
-     * does past the light branch's ink.
-     */
-    val WideHeroScrim: Brush
-        @Composable @ReadOnlyComposable
-        get() =
-            if (LocalIsLightTheme.current) {
-                LightWideHeroScrim
-            } else {
-                val background = MaterialTheme.colorScheme.background
-                Brush.horizontalGradient(
-                    colorStops =
-                        arrayOf(
-                            0f to background.copy(alpha = WIDE_HERO_NEAR_ALPHA),
-                            WIDE_HERO_MID_STOP to background.copy(alpha = WIDE_HERO_MID_ALPHA),
-                            WIDE_HERO_END_STOP to Color.Transparent,
-                        ),
-                )
-            }
-
-    private val LightWideHeroScrim: Brush =
-        Brush.horizontalGradient(
-            colorStops =
-                arrayOf(
-                    0f to OverMedia.ScrimInk.copy(alpha = WIDE_HERO_NEAR_ALPHA),
-                    WIDE_HERO_MID_STOP to OverMedia.ScrimInk.copy(alpha = WIDE_HERO_MID_ALPHA),
-                    WIDE_HERO_END_STOP to Color.Transparent,
-                ),
-        )
 
     /**
      * [TopChromeScrim] for the band that lands on a hero rather than on the page: the page-coloured
@@ -235,13 +163,31 @@ object JellyfinGradients {
 
     internal const val BRAND_GLOW_MID_ALPHA_LIGHT = 0.10f
 
-    /** The canvas's ramp: transparent, then 30% at 42%, then 78% at the artwork's foot. */
-    private const val BACKDROP_INK_MID_STOP = 0.42f
+    /**
+     * The canvas's foot value, promoted to a **plateau**: it is the ground every over-media ink's
+     * quoted ratio is measured against, so the ramp has to be holding it everywhere the copy is
+     * drawn — not only at the very bottom, which is where a fraction ramp puts it and where the
+     * copy is not. `#101010`@78% over a white backdrop leaves white at 9.67:1, [OverMedia.Eyebrow]
+     * at 6.65:1 and [OverMedia.Meta] at 6.19:1; `#0C0E14` is marginally darker, so the dark scheme
+     * is the binding case and the one `ContrastRatioTest` pins.
+     */
+    internal const val BACKDROP_PLATEAU_ALPHA = 0.78f
 
-    private const val BACKDROP_INK_MID_ALPHA = 0.30f
+    /** How far above the copy zone the ramp climbs out of transparent. */
+    internal val BackdropRise: Dp = 140.dp
 
-    /** What every over-media ink's quoted ratio is measured against. */
-    internal const val BACKDROP_INK_FOOT_ALPHA = 0.78f
+    /**
+     * The dark ramp's tail: it alone still has to arrive at an opaque page colour, because in the
+     * dark scheme the artwork dissolves into the page rather than ending on an edge, and
+     * `HomeHero`'s rail fade and 48dp overlap are seated on that dissolve.
+     */
+    internal val BackdropDarkFootRun: Dp = 140.dp
+
+    /** Clear of the copy column's right edge before the wash starts letting go. */
+    internal val WideHeroWashMargin: Dp = 24.dp
+
+    /** How long the wash takes to reach transparent past [WideHeroWashMargin]. */
+    internal val WideHeroWashFade: Dp = 280.dp
 
     /** Nothing but a whisper of page until halfway down the artwork. */
     private const val BACKDROP_LIGHT_ONSET_STOP = 0.50f
@@ -262,14 +208,7 @@ object JellyfinGradients {
 
     private const val TOP_CHROME_LIGHT_MID_ALPHA = 0.50f
 
-    private const val WIDE_HERO_NEAR_ALPHA = 0.94f
-
-    private const val WIDE_HERO_MID_STOP = 0.38f
-
-    /** The wash's weakest point under the wide copy column — where [OverMedia.Meta] is measured. */
-    internal const val WIDE_HERO_MID_ALPHA = 0.72f
-
-    private const val WIDE_HERO_END_STOP = 0.70f
+    internal const val WIDE_HERO_NEAR_ALPHA = 0.94f
 
     /** Where the purple centre has become the blue mid-stop, as a fraction of the radius. */
     private const val BRAND_GLOW_MID_STOP = 0.45f
@@ -365,6 +304,146 @@ object JellyfinGradients {
                         MaterialTheme.colorScheme.surface,
                     ),
             )
+}
+
+/**
+ * The scrim over a hero or a detail backdrop, and the app's statement of the canvas's doctrine
+ * (`design/screens/home-light.html`): **image territory is dark-scrimmed in both schemes**, and a
+ * light page begins at the artwork's bottom edge rather than being faded into.
+ *
+ * A `Modifier` and not a `Brush`, for `heroHalo`'s reason turned on a different axis: a ramp whose
+ * stops are *fractions of the banner* protects a fraction, and what needs protecting is a lockup
+ * measured in **dp**, which moves up the picture as the font scale grows and the banner does not.
+ * The fraction ramp put its full strength at the foot, 100–220dp below where the copy actually sits.
+ * So the geometry is anchored to [copyZone] instead: transparent at the top, climbing over
+ * [JellyfinGradients.BackdropRise], and holding [JellyfinGradients.BACKDROP_PLATEAU_ALPHA] from the
+ * lockup's ceiling all the way down. A banner too short to hold both starts part-way up the climb
+ * rather than jumping — which is the case where the copy has filled the picture anyway.
+ *
+ * The dark ramp keeps going past the plateau to the real `colorScheme.background`, because there the
+ * page colour *is* the ink and the artwork dissolves into the page (that also keeps a dynamic-colour
+ * dark page seamless). The light ramp cannot: fading to `#EEF1F7` milks the picture out and leaves
+ * everything drawn on it with no ground, so it rides [OverMedia.ScrimInk] and holds flat to the foot.
+ *
+ * Where the page's own content is drawn *across* the artwork's bottom edge there is no edge to begin
+ * at and no copy on the picture — that is [JellyfinGradients.StageScrim], not this.
+ *
+ * @param copyZone how far above the artwork's foot the over-media lockup drawn on it reaches. Pass
+ *   the layout's own measurement (`compactHeroCopyZone`, `detailLockupCopyZone`), never a guess:
+ *   this is the one number that decides whether the ink has a ground.
+ */
+@Composable
+fun Modifier.backdropScrim(copyZone: Dp): Modifier {
+    val light = LocalIsLightTheme.current
+    val ink = if (light) OverMedia.ScrimInk else MaterialTheme.colorScheme.background
+    val density = LocalDensity.current
+    val copyZonePx = with(density) { copyZone.toPx() }
+    val risePx = with(density) { JellyfinGradients.BackdropRise.toPx() }
+    val footRunPx = if (light) 0f else with(density) { JellyfinGradients.BackdropDarkFootRun.toPx() }
+    val footAlpha = if (light) JellyfinGradients.BACKDROP_PLATEAU_ALPHA else 1f
+    // Remembered on everything the lambda captures — `screenGlow`'s rule.
+    val onBuildDrawCache: CacheDrawScope.() -> DrawResult =
+        remember(ink, copyZonePx, risePx, footRunPx, footAlpha) {
+            {
+                val stops =
+                    backdropScrimStops(
+                        heightPx = size.height,
+                        copyZonePx = copyZonePx,
+                        risePx = risePx,
+                        footRunPx = footRunPx,
+                        footAlpha = footAlpha,
+                    )
+                val brush =
+                    Brush.verticalGradient(
+                        colorStops = stops.map { (at, alpha) -> at to ink.copy(alpha = alpha) }.toTypedArray(),
+                        startY = 0f,
+                        endY = size.height,
+                    )
+                onDrawBehind { drawRect(brush = brush) }
+            }
+        }
+    return drawWithCache(onBuildDrawCache)
+}
+
+/**
+ * [Modifier.backdropScrim]'s geometry, as a pure function so `BackdropScrimGeometryTest` can pin the
+ * one guarantee the whole doctrine rests on: the plateau is already held at the copy zone's ceiling.
+ *
+ * Fractions are strictly increasing and the last one is always 1, which is what
+ * `Brush.verticalGradient` requires of its stops.
+ *
+ * @param footRunPx `0` where the scrim holds its plateau flat to the foot (light); otherwise the run
+ *   over which it deepens to [footAlpha], and also the shortest tail the plateau may leave itself.
+ */
+internal fun backdropScrimStops(
+    heightPx: Float,
+    copyZonePx: Float,
+    risePx: Float,
+    footRunPx: Float,
+    footAlpha: Float,
+): List<Pair<Float, Float>> {
+    val plateau = JellyfinGradients.BACKDROP_PLATEAU_ALPHA
+    if (heightPx <= 0f) return listOf(0f to plateau, 1f to footAlpha)
+    val ceiling = (heightPx - maxOf(copyZonePx, footRunPx)).coerceIn(0f, heightPx)
+    // Where the climb would start if there were room above the ceiling for all of it.
+    val onset = ceiling - risePx
+    val startAlpha = if (onset >= 0f || risePx <= 0f) 0f else plateau * (-onset / risePx)
+    val stops = mutableListOf(0f to startAlpha)
+    if (onset > 0f) stops += (onset / heightPx) to 0f
+    if (ceiling > 0f && ceiling < heightPx) stops += (ceiling / heightPx) to plateau
+    stops += 1f to footAlpha
+    return stops.distinctBy { it.first }
+}
+
+/**
+ * The wide hero's left-edge wash: near-solid under the copy, transparent before the artwork's focal
+ * right half. It takes [Modifier.backdropScrim]'s doctrine — dark ink over the picture in both
+ * schemes — and its geometry lesson: the copy column is `24dp + 420dp` of **dp**, so a wash whose
+ * mid stop was a fraction of the window let the copy's right half slide onto thinning wash on every
+ * window narrower than ~1168dp, and the wide layout starts at 600dp.
+ *
+ * Mirrored under RTL, because the copy column is.
+ *
+ * @param copyEdge the copy column's far edge, measured from the leading side.
+ */
+@Composable
+fun Modifier.wideHeroWash(copyEdge: Dp): Modifier {
+    val light = LocalIsLightTheme.current
+    val ink = if (light) OverMedia.ScrimInk else MaterialTheme.colorScheme.background
+    val density = LocalDensity.current
+    val holdPx = with(density) { (copyEdge + JellyfinGradients.WideHeroWashMargin).toPx() }
+    val fadePx = with(density) { JellyfinGradients.WideHeroWashFade.toPx() }
+    val onBuildDrawCache: CacheDrawScope.() -> DrawResult =
+        remember(ink, holdPx, fadePx) {
+            {
+                val stops = wideHeroWashStops(widthPx = size.width, holdPx = holdPx, fadePx = fadePx)
+                val rtl = layoutDirection == LayoutDirection.Rtl
+                val brush =
+                    Brush.horizontalGradient(
+                        colorStops = stops.map { (at, alpha) -> at to ink.copy(alpha = alpha) }.toTypedArray(),
+                        startX = if (rtl) size.width else 0f,
+                        endX = if (rtl) 0f else size.width,
+                    )
+                onDrawBehind { drawRect(brush = brush) }
+            }
+        }
+    return drawWithCache(onBuildDrawCache)
+}
+
+/** [Modifier.wideHeroWash]'s geometry, pure for the same reason [backdropScrimStops] is. */
+internal fun wideHeroWashStops(
+    widthPx: Float,
+    holdPx: Float,
+    fadePx: Float,
+): List<Pair<Float, Float>> {
+    val near = JellyfinGradients.WIDE_HERO_NEAR_ALPHA
+    val plateau = JellyfinGradients.BACKDROP_PLATEAU_ALPHA
+    if (widthPx <= 0f || holdPx >= widthPx) return listOf(0f to near, 1f to plateau)
+    val stops = mutableListOf(0f to near, (holdPx / widthPx) to plateau)
+    val end = holdPx + fadePx
+    if (end < widthPx) stops += (end / widthPx) to 0f
+    stops += 1f to (if (end < widthPx) 0f else plateau * (1f - (widthPx - holdPx) / fadePx))
+    return stops.distinctBy { it.first }
 }
 
 /**

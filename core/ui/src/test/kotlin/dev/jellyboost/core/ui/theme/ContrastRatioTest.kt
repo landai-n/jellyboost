@@ -246,18 +246,20 @@ private val RatingOverArtwork = Color.Black.copy(alpha = 0.65f) over BrightArtwo
 private val IndicatorOverArtwork = Color.Black.copy(alpha = 0.60f) over BrightArtwork
 
 /**
- * The hero and detail scrim where the copy lockup sits: its foot, the alpha the saved canvas names.
- * Over a fully white backdrop, which is what makes it the worst case rather than a typical one.
+ * The one ground every over-media ink is measured on: the scrim's plateau over a fully white
+ * backdrop. `Modifier.backdropScrim` holds it from the copy zone's ceiling down and
+ * `Modifier.wideHeroWash` holds it past the copy column's far edge — which is what makes this the
+ * ground the copy actually sits on rather than a flattering altitude, and what
+ * `BackdropScrimGeometryTest` exists to pin.
+ *
+ * The **dark** scheme's `#101010` rather than the light [OverMedia.ScrimInk], because it is the
+ * lighter of the two inks and therefore the binding case for white drawn on it.
  */
-private val HeroScrimFoot =
-    OverMedia.ScrimInk.copy(alpha = JellyfinGradients.BACKDROP_INK_FOOT_ALPHA) over BrightArtwork
+private val ScrimPlateau =
+    JellyfinColors.Background.copy(alpha = JellyfinGradients.BACKDROP_PLATEAU_ALPHA) over BrightArtwork
 
-/** The wide hero's left wash at its mid stop — the weakest ground under the wide copy column. */
-private val WideHeroWash =
-    OverMedia.ScrimInk.copy(alpha = JellyfinGradients.WIDE_HERO_MID_ALPHA) over BrightArtwork
-
-/** A pill inside the hero's lockup: its glass is over the scrim, never over raw artwork. */
-private val HeroGlass = OverMedia.GlassFill over HeroScrimFoot
+/** A pill or chip inside a lockup: its glass is over the plateau, never over raw artwork. */
+private val OverMediaGlass = OverMedia.GlassFill over ScrimPlateau
 
 /** Chrome, which *is* over raw artwork — hence the stronger fill. */
 private val OverMediaChrome = OverMedia.ChromeFill over BrightArtwork
@@ -1006,66 +1008,60 @@ private val CASES =
         ),
         // --- Image territory: dark-scrimmed and light-on-image in *both* schemes, so measured once -
         ContrastCase(
-            name = "hero and detail lockup title over the scrim's foot",
-            foreground = OverMedia.Title over HeroScrimFoot,
-            background = HeroScrimFoot,
+            name = "hero and detail lockup title on the scrim's plateau",
+            foreground = OverMedia.Title over ScrimPlateau,
+            background = ScrimPlateau,
             demand = Demand.Floor(NORMAL_TEXT, "WCAG 1.4.3"),
-            source = "OverMedia.Title on BackdropScrim's 78% foot over a white backdrop — 9.89:1",
+            source = "OverMedia.Title on the 78% plateau over a white backdrop — 9.67:1",
         ),
         ContrastCase(
-            name = "hero and detail lockup eyebrow over the scrim's foot",
-            foreground = OverMedia.Eyebrow over HeroScrimFoot,
-            background = HeroScrimFoot,
+            name = "hero and detail lockup eyebrow on the scrim's plateau",
+            foreground = OverMedia.Eyebrow over ScrimPlateau,
+            background = ScrimPlateau,
             demand = Demand.Floor(NORMAL_TEXT, "WCAG 1.4.3"),
-            source = "OverMedia.Eyebrow (white@78%) on the same foot — 6.78:1",
+            source = "OverMedia.Eyebrow (white@78%) on the same plateau — 6.65:1",
         ),
         ContrastCase(
-            name = "hero and detail meta text over the scrim's foot",
-            foreground = OverMedia.Meta over HeroScrimFoot,
-            background = HeroScrimFoot,
+            name = "hero and detail meta text on the scrim's plateau",
+            foreground = OverMedia.Meta over ScrimPlateau,
+            background = ScrimPlateau,
             demand = Demand.Floor(NORMAL_TEXT, "WCAG 1.4.3"),
-            source = "OverMedia.Meta (white@74%) on the same foot — 6.29:1",
+            source = "OverMedia.Meta (white@74%) — 6.19:1, the weakest text and what sized the plateau",
         ),
         ContrastCase(
-            name = "certificate pill's edge over the scrim's foot",
-            foreground = OverMedia.BadgeBorder over HeroScrimFoot,
-            background = HeroScrimFoot,
+            name = "hero eyebrow dot and detail rating star on the scrim's plateau",
+            foreground = OverMedia.Accent over ScrimPlateau,
+            background = ScrimPlateau,
+            demand = Demand.Floor(COMPONENT, "WCAG 1.4.11"),
+            source = "OverMedia.Accent (#00A4DC) on the plateau — 3.38:1",
+        ),
+        ContrastCase(
+            name = "certificate pill's edge on the scrim's plateau",
+            foreground = OverMedia.BadgeBorder over ScrimPlateau,
+            background = ScrimPlateau,
             demand =
                 Demand.Exempt(
-                    recorded = 2.48,
+                    recorded = 2.46,
                     reason =
                         "the certificate is read from its label, which clears 4.5:1 on this very " +
-                            "ground; the box only holds it apart from the times beside it",
+                            "ground; the box only holds it apart from the times beside it, and it " +
+                            "is the one over-media edge that is not a control's",
                 ),
-            source = "OverMedia.BadgeBorder (white@32%) on BackdropScrim's foot",
+            source = "OverMedia.BadgeBorder (white@32%) on the plateau",
         ),
         ContrastCase(
-            name = "wide hero title over the left wash",
-            foreground = OverMedia.Title over WideHeroWash,
-            background = WideHeroWash,
+            name = "over-media pill and chip label on their glass",
+            foreground = OverMedia.GlassContent over OverMediaGlass,
+            background = OverMediaGlass,
             demand = Demand.Floor(NORMAL_TEXT, "WCAG 1.4.3"),
-            source = "OverMedia.Title on WideHeroScrim's 72% mid stop over a white backdrop — 7.88:1",
+            source = "OverMedia.GlassFill (#0A0C12@42%) on the plateau — 13.81:1",
         ),
         ContrastCase(
-            name = "wide hero overview and meta over the left wash",
-            foreground = OverMedia.Meta over WideHeroWash,
-            background = WideHeroWash,
-            demand = Demand.Floor(NORMAL_TEXT, "WCAG 1.4.3"),
-            source = "OverMedia.Meta on the same mid stop — 5.20:1",
-        ),
-        ContrastCase(
-            name = "hero pill's label on its over-media glass",
-            foreground = OverMedia.GlassContent over HeroGlass,
-            background = HeroGlass,
-            demand = Demand.Floor(NORMAL_TEXT, "WCAG 1.4.3"),
-            source = "OverMedia.GlassFill (#0A0C12@42%) on the scrim's foot — 13.97:1",
-        ),
-        ContrastCase(
-            name = "hero ghost pill's edge on its over-media glass",
-            foreground = OverMedia.GlassBorder over HeroGlass,
-            background = HeroGlass,
+            name = "over-media pill and chip edge on their glass",
+            foreground = OverMedia.GlassBorder over OverMediaGlass,
+            background = OverMediaGlass,
             demand = Demand.Floor(COMPONENT, "WCAG 1.4.11"),
-            source = "OverMedia.GlassBorder (white@40%) on GlassFill — 3.56:1 (the canvas's 22% would be 2.04:1)",
+            source = "OverMedia.GlassBorder (white@40%) on GlassFill — 3.54:1 (the canvas's 22% would be 2.03:1)",
         ),
         ContrastCase(
             name = "over-media chrome glyph over bright artwork",
@@ -1073,8 +1069,15 @@ private val CASES =
             background = OverMediaChrome,
             demand = Demand.Floor(COMPONENT, "WCAG 1.4.11"),
             source =
-                "OverMedia.ChromeFill — 7.70:1; the in-lockup GlassFill would be 2.85:1 here, " +
-                    "which is why chrome does not take it",
+                "OverMedia.ChromeFill, the ground the dark chrome's own cases above measure; the " +
+                    "in-lockup GlassFill would leave this glyph at 2.85:1, which is why chrome does not take it",
+        ),
+        ContrastCase(
+            name = "over-media chrome's offline glyph over bright artwork",
+            foreground = OverMedia.ErrorAccent over OverMediaChrome,
+            background = OverMediaChrome,
+            demand = Demand.Floor(COMPONENT, "WCAG 1.4.11"),
+            source = "OverMedia.ErrorAccent #F0A3AE — 3.89:1 (the dark scheme's own #CF6679 would be 2.15:1)",
         ),
         ContrastCase(
             name = "over-media primary pill's ink on its white fill",
@@ -1191,6 +1194,10 @@ private val MIRRORED_DECLARATIONS =
             "color = GlassDefaults.DarkHairline,",
         "player/src/main/kotlin/dev/jellyboost/player/ui/UpNextCard.kt" to
             "borderColor = GlassDefaults.DarkHairline,",
+        // The card's Close circle: a `tint` on its own left the fill and the edge following the
+        // page, which is a white@55% disc with a black edge inside a pinned-dark card.
+        "player/src/main/kotlin/dev/jellyboost/player/ui/UpNextCard.kt" to
+            "surfaceTint = VIDEO_GLASS_FILL,",
         // The two discs that stay literal because they are drawn on video and on album art.
         "player/src/main/kotlin/dev/jellyboost/player/ui/PlayerControls.kt" to
             "private val OVER_MEDIA_DISC = Color.White",

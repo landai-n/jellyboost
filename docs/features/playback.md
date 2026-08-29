@@ -543,8 +543,11 @@ Three wiring points, all wrapping rather than replacing:
 attachments, so an item downloaded at anything but *Original* would draw its styled subtitle in the
 fallback family — positioning, colour, scale, blur and fades intact, the typeface wrong. The planner
 therefore fetches the source's font attachments alongside the ASS sidecar (`DownloadFileType.FONT`,
-one file per attachment, only when a sidecar is ASS/SSA — an *Original* download keeps the container
-and needs none), and `AssSubtitleSupport.addFonts` registers them at `prepare`. Downloads taken
+one file per attachment, only for a transcode and only when a sidecar is ASS/SSA), and
+`AssSubtitleSupport.addFonts` registers them at `prepare`. The quality guard is its own condition
+rather than a corollary of the sidecar one: an *external* subtitle is planned as a sidecar at every
+quality, so an item with a `.ass` file beside it on the server would otherwise have its faces
+downloaded a second time next to the container that already holds them. Downloads taken
 before this shipped repair themselves: the sidecar top-up covers fonts too, so they arrive on the
 next connectivity edge.
 

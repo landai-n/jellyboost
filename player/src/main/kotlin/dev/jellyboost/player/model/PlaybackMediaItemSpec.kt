@@ -27,7 +27,9 @@ internal data class PlaybackMediaItemSpec(
  * One font file on this device, handed to libass rather than to ExoPlayer.
  *
  * @property path an absolute filesystem path, not a URI: the bytes are read by the app and passed to
- *   `AssHandler.addFont`.
+ *   `Ass.addFont` through `AssSubtitleSupport.addFonts`. **Not `AssHandler.addFont`** — that one parks
+ *   a face until after the renderer has already read its font list, which is the bug this exists to
+ *   avoid; `AssSubtitleSupport.addFonts` carries the mechanism.
  */
 internal data class FontSpec(
     val name: String,

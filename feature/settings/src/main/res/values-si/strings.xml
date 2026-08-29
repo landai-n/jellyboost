@@ -33,7 +33,6 @@
         <item quantity="other">බාගත කිරීම් තවම ස්ථාන අතර ගෙන යා නොහැකි බැවින්, මෙම උපාංගයේ දැනටමත් ඇති %1$d මකා දමනු ලැබේ. ඔබට ඒවා නව ස්ථානයට නැවත බාගත කළ හැක.</item>
     </plurals>
     <string name="settings_storage_switch_confirm">මකා මාරු වන්න</string>
-    <string name="settings_section_connectivity">සම්බන්ධතාවය</string>
     <string name="settings_offline_mode">නොබැඳි ප්‍රකාරය</string>
     <string name="settings_offline_mode_supporting">මෙම උපාංගයේ දැනටමත් ඇති මාධ්‍ය පමණක් පෙන්වන්න.</string>
     <string name="settings_section_account">ගිණුම</string>
@@ -68,7 +67,6 @@
     <string name="settings_hub_state_on">%1$s ක්‍රියාත්මකයි</string>
     <string name="settings_hub_state_off">%1$s අක්‍රියයි</string>
     <string name="settings_hub_storage_used">මෙම උපාංගයේ %1$s</string>
-    <string name="settings_eyebrow_colour">වර්ණය</string>
     <string name="settings_eyebrow_during_playback">වාදනය අතරතුර</string>
     <string name="settings_eyebrow_subtitles">උපසිරැසි</string>
     <string name="settings_eyebrow_on_this_device">මෙම උපාංගයේ</string>

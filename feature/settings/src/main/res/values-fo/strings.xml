@@ -36,7 +36,6 @@
     </plurals>
     <string name="settings_storage_switch_confirm">Strika og skift</string>
 
-    <string name="settings_section_connectivity">Samband</string>
     <string name="settings_offline_mode">Frákoplaður háttur</string>
     <string name="settings_offline_mode_supporting">Sýn bert tilfar, sum longu er á hesum tólinum.</string>
 
@@ -72,7 +71,6 @@
     <string name="settings_hub_state_on">%1$s kveikt</string>
     <string name="settings_hub_state_off">%1$s sløkt</string>
     <string name="settings_hub_storage_used">%1$s á hesum tólinum</string>
-    <string name="settings_eyebrow_colour">Litur</string>
     <string name="settings_eyebrow_during_playback">Meðan avspælt verður</string>
     <string name="settings_eyebrow_subtitles">Undirtekstir</string>
     <string name="settings_eyebrow_on_this_device">Á hesum tólinum</string>

@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.hasClickAction
@@ -126,6 +127,82 @@ class SettingsCategoryPagesA11yTest {
         )
     }
 
+    /**
+     * The meter under the storage figures restates them; a progress node would follow "12.3 GB used
+     * · 41.0 GB free on this device" with a bare "23 percent" of nothing nameable. Adding
+     * `progressBarRangeInfo` here looks like a fix and is a regression, so the absence is pinned.
+     */
+    @Test
+    fun theStorageMeterAddsNoProgressNodeToTheRowItIllustrates() {
+        rule.setContent { Page(SettingsPane.DOWNLOADS) }
+
+        val withRange =
+            rule
+                .onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsProperties.ProgressBarRangeInfo))
+                .fetchSemanticsNodes()
+
+        assertEquals(
+            "the storage meter announces a percentage the row already said in words",
+            0,
+            withRange.size,
+        )
+    }
+
+    @Test
+    fun aSingleSectionPageDrawsNoEyebrowBecauseItsTitleAlreadySaysThat() {
+        listOf(SettingsPane.APPEARANCE, SettingsPane.NETWORK, SettingsPane.ACCOUNT, SettingsPane.ABOUT)
+            .forEach { pane ->
+                rule.setContent { Page(pane) }
+
+                val headings =
+                    rule
+                        .onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
+                        .fetchSemanticsNodes()
+
+                assertEquals("$pane draws an eyebrow over its only section", 0, headings.size)
+            }
+    }
+
+    @Test
+    fun aMultiSectionPageKeepsAnEyebrowPerSection() {
+        rule.setContent { Page(SettingsPane.PLAYBACK) }
+
+        val headings =
+            rule
+                .onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
+                .fetchSemanticsNodes()
+
+        assertEquals(PLAYBACK_SECTIONS, headings.size)
+    }
+
+    @Test
+    fun anEyebrowIsSpokenSentenceCaseRatherThanAsTheLetteringItDraws() {
+        rule.setContent { Page(SettingsPane.PLAYBACK) }
+
+        rule
+            .onNodeWithContentDescription(
+                rule.activity.getString(R.string.settings_eyebrow_during_playback),
+            ).assertExists()
+    }
+
+    @Test
+    fun theThemeGroupKeepsItsCaptionEvenWithNoEyebrowAboveIt() {
+        rule.setContent { Page(SettingsPane.APPEARANCE) }
+
+        val group = rule.activity.getString(R.string.settings_theme)
+        ThemeModeLabels.forEach { optionRes ->
+            rule
+                .onNodeWithContentDescription(
+                    choiceRowDescription(
+                        groupLabel = group,
+                        label = rule.activity.getString(optionRes),
+                        supportingText = null,
+                        actionHint = null,
+                    ),
+                ).assertExists()
+        }
+    }
+
     @Test
     fun theStorageLocationPickerRepeatsItsGroupOnEveryVolume() {
         rule.setContent { Page(SettingsPane.DOWNLOADS) }
@@ -199,5 +276,15 @@ class SettingsCategoryPagesA11yTest {
     private companion object {
         val COMPACT_WIDTH = 400.dp
         val MIN_TOUCH_TARGET = 48.dp
+
+        /** "During playback" and "Subtitles". */
+        const val PLAYBACK_SECTIONS = 2
+
+        val ThemeModeLabels =
+            listOf(
+                R.string.settings_theme_system,
+                R.string.settings_theme_light,
+                R.string.settings_theme_dark,
+            )
     }
 }

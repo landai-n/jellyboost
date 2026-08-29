@@ -32,7 +32,6 @@
         <item quantity="other">Unduhan belum dapat dipindahkan antar lokasi, sehingga %1$d unduhan yang sudah ada di perangkat ini akan dihapus. Anda dapat mengunduhnya lagi ke lokasi baru.</item>
     </plurals>
     <string name="settings_storage_switch_confirm">Hapus dan alihkan</string>
-    <string name="settings_section_connectivity">Konektivitas</string>
     <string name="settings_offline_mode">Mode luring</string>
     <string name="settings_offline_mode_supporting">Hanya tampilkan media yang sudah ada di perangkat ini.</string>
     <string name="settings_section_account">Akun</string>
@@ -67,7 +66,6 @@
     <string name="settings_hub_state_on">%1$s aktif</string>
     <string name="settings_hub_state_off">%1$s nonaktif</string>
     <string name="settings_hub_storage_used">%1$s di perangkat ini</string>
-    <string name="settings_eyebrow_colour">Warna</string>
     <string name="settings_eyebrow_during_playback">Saat pemutaran</string>
     <string name="settings_eyebrow_subtitles">Subtitle</string>
     <string name="settings_eyebrow_on_this_device">Di perangkat ini</string>

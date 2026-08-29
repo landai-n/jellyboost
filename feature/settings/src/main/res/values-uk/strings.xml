@@ -38,7 +38,6 @@
     </plurals>
     <string name="settings_storage_switch_confirm">Видалити і перемкнути</string>
 
-    <string name="settings_section_connectivity">З’єднання</string>
     <string name="settings_offline_mode">Автономний режим</string>
     <string name="settings_offline_mode_supporting">Показувати лише медіа, які вже є на цьому пристрої.</string>
 
@@ -74,7 +73,6 @@
     <string name="settings_hub_state_on">%1$s увімкнено</string>
     <string name="settings_hub_state_off">%1$s вимкнено</string>
     <string name="settings_hub_storage_used">%1$s на цьому пристрої</string>
-    <string name="settings_eyebrow_colour">Колір</string>
     <string name="settings_eyebrow_during_playback">Під час відтворення</string>
     <string name="settings_eyebrow_subtitles">Субтитри</string>
     <string name="settings_eyebrow_on_this_device">На цьому пристрої</string>

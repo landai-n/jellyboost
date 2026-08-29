@@ -34,7 +34,6 @@
         <item quantity="other">Descărcările nu pot fi mutate încă între locații, așa că cele %1$d de descărcări deja existente pe acest dispozitiv vor fi șterse. Le puteți descărca din nou la noua locație.</item>
     </plurals>
     <string name="settings_storage_switch_confirm">Șterge și schimbă</string>
-    <string name="settings_section_connectivity">Conectivitate</string>
     <string name="settings_offline_mode">Mod offline</string>
     <string name="settings_offline_mode_supporting">Afișează doar conținutul media deja existent pe acest dispozitiv.</string>
     <string name="settings_section_account">Cont</string>
@@ -69,7 +68,6 @@
     <string name="settings_hub_state_on">%1$s activat</string>
     <string name="settings_hub_state_off">%1$s dezactivat</string>
     <string name="settings_hub_storage_used">%1$s pe acest dispozitiv</string>
-    <string name="settings_eyebrow_colour">Culoare</string>
     <string name="settings_eyebrow_during_playback">În timpul redării</string>
     <string name="settings_eyebrow_subtitles">Subtitrări</string>
     <string name="settings_eyebrow_on_this_device">Pe acest dispozitiv</string>

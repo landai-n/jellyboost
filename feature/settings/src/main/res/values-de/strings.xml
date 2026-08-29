@@ -36,7 +36,6 @@
     </plurals>
     <string name="settings_storage_switch_confirm">Löschen und wechseln</string>
 
-    <string name="settings_section_connectivity">Konnektivität</string>
     <string name="settings_offline_mode">Offlinemodus</string>
     <string name="settings_offline_mode_supporting">Nur Medien anzeigen, die bereits auf diesem Gerät sind.</string>
 
@@ -72,7 +71,6 @@
     <string name="settings_hub_state_on">%1$s an</string>
     <string name="settings_hub_state_off">%1$s aus</string>
     <string name="settings_hub_storage_used">%1$s auf diesem Gerät</string>
-    <string name="settings_eyebrow_colour">Farbe</string>
     <string name="settings_eyebrow_during_playback">Während der Wiedergabe</string>
     <string name="settings_eyebrow_subtitles">Untertitel</string>
     <string name="settings_eyebrow_on_this_device">Auf diesem Gerät</string>

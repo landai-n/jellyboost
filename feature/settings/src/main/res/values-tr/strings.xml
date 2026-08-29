@@ -33,7 +33,6 @@
         <item quantity="other">İndirmeler henüz konumlar arasında taşınamıyor, bu yüzden bu cihazdaki %1$d tanesi silinecek. Yeni konuma tekrar indirebilirsiniz.</item>
     </plurals>
     <string name="settings_storage_switch_confirm">Sil ve değiştir</string>
-    <string name="settings_section_connectivity">Bağlantı</string>
     <string name="settings_offline_mode">Çevrimdışı mod</string>
     <string name="settings_offline_mode_supporting">Yalnızca bu cihazda zaten bulunan medyayı göster.</string>
     <string name="settings_section_account">Hesap</string>
@@ -68,7 +67,6 @@
     <string name="settings_hub_state_on">%1$s açık</string>
     <string name="settings_hub_state_off">%1$s kapalı</string>
     <string name="settings_hub_storage_used">Bu cihazda %1$s</string>
-    <string name="settings_eyebrow_colour">Renk</string>
     <string name="settings_eyebrow_during_playback">Oynatma sırasında</string>
     <string name="settings_eyebrow_subtitles">Altyazılar</string>
     <string name="settings_eyebrow_on_this_device">Bu cihazda</string>

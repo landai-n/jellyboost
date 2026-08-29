@@ -36,7 +36,6 @@
     </plurals>
     <string name="settings_storage_switch_confirm">ފޮހެލާފައި ބަދަލުކުރޭ</string>
 
-    <string name="settings_section_connectivity">ކަނެކްޓިވިޓީ</string>
     <string name="settings_offline_mode">އޮފްލައިން މޯޑް</string>
     <string name="settings_offline_mode_supporting">މިހާރު މި ޑިވައިސްގައި ހުރި މީޑިއާ އެކަނި ދައްކާ.</string>
 
@@ -72,7 +71,6 @@
     <string name="settings_hub_state_on">%1$s ހުޅުވިފައި</string>
     <string name="settings_hub_state_off">%1$s ބަންދުކޮށްފައި</string>
     <string name="settings_hub_storage_used">މި ޑިވައިސްގައި %1$s</string>
-    <string name="settings_eyebrow_colour">ކުލަ</string>
     <string name="settings_eyebrow_during_playback">ޕްލޭ ކުރާއިރު</string>
     <string name="settings_eyebrow_subtitles">ސަބްޓައިޓަލް</string>
     <string name="settings_eyebrow_on_this_device">މި ޑިވައިސްގައި</string>

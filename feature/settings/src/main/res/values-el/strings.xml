@@ -36,7 +36,6 @@
     </plurals>
     <string name="settings_storage_switch_confirm">Διαγραφή και αλλαγή</string>
 
-    <string name="settings_section_connectivity">Συνδεσιμότητα</string>
     <string name="settings_offline_mode">Λειτουργία εκτός σύνδεσης</string>
     <string name="settings_offline_mode_supporting">Εμφάνιση μόνο μέσων που υπάρχουν ήδη σε αυτή τη συσκευή.</string>
 
@@ -72,7 +71,6 @@
     <string name="settings_hub_state_on">%1$s ενεργό</string>
     <string name="settings_hub_state_off">%1$s ανενεργό</string>
     <string name="settings_hub_storage_used">%1$s σε αυτή τη συσκευή</string>
-    <string name="settings_eyebrow_colour">Χρώμα</string>
     <string name="settings_eyebrow_during_playback">Κατά την αναπαραγωγή</string>
     <string name="settings_eyebrow_subtitles">Υπότιτλοι</string>
     <string name="settings_eyebrow_on_this_device">Σε αυτή τη συσκευή</string>

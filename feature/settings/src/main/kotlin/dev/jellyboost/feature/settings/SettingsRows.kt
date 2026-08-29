@@ -8,7 +8,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -16,6 +18,7 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.HorizontalDivider
@@ -42,6 +45,7 @@ import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
 import dev.jellyboost.core.ui.theme.mSurface
+import dev.jellyboost.core.ui.theme.pageInk
 
 // The invariant every row here upholds: the *whole* row is the touch target and carries the
 // semantics, and the control it contains (`Switch`, `RadioButton`) is inert. `toggleable`/
@@ -61,6 +65,13 @@ private val IdentityAvatarSize: Dp = 44.dp
 
 /** Between a row's leading circle and its text, and between its text and a trailing chevron. */
 private val RowGap: Dp = 14.dp
+
+// Same three values `:feature:downloads`' UsageBar draws; the two meters measure the same quantity.
+private val MeterHeight: Dp = 6.dp
+
+private val MeterRadius: Dp = 3.dp
+
+private const val METER_TRACK_ALPHA = 0.12f
 
 /**
  * A category page's section heading: an eyebrow rather than [JellyfinTypeExtras.SectionTitle],
@@ -392,12 +403,16 @@ internal fun SettingsActionRow(
 /**
  * One node: a caption and the fact it captions are not two pieces of information, and read as two
  * stops they arrive with a swipe in between.
+ *
+ * @param usedFraction draws a meter under [value]. It restates the figures [value] already gives in
+ *   words, so it is a picture of this node's text rather than a datum of its own.
  */
 @Composable
 internal fun SettingsInfoRow(
     label: String,
     value: String,
     modifier: Modifier = Modifier,
+    usedFraction: Float? = null,
 ) {
     Column(
         modifier =
@@ -417,6 +432,44 @@ internal fun SettingsInfoRow(
             text = value,
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurface,
+        )
+        if (usedFraction != null) {
+            InfoRowMeter(fraction = usedFraction)
+        }
+    }
+}
+
+/**
+ * Deliberately carries **no** `progressBarRangeInfo`, unlike `:feature:downloads`' `UsageBar`, and
+ * the difference is the text beside each. That one is drawn loose, three to a wide layout, with no
+ * sentence saying which volume it measures, so an explicit range is the only thing that makes it
+ * speak at all. This one sits inside a merged row whose own text already says "12.3 GB used · 41.0
+ * GB free on this device"; a progress node here would follow that sentence with a bare "23 percent"
+ * of nothing nameable. `MediaCardArtwork.InsetProgressBar` is the same call made the same way.
+ *
+ * Metrics and track ink match `UsageBar` exactly — two meters of the same quantity in one app should
+ * not be two different objects.
+ */
+@Composable
+private fun InfoRowMeter(fraction: Float) {
+    val shape = RoundedCornerShape(MeterRadius)
+    val clamped = fraction.coerceIn(0f, 1f)
+    Box(
+        modifier =
+            Modifier
+                .clearAndSetSemantics {}
+                .padding(top = Dimens.SpaceSmall)
+                .fillMaxWidth()
+                .height(MeterHeight)
+                .clip(shape)
+                .background(pageInk(darkAlpha = METER_TRACK_ALPHA)),
+    ) {
+        Box(
+            modifier =
+                Modifier
+                    .fillMaxWidth(clamped)
+                    .fillMaxHeight()
+                    .background(color = MaterialTheme.colorScheme.primary, shape = shape),
         )
     }
 }

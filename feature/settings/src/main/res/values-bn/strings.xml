@@ -33,7 +33,6 @@
         <item quantity="other">ডাউনলোড এখনও এক অবস্থান থেকে অন্য অবস্থানে সরানো যায় না, তাই এই ডিভাইসে থাকা %1$dটি মুছে ফেলা হবে। আপনি নতুন অবস্থানে সেগুলো আবার ডাউনলোড করতে পারবেন।</item>
     </plurals>
     <string name="settings_storage_switch_confirm">মুছে ফেলুন এবং পরিবর্তন করুন</string>
-    <string name="settings_section_connectivity">সংযোগ</string>
     <string name="settings_offline_mode">অফলাইন মোড</string>
     <string name="settings_offline_mode_supporting">শুধুমাত্র এই ডিভাইসে ইতিমধ্যে থাকা মিডিয়া দেখান।</string>
     <string name="settings_section_account">অ্যাকাউন্ট</string>
@@ -68,7 +67,6 @@
     <string name="settings_hub_state_on">%1$s চালু</string>
     <string name="settings_hub_state_off">%1$s বন্ধ</string>
     <string name="settings_hub_storage_used">এই ডিভাইসে %1$s</string>
-    <string name="settings_eyebrow_colour">রং</string>
     <string name="settings_eyebrow_during_playback">প্লেব্যাকের সময়</string>
     <string name="settings_eyebrow_subtitles">সাবটাইটেল</string>
     <string name="settings_eyebrow_on_this_device">এই ডিভাইসে</string>

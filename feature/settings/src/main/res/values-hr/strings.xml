@@ -37,7 +37,6 @@
     </plurals>
     <string name="settings_storage_switch_confirm">Izbriši i promijeni</string>
 
-    <string name="settings_section_connectivity">Povezivost</string>
     <string name="settings_offline_mode">Izvanmrežni način</string>
     <string name="settings_offline_mode_supporting">Prikaži samo sadržaj koji je već na ovom uređaju.</string>
 
@@ -73,7 +72,6 @@
     <string name="settings_hub_state_on">%1$s uključeno</string>
     <string name="settings_hub_state_off">%1$s isključeno</string>
     <string name="settings_hub_storage_used">%1$s na ovom uređaju</string>
-    <string name="settings_eyebrow_colour">Boja</string>
     <string name="settings_eyebrow_during_playback">Tijekom reprodukcije</string>
     <string name="settings_eyebrow_subtitles">Titlovi</string>
     <string name="settings_eyebrow_on_this_device">Na ovom uređaju</string>

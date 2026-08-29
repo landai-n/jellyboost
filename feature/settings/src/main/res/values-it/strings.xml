@@ -33,7 +33,6 @@
         <item quantity="other">I download non possono ancora essere spostati tra posizioni, quindi i %1$d già presenti su questo dispositivo verranno eliminati. Potrai scaricarli di nuovo nella nuova posizione.</item>
     </plurals>
     <string name="settings_storage_switch_confirm">Elimina e cambia</string>
-    <string name="settings_section_connectivity">Connettività</string>
     <string name="settings_offline_mode">Modalità offline</string>
     <string name="settings_offline_mode_supporting">Mostra solo i contenuti già presenti su questo dispositivo.</string>
     <string name="settings_section_account">Account</string>
@@ -68,7 +67,6 @@
     <string name="settings_hub_state_on">%1$s attivato</string>
     <string name="settings_hub_state_off">%1$s disattivato</string>
     <string name="settings_hub_storage_used">%1$s su questo dispositivo</string>
-    <string name="settings_eyebrow_colour">Colore</string>
     <string name="settings_eyebrow_during_playback">Durante la riproduzione</string>
     <string name="settings_eyebrow_subtitles">Sottotitoli</string>
     <string name="settings_eyebrow_on_this_device">Su questo dispositivo</string>

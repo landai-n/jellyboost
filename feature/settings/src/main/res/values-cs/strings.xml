@@ -38,7 +38,6 @@
     </plurals>
     <string name="settings_storage_switch_confirm">Smazat a přepnout</string>
 
-    <string name="settings_section_connectivity">Připojení</string>
     <string name="settings_offline_mode">Offline režim</string>
     <string name="settings_offline_mode_supporting">Zobrazovat pouze média, která už jsou v tomto zařízení.</string>
 
@@ -74,7 +73,6 @@
     <string name="settings_hub_state_on">%1$s zapnuto</string>
     <string name="settings_hub_state_off">%1$s vypnuto</string>
     <string name="settings_hub_storage_used">%1$s na tomto zařízení</string>
-    <string name="settings_eyebrow_colour">Barva</string>
     <string name="settings_eyebrow_during_playback">Během přehrávání</string>
     <string name="settings_eyebrow_subtitles">Titulky</string>
     <string name="settings_eyebrow_on_this_device">Na tomto zařízení</string>

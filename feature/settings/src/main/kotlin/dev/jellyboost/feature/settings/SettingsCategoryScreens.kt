@@ -494,6 +494,7 @@ private fun StorageRow(usage: StorageUsage) {
                 formatBytes(usage.usedBytes),
                 formatBytes(usage.availableBytes),
             ),
+        usedFraction = storageUsedFraction(usage.usedBytes, usage.availableBytes),
     )
     usage.rootPath?.let { path ->
         Text(
@@ -513,9 +514,13 @@ private fun StorageRow(usage: StorageUsage) {
 // --- Appearance ---------------------------------------------------------------------------------
 
 /**
- * The dynamic-colour row is **absent**, not disabled, below API 31 — the platform has no wallpaper
- * palette there, so the switch would be a control with nothing behind it. The section goes with it:
- * an eyebrow over an empty panel is worse than no section.
+ * One panel, and therefore no eyebrow: a section heading only earns its place on a page carrying
+ * more than one section, and here the screen title says what the panel is. The choice group keeps
+ * its own "Theme" caption — that is the group's a11y anchor, repeated into each row's
+ * `contentDescription`, not a heading.
+ *
+ * The dynamic-colour row is **absent**, not disabled, below API 31: the platform has no wallpaper
+ * palette there, so the switch would be a control with nothing behind it.
  */
 @Composable
 private fun AppearancePage(
@@ -524,7 +529,7 @@ private fun AppearancePage(
     onThemeMode: (ThemeMode) -> Unit,
     onDynamicColor: (Boolean) -> Unit,
 ) {
-    SettingsSection(title = stringResource(R.string.settings_theme)) {
+    SettingsPanel {
         val groupLabel = stringResource(R.string.settings_theme)
         SettingsChoiceGroup(label = groupLabel) {
             ThemeMode.entries.forEach { mode ->
@@ -536,9 +541,8 @@ private fun AppearancePage(
                 )
             }
         }
-    }
-    if (dynamicColorAvailable) {
-        SettingsSection(title = stringResource(R.string.settings_eyebrow_colour)) {
+        if (dynamicColorAvailable) {
+            SettingsRowSeparator()
             SettingsSwitchRow(
                 label = stringResource(R.string.settings_dynamic_color),
                 supportingText = stringResource(R.string.settings_dynamic_color_supporting),
@@ -551,12 +555,13 @@ private fun AppearancePage(
 
 // --- Network ------------------------------------------------------------------------------------
 
+/** One panel, so no eyebrow — the screen title already names it. */
 @Composable
 private fun NetworkPage(
     forceOffline: Boolean,
     onForceOffline: (Boolean) -> Unit,
 ) {
-    SettingsSection(title = stringResource(R.string.settings_section_connectivity)) {
+    SettingsPanel {
         SettingsSwitchRow(
             label = stringResource(R.string.settings_offline_mode),
             supportingText = stringResource(R.string.settings_offline_mode_supporting),
@@ -588,7 +593,7 @@ private fun AccountPage(
     // rotation, which does not leave it, keeps it.
     var confirmingSignOut by rememberSaveable { mutableStateOf(false) }
 
-    SettingsSection(title = stringResource(R.string.settings_section_account)) {
+    SettingsPanel {
         SettingsInfoRow(
             label = stringResource(R.string.settings_account_user),
             value = account?.userName ?: stringResource(R.string.settings_account_unknown),
@@ -694,7 +699,7 @@ private fun AboutPage(
     onOpenLicence: () -> Unit,
     onOpenThirdPartyLicences: () -> Unit,
 ) {
-    SettingsSection(title = stringResource(R.string.settings_section_about)) {
+    SettingsPanel {
         SettingsInfoRow(
             label = stringResource(R.string.settings_version),
             value = appVersion,

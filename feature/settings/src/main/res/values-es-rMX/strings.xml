@@ -33,7 +33,6 @@
         <item quantity="other">Las descargas aún no se pueden mover entre ubicaciones, así que las %1$d que ya están en este dispositivo se eliminarán. Puedes volver a descargarlas en la nueva ubicación.</item>
     </plurals>
     <string name="settings_storage_switch_confirm">Eliminar y cambiar</string>
-    <string name="settings_section_connectivity">Conectividad</string>
     <string name="settings_offline_mode">Modo sin conexión</string>
     <string name="settings_offline_mode_supporting">Mostrar solo el contenido que ya está en este dispositivo.</string>
     <string name="settings_section_account">Cuenta</string>
@@ -68,7 +67,6 @@
     <string name="settings_hub_state_on">%1$s activado</string>
     <string name="settings_hub_state_off">%1$s desactivado</string>
     <string name="settings_hub_storage_used">%1$s en este dispositivo</string>
-    <string name="settings_eyebrow_colour">Color</string>
     <string name="settings_eyebrow_during_playback">Durante la reproducción</string>
     <string name="settings_eyebrow_subtitles">Subtítulos</string>
     <string name="settings_eyebrow_on_this_device">En este dispositivo</string>

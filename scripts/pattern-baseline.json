@@ -52,6 +52,7 @@
     "core/common/src/main/kotlin/dev/jellyboost/core/common/model/LibraryView.kt": 2,
     "core/common/src/main/kotlin/dev/jellyboost/core/common/model/Person.kt": 2,
     "core/common/src/main/kotlin/dev/jellyboost/core/common/model/SegmentSkipMode.kt": 2,
+    "core/common/src/main/kotlin/dev/jellyboost/core/common/model/SubtitleAppearance.kt": 2,
     "core/common/src/main/kotlin/dev/jellyboost/core/common/model/ThemeMode.kt": 1,
     "core/common/src/main/kotlin/dev/jellyboost/core/common/model/UserData.kt": 1,
     "core/common/src/main/kotlin/dev/jellyboost/core/common/music/Lyrics.kt": 2,

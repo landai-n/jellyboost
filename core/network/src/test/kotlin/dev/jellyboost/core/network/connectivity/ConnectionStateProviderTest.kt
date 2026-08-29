@@ -3,6 +3,8 @@ package dev.jellyboost.core.network.connectivity
 import app.cash.turbine.test
 import dev.jellyboost.core.common.model.DownloadQuality
 import dev.jellyboost.core.common.model.SegmentSkipMode
+import dev.jellyboost.core.common.model.SubtitleBackground
+import dev.jellyboost.core.common.model.SubtitleTextSize
 import dev.jellyboost.core.common.model.ThemeMode
 import dev.jellyboost.core.datastore.AppPreferences
 import dev.jellyboost.core.network.ConnectionState
@@ -42,6 +44,9 @@ class ConnectionStateProviderTest {
     private val monitor =
         object : ConnectivityMonitor {
             override val hasNetwork: Flow<Boolean> = hasNetworkFlow
+
+            // Nothing under test here reads the metered signal; it is the Downloads screen's input.
+            override val isMetered: Flow<Boolean> = MutableStateFlow(false)
         }
 
     private val preferences =
@@ -87,6 +92,15 @@ class ConnectionStateProviderTest {
             override val styledAssSubtitles: Flow<Boolean> = MutableStateFlow(false)
 
             override suspend fun setStyledAssSubtitles(enabled: Boolean) = Unit
+
+            override val subtitleTextSize: Flow<SubtitleTextSize> = MutableStateFlow(SubtitleTextSize.SYSTEM)
+
+            override suspend fun setSubtitleTextSize(size: SubtitleTextSize) = Unit
+
+            override val subtitleBackground: Flow<SubtitleBackground> =
+                MutableStateFlow(SubtitleBackground.SYSTEM)
+
+            override suspend fun setSubtitleBackground(background: SubtitleBackground) = Unit
 
             override val maxStreamingBitrate: Flow<Int?> = MutableStateFlow(null)
 

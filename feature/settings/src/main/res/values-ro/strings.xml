@@ -66,4 +66,14 @@
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Subtitrări ASS stilizate</string>
     <string name="settings_styled_ass_supporting">Desenează ASS/SSA cu libass: fonturi, poziționare și efecte. Experimental; se aplică următorului videoclip pornit când nu se redă nimic altceva.</string>
+    <string name="settings_hub_state_on">%1$s activat</string>
+    <string name="settings_hub_state_off">%1$s dezactivat</string>
+    <string name="settings_hub_storage_used">%1$s pe acest dispozitiv</string>
+    <string name="settings_eyebrow_colour">Culoare</string>
+    <string name="settings_eyebrow_during_playback">În timpul redării</string>
+    <string name="settings_eyebrow_subtitles">Subtitrări</string>
+    <string name="settings_eyebrow_on_this_device">Pe acest dispozitiv</string>
+    <string name="settings_eyebrow_over_the_network">Prin rețea</string>
+    <string name="settings_eyebrow_quality">Calitate</string>
+    <string name="settings_section_network">Rețea</string>
 </resources>

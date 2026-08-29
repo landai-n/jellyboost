@@ -69,4 +69,14 @@
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">శైలితో కూడిన ASS ఉపశీర్షికలు</string>
     <string name="settings_styled_ass_supporting">libass తో ASS/SSA ను గీస్తుంది: ఫాంట్‌లు, స్థానం, ప్రభావాలు. ప్రయోగాత్మకం; మరేదీ ప్లే కానప్పుడు మీరు తర్వాత ప్రారంభించే వీడియోకు వర్తిస్తుంది.</string>
+    <string name="settings_hub_state_on">%1$s ఆన్‌లో ఉంది</string>
+    <string name="settings_hub_state_off">%1$s ఆఫ్‌లో ఉంది</string>
+    <string name="settings_hub_storage_used">ఈ పరికరంలో %1$s</string>
+    <string name="settings_eyebrow_colour">రంగు</string>
+    <string name="settings_eyebrow_during_playback">ప్లేబ్యాక్ సమయంలో</string>
+    <string name="settings_eyebrow_subtitles">ఉపశీర్షికలు</string>
+    <string name="settings_eyebrow_on_this_device">ఈ పరికరంలో</string>
+    <string name="settings_eyebrow_over_the_network">నెట్‌వర్క్ ద్వారా</string>
+    <string name="settings_eyebrow_quality">నాణ్యత</string>
+    <string name="settings_section_network">నెట్‌వర్క్</string>
 </resources>

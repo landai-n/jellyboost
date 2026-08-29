@@ -65,4 +65,14 @@
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Subtítols ASS amb estil</string>
     <string name="settings_styled_ass_supporting">Dibuixa ASS/SSA amb libass: tipografies, posició i efectes. Experimental; s\'aplica al pròxim vídeo que iniciïs quan no s\'estigui reproduint res més.</string>
+    <string name="settings_hub_state_on">%1$s activat</string>
+    <string name="settings_hub_state_off">%1$s desactivat</string>
+    <string name="settings_hub_storage_used">%1$s en aquest dispositiu</string>
+    <string name="settings_eyebrow_colour">Color</string>
+    <string name="settings_eyebrow_during_playback">Durant la reproducció</string>
+    <string name="settings_eyebrow_subtitles">Subtítols</string>
+    <string name="settings_eyebrow_on_this_device">En aquest dispositiu</string>
+    <string name="settings_eyebrow_over_the_network">A través de la xarxa</string>
+    <string name="settings_eyebrow_quality">Qualitat</string>
+    <string name="settings_section_network">Xarxa</string>
 </resources>

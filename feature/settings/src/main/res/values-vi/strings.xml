@@ -64,4 +64,14 @@
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Phụ đề ASS có định dạng</string>
     <string name="settings_styled_ass_supporting">Vẽ ASS/SSA bằng libass: phông chữ, vị trí và hiệu ứng. Thử nghiệm; áp dụng cho video bạn mở tiếp theo khi không có gì khác đang phát.</string>
+    <string name="settings_hub_state_on">%1$s đang bật</string>
+    <string name="settings_hub_state_off">%1$s đang tắt</string>
+    <string name="settings_hub_storage_used">%1$s trên thiết bị này</string>
+    <string name="settings_eyebrow_colour">Màu sắc</string>
+    <string name="settings_eyebrow_during_playback">Trong khi phát</string>
+    <string name="settings_eyebrow_subtitles">Phụ đề</string>
+    <string name="settings_eyebrow_on_this_device">Trên thiết bị này</string>
+    <string name="settings_eyebrow_over_the_network">Qua mạng</string>
+    <string name="settings_eyebrow_quality">Chất lượng</string>
+    <string name="settings_section_network">Mạng</string>
 </resources>

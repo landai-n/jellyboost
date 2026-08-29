@@ -69,4 +69,14 @@
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">زیرنویس‌های ASS سبک‌دار</string>
     <string name="settings_styled_ass_supporting">ASS/SSA را با libass می‌کشد: قلم‌ها، موقعیت و جلوه‌ها. آزمایشی؛ وقتی چیز دیگری در حال پخش نباشد، از ویدیوی بعدی اعمال می‌شود.</string>
+    <string name="settings_hub_state_on">%1$s روشن</string>
+    <string name="settings_hub_state_off">%1$s خاموش</string>
+    <string name="settings_hub_storage_used">%1$s روی این دستگاه</string>
+    <string name="settings_eyebrow_colour">رنگ</string>
+    <string name="settings_eyebrow_during_playback">هنگام پخش</string>
+    <string name="settings_eyebrow_subtitles">زیرنویس‌ها</string>
+    <string name="settings_eyebrow_on_this_device">روی این دستگاه</string>
+    <string name="settings_eyebrow_over_the_network">از طریق شبکه</string>
+    <string name="settings_eyebrow_quality">کیفیت</string>
+    <string name="settings_section_network">شبکه</string>
 </resources>

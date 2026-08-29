@@ -65,4 +65,14 @@
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Biçimli ASS altyazıları</string>
     <string name="settings_styled_ass_supporting">ASS/SSA\'yı libass ile çizer: yazı tipleri, konumlandırma ve efektler. Deneysel; başka bir şey çalmıyorken başlattığınız bir sonraki videoda geçerli olur.</string>
+    <string name="settings_hub_state_on">%1$s açık</string>
+    <string name="settings_hub_state_off">%1$s kapalı</string>
+    <string name="settings_hub_storage_used">Bu cihazda %1$s</string>
+    <string name="settings_eyebrow_colour">Renk</string>
+    <string name="settings_eyebrow_during_playback">Oynatma sırasında</string>
+    <string name="settings_eyebrow_subtitles">Altyazılar</string>
+    <string name="settings_eyebrow_on_this_device">Bu cihazda</string>
+    <string name="settings_eyebrow_over_the_network">Ağ üzerinden</string>
+    <string name="settings_eyebrow_quality">Kalite</string>
+    <string name="settings_section_network">Ağ</string>
 </resources>

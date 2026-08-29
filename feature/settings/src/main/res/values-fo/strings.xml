@@ -69,4 +69,14 @@
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Stílaðir ASS-undirtekstir</string>
     <string name="settings_styled_ass_supporting">Tekna ASS/SSA við libass: stavasnið, staðseting og brellur. Royndarført; virkar á næsta video, tú byrjar, tá einki annað spælir.</string>
+    <string name="settings_hub_state_on">%1$s kveikt</string>
+    <string name="settings_hub_state_off">%1$s sløkt</string>
+    <string name="settings_hub_storage_used">%1$s á hesum tólinum</string>
+    <string name="settings_eyebrow_colour">Litur</string>
+    <string name="settings_eyebrow_during_playback">Meðan avspælt verður</string>
+    <string name="settings_eyebrow_subtitles">Undirtekstir</string>
+    <string name="settings_eyebrow_on_this_device">Á hesum tólinum</string>
+    <string name="settings_eyebrow_over_the_network">Um netið</string>
+    <string name="settings_eyebrow_quality">Góðska</string>
+    <string name="settings_section_network">Net</string>
 </resources>

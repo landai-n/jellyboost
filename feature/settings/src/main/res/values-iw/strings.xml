@@ -71,4 +71,14 @@
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">כתוביות ASS מעוצבות</string>
     <string name="settings_styled_ass_supporting">מצייר ASS/SSA באמצעות libass: גופנים, מיקום ואפקטים. ניסיוני; חל על הסרטון הבא שתפעיל כשלא מתנגן דבר אחר.</string>
+    <string name="settings_hub_state_on">%1$s פעיל</string>
+    <string name="settings_hub_state_off">%1$s כבוי</string>
+    <string name="settings_hub_storage_used">%1$s במכשיר זה</string>
+    <string name="settings_eyebrow_colour">צבע</string>
+    <string name="settings_eyebrow_during_playback">במהלך הפעלה</string>
+    <string name="settings_eyebrow_subtitles">כתוביות</string>
+    <string name="settings_eyebrow_on_this_device">במכשיר זה</string>
+    <string name="settings_eyebrow_over_the_network">דרך הרשת</string>
+    <string name="settings_eyebrow_quality">איכות</string>
+    <string name="settings_section_network">רשת</string>
 </resources>

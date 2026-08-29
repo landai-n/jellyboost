@@ -64,4 +64,14 @@
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Subtitle ASS bergaya</string>
     <string name="settings_styled_ass_supporting">Menggambar ASS/SSA dengan libass: font, posisi, dan efek. Eksperimental; berlaku untuk video berikutnya yang Anda putar saat tidak ada yang sedang diputar.</string>
+    <string name="settings_hub_state_on">%1$s aktif</string>
+    <string name="settings_hub_state_off">%1$s nonaktif</string>
+    <string name="settings_hub_storage_used">%1$s di perangkat ini</string>
+    <string name="settings_eyebrow_colour">Warna</string>
+    <string name="settings_eyebrow_during_playback">Saat pemutaran</string>
+    <string name="settings_eyebrow_subtitles">Subtitle</string>
+    <string name="settings_eyebrow_on_this_device">Di perangkat ini</string>
+    <string name="settings_eyebrow_over_the_network">Melalui jaringan</string>
+    <string name="settings_eyebrow_quality">Kualitas</string>
+    <string name="settings_section_network">Jaringan</string>
 </resources>

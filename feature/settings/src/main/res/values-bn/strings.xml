@@ -65,4 +65,14 @@
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">স্টাইলযুক্ত ASS সাবটাইটেল</string>
     <string name="settings_styled_ass_supporting">libass দিয়ে ASS/SSA আঁকে: ফন্ট, অবস্থান ও এফেক্ট। পরীক্ষামূলক; অন্য কিছু না চললে পরের বার ভিডিও চালু করলে কার্যকর হবে।</string>
+    <string name="settings_hub_state_on">%1$s চালু</string>
+    <string name="settings_hub_state_off">%1$s বন্ধ</string>
+    <string name="settings_hub_storage_used">এই ডিভাইসে %1$s</string>
+    <string name="settings_eyebrow_colour">রং</string>
+    <string name="settings_eyebrow_during_playback">প্লেব্যাকের সময়</string>
+    <string name="settings_eyebrow_subtitles">সাবটাইটেল</string>
+    <string name="settings_eyebrow_on_this_device">এই ডিভাইসে</string>
+    <string name="settings_eyebrow_over_the_network">নেটওয়ার্কের মাধ্যমে</string>
+    <string name="settings_eyebrow_quality">মান</string>
+    <string name="settings_section_network">নেটওয়ার্ক</string>
 </resources>

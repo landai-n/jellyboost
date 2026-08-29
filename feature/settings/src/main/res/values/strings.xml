@@ -2,8 +2,18 @@
 <resources>
     <string name="settings_title">Settings</string>
 
+    <!-- Hub — one row per category, each summarised by its own current state.
+         The two state frames are format strings so a language can put the word first; %1$s is
+         always a preference's own label, resolved in the same locale at draw time. -->
+    <string name="settings_hub_state_on">%1$s on</string>
+    <string name="settings_hub_state_off">%1$s off</string>
+    <string name="settings_hub_storage_used">%1$s on this device</string>
+    <!-- Product name plus its version; neither half is translated. -->
+    <string name="settings_hub_version" translatable="false">Jellyboost %1$s</string>
+
     <!-- Appearance -->
     <string name="settings_section_appearance">Appearance</string>
+    <string name="settings_eyebrow_colour">Colour</string>
     <string name="settings_theme">Theme</string>
     <string name="settings_theme_system">Follow the device</string>
     <string name="settings_theme_light">Light</string>
@@ -14,6 +24,8 @@
 
     <!-- Playback -->
     <string name="settings_section_playback">Playback</string>
+    <string name="settings_eyebrow_during_playback">During playback</string>
+    <string name="settings_eyebrow_subtitles">Subtitles</string>
     <string name="settings_skip_intro">Skip intro</string>
     <string name="settings_skip_outro">Skip outro</string>
     <string name="settings_skip_mode_off">Do nothing</string>
@@ -27,6 +39,9 @@
 
     <!-- Downloads -->
     <string name="settings_section_downloads">Downloads</string>
+    <string name="settings_eyebrow_on_this_device">On this device</string>
+    <string name="settings_eyebrow_over_the_network">Over the network</string>
+    <string name="settings_eyebrow_quality">Quality</string>
     <string name="settings_wifi_only">Wi‑Fi only</string>
     <string name="settings_wifi_only_supporting">Pause downloads on mobile data.</string>
     <string name="settings_quality">Download quality</string>
@@ -55,6 +70,9 @@
     <string name="settings_storage_switch_confirm">Delete and switch</string>
 
     <!-- Connectivity -->
+    <!-- The hub's category name for the connectivity rows; `settings_section_connectivity` is the
+         heading *inside* the page, where the longer word has room to read correctly. -->
+    <string name="settings_section_network">Network</string>
     <string name="settings_section_connectivity">Connectivity</string>
     <string name="settings_offline_mode">Offline mode</string>
     <string name="settings_offline_mode_supporting">Only show media that is already on this device.</string>
@@ -78,6 +96,8 @@
     <string name="settings_licence">Licence</string>
     <!-- The licence is named by its stewards and is the same name in every language. -->
     <string name="settings_licence_name" translatable="false">GNU General Public License v3.0 or later</string>
+    <!-- The SPDX identifier, for the hub summary where the full name will not fit. -->
+    <string name="settings_licence_short" translatable="false">GPL-3.0</string>
     <string name="settings_licence_intro">Jellyboost is free software: you may use, study, share and change it under the terms of the GNU General Public License, version 3 or any later version. It comes with no warranty.</string>
     <string name="settings_third_party">Third-party licences</string>
     <string name="settings_third_party_supporting">The open-source components this app is built with.</string>

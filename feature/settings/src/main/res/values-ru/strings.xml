@@ -71,4 +71,14 @@
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Стилизованные субтитры ASS</string>
     <string name="settings_styled_ass_supporting">Рисует ASS/SSA через libass: шрифты, позиционирование и эффекты. Экспериментально; применяется со следующего запущенного видео, когда ничего другого не воспроизводится.</string>
+    <string name="settings_hub_state_on">%1$s включено</string>
+    <string name="settings_hub_state_off">%1$s выключено</string>
+    <string name="settings_hub_storage_used">%1$s на этом устройстве</string>
+    <string name="settings_eyebrow_colour">Цвет</string>
+    <string name="settings_eyebrow_during_playback">Во время воспроизведения</string>
+    <string name="settings_eyebrow_subtitles">Субтитры</string>
+    <string name="settings_eyebrow_on_this_device">На этом устройстве</string>
+    <string name="settings_eyebrow_over_the_network">По сети</string>
+    <string name="settings_eyebrow_quality">Качество</string>
+    <string name="settings_section_network">Сеть</string>
 </resources>

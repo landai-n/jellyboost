@@ -36,7 +36,6 @@
     </plurals>
     <string name="settings_storage_switch_confirm">حذف کریں اور تبدیل کریں</string>
 
-    <string name="settings_section_connectivity">کنیکٹیویٹی</string>
     <string name="settings_offline_mode">آف لائن موڈ</string>
     <string name="settings_offline_mode_supporting">صرف وہ میڈیا دکھائیں جو پہلے سے اس ڈیوائس پر موجود ہے۔</string>
 
@@ -69,4 +68,13 @@
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">اسٹائل شدہ ASS سب ٹائٹلز</string>
     <string name="settings_styled_ass_supporting">libass کے ذریعے ASS/SSA بناتا ہے: فونٹس، جگہ اور اثرات۔ تجرباتی؛ جب کچھ اور نہ چل رہا ہو تو اگلی بار ویڈیو چلانے پر لاگو ہوگا۔</string>
+    <string name="settings_hub_state_on">%1$s آن</string>
+    <string name="settings_hub_state_off">%1$s آف</string>
+    <string name="settings_hub_storage_used">اس ڈیوائس پر %1$s</string>
+    <string name="settings_eyebrow_during_playback">پلے بیک کے دوران</string>
+    <string name="settings_eyebrow_subtitles">سب ٹائٹلز</string>
+    <string name="settings_eyebrow_on_this_device">اس ڈیوائس پر</string>
+    <string name="settings_eyebrow_over_the_network">نیٹ ورک کے ذریعے</string>
+    <string name="settings_eyebrow_quality">کوالٹی</string>
+    <string name="settings_section_network">نیٹ ورک</string>
 </resources>

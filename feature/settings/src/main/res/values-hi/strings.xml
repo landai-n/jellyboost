@@ -39,7 +39,6 @@
     <string name="settings_storage_switch_confirm">हटाएँ और बदलें</string>
 
     <!-- Connectivity -->
-    <string name="settings_section_connectivity">कनेक्टिविटी</string>
     <string name="settings_offline_mode">ऑफ़लाइन मोड</string>
     <string name="settings_offline_mode_supporting">केवल वही मीडिया दिखाएँ जो पहले से इस डिवाइस पर है।</string>
 
@@ -73,4 +72,13 @@
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">स्टाइल वाले ASS उपशीर्षक</string>
     <string name="settings_styled_ass_supporting">libass से ASS/SSA बनाता है: फ़ॉन्ट, स्थिति और प्रभाव। प्रायोगिक; जब कुछ और न चल रहा हो, तब अगली बार वीडियो चलाने पर लागू होगा।</string>
+    <string name="settings_hub_state_on">%1$s चालू</string>
+    <string name="settings_hub_state_off">%1$s बंद</string>
+    <string name="settings_hub_storage_used">इस डिवाइस पर %1$s</string>
+    <string name="settings_eyebrow_during_playback">प्लेबैक के दौरान</string>
+    <string name="settings_eyebrow_subtitles">उपशीर्षक</string>
+    <string name="settings_eyebrow_on_this_device">इस डिवाइस पर</string>
+    <string name="settings_eyebrow_over_the_network">नेटवर्क के ज़रिए</string>
+    <string name="settings_eyebrow_quality">गुणवत्ता</string>
+    <string name="settings_section_network">नेटवर्क</string>
 </resources>

@@ -33,7 +33,6 @@
         <item quantity="other">Downloads ainda não podem ser movidos entre locais, então os %1$d já neste dispositivo serão excluídos. Você pode baixá-los novamente no novo local.</item>
     </plurals>
     <string name="settings_storage_switch_confirm">Excluir e mudar</string>
-    <string name="settings_section_connectivity">Conectividade</string>
     <string name="settings_offline_mode">Modo offline</string>
     <string name="settings_offline_mode_supporting">Mostrar apenas mídia que já está neste dispositivo.</string>
     <string name="settings_section_account">Conta</string>
@@ -65,4 +64,13 @@
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Legendas ASS estilizadas</string>
     <string name="settings_styled_ass_supporting">Desenha ASS/SSA com libass: fontes, posicionamento e efeitos. Experimental; vale para o próximo vídeo que você iniciar quando nada mais estiver em reprodução.</string>
+    <string name="settings_hub_state_on">%1$s ativado</string>
+    <string name="settings_hub_state_off">%1$s desativado</string>
+    <string name="settings_hub_storage_used">%1$s neste dispositivo</string>
+    <string name="settings_eyebrow_during_playback">Durante a reprodução</string>
+    <string name="settings_eyebrow_subtitles">Legendas</string>
+    <string name="settings_eyebrow_on_this_device">Neste dispositivo</string>
+    <string name="settings_eyebrow_over_the_network">Pela rede</string>
+    <string name="settings_eyebrow_quality">Qualidade</string>
+    <string name="settings_section_network">Rede</string>
 </resources>

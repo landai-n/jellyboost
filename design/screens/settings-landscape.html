@@ -1,0 +1,164 @@
+<!-- @dsCard viewport="1000x860" group="Screens" name="Settings — two-pane (landscape tablet)" subtitle="≥840dp: the hub becomes a 340dp rail and the category opens beside it, so nothing sits a level deeper than on a phone. The rail carries the only Back; the pane has none. Below 840dp the phone push flow is used verbatim." -->
+<link rel="stylesheet" href="../_shared/modern.css">
+<style>
+  * { box-sizing:border-box; }
+  body { margin:0; }
+  /* Only token this sheet adds: the muted rationale-note ink the other screens inline. */
+  :root { --note-fg:rgba(255,255,255,.45); }
+  [data-theme="light"] { --note-fg:rgba(31,35,48,.55); }
+  .tablet { width:1000px; min-height:860px; margin:0 auto; }
+
+    .screen{position:relative;background:var(--background);color:var(--on-background);overflow:hidden}
+    .glow{position:absolute;left:0;right:0;top:0;height:320px;pointer-events:none}
+
+    /* ScreenHeader: HeaderPadding 20dp gutter, 8dp gaps, 36dp GlassIconButtons, ScreenTitle 28sp/W700/-.02em */
+    .hdr{position:relative;display:flex;align-items:center;gap:8px;padding:24px 20px 8px}
+    .iconbtn{width:36px;height:36px;border-radius:50%;background:var(--glass-bg);border:1px solid var(--glass-line);display:flex;align-items:center;justify-content:center;flex:none}
+    .iconbtn svg{width:18px;height:18px;fill:var(--icon-fg)}
+    .htitle{font-size:28px;font-weight:700;letter-spacing:-.02em;padding-left:4px}
+
+    /* ScreenPadding 16dp gutter under a 20dp header — the app's two gutters, deliberately unequal */
+    .content{position:relative;padding:8px 16px 32px;display:flex;flex-direction:column;gap:24px}
+    .sec{display:flex;flex-direction:column;gap:8px}
+    .eyebrow{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--on-surface-variant);padding-left:4px}
+    .panel{background:var(--surface);border:1px solid var(--hairline);border-radius:16px;overflow:hidden}
+
+    .row{display:flex;align-items:center;gap:14px;padding:14px 16px;min-height:48px}
+    .row+.row,.grp+.row,.row+.grp,.grp+.grp,.inforow+.row,.row+.inforow,.grp+.inforow,.inforow+.grp,.caption+.grp,.caption+.row{border-top:1px solid var(--hairline)}
+    .ic{width:36px;height:36px;border-radius:50%;background:var(--glass-bg);border:1px solid var(--glass-line);display:flex;align-items:center;justify-content:center;flex:none}
+    .ic svg{width:18px;height:18px;fill:var(--icon-fg)}
+    .ic.danger{background:var(--error-bg);border-color:var(--error-line)}
+    .ic.danger svg{fill:var(--error-fg)}
+    .tx{flex:1;min-width:0}
+    .nm{font-size:15px;font-weight:600;line-height:20px}
+    .nm.danger{color:var(--error-fg)}
+    .sb{font-size:12px;line-height:16px;color:var(--on-surface-variant);margin-top:2px}
+    .chev{width:20px;height:20px;flex:none;fill:var(--on-surface-variant)}
+    .av{width:44px;height:44px;border-radius:50%;flex:none;background:linear-gradient(160deg,#3a5f3f,#7fa06a 55%,#b0c4a0)}
+
+    /* Switch is inert; the row owns the toggle (SettingsRows.kt invariant) */
+    .sw{width:42px;height:24px;border-radius:12px;background:var(--track);position:relative;flex:none}
+    .sw::after{content:"";position:absolute;width:20px;height:20px;border-radius:50%;background:var(--outline);top:2px;left:2px}
+    .sw.on{background:var(--primary)}
+    .sw.on::after{background:#ffffff;left:20px}
+
+    /* Choice group: unchanged from SettingsRows.kt — muted labelLarge caption, one row per
+       option, radio trailing, whole row selectable inside a selectableGroup */
+    .grpcap{font-size:14px;font-weight:500;line-height:20px;color:var(--on-surface-variant);padding:12px 16px 4px}
+    .crow{display:flex;align-items:center;gap:14px;padding:6px 16px;min-height:48px}
+    .radio{width:20px;height:20px;border-radius:50%;border:2px solid var(--outline);flex:none;position:relative}
+    .radio.sel{border-color:var(--primary)}
+    .radio.sel::after{content:"";position:absolute;inset:3px;border-radius:50%;background:var(--primary)}
+    .grp{display:flex;flex-direction:column;padding-bottom:8px}
+
+    .inforow{display:flex;flex-direction:column;gap:2px;padding:14px 16px}
+    .infolbl{font-size:12px;line-height:16px;color:var(--on-surface-variant)}
+    .infoval{font-size:15px;font-weight:600;line-height:20px}
+    .bar{height:6px;border-radius:3px;background:var(--track);overflow:hidden;margin-top:10px}
+    .barfill{height:100%;border-radius:3px;background:var(--primary)}
+
+    .pill{padding:2px 8px;border-radius:6px;border:1px solid var(--outline);font-size:11px;font-weight:600;letter-spacing:.04em;color:var(--on-surface-variant);flex:none}
+    .planned{opacity:.58}
+    .caption{font-size:12px;line-height:16px;color:var(--on-surface-variant);padding:0 16px 14px}
+    .note{font-size:11px;line-height:16px;color:var(--note-fg)}
+    .note b{color:var(--on-surface-variant);font-weight:600}
+    .ghost{display:flex;align-items:center;justify-content:center;height:44px;border-radius:999px;background:var(--glass-bg);border:1px solid var(--ghost-line);font-size:14px;font-weight:600;color:var(--on-background)}
+  
+    /* Two-pane, >=840dp: the rail is the hub, the pane is the open category */
+    .tablet{position:relative;display:flex;background:var(--background);color:var(--on-background);overflow:hidden}
+    .rail{width:340px;flex:none;border-right:1px solid var(--hairline);display:flex;flex-direction:column;position:relative}
+    .raillist{display:flex;flex-direction:column;gap:2px;padding:8px 12px 24px}
+    .railrow{display:flex;align-items:center;gap:14px;padding:12px 12px;min-height:48px;border-radius:12px;border:1px solid transparent}
+    .railrow.sel{background:var(--glass-bg);border-color:var(--glass-line)}
+    .pane{flex:1;min-width:0;position:relative;display:flex;flex-direction:column}
+    .panehdr{padding:24px 24px 4px;font-size:22px;font-weight:700;letter-spacing:-.02em}
+    .panebody{padding:12px 24px 24px;display:flex;flex-direction:column;gap:24px;max-width:688px}
+
+    /* Anatomy sheet */
+    .sheet{background:var(--background);color:var(--on-background);padding:28px 32px 32px;display:flex;flex-direction:column;gap:22px}
+    .sheettitle{font-size:24px;font-weight:700;letter-spacing:-.02em}
+    .spec{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+    .specitem{display:flex;flex-direction:column;gap:8px}
+    .speclbl{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--on-surface-variant)}
+  </style>
+<div class="tablet">
+  <div class="glow"></div>
+
+  <div class="rail">
+    <div class="hdr">
+      <div class="iconbtn"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></div>
+      <div class="htitle" style="font-size: 30px">Settings</div>
+    </div>
+    <div class="raillist">
+      <div class="railrow">
+        <div class="av" style="width: 36px; height: 36px"></div>
+        <div class="tx"><div class="nm">Sam</div><div class="sb">lighthouse &middot; 192.168.1.10</div></div>
+      </div>
+      <div class="railrow sel">
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+        <div class="tx"><div class="nm">Playback</div><div class="sb">Auto-skip intro &middot; Picture-in-picture on</div></div>
+      </div>
+      <div class="railrow">
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg></div>
+        <div class="tx"><div class="nm">Downloads</div><div class="sb">Wi-Fi only &middot; 12.3 GB on this device</div></div>
+      </div>
+      <div class="railrow">
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M12 22c5.52 0 10-4.48 10-10S17.52 2 12 2 2 6.48 2 12s4.48 10 10 10zm0-18v16c-4.41 0-8-3.59-8-8s3.59-8 8-8z"/></svg></div>
+        <div class="tx"><div class="nm">Appearance</div><div class="sb">Follow system &middot; Dynamic colour on</div></div>
+      </div>
+      <div class="railrow">
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg></div>
+        <div class="tx"><div class="nm">Network</div><div class="sb">Offline mode off</div></div>
+      </div>
+      <div class="railrow">
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg></div>
+        <div class="tx"><div class="nm">About</div><div class="sb">Jellyboost 0.1.0 &middot; GPL-3.0</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pane">
+    <div class="panehdr">Playback</div>
+    <div class="panebody">
+      <div class="sec">
+        <div class="eyebrow">During playback</div>
+        <div class="panel">
+          <div class="grp">
+            <div class="grpcap">Skip intro</div>
+            <div class="crow"><div class="tx"><div class="nm">Do nothing</div></div><div class="radio"></div></div>
+            <div class="crow"><div class="tx"><div class="nm">Show a skip button</div></div><div class="radio"></div></div>
+            <div class="crow"><div class="tx"><div class="nm">Skip automatically</div></div><div class="radio sel"></div></div>
+          </div>
+          <div class="grp">
+            <div class="grpcap">Skip outro</div>
+            <div class="crow"><div class="tx"><div class="nm">Do nothing</div></div><div class="radio"></div></div>
+            <div class="crow"><div class="tx"><div class="nm">Show a skip button</div></div><div class="radio sel"></div></div>
+            <div class="crow"><div class="tx"><div class="nm">Skip automatically</div></div><div class="radio"></div></div>
+          </div>
+          <div class="row">
+            <div class="tx">
+              <div class="nm">Picture&#8209;in&#8209;picture</div>
+              <div class="sb">Keep playing in a floating window when you leave the app.</div>
+            </div>
+            <div class="sw on"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="eyebrow">Subtitles</div>
+        <div class="panel">
+          <div class="row">
+            <div class="tx">
+              <div class="nm">Styled ASS subtitles</div>
+              <div class="sb">Draws ASS/SSA with libass: fonts, positioning and effects. Experimental; applies to the next video you start with nothing else playing.</div>
+            </div>
+            <div class="sw"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="note">At <b>&ge;840dp</b> the hub becomes the rail and the category opens beside it, so nothing is a level deeper than it is on a phone today. Below 840dp the tablet uses the phone flow verbatim &mdash; hub pushes detail, Back returns. The rail carries the only <b>Back</b> on the screen and the pane has none of its own; <b>Home</b> is reached from the nav rail, never from a header.</div>
+    </div>
+  </div>
+</div>

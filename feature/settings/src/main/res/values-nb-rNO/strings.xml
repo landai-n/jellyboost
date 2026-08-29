@@ -36,7 +36,6 @@
     </plurals>
     <string name="settings_storage_switch_confirm">Slett og bytt</string>
 
-    <string name="settings_section_connectivity">Tilkobling</string>
     <string name="settings_offline_mode">Offline-modus</string>
     <string name="settings_offline_mode_supporting">Vis bare innhold som allerede er på denne enheten.</string>
 
@@ -69,4 +68,13 @@
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Stiliserte ASS-undertekster</string>
     <string name="settings_styled_ass_supporting">Tegner ASS/SSA med libass: skrifter, plassering og effekter. Eksperimentelt; gjelder neste video du starter når ingenting annet spilles av.</string>
+    <string name="settings_hub_state_on">%1$s på</string>
+    <string name="settings_hub_state_off">%1$s av</string>
+    <string name="settings_hub_storage_used">%1$s på denne enheten</string>
+    <string name="settings_eyebrow_during_playback">Under avspilling</string>
+    <string name="settings_eyebrow_subtitles">Undertekster</string>
+    <string name="settings_eyebrow_on_this_device">På denne enheten</string>
+    <string name="settings_eyebrow_over_the_network">Over nettverket</string>
+    <string name="settings_eyebrow_quality">Kvalitet</string>
+    <string name="settings_section_network">Nettverk</string>
 </resources>

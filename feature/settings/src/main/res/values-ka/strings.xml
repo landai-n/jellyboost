@@ -33,7 +33,6 @@
         <item quantity="other">გადმოწერების ადგილებს შორის გადატანა ჯერ არ არის შესაძლებელი, ამიტომ ამ მოწყობილობაზე უკვე არსებული %1$d წაიშლება. შეგიძლიათ ისევ გადმოწეროთ ახალ ადგილას.</item>
     </plurals>
     <string name="settings_storage_switch_confirm">წაშლა და გადართვა</string>
-    <string name="settings_section_connectivity">კავშირი</string>
     <string name="settings_offline_mode">ოფლაინ რეჟიმი</string>
     <string name="settings_offline_mode_supporting">მხოლოდ ამ მოწყობილობაზე უკვე არსებული მედიის ჩვენება.</string>
     <string name="settings_section_account">ანგარიში</string>
@@ -65,4 +64,13 @@
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">სტილიზებული ASS სუბტიტრები</string>
     <string name="settings_styled_ass_supporting">ხატავს ASS/SSA-ს libass-ით: შრიფტები, განლაგება და ეფექტები. ექსპერიმენტული; ამოქმედდება შემდეგ გაშვებულ ვიდეოზე, როცა სხვა არაფერი უკრავს.</string>
+    <string name="settings_hub_state_on">%1$s ჩართულია</string>
+    <string name="settings_hub_state_off">%1$s გამორთულია</string>
+    <string name="settings_hub_storage_used">%1$s ამ მოწყობილობაზე</string>
+    <string name="settings_eyebrow_during_playback">დაკვრის დროს</string>
+    <string name="settings_eyebrow_subtitles">სუბტიტრები</string>
+    <string name="settings_eyebrow_on_this_device">ამ მოწყობილობაზე</string>
+    <string name="settings_eyebrow_over_the_network">ქსელის საშუალებით</string>
+    <string name="settings_eyebrow_quality">ხარისხი</string>
+    <string name="settings_section_network">ქსელი</string>
 </resources>

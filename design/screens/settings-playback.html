@@ -1,0 +1,154 @@
+<!-- @dsCard viewport="400x1160" group="Screens" name="Settings — Playback (portrait)" subtitle="Category detail page: choice groups unchanged from SettingsRows.kt (muted caption, one row per option, full copy, radio trailing, selectableGroup), no leading row icons, dimmed M14 Gestures group showing where track 5 lands" -->
+<link rel="stylesheet" href="../_shared/modern.css">
+<style>
+  * { box-sizing:border-box; }
+  body { margin:0; }
+  /* Only token this sheet adds: the muted rationale-note ink the other screens inline. */
+  :root { --note-fg:rgba(255,255,255,.45); }
+  [data-theme="light"] { --note-fg:rgba(31,35,48,.55); }
+  .screen { width:400px; min-height:1160px; margin:0 auto; }
+
+    .screen{position:relative;background:var(--background);color:var(--on-background);overflow:hidden}
+    .glow{position:absolute;left:0;right:0;top:0;height:320px;pointer-events:none}
+
+    /* ScreenHeader: HeaderPadding 20dp gutter, 8dp gaps, 36dp GlassIconButtons, ScreenTitle 28sp/W700/-.02em */
+    .hdr{position:relative;display:flex;align-items:center;gap:8px;padding:24px 20px 8px}
+    .iconbtn{width:36px;height:36px;border-radius:50%;background:var(--glass-bg);border:1px solid var(--glass-line);display:flex;align-items:center;justify-content:center;flex:none}
+    .iconbtn svg{width:18px;height:18px;fill:var(--icon-fg)}
+    .htitle{font-size:28px;font-weight:700;letter-spacing:-.02em;padding-left:4px}
+
+    /* ScreenPadding 16dp gutter under a 20dp header — the app's two gutters, deliberately unequal */
+    .content{position:relative;padding:8px 16px 32px;display:flex;flex-direction:column;gap:24px}
+    .sec{display:flex;flex-direction:column;gap:8px}
+    .eyebrow{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--on-surface-variant);padding-left:4px}
+    .panel{background:var(--surface);border:1px solid var(--hairline);border-radius:16px;overflow:hidden}
+
+    .row{display:flex;align-items:center;gap:14px;padding:14px 16px;min-height:48px}
+    .row+.row,.grp+.row,.row+.grp,.grp+.grp,.inforow+.row,.row+.inforow,.grp+.inforow,.inforow+.grp,.caption+.grp,.caption+.row{border-top:1px solid var(--hairline)}
+    .ic{width:36px;height:36px;border-radius:50%;background:var(--glass-bg);border:1px solid var(--glass-line);display:flex;align-items:center;justify-content:center;flex:none}
+    .ic svg{width:18px;height:18px;fill:var(--icon-fg)}
+    .ic.danger{background:var(--error-bg);border-color:var(--error-line)}
+    .ic.danger svg{fill:var(--error-fg)}
+    .tx{flex:1;min-width:0}
+    .nm{font-size:15px;font-weight:600;line-height:20px}
+    .nm.danger{color:var(--error-fg)}
+    .sb{font-size:12px;line-height:16px;color:var(--on-surface-variant);margin-top:2px}
+    .chev{width:20px;height:20px;flex:none;fill:var(--on-surface-variant)}
+    .av{width:44px;height:44px;border-radius:50%;flex:none;background:linear-gradient(160deg,#3a5f3f,#7fa06a 55%,#b0c4a0)}
+
+    /* Switch is inert; the row owns the toggle (SettingsRows.kt invariant) */
+    .sw{width:42px;height:24px;border-radius:12px;background:var(--track);position:relative;flex:none}
+    .sw::after{content:"";position:absolute;width:20px;height:20px;border-radius:50%;background:var(--outline);top:2px;left:2px}
+    .sw.on{background:var(--primary)}
+    .sw.on::after{background:#ffffff;left:20px}
+
+    /* Choice group: unchanged from SettingsRows.kt — muted labelLarge caption, one row per
+       option, radio trailing, whole row selectable inside a selectableGroup */
+    .grpcap{font-size:14px;font-weight:500;line-height:20px;color:var(--on-surface-variant);padding:12px 16px 4px}
+    .crow{display:flex;align-items:center;gap:14px;padding:6px 16px;min-height:48px}
+    .radio{width:20px;height:20px;border-radius:50%;border:2px solid var(--outline);flex:none;position:relative}
+    .radio.sel{border-color:var(--primary)}
+    .radio.sel::after{content:"";position:absolute;inset:3px;border-radius:50%;background:var(--primary)}
+    .grp{display:flex;flex-direction:column;padding-bottom:8px}
+
+    .inforow{display:flex;flex-direction:column;gap:2px;padding:14px 16px}
+    .infolbl{font-size:12px;line-height:16px;color:var(--on-surface-variant)}
+    .infoval{font-size:15px;font-weight:600;line-height:20px}
+    .bar{height:6px;border-radius:3px;background:var(--track);overflow:hidden;margin-top:10px}
+    .barfill{height:100%;border-radius:3px;background:var(--primary)}
+
+    .pill{padding:2px 8px;border-radius:6px;border:1px solid var(--outline);font-size:11px;font-weight:600;letter-spacing:.04em;color:var(--on-surface-variant);flex:none}
+    .planned{opacity:.58}
+    .caption{font-size:12px;line-height:16px;color:var(--on-surface-variant);padding:0 16px 14px}
+    .note{font-size:11px;line-height:16px;color:var(--note-fg)}
+    .note b{color:var(--on-surface-variant);font-weight:600}
+    .ghost{display:flex;align-items:center;justify-content:center;height:44px;border-radius:999px;background:var(--glass-bg);border:1px solid var(--ghost-line);font-size:14px;font-weight:600;color:var(--on-background)}
+  
+    /* Two-pane, >=840dp: the rail is the hub, the pane is the open category */
+    .tablet{position:relative;display:flex;background:var(--background);color:var(--on-background);overflow:hidden}
+    .rail{width:340px;flex:none;border-right:1px solid var(--hairline);display:flex;flex-direction:column;position:relative}
+    .raillist{display:flex;flex-direction:column;gap:2px;padding:8px 12px 24px}
+    .railrow{display:flex;align-items:center;gap:14px;padding:12px 12px;min-height:48px;border-radius:12px;border:1px solid transparent}
+    .railrow.sel{background:var(--glass-bg);border-color:var(--glass-line)}
+    .pane{flex:1;min-width:0;position:relative;display:flex;flex-direction:column}
+    .panehdr{padding:24px 24px 4px;font-size:22px;font-weight:700;letter-spacing:-.02em}
+    .panebody{padding:12px 24px 24px;display:flex;flex-direction:column;gap:24px;max-width:688px}
+
+    /* Anatomy sheet */
+    .sheet{background:var(--background);color:var(--on-background);padding:28px 32px 32px;display:flex;flex-direction:column;gap:22px}
+    .sheettitle{font-size:24px;font-weight:700;letter-spacing:-.02em}
+    .spec{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+    .specitem{display:flex;flex-direction:column;gap:8px}
+    .speclbl{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--on-surface-variant)}
+  </style>
+<div class="screen">
+  <div class="glow"></div>
+
+  <div class="hdr">
+    <div class="iconbtn"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></div>
+    <div class="htitle">Playback</div>
+  </div>
+
+  <div class="content">
+    <div class="sec">
+      <div class="eyebrow">During playback</div>
+      <div class="panel">
+        <div class="grp">
+          <div class="grpcap">Skip intro</div>
+          <div class="crow"><div class="tx"><div class="nm">Do nothing</div></div><div class="radio"></div></div>
+          <div class="crow"><div class="tx"><div class="nm">Show a skip button</div></div><div class="radio"></div></div>
+          <div class="crow"><div class="tx"><div class="nm">Skip automatically</div></div><div class="radio sel"></div></div>
+        </div>
+        <div class="grp">
+          <div class="grpcap">Skip outro</div>
+          <div class="crow"><div class="tx"><div class="nm">Do nothing</div></div><div class="radio"></div></div>
+          <div class="crow"><div class="tx"><div class="nm">Show a skip button</div></div><div class="radio sel"></div></div>
+          <div class="crow"><div class="tx"><div class="nm">Skip automatically</div></div><div class="radio"></div></div>
+        </div>
+        <div class="row">
+          <div class="tx">
+            <div class="nm">Picture&#8209;in&#8209;picture</div>
+            <div class="sb">Keep playing in a floating window when you leave the app.</div>
+          </div>
+          <div class="sw on"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="eyebrow">Subtitles</div>
+      <div class="panel">
+        <div class="row">
+          <div class="tx">
+            <div class="nm">Styled ASS subtitles</div>
+            <div class="sb">Draws ASS/SSA with libass: fonts, positioning and effects. Experimental; applies to the next video you start with nothing else playing.</div>
+          </div>
+          <div class="sw"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec planned">
+      <div class="eyebrow">Gestures <span class="pill">M14</span></div>
+      <div class="panel">
+        <div class="row">
+          <div class="tx">
+            <div class="nm">Pinch to zoom</div>
+            <div class="sb">Pinch the picture to switch between fit and fill.</div>
+          </div>
+          <div class="sw"></div>
+        </div>
+        <div class="row">
+          <div class="tx">
+            <div class="nm">Swipe to seek</div>
+            <div class="sb">Drag across the picture to scrub, with a trickplay preview.</div>
+          </div>
+          <div class="sw"></div>
+        </div>
+        <div class="caption">Each gesture keeps its button equivalent in the player controls &mdash; a gesture-only control is a known a11y violation class.</div>
+      </div>
+    </div>
+
+    <div class="note">Detail rows carry <b>no leading icon</b>: icons identify a category on the hub, and inside one they only narrow the label column. Choice groups are unchanged from <b>SettingsRows.kt</b> &mdash; muted caption, one row per option, full copy, radio trailing, whole row selectable inside a <b>selectableGroup</b> so TalkBack still says &ldquo;2 of 3&rdquo;. The Gestures group is drawn dimmed to show where M14 track 5 lands; it is not a spec to implement from.</div>
+  </div>
+</div>

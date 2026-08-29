@@ -36,7 +36,6 @@
     </plurals>
     <string name="settings_storage_switch_confirm">Устгаад сэлгэх</string>
 
-    <string name="settings_section_connectivity">Холболт</string>
     <string name="settings_offline_mode">Оффлайн горим</string>
     <string name="settings_offline_mode_supporting">Зөвхөн энэ төхөөрөмж дээр байгаа медиаг харуулна.</string>
 
@@ -69,4 +68,13 @@
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Загварчилсан ASS хадмал</string>
     <string name="settings_styled_ass_supporting">ASS/SSA-г libass-ээр зурна: фонт, байрлал, эффект. Туршилтын; өөр юу ч тоглогдоогүй үед дараагийн эхлүүлэх видеонд үйлчилнэ.</string>
+    <string name="settings_hub_state_on">%1$s асаалттай</string>
+    <string name="settings_hub_state_off">%1$s унтраалттай</string>
+    <string name="settings_hub_storage_used">энэ төхөөрөмж дээр %1$s</string>
+    <string name="settings_eyebrow_during_playback">Тоглуулах явцад</string>
+    <string name="settings_eyebrow_subtitles">Хадмал орчуулга</string>
+    <string name="settings_eyebrow_on_this_device">Энэ төхөөрөмж дээр</string>
+    <string name="settings_eyebrow_over_the_network">Сүлжээгээр</string>
+    <string name="settings_eyebrow_quality">Чанар</string>
+    <string name="settings_section_network">Сүлжээ</string>
 </resources>

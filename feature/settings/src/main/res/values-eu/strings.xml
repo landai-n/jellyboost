@@ -33,7 +33,6 @@
         <item quantity="other">Deskargak oraindik ezin dira kokapenez aldatu, beraz gailu honetan dauden %1$d ezabatu egingo dira. Berriz deskarga ditzakezu kokapen berrian.</item>
     </plurals>
     <string name="settings_storage_switch_confirm">Ezabatu eta aldatu</string>
-    <string name="settings_section_connectivity">Konektagarritasuna</string>
     <string name="settings_offline_mode">Lineaz kanpoko modua</string>
     <string name="settings_offline_mode_supporting">Erakutsi soilik gailu honetan dagoeneko dagoen multimedia.</string>
     <string name="settings_section_account">Kontua</string>
@@ -65,4 +64,13 @@
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Estiloa duten ASS azpitituluak</string>
     <string name="settings_styled_ass_supporting">ASS/SSA libass-ekin marrazten du: letra-tipoak, kokapena eta efektuak. Esperimentala; abiaraziko duzun hurrengo bideoari aplikatzen zaio, beste ezer erreproduzitzen ari ez denean.</string>
+    <string name="settings_hub_state_on">%1$s aktibatuta</string>
+    <string name="settings_hub_state_off">%1$s desaktibatuta</string>
+    <string name="settings_hub_storage_used">%1$s gailu honetan</string>
+    <string name="settings_eyebrow_during_playback">Erreprodukzioan zehar</string>
+    <string name="settings_eyebrow_subtitles">Azpitituluak</string>
+    <string name="settings_eyebrow_on_this_device">Gailu honetan</string>
+    <string name="settings_eyebrow_over_the_network">Sarearen bidez</string>
+    <string name="settings_eyebrow_quality">Kalitatea</string>
+    <string name="settings_section_network">Sarea</string>
 </resources>

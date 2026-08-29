@@ -1,0 +1,93 @@
+<!-- @dsCard group="Spacing" name="Navigation chrome — back & home" subtitle="One leading control per screen; Home is nav-bar only, never a header button" -->
+<link rel="stylesheet" href="../_shared/modern.css">
+<style>
+body{margin:0;background:var(--background);color:var(--on-background);font-family:Roboto,"Segoe UI",system-ui,sans-serif;padding:32px}
+.wrap{display:flex;flex-direction:column;gap:32px;max-width:1000px}
+h1{margin:0;font-size:26px;font-weight:700;letter-spacing:-.02em}
+.lede{margin:0;font-size:13px;line-height:20px;color:var(--on-surface-variant);max-width:62ch}
+.rules{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.rule{background:var(--surface);border:1px solid var(--hairline);border-radius:16px;padding:18px 18px 20px;display:flex;flex-direction:column;gap:8px}
+.rule .n{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--on-surface-variant)}
+.rule .h{font-size:15px;font-weight:600;line-height:20px}
+.rule .b{font-size:12px;line-height:18px;color:var(--on-surface-variant)}
+.demo{display:flex;flex-direction:column;gap:12px}
+.pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.frame{border:1px solid var(--hairline);border-radius:16px;overflow:hidden;background:var(--background)}
+.tag{display:flex;align-items:center;gap:8px;padding:10px 14px;font-size:11px;font-weight:600;letter-spacing:.04em;border-bottom:1px solid var(--hairline)}
+.dot{width:8px;height:8px;border-radius:50%;flex:none}
+.ok .dot{background:#7fa06a}.no .dot{background:var(--error-fg)}
+.no .tag{color:var(--error-fg)}
+.hdr{display:flex;align-items:center;gap:8px;padding:20px 20px 16px}
+.iconbtn{width:36px;height:36px;border-radius:50%;background:var(--glass-bg);border:1px solid var(--glass-line);display:flex;align-items:center;justify-content:center;flex:none;box-sizing:border-box}
+.iconbtn svg{width:18px;height:18px;fill:var(--icon-fg)}
+.iconbtn.bad{border-color:var(--error-line);background:var(--error-bg)}
+.iconbtn.bad svg{fill:var(--error-fg)}
+.htitle{font-size:24px;font-weight:700;letter-spacing:-.02em;padding-left:4px}
+.spacer{flex:1}
+.tbl{display:grid;grid-template-columns:1.1fr 1fr 1fr 1.5fr;font-size:12px;line-height:18px;border:1px solid var(--hairline);border-radius:14px;overflow:hidden}
+.tbl>div{padding:10px 14px;border-bottom:1px solid var(--hairline);box-sizing:border-box}
+.tbl>div:nth-child(-n+4){font-weight:600;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--on-surface-variant);background:var(--surface)}
+.tbl>div:nth-last-child(-n+4){border-bottom:none}
+.muted{color:var(--on-surface-variant)}
+</style>
+<div class="wrap">
+  <div>
+    <h1>Navigation chrome</h1>
+    <p class="lede">Every screen has exactly one way out of it, in the same place. Back is that control. Home is a destination in the bottom nav or rail, not a header button — putting both in a header gives two adjacent controls that look like the same affordance and do different things.</p>
+  </div>
+
+  <div class="rules">
+    <div class="rule">
+      <div class="n">Rule 01</div>
+      <div class="h">Back is the leading control, or there is none</div>
+      <div class="b">36dp glass icon button, first child of the header, 8dp before the title. Top-level tabs (Home, Libraries, Search, Downloads) draw no back button at all — the nav bar is their context.</div>
+    </div>
+    <div class="rule">
+      <div class="n">Rule 02</div>
+      <div class="h">Home never appears in a header</div>
+      <div class="b">Home is reachable from the bottom nav pill on compact and the rail on wide. A header Home button duplicates a control that is already on screen.</div>
+    </div>
+    <div class="rule">
+      <div class="n">Rule 03</div>
+      <div class="h">Immersive screens are the one exception</div>
+      <div class="b">Detail and Player hide the nav bar, and Detail can be entered by deep link with no back stack. Detail carries a Home button at the <b>trailing</b> edge of its overlay row, never beside Back.</div>
+    </div>
+    <div class="rule">
+      <div class="n">Rule 04</div>
+      <div class="h">The trailing edge is for screen actions</div>
+      <div class="b">Search, filter, cast, favourite, overflow. Navigation never sits on the right of a header; actions never sit on the left.</div>
+    </div>
+  </div>
+
+  <div class="demo">
+    <div class="pair">
+      <div class="frame ok">
+        <div class="tag"><span class="dot"></span>Do — one leading control</div>
+        <div class="hdr">
+          <div class="iconbtn"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></div>
+          <div class="htitle">Playback</div>
+          <div class="spacer"></div>
+          <div class="iconbtn"><svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14z"/></svg></div>
+        </div>
+      </div>
+      <div class="frame no">
+        <div class="tag"><span class="dot"></span>Don't — Back and Home stacked</div>
+        <div class="hdr">
+          <div class="iconbtn"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></div>
+          <div class="iconbtn bad"><svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></div>
+          <div class="htitle">Playback</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tbl">
+    <div>Surface</div><div>Leading</div><div>Trailing</div><div>Escape to Home</div>
+    <div>Home, Libraries, Search, Downloads</div><div class="muted">none</div><div>Cast, avatar, overflow</div><div class="muted">Already Home / nav bar</div>
+    <div>Library detail (Movies, Shows)</div><div>Back</div><div>Search, filter</div><div class="muted">Nav bar</div>
+    <div>Settings hub and all sections</div><div>Back</div><div class="muted">none</div><div class="muted">Nav bar</div>
+    <div>Detail (portrait &amp; wide)</div><div>Back</div><div>Favourite, Home</div><div>Trailing Home button</div>
+    <div>Player</div><div>Back</div><div>Transport and track pickers</div><div class="muted">Back, twice</div>
+    <div>Login, Server setup</div><div>Back once a step exists</div><div class="muted">none</div><div class="muted">Not signed in</div>
+  </div>
+</div>

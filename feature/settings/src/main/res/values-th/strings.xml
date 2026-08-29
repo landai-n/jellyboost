@@ -32,7 +32,6 @@
         <item quantity="other">ยังไม่สามารถย้ายดาวน์โหลดระหว่างตำแหน่งได้ %1$d รายการที่มีอยู่ในอุปกรณ์นี้จะถูกลบ คุณสามารถดาวน์โหลดใหม่ไปยังตำแหน่งใหม่ได้</item>
     </plurals>
     <string name="settings_storage_switch_confirm">ลบและเปลี่ยน</string>
-    <string name="settings_section_connectivity">การเชื่อมต่อ</string>
     <string name="settings_offline_mode">โหมดออฟไลน์</string>
     <string name="settings_offline_mode_supporting">แสดงเฉพาะสื่อที่มีอยู่ในอุปกรณ์นี้แล้ว</string>
     <string name="settings_section_account">บัญชี</string>
@@ -64,4 +63,13 @@
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">คำบรรยาย ASS แบบมีสไตล์</string>
     <string name="settings_styled_ass_supporting">วาด ASS/SSA ด้วย libass: ฟอนต์ ตำแหน่ง และเอฟเฟกต์ อยู่ระหว่างทดลอง มีผลกับวิดีโอที่คุณเริ่มเล่นครั้งถัดไปเมื่อไม่มีสิ่งอื่นกำลังเล่นอยู่</string>
+    <string name="settings_hub_state_on">%1$s เปิดอยู่</string>
+    <string name="settings_hub_state_off">%1$s ปิดอยู่</string>
+    <string name="settings_hub_storage_used">%1$s บนอุปกรณ์นี้</string>
+    <string name="settings_eyebrow_during_playback">ระหว่างการเล่น</string>
+    <string name="settings_eyebrow_subtitles">คำบรรยาย</string>
+    <string name="settings_eyebrow_on_this_device">บนอุปกรณ์นี้</string>
+    <string name="settings_eyebrow_over_the_network">ผ่านเครือข่าย</string>
+    <string name="settings_eyebrow_quality">คุณภาพ</string>
+    <string name="settings_section_network">เครือข่าย</string>
 </resources>

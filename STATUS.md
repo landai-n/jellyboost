@@ -35,7 +35,41 @@ Known issues:
   files under `build/` may carry future timestamps; nothing reads them (the commit gate
   compares only tracked `*.kt`/`*.kts`).
 
-## Current milestone: M14 — Breadth & theming (approved 2026-08-28; tracks 4 and 6 landed, gate green)
+## Current milestone: M14 — Breadth & theming (approved 2026-08-28; tracks 4 and 6 landed, gate green; Settings hub landed on `m14/settings-hub`)
+
+**Settings redesign — hub + category pages (2026-08-29, branch `m14/settings-hub`; adversarial
+review and device walk owed).** The flat six-section scroll becomes a **category hub** (identity row
+plus Playback / Downloads / Appearance / Network / About, each row summarised by that category's
+*current state*) and six pushed pages, with a **340dp rail + pane** two-pane shape at ≥840dp. Section
+headings became the design system's eyebrow; rows sit on 16dp panels; rows inside a category carry no
+leading icon. **Nothing a control does changed** — same strings, same inert inner controls, same
+48dp targets, same `selectableGroup()`, same live region, same confirm dialogs.
+
+Settings is also the **first surface to adopt the navigation-chrome rule**: Back is the only leading
+control. `ScreenHeader.onHome` is now nullable with a default that leaves every other caller
+unchanged; rolling the rule out to Library / Detail / Player is a separate wave.
+
+`:feature:settings` **left** `scripts/a11y-scaffolding-allowlist.json` — it grew the instrumented
+suite it had owed since 2026-08-05 (three ATF suites, every screen at fontScale 1.0 and 2.0).
+Full scope, the exclusions (Switch account / Manage servers / player gestures) and the reasoning:
+DECISIONS.md 2026-08-29, `docs/features/settings.md`.
+
+Design-review follow-ups (2026-08-29, same branch): the storage row's usage meter ships, carrying no
+progress semantics because it restates figures its merged node already speaks; an eyebrow only earns
+its place on a page with more than one section, so Appearance, Network, Account and About draw none;
+and a category has one name, which deleted `settings_section_connectivity` and
+`settings_eyebrow_colour` from all 70 string files. DECISIONS.md 2026-08-29 (second entry) carries
+the reasoning and the one thing left undecided — the Appearance artboard's `.caption`, not shipped
+because it reads as a note to a designer rather than user copy.
+
+Known issues / owed:
+- **Device walk owed.** The two-pane shape, the fontScale-2.0 pass and the Appearance page in the
+  **light** scheme have been reasoned about but not seen on the tablet.
+- **The Appearance caption is an open question** — see the DECISIONS entry; shipping it costs a new
+  string in 70 files, so it wants a decision rather than an inference.
+- **`connectedDebugAndroidTest` not yet run** for the new suites — they compile, but a test that has
+  never executed is a claim, not a gate.
+- `/adversarial-review` has not run over the branch; it must before the merge.
 
 Six tracks: multi-server & account switching (surfacing `ServerEntity`/
 `ServerAddressEntity`); collections (BoxSets); chapter UI in the player (markers + sheet from

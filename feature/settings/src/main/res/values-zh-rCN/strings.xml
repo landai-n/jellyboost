@@ -35,7 +35,6 @@
     </plurals>
     <string name="settings_storage_switch_confirm">删除并切换</string>
 
-    <string name="settings_section_connectivity">连接</string>
     <string name="settings_offline_mode">离线模式</string>
     <string name="settings_offline_mode_supporting">仅显示此设备上已有的媒体。</string>
 
@@ -68,4 +67,13 @@
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">带样式的 ASS 字幕</string>
     <string name="settings_styled_ass_supporting">使用 libass 绘制 ASS/SSA：字体、定位与特效。实验性功能，在没有其他内容播放时，下次播放视频时生效。</string>
+    <string name="settings_hub_state_on">%1$s 已开启</string>
+    <string name="settings_hub_state_off">%1$s 已关闭</string>
+    <string name="settings_hub_storage_used">此设备上 %1$s</string>
+    <string name="settings_eyebrow_during_playback">播放期间</string>
+    <string name="settings_eyebrow_subtitles">字幕</string>
+    <string name="settings_eyebrow_on_this_device">此设备上</string>
+    <string name="settings_eyebrow_over_the_network">通过网络</string>
+    <string name="settings_eyebrow_quality">画质</string>
+    <string name="settings_section_network">网络</string>
 </resources>

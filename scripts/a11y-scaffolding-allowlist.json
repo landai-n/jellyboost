@@ -15,6 +15,5 @@
   ":feature:library": "PillChip's selectable semantics land here across eleven filter chips plus the sort menu's active tick — the exact case ATF's own checks would have caught. Owed since 2026-08-05.",
   ":feature:music": "Queue and now-playing sheets carry the same row/selection patterns the audit flagged elsewhere; no suite followed the fixes. Owed since 2026-08-05.",
   ":feature:search": "Result-count and empty/error announcements were added to a screen with no instrumented coverage, and a live region that stops firing is invisible on screen. Owed since 2026-08-05.",
-  ":feature:downloads": "Progress semantics (rows, badges, the usage bar) and selection-mode announcements were all wave-4 fixes here, and progress is the app's most regression-prone semantics. Owed since 2026-08-05.",
-  ":feature:settings": "The audit called these rows textbook (toggleable/selectable whole row, inert inner control, 48dp floor) — which is precisely the pattern worth pinning before someone 'simplifies' it. Owed since 2026-08-05."
+  ":feature:downloads": "Progress semantics (rows, badges, the usage bar) and selection-mode announcements were all wave-4 fixes here, and progress is the app's most regression-prone semantics. Owed since 2026-08-05."
 }

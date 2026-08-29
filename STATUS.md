@@ -54,9 +54,19 @@ suite it had owed since 2026-08-05 (three ATF suites, every screen at fontScale 
 Full scope, the exclusions (Switch account / Manage servers / player gestures) and the reasoning:
 DECISIONS.md 2026-08-29, `docs/features/settings.md`.
 
+Design-review follow-ups (2026-08-29, same branch): the storage row's usage meter ships, carrying no
+progress semantics because it restates figures its merged node already speaks; an eyebrow only earns
+its place on a page with more than one section, so Appearance, Network, Account and About draw none;
+and a category has one name, which deleted `settings_section_connectivity` and
+`settings_eyebrow_colour` from all 70 string files. DECISIONS.md 2026-08-29 (second entry) carries
+the reasoning and the one thing left undecided — the Appearance artboard's `.caption`, not shipped
+because it reads as a note to a designer rather than user copy.
+
 Known issues / owed:
 - **Device walk owed.** The two-pane shape, the fontScale-2.0 pass and the Appearance page in the
   **light** scheme have been reasoned about but not seen on the tablet.
+- **The Appearance caption is an open question** — see the DECISIONS entry; shipping it costs a new
+  string in 70 files, so it wants a decision rather than an inference.
 - **`connectedDebugAndroidTest` not yet run** for the new suites — they compile, but a test that has
   never executed is a claim, not a gate.
 - `/adversarial-review` has not run over the branch; it must before the merge.

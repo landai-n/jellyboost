@@ -17,8 +17,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Download
@@ -26,9 +28,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -43,6 +49,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -67,10 +74,13 @@ import dev.jellyboost.core.ui.component.ThumbCard
 import dev.jellyboost.core.ui.component.libraryIcon
 import dev.jellyboost.core.ui.text.episodeNumberLabel
 import dev.jellyboost.core.ui.text.resolve
+import dev.jellyboost.core.ui.theme.ChromeBackdrop
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.core.ui.theme.LocalAppChromePadding
+import dev.jellyboost.core.ui.theme.LocalChromeBackdrop
+import dev.jellyboost.core.ui.theme.OverMedia
 import dev.jellyboost.core.ui.theme.pageInk
 import dev.jellyboost.core.ui.R as CoreUiR
 
@@ -153,8 +163,19 @@ private fun HomeRows(
         // never-equal list every recomposition, defeating skipping on the most-patched row.
         val resumeAfterHero = remember(state.resume) { state.resume.drop(1) }
         val chrome = LocalAppChromePadding.current
-        val fontScale = LocalDensity.current.fontScale
+        val density = LocalDensity.current
+        val fontScale = density.fontScale
+        val listState = rememberLazyListState()
+        val heroHeight = heroHeight(wide = wide, viewportHeight = maxHeight, fontScale = fontScale)
+        ChromeOverHeroEffect(
+            chromeBackdrop = LocalChromeBackdrop.current,
+            listState = listState,
+            heroHeight = if (hero == null) 0.dp else heroHeight,
+            chrome = chrome,
+            density = density,
+        )
         LazyColumn(
+            state = listState,
             modifier = Modifier.fillMaxSize(),
             contentPadding =
                 PaddingValues(
@@ -166,52 +187,103 @@ private fun HomeRows(
             heroRow(
                 hero = hero,
                 wide = wide,
-                height = heroHeight(wide = wide, viewportHeight = maxHeight, fontScale = fontScale),
+                height = heroHeight,
                 actions = actions,
             )
 
-            // Row order is the user's, from the server. Unsupported sections are skipped here rather
-            // than dropped upstream so hiding one in jellyfin-web still reorders its neighbours.
-            var librariesDrawn = false
-            state.sections.forEach { section ->
-                when (section) {
-                    // Both spellings of *My Media* are one row here — two items under one key would
-                    // crash the lazy list.
-                    HomeSectionType.SMALL_LIBRARY_TILES, HomeSectionType.LIBRARY_BUTTONS ->
-                        if (!librariesDrawn) {
-                            librariesDrawn = true
-                            if (wide) {
-                                librariesRow(state, actions, cardWidth)
-                            } else {
-                                quickAccessRow(state, actions)
-                            }
-                        }
-
-                    HomeSectionType.RESUME ->
-                        resumeRow(
-                            items = resumeAfterHero,
-                            actions = actions,
-                            cardWidth = cardWidth,
-                        )
-
-                    HomeSectionType.NEXT_UP -> nextUpRow(state, actions, cardWidth)
-                    HomeSectionType.LATEST_MEDIA -> latestRows(state, actions)
-                    HomeSectionType.RESUME_AUDIO -> resumeAudioRow(state, actions)
-
-                    HomeSectionType.NONE,
-                    HomeSectionType.ACTIVE_RECORDINGS,
-                    HomeSectionType.RESUME_BOOK,
-                    HomeSectionType.LIVE_TV,
-                    -> Unit
-                }
-            }
+            sectionRows(
+                state = state,
+                actions = actions,
+                wide = wide,
+                cardWidth = cardWidth,
+                resumeAfterHero = resumeAfterHero,
+            )
         }
     }
 }
 
 /**
+ * Row order is the user's, from the server. Unsupported sections are skipped here rather than
+ * dropped upstream, so hiding one in jellyfin-web still reorders its neighbours.
+ */
+private fun LazyListScope.sectionRows(
+    state: HomeUiState,
+    actions: HomeActions,
+    wide: Boolean,
+    cardWidth: Dp,
+    resumeAfterHero: List<JellyfinItem>,
+) {
+    var librariesDrawn = false
+    state.sections.forEach { section ->
+        when (section) {
+            // Both spellings of *My Media* are one row here — two items under one key would crash
+            // the lazy list.
+            HomeSectionType.SMALL_LIBRARY_TILES, HomeSectionType.LIBRARY_BUTTONS ->
+                if (!librariesDrawn) {
+                    librariesDrawn = true
+                    myMediaRow(state, actions, wide, cardWidth)
+                }
+
+            HomeSectionType.RESUME ->
+                resumeRow(
+                    items = resumeAfterHero,
+                    actions = actions,
+                    cardWidth = cardWidth,
+                )
+
+            HomeSectionType.NEXT_UP -> nextUpRow(state, actions, cardWidth)
+            HomeSectionType.LATEST_MEDIA -> latestRows(state, actions)
+            HomeSectionType.RESUME_AUDIO -> resumeAudioRow(state, actions)
+
+            HomeSectionType.NONE,
+            HomeSectionType.ACTIVE_RECORDINGS,
+            HomeSectionType.RESUME_BOOK,
+            HomeSectionType.LIVE_TV,
+            -> Unit
+        }
+    }
+}
+
+/**
+ * Home is the only screen that draws full-bleed artwork under the app frame's chrome, and the chrome
+ * is a sibling of the nav host, so this is the one direction the answer can travel. It is a *scroll*
+ * question, not a destination one: the moment the hero's foot passes the chrome's, the ground under
+ * the bars is page again and the glass must go back to following the scheme.
+ *
+ * `derivedStateOf` so the per-pixel scroll and the animating chrome inset move a boolean rather than
+ * a recomposition, and `onDispose` so leaving Home — or Home losing its hero — cannot strand the
+ * frame in the over-media state.
+ */
+@Composable
+private fun ChromeOverHeroEffect(
+    chromeBackdrop: ChromeBackdrop,
+    listState: LazyListState,
+    heroHeight: Dp,
+    chrome: PaddingValues,
+    density: Density,
+) {
+    val overMedia =
+        remember(listState, heroHeight, chrome, density) {
+            derivedStateOf {
+                listState.firstVisibleItemIndex == 0 &&
+                    listState.firstVisibleItemScrollOffset <
+                    with(density) {
+                        (heroHeight - chrome.calculateTopPadding()).coerceAtLeast(0.dp).roundToPx()
+                    }
+            }
+        }
+    LaunchedEffect(chromeBackdrop, overMedia) {
+        snapshotFlow { overMedia.value }.collect(chromeBackdrop::reportOverMedia)
+    }
+    DisposableEffect(chromeBackdrop) {
+        onDispose { chromeBackdrop.reportOverMedia(false) }
+    }
+}
+
+/**
  * Lays out [amount] shorter than it draws, so the next lazy item overlaps its bottom edge. Only safe
- * on content whose bottom band has already faded to the app background.
+ * on content whose bottom band has already faded to the app background — which the hero's does only
+ * where [OverMedia.artworkDissolvesIntoPage].
  */
 private fun Modifier.reportShorterBy(amount: Dp): Modifier =
     layout { measurable, constraints ->
@@ -228,6 +300,7 @@ private fun LazyListScope.heroRow(
 ) {
     if (hero == null) return
     item(key = SECTION_HERO, contentType = ROW_HERO) {
+        val overlaps = wide && OverMedia.artworkDissolvesIntoPage
         HomeHero(
             item = hero,
             wide = wide,
@@ -236,12 +309,25 @@ private fun LazyListScope.heroRow(
             onDetails = { actions.onItemClick(hero) },
             // A lazy list cannot offset the following item, only shorten this one.
             modifier =
-                if (wide) {
+                if (overlaps) {
                     Modifier.reportShorterBy(HeroRailOverlap + Dimens.SpaceExtraLarge)
                 } else {
                     Modifier
                 },
         )
+    }
+}
+
+private fun LazyListScope.myMediaRow(
+    state: HomeUiState,
+    actions: HomeActions,
+    wide: Boolean,
+    cardWidth: Dp,
+) {
+    if (wide) {
+        librariesRow(state, actions, cardWidth)
+    } else {
+        quickAccessRow(state, actions)
     }
 }
 

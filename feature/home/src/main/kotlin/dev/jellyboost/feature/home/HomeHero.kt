@@ -48,12 +48,16 @@ import dev.jellyboost.core.ui.text.episodeNumberLabel
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinGradients
 import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
+import dev.jellyboost.core.ui.theme.OverMedia
 import dev.jellyboost.core.ui.theme.heroHalo
 import dev.jellyboost.core.ui.R as CoreUiR
 
 /**
  * The copy stays bottom-left (compact) or left (wide): `AppActionCluster` floats its glass circles
  * over this banner's top-right corner, so nothing here may compete for it.
+ *
+ * Everything the banner draws is `OverMedia`'s, in both schemes: the artwork is dark-scrimmed either
+ * way, so a light page below it changes where the banner *ends*, never what it is written in.
  */
 @Composable
 internal fun HomeHero(
@@ -73,7 +77,9 @@ internal fun HomeHero(
 
         if (wide) {
             // The fade goes under the copy: a tall overview must never be the thing that fades out.
-            HeroRailFade(modifier = Modifier.align(Alignment.BottomStart))
+            if (OverMedia.artworkDissolvesIntoPage) {
+                HeroRailFade(modifier = Modifier.align(Alignment.BottomStart))
+            }
             WideHeroCopy(
                 item = item,
                 heroHeight = height,
@@ -151,11 +157,13 @@ private fun CompactHeroCopy(
                 onClick = onResume,
                 modifier = Modifier.weight(1f),
                 leadingIcon = Icons.Filled.PlayArrow,
+                overMedia = true,
             )
             GhostPillButton(
                 text = stringResource(R.string.home_hero_details),
                 onClick = onDetails,
                 modifier = Modifier.weight(1f),
+                overMedia = true,
             )
         }
     }
@@ -198,7 +206,7 @@ private fun WideHeroCopy(
             Text(
                 text = overview,
                 style = OverviewStyle,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = OverMedia.Meta,
                 maxLines = OVERVIEW_MAX_LINES,
                 overflow = TextOverflow.Ellipsis,
                 // `fill = false`: a short overview keeps its own height instead of pushing the
@@ -211,8 +219,13 @@ private fun WideHeroCopy(
                 text = resumeLabel(item),
                 onClick = onResume,
                 leadingIcon = Icons.Filled.PlayArrow,
+                overMedia = true,
             )
-            GhostPillButton(text = stringResource(R.string.home_hero_details), onClick = onDetails)
+            GhostPillButton(
+                text = stringResource(R.string.home_hero_details),
+                onClick = onDetails,
+                overMedia = true,
+            )
         }
     }
 }
@@ -228,12 +241,12 @@ private fun HeroEyebrow(modifier: Modifier = Modifier) {
             modifier =
                 Modifier
                     .size(EyebrowDotSize)
-                    .background(color = MaterialTheme.colorScheme.primary, shape = CircleShape),
+                    .background(color = OverMedia.Accent, shape = CircleShape),
         )
         Text(
             text = stringResource(R.string.home_section_continue_watching).uppercase(),
             style = JellyfinTypeExtras.Eyebrow,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = OverMedia.Eyebrow,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -252,9 +265,7 @@ private fun HeroTitle(
     Text(
         text = title,
         style = if (expanded) JellyfinTypeExtras.HeroTitleExpanded else JellyfinTypeExtras.HeroTitleCompact,
-        // Not over the artwork: `BackdropScrim` has already faded to the page colour by this row,
-        // which is why the eyebrow beside it is `onSurfaceVariant` rather than a dimmed white.
-        color = MaterialTheme.colorScheme.onBackground,
+        color = OverMedia.Title,
         maxLines = maxLines,
         overflow = TextOverflow.Ellipsis,
         modifier = modifier.semantics { contentDescription = title },
@@ -290,7 +301,11 @@ private fun HeroMeta(
             HeroMetaText(text = label, modifier = Modifier.align(Alignment.CenterVertically))
         }
         certificate?.let {
-            MPillBadge(text = it, modifier = Modifier.align(Alignment.CenterVertically))
+            MPillBadge(
+                text = it,
+                modifier = Modifier.align(Alignment.CenterVertically),
+                overMedia = true,
+            )
         }
         remainingText?.let {
             HeroMetaText(text = it, modifier = Modifier.align(Alignment.CenterVertically))
@@ -306,14 +321,17 @@ private fun HeroMetaText(
     Text(
         text = text,
         style = MetaStyle,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        color = OverMedia.Meta,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
         modifier = modifier,
     )
 }
 
-/** What makes [HeroRailOverlap] safe: the artwork has dissolved into the background by then. */
+/**
+ * What makes [HeroRailOverlap] safe: the artwork has dissolved into the background by then. Drawn
+ * only where it has — see [OverMedia.artworkDissolvesIntoPage].
+ */
 @Composable
 private fun HeroRailFade(modifier: Modifier = Modifier) {
     val background = MaterialTheme.colorScheme.background
@@ -417,7 +435,12 @@ private const val WIDE_COPY_TOP_FRACTION = 0.26f
 
 private val WideCopyMaxWidth = 420.dp
 
-/** How far the content rows overlap the wide banner. */
+/**
+ * How far the content rows overlap the wide banner — where the artwork dissolves into the page
+ * ([OverMedia.artworkDissolvesIntoPage]); under the light ramp the rows start at the banner's edge
+ * instead. It stays the wide copy's bottom inset in **both** schemes, so every height threshold
+ * below is calibrated against one number rather than two.
+ */
 internal val HeroRailOverlap = 48.dp
 
 /** Deeper than [HeroRailOverlap], so the overlap never lands on a hard edge. */

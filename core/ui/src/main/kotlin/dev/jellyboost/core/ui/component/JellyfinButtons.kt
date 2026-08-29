@@ -239,6 +239,7 @@ fun GlassIconButton(
     overMedia: Boolean = false,
     tint: Color = if (overMedia) OverMedia.GlassContent else GlassIconTint,
     surfaceTint: Color = if (overMedia) OverMedia.ChromeFill else GlassDefaults.Fill,
+    borderColor: Color = if (overMedia) OverMedia.ChromeBorder else GlassDefaults.Hairline,
     enabled: Boolean = true,
 ) {
     Box(
@@ -252,11 +253,8 @@ fun GlassIconButton(
             modifier =
                 Modifier
                     .size(size)
-                    .glassSurface(
-                        shape = CircleShape,
-                        borderColor = if (overMedia) OverMedia.ChromeBorder else GlassDefaults.Hairline,
-                        tint = surfaceTint,
-                    ).clickable(enabled = enabled, role = Role.Button, onClick = onClick)
+                    .glassSurface(shape = CircleShape, borderColor = borderColor, tint = surfaceTint)
+                    .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
                     .semantics(mergeDescendants = true) {},
             contentAlignment = Alignment.Center,
         ) {

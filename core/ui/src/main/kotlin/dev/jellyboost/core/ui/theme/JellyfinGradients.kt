@@ -38,19 +38,36 @@ object JellyfinGradients {
      * Transparent at the top, solid at the bottom: it seats a hero *into* the page below it. It
      * therefore has to end on whatever the page actually is — a scrim fading to `#101010` over a
      * light page is a hard seam where the artwork stops, not a transition.
+     *
+     * The light ramp is not the dark ramp recoloured: white at the dark alphas reads as fog over
+     * the artwork (it raises luminance and desaturates) where black reads as shadow, so the light
+     * side starts its fade later and compresses it toward the bottom edge, where the hero copy
+     * still needs a near-solid ground for its scheme ink.
      */
     val BackdropScrim: Brush
         @Composable @ReadOnlyComposable
         get() {
             val background = MaterialTheme.colorScheme.background
-            return Brush.verticalGradient(
-                colors =
-                    listOf(
-                        Color.Transparent,
-                        background.copy(alpha = 0.65f),
-                        background,
-                    ),
-            )
+            return if (LocalIsLightTheme.current) {
+                Brush.verticalGradient(
+                    colorStops =
+                        arrayOf(
+                            0f to Color.Transparent,
+                            BACKDROP_LIGHT_ONSET_STOP to background.copy(alpha = BACKDROP_LIGHT_ONSET_ALPHA),
+                            BACKDROP_LIGHT_MID_STOP to background.copy(alpha = BACKDROP_LIGHT_MID_ALPHA),
+                            1f to background,
+                        ),
+                )
+            } else {
+                Brush.verticalGradient(
+                    colors =
+                        listOf(
+                            Color.Transparent,
+                            background.copy(alpha = 0.65f),
+                            background,
+                        ),
+                )
+            }
         }
 
     /**
@@ -62,14 +79,57 @@ object JellyfinGradients {
         @Composable @ReadOnlyComposable
         get() {
             val background = MaterialTheme.colorScheme.background
-            return Brush.verticalGradient(
-                colors =
-                    listOf(
-                        background.copy(alpha = 0.94f),
-                        background.copy(alpha = 0.72f),
-                        Color.Transparent,
-                    ),
-            )
+            return if (LocalIsLightTheme.current) {
+                // Same fog-versus-shadow asymmetry as `BackdropScrim`: the band keeps its strength
+                // right under the bars, then falls off early instead of hazing a third of the page.
+                Brush.verticalGradient(
+                    colorStops =
+                        arrayOf(
+                            0f to background.copy(alpha = TOP_CHROME_LIGHT_TOP_ALPHA),
+                            TOP_CHROME_LIGHT_MID_STOP to background.copy(alpha = TOP_CHROME_LIGHT_MID_ALPHA),
+                            1f to Color.Transparent,
+                        ),
+                )
+            } else {
+                Brush.verticalGradient(
+                    colors =
+                        listOf(
+                            background.copy(alpha = 0.94f),
+                            background.copy(alpha = 0.72f),
+                            Color.Transparent,
+                        ),
+                )
+            }
+        }
+
+    /**
+     * The wide hero's left-edge wash: near-solid page under the copy, transparent before the
+     * artwork's focal right half. Lives here, not in the hero, because which ramp it takes is the
+     * same fog-versus-shadow branch as [BackdropScrim] — and that bit is this package's to read.
+     */
+    val WideHeroScrim: Brush
+        @Composable @ReadOnlyComposable
+        get() {
+            val background = MaterialTheme.colorScheme.background
+            return if (LocalIsLightTheme.current) {
+                Brush.horizontalGradient(
+                    colorStops =
+                        arrayOf(
+                            0f to background.copy(alpha = WIDE_HERO_LIGHT_NEAR_ALPHA),
+                            WIDE_HERO_LIGHT_MID_STOP to background.copy(alpha = WIDE_HERO_LIGHT_MID_ALPHA),
+                            WIDE_HERO_LIGHT_END_STOP to Color.Transparent,
+                        ),
+                )
+            } else {
+                Brush.horizontalGradient(
+                    colorStops =
+                        arrayOf(
+                            0f to background.copy(alpha = WIDE_HERO_NEAR_ALPHA),
+                            WIDE_HERO_MID_STOP to background.copy(alpha = WIDE_HERO_MID_ALPHA),
+                            WIDE_HERO_END_STOP to Color.Transparent,
+                        ),
+                )
+            }
         }
 
     /**
@@ -114,6 +174,38 @@ object JellyfinGradients {
     internal const val BRAND_GLOW_CENTER_ALPHA_LIGHT = 0.16f
 
     internal const val BRAND_GLOW_MID_ALPHA_LIGHT = 0.10f
+
+    /** Nothing but a whisper of page until halfway down the artwork. */
+    private const val BACKDROP_LIGHT_ONSET_STOP = 0.50f
+
+    private const val BACKDROP_LIGHT_ONSET_ALPHA = 0.18f
+
+    private const val BACKDROP_LIGHT_MID_STOP = 0.78f
+
+    private const val BACKDROP_LIGHT_MID_ALPHA = 0.62f
+
+    private const val TOP_CHROME_LIGHT_TOP_ALPHA = 0.92f
+
+    private const val TOP_CHROME_LIGHT_MID_STOP = 0.40f
+
+    private const val TOP_CHROME_LIGHT_MID_ALPHA = 0.50f
+
+    private const val WIDE_HERO_NEAR_ALPHA = 0.94f
+
+    private const val WIDE_HERO_MID_STOP = 0.38f
+
+    private const val WIDE_HERO_MID_ALPHA = 0.72f
+
+    private const val WIDE_HERO_END_STOP = 0.70f
+
+    /** The copy edge keeps its near-solid ground; only the fade past it lets go earlier and lower. */
+    private const val WIDE_HERO_LIGHT_NEAR_ALPHA = 0.92f
+
+    private const val WIDE_HERO_LIGHT_MID_STOP = 0.30f
+
+    private const val WIDE_HERO_LIGHT_MID_ALPHA = 0.55f
+
+    private const val WIDE_HERO_LIGHT_END_STOP = 0.60f
 
     /** Where the purple centre has become the blue mid-stop, as a fraction of the radius. */
     private const val BRAND_GLOW_MID_STOP = 0.45f

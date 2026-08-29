@@ -66,6 +66,17 @@
     <string name="settings_dynamic_color_supporting">Ја зема палетата од твојот тапет наместо сината на Jellyfin.</string>
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_subtitle_size">Големина на текстот</string>
+    <string name="settings_subtitle_appearance_supporting">Се однесува на титловите што ги исцртува Jellyboost. Стилизираните ASS титлови го задржуваат својот стил.</string>
+    <string name="settings_subtitle_follow_device">Следи го уредот</string>
+    <string name="settings_subtitle_size_small">Мала</string>
+    <string name="settings_subtitle_size_normal">Нормална</string>
+    <string name="settings_subtitle_size_large">Голема</string>
+    <string name="settings_subtitle_size_larger">Поголема</string>
+    <string name="settings_subtitle_background">Позадина</string>
+    <string name="settings_subtitle_background_none">Нема</string>
+    <string name="settings_subtitle_background_translucent">Полупроѕирна</string>
+    <string name="settings_subtitle_background_solid">Полна</string>
     <string name="settings_styled_ass">Стилизирани ASS титлови</string>
     <string name="settings_styled_ass_supporting">Ги црта ASS/SSA со libass: фонтови, позиционирање и ефекти. Експериментално; важи за следното видео што ќе го пуштите кога ништо друго не се репродуцира.</string>
     <string name="settings_hub_state_on">%1$s вклучено</string>

@@ -66,6 +66,17 @@
     <string name="settings_dynamic_color_supporting">Tekur litirnar úr veggbílætinum í staðin fyri Jellyfin-bláa.</string>
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_subtitle_size">Tekststødd</string>
+    <string name="settings_subtitle_appearance_supporting">Galdur fyri undirtekstir, sum Jellyboost sjálvt tekur. Stílaðir ASS-undirtekstir halda sín egna stíl.</string>
+    <string name="settings_subtitle_follow_device">Fylg tólinum</string>
+    <string name="settings_subtitle_size_small">Lítil</string>
+    <string name="settings_subtitle_size_normal">Vanlig</string>
+    <string name="settings_subtitle_size_large">Stór</string>
+    <string name="settings_subtitle_size_larger">Størri</string>
+    <string name="settings_subtitle_background">Bakgrund</string>
+    <string name="settings_subtitle_background_none">Eingin</string>
+    <string name="settings_subtitle_background_translucent">Hálvgjøgnumsæddur</string>
+    <string name="settings_subtitle_background_solid">Fastur</string>
     <string name="settings_styled_ass">Stílaðir ASS-undirtekstir</string>
     <string name="settings_styled_ass_supporting">Tekna ASS/SSA við libass: stavasnið, staðseting og brellur. Royndarført; virkar á næsta video, tú byrjar, tá einki annað spælir.</string>
     <string name="settings_hub_state_on">%1$s kveikt</string>

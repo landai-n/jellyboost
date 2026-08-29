@@ -9,6 +9,8 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import dev.jellyboost.core.common.model.DownloadQuality
 import dev.jellyboost.core.common.model.SegmentSkipMode
+import dev.jellyboost.core.common.model.SubtitleBackground
+import dev.jellyboost.core.common.model.SubtitleTextSize
 import dev.jellyboost.core.common.model.ThemeMode
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -117,6 +119,21 @@ class DataStoreAppPreferences
             dataStore.edit { it[DYNAMIC_COLOR_ENABLED] = enabled }
         }
 
+        // Both decode an unknown stored name to SYSTEM, for THEME_MODE's reason.
+        override val subtitleTextSize: Flow<SubtitleTextSize> =
+            preference { SubtitleTextSize.fromNameOrDefault(it[SUBTITLE_TEXT_SIZE]) }
+
+        override suspend fun setSubtitleTextSize(size: SubtitleTextSize) {
+            dataStore.edit { it[SUBTITLE_TEXT_SIZE] = size.name }
+        }
+
+        override val subtitleBackground: Flow<SubtitleBackground> =
+            preference { SubtitleBackground.fromNameOrDefault(it[SUBTITLE_BACKGROUND]) }
+
+        override suspend fun setSubtitleBackground(background: SubtitleBackground) {
+            dataStore.edit { it[SUBTITLE_BACKGROUND] = background.name }
+        }
+
         override val styledAssSubtitles: Flow<Boolean> =
             preference { it[STYLED_ASS_SUBTITLES] ?: DEFAULT_STYLED_ASS_SUBTITLES }
 
@@ -161,6 +178,10 @@ class DataStoreAppPreferences
             val THEME_MODE = stringPreferencesKey(PreferenceKeys.THEME_MODE)
             val DYNAMIC_COLOR_ENABLED = booleanPreferencesKey(PreferenceKeys.DYNAMIC_COLOR_ENABLED)
             val STYLED_ASS_SUBTITLES = booleanPreferencesKey(PreferenceKeys.STYLED_ASS_SUBTITLES)
+
+            val SUBTITLE_TEXT_SIZE = stringPreferencesKey(PreferenceKeys.SUBTITLE_TEXT_SIZE)
+
+            val SUBTITLE_BACKGROUND = stringPreferencesKey(PreferenceKeys.SUBTITLE_BACKGROUND)
 
             const val DEFAULT_WIFI_ONLY = true
 

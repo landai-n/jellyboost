@@ -1,6 +1,8 @@
 package dev.jellyboost.player.ui
 
 import dev.jellyboost.core.common.Separators
+import dev.jellyboost.core.common.model.SubtitleBackground
+import dev.jellyboost.core.common.model.SubtitleTextSize
 import dev.jellyboost.core.ui.text.UiText
 import dev.jellyboost.player.PlayMethod
 import dev.jellyboost.player.model.PlaybackQuality
@@ -44,6 +46,12 @@ internal data class PlayerUiState(
     val selectedAudioIndex: Int? = null,
     /** Jellyfin stream index of the active subtitle track; `null` means subtitles are off. */
     val selectedSubtitleIndex: Int? = null,
+    /**
+     * Media3's subtitle appearance, collected rather than read once so a change in Settings redraws the
+     * cue on screen. Not applied to an ASS/SSA track libass is drawing — that one carries its own.
+     */
+    val subtitleTextSize: SubtitleTextSize = SubtitleTextSize.DEFAULT,
+    val subtitleBackground: SubtitleBackground = SubtitleBackground.DEFAULT,
     val quality: PlaybackQuality = PlaybackQuality.AUTO,
     /** Session-scoped and never persisted. */
     val speed: PlaybackSpeed = PlaybackSpeed.NORMAL,

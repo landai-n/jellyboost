@@ -66,6 +66,17 @@
     <string name="settings_dynamic_color_supporting">Hëlt d\'Palette vun dengem Hannergrondbild amplaz vum Jellyfin-Blo.</string>
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_subtitle_size">Textgréisst</string>
+    <string name="settings_subtitle_appearance_supporting">Gëllt fir Ënnertitelen, déi Jellyboost selwer zeechent. Gestylte ASS-Ënnertitelen behalen hire eegene Stil.</string>
+    <string name="settings_subtitle_follow_device">Dem Apparat follegen</string>
+    <string name="settings_subtitle_size_small">Kleng</string>
+    <string name="settings_subtitle_size_normal">Normal</string>
+    <string name="settings_subtitle_size_large">Grouss</string>
+    <string name="settings_subtitle_size_larger">Méi grouss</string>
+    <string name="settings_subtitle_background">Hannergrond</string>
+    <string name="settings_subtitle_background_none">Keen</string>
+    <string name="settings_subtitle_background_translucent">Duerchsiichteg</string>
+    <string name="settings_subtitle_background_solid">Vollstänneg</string>
     <string name="settings_styled_ass">Formatéiert ASS-Ënnertitelen</string>
     <string name="settings_styled_ass_supporting">Zeechent ASS/SSA mat libass: Schrëften, Positioun an Effekter. Experimentell; gëllt fir dat nächst Video, dat s du starts, wa soss näischt spillt.</string>
     <string name="settings_hub_state_on">%1$s un</string>

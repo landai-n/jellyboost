@@ -62,6 +62,17 @@
     <string name="settings_dynamic_color_supporting">Jellyfin නිල් වෙනුවට ඔබේ බිතුපතෙන් වර්ණ ලබා ගනී.</string>
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_subtitle_size">අකුරු ප්‍රමාණය</string>
+    <string name="settings_subtitle_appearance_supporting">Jellyboost විසින්ම අඳින උපසිරැසිවලට අදාළ වේ. විලාසගත ASS උපසිරැසි තමන්ගේම විලාසය තබා ගනී.</string>
+    <string name="settings_subtitle_follow_device">උපාංගය අනුගමනය කරන්න</string>
+    <string name="settings_subtitle_size_small">කුඩා</string>
+    <string name="settings_subtitle_size_normal">සාමාන්‍ය</string>
+    <string name="settings_subtitle_size_large">විශාල</string>
+    <string name="settings_subtitle_size_larger">වඩා විශාල</string>
+    <string name="settings_subtitle_background">පසුබිම</string>
+    <string name="settings_subtitle_background_none">කිසිවක් නැත</string>
+    <string name="settings_subtitle_background_translucent">අර්ධ පාරදෘශ්‍ය</string>
+    <string name="settings_subtitle_background_solid">ඝන</string>
     <string name="settings_styled_ass">මෝස්තරගත ASS උපසිරැසි</string>
     <string name="settings_styled_ass_supporting">libass මගින් ASS/SSA අඳියි: අකුරු, පිහිටීම සහ ප්‍රයෝග. පර්යේෂණාත්මකයි; වෙනත් කිසිවක් වාදනය නොවන විට ඔබ ඊළඟට ආරම්භ කරන වීඩියෝවට අදාළ වේ.</string>
     <string name="settings_hub_state_on">%1$s ක්‍රියාත්මකයි</string>

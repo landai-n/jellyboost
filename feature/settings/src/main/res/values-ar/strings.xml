@@ -70,6 +70,17 @@
     <string name="settings_dynamic_color_supporting">يأخذ لوحة الألوان من خلفية شاشتك بدلاً من أزرق Jellyfin.</string>
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_subtitle_size">حجم النص</string>
+    <string name="settings_subtitle_appearance_supporting">ينطبق على الترجمات التي يرسمها Jellyboost. تحتفظ ترجمات ASS المنسّقة بتنسيقها الخاص.</string>
+    <string name="settings_subtitle_follow_device">اتباع الجهاز</string>
+    <string name="settings_subtitle_size_small">صغير</string>
+    <string name="settings_subtitle_size_normal">عادي</string>
+    <string name="settings_subtitle_size_large">كبير</string>
+    <string name="settings_subtitle_size_larger">أكبر</string>
+    <string name="settings_subtitle_background">الخلفية</string>
+    <string name="settings_subtitle_background_none">بلا</string>
+    <string name="settings_subtitle_background_translucent">شبه شفافة</string>
+    <string name="settings_subtitle_background_solid">صلبة</string>
     <string name="settings_styled_ass">ترجمات ASS المنسّقة</string>
     <string name="settings_styled_ass_supporting">يرسم ASS/SSA باستخدام libass: الخطوط والمواضع والمؤثرات. تجريبي؛ يسري على الفيديو التالي الذي تشغّله عندما لا يكون هناك تشغيل آخر جارٍ.</string>
     <string name="settings_hub_state_on">%1$s قيد التشغيل</string>

@@ -66,6 +66,17 @@
     <string name="settings_dynamic_color_supporting">Палитраны Jellyfin көгінің орнына тұсқағазыңыздан алады.</string>
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_subtitle_size">Мәтін өлшемі</string>
+    <string name="settings_subtitle_appearance_supporting">Jellyboost өзі салатын субтитрлерге қолданылады. Стильденген ASS субтитрлері өз стилін сақтайды.</string>
+    <string name="settings_subtitle_follow_device">Құрылғы бойынша</string>
+    <string name="settings_subtitle_size_small">Кішкентай</string>
+    <string name="settings_subtitle_size_normal">Қалыпты</string>
+    <string name="settings_subtitle_size_large">Үлкен</string>
+    <string name="settings_subtitle_size_larger">Одан үлкен</string>
+    <string name="settings_subtitle_background">Фон</string>
+    <string name="settings_subtitle_background_none">Жоқ</string>
+    <string name="settings_subtitle_background_translucent">Мөлдір</string>
+    <string name="settings_subtitle_background_solid">Тұтас</string>
     <string name="settings_styled_ass">Мәнерленген ASS субтитрлері</string>
     <string name="settings_styled_ass_supporting">ASS/SSA пішімін libass арқылы салады: қаріптер, орналасу және әсерлер. Эксперименттік; басқа ештеңе ойнатылмаған кезде келесі бейнеден бастап қолданылады.</string>
     <string name="settings_hub_state_on">%1$s қосулы</string>

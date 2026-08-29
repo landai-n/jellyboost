@@ -281,6 +281,18 @@ internal class PlayerViewModel
                     publishPipState()
                 }
             }
+            // Its own collection rather than a fourth arm of the combine above: these two reach the
+            // UI state and nothing else, while those three are fields the player logic reads. Folding
+            // them together would rebuild the state object every time a skip mode changed.
+            viewModelScope.launch {
+                combine(
+                    preferences.subtitleTextSize,
+                    preferences.subtitleBackground,
+                    ::Pair,
+                ).collect { (size, background) ->
+                    _uiState.update { it.copy(subtitleTextSize = size, subtitleBackground = background) }
+                }
+            }
         }
 
         /**

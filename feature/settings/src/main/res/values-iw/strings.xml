@@ -68,6 +68,17 @@
     <string name="settings_dynamic_color_supporting">לוקח את לוח הצבעים מתמונת הרקע שלך במקום הכחול של Jellyfin.</string>
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_subtitle_size">גודל הטקסט</string>
+    <string name="settings_subtitle_appearance_supporting">חל על כתוביות ש-Jellyboost מצייר בעצמו. כתוביות ASS מעוצבות שומרות על העיצוב שלהן.</string>
+    <string name="settings_subtitle_follow_device">לפי המכשיר</string>
+    <string name="settings_subtitle_size_small">קטן</string>
+    <string name="settings_subtitle_size_normal">רגיל</string>
+    <string name="settings_subtitle_size_large">גדול</string>
+    <string name="settings_subtitle_size_larger">גדול יותר</string>
+    <string name="settings_subtitle_background">רקע</string>
+    <string name="settings_subtitle_background_none">ללא</string>
+    <string name="settings_subtitle_background_translucent">שקוף למחצה</string>
+    <string name="settings_subtitle_background_solid">אטום</string>
     <string name="settings_styled_ass">כתוביות ASS מעוצבות</string>
     <string name="settings_styled_ass_supporting">מצייר ASS/SSA באמצעות libass: גופנים, מיקום ואפקטים. ניסיוני; חל על הסרטון הבא שתפעיל כשלא מתנגן דבר אחר.</string>
     <string name="settings_hub_state_on">%1$s פעיל</string>

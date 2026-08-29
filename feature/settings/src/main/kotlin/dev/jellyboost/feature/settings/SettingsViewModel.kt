@@ -7,6 +7,8 @@ import dev.jellyboost.core.common.AppResult
 import dev.jellyboost.core.common.di.ApplicationScope
 import dev.jellyboost.core.common.model.DownloadQuality
 import dev.jellyboost.core.common.model.SegmentSkipMode
+import dev.jellyboost.core.common.model.SubtitleBackground
+import dev.jellyboost.core.common.model.SubtitleTextSize
 import dev.jellyboost.core.common.model.ThemeMode
 import dev.jellyboost.core.datastore.AppPreferences
 import dev.jellyboost.core.network.SessionRepository
@@ -54,6 +56,8 @@ class SettingsViewModel
                     outroSkipMode = prefs.outroSkipMode,
                     pipOnLeave = prefs.pipOnLeave,
                     styledAssSubtitles = prefs.styledAssSubtitles,
+                    subtitleTextSize = prefs.subtitleTextSize,
+                    subtitleBackground = prefs.subtitleBackground,
                     downloadOverWifiOnly = prefs.downloadOverWifiOnly,
                     downloadQuality = prefs.downloadQuality,
                     forceOffline = prefs.forceOffline,
@@ -139,6 +143,15 @@ class SettingsViewModel
             viewModelScope.launch { appPreferences.setStyledAssSubtitles(enabled) }
         }
 
+        /** Unlike the switch above, these two reach the playback on screen — see [AppPreferences]. */
+        fun setSubtitleTextSize(size: SubtitleTextSize) {
+            viewModelScope.launch { appPreferences.setSubtitleTextSize(size) }
+        }
+
+        fun setSubtitleBackground(background: SubtitleBackground) {
+            viewModelScope.launch { appPreferences.setSubtitleBackground(background) }
+        }
+
         /**
          * The deletes run **before** the sign-out: signing out clears the credentials, and files
          * deleted afterwards would be orphaned rows nobody can re-download without logging back in.
@@ -196,13 +209,22 @@ class SettingsViewModel
                 appPreferences.downloadQuality,
                 appPreferences.themeMode,
                 appPreferences.dynamicColorEnabled,
-                appPreferences.styledAssSubtitles,
-            ) { rest, quality, themeMode, dynamicColor, styledAss ->
+                // The three subtitle preferences fold into one arm for the same reason the block
+                // above exists: the outer `combine` is at its five-flow limit.
+                combine(
+                    appPreferences.styledAssSubtitles,
+                    appPreferences.subtitleTextSize,
+                    appPreferences.subtitleBackground,
+                    ::SubtitlePreferences,
+                ),
+            ) { rest, quality, themeMode, dynamicColor, subtitles ->
                 rest.copy(
                     downloadQuality = quality,
                     themeMode = themeMode,
                     dynamicColorEnabled = dynamicColor,
-                    styledAssSubtitles = styledAss,
+                    styledAssSubtitles = subtitles.styledAss,
+                    subtitleTextSize = subtitles.textSize,
+                    subtitleBackground = subtitles.background,
                 )
             }
 
@@ -216,6 +238,15 @@ class SettingsViewModel
             val themeMode: ThemeMode = ThemeMode.SYSTEM,
             val dynamicColorEnabled: Boolean = false,
             val styledAssSubtitles: Boolean = false,
+            val subtitleTextSize: SubtitleTextSize = SubtitleTextSize.DEFAULT,
+            val subtitleBackground: SubtitleBackground = SubtitleBackground.DEFAULT,
+        )
+
+        /** The three that share the outer `combine`'s last slot. */
+        private data class SubtitlePreferences(
+            val styledAss: Boolean,
+            val textSize: SubtitleTextSize,
+            val background: SubtitleBackground,
         )
 
         private companion object {

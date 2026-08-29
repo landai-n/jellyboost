@@ -66,6 +66,17 @@
     <string name="settings_dynamic_color_supporting">Jellyfin நீலத்திற்குப் பதிலாக உங்கள் வால்பேப்பரிலிருந்து நிறங்களை எடுக்கிறது.</string>
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_subtitle_size">உரை அளவு</string>
+    <string name="settings_subtitle_appearance_supporting">Jellyboost தானே வரையும் வசனங்களுக்குப் பொருந்தும். வடிவமைக்கப்பட்ட ASS வசனங்கள் தமது பாணியைத் தக்கவைக்கும்.</string>
+    <string name="settings_subtitle_follow_device">சாதனத்தைப் பின்பற்று</string>
+    <string name="settings_subtitle_size_small">சிறியது</string>
+    <string name="settings_subtitle_size_normal">இயல்பானது</string>
+    <string name="settings_subtitle_size_large">பெரியது</string>
+    <string name="settings_subtitle_size_larger">இன்னும் பெரியது</string>
+    <string name="settings_subtitle_background">பின்னணி</string>
+    <string name="settings_subtitle_background_none">எதுவும் இல்லை</string>
+    <string name="settings_subtitle_background_translucent">ஒளிபுகும்</string>
+    <string name="settings_subtitle_background_solid">திடமானது</string>
     <string name="settings_styled_ass">வடிவமைக்கப்பட்ட ASS வசன வரிகள்</string>
     <string name="settings_styled_ass_supporting">libass கொண்டு ASS/SSA ஐ வரையும்: எழுத்துருக்கள், இடம் மற்றும் விளைவுகள். சோதனை முறை; வேறு எதுவும் இயங்காதபோது அடுத்து தொடங்கும் வீடியோவுக்குப் பொருந்தும்.</string>
     <string name="settings_hub_state_on">%1$s இயக்கத்தில்</string>

@@ -68,6 +68,17 @@
     <string name="settings_dynamic_color_supporting">Берёт палитру с ваших обоев вместо синего цвета Jellyfin.</string>
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_subtitle_size">Размер текста</string>
+    <string name="settings_subtitle_appearance_supporting">Применяется к субтитрам, которые Jellyboost рисует сам. Стилизованные субтитры ASS сохраняют свой стиль.</string>
+    <string name="settings_subtitle_follow_device">Как на устройстве</string>
+    <string name="settings_subtitle_size_small">Мелкий</string>
+    <string name="settings_subtitle_size_normal">Обычный</string>
+    <string name="settings_subtitle_size_large">Крупный</string>
+    <string name="settings_subtitle_size_larger">Крупнее</string>
+    <string name="settings_subtitle_background">Фон</string>
+    <string name="settings_subtitle_background_none">Нет</string>
+    <string name="settings_subtitle_background_translucent">Полупрозрачный</string>
+    <string name="settings_subtitle_background_solid">Сплошной</string>
     <string name="settings_styled_ass">Стилизованные субтитры ASS</string>
     <string name="settings_styled_ass_supporting">Рисует ASS/SSA через libass: шрифты, позиционирование и эффекты. Экспериментально; применяется со следующего запущенного видео, когда ничего другого не воспроизводится.</string>
     <string name="settings_hub_state_on">%1$s включено</string>

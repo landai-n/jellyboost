@@ -66,6 +66,17 @@
     <string name="settings_dynamic_color_supporting">Jellyfin ނޫކުލައިގެ ބަދަލުގައި ތިޔަ ވޯލްޕޭޕަރުން ކުލަ ނަގާ.</string>
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_subtitle_size">ލިޔުމުގެ ސައިޒް</string>
+    <string name="settings_subtitle_appearance_supporting">މިއީ Jellyboost އަމިއްލައަށް ދައްކާ ސަބްޓައިޓަލްތަކަށެވެ. ސްޓައިލްކުރެވިފައިވާ ASS ސަބްޓައިޓަލްތައް އަމިއްލަ ސްޓައިލް ބަހައްޓައެވެ.</string>
+    <string name="settings_subtitle_follow_device">ޑިވައިސްއާ އެއްގޮތަށް</string>
+    <string name="settings_subtitle_size_small">ކުޑަ</string>
+    <string name="settings_subtitle_size_normal">އާދައިގެ</string>
+    <string name="settings_subtitle_size_large">ބޮޑު</string>
+    <string name="settings_subtitle_size_larger">އިތުރަށް ބޮޑު</string>
+    <string name="settings_subtitle_background">ފުރަގަސް</string>
+    <string name="settings_subtitle_background_none">ނެތް</string>
+    <string name="settings_subtitle_background_translucent">ދެފުށްފެންނަ</string>
+    <string name="settings_subtitle_background_solid">ސޮލިޑް</string>
     <string name="settings_styled_ass">ސްޓައިލްކުރެވިފައިވާ ASS ސަބްޓައިޓަލް</string>
     <string name="settings_styled_ass_supporting">libass ބޭނުންކޮށްގެން ASS/SSA ކުރަހާ: ފޮންޓް، ޕޮޒިޝަން އަދި އެފެކްޓް. ތަޖުރިބާކުރަނިވި؛ އެހެން އެއްޗެއް ނުޖަހާ ހުއްޓައި ދެން ފަށާ ވީޑިއޯއަށް އަސަރުކުރާނެ.</string>
     <string name="settings_hub_state_on">%1$s ހުޅުވިފައި</string>

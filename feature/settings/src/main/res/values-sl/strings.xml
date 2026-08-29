@@ -68,6 +68,17 @@
     <string name="settings_dynamic_color_supporting">Paleto vzame z vašega ozadja namesto Jellyfinove modre.</string>
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_subtitle_size">Velikost besedila</string>
+    <string name="settings_subtitle_appearance_supporting">Velja za podnapise, ki jih izriše Jellyboost. Oblikovani podnapisi ASS ohranijo svojega.</string>
+    <string name="settings_subtitle_follow_device">Sledi napravi</string>
+    <string name="settings_subtitle_size_small">Majhna</string>
+    <string name="settings_subtitle_size_normal">Običajna</string>
+    <string name="settings_subtitle_size_large">Velika</string>
+    <string name="settings_subtitle_size_larger">Večja</string>
+    <string name="settings_subtitle_background">Ozadje</string>
+    <string name="settings_subtitle_background_none">Brez</string>
+    <string name="settings_subtitle_background_translucent">Prosojno</string>
+    <string name="settings_subtitle_background_solid">Polno</string>
     <string name="settings_styled_ass">Oblikovani podnapisi ASS</string>
     <string name="settings_styled_ass_supporting">ASS/SSA izriše z libass: pisave, postavitev in učinki. Poskusno; velja za naslednji zagnani videoposnetek, ko se ne predvaja nič drugega.</string>
     <string name="settings_hub_state_on">%1$s vklopljeno</string>

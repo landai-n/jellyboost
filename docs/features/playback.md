@@ -506,6 +506,43 @@ report and then goes quiet, while playback carries on solo. Every local position
 in all of these cases. See DECISIONS.md, 2026-07-30.
 <!-- END: SyncPlay (M11) -->
 
+<!-- BEGIN: Subtitle appearance -->
+
+## Subtitle appearance — size and background
+
+Two preferences in Settings → Playback → Subtitles style **the subtitles the app draws itself**:
+*Text size* (Follow the device / Small / Normal / Large / Larger) and *Background* (Follow the device /
+None / Translucent / Solid).
+
+**Both default to following the device**, which is not "no preference" but the explicit choice to defer:
+`PlayerView` untouched calls `setUserDefaultTextSize()` and `setUserDefaultStyle()`, which read Android's
+`CaptioningManager`. Defaulting to anything else would override a caption size a user set in accessibility
+settings and would change how every existing install looks. `SubtitleTextSize.NORMAL` is Media3's own
+`DEFAULT_TEXT_SIZE_FRACTION`, so the option a user reads as "normal" is what the player draws with no
+preference at all.
+
+| Class | Responsibility |
+|---|---|
+| `core.common.model.SubtitleTextSize` | The size ramp, as a fraction of the video's height; `null` defers to the device. |
+| `core.common.model.SubtitleBackground` | The box's alpha, and whether the glyphs are outlined; `null` defers to the device. |
+| `player.ui.applyAppearance` | Puts both onto Media3's `SubtitleView`, through two independent calls. |
+
+Two calls and not one style object, so size can follow the device while the background is overridden or the
+reverse. The outline is tied to the background rather than offered separately because it is only
+load-bearing when there is no box — white-on-white is unreadable — so *None* is outlined and the others are
+not; separating them would let a user build the one combination that cannot be read.
+
+**They reach the playback already on screen**, unlike the styled-ASS switch below them: they are collected
+into `PlayerUiState` and applied in the `AndroidView`'s `update`, because nothing about the renderers, the
+extractors or the parser depends on them.
+
+**They do not touch a track libass is drawing.** With *Styled ASS subtitles* on, an ASS/SSA cue is parsed by
+`AssNoOpSubtitleParser` and drawn by `AssSubtitleView` from the script's own styles, so `SubtitleView` has no
+cue of that track to draw. Every other format, and ASS/SSA whenever that switch is off, is styled from here —
+which is what the group's supporting line tells the user. See DECISIONS.md, 2026-08-29.
+
+<!-- END: Subtitle appearance -->
+
 <!-- BEGIN: Styled ASS/SSA (M14 track 6) -->
 
 ## Styled ASS/SSA — libass under Media3

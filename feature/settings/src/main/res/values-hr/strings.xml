@@ -67,6 +67,17 @@
     <string name="settings_dynamic_color_supporting">Preuzima paletu s vaše pozadinske slike umjesto Jellyfinove plave.</string>
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_subtitle_size">Veličina teksta</string>
+    <string name="settings_subtitle_appearance_supporting">Odnosi se na podnaslove koje Jellyboost sam iscrtava. Stilizirani ASS podnaslovi zadržavaju svoj stil.</string>
+    <string name="settings_subtitle_follow_device">Prati uređaj</string>
+    <string name="settings_subtitle_size_small">Mala</string>
+    <string name="settings_subtitle_size_normal">Normalna</string>
+    <string name="settings_subtitle_size_large">Velika</string>
+    <string name="settings_subtitle_size_larger">Veća</string>
+    <string name="settings_subtitle_background">Pozadina</string>
+    <string name="settings_subtitle_background_none">Bez</string>
+    <string name="settings_subtitle_background_translucent">Prozirna</string>
+    <string name="settings_subtitle_background_solid">Neprozirna</string>
     <string name="settings_styled_ass">Stilizirani ASS titlovi</string>
     <string name="settings_styled_ass_supporting">Iscrtava ASS/SSA pomoću libassa: fontovi, položaj i efekti. Eksperimentalno; primjenjuje se na sljedeći pokrenuti videozapis kada se ništa drugo ne reproducira.</string>
     <string name="settings_hub_state_on">%1$s uključeno</string>

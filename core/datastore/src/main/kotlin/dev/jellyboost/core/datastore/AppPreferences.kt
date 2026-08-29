@@ -2,6 +2,8 @@ package dev.jellyboost.core.datastore
 
 import dev.jellyboost.core.common.model.DownloadQuality
 import dev.jellyboost.core.common.model.SegmentSkipMode
+import dev.jellyboost.core.common.model.SubtitleBackground
+import dev.jellyboost.core.common.model.SubtitleTextSize
 import dev.jellyboost.core.common.model.ThemeMode
 import kotlinx.coroutines.flow.Flow
 
@@ -90,6 +92,22 @@ interface AppPreferences {
     val styledAssSubtitles: Flow<Boolean>
 
     suspend fun setStyledAssSubtitles(enabled: Boolean)
+
+    /**
+     * How large Media3 draws a subtitle, and what it draws behind it. Both default to
+     * [SubtitleTextSize.SYSTEM] / [SubtitleBackground.SYSTEM], which is the device's own caption style —
+     * exactly what `PlayerView` does untouched, so no install changes appearance by upgrading.
+     *
+     * Unlike [styledAssSubtitles] these are collected, not read once: they reach the playback on screen.
+     * They style Media3's renderer only; an ASS/SSA track drawn by libass carries its own.
+     */
+    val subtitleTextSize: Flow<SubtitleTextSize>
+
+    suspend fun setSubtitleTextSize(size: SubtitleTextSize)
+
+    val subtitleBackground: Flow<SubtitleBackground>
+
+    suspend fun setSubtitleBackground(background: SubtitleBackground)
 
     /**
      * Not a user setting and not surfaced in Settings: the player's bandwidth detector writes it after a

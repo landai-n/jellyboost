@@ -6,6 +6,8 @@ import dev.jellyboost.core.common.AppError
 import dev.jellyboost.core.common.AppResult
 import dev.jellyboost.core.common.model.DownloadQuality
 import dev.jellyboost.core.common.model.SegmentSkipMode
+import dev.jellyboost.core.common.model.SubtitleBackground
+import dev.jellyboost.core.common.model.SubtitleTextSize
 import dev.jellyboost.core.common.model.ThemeMode
 import dev.jellyboost.core.datastore.AppPreferences
 import dev.jellyboost.core.network.SessionRepository
@@ -49,6 +51,8 @@ class SettingsViewModelTest {
     private val themeMode = MutableStateFlow(ThemeMode.SYSTEM)
     private val dynamicColorEnabled = MutableStateFlow(false)
     private val styledAssSubtitles = MutableStateFlow(false)
+    private val subtitleTextSize = MutableStateFlow(SubtitleTextSize.SYSTEM)
+    private val subtitleBackground = MutableStateFlow(SubtitleBackground.SYSTEM)
     private val storage = MutableStateFlow(StorageUsage())
     private val storageLocations = MutableStateFlow(StorageLocations())
     private val sessionState = MutableStateFlow<SessionState>(SessionState.Unknown)
@@ -72,6 +76,8 @@ class SettingsViewModelTest {
         every { appPreferences.themeMode } returns themeMode
         every { appPreferences.dynamicColorEnabled } returns dynamicColorEnabled
         every { appPreferences.styledAssSubtitles } returns styledAssSubtitles
+        every { appPreferences.subtitleTextSize } returns subtitleTextSize
+        every { appPreferences.subtitleBackground } returns subtitleBackground
         every { sessionRepository.sessionState } returns sessionState
         every { downloads.observeStorage() } returns storage
         every { downloads.observeStorageLocations() } returns storageLocations
@@ -92,6 +98,8 @@ class SettingsViewModelTest {
             themeMode.value = ThemeMode.LIGHT
             dynamicColorEnabled.value = true
             styledAssSubtitles.value = true
+            subtitleTextSize.value = SubtitleTextSize.LARGER
+            subtitleBackground.value = SubtitleBackground.NONE
             storage.value = StorageUsage(usedBytes = 100L, availableBytes = 900L, rootPath = "/sdcard")
 
             viewModel().uiState.test {
@@ -107,6 +115,8 @@ class SettingsViewModelTest {
                 state.themeMode shouldBe ThemeMode.LIGHT
                 state.dynamicColorEnabled shouldBe true
                 state.styledAssSubtitles shouldBe true
+                state.subtitleTextSize shouldBe SubtitleTextSize.LARGER
+                state.subtitleBackground shouldBe SubtitleBackground.NONE
                 state.storage.usedBytes shouldBe 100L
                 state.storage.rootPath shouldBe "/sdcard"
                 cancelAndIgnoreRemainingEvents()
@@ -513,4 +523,32 @@ class SettingsViewModelTest {
                 serverVersion = "10.11.0",
             )
     }
+
+    @Test
+    fun `choosing a subtitle size and background writes both through`() =
+        runTest(dispatcher) {
+            val model = viewModel()
+
+            model.setSubtitleTextSize(SubtitleTextSize.LARGE)
+            model.setSubtitleBackground(SubtitleBackground.TRANSLUCENT)
+            advanceUntilIdle()
+
+            coVerify { appPreferences.setSubtitleTextSize(SubtitleTextSize.LARGE) }
+            coVerify { appPreferences.setSubtitleBackground(SubtitleBackground.TRANSLUCENT) }
+        }
+
+    @Test
+    fun `subtitle appearance starts out following the device`() =
+        runTest(dispatcher) {
+            // The projection, not just the store: a state that opened on NORMAL would show a
+            // selection the user never made and would not match what the player draws.
+            viewModel().uiState.test {
+                val state = awaitItem()
+
+                state.subtitleTextSize shouldBe SubtitleTextSize.SYSTEM
+                state.subtitleBackground shouldBe SubtitleBackground.SYSTEM
+
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
 }

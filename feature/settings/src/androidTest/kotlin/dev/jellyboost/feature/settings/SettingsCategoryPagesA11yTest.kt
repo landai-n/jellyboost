@@ -88,6 +88,40 @@ class SettingsCategoryPagesA11yTest {
     }
 
     @Test
+    fun bothSubtitleAppearanceGroupsRepeatTheirOwnNameSoFollowTheDeviceCanBeToldApart() {
+        // "Follow the device" is the first option of both new groups, on the same page as each
+        // other and as the two skip groups: four radios, two identical labels. The group name in
+        // each row's own description is the only thing that separates them for a reader.
+        rule.setContent { Page(SettingsPane.PLAYBACK) }
+
+        val option = rule.activity.getString(R.string.settings_subtitle_follow_device)
+        listOf(R.string.settings_subtitle_size, R.string.settings_subtitle_background).forEach { groupRes ->
+            val group = rule.activity.getString(groupRes)
+            rule
+                .onNodeWithContentDescription(
+                    choiceRowDescription(group, option, supportingText = null, actionHint = null),
+                ).assertExists()
+        }
+    }
+
+    @Test
+    fun theSubtitleSizeCaptionIsDrawnButNotSpokenTwice() {
+        // The group's supporting line is a visual aid: it is `clearAndSetSemantics`, and the rows
+        // below it pass `supportingText = null`, so it is never read out as part of a row.
+        rule.setContent { Page(SettingsPane.PLAYBACK) }
+
+        val group = rule.activity.getString(R.string.settings_subtitle_size)
+        val option = rule.activity.getString(R.string.settings_subtitle_size_large)
+        val caption = rule.activity.getString(R.string.settings_subtitle_appearance_supporting)
+
+        rule
+            .onNodeWithContentDescription(
+                choiceRowDescription(group, option, supportingText = null, actionHint = null),
+            ).assertExists()
+        rule.onNodeWithContentDescription(caption, substring = true).assertDoesNotExist()
+    }
+
+    @Test
     fun aChoiceRowIsSelectableAtTheRowLevelAndItsRadioIsInert() {
         rule.setContent { Page(SettingsPane.APPEARANCE) }
 

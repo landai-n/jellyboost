@@ -62,6 +62,17 @@
     <string name="settings_dynamic_color_supporting">Usa a paleta do teu fundo em vez do azul do Jellyfin.</string>
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_subtitle_size">Tamanho do texto</string>
+    <string name="settings_subtitle_appearance_supporting">Aplica-se às legendas que o Jellyboost desenha. As legendas ASS estilizadas mantêm o seu próprio estilo.</string>
+    <string name="settings_subtitle_follow_device">Seguir o dispositivo</string>
+    <string name="settings_subtitle_size_small">Pequeno</string>
+    <string name="settings_subtitle_size_normal">Normal</string>
+    <string name="settings_subtitle_size_large">Grande</string>
+    <string name="settings_subtitle_size_larger">Maior</string>
+    <string name="settings_subtitle_background">Fundo</string>
+    <string name="settings_subtitle_background_none">Nenhum</string>
+    <string name="settings_subtitle_background_translucent">Translúcido</string>
+    <string name="settings_subtitle_background_solid">Sólido</string>
     <string name="settings_styled_ass">Legendas ASS estilizadas</string>
     <string name="settings_styled_ass_supporting">Desenha ASS/SSA com libass: tipos de letra, posicionamento e efeitos. Experimental; aplica-se ao próximo vídeo que iniciar quando nada mais estiver em reprodução.</string>
     <string name="settings_hub_state_on">%1$s ativado</string>

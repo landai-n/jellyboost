@@ -66,6 +66,17 @@
     <string name="settings_dynamic_color_supporting">Neem die palet uit jou muurpapier in plaas van die Jellyfin-blou.</string>
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_subtitle_size">Teksgrootte</string>
+    <string name="settings_subtitle_appearance_supporting">Geld vir onderskrifte wat Jellyboost teken. Gestileerde ASS-onderskrifte behou hul eie.</string>
+    <string name="settings_subtitle_follow_device">Volg die toestel</string>
+    <string name="settings_subtitle_size_small">Klein</string>
+    <string name="settings_subtitle_size_normal">Normaal</string>
+    <string name="settings_subtitle_size_large">Groot</string>
+    <string name="settings_subtitle_size_larger">Groter</string>
+    <string name="settings_subtitle_background">Agtergrond</string>
+    <string name="settings_subtitle_background_none">Geen</string>
+    <string name="settings_subtitle_background_translucent">Deurskynend</string>
+    <string name="settings_subtitle_background_solid">Solied</string>
     <string name="settings_styled_ass">Gestileerde ASS-onderskrifte</string>
     <string name="settings_styled_ass_supporting">Teken ASS/SSA met libass: lettertipes, plasing en effekte. Eksperimenteel; geld vir die volgende video wat jy begin as niks anders speel nie.</string>
     <string name="settings_hub_state_on">%1$s aan</string>

@@ -63,6 +63,17 @@
     <string name="settings_dynamic_color_supporting">Preia paleta din imaginea ta de fundal în loc de albastrul Jellyfin.</string>
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_subtitle_size">Dimensiunea textului</string>
+    <string name="settings_subtitle_appearance_supporting">Se aplică subtitrărilor desenate de Jellyboost. Subtitrările ASS stilizate își păstrează propriul stil.</string>
+    <string name="settings_subtitle_follow_device">Urmează dispozitivul</string>
+    <string name="settings_subtitle_size_small">Mică</string>
+    <string name="settings_subtitle_size_normal">Normală</string>
+    <string name="settings_subtitle_size_large">Mare</string>
+    <string name="settings_subtitle_size_larger">Mai mare</string>
+    <string name="settings_subtitle_background">Fundal</string>
+    <string name="settings_subtitle_background_none">Niciunul</string>
+    <string name="settings_subtitle_background_translucent">Translucid</string>
+    <string name="settings_subtitle_background_solid">Opac</string>
     <string name="settings_styled_ass">Subtitrări ASS stilizate</string>
     <string name="settings_styled_ass_supporting">Desenează ASS/SSA cu libass: fonturi, poziționare și efecte. Experimental; se aplică următorului videoclip pornit când nu se redă nimic altceva.</string>
     <string name="settings_hub_state_on">%1$s activat</string>

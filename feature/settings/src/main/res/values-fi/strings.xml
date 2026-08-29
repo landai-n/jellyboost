@@ -66,6 +66,17 @@
     <string name="settings_dynamic_color_supporting">Ottaa paletin taustakuvastasi Jellyfinin sinisen sijaan.</string>
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_subtitle_size">Tekstin koko</string>
+    <string name="settings_subtitle_appearance_supporting">Koskee tekstityksiä, jotka Jellyboost piirtää itse. Tyylitellyt ASS-tekstitykset säilyttävät oman tyylinsä.</string>
+    <string name="settings_subtitle_follow_device">Seuraa laitetta</string>
+    <string name="settings_subtitle_size_small">Pieni</string>
+    <string name="settings_subtitle_size_normal">Normaali</string>
+    <string name="settings_subtitle_size_large">Suuri</string>
+    <string name="settings_subtitle_size_larger">Suurempi</string>
+    <string name="settings_subtitle_background">Tausta</string>
+    <string name="settings_subtitle_background_none">Ei mitään</string>
+    <string name="settings_subtitle_background_translucent">Läpikuultava</string>
+    <string name="settings_subtitle_background_solid">Läpinäkymätön</string>
     <string name="settings_styled_ass">Tyylitellyt ASS-tekstitykset</string>
     <string name="settings_styled_ass_supporting">Piirtää ASS/SSA:n libassilla: fontit, sijoittelu ja tehosteet. Kokeellinen; vaikuttaa seuraavaan käynnistettävään videoon, kun mitään muuta ei toisteta.</string>
     <string name="settings_hub_state_on">%1$s päällä</string>

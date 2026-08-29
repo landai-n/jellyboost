@@ -66,6 +66,17 @@
     <string name="settings_dynamic_color_supporting">Nimmt die Palette aus deinem Hintergrundbild statt dem Jellyfin-Blau.</string>
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_subtitle_size">Textgröße</string>
+    <string name="settings_subtitle_appearance_supporting">Gilt für Untertitel, die Jellyboost selbst zeichnet. Gestaltete ASS-Untertitel behalten ihre eigene Formatierung.</string>
+    <string name="settings_subtitle_follow_device">Dem Gerät folgen</string>
+    <string name="settings_subtitle_size_small">Klein</string>
+    <string name="settings_subtitle_size_normal">Normal</string>
+    <string name="settings_subtitle_size_large">Groß</string>
+    <string name="settings_subtitle_size_larger">Größer</string>
+    <string name="settings_subtitle_background">Hintergrund</string>
+    <string name="settings_subtitle_background_none">Keiner</string>
+    <string name="settings_subtitle_background_translucent">Durchscheinend</string>
+    <string name="settings_subtitle_background_solid">Deckend</string>
     <string name="settings_styled_ass">Formatierte ASS-Untertitel</string>
     <string name="settings_styled_ass_supporting">Zeichnet ASS/SSA mit libass: Schriften, Positionierung und Effekte. Experimentell; gilt ab dem nächsten Video, wenn nichts anderes läuft.</string>
     <string name="settings_hub_state_on">%1$s an</string>

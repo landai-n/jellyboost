@@ -67,6 +67,17 @@
     <string name="settings_dynamic_color_supporting">Paleti ņem no jūsu fona attēla, nevis Jellyfin zilās.</string>
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_subtitle_size">Teksta izmērs</string>
+    <string name="settings_subtitle_appearance_supporting">Attiecas uz subtitriem, ko zīmē pats Jellyboost. Stilizētie ASS subtitri saglabā savu stilu.</string>
+    <string name="settings_subtitle_follow_device">Sekot ierīcei</string>
+    <string name="settings_subtitle_size_small">Mazs</string>
+    <string name="settings_subtitle_size_normal">Parasts</string>
+    <string name="settings_subtitle_size_large">Liels</string>
+    <string name="settings_subtitle_size_larger">Lielāks</string>
+    <string name="settings_subtitle_background">Fons</string>
+    <string name="settings_subtitle_background_none">Nav</string>
+    <string name="settings_subtitle_background_translucent">Caurspīdīgs</string>
+    <string name="settings_subtitle_background_solid">Necaurspīdīgs</string>
     <string name="settings_styled_ass">Stilizēti ASS subtitri</string>
     <string name="settings_styled_ass_supporting">Zīmē ASS/SSA ar libass: fonti, novietojums un efekti. Eksperimentāls; attiecas uz nākamo palaisto video, kad nekas cits netiek atskaņots.</string>
     <string name="settings_hub_state_on">%1$s ieslēgts</string>

@@ -20,6 +20,16 @@ Watching, Next Up, then the *Latest* rows, exactly as before.
 Empty rows are not rendered — jellyfin-web omits an empty shelf rather than showing a blank one,
 and `MediaRow` returns early on an empty list to match.
 
+**Continue Watching is video only, at the source.** Music has its own resume row (*Continue
+Listening*, `RESUME_AUDIO`), and the two must not overlap: an in-progress track that reached the
+video row became the hero, drew an "S1 · E14" line built from its disc and track numbers, and its
+resume button opened the video player. Both resume sources therefore state their side of the line
+themselves — online through `mediaTypes` **and** a client-side re-check of the returned kinds,
+offline through `ItemDao.resumeDownloaded`'s explicit video kinds — rather than leaving it to the
+UI. Two guards sit behind that: `episodeNumberLabel()` answers for episodes only, and the hero's
+resume tap goes through `:app`'s `playbackRouteFor(type)`, so an audio item that ever reappears here
+still resumes in the music queue.
+
 ## The configured layout
 
 jellyfin-web stores Settings → Home in **DisplayPreferences**, as `homesection0` … `homesection9`

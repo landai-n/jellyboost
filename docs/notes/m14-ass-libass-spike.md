@@ -1,8 +1,10 @@
 # M14 track 6 — styled ASS/SSA under Media3 (libass)
 
 Spike verdict: **feasible with no player-engine swap, and implemented behind a default-off
-preference.** The on-device validation this note ends with is still owed; until it is walked the
-feature is experimental and the switch stays off for every install.
+preference.** The on-device validation this note ends with was walked on 2026-08-29 and is
+**four-sevenths done**: rendering, fonts, spacing, the sidecar path, HDR inertness and stability all
+pass; the double-merge guard, sign timing and the cast path are still open. Until those close the
+feature stays experimental and the switch stays off for every install.
 
 ## What the baseline actually is
 
@@ -162,31 +164,75 @@ reach libass through `ass_add_font` and its embedded provider, which never consu
 cache directory, the rewrite-only-on-change behaviour, and — as a source check, since an `AssHandler`
 cannot be built off a device — that the environment is set *before* the handler that reads it.
 
-## Device checklist — still owed
+## Device checklist — walked 2026-08-29
 
-Nothing below has run on hardware. Until it has, the switch stays default-off and this feature is
-experimental.
+Walked on the test tablet against the dev server, debug build of `53e31530`, switch on (verified at
+the datastore, not the switch's rendered state — see the caveat under (0) below). **Four of the seven
+pass, one is partial, one could not be measured as specified, one is blocked.** The switch stays
+default-off and the feature stays experimental until (3)'s guard branch, (4) and (7) are closed.
 
-1. ~~**Visible at all.**~~ **Passed 2026-08-28.** Styled ASS is drawn on the production
-   `PlayerView`/`SurfaceView` path at `OVERLAY_OPEN_GL`; the Wholphin #1049 failure — its first
-   integration was reverted because ASS was completely invisible in direct-rendering /
-   hardware-overlay mode — does not reproduce here. The same run found the missing inter-word spaces
-   fixed above, so **re-check spacing while walking the rest**: real gaps between words, and the
-   default font a style whose family is absent falls back to (it should now be Roboto rather than
-   whatever sorted first).
-2. **Embedded MKV.** A direct-play H.264 MKV with an embedded ASS track: attached fonts, animation
-   and karaoke all rendering.
-3. **External sidecar.** A downloaded item's `.ass` sidecar rendering identically, with the
-   `external:<index>` mapping still selecting the right track; and the double-merge guard confirmed
-   on a downloaded item that has audio sidecars too (subtitles present, unstyled).
-4. **Sign timing.** Measured offset against server burn-in on sign-heavy content, to quantify #71 on
-   this hardware and decide whether it is acceptable.
-5. **HDR / HEVC.** No regression on the HDR path, against the tablet's known decoder limits (no Main
-   10 HEVC, hardware decode capped at 2560x1440).
-6. **Stability.** Repeated surface resize, orientation change, PiP enter/exit, mid-playback track
-   switching, and a memory check with `maxRenderPixels` tuned if needed.
-7. **Cast inertness.** Routing to a Cast receiver with the switch on: libass must be inert, the
-   receiver's own subtitles unaffected, and the transfer back must not leave a dead overlay.
+0. **Reading the switch.** `uiautomator`'s `checked=` on the settings row was misread twice during
+   this walk and sent a whole pass down the wrong branch. The authority is the preference itself:
+   `adb shell run-as dev.jellyboost.app.debug cat files/datastore/app_preferences.preferences_pb`,
+   where `styled_ass_subtitles` is followed by `12 02 08 01` for on and `12 02 08 00` for off. Check
+   it before and after any A/B, and force-stop between toggles — the preference is read once per
+   player build, so a relaunch that reuses the process keeps the old player and the old answer.
+1. ~~**Visible at all.**~~ **Passed 2026-08-28**, and the **spacing re-check passes 2026-08-29**:
+   real gaps between words, no *"No usable fontconfig configuration file found"* anywhere in the
+   logs, and `SubtitleRenderer: Using font provider fontconfig` on every session. Where a style's
+   family is absent, the fallback now resolves to Roboto — see (3).
+2. **Embedded MKV — PASS.** A direct-play H.264 MKV (`DIRECT PLAY 1036P`, 13 font attachments,
+   18 styles, 1468 events, `\blur`×383 / `\fax`×169 / `\fad` / `\fscx` / `\pos`) draws its title card
+   with the attached display faces at their two different scales, positioned over the original art,
+   and its lyric lines in the attached face in yellow bold-italic with the ASS outline. The A/B with
+   the switch off is unambiguous: the same line falls back to the system face inside an opaque box,
+   which is `SsaParser` keeping only colour and italic. **Karaoke is untested and untestable here** —
+   no `\k`/`\kf`/`\ko` tag exists in any ASS track in this library; "animation" is covered only as
+   `\fad`/`\blur`/`\fscx`, not `\t`.
+3. **External sidecar — PASS for the styled branch, guard branch NOT exercised.**
+   - A transcoded download writes `subtitle.<index>.<lang>.ass` sidecars; libass parses
+     `Format(external:2, …)` and the player reports `1:external:2` — **one** merge prefix, which
+     ass-media's single strip matches. Switching mid-playback to the second sidecar gives
+     `2:external:3`, also matched. The `external:<index>` scheme survives intact.
+   - An `ORIGINAL` download keeps the whole MKV, so its **embedded** ASS renders styled offline too.
+   - **New finding: a transcoded download loses the MKV's font attachments.** The server's output
+     carries video + audio only (verified with `ffprobe` on the file's header: `h264`, `aac`, no
+     attachment streams), and the sidecar is a bare `.ass`, so libass has no embedded provider to
+     ask. It logs `fontselect: Using default font family: (AG Foreigner-Roman, 700, 0) ->
+     /system/fonts/Roboto-Regular.ttf, Roboto-Bold`. Positioning, colour, scale, blur and fades all
+     survive; the **typeface does not**. That the fallback is Roboto-Bold rather than an arbitrary
+     face is `AssFontConfig`'s `sans-serif` alias doing exactly its job.
+   - The guard's own shape could not be built from this library. Audio sidecars exist only when
+     `quality.isTranscoded`, and `DownloadEnqueuer.planQuality` downgrades a transcode to `ORIGINAL`
+     whenever it would not save 10 % (`ORIGINAL_THRESHOLD = 0.9`). Every multi-audio ASS item here is
+     low-bitrate enough to be downgraded — a 2.3 Mbps x265 episode estimates *larger* at `LOW`
+     (475 MB against 379 MB, logged verbatim) — and the one item that does transcode has a single
+     audio track. **To close this, a multi-audio ASS source above ~4 Mbps is needed**; the guard
+     stays pinned only by `AssMergeCompatTest`.
+4. **Sign timing — NOT MEASURED, and not constructible as written.** The check asks for an offset
+   "against server burn-in", but this app has **no burn-in path**: on a transcode it delivers
+   subtitles as in-manifest VTT by design (the 2026-08-21 drift fix), so ASS never reaches the client
+   there and there is nothing in-app to measure against. An attempt to measure against the source
+   file instead — screen-record the player, match each captured frame back to a source frame, read
+   the cue onset off the match — failed on content: the ASS-bearing material here is near-static
+   dialogue (mean inter-frame |Δ| ≈ 0.6 of 255 in the matching region), so many captured frames match
+   the same source frame and onset cannot be resolved better than several frames. No gross (~0.5 s)
+   lateness was visible in any capture, but **no figure is established and this check is not passed.**
+   To close it: render a burn-in reference locally (`ffmpeg -vf subtitles=`, which is libass itself)
+   from a **high-motion** sign-heavy source, play both, and match frames; or add a temporary
+   frame-counter overlay to the debug build.
+5. **HDR / HEVC — PASS.** A 4 K HDR10 HEVC Main 10 title is transcoded by the server (as the profile
+   intends: the tablet has no Main 10 decoder) and decoded by `c2.mtk.avc.decoder` at 2560x1440, the
+   known cap. With the switch on, libass stays **inert** on that path — `subtitle track disabled`, no
+   `libasskt.so` load, no renderer — and nothing regressed.
+6. **Stability — PASS.** Four orientation changes, PiP enter and exit (`AssHandler` follows the
+   surface 2560x1384 → 896x484 → 2560x1384), and a mid-playback subtitle-track switch, all with
+   styled ASS drawing. Native heap 50.9 MB → 53.5 MB across the whole pass, which is the second track
+   being parsed rather than a leak; `maxRenderPixels` was left alone because nothing pressed on it.
+   **Zero** `FATAL EXCEPTION` / `ExoPlaybackException` / `CodecException` /
+   `ExceptionInInitializerError` across every capture in the walk.
+7. **Cast inertness — BLOCKED.** No Cast receiver was reachable on the network during the walk (the
+   picker offered none), so neither direction of the transfer was exercised.
 
-If (1) or (4) fails, the honest outcome is to downgrade to *do not implement*, keep the code behind
-its off switch or remove it, and record that in `DECISIONS.md`.
+If (4) — once it is measurable — or (7) fails, the honest outcome is still to downgrade to *do not
+implement*, keep the code behind its off switch or remove it, and record that in `DECISIONS.md`.

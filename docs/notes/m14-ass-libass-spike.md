@@ -195,13 +195,16 @@ default-off and the feature stays experimental until (3)'s guard branch, (4) and
      ass-media's single strip matches. Switching mid-playback to the second sidecar gives
      `2:external:3`, also matched. The `external:<index>` scheme survives intact.
    - An `ORIGINAL` download keeps the whole MKV, so its **embedded** ASS renders styled offline too.
-   - **New finding: a transcoded download loses the MKV's font attachments.** The server's output
-     carries video + audio only (verified with `ffprobe` on the file's header: `h264`, `aac`, no
-     attachment streams), and the sidecar is a bare `.ass`, so libass has no embedded provider to
-     ask. It logs `fontselect: Using default font family: (AG Foreigner-Roman, 700, 0) ->
-     /system/fonts/Roboto-Regular.ttf, Roboto-Bold`. Positioning, colour, scale, blur and fades all
-     survive; the **typeface does not**. That the fallback is Roboto-Bold rather than an arbitrary
-     face is `AssFontConfig`'s `sans-serif` alias doing exactly its job.
+   - **New finding, since fixed: a transcoded download lost the MKV's font attachments.** The
+     server's output carries video + audio only (verified with `ffprobe` on the file's header:
+     `h264`, `aac`, no attachment streams), and the sidecar is a bare `.ass`, so libass had no
+     embedded provider to ask and logged `fontselect: Using default font family: (AG
+     Foreigner-Roman, 700, 0) -> /system/fonts/Roboto-Regular.ttf, Roboto-Bold`. Positioning,
+     colour, scale, blur and fades all survived; the **typeface did not**. The download now fetches
+     the attachments as `DownloadFileType.FONT` files and `AssSubtitleSupport.addFonts` registers
+     them — re-walked 2026-08-29 on the same item, which now logs
+     `fontselect: (AG Foreigner-Roman, 700, 0) -> AGForeignerRomanMedium` and draws in the attached
+     face. DECISIONS 2026-08-29 carries the two ordering facts that decide whether it works.
    - The guard's own shape could not be built from this library. Audio sidecars exist only when
      `quality.isTranscoded`, and `DownloadEnqueuer.planQuality` downgrades a transcode to `ORIGINAL`
      whenever it would not save 10 % (`ORIGINAL_THRESHOLD = 0.9`). Every multi-audio ASS item here is

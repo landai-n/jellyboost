@@ -6,6 +6,7 @@ import dev.jellyboost.core.common.model.DownloadQuality
 import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.BaseItemKind
 import org.jellyfin.sdk.model.api.ImageType
+import org.jellyfin.sdk.model.api.MediaAttachment
 import org.jellyfin.sdk.model.api.MediaStream
 import org.jellyfin.sdk.model.api.MediaStreamType
 import java.util.UUID
@@ -86,8 +87,10 @@ internal class DownloadFilePlanner
                 seriesImage(item)?.let(::add)
                 if (mediaSourceId != null) {
                     val streams = mediaSource.mediaStreams.orEmpty()
-                    addAll(subtitles(item, mediaSourceId, streams, quality))
+                    val subtitles = subtitles(item, mediaSourceId, streams, quality)
+                    addAll(subtitles)
                     addAll(audioSidecars(item, mediaSourceId, streams, quality, audioStreamIndex))
+                    addAll(fonts(item, mediaSourceId, mediaSource.mediaAttachments.orEmpty(), streams, subtitles))
                 }
                 addAll(trickplayTiles(item))
             }
@@ -232,6 +235,47 @@ internal class DownloadFilePlanner
                 }
 
         /**
+         * The container's attached fonts, one file each, so libass can draw a styled sidecar in the faces
+         * its styles actually name.
+         *
+         * Three filters, and each one is the difference between a useful file and wasted bytes:
+         *
+         * - **[plannedSubtitles] must contain an ASS/SSA sidecar.** A font is only ever consulted through
+         *   an ASS style; for an item whose sidecars are all SubRip — or which has none, because the
+         *   download is `ORIGINAL` — every one of these would be downloaded and never opened. This filter
+         *   is also what makes the `ORIGINAL` case fall out for free: that plan has no sidecars at all,
+         *   because the container it keeps still holds its own subtitles *and* its own attachments, which
+         *   `withAssMkvSupport` reads directly.
+         * - **[FONT_MIME_PREFIX] or a [FONT_EXTENSIONS] filename.** Matroska attachments carry cover art
+         *   and `.txt` credits too, and servers are inconsistent about the mime type on older files, so
+         *   the extension is checked as well rather than instead.
+         * - **a usable name.** [MediaAttachment.fileName] is what libass registers the face under and what
+         *   its style lookup matches; an attachment without one cannot be addressed and is skipped.
+         */
+        private fun fonts(
+            item: BaseItemDto,
+            mediaSourceId: String,
+            attachments: List<MediaAttachment>,
+            streams: List<MediaStream>,
+            plannedSubtitles: List<PlannedFile>,
+        ): List<PlannedFile> {
+            val styledIndices = streams.filter { it.codec?.lowercase() in ASS_SUBTITLE_CODECS }.map { it.index }
+            if (plannedSubtitles.none { it.streamIndex in styledIndices }) return emptyList()
+
+            return attachments
+                .filter { it.isFont }
+                .mapNotNull { attachment ->
+                    val name = attachment.fileName?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
+                    PlannedFile(
+                        type = DownloadFileType.FONT,
+                        fileName = "font.${attachment.index}.${name.sanitisedFileName()}",
+                        url = urls.attachmentUrl(item.id, mediaSourceId, attachment.index),
+                        streamIndex = attachment.index,
+                    )
+                }
+        }
+
+        /**
          * Every audio language a transcode did *not* bake into the media file, fetched as its own
          * sidecar. Guarded on [DownloadQuality.isTranscoded] — an `ORIGINAL` already holds every track
          * in the one file — and on [audioStreamIndex] being non-null, which is the plan's own record of
@@ -276,6 +320,24 @@ internal class DownloadFilePlanner
                 ?.take(MAX_LANGUAGE_LENGTH)
                 ?.takeIf { it.isNotBlank() }
                 ?: UNDEFINED_LANGUAGE
+
+        /**
+         * A font attachment carries an arbitrary server-side filename — spaces, accents, and on a hostile
+         * or merely careless library a `/` or a `..`. Sanitising it costs nothing downstream: libass's
+         * memory provider parses each blob with FreeType and matches styles on the **face's own family
+         * names**, so the name it is registered under is a label, not the lookup key.
+         */
+        private fun String.sanitisedFileName(): String =
+            filter { it.isLetterOrDigit() || it == '-' || it == '_' || it == '.' }
+                .takeLast(MAX_FONT_FILE_NAME_LENGTH)
+                .takeIf { it.isNotBlank() }
+                ?: "font"
+
+        /** Matroska attachments are cover art and credits as often as fonts; both tests are needed. */
+        private val MediaAttachment.isFont: Boolean
+            get() =
+                mimeType?.startsWith(FONT_MIME_PREFIX, ignoreCase = true) == true ||
+                    FONT_EXTENSIONS.any { fileName?.endsWith(it, ignoreCase = true) == true }
 
         /**
          * Every trickplay tile sheet of the *largest* resolution the server generated: a server can
@@ -333,7 +395,22 @@ internal class DownloadFilePlanner
 
             private const val DEFAULT_SUBTITLE_FORMAT = "srt"
 
+            /** The subtitle codecs whose styles can name a font at all — the only reason to fetch one. */
+            val ASS_SUBTITLE_CODECS = setOf("ssa", "ass")
+
+            /** `font/ttf`, `font/otf`, `font/sfnt`, … — the modern registered tree for font media types. */
+            private const val FONT_MIME_PREFIX = "font/"
+
+            /**
+             * Checked in addition to the mime type, which older servers leave as
+             * `application/octet-stream` on attachments muxed years ago.
+             */
+            private val FONT_EXTENSIONS = listOf(".ttf", ".otf", ".ttc", ".otc", ".pfb", ".woff", ".woff2")
+
             /** Longer than any real BCP-47 tag; short enough that a hostile one cannot ENAMETOOLONG. */
             private const val MAX_LANGUAGE_LENGTH = 20
+
+            /** Keeps the tail, so the extension survives a name long enough to threaten ENAMETOOLONG. */
+            private const val MAX_FONT_FILE_NAME_LENGTH = 60
         }
     }

@@ -7,6 +7,7 @@ import dev.jellyboost.data.downloads.DownloadFixtures.album
 import dev.jellyboost.data.downloads.DownloadFixtures.artist
 import dev.jellyboost.data.downloads.DownloadFixtures.audioStream
 import dev.jellyboost.data.downloads.DownloadFixtures.episode
+import dev.jellyboost.data.downloads.DownloadFixtures.fontAttachment
 import dev.jellyboost.data.downloads.DownloadFixtures.movie
 import dev.jellyboost.data.downloads.DownloadFixtures.playlist
 import dev.jellyboost.data.downloads.DownloadFixtures.season
@@ -673,6 +674,139 @@ class DownloadFilePlannerTest {
         shouldThrow<NotDownloadableException> { planner.plan(playlist(), TRACK_DIRECTORY) }
     }
 
+    // ---- attached fonts -------------------------------------------------------------------------
+
+    @Test
+    fun `a transcoded download with an ASS sidecar fetches the container's fonts`() {
+        val plan =
+            planner.plan(
+                movie(
+                    streams = listOf(subtitleStream(index = 3, codec = "ass", external = false)),
+                    attachments = listOf(fontAttachment(index = 4), fontAttachment(index = 5)),
+                ),
+                DIRECTORY,
+                quality = DownloadQuality.LOW,
+            )
+
+        val item = DownloadFixtures.uuid(1)
+        plan.filter { it.type == DownloadFileType.FONT }.map { it.url } shouldContainExactly
+            listOf("attachment://$item/source-1/4", "attachment://$item/source-1/5")
+    }
+
+    @Test
+    fun `an ORIGINAL download fetches no fonts, because it keeps the container that holds them`() {
+        // Not a special case in the code: an ORIGINAL plan has no subtitle sidecars either, and the
+        // font branch keys off those — the same container still carries both.
+        val plan =
+            planner.plan(
+                movie(
+                    streams = listOf(subtitleStream(index = 3, codec = "ass", external = false)),
+                    attachments = listOf(fontAttachment(index = 4)),
+                ),
+                DIRECTORY,
+            )
+
+        plan.filter { it.type == DownloadFileType.FONT }.shouldBeEmpty()
+    }
+
+    @Test
+    fun `fonts are not fetched for a sidecar no style can name a face in`() {
+        val plan =
+            planner.plan(
+                movie(
+                    streams = listOf(subtitleStream(index = 3, codec = "subrip", external = false)),
+                    attachments = listOf(fontAttachment(index = 4)),
+                ),
+                DIRECTORY,
+                quality = DownloadQuality.LOW,
+            )
+
+        plan.filter { it.type == DownloadFileType.FONT }.shouldBeEmpty()
+    }
+
+    @Test
+    fun `cover art riding along with the fonts is left behind`() {
+        val plan =
+            planner.plan(
+                movie(
+                    streams = listOf(subtitleStream(index = 3, codec = "ssa", external = false)),
+                    attachments =
+                        listOf(
+                            fontAttachment(index = 4, fileName = "cover.jpg", mimeType = "image/jpeg"),
+                            fontAttachment(index = 5, fileName = "credits.txt", mimeType = "text/plain"),
+                            fontAttachment(index = 6),
+                        ),
+                ),
+                DIRECTORY,
+                quality = DownloadQuality.LOW,
+            )
+
+        plan.filter { it.type == DownloadFileType.FONT }.map { it.streamIndex } shouldContainExactly listOf(6)
+    }
+
+    @Test
+    fun `an old server's octet-stream font is still recognised, by its extension`() {
+        val plan =
+            planner.plan(
+                movie(
+                    streams = listOf(subtitleStream(index = 3, codec = "ass", external = false)),
+                    attachments =
+                        listOf(fontAttachment(index = 4, fileName = "Face.otf", mimeType = "application/octet-stream")),
+                ),
+                DIRECTORY,
+                quality = DownloadQuality.LOW,
+            )
+
+        plan.filter { it.type == DownloadFileType.FONT }.map { it.streamIndex } shouldContainExactly listOf(4)
+    }
+
+    @Test
+    fun `a font file name cannot escape the item directory`() {
+        val plan =
+            planner.plan(
+                movie(
+                    streams = listOf(subtitleStream(index = 3, codec = "ass", external = false)),
+                    attachments = listOf(fontAttachment(index = 4, fileName = "../../etc/Face .ttf")),
+                ),
+                DIRECTORY,
+                quality = DownloadQuality.LOW,
+            )
+
+        val font = plan.single { it.type == DownloadFileType.FONT }
+        font.fileName shouldBe "font.4.....etcFace.ttf"
+        font.fileName.shouldNotContain("/")
+    }
+
+    @Test
+    fun `an attachment with no name is skipped rather than stored under one invented for it`() {
+        val plan =
+            planner.plan(
+                movie(
+                    streams = listOf(subtitleStream(index = 3, codec = "ass", external = false)),
+                    attachments = listOf(fontAttachment(index = 4, fileName = null, mimeType = "font/ttf")),
+                ),
+                DIRECTORY,
+                quality = DownloadQuality.LOW,
+            )
+
+        plan.filter { it.type == DownloadFileType.FONT }.shouldBeEmpty()
+    }
+
+    @Test
+    fun `no font is essential`() {
+        val plan =
+            planner.plan(
+                movie(
+                    streams = listOf(subtitleStream(index = 3, codec = "ass", external = false)),
+                    attachments = listOf(fontAttachment(index = 4)),
+                ),
+                DIRECTORY,
+                quality = DownloadQuality.LOW,
+            )
+
+        plan.filter { it.type == DownloadFileType.FONT }.forEach { it.essential shouldBe false }
+    }
+
     private fun info(
         width: Int,
         thumbnails: Int,
@@ -743,4 +877,10 @@ private class FakeDownloadUrlFactory : DownloadUrlFactory {
         mediaSourceId: String?,
         streamIndex: Int,
     ) = "audio://$itemId?mediaSourceId=$mediaSourceId&audioStreamIndex=$streamIndex"
+
+    override fun attachmentUrl(
+        itemId: UUID,
+        mediaSourceId: String,
+        index: Int,
+    ) = "attachment://$itemId/$mediaSourceId/$index"
 }

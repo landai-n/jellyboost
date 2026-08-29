@@ -186,10 +186,12 @@ one item that transcodes has a single audio track, so a multi-audio ASS source a
 needed; (4) sign timing — **not constructible as written**, because this app has no server burn-in
 path to measure against (transcodes deliver VTT by design) and the library's ASS content is too
 static for frame-matching, so no figure is established (no gross ~0.5 s lateness was visible); and
-(7) cast inertness — blocked, no receiver reachable. **New finding:** a *transcoded* download loses
-the MKV's font attachments, so libass falls back to Roboto-Bold via `AssFontConfig`'s `sans-serif`
-alias — positioning, colour, scale, blur and fades survive, the typeface does not; an `ORIGINAL`
-download keeps its fonts. **Accepted staleness (review wave,
+(7) cast inertness — blocked, no receiver reachable. **New finding, fixed the same day:** a *transcoded* download lost
+the MKV's font attachments, so libass fell back to Roboto-Bold — positioning, colour, scale, blur and
+fades survived, the typeface did not. The plan now fetches the attachments (`DownloadFileType.FONT`),
+`AssSubtitleSupport.addFonts` registers them at `prepare`, and the sidecar top-up repairs downloads
+taken before that; re-walked on device, the same item now resolves `AG Foreigner-Roman` to the
+attached face. DECISIONS 2026-08-29. **Accepted staleness (review wave,
 2026-08-28):** the preference is read once per player build, and a music or cast session keeps that
 player across the handover, so a toggle flipped there waits for the player to go. The switch now
 says "with nothing else playing" in all 70 string files rather than "the next video you start";

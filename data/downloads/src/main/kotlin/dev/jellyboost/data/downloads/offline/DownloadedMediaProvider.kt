@@ -87,6 +87,7 @@ class DownloadedMediaProvider
                     // No seek-repair call here (unlike the media file above): these are locally muxed
                     // by the post-fetch strip and land with a complete `moov`.
                     audio = stored.files.toAudio(),
+                    fonts = stored.files.toFonts(),
                     trickplay = stored.files.toTrickplay(dto),
                 )
             }
@@ -108,6 +109,17 @@ class DownloadedMediaProvider
                     val index = file.streamIndex ?: return@mapNotNull null
                     val onDisk = file.takeIfOnDisk() ?: return@mapNotNull null
                     DownloadedSubtitle(streamIndex = index, uri = localFileUri(onDisk.path))
+                }
+
+        /**
+         * The attached fonts on disk. Unsorted and unindexed on purpose: libass matches a style to a face
+         * by the family names it reads out of the blob, so nothing here has to line up with a stream.
+         */
+        private fun List<DownloadFileEntity>.toFonts(): List<DownloadedFont> =
+            filter { it.type == DownloadFileType.FONT }
+                .mapNotNull { file ->
+                    val onDisk = file.takeIfOnDisk() ?: return@mapNotNull null
+                    DownloadedFont(name = file.fileName, path = onDisk.path)
                 }
 
         /** Sorted ascending by stream index — the order [DownloadedMedia.audio] promises the player. */

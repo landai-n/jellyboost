@@ -3,6 +3,7 @@ package dev.jellyboost.player.resolve
 import androidx.media3.common.MimeTypes
 import dev.jellyboost.core.common.model.DownloadQuality
 import dev.jellyboost.data.downloads.offline.DownloadedAudio
+import dev.jellyboost.data.downloads.offline.DownloadedFont
 import dev.jellyboost.data.downloads.offline.DownloadedMediaProvider
 import dev.jellyboost.data.downloads.offline.DownloadedSubtitle
 import dev.jellyboost.data.downloads.offline.DownloadedTrickplay
@@ -737,6 +738,39 @@ class LocalPlaybackResolverTest {
         }
 
     @Suppress("LongParameterList")
+    @Test
+    fun `carries the downloaded fonts onto the source, unfiltered`() =
+        runTest {
+            // Not tracks, so nothing here is sorted, indexed or matched against a stream: libass reads
+            // each blob's own family names and matches styles on those.
+            downloaded(
+                fonts =
+                    listOf(
+                        DownloadedFont(name = "font.5.Second.otf", path = "/d/font.5.Second.otf"),
+                        DownloadedFont(name = "font.4.First.ttf", path = "/d/font.4.First.ttf"),
+                    ),
+            )
+
+            val source = resolver.resolve(request).shouldNotBeNull()
+
+            source.fonts.map { it.name } shouldContainExactly listOf("font.5.Second.otf", "font.4.First.ttf")
+            source.fonts.map { it.path } shouldContainExactly
+                listOf("/d/font.5.Second.otf", "/d/font.4.First.ttf")
+        }
+
+    @Test
+    fun `an item with no attached fonts resolves without any`() =
+        runTest {
+            downloaded()
+
+            resolver
+                .resolve(request)
+                .shouldNotBeNull()
+                .fonts
+                .shouldBeEmpty()
+        }
+
+    @Suppress("LongParameterList")
     private fun downloaded(
         mediaSource: MediaSourceInfo? = PlayerFixtures.mediaSourceInfo(supportsDirectPlay = true),
         runTimeTicks: Long = PlayerFixtures.RUN_TIME_TICKS,
@@ -744,6 +778,7 @@ class LocalPlaybackResolverTest {
         bakedAudioStreamIndex: Int? = null,
         subtitles: List<DownloadedSubtitle> = emptyList(),
         audio: List<DownloadedAudio> = emptyList(),
+        fonts: List<DownloadedFont> = emptyList(),
         trickplay: DownloadedTrickplay? = null,
     ) {
         coEvery { downloads.get(PlayerFixtures.ITEM_ID) } returns
@@ -754,6 +789,7 @@ class LocalPlaybackResolverTest {
                 bakedAudioStreamIndex = bakedAudioStreamIndex,
                 subtitles = subtitles,
                 audio = audio,
+                fonts = fonts,
                 trickplay = trickplay,
             )
     }

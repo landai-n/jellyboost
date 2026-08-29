@@ -16,6 +16,22 @@ internal data class PlaybackMediaItemSpec(
     val mimeType: String? = null,
     val subtitles: List<SubtitleSpec> = emptyList(),
     val audioSidecars: List<AudioSidecarSpec> = emptyList(),
+    /**
+     * Attached fonts downloaded beside a transcoded item, for libass alone. Not part of any
+     * `MediaItem` — ExoPlayer never opens these — so they take no merge child and change no track id.
+     */
+    val fonts: List<FontSpec> = emptyList(),
+)
+
+/**
+ * One font file on this device, handed to libass rather than to ExoPlayer.
+ *
+ * @property path an absolute filesystem path, not a URI: the bytes are read by the app and passed to
+ *   `AssHandler.addFont`.
+ */
+internal data class FontSpec(
+    val name: String,
+    val path: String,
 )
 
 /**

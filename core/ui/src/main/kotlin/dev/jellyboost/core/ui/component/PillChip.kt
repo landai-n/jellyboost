@@ -194,10 +194,12 @@ private fun ChipSurface(
                 .then(
                     when {
                         selected -> Modifier.background(color = ChipSelectedFill, shape = CircleShape)
+                        // GlassBorder, not the badge's: a chip is a control, so its edge is its
+                        // whole boundary and owes WCAG 1.4.11's 3:1 — the ghost pill's rule.
                         overMedia ->
                             Modifier
                                 .background(color = OverMedia.GlassFill, shape = CircleShape)
-                                .border(GlassDefaults.HairlineWidth, OverMedia.BadgeBorder, CircleShape)
+                                .border(GlassDefaults.HairlineWidth, OverMedia.GlassBorder, CircleShape)
 
                         else ->
                             Modifier

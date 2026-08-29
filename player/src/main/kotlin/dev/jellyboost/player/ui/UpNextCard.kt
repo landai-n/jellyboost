@@ -93,8 +93,11 @@ internal fun UpNextCard(
                 icon = Icons.Filled.Close,
                 contentDescription = stringResource(R.string.player_up_next_dismiss),
                 onClick = onDismiss,
-                // Full white, not the chrome default of white@80%: read against a moving image.
+                // Fill, edge and glyph together, like the pill below it: all three sit on this
+                // card's own dark glass, so none of them may follow the page.
                 tint = Color.White,
+                surfaceTint = VIDEO_GLASS_FILL,
+                borderColor = GlassDefaults.DarkHairline,
             )
         }
 

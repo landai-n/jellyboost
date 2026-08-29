@@ -176,8 +176,20 @@ device fontconfig finds no configuration, loses `conf.d`, and cannot resolve the
 libass builds its entire fallback sort from; every codepoint then came from the first font in an
 arbitrary order that covered it, and U+0020 is covered by icon faces whose space advance is zero.
 `AssFontConfig` writes a `fonts.conf` and names it in `FONTCONFIG_FILE` before libass loads
-(DECISIONS 2026-08-28). **Owed:** checks (2)–(7) of the device walk in
-`docs/notes/m14-ass-libass-spike.md`, plus a spacing re-check on the same pass. **Accepted staleness (review wave,
+(DECISIONS 2026-08-28). **Device walk run 2026-08-29 — four of seven pass** (DECISIONS 2026-08-29,
+full results in `docs/notes/m14-ass-libass-spike.md`): the spacing re-check, embedded MKV with its
+attached fonts, HDR/HEVC inertness and stability (rotation, PiP, mid-playback track switch, flat
+heap, zero exceptions) all **PASS**; the external-sidecar branch of (3) passes with the
+`external:<index>` mapping intact. **Still owed:** (3)'s double-merge guard — unreachable from this
+library, since `planQuality` downgrades every low-bitrate multi-audio ASS item to `ORIGINAL` and the
+one item that transcodes has a single audio track, so a multi-audio ASS source above ~4 Mbps is
+needed; (4) sign timing — **not constructible as written**, because this app has no server burn-in
+path to measure against (transcodes deliver VTT by design) and the library's ASS content is too
+static for frame-matching, so no figure is established (no gross ~0.5 s lateness was visible); and
+(7) cast inertness — blocked, no receiver reachable. **New finding:** a *transcoded* download loses
+the MKV's font attachments, so libass falls back to Roboto-Bold via `AssFontConfig`'s `sans-serif`
+alias — positioning, colour, scale, blur and fades survive, the typeface does not; an `ORIGINAL`
+download keeps its fonts. **Accepted staleness (review wave,
 2026-08-28):** the preference is read once per player build, and a music or cast session keeps that
 player across the handover, so a toggle flipped there waits for the player to go. The switch now
 says "with nothing else playing" in all 70 string files rather than "the next video you start";

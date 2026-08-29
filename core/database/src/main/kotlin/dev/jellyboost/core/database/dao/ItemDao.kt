@@ -90,11 +90,16 @@ interface ItemDao {
         limit: Int,
     ): List<ItemEntity>
 
+    /**
+     * [videoTypes] is what makes this the mirror of [resumeDownloadedAudio] rather than its superset:
+     * unfiltered, an in-progress track answers *Continue watching* as well as *Continue listening*.
+     */
     @Query(
         """
         SELECT i.* FROM items AS i
         INNER JOIN user_data AS u ON u.itemId = i.id AND u.userId = :userId
         WHERE i.source = :source
+          AND i.type IN (:videoTypes)
           AND u.playbackPositionTicks > 0
           AND u.played = 0
         ORDER BY u.lastPlayedDate DESC, u.updatedAt DESC
@@ -104,6 +109,7 @@ interface ItemDao {
     suspend fun resumeDownloaded(
         source: ItemSource,
         userId: UUID,
+        videoTypes: List<ItemType>,
         limit: Int,
     ): List<ItemEntity>
 

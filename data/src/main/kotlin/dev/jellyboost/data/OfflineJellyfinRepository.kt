@@ -70,7 +70,7 @@ internal class OfflineJellyfinRepository
             onIo {
                 val userId = currentUserId() ?: return@onIo emptyList()
                 itemDao
-                    .resumeDownloaded(ItemSource.DOWNLOAD, userId, limit)
+                    .resumeDownloaded(ItemSource.DOWNLOAD, userId, VIDEO_RESUME_TYPES, limit)
                     .withLocalUserData(userId)
                     .asHomeCards()
             }
@@ -425,6 +425,13 @@ internal class OfflineJellyfinRepository
 
         private companion object {
             val LIST_ITEM_TYPES = listOf(ItemType.MOVIE, ItemType.SERIES, ItemType.EPISODE)
+
+            /**
+             * The downloadable kinds `getResumeItems` may answer with — the offline counterpart of
+             * the online row's `mediaTypes = [VIDEO]`. A track is [ItemType.AUDIO] and belongs to
+             * `getResumeAudioItems` alone.
+             */
+            val VIDEO_RESUME_TYPES = listOf(ItemType.MOVIE, ItemType.EPISODE)
 
             /** A grouped row's parent is only usable as a card when the cached row really is one. */
             val GROUP_CARD_TYPES = setOf(ItemType.SERIES, ItemType.MUSIC_ALBUM)

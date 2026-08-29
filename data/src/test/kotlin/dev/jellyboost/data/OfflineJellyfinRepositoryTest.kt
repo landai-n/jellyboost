@@ -37,6 +37,7 @@ import dev.jellyboost.data.cache.CacheFixtures.uuid
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
@@ -45,6 +46,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -114,7 +116,7 @@ class OfflineJellyfinRepositoryTest {
     fun `continue watching lists downloads with a resume position`() =
         runTest {
             val movie = movieDto(uuid(1), "Arrival")
-            coEvery { itemDao.resumeDownloaded(ItemSource.DOWNLOAD, USER_ID, 12) } returns
+            coEvery { itemDao.resumeDownloaded(ItemSource.DOWNLOAD, USER_ID, VIDEO_TYPES, 12) } returns
                 listOf(entity(movie))
             coEvery { userDataDao.getUserDataFor(listOf(uuid(1)), USER_ID) } returns
                 listOf(userData(uuid(1), positionTicks = 30_000_000_000L))
@@ -135,7 +137,7 @@ class OfflineJellyfinRepositoryTest {
     fun `continue watching carries no overview offline either, matching the lean online card fields`() =
         runTest {
             val movie = movieDto(uuid(1), "Arrival").copy(overview = SYNOPSIS)
-            coEvery { itemDao.resumeDownloaded(ItemSource.DOWNLOAD, USER_ID, 12) } returns
+            coEvery { itemDao.resumeDownloaded(ItemSource.DOWNLOAD, USER_ID, VIDEO_TYPES, 12) } returns
                 listOf(entity(movie))
 
             val items = repository.getResumeItems(limit = 12).getOrNull()!!
@@ -187,7 +189,28 @@ class OfflineJellyfinRepositoryTest {
 
             repository.getResumeItems(limit = 12).getOrNull()!!.shouldBeEmpty()
 
-            coVerify(exactly = 0) { itemDao.resumeDownloaded(any(), any(), any()) }
+            coVerify(exactly = 0) { itemDao.resumeDownloaded(any(), any(), any(), any()) }
+        }
+
+    /**
+     * Unfiltered, this query answers with every downloaded row carrying a position, which puts an
+     * in-progress track in the *Continue watching* hero — eyebrow, an episode badge built from its
+     * disc and track numbers, and a resume button into the video player.
+     */
+    @Test
+    fun `continue watching asks only for video kinds, leaving tracks to continue listening`() =
+        runTest {
+            val types = slot<List<ItemType>>()
+            val episode = episodeDto(uuid(12), "Winter Is Coming", uuid(10), "Thrones", uuid(11), 1, 1)
+            coEvery {
+                itemDao.resumeDownloaded(ItemSource.DOWNLOAD, USER_ID, capture(types), 12)
+            } returns listOf(entity(movieDto(uuid(1), "Arrival")), entity(episode))
+
+            val items = repository.getResumeItems(limit = 12).getOrNull()!!
+
+            items.map { it.name } shouldContainExactly listOf("Arrival", "Winter Is Coming")
+            types.captured shouldContainExactly listOf(ItemType.MOVIE, ItemType.EPISODE)
+            types.captured shouldNotContain ItemType.AUDIO
         }
 
     // ---- Next up ------------------------------------------------------------------------------
@@ -918,6 +941,9 @@ class OfflineJellyfinRepositoryTest {
 
         /** A photo or live-TV library: recognised, but nothing downloads into it. */
         val OTHER_LIBRARY: UUID = uuid(40)
+
+        /** What *Continue watching* narrows its query to; a track is deliberately not in it. */
+        val VIDEO_TYPES = listOf(ItemType.MOVIE, ItemType.EPISODE)
 
         /** A synopsis long enough to unbalance the home hero if it were not stripped. */
         const val SYNOPSIS =

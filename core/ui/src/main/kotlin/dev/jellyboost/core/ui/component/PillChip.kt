@@ -31,6 +31,7 @@ import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
+import dev.jellyboost.core.ui.theme.OverMedia
 import dev.jellyboost.core.ui.theme.pageInk
 
 private const val CHIP_FILL_ALPHA = 0.05f
@@ -104,6 +105,9 @@ fun PillChip(
 /**
  * For a chip that opens something rather than toggling: as a [PillChip] it would announce "not
  * selected" forever, a state the user cannot change.
+ *
+ * @param overMedia the chip is inside a copy lockup drawn on artwork (the detail hero's origin
+ *   chips), which is dark-scrimmed in both schemes — see [OverMedia].
  */
 @Composable
 fun ActionPillChip(
@@ -111,12 +115,14 @@ fun ActionPillChip(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    overMedia: Boolean = false,
 ) {
     ChipFrame(modifier = modifier) {
         ChipSurface(
             text = text,
             selected = false,
             contentAlpha = if (enabled) 1f else DISABLED_CHIP_ALPHA,
+            overMedia = overMedia,
             interaction =
                 Modifier.clickable(
                     enabled = enabled,
@@ -172,25 +178,31 @@ private fun ChipSurface(
     selected: Boolean,
     contentAlpha: Float,
     modifier: Modifier = Modifier,
+    overMedia: Boolean = false,
     interaction: Modifier = Modifier,
 ) {
     val contentColor =
-        if (selected) {
-            ChipSelectedContent
-        } else {
-            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = contentAlpha)
+        when {
+            selected -> ChipSelectedContent
+            overMedia -> OverMedia.GlassContent.copy(alpha = contentAlpha)
+            else -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = contentAlpha)
         }
     Box(
         modifier =
             modifier
                 .clip(CircleShape)
                 .then(
-                    if (selected) {
-                        Modifier.background(color = ChipSelectedFill, shape = CircleShape)
-                    } else {
-                        Modifier
-                            .background(color = ChipFill, shape = CircleShape)
-                            .border(GlassDefaults.HairlineWidth, GlassDefaults.Hairline, CircleShape)
+                    when {
+                        selected -> Modifier.background(color = ChipSelectedFill, shape = CircleShape)
+                        overMedia ->
+                            Modifier
+                                .background(color = OverMedia.GlassFill, shape = CircleShape)
+                                .border(GlassDefaults.HairlineWidth, OverMedia.BadgeBorder, CircleShape)
+
+                        else ->
+                            Modifier
+                                .background(color = ChipFill, shape = CircleShape)
+                                .border(GlassDefaults.HairlineWidth, GlassDefaults.Hairline, CircleShape)
                     },
                 ).then(interaction)
                 .defaultMinSize(minHeight = Dimens.PillHeightSmall)
@@ -207,22 +219,28 @@ private fun ChipSurface(
     }
 }
 
-/** Never interactive and never coloured: a label whose box keeps it out of the metadata sentence. */
+/**
+ * Never interactive and never coloured: a label whose box keeps it out of the metadata sentence.
+ *
+ * @param overMedia the certificate as a hero or detail lockup draws it — on artwork, which is
+ *   dark-scrimmed in both schemes, so the label and its box are [OverMedia]'s and not the page's.
+ */
 @Composable
 fun MPillBadge(
     text: String,
     modifier: Modifier = Modifier,
+    overMedia: Boolean = false,
 ) {
     Text(
         text = text,
         style = JellyfinTypeExtras.MPill,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        color = if (overMedia) OverMedia.Meta else MaterialTheme.colorScheme.onSurfaceVariant,
         maxLines = 1,
         modifier =
             modifier
                 .border(
                     width = GlassDefaults.HairlineWidth,
-                    color = MaterialTheme.colorScheme.outline,
+                    color = if (overMedia) OverMedia.BadgeBorder else MaterialTheme.colorScheme.outline,
                     shape = RoundedCornerShape(Dimens.MPillRadius),
                 ).padding(horizontal = MPillHorizontalPadding, vertical = MPillVerticalPadding),
     )

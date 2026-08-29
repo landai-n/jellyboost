@@ -90,7 +90,16 @@ internal class DownloadFilePlanner
                     val subtitles = subtitles(item, mediaSourceId, streams, quality)
                     addAll(subtitles)
                     addAll(audioSidecars(item, mediaSourceId, streams, quality, audioStreamIndex))
-                    addAll(fonts(item, mediaSourceId, mediaSource.mediaAttachments.orEmpty(), streams, subtitles))
+                    addAll(
+                        fonts(
+                            item,
+                            mediaSourceId,
+                            mediaSource.mediaAttachments.orEmpty(),
+                            streams,
+                            quality,
+                            subtitles,
+                        ),
+                    )
                 }
                 addAll(trickplayTiles(item))
             }
@@ -240,25 +249,33 @@ internal class DownloadFilePlanner
          *
          * Three filters, and each one is the difference between a useful file and wasted bytes:
          *
+         * - **the row's [quality]**, exactly as [audioSidecars] is guarded, and for the same reason: only
+         *   a transcode drops the attachments. An `ORIGINAL` download *is* the container, so
+         *   `withAssMkvSupport` reads the faces straight out of the file already on disk and every one of
+         *   these would be a second copy of bytes this plan is storing anyway. This has to be its own
+         *   test and not a corollary of the one below: [subtitles] plans a sidecar for an **external**
+         *   subtitle at *every* quality, so an item with a `.ass` file beside it on the server reaches
+         *   this function with a styled sidecar in hand and an untranscoded container behind it.
          * - **[plannedSubtitles] must contain an ASS/SSA sidecar.** A font is only ever consulted through
-         *   an ASS style; for an item whose sidecars are all SubRip — or which has none, because the
-         *   download is `ORIGINAL` — every one of these would be downloaded and never opened. This filter
-         *   is also what makes the `ORIGINAL` case fall out for free: that plan has no sidecars at all,
-         *   because the container it keeps still holds its own subtitles *and* its own attachments, which
-         *   `withAssMkvSupport` reads directly.
+         *   an ASS style, so for a transcode whose sidecars are all SubRip every one of these would be
+         *   downloaded and never opened.
          * - **[FONT_MIME_PREFIX] or a [FONT_EXTENSIONS] filename.** Matroska attachments carry cover art
          *   and `.txt` credits too, and servers are inconsistent about the mime type on older files, so
          *   the extension is checked as well rather than instead.
-         * - **a usable name.** [MediaAttachment.fileName] is what libass registers the face under and what
-         *   its style lookup matches; an attachment without one cannot be addressed and is skipped.
+         *
+         * An attachment with no [MediaAttachment.fileName] is skipped for want of something to name the
+         * stored file after — not for want of a lookup key, which is the face's own family names.
          */
+        @Suppress("LongParameterList")
         private fun fonts(
             item: BaseItemDto,
             mediaSourceId: String,
             attachments: List<MediaAttachment>,
             streams: List<MediaStream>,
+            quality: DownloadQuality,
             plannedSubtitles: List<PlannedFile>,
         ): List<PlannedFile> {
+            if (!quality.isTranscoded) return emptyList()
             val styledIndices = streams.filter { it.codec?.lowercase() in ASS_SUBTITLE_CODECS }.map { it.index }
             if (plannedSubtitles.none { it.streamIndex in styledIndices }) return emptyList()
 

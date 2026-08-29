@@ -103,7 +103,8 @@ internal interface DownloadUrlFactory {
     /**
      * One font attached to the source container, by its `MediaAttachment.index`. Fetched only for a
      * transcoded download: the server's re-encode carries video and audio and drops the attachments,
-     * so this is the only route to the faces an ASS/SSA sidecar names.
+     * so this is the only route to the faces an ASS/SSA sidecar names. An `ORIGINAL` download keeps
+     * the container and reads them out of it.
      */
     fun attachmentUrl(
         itemId: UUID,

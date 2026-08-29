@@ -111,7 +111,7 @@ private fun HeroBackdrop(
     Box(modifier = Modifier.fillMaxSize().heroHalo())
     Box(modifier = Modifier.fillMaxSize().background(JellyfinGradients.BackdropScrim))
     if (wide) {
-        Box(modifier = Modifier.fillMaxSize().background(wideHeroScrim()))
+        Box(modifier = Modifier.fillMaxSize().background(JellyfinGradients.WideHeroScrim))
     }
 }
 
@@ -324,33 +324,6 @@ private fun HeroRailFade(modifier: Modifier = Modifier) {
 @Composable
 private fun resumeLabel(item: JellyfinItem): String =
     stringResource(if (item.userData.isResumable) R.string.home_hero_resume else CoreUiR.string.action_play)
-
-/**
- * Laid over `JellyfinGradients.BackdropScrim`, not instead of it; local to this file because it is a
- * function of the theme's background colour.
- */
-@Composable
-private fun wideHeroScrim(): Brush {
-    val background = MaterialTheme.colorScheme.background
-    return remember(background) {
-        Brush.horizontalGradient(
-            colorStops =
-                arrayOf(
-                    0f to background.copy(alpha = WIDE_SCRIM_NEAR_ALPHA),
-                    WIDE_SCRIM_MID_STOP to background.copy(alpha = WIDE_SCRIM_MID_ALPHA),
-                    WIDE_SCRIM_END_STOP to Color.Transparent,
-                ),
-        )
-    }
-}
-
-private const val WIDE_SCRIM_NEAR_ALPHA = 0.94f
-
-private const val WIDE_SCRIM_MID_STOP = 0.38f
-
-private const val WIDE_SCRIM_MID_ALPHA = 0.72f
-
-private const val WIDE_SCRIM_END_STOP = 0.70f
 
 private val CompactCopyPadding = 20.dp
 

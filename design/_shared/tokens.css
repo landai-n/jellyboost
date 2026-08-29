@@ -56,7 +56,9 @@
   --error: #B3261E;
   --outline: #788AB0;
 
-  --backdrop-scrim: linear-gradient(180deg, rgba(238, 241, 247, 0) 0%, rgba(238, 241, 247, .65) 60%, #EEF1F7 100%);
+  /* Eased, not the dark ramp recoloured: white at the dark alphas fogs artwork instead of
+     shading it, so the light fade starts later and compresses toward the solid edge. */
+  --backdrop-scrim: linear-gradient(180deg, rgba(238, 241, 247, 0) 0%, rgba(238, 241, 247, .18) 50%, rgba(238, 241, 247, .62) 78%, #EEF1F7 100%);
   --image-placeholder: linear-gradient(135deg, #E3E8F2 0%, #FFFFFF 100%);
 
   background: var(--background);

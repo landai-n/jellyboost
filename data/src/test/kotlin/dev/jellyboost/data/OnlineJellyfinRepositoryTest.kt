@@ -263,6 +263,9 @@ class OnlineJellyfinRepositoryTest {
                 queryResponse(
                     listOf(
                         itemDto(BaseItemKind.AUDIO, "Fake Plastic Trees"),
+                        // Both members of AUDIO_RESUME_KINDS: the set shrinking to just AUDIO
+                        // must turn this test red, not only the doc claim false.
+                        itemDto(BaseItemKind.AUDIO_BOOK, "Project Hail Mary"),
                         itemDto(BaseItemKind.EPISODE, "Trompe L'Oeil"),
                         itemDto(BaseItemKind.MOVIE, "Arrival"),
                     ),
@@ -631,20 +634,25 @@ class OnlineJellyfinRepositoryTest {
 
     /** The mirror of the *Continue watching* guard: neither row may draw the other's kind. */
     @Test
-    fun `getResumeAudioItems drops video the server returned anyway`() =
+    fun `getResumeAudioItems drops video the server returned anyway, and caches only what it keeps`() =
         runTest {
+            val cached = slot<List<BaseItemDto>>()
             coEvery { itemsApi.getResumeItems(any<GetResumeItemsRequest>()) } returns
                 queryResponse(
                     listOf(
                         itemDto(BaseItemKind.MOVIE, "Arrival"),
                         itemDto(BaseItemKind.AUDIO, "Fake Plastic Trees"),
+                        itemDto(BaseItemKind.AUDIO_BOOK, "Project Hail Mary"),
                     ),
                 )
 
             val result = repository.getResumeAudioItems()
 
             (result as AppResult.Success).value.map { it.name } shouldContainExactly
-                listOf("Fake Plastic Trees")
+                listOf("Fake Plastic Trees", "Project Hail Mary")
+            verify { browseCache.cacheItems(capture(cached), full = false) }
+            cached.captured.map { it.name } shouldContainExactly
+                listOf("Fake Plastic Trees", "Project Hail Mary")
         }
 
     @Test

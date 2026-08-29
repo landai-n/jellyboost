@@ -2,7 +2,9 @@
 <resources>
     <string name="downloads_tab_downloaded">ダウンロード済み</string>
     <string name="downloads_tab_queue">キュー</string>
-    <string name="downloads_wifi_only">Wi‑Fi接続時のみ</string>
+    <string name="downloads_wifi_wait_title">Wi‑Fi を待機中</string>
+    <string name="downloads_wifi_wait_body">モバイルデータ接続のため、キューを一時停止しています。</string>
+    <string name="downloads_wifi_wait_action">「Wi‑Fi接続時のみ」をオフにする</string>
     <string name="downloads_screen_title">ダウンロード</string>
 
     <string name="downloads_section_movies">映画</string>
@@ -23,13 +25,11 @@
     <string name="downloads_storage_free">空き %1$s</string>
     <string name="downloads_stat_on_device">この端末に</string>
     <string name="downloads_stat_queue">キュー</string>
-    <string name="downloads_stat_network">ネットワーク</string>
     <string name="downloads_stat_free_of">%2$s のうち %1$s 空き</string>
     <plurals name="downloads_stat_queue_items">
         <item quantity="other">%1$d 件 · %2$s</item>
     </plurals>
     <string name="downloads_stat_eta_about">残り約 %1$s</string>
-    <string name="downloads_stat_network_helper">モバイルデータ利用時は自動的に一時停止します</string>
     <string name="downloads_usage_storage_label">使用中のストレージ</string>
     <string name="downloads_usage_queue_label">キューの進捗</string>
     <string name="downloads_queue_row_description">%1$s、%2$d%%、%3$s</string>

@@ -2,7 +2,9 @@
 <resources>
     <string name="downloads_tab_downloaded">डाउनलोड किया गया</string>
     <string name="downloads_tab_queue">कतार</string>
-    <string name="downloads_wifi_only">केवल Wi-Fi</string>
+    <string name="downloads_wifi_wait_title">Wi-Fi का इंतज़ार</string>
+    <string name="downloads_wifi_wait_body">मोबाइल डेटा कनेक्शन पर कतार रोक दी गई है।</string>
+    <string name="downloads_wifi_wait_action">केवल Wi-Fi बंद करें</string>
     <string name="downloads_screen_title">डाउनलोड</string>
 
     <!-- Downloaded tab grouping -->
@@ -27,14 +29,12 @@
     <string name="downloads_storage_free">%1$s खाली</string>
     <string name="downloads_stat_on_device">इस डिवाइस पर</string>
     <string name="downloads_stat_queue">कतार</string>
-    <string name="downloads_stat_network">नेटवर्क</string>
     <string name="downloads_stat_free_of">%2$s में से %1$s खाली</string>
     <plurals name="downloads_stat_queue_items">
         <item quantity="one">%1$d आइटम · %2$s</item>
         <item quantity="other">%1$d आइटम · %2$s</item>
     </plurals>
     <string name="downloads_stat_eta_about">लगभग %1$s शेष</string>
-    <string name="downloads_stat_network_helper">मोबाइल डेटा पर अपने आप रुक जाता है</string>
     <string name="downloads_usage_storage_label">उपयोग में स्टोरेज</string>
     <string name="downloads_usage_queue_label">कतार की प्रगति</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>

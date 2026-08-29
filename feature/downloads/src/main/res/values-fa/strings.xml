@@ -2,7 +2,9 @@
 <resources>
     <string name="downloads_tab_downloaded">دانلود شده</string>
     <string name="downloads_tab_queue">صف</string>
-    <string name="downloads_wifi_only">فقط Wi‑Fi</string>
+    <string name="downloads_wifi_wait_title">در انتظار Wi‑Fi</string>
+    <string name="downloads_wifi_wait_body">صف در این اتصال داده تلفن همراه متوقف شده است.</string>
+    <string name="downloads_wifi_wait_action">خاموش کردن «فقط Wi‑Fi»</string>
     <string name="downloads_screen_title">دانلودها</string>
 
     <string name="downloads_section_movies">فیلم‌ها</string>
@@ -25,14 +27,12 @@
     <string name="downloads_storage_free">%1$s آزاد</string>
     <string name="downloads_stat_on_device">روی این دستگاه</string>
     <string name="downloads_stat_queue">صف</string>
-    <string name="downloads_stat_network">شبکه</string>
     <string name="downloads_stat_free_of">%1$s آزاد از %2$s</string>
     <plurals name="downloads_stat_queue_items">
         <item quantity="one">%1$d مورد · %2$s</item>
         <item quantity="other">%1$d مورد · %2$s</item>
     </plurals>
     <string name="downloads_stat_eta_about">حدود %1$s مانده</string>
-    <string name="downloads_stat_network_helper">با داده تلفن همراه به‌طور خودکار متوقف می‌شود</string>
     <string name="downloads_usage_storage_label">حافظه استفاده‌شده</string>
     <string name="downloads_usage_queue_label">پیشرفت صف</string>
     <string name="downloads_queue_row_description">%1$s، %2$d%%، %3$s</string>

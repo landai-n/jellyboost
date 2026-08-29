@@ -2,7 +2,9 @@
 <resources>
     <string name="downloads_tab_downloaded">Transferidos</string>
     <string name="downloads_tab_queue">Fila</string>
-    <string name="downloads_wifi_only">Apenas Wi‑Fi</string>
+    <string name="downloads_wifi_wait_title">À espera de Wi‑Fi</string>
+    <string name="downloads_wifi_wait_body">A fila está em pausa nesta ligação de dados móveis.</string>
+    <string name="downloads_wifi_wait_action">Desativar Apenas Wi‑Fi</string>
     <string name="downloads_screen_title">Transferências</string>
     <string name="downloads_section_movies">Filmes</string>
     <string name="downloads_section_series">Séries</string>
@@ -23,14 +25,12 @@
     <string name="downloads_storage_free">%1$s livres</string>
     <string name="downloads_stat_on_device">Neste dispositivo</string>
     <string name="downloads_stat_queue">Fila</string>
-    <string name="downloads_stat_network">Rede</string>
     <string name="downloads_stat_free_of">%1$s livres de %2$s</string>
     <plurals name="downloads_stat_queue_items">
         <item quantity="one">%1$d item · %2$s</item>
         <item quantity="other">%1$d itens · %2$s</item>
     </plurals>
     <string name="downloads_stat_eta_about">Faltam aproximadamente %1$s</string>
-    <string name="downloads_stat_network_helper">Pausado automaticamente com dados móveis</string>
     <string name="downloads_usage_storage_label">Armazenamento usado</string>
     <string name="downloads_usage_queue_label">Progresso da fila</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>

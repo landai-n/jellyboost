@@ -2,7 +2,9 @@
 <resources>
     <string name="downloads_tab_downloaded">Изтеглено</string>
     <string name="downloads_tab_queue">Опашка</string>
-    <string name="downloads_wifi_only">Само Wi‑Fi</string>
+    <string name="downloads_wifi_wait_title">Изчакване на Wi‑Fi</string>
+    <string name="downloads_wifi_wait_body">Опашката е на пауза при тази мобилна връзка.</string>
+    <string name="downloads_wifi_wait_action">Изключване на „Само Wi‑Fi“</string>
     <string name="downloads_screen_title">Изтегляния</string>
 
     <string name="downloads_section_movies">Филми</string>
@@ -25,14 +27,12 @@
     <string name="downloads_storage_free">%1$s свободни</string>
     <string name="downloads_stat_on_device">На това устройство</string>
     <string name="downloads_stat_queue">Опашка</string>
-    <string name="downloads_stat_network">Мрежа</string>
     <string name="downloads_stat_free_of">%1$s свободни от %2$s</string>
     <plurals name="downloads_stat_queue_items">
         <item quantity="one">%1$d елемент · %2$s</item>
         <item quantity="other">%1$d елемента · %2$s</item>
     </plurals>
     <string name="downloads_stat_eta_about">Остават около %1$s</string>
-    <string name="downloads_stat_network_helper">Автоматично се поставя на пауза при мобилни данни</string>
     <string name="downloads_usage_storage_label">Използвано хранилище</string>
     <string name="downloads_usage_queue_label">Напредък на опашката</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>

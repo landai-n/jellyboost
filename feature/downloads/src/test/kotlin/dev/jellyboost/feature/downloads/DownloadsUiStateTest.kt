@@ -659,7 +659,97 @@ class DownloadsUiStateTest {
         state.chrome.selectedTab shouldBe DownloadsTab.QUEUE
         state.chrome.canPauseAll shouldBe true
         state.chrome.canResumeAll shouldBe true
-        state.chrome.wifiOnly shouldBe false
+        // The raw preference is gone from the chrome — Settings owns the switch, and all the chrome
+        // needs is the derived verdict.
+        state.chrome.queuePausedForWifi shouldBe false
+    }
+
+    // ---- waiting for Wi-Fi -----------------------------------------------------------------------
+
+    @Test
+    fun `Wi-Fi only, a metered network and a queued row is the one combination that pauses for Wi-Fi`() {
+        val state =
+            DownloadsUiState(
+                queue = listOf(status("1", DownloadStatus.QUEUED)),
+                wifiOnly = true,
+                onMeteredNetwork = true,
+            )
+
+        state.queuePausedForWifi shouldBe true
+        state.chrome.queuePausedForWifi shouldBe true
+    }
+
+    @Test
+    fun `a transfer already in flight counts too`() {
+        val state =
+            DownloadsUiState(
+                queue = listOf(status("1", DownloadStatus.DOWNLOADING)),
+                wifiOnly = true,
+                onMeteredNetwork = true,
+            )
+
+        state.queuePausedForWifi shouldBe true
+    }
+
+    @Test
+    fun `an empty queue is not waiting for anything`() {
+        val state = DownloadsUiState(queue = emptyList(), wifiOnly = true, onMeteredNetwork = true)
+
+        state.queuePausedForWifi shouldBe false
+    }
+
+    @Test
+    fun `a queue of only paused and failed rows is the user's doing, not the network's`() {
+        val state =
+            DownloadsUiState(
+                queue = listOf(status("1", DownloadStatus.PAUSED), status("2", DownloadStatus.ERROR)),
+                wifiOnly = true,
+                onMeteredNetwork = true,
+            )
+
+        state.queuePausedForWifi shouldBe false
+    }
+
+    @Test
+    fun `an unmetered network is not the reason, whatever the preference says`() {
+        val state =
+            DownloadsUiState(
+                queue = listOf(status("1", DownloadStatus.QUEUED)),
+                wifiOnly = true,
+                onMeteredNetwork = false,
+            )
+
+        state.queuePausedForWifi shouldBe false
+    }
+
+    @Test
+    fun `with Wi-Fi only off, a metered network holds nothing back`() {
+        val state =
+            DownloadsUiState(
+                queue = listOf(status("1", DownloadStatus.QUEUED)),
+                wifiOnly = false,
+                onMeteredNetwork = true,
+            )
+
+        state.queuePausedForWifi shouldBe false
+    }
+
+    @Test
+    fun `only QUEUED and DOWNLOADING rows count as held back by the constraint`() {
+        // Pinned directly, because the status set is the whole claim the notice makes: a download
+        // stopped by leaving Wi-Fi goes back to QUEUED, so PAUSED and ERROR are decisions of the
+        // user's or the server's and must not be counted as waiting for a network.
+        val everyStatus = DownloadStatus.entries.map { status(it.name, it) }
+        val state = DownloadsUiState(queue = everyStatus)
+
+        state.wifiBlockedCount shouldBe 2
+    }
+
+    @Test
+    fun `finished rows never reach the count, because they never reach the queue`() {
+        val state = DownloadsUiState(queue = listOf(status("1", DownloadStatus.DOWNLOADED)))
+
+        state.wifiBlockedCount shouldBe 0
     }
 
     private fun film(
@@ -753,6 +843,11 @@ class DownloadsUiStateTest {
     ) = queued(itemId).copy(albumName = album, itemType = ItemType.AUDIO)
 
     private fun paused(itemId: String) = queued(itemId).copy(status = DownloadStatus.PAUSED)
+
+    private fun status(
+        itemId: String,
+        status: DownloadStatus,
+    ) = queued(itemId).copy(status = status)
 
     @Suppress("LongParameterList")
     private fun queued(

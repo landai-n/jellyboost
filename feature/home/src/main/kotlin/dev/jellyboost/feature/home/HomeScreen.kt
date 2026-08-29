@@ -99,12 +99,13 @@ fun HomeScreen(
 }
 
 /**
- * @param onPlay start position is in Jellyfin ticks; `:app` turns this into a `Routes.Player` nav.
+ * @param onPlay `:app` dispatches on the item's kind, so this screen cannot ask for a video route on
+ *   an audio item.
  * @param onPlayTrack starts the music queue in place rather than navigating — not an [onPlay] overload.
  */
 data class HomeActions(
     val onItemClick: (JellyfinItem) -> Unit,
-    val onPlay: (itemId: String, startPositionTicks: Long) -> Unit,
+    val onPlay: (item: JellyfinItem) -> Unit,
     val onLibraryClick: (LibraryView) -> Unit,
     val onOpenDownloads: () -> Unit,
     val onPlayTrack: (JellyfinItem) -> Unit,
@@ -304,7 +305,7 @@ private fun LazyListScope.heroRow(
             item = hero,
             wide = wide,
             height = height,
-            onResume = { actions.onPlay(hero.id, hero.userData.playbackPositionTicks) },
+            onResume = { actions.onPlay(hero) },
             onDetails = { actions.onItemClick(hero) },
             // A lazy list cannot offset the following item, only shorten this one.
             modifier =
@@ -666,7 +667,7 @@ private fun previewState(withResume: Boolean): HomeUiState =
 private val PreviewActions =
     HomeActions(
         onItemClick = {},
-        onPlay = { _, _ -> },
+        onPlay = {},
         onLibraryClick = {},
         onOpenDownloads = {},
         onPlayTrack = {},

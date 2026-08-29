@@ -14,6 +14,7 @@ import dev.jellyboost.core.database.entities.DownloadProgress
 import dev.jellyboost.core.database.entities.DownloadWithFiles
 import dev.jellyboost.core.datastore.AppPreferences
 import dev.jellyboost.core.network.SessionRepository
+import dev.jellyboost.core.network.connectivity.ConnectivityMonitor
 import dev.jellyboost.core.network.model.SessionState
 import dev.jellyboost.data.cache.ItemEntityMapper
 import dev.jellyboost.data.downloads.DownloadRepository
@@ -76,6 +77,7 @@ internal class DownloadRepositoryImpl
         private val locations: StorageLocationManager,
         private val preferences: AppPreferences,
         private val sessionRepository: SessionRepository,
+        private val connectivity: ConnectivityMonitor,
         private val clock: Clock,
         private val transactionRunner: TransactionRunner,
         @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
@@ -256,6 +258,8 @@ internal class DownloadRepositoryImpl
             }
 
         override val wifiOnly: Flow<Boolean> get() = preferences.downloadOverWifiOnly
+
+        override val onMeteredNetwork: Flow<Boolean> get() = connectivity.isMetered
 
         override suspend fun setWifiOnly(enabled: Boolean) {
             preferences.setDownloadOverWifiOnly(enabled)

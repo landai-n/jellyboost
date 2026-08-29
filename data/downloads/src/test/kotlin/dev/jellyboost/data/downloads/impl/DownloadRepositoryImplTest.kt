@@ -17,6 +17,7 @@ import dev.jellyboost.core.database.entities.ItemEntity
 import dev.jellyboost.core.database.entities.ItemSource
 import dev.jellyboost.core.datastore.AppPreferences
 import dev.jellyboost.core.network.SessionRepository
+import dev.jellyboost.core.network.connectivity.ConnectivityMonitor
 import dev.jellyboost.core.network.model.SessionState
 import dev.jellyboost.data.cache.ItemEntityMapper
 import dev.jellyboost.data.downloads.DownloadFixtures.NOW
@@ -45,6 +46,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -78,6 +80,7 @@ class DownloadRepositoryImplTest {
     private val locations = mockk<StorageLocationManager>(relaxUnitFun = true)
     private val preferences = mockk<AppPreferences>(relaxUnitFun = true)
     private val sessionRepository = mockk<SessionRepository>()
+    private val connectivity = mockk<ConnectivityMonitor>()
     private val clock = Clock.fixed(NOW, ZoneOffset.UTC)
     private val selectedVolumeId = MutableStateFlow<String?>(null)
 
@@ -85,6 +88,7 @@ class DownloadRepositoryImplTest {
     fun setUp() {
         every { sessionRepository.sessionState } returns MutableStateFlow(LOGGED_IN)
         every { preferences.downloadOverWifiOnly } returns flowOf(true)
+        every { connectivity.isMetered } returns flowOf(false)
         every { locations.selectedVolumeId } returns selectedVolumeId
         every { locations.resolve(any()) } answers { selectionFor(firstArg()) }
         // The tests that switch volume start out writing to the primary one.
@@ -1083,6 +1087,37 @@ class DownloadRepositoryImplTest {
     // ---- preferences ----------------------------------------------------------------------------
 
     @Test
+    fun `the Wi-Fi-only preference is read straight off the preference store`() =
+        runTest {
+            every { preferences.downloadOverWifiOnly } returns flowOf(false)
+
+            repository().wifiOnly.first() shouldBe false
+        }
+
+    @Test
+    fun `the metered signal is the connectivity monitor's own, not a second reading of it`() =
+        runTest {
+            // Delegation, not derivation: the screen's notice and the WorkManager constraint must
+            // not be able to disagree about what "metered" means.
+            every { connectivity.isMetered } returns flowOf(true)
+
+            repository().onMeteredNetwork.first() shouldBe true
+        }
+
+    @Test
+    fun `the metered signal follows the monitor as the network moves`() =
+        runTest {
+            val metered = MutableStateFlow(false)
+            every { connectivity.isMetered } returns metered
+
+            val readings = repository().onMeteredNetwork
+
+            readings.first() shouldBe false
+            metered.value = true
+            readings.first() shouldBe true
+        }
+
+    @Test
     fun `flipping Wi-Fi only re-applies the constraint to the running queue`() =
         runTest {
             repository().setWifiOnly(false)
@@ -1128,6 +1163,7 @@ class DownloadRepositoryImplTest {
             locations = locations,
             preferences = preferences,
             sessionRepository = sessionRepository,
+            connectivity = connectivity,
             clock = clock,
             transactionRunner = directTransactionRunner,
             ioDispatcher = ioDispatcher,

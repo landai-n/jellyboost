@@ -42,6 +42,9 @@ class ConnectionStateProviderTest {
     private val monitor =
         object : ConnectivityMonitor {
             override val hasNetwork: Flow<Boolean> = hasNetworkFlow
+
+            // Nothing under test here reads the metered signal; it is the Downloads screen's input.
+            override val isMetered: Flow<Boolean> = MutableStateFlow(false)
         }
 
     private val preferences =

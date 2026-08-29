@@ -46,6 +46,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -237,10 +238,29 @@ private fun DetailBackdrop(
         imageUrl = item.backdropImageUrl ?: item.thumbImageUrl ?: item.primaryImageUrl,
         height = height,
         dissolvesIntoPage = stage,
+        copyZone = if (stage) 0.dp else detailLockupCopyZone(LocalDensity.current.fontScale),
     )
     if (stage) {
         Box(modifier = Modifier.fillMaxSize().heroHalo())
     }
+}
+
+/**
+ * How far [TitleLockup] reaches above the backdrop's foot, for `Modifier.backdropScrim`'s plateau.
+ *
+ * Modelled the way `HomeHero` models its own: a fixed frame plus the part that is text and stretches
+ * with the scale. The frame is the bottom [DetailEdgePadding], the four gaps between the five blocks
+ * and the origin chips' [Dimens.MinTouchTarget] (a chip's touch frame is not text and does not
+ * grow); the text is the eyebrow, the two-line title, the subtitle and the metadata row.
+ *
+ * Every optional block is counted whether or not the item has one — a movie has no origin chips and
+ * may have no subtitle — because over-measuring only starts the plateau higher, which is the safe
+ * direction. It reaches 356dp at scale 2.0, past a compact backdrop's own height: at that scale the
+ * lockup *is* the picture, and the scrim covering all of it is the honest answer rather than a bug.
+ */
+internal fun detailLockupCopyZone(fontScale: Float): Dp {
+    val growth = (fontScale - 1f).coerceAtLeast(0f)
+    return DetailLockupFrame + DetailLockupText * (1f + growth)
 }
 
 data class DetailActionHandlers(
@@ -961,6 +981,12 @@ private const val TOP_BILLED = 4
 
 /** The mocks' 20dp detail padding. */
 internal val DetailEdgePadding = 20.dp
+
+/** [detailLockupCopyZone]'s fixed part: the bottom padding, four gaps and the origin chips' frame. */
+private val DetailLockupFrame = DetailEdgePadding + Dimens.SpaceSmall * 4 + Dimens.MinTouchTarget
+
+/** Its text part: eyebrow 14, two 38dp title lines, an 18dp subtitle line and the 20dp metadata row. */
+private val DetailLockupText = 128.dp
 
 private val POSTER_OVERLAP = 190.dp
 

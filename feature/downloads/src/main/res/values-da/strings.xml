@@ -2,7 +2,9 @@
 <resources>
     <string name="downloads_tab_downloaded">Downloadet</string>
     <string name="downloads_tab_queue">Kø</string>
-    <string name="downloads_wifi_only">Kun Wi-Fi</string>
+    <string name="downloads_wifi_wait_title">Venter på Wi-Fi</string>
+    <string name="downloads_wifi_wait_body">Køen er sat på pause på denne mobilforbindelse.</string>
+    <string name="downloads_wifi_wait_action">Slå Kun Wi-Fi fra</string>
     <string name="downloads_screen_title">Downloads</string>
 
     <string name="downloads_section_movies">Film</string>
@@ -25,14 +27,12 @@
     <string name="downloads_storage_free">%1$s ledig</string>
     <string name="downloads_stat_on_device">På denne enhed</string>
     <string name="downloads_stat_queue">Kø</string>
-    <string name="downloads_stat_network">Netværk</string>
     <string name="downloads_stat_free_of">%1$s ledig ud af %2$s</string>
     <plurals name="downloads_stat_queue_items">
         <item quantity="one">%1$d element · %2$s</item>
         <item quantity="other">%1$d elementer · %2$s</item>
     </plurals>
     <string name="downloads_stat_eta_about">cirka %1$s tilbage</string>
-    <string name="downloads_stat_network_helper">Sættes automatisk på pause ved mobildata</string>
     <string name="downloads_usage_storage_label">Brugt lagerplads</string>
     <string name="downloads_usage_queue_label">Køens fremgang</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>

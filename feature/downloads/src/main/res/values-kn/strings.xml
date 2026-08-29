@@ -2,7 +2,9 @@
 <resources>
     <string name="downloads_tab_downloaded">ಡೌನ್‌ಲೋಡ್ ಆಗಿದೆ</string>
     <string name="downloads_tab_queue">ಸರತಿ</string>
-    <string name="downloads_wifi_only">ಕೇವಲ Wi‑Fi</string>
+    <string name="downloads_wifi_wait_title">Wi‑Fi ಗಾಗಿ ಕಾಯಲಾಗುತ್ತಿದೆ</string>
+    <string name="downloads_wifi_wait_body">ಮೊಬೈಲ್ ಡೇಟಾ ಸಂಪರ್ಕದಲ್ಲಿ ಸರತಿ ವಿರಾಮಗೊಂಡಿದೆ.</string>
+    <string name="downloads_wifi_wait_action">ಕೇವಲ Wi‑Fi ಆಫ್ ಮಾಡಿ</string>
     <string name="downloads_screen_title">ಡೌನ್‌ಲೋಡ್‌ಗಳು</string>
 
     <string name="downloads_section_movies">ಚಲನಚಿತ್ರಗಳು</string>
@@ -25,14 +27,12 @@
     <string name="downloads_storage_free">%1$s ಖಾಲಿ ಇದೆ</string>
     <string name="downloads_stat_on_device">ಈ ಸಾಧನದಲ್ಲಿ</string>
     <string name="downloads_stat_queue">ಸರತಿ</string>
-    <string name="downloads_stat_network">ನೆಟ್‌ವರ್ಕ್</string>
     <string name="downloads_stat_free_of">%2$s ರಲ್ಲಿ %1$s ಖಾಲಿ ಇದೆ</string>
     <plurals name="downloads_stat_queue_items">
         <item quantity="one">%1$d ಐಟಂ · %2$s</item>
         <item quantity="other">%1$d ಐಟಂಗಳು · %2$s</item>
     </plurals>
     <string name="downloads_stat_eta_about">ಸುಮಾರು %1$s ಬಾಕಿ</string>
-    <string name="downloads_stat_network_helper">ಮೊಬೈಲ್ ಡೇಟಾದಲ್ಲಿ ಸ್ವಯಂಚಾಲಿತವಾಗಿ ವಿರಾಮಗೊಳ್ಳುತ್ತದೆ</string>
     <string name="downloads_usage_storage_label">ಬಳಸಿದ ಸಂಗ್ರಹಣೆ</string>
     <string name="downloads_usage_queue_label">ಸರತಿಯ ಪ್ರಗತಿ</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>

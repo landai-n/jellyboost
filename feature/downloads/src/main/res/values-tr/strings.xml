@@ -2,7 +2,9 @@
 <resources>
     <string name="downloads_tab_downloaded">İndirildi</string>
     <string name="downloads_tab_queue">Kuyruk</string>
-    <string name="downloads_wifi_only">Yalnızca Wi‑Fi</string>
+    <string name="downloads_wifi_wait_title">Wi‑Fi bekleniyor</string>
+    <string name="downloads_wifi_wait_body">Sıra bu mobil veri bağlantısında duraklatıldı.</string>
+    <string name="downloads_wifi_wait_action">Yalnızca Wi‑Fi seçeneğini kapat</string>
     <string name="downloads_screen_title">İndirilenler</string>
     <string name="downloads_section_movies">Filmler</string>
     <string name="downloads_section_series">Diziler</string>
@@ -23,14 +25,12 @@
     <string name="downloads_storage_free">%1$s boş</string>
     <string name="downloads_stat_on_device">Bu cihazda</string>
     <string name="downloads_stat_queue">Kuyruk</string>
-    <string name="downloads_stat_network">Ağ</string>
     <string name="downloads_stat_free_of">%2$s içinden %1$s boş</string>
     <plurals name="downloads_stat_queue_items">
         <item quantity="one">%1$d öğe · %2$s</item>
         <item quantity="other">%1$d öğe · %2$s</item>
     </plurals>
     <string name="downloads_stat_eta_about">yaklaşık %1$s kaldı</string>
-    <string name="downloads_stat_network_helper">Mobil veride otomatik olarak duraklatılır</string>
     <string name="downloads_usage_storage_label">Kullanılan depolama</string>
     <string name="downloads_usage_queue_label">Kuyruğun ilerlemesi</string>
     <string name="downloads_queue_row_description">%1$s, %%%2$d, %3$s</string>

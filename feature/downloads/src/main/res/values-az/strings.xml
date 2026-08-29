@@ -2,7 +2,9 @@
 <resources>
     <string name="downloads_tab_downloaded">Yükləndi</string>
     <string name="downloads_tab_queue">Növbə</string>
-    <string name="downloads_wifi_only">Yalnız Wi‑Fi</string>
+    <string name="downloads_wifi_wait_title">Wi‑Fi gözlənilir</string>
+    <string name="downloads_wifi_wait_body">Növbə bu mobil bağlantıda dayandırılıb.</string>
+    <string name="downloads_wifi_wait_action">Yalnız Wi‑Fi seçimini söndür</string>
     <string name="downloads_screen_title">Yükləmələr</string>
     <string name="downloads_section_movies">Filmlər</string>
     <string name="downloads_section_series">Seriallar</string>
@@ -23,14 +25,12 @@
     <string name="downloads_storage_free">%1$s boşdur</string>
     <string name="downloads_stat_on_device">Bu cihazda</string>
     <string name="downloads_stat_queue">Növbə</string>
-    <string name="downloads_stat_network">Şəbəkə</string>
     <string name="downloads_stat_free_of">%2$s-dən %1$s boş</string>
     <plurals name="downloads_stat_queue_items">
         <item quantity="one">%1$d element · %2$s</item>
         <item quantity="other">%1$d element · %2$s</item>
     </plurals>
     <string name="downloads_stat_eta_about">təxminən %1$s qalıb</string>
-    <string name="downloads_stat_network_helper">Mobil datada avtomatik olaraq fasilə verilir</string>
     <string name="downloads_usage_storage_label">İstifadə olunan yaddaş</string>
     <string name="downloads_usage_queue_label">Növbənin gedişi</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>

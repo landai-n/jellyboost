@@ -2,7 +2,9 @@
 <resources>
     <string name="downloads_tab_downloaded">Preneseno</string>
     <string name="downloads_tab_queue">Čakalna vrsta</string>
-    <string name="downloads_wifi_only">Samo Wi-Fi</string>
+    <string name="downloads_wifi_wait_title">Čakanje na Wi-Fi</string>
+    <string name="downloads_wifi_wait_body">Čakalna vrsta je zaustavljena na tej mobilni povezavi.</string>
+    <string name="downloads_wifi_wait_action">Izklopi Samo Wi-Fi</string>
     <string name="downloads_screen_title">Prenosi</string>
 
     <string name="downloads_section_movies">Filmi</string>
@@ -29,7 +31,6 @@
     <string name="downloads_storage_free">%1$s prosto</string>
     <string name="downloads_stat_on_device">Na tej napravi</string>
     <string name="downloads_stat_queue">Čakalna vrsta</string>
-    <string name="downloads_stat_network">Omrežje</string>
     <string name="downloads_stat_free_of">%1$s prosto od %2$s</string>
     <plurals name="downloads_stat_queue_items">
         <item quantity="one">%1$d element · %2$s</item>
@@ -38,7 +39,6 @@
         <item quantity="other">%1$d elementov · %2$s</item>
     </plurals>
     <string name="downloads_stat_eta_about">Še približno %1$s</string>
-    <string name="downloads_stat_network_helper">Samodejno se zaustavi pri mobilnih podatkih</string>
     <string name="downloads_usage_storage_label">Porabljena shramba</string>
     <string name="downloads_usage_queue_label">Napredek čakalne vrste</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>

@@ -2,7 +2,9 @@
 <resources>
     <string name="downloads_tab_downloaded">გადმოწერილია</string>
     <string name="downloads_tab_queue">რიგი</string>
-    <string name="downloads_wifi_only">მხოლოდ Wi‑Fi</string>
+    <string name="downloads_wifi_wait_title">Wi‑Fi-ის მოლოდინში</string>
+    <string name="downloads_wifi_wait_body">რიგი შეჩერებულია მობილურ კავშირზე.</string>
+    <string name="downloads_wifi_wait_action">„მხოლოდ Wi‑Fi“-ის გამორთვა</string>
     <string name="downloads_screen_title">გადმოწერები</string>
     <string name="downloads_section_movies">ფილმები</string>
     <string name="downloads_section_series">სერიალები</string>
@@ -23,14 +25,12 @@
     <string name="downloads_storage_free">%1$s თავისუფალია</string>
     <string name="downloads_stat_on_device">ამ მოწყობილობაზე</string>
     <string name="downloads_stat_queue">რიგი</string>
-    <string name="downloads_stat_network">ქსელი</string>
     <string name="downloads_stat_free_of">%2$s-დან %1$s თავისუფალია</string>
     <plurals name="downloads_stat_queue_items">
         <item quantity="one">%1$d ერთეული · %2$s</item>
         <item quantity="other">%1$d ერთეული · %2$s</item>
     </plurals>
     <string name="downloads_stat_eta_about">დარჩენილია დაახლოებით %1$s</string>
-    <string name="downloads_stat_network_helper">მობილურ მონაცემებზე ავტომატურად ჩერდება</string>
     <string name="downloads_usage_storage_label">გამოყენებული მეხსიერება</string>
     <string name="downloads_usage_queue_label">რიგის მიმდინარეობა</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>

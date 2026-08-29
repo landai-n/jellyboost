@@ -84,6 +84,8 @@ data class DownloadsUiState(
     val progress: Map<String, Float> = emptyMap(),
     val storage: StorageUsage = StorageUsage(),
     val wifiOnly: Boolean = true,
+    /** `DownloadRepository.onMeteredNetwork`: `false` while offline, not only while on Wi-Fi. */
+    val onMeteredNetwork: Boolean = false,
     val isLoading: Boolean = true,
     /**
      * The projection itself collapsed — the Room/DataStore combine threw and will not emit again.
@@ -133,6 +135,20 @@ data class DownloadsUiState(
      */
     val unpausableCount: Int = queue.count { !it.isResumeTarget && !it.isPausable }
 
+    /**
+     * Rows the Wi-Fi-only preference is actually holding back. **[DownloadStatus.QUEUED] and
+     * [DownloadStatus.DOWNLOADING] only:** [DownloadStatus]' own KDoc states that `PAUSED` is a user
+     * decision that survives process death, and that a download stopped because the device left Wi-Fi
+     * goes back to `QUEUED` instead — `QUEUED` is the status WorkManager's `UNMETERED` constraint parks
+     * work in, and the one it resumes from by itself. A row the user paused, or one that failed, is not
+     * waiting for Wi-Fi, and must not let the notice claim it is.
+     */
+    val wifiBlockedCount: Int =
+        queue.count { it.status == DownloadStatus.QUEUED || it.status == DownloadStatus.DOWNLOADING }
+
+    /** The preference is *currently the reason* nothing is moving — all three must hold at once. */
+    val queuePausedForWifi: Boolean = wifiOnly && onMeteredNetwork && wifiBlockedCount > 0
+
     val canPauseAll: Boolean = pauseAllTargets.isNotEmpty()
 
     val canResumeAll: Boolean = resumeAllTargets.isNotEmpty()
@@ -176,7 +192,7 @@ data class DownloadsUiState(
                     usageFraction(used = done, total = done + queueStats.remainingBytes)
                 },
             hasQueue = queue.isNotEmpty(),
-            wifiOnly = wifiOnly,
+            queuePausedForWifi = queuePausedForWifi,
             canPauseAll = canPauseAll,
             canResumeAll = canResumeAll,
         )
@@ -222,7 +238,11 @@ data class DownloadsChromeState(
     val queueStats: QueueStats = QueueStats(itemCount = 0, remainingBytes = 0L, bytesPerSecond = 0L, etaSeconds = null),
     val queueProgress: Float = 0f,
     val hasQueue: Boolean = false,
-    val wifiOnly: Boolean = true,
+    /**
+     * The derived verdict, not the raw preference: Settings owns the switch, and the chrome only ever
+     * needs to know whether to draw the waiting-for-Wi-Fi notice.
+     */
+    val queuePausedForWifi: Boolean = false,
     val canPauseAll: Boolean = false,
     val canResumeAll: Boolean = false,
 )
@@ -252,6 +272,7 @@ internal data class DownloadsProjection(
     val progress: Map<String, Float> = emptyMap(),
     val storage: StorageUsage = StorageUsage(),
     val wifiOnly: Boolean = true,
+    val onMeteredNetwork: Boolean = false,
     val loadFailed: Boolean = false,
 )
 
@@ -278,6 +299,7 @@ internal fun DownloadsProjection.toUiState(local: LocalState): DownloadsUiState 
         progress = progress,
         storage = storage,
         wifiOnly = wifiOnly,
+        onMeteredNetwork = onMeteredNetwork,
         isLoading = false,
         loadFailed = loadFailed,
         showCancelAllConfirmation = local.showCancelAllConfirmation,

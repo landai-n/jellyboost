@@ -2,7 +2,9 @@
 <resources>
     <string name="downloads_tab_downloaded">已下载</string>
     <string name="downloads_tab_queue">队列</string>
-    <string name="downloads_wifi_only">仅限 Wi‑Fi</string>
+    <string name="downloads_wifi_wait_title">正在等待 Wi‑Fi</string>
+    <string name="downloads_wifi_wait_body">在移动数据连接下队列已暂停。</string>
+    <string name="downloads_wifi_wait_action">关闭“仅限 Wi‑Fi”</string>
     <string name="downloads_screen_title">下载</string>
 
     <string name="downloads_section_movies">电影</string>
@@ -23,13 +25,11 @@
     <string name="downloads_storage_free">剩余 %1$s</string>
     <string name="downloads_stat_on_device">在此设备上</string>
     <string name="downloads_stat_queue">队列</string>
-    <string name="downloads_stat_network">网络</string>
     <string name="downloads_stat_free_of">%2$s 中剩余 %1$s</string>
     <plurals name="downloads_stat_queue_items">
         <item quantity="other">%1$d 项 · %2$s</item>
     </plurals>
     <string name="downloads_stat_eta_about">剩余约 %1$s</string>
-    <string name="downloads_stat_network_helper">使用移动数据时自动暂停</string>
     <string name="downloads_usage_storage_label">已用存储空间</string>
     <string name="downloads_usage_queue_label">队列进度</string>
     <string name="downloads_queue_row_description">%1$s，%2$d%%，%3$s</string>

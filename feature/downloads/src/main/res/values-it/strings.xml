@@ -2,7 +2,9 @@
 <resources>
     <string name="downloads_tab_downloaded">Scaricati</string>
     <string name="downloads_tab_queue">Coda</string>
-    <string name="downloads_wifi_only">Solo Wi‑Fi</string>
+    <string name="downloads_wifi_wait_title">In attesa del Wi‑Fi</string>
+    <string name="downloads_wifi_wait_body">La coda è in pausa su questa connessione dati mobile.</string>
+    <string name="downloads_wifi_wait_action">Disattiva Solo Wi‑Fi</string>
     <string name="downloads_screen_title">Download</string>
     <string name="downloads_section_movies">Film</string>
     <string name="downloads_section_series">Serie</string>
@@ -23,14 +25,12 @@
     <string name="downloads_storage_free">%1$s liberi</string>
     <string name="downloads_stat_on_device">Su questo dispositivo</string>
     <string name="downloads_stat_queue">Coda</string>
-    <string name="downloads_stat_network">Rete</string>
     <string name="downloads_stat_free_of">%1$s liberi su %2$s</string>
     <plurals name="downloads_stat_queue_items">
         <item quantity="one">%1$d elemento · %2$s</item>
         <item quantity="other">%1$d elementi · %2$s</item>
     </plurals>
     <string name="downloads_stat_eta_about">circa %1$s rimanenti</string>
-    <string name="downloads_stat_network_helper">Messo in pausa automaticamente sui dati mobili</string>
     <string name="downloads_usage_storage_label">Spazio usato</string>
     <string name="downloads_usage_queue_label">Avanzamento della coda</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>

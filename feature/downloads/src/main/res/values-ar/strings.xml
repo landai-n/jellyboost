@@ -2,7 +2,9 @@
 <resources>
     <string name="downloads_tab_downloaded">تم تنزيله</string>
     <string name="downloads_tab_queue">قائمة الانتظار</string>
-    <string name="downloads_wifi_only">Wi‑Fi فقط</string>
+    <string name="downloads_wifi_wait_title">في انتظار Wi‑Fi</string>
+    <string name="downloads_wifi_wait_body">قائمة الانتظار متوقفة مؤقتًا على اتصال بيانات الجوال هذا.</string>
+    <string name="downloads_wifi_wait_action">إيقاف Wi‑Fi فقط</string>
     <string name="downloads_screen_title">التنزيلات</string>
 
     <string name="downloads_section_movies">الأفلام</string>
@@ -33,7 +35,6 @@
     <string name="downloads_storage_free">%1$s متاحة</string>
     <string name="downloads_stat_on_device">على هذا الجهاز</string>
     <string name="downloads_stat_queue">قائمة الانتظار</string>
-    <string name="downloads_stat_network">الشبكة</string>
     <string name="downloads_stat_free_of">%1$s متاحة من %2$s</string>
     <plurals name="downloads_stat_queue_items">
         <item quantity="zero">لا عناصر · %2$s</item>
@@ -44,7 +45,6 @@
         <item quantity="other">%1$d عنصر · %2$s</item>
     </plurals>
     <string name="downloads_stat_eta_about">نحو %1$s متبقٍ</string>
-    <string name="downloads_stat_network_helper">يتم الإيقاف المؤقت تلقائيًا عند استخدام بيانات الجوال</string>
     <string name="downloads_usage_storage_label">المساحة المستخدمة</string>
     <string name="downloads_usage_queue_label">تقدّم قائمة الانتظار</string>
     <string name="downloads_queue_row_description">%1$s، %2$d%%، %3$s</string>

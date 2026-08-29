@@ -30,7 +30,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -38,11 +37,12 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.outlined.WifiOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
@@ -59,10 +59,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
@@ -136,7 +138,9 @@ fun DownloadsScreen(
             actions = actions,
             bulk = bulk,
             onPlay = onPlay,
-            onWifiOnlyChange = viewModel::setWifiOnly,
+            // Flips the persistent preference Settings owns; the notice is the only place the
+            // Downloads screen still touches it.
+            onAllowCellular = { viewModel.setWifiOnly(false) },
             modifier = Modifier.padding(innerPadding),
         )
     }
@@ -196,7 +200,7 @@ fun DownloadsContent(
     actions: DownloadsActions,
     bulk: QueueBulkActions,
     onPlay: (itemId: String, startPositionTicks: Long, item: JellyfinItem?) -> Unit,
-    onWifiOnlyChange: (Boolean) -> Unit,
+    onAllowCellular: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     // Chrome TOP padding here, BOTTOM on whichever list is drawn (listContentPadding).
@@ -221,7 +225,7 @@ fun DownloadsContent(
                 actions = actions,
                 bulk = bulk,
                 onPlay = onPlay,
-                onWifiOnlyChange = onWifiOnlyChange,
+                onAllowCellular = onAllowCellular,
                 onRequestDelete = { pendingDeleteId = it },
             )
         } else {
@@ -231,7 +235,7 @@ fun DownloadsContent(
                 bulk = bulk,
                 wide = wide,
                 onPlay = onPlay,
-                onWifiOnlyChange = onWifiOnlyChange,
+                onAllowCellular = onAllowCellular,
                 onRequestDelete = { pendingDeleteId = it },
             )
         }
@@ -264,7 +268,7 @@ private fun PinnedChromeLayout(
     actions: DownloadsActions,
     bulk: QueueBulkActions,
     onPlay: (itemId: String, startPositionTicks: Long, item: JellyfinItem?) -> Unit,
-    onWifiOnlyChange: (Boolean) -> Unit,
+    onAllowCellular: () -> Unit,
     onRequestDelete: (itemId: String) -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
@@ -273,7 +277,7 @@ private fun PinnedChromeLayout(
             onSelectTab = actions.onSelectTab,
             bulk = bulk,
             wide = true,
-            onWifiOnlyChange = onWifiOnlyChange,
+            onAllowCellular = onAllowCellular,
         )
 
         val body = state.body()
@@ -313,7 +317,7 @@ private fun UnifiedScrollLayout(
     bulk: QueueBulkActions,
     wide: Boolean,
     onPlay: (itemId: String, startPositionTicks: Long, item: JellyfinItem?) -> Unit,
-    onWifiOnlyChange: (Boolean) -> Unit,
+    onAllowCellular: () -> Unit,
     onRequestDelete: (itemId: String) -> Unit,
 ) {
     LazyColumn(
@@ -328,7 +332,7 @@ private fun UnifiedScrollLayout(
                 onSelectTab = actions.onSelectTab,
                 bulk = bulk,
                 wide = wide,
-                onWifiOnlyChange = onWifiOnlyChange,
+                onAllowCellular = onAllowCellular,
             )
         }
 
@@ -367,7 +371,7 @@ private fun DownloadsChrome(
     onSelectTab: (DownloadsTab) -> Unit,
     bulk: QueueBulkActions,
     wide: Boolean,
-    onWifiOnlyChange: (Boolean) -> Unit,
+    onAllowCellular: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
@@ -378,15 +382,16 @@ private fun DownloadsChrome(
                 storage = chrome.storage,
                 queueStats = chrome.queueStats,
                 queueProgress = chrome.queueProgress,
-                wifiOnly = chrome.wifiOnly,
-                onWifiOnlyChange = onWifiOnlyChange,
             )
         } else {
-            StorageCard(
-                storage = chrome.storage,
-                wifiOnly = chrome.wifiOnly,
-                onWifiOnlyChange = onWifiOnlyChange,
-            )
+            StorageCard(storage = chrome.storage)
+        }
+
+        // Drawn here, above the tabs, for **both** layouts: the wide branch and the compact one
+        // differ only in the summary above, and a notice on one alone is exactly the
+        // sibling-branch bug this screen has already paid for once.
+        if (chrome.queuePausedForWifi) {
+            WaitingForWifiNotice(onAllowCellular = onAllowCellular)
         }
 
         val showInlineBulkActions = wide && chrome.selectedTab == DownloadsTab.QUEUE && chrome.hasQueue
@@ -903,8 +908,6 @@ private fun DownloadKind.itemCountText(count: Int): String =
 @Composable
 private fun StorageCard(
     storage: StorageSummary,
-    wifiOnly: Boolean,
-    onWifiOnlyChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -937,37 +940,71 @@ private fun StorageCard(
             fraction = usageFraction(storage.usedBytes, storage.totalBytes),
             label = stringResource(R.string.downloads_usage_storage_label),
         )
-        WifiOnlyToggle(wifiOnly = wifiOnly, onWifiOnlyChange = onWifiOnlyChange)
     }
 }
 
 /**
- * Shared by the compact [StorageCard] and the wide [NetworkStatPanel]. The label is `onBackground`,
- * not `onSurfaceVariant`: white at 70 % on the `#202020` m-surface is the lower-contrast answer.
- * The whole row is the toggle's target, [Dimens.MinTouchTarget] tall.
+ * Drawn only while the Wi-Fi-only preference is *currently* what is holding the queue still — see
+ * `DownloadsUiState.queuePausedForWifi`. The screen carries no download preference otherwise;
+ * Settings owns the switch, and this notice is the one place the user reaches it from here.
+ *
+ * Deliberately **not** `:core:ui`'s `ErrorBanner`: that surface is red and failure-shaped, and
+ * nothing has failed — the queue is waiting, and moves by itself the moment Wi-Fi returns.
  */
 @Composable
-private fun WifiOnlyToggle(
-    wifiOnly: Boolean,
-    onWifiOnlyChange: (Boolean) -> Unit,
+private fun WaitingForWifiNotice(
+    onAllowCellular: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
         modifier =
             modifier
                 .fillMaxWidth()
-                .defaultMinSize(minHeight = Dimens.MinTouchTarget)
-                .toggleable(value = wifiOnly, onValueChange = onWifiOnlyChange, role = Role.Switch),
-        horizontalArrangement = Arrangement.SpaceBetween,
+                .padding(horizontal = Dimens.PanelPadding, vertical = Dimens.SpaceSmall)
+                .mSurface(MaterialTheme.colorScheme.surface)
+                .padding(horizontal = Dimens.SpaceLarge, vertical = StatPanelVerticalPadding),
+        horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            text = stringResource(R.string.downloads_wifi_only),
-            style = StatSwitchLabel,
-            color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.weight(1f),
+        Icon(
+            imageVector = Icons.Outlined.WifiOff,
+            // The merged text node beside it already says all of this; a description here would
+            // make TalkBack read the notice twice.
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(NoticeIconSize),
         )
-        Switch(checked = wifiOnly, onCheckedChange = null)
+        Column(
+            modifier =
+                Modifier
+                    .weight(1f)
+                    // The text column alone, never the whole row: merging the row would swallow the
+                    // button, which must stay its own focusable action.
+                    .semantics(mergeDescendants = true) {
+                        // Polite, not Assertive — and the difference from `SettingsCategoryScreens`'
+                        // missing-storage-volume warning is deliberate: a vanished volume is losing
+                        // data right now, a metered connection is merely waiting.
+                        liveRegion = LiveRegionMode.Polite
+                    },
+            verticalArrangement = Arrangement.spacedBy(StatPanelInnerGap),
+        ) {
+            Text(
+                text = stringResource(R.string.downloads_wifi_wait_title),
+                style = StatValueSmall,
+                color = MaterialTheme.colorScheme.onBackground,
+            )
+            Text(
+                text = stringResource(R.string.downloads_wifi_wait_body),
+                style = StatCaption,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        TextButton(
+            onClick = onAllowCellular,
+            modifier = Modifier.defaultMinSize(minHeight = Dimens.MinTouchTarget),
+        ) {
+            Text(text = stringResource(R.string.downloads_wifi_wait_action))
+        }
     }
 }
 
@@ -983,8 +1020,6 @@ private fun WideSummary(
     storage: StorageSummary,
     queueStats: QueueStats,
     queueProgress: Float,
-    wifiOnly: Boolean,
-    onWifiOnlyChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -992,7 +1027,8 @@ private fun WideSummary(
             modifier
                 .fillMaxWidth()
                 .padding(horizontal = Dimens.PanelPadding, vertical = Dimens.SpaceSmall)
-                // Equal heights: the network panel grows a helper line while Wi-Fi-only is on.
+                // Equal heights: the queue panel grows a speed/ETA line while a transfer runs, and
+                // one panel shorter than its neighbour reads as a layout bug rather than as news.
                 .height(IntrinsicSize.Max),
         horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceLarge),
     ) {
@@ -1003,11 +1039,6 @@ private fun WideSummary(
         QueueStatPanel(
             stats = queueStats,
             progress = queueProgress,
-            modifier = Modifier.weight(1f).fillMaxHeight(),
-        )
-        NetworkStatPanel(
-            wifiOnly = wifiOnly,
-            onWifiOnlyChange = onWifiOnlyChange,
             modifier = Modifier.weight(1f).fillMaxHeight(),
         )
     }
@@ -1073,25 +1104,6 @@ private fun QueueStatPanel(
                             stringResource(R.string.downloads_stat_eta_about, formatDurationSeconds(it))
                         },
                     ).joinToString(Separators.DOT),
-                style = StatCaption,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
-}
-
-@Composable
-private fun NetworkStatPanel(
-    wifiOnly: Boolean,
-    onWifiOnlyChange: (Boolean) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    StatPanel(modifier = modifier) {
-        StatEyebrow(text = stringResource(R.string.downloads_stat_network))
-        WifiOnlyToggle(wifiOnly = wifiOnly, onWifiOnlyChange = onWifiOnlyChange)
-        if (wifiOnly) {
-            Text(
-                text = stringResource(R.string.downloads_stat_network_helper),
                 style = StatCaption,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -1304,6 +1316,9 @@ private val SegmentedTabLabel = TextStyle(fontSize = 13.sp, fontWeight = FontWei
 private val BulkButtonHorizontalPadding = 14.dp
 private val BulkButtonVerticalPadding = 8.dp
 private val BulkButtonIconSize = 15.dp
+
+/** Matches [StatValueSmall]'s optical weight beside it, not the 24.dp default. */
+private val NoticeIconSize = 20.dp
 private val BulkButtonLabel = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.W500)
 
 /**
@@ -1318,7 +1333,6 @@ private val BulkButtonDisabledContent: Color
     get() = pageInk(darkAlpha = 0.48f, lightAlpha = 0.65f)
 private val StatValue = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.W600)
 private val StatValueSmall = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.W600)
-private val StatSwitchLabel = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.W600)
 private val StatCaption = TextStyle(fontSize = 12.sp)
 
 @Preview(name = "Downloads — queue", showBackground = true, backgroundColor = 0xFF101010, widthDp = 390)
@@ -1386,7 +1400,7 @@ private fun DownloadsDownloadedPreview() {
             actions = previewActions(),
             bulk = previewBulkActions(),
             onPlay = { _, _, _ -> },
-            onWifiOnlyChange = {},
+            onAllowCellular = {},
         )
     }
 }
@@ -1527,7 +1541,7 @@ private fun QueuePreview() {
             actions = previewActions(),
             bulk = previewBulkActions(),
             onPlay = { _, _, _ -> },
-            onWifiOnlyChange = {},
+            onAllowCellular = {},
         )
     }
 }

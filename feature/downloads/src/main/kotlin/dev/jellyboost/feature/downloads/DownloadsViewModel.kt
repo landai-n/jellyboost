@@ -71,7 +71,8 @@ class DownloadsViewModel
                         downloads.observeDownloads(),
                         downloads.observeStorage(),
                         downloads.wifiOnly,
-                    ) { items, storage, wifiOnly ->
+                        downloads.onMeteredNetwork,
+                    ) { items, storage, wifiOnly, onMeteredNetwork ->
                         val queue = items.toQueue()
                         DownloadsProjection(
                             downloaded = groupCache.sections(items),
@@ -81,6 +82,7 @@ class DownloadsViewModel
                             progress = progressRatchet.update(queue),
                             storage = storage,
                             wifiOnly = wifiOnly,
+                            onMeteredNetwork = onMeteredNetwork,
                         )
                     },
                 )

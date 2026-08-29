@@ -2,7 +2,9 @@
 <resources>
     <string name="downloads_tab_downloaded">බාගත කළ</string>
     <string name="downloads_tab_queue">පෝලිම</string>
-    <string name="downloads_wifi_only">Wi‑Fi පමණි</string>
+    <string name="downloads_wifi_wait_title">Wi‑Fi සඳහා රැඳී සිටී</string>
+    <string name="downloads_wifi_wait_body">ජංගම දත්ත සම්බන්ධතාවයේදී පෝලිම විරාම කර ඇත.</string>
+    <string name="downloads_wifi_wait_action">Wi‑Fi පමණි ක්‍රියාවිරහිත කරන්න</string>
     <string name="downloads_screen_title">බාගත කිරීම්</string>
     <string name="downloads_section_movies">චිත්‍රපට</string>
     <string name="downloads_section_series">සිරීස්</string>
@@ -23,14 +25,12 @@
     <string name="downloads_storage_free">%1$s නිදහස්</string>
     <string name="downloads_stat_on_device">මෙම උපාංගයේ</string>
     <string name="downloads_stat_queue">පෝලිම</string>
-    <string name="downloads_stat_network">ජාලය</string>
     <string name="downloads_stat_free_of">%2$s න් %1$s නිදහස්</string>
     <plurals name="downloads_stat_queue_items">
         <item quantity="one">%1$d අයිතමය · %2$s</item>
         <item quantity="other">%1$d අයිතම · %2$s</item>
     </plurals>
     <string name="downloads_stat_eta_about">දළ වශයෙන් %1$s ඉතිරිය</string>
-    <string name="downloads_stat_network_helper">ජංගම දත්ත මත ස්වයංක්‍රීයව විරාම වේ</string>
     <string name="downloads_usage_storage_label">භාවිත කළ ආචයනය</string>
     <string name="downloads_usage_queue_label">පෝලිමේ ප්‍රගතිය</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>

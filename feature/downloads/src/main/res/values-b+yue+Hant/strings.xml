@@ -2,7 +2,9 @@
 <resources>
     <string name="downloads_tab_downloaded">已下載</string>
     <string name="downloads_tab_queue">佇列</string>
-    <string name="downloads_wifi_only">淨係 Wi‑Fi</string>
+    <string name="downloads_wifi_wait_title">等緊 Wi‑Fi</string>
+    <string name="downloads_wifi_wait_body">喺流動數據連線下，佇列已暫停。</string>
+    <string name="downloads_wifi_wait_action">關閉「淨係 Wi‑Fi」</string>
     <string name="downloads_screen_title">下載</string>
 
     <string name="downloads_section_movies">電影</string>
@@ -23,13 +25,11 @@
     <string name="downloads_storage_free">仲有 %1$s</string>
     <string name="downloads_stat_on_device">喺呢部裝置上</string>
     <string name="downloads_stat_queue">佇列</string>
-    <string name="downloads_stat_network">網絡</string>
     <string name="downloads_stat_free_of">喺 %2$s 入面重有 %1$s</string>
     <plurals name="downloads_stat_queue_items">
         <item quantity="other">%1$d 項 · %2$s</item>
     </plurals>
     <string name="downloads_stat_eta_about">仲要大約 %1$s</string>
-    <string name="downloads_stat_network_helper">用緊手機數據會自動暫停</string>
     <string name="downloads_usage_storage_label">已用儲存空間</string>
     <string name="downloads_usage_queue_label">佇列進度</string>
     <string name="downloads_queue_row_description">%1$s，%2$d%%，%3$s</string>

@@ -2,7 +2,9 @@
 <resources>
     <string name="downloads_tab_downloaded">Загружено</string>
     <string name="downloads_tab_queue">Очередь</string>
-    <string name="downloads_wifi_only">Только Wi-Fi</string>
+    <string name="downloads_wifi_wait_title">Ожидание Wi-Fi</string>
+    <string name="downloads_wifi_wait_body">Очередь приостановлена на мобильном соединении.</string>
+    <string name="downloads_wifi_wait_action">Отключить «Только Wi-Fi»</string>
     <string name="downloads_screen_title">Загрузки</string>
 
     <string name="downloads_section_movies">Фильмы</string>
@@ -29,7 +31,6 @@
     <string name="downloads_storage_free">свободно: %1$s</string>
     <string name="downloads_stat_on_device">На этом устройстве</string>
     <string name="downloads_stat_queue">Очередь</string>
-    <string name="downloads_stat_network">Сеть</string>
     <string name="downloads_stat_free_of">свободно %1$s из %2$s</string>
     <plurals name="downloads_stat_queue_items">
         <item quantity="one">%1$d элемент · %2$s</item>
@@ -38,7 +39,6 @@
         <item quantity="other">%1$d элементов · %2$s</item>
     </plurals>
     <string name="downloads_stat_eta_about">осталось около %1$s</string>
-    <string name="downloads_stat_network_helper">Автоматически приостанавливается при мобильном интернете</string>
     <string name="downloads_usage_storage_label">Занято в хранилище</string>
     <string name="downloads_usage_queue_label">Прогресс очереди</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>

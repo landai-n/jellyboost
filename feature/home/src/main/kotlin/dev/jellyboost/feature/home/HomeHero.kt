@@ -206,7 +206,10 @@ private fun WideHeroCopy(
                 .padding(horizontal = Dimens.SpaceExtraLarge)
                 .padding(top = wideHeroCopyTopInset(heroHeight), bottom = bottomInset)
                 .widthIn(max = WideCopyMaxWidth),
-        verticalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
+        // Centered in the band, not top-anchored: with no overview the lockup is ~150dp shorter
+        // than the band, and all of that as a gap under the buttons reads as a hole. A full-band
+        // lockup centers to the same place top-anchoring put it.
+        verticalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium, Alignment.CenterVertically),
     ) {
         if (showSecondary) HeroEyebrow()
         HeroTitle(

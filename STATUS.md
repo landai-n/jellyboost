@@ -58,7 +58,7 @@ Known issues / owed:
   milestone DoD.
 
 **Downloads: the Wi-Fi switch moves out, a conditional notice moves in (2026-08-29, branch
-`m14/downloads-wifi-notice`; adversarial review and device walk owed).** The Downloads screen's
+`m14/downloads-wifi-notice`, merged `dad3ea67`; device walk owed).** The Downloads screen's
 always-on *Wi-Fi only* toggle is **deleted** — it and Settings › Downloads wrote the same DataStore
 key, so it was a duplicated control, and Settings is now its sole owner. In its place, a
 `WaitingForWifiNotice` drawn above the tab row in **both** the compact and the wide layout, and only
@@ -87,7 +87,13 @@ Known issues / owed:
   is still on `scripts/a11y-scaffolding-allowlist.json`); the polite live region and the 48dp target
   belong with the suite that allowlist entry owes.
 - **Device walk owed** — the notice at fontScale 2.0, and both layout branches on the tablet.
-- `/adversarial-review` has not run over the branch; it must before the merge.
+- ~~`/adversarial-review` has not run over the branch~~ — RAN 2026-08-29, after the merge rather
+  than before it (5 lenses, every finding refute-verified): **5 raised, 0 confirmed, 5 refuted**.
+  The refutations killed each headline claim on reproducibility or pre-existence, but two conceded a
+  real inaccuracy in this wave's own prose, both since fixed: the `PINNED_CHROME_MIN_HEIGHT` KDoc still
+  said *three* stat panels after `WideSummary` dropped to two, and the DECISIONS bullet claimed
+  `:app:lintDebug` pinned the notice's live region and touch target when `config/lint/lint.xml`
+  disclaims Compose semantics and omits `TouchTargetSizeCheck` — it pins neither.
 
 **Settings redesign — hub + category pages (2026-08-29, branch `m14/settings-hub`; adversarial
 review and device walk owed).** The flat six-section scroll becomes a **category hub** (identity row

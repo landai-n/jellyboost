@@ -236,7 +236,9 @@ class SubtitleSidecarTopUpTest {
         runTest {
             // Audio sidecars are for new downloads only: an extra language is ~165 MB through a
             // junk-video transcode, not a repair to perform silently behind a user who has the film.
-            // The `type == SUBTITLE` filter is the whole guard, and widening it has to be a decision.
+            // The `type in TOPPED_UP_TYPES` filter is the whole guard: it was widened to fonts on
+            // 2026-08-29 (tens of KB, and useless without the subtitle beside them) and audio stayed
+            // out for the size reason above. Widening it again has to be a decision.
             given(files = listOf(mediaFile()))
             val dubbed =
                 movie(
@@ -254,6 +256,49 @@ class SubtitleSidecarTopUpTest {
 
             inserted.map { it.type }.distinct() shouldContainExactly listOf(DownloadFileType.SUBTITLE)
             requested.none { it.startsWith("audio://") } shouldBe true
+        }
+
+    @Test
+    fun `a download taken before styled ASS shipped gains the fonts its sidecars name`() =
+        runTest {
+            // The reason fonts joined the top-up: an item downloaded before the font branch existed
+            // has its ASS sidecar and none of the faces it names, and would draw in the fallback
+            // family forever otherwise.
+            given(files = listOf(mediaFile()))
+            val styled =
+                movie(
+                    streams = listOf(subtitleStream(index = 6, codec = "ass", language = "fra", external = false)),
+                    attachments = listOf(DownloadFixtures.fontAttachment(index = 4)),
+                )
+
+            topUp().topUp(listOf(styled)) shouldBe 2
+
+            inserted.map { it.type } shouldContainExactly
+                listOf(DownloadFileType.SUBTITLE, DownloadFileType.FONT)
+            requested.any { it.startsWith("attachment://") } shouldBe true
+        }
+
+    @Test
+    fun `a font already on disk is not fetched again`() =
+        runTest {
+            val fontOnDisk = File(directory, "font.4.Face-4.ttf").apply { writeText("face bytes") }
+            given(
+                files =
+                    listOf(
+                        mediaFile(),
+                        fontRow(streamIndex = 4, path = fontOnDisk.absolutePath),
+                    ),
+            )
+            val styled =
+                movie(
+                    streams = listOf(subtitleStream(index = 6, codec = "ass", language = "fra", external = false)),
+                    attachments = listOf(DownloadFixtures.fontAttachment(index = 4)),
+                )
+
+            // Only the subtitle is missing.
+            topUp().topUp(listOf(styled)) shouldBe 1
+
+            inserted.map { it.type }.distinct() shouldContainExactly listOf(DownloadFileType.SUBTITLE)
         }
 
     @Test
@@ -328,6 +373,19 @@ class SubtitleSidecarTopUpTest {
             path = File(directory, "film.mkv").absolutePath,
         )
 
+    private fun fontRow(
+        streamIndex: Int,
+        path: String,
+    ) = DownloadFixtures.file(
+        id = FILE_ID + 1,
+        itemId = uuid(1),
+        type = DownloadFileType.FONT,
+        fileName = "font.$streamIndex.Face-$streamIndex.ttf",
+        streamIndex = streamIndex,
+        status = DownloadStatus.DOWNLOADED,
+        path = path,
+    )
+
     private fun subtitleRow(
         streamIndex: Int,
         status: DownloadStatus = DownloadStatus.DOWNLOADED,
@@ -348,7 +406,7 @@ class SubtitleSidecarTopUpTest {
     }
 }
 
-/** Enough of a [DownloadUrlFactory] for the planner; only the subtitle URLs are ever fetched. */
+/** Enough of a [DownloadUrlFactory] for the planner; only the sidecar URLs are ever fetched. */
 private object FakeUrls : DownloadUrlFactory {
     override fun mediaUrl(itemId: UUID) = "download://$itemId"
 
@@ -394,4 +452,10 @@ private object FakeUrls : DownloadUrlFactory {
         mediaSourceId: String?,
         streamIndex: Int,
     ) = "audio://$itemId/$streamIndex"
+
+    override fun attachmentUrl(
+        itemId: UUID,
+        mediaSourceId: String,
+        index: Int,
+    ) = "attachment://$itemId/$index"
 }

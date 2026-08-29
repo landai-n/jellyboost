@@ -7,6 +7,7 @@ import org.jellyfin.sdk.api.client.extensions.imageApi
 import org.jellyfin.sdk.api.client.extensions.libraryApi
 import org.jellyfin.sdk.api.client.extensions.subtitleApi
 import org.jellyfin.sdk.api.client.extensions.trickplayApi
+import org.jellyfin.sdk.api.client.extensions.videoAttachmentsApi
 import org.jellyfin.sdk.api.client.extensions.videosApi
 import org.jellyfin.sdk.model.api.EncodingContext
 import org.jellyfin.sdk.model.api.ImageFormat
@@ -97,6 +98,17 @@ internal interface DownloadUrlFactory {
         itemId: UUID,
         mediaSourceId: String?,
         streamIndex: Int,
+    ): String
+
+    /**
+     * One font attached to the source container, by its `MediaAttachment.index`. Fetched only for a
+     * transcoded download: the server's re-encode carries video and audio and drops the attachments,
+     * so this is the only route to the faces an ASS/SSA sidecar names.
+     */
+    fun attachmentUrl(
+        itemId: UUID,
+        mediaSourceId: String,
+        index: Int,
     ): String
 }
 
@@ -234,5 +246,16 @@ internal class SdkDownloadUrlFactory
                 allowVideoStreamCopy = false,
                 allowAudioStreamCopy = false,
                 context = EncodingContext.STATIC,
+            )
+
+        override fun attachmentUrl(
+            itemId: UUID,
+            mediaSourceId: String,
+            index: Int,
+        ): String =
+            apiClient.videoAttachmentsApi.getAttachmentUrl(
+                videoId = itemId,
+                mediaSourceId = mediaSourceId,
+                index = index,
             )
     }

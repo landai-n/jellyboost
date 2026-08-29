@@ -35,6 +35,7 @@ data class DownloadedMedia(
     val bakedAudioStreamIndex: Int? = null,
     val subtitles: List<DownloadedSubtitle> = emptyList(),
     val audio: List<DownloadedAudio> = emptyList(),
+    val fonts: List<DownloadedFont> = emptyList(),
     val trickplay: DownloadedTrickplay? = null,
 ) {
     /** `true` when the bytes on disk are a server re-encode rather than the source file. */
@@ -62,6 +63,20 @@ data class DownloadedSubtitle(
 data class DownloadedAudio(
     val streamIndex: Int,
     val uri: String,
+)
+
+/**
+ * One font attached to the source container, downloaded because this row is a transcode and the server's
+ * re-encode dropped the attachments an ASS/SSA sidecar's styles name.
+ *
+ * @property name a label, not a lookup key: libass parses the blob with FreeType and matches styles on the
+ *   face's own family names, so a sanitised filename here costs nothing.
+ * @property path an absolute filesystem path rather than a `file://` URI — these bytes are read by the app
+ *   and handed to libass, never opened by ExoPlayer.
+ */
+data class DownloadedFont(
+    val name: String,
+    val path: String,
 )
 
 /**

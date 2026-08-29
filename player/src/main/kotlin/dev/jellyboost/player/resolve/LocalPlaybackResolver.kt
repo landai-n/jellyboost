@@ -8,6 +8,7 @@ import dev.jellyboost.data.downloads.offline.DownloadedTrickplay
 import dev.jellyboost.player.deviceprofile.CodecHelpers
 import dev.jellyboost.player.model.ExternalAudio
 import dev.jellyboost.player.model.ExternalSubtitle
+import dev.jellyboost.player.model.LocalFont
 import dev.jellyboost.player.model.LocalPlaybackMediaSource
 import dev.jellyboost.player.model.LocalTrickplay
 import dev.jellyboost.player.model.PlaybackTrack
@@ -93,6 +94,9 @@ internal class LocalPlaybackResolver
                 // `ExoPlayerHandle` builds its merge children in, and the only handle selection has
                 // on which ExoPlayer audio group is which Jellyfin stream.
                 externalAudio = audioSidecars.map { ExternalAudio(index = it.streamIndex, uri = it.uri) },
+                // Carried through unfiltered and unordered: these are not tracks, and libass matches a
+                // style to a face by the family names it reads out of each blob.
+                fonts = downloaded.fonts.map { LocalFont(name = it.name, path = it.path) },
                 // Labelled off the source's defaults rather than the file's, because that is what
                 // they describe — the item, not the copy of it on this device.
                 allAudioTracks =

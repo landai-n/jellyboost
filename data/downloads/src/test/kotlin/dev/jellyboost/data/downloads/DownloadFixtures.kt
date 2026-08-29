@@ -10,6 +10,7 @@ import dev.jellyboost.core.database.entities.DownloadFileEntity
 import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.BaseItemKind
 import org.jellyfin.sdk.model.api.ImageType
+import org.jellyfin.sdk.model.api.MediaAttachment
 import org.jellyfin.sdk.model.api.MediaProtocol
 import org.jellyfin.sdk.model.api.MediaSourceInfo
 import org.jellyfin.sdk.model.api.MediaSourceType
@@ -77,6 +78,7 @@ object DownloadFixtures {
         primaryTag: String? = "primary-tag",
         backdropTag: String? = null,
         trickplay: Map<String, Map<String, TrickplayInfoDto>>? = null,
+        attachments: List<MediaAttachment> = emptyList(),
     ): BaseItemDto =
         BaseItemDto(
             id = id,
@@ -99,9 +101,22 @@ object DownloadFixtures {
                             streams = streams,
                             container = sourceContainer,
                             defaultAudioStreamIndex = defaultAudioStreamIndex,
+                            attachments = attachments,
                         ),
                     )
                 },
+        )
+
+    /** One Matroska attachment. [mimeType] `null` is the older-server case the extension check covers. */
+    fun fontAttachment(
+        index: Int,
+        fileName: String? = "Face-$index.ttf",
+        mimeType: String? = "font/ttf",
+    ): MediaAttachment =
+        MediaAttachment(
+            index = index,
+            fileName = fileName,
+            mimeType = mimeType,
         )
 
     @Suppress("LongParameterList")
@@ -274,6 +289,7 @@ object DownloadFixtures {
         streams: List<MediaStream> = emptyList(),
         container: String? = "mkv",
         defaultAudioStreamIndex: Int? = null,
+        attachments: List<MediaAttachment> = emptyList(),
     ): MediaSourceInfo =
         MediaSourceInfo(
             id = id,
@@ -281,6 +297,7 @@ object DownloadFixtures {
             bitrate = bitrate,
             container = container,
             mediaStreams = streams,
+            mediaAttachments = attachments,
             defaultAudioStreamIndex = defaultAudioStreamIndex,
             type = MediaSourceType.DEFAULT,
             protocol = MediaProtocol.FILE,

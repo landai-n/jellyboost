@@ -118,6 +118,8 @@ internal data class LocalPlaybackMediaSource(
     val externalAudio: List<ExternalAudio> = emptyList(),
     val allAudioTracks: List<PlaybackTrack> = audioTracks,
     val allSubtitleTracks: List<PlaybackTrack> = subtitleTracks,
+    /** Attached fonts on disk, for libass; empty for anything but a transcoded download with ASS. */
+    val fonts: List<LocalFont> = emptyList(),
     override val selectedAudioIndex: Int? = null,
     override val selectedSubtitleIndex: Int? = null,
     val trickplay: LocalTrickplay? = null,
@@ -212,4 +214,16 @@ data class ExternalSubtitle(
 internal data class ExternalAudio(
     val index: Int,
     val uri: String,
+)
+
+/**
+ * One attached font downloaded beside a transcoded item, for libass. Unlike [ExternalAudio] and
+ * `ExternalSubtitle` this is not a track and takes no merge child: nothing about the player's track
+ * list changes because a font is present.
+ *
+ * @property path an absolute filesystem path, not a URI — the bytes are read and handed to libass.
+ */
+internal data class LocalFont(
+    val name: String,
+    val path: String,
 )

@@ -22,7 +22,8 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Fetches the subtitle sidecars a **finished** download is missing, without touching its media file.
+ * Fetches the optional sidecars a **finished** download is missing — subtitles and the fonts they
+ * name — without touching its media file.
  *
  * Not "just re-queue the row": the queue walks *every* file in the plan, and a transcoded media file
  * cannot be resumed — the server ignores `Range` on a live transcode, answers `200`, and
@@ -34,7 +35,9 @@ import javax.inject.Singleton
  *   on the application scope where no constraint applies, so it must enforce the rule itself.
  * - Only rows that are [DownloadStatus.DOWNLOADED] — anything still in the queue is the queue's, and
  *   the two must not write the same file rows at once.
- * - Only [DownloadFileType.SUBTITLE] entries of the plan; widening it later is a decision.
+ * - Only [TOPPED_UP_TYPES] entries of the plan — the subtitle sidecars this is named for, and since
+ *   2026-08-29 the font attachments that go with them, so a download taken before styled ASS shipped
+ *   gains its faces on the next connectivity edge instead of drawing in the fallback family forever.
  * - Only files that are genuinely absent, which is what makes running this on every connectivity edge
  *   cheap.
  * - Never throws. A failure leaves exactly the gap that was there before.
@@ -73,7 +76,7 @@ internal class SubtitleSidecarTopUp
             for (item in items) {
                 fetched += topUpOne(item)
             }
-            if (fetched > 0) Timber.i("Fetched %d missing subtitle sidecar(s) for downloaded items", fetched)
+            if (fetched > 0) Timber.i("Fetched %d missing sidecar file(s) for downloaded items", fetched)
             return fetched
         }
 
@@ -82,7 +85,7 @@ internal class SubtitleSidecarTopUp
             val missing = missingSidecars(item, stored.download, stored.files)
             if (missing.isEmpty()) return 0
 
-            Timber.i("%s is missing %d subtitle sidecar(s); fetching them", stored.download.itemName, missing.size)
+            Timber.i("%s is missing %d sidecar file(s); fetching them", stored.download.itemName, missing.size)
             return missing.count { planned -> fetch(stored.download, planned, stored.files) }
         }
 
@@ -107,10 +110,10 @@ internal class SubtitleSidecarTopUp
                 } ?: return emptyList()
 
             return planned
-                .filter { it.type == DownloadFileType.SUBTITLE }
+                .filter { it.type in TOPPED_UP_TYPES }
                 .filterNot { file ->
                     files.any { row ->
-                        row.type == DownloadFileType.SUBTITLE &&
+                        row.type == file.type &&
                             row.streamIndex == file.streamIndex &&
                             row.status == DownloadStatus.DOWNLOADED &&
                             File(row.path).isFile
@@ -134,7 +137,7 @@ internal class SubtitleSidecarTopUp
                 storage.prepareItemDirectory(download.directoryName)
                 val previous =
                     files.firstOrNull {
-                        it.type == DownloadFileType.SUBTITLE && it.streamIndex == planned.streamIndex
+                        it.type == planned.type && it.streamIndex == planned.streamIndex
                     }
                 val fileName = previous?.fileName ?: planned.fileName
                 val target = storage.resolve(download.directoryName, fileName)
@@ -145,7 +148,7 @@ internal class SubtitleSidecarTopUp
                             val fresh =
                                 DownloadFileEntity(
                                     itemId = download.itemId,
-                                    type = DownloadFileType.SUBTITLE,
+                                    type = planned.type,
                                     streamIndex = planned.streamIndex,
                                     fileName = fileName,
                                     path = target.absolutePath,
@@ -185,6 +188,16 @@ internal class SubtitleSidecarTopUp
          */
         private inline fun <T> topUpOrNull(block: () -> T): T? =
             runCatchingUnlessCancelled(block)
-                .onFailure { Timber.w(it, "Could not top up a subtitle sidecar") }
+                .onFailure { Timber.w(it, "Could not top up a sidecar file") }
                 .getOrNull()
+
+        private companion object {
+            /**
+             * Both optional kinds that a *finished* row can be missing and that the planner will name
+             * again from the row's own quality. Fonts join subtitles because the planner only ever emits
+             * one alongside the other, so topping up a subtitle without its faces would leave exactly the
+             * gap this exists to close.
+             */
+            val TOPPED_UP_TYPES = setOf(DownloadFileType.SUBTITLE, DownloadFileType.FONT)
+        }
     }

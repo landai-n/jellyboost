@@ -31,4 +31,15 @@ enum class DownloadFileType(
      * row an older build cannot read degrades to a skipped optional file rather than crashing it.
      */
     AUDIO(essential = false),
+
+    /**
+     * One font attached to the source container, fetched for a **transcoded** download that carries an
+     * ASS/SSA sidecar. The server's re-encode holds video and audio only, so the attachments libass would
+     * otherwise read out of the `.mkv` are gone, and a styled subtitle falls back to the default family.
+     * An `ORIGINAL` download keeps the whole container and therefore needs none of these.
+     *
+     * Same no-migration note as [AUDIO]: an older build decodes the unknown name to [TRICKPLAY_TILE] and
+     * skips the file.
+     */
+    FONT(essential = false),
 }

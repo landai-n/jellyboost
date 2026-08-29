@@ -525,6 +525,7 @@ it, `io.github.peerless2012:ass-media` renders the file with libass itself, at
 | `session/AssSubtitleSupport` | `@Singleton`. Reads `styledAssSubtitles`, installs the fontconfig configuration, creates the `AssHandler`, forces `System.loadLibrary` while a fallback is still possible, publishes the handler for the UI, and releases it. |
 | `session/AssFontConfig` | The `fonts.conf` libass is pointed at through `FONTCONFIG_FILE`, because the one compiled into `ass-kt` names CI build-tree paths that cannot exist on a device. |
 | `session/AssMergeCompat` | `styledAssSurvivesMerge(spec)` — whether libass's one-prefix track lookup can survive how this item's source is merged. |
+| `AssSubtitleSupport.addFonts` | Hands libass the faces a transcoded download carries beside its ASS sidecar, because the server's re-encode drops the container's attachments. |
 
 Three wiring points, all wrapping rather than replacing:
 
@@ -537,6 +538,21 @@ Three wiring points, all wrapping rather than replacing:
   beside Media3's own cue output, and removes exactly that view again when the handler goes.
 - Nothing else moves: the device profile, `PlaybackInfoResolver`, `ExoMediaSourceFactory`,
   `MediaItems` and `TrackSelectionController` are all format-agnostic and unchanged.
+
+**Attached fonts on a download.** A transcode keeps video and audio and drops the container's
+attachments, so an item downloaded at anything but *Original* would draw its styled subtitle in the
+fallback family — positioning, colour, scale, blur and fades intact, the typeface wrong. The planner
+therefore fetches the source's font attachments alongside the ASS sidecar (`DownloadFileType.FONT`,
+one file per attachment, only when a sidecar is ASS/SSA — an *Original* download keeps the container
+and needs none), and `AssSubtitleSupport.addFonts` registers them at `prepare`. Downloads taken
+before this shipped repair themselves: the sidecar top-up covers fonts too, so they arrive on the
+next connectivity edge.
+
+Two ordering facts make it work, both found on device: the faces go to `handler.ass` and **not** to
+`AssHandler.addFont`, which parks a font until the first `createTrack` — one step after that method
+has already built the renderer, and libass reads its font list exactly once, when the renderer is
+created. And the read is blocking, because the bytes have to be in the library before that first
+track rather than whenever a background thread gets there. See DECISIONS.md, 2026-08-29.
 
 **Fonts.** `ass-kt` 0.5.1 ships a `libass.so` whose fontconfig looks for `fonts.conf` under the CI
 runner's home directory, so on a device fontconfig finds nothing, falls back to a document with no
@@ -573,6 +589,9 @@ device walk is still owed (DECISIONS 2026-08-28).
 - The item is merged twice — audio sidecars *and* side-loaded subtitles — where libass's single
   `childIndex:` strip cannot match its own track. `styledAssSurvivesMerge` routes those through the
   plain media-source factory: unstyled, but on screen rather than missing.
+- A face is missing or will not parse. That one style falls back to the default family — which
+  resolves to Roboto rather than to whatever sorted first, because of the fontconfig alias above —
+  and everything else about the line still renders.
 - The stream is a transcode. Its subtitles are in-manifest VTT by design; ASS never arrives.
 - Casting. `CastPlayerHandle` has no local surface and never reaches any of this; the receiver draws
   its own subtitles.

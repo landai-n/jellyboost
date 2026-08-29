@@ -517,6 +517,56 @@ class DownloadedMediaProviderTest {
             )
     }
 
+    @Test
+    fun `attached fonts on disk are carried through with their names`() =
+        runTest {
+            val face = write("font.4.Face.ttf")
+            stored(
+                files =
+                    listOf(
+                        mediaFile(path = write("a.mkv").absolutePath),
+                        fontFile(id = 2L, fileName = "font.4.Face.ttf", path = face.absolutePath),
+                    ),
+            )
+
+            val resolved = provider.get(itemId).shouldNotBeNull()
+
+            resolved.fonts.map { it.name } shouldContainExactly listOf("font.4.Face.ttf")
+            // A path, not a URI: these bytes are read by the app and handed to libass, never opened
+            // by ExoPlayer.
+            resolved.fonts.map { it.path } shouldContainExactly listOf(face.absolutePath)
+        }
+
+    @Test
+    fun `a font whose file left the disk is dropped rather than handed over`() =
+        runTest {
+            stored(
+                files =
+                    listOf(
+                        mediaFile(path = write("a.mkv").absolutePath),
+                        fontFile(id = 2L, fileName = "font.4.Gone.ttf", path = "/tmp/gone.ttf"),
+                    ),
+            )
+
+            provider
+                .get(itemId)
+                .shouldNotBeNull()
+                .fonts
+                .shouldBeEmpty()
+        }
+
+    @Test
+    fun `an item with no attached fonts reports none`() =
+        runTest {
+            stored(files = listOf(mediaFile(path = write("a.mkv").absolutePath)))
+
+            provider
+                .get(itemId)
+                .shouldNotBeNull()
+                .fonts
+                .shouldBeEmpty()
+        }
+
     private fun mediaFile(
         path: String = "/tmp/missing.mkv",
         status: DownloadStatus = DownloadStatus.DOWNLOADED,
@@ -548,6 +598,20 @@ class DownloadedMediaProviderTest {
         status = status,
         path = path,
         streamIndex = streamIndex,
+    )
+
+    private fun fontFile(
+        id: Long,
+        fileName: String,
+        path: String,
+        status: DownloadStatus = DownloadStatus.DOWNLOADED,
+    ) = DownloadFixtures.file(
+        id = id,
+        itemId = itemId,
+        type = DownloadFileType.FONT,
+        status = status,
+        path = path,
+        fileName = fileName,
     )
 
     private fun tileFile(

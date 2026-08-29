@@ -4,6 +4,7 @@ import androidx.media3.common.MimeTypes
 import dev.jellyboost.player.PlayMethod
 import dev.jellyboost.player.api.StreamUrlFactory
 import dev.jellyboost.player.model.AudioSidecarSpec
+import dev.jellyboost.player.model.FontSpec
 import dev.jellyboost.player.model.LocalPlaybackMediaSource
 import dev.jellyboost.player.model.PlaybackMediaItemSpec
 import dev.jellyboost.player.model.PlaybackMediaSource
@@ -81,6 +82,7 @@ internal class ExoMediaSourceFactory
                     externalAudio.map { audio ->
                         AudioSidecarSpec(streamIndex = audio.index, uri = audio.uri)
                     },
+                fonts = fonts.map { font -> FontSpec(name = font.name, path = font.path) },
             )
 
         /** A source the server pulls over HTTP (a live stream) is already a playlist and is handed over as-is. */

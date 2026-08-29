@@ -2,11 +2,13 @@ package dev.jellyboost.player
 
 import dev.jellyboost.core.common.model.DownloadQuality
 import dev.jellyboost.data.downloads.offline.DownloadedAudio
+import dev.jellyboost.data.downloads.offline.DownloadedFont
 import dev.jellyboost.data.downloads.offline.DownloadedMedia
 import dev.jellyboost.data.downloads.offline.DownloadedSubtitle
 import dev.jellyboost.data.downloads.offline.DownloadedTrickplay
 import dev.jellyboost.player.model.ExternalAudio
 import dev.jellyboost.player.model.ExternalSubtitle
+import dev.jellyboost.player.model.LocalFont
 import dev.jellyboost.player.model.LocalPlaybackMediaSource
 import dev.jellyboost.player.model.LocalTrickplay
 import dev.jellyboost.player.model.PlaybackTrack
@@ -183,6 +185,7 @@ internal object PlayerFixtures {
         subtitleTracks: List<PlaybackTrack> = emptyList(),
         externalSubtitles: List<ExternalSubtitle> = emptyList(),
         externalAudio: List<ExternalAudio> = emptyList(),
+        fonts: List<LocalFont> = emptyList(),
         allAudioTracks: List<PlaybackTrack> = audioTracks,
         allSubtitleTracks: List<PlaybackTrack> = subtitleTracks,
         selectedAudioIndex: Int? = null,
@@ -199,6 +202,7 @@ internal object PlayerFixtures {
             subtitleTracks = subtitleTracks,
             externalSubtitles = externalSubtitles,
             externalAudio = externalAudio,
+            fonts = fonts,
             allAudioTracks = allAudioTracks,
             allSubtitleTracks = allSubtitleTracks,
             selectedAudioIndex = selectedAudioIndex,
@@ -261,6 +265,7 @@ internal object PlayerFixtures {
         bakedAudioStreamIndex: Int? = null,
         subtitles: List<DownloadedSubtitle> = emptyList(),
         audio: List<DownloadedAudio> = emptyList(),
+        fonts: List<DownloadedFont> = emptyList(),
         trickplay: DownloadedTrickplay? = null,
     ): DownloadedMedia =
         DownloadedMedia(
@@ -273,6 +278,7 @@ internal object PlayerFixtures {
             bakedAudioStreamIndex = bakedAudioStreamIndex,
             subtitles = subtitles,
             audio = audio,
+            fonts = fonts,
             trickplay = trickplay,
         )
 

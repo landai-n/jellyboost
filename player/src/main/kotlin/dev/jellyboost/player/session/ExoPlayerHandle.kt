@@ -146,6 +146,11 @@ internal class ExoPlayerHandle
         ) {
             startPlaybackService()
             with(requirePlayer()) {
+                // After requirePlayer, which is what builds the player and attaches the handler these
+                // go to — before it, the first prepare of a session would drop them — and before the
+                // source is set, so the faces are on their way while the first samples are read. A
+                // no-op unless this is a downloaded transcode whose container lost its attachments.
+                assSubtitles.addFonts(spec.fonts)
                 // This player outlives the item: without the reset, the previous item's overrides
                 // — including its "subtitles off" — are this one's starting point.
                 TrackSelectionController(this).reset()

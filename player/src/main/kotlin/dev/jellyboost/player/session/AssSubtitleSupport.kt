@@ -8,6 +8,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.jellyboost.core.common.di.ApplicationScope
 import dev.jellyboost.core.common.runCatchingUnlessCancelled
 import dev.jellyboost.core.datastore.AppPreferences
+import dev.jellyboost.player.model.FontSpec
 import io.github.peerless2012.ass.media.AssHandler
 import io.github.peerless2012.ass.media.type.AssRenderType
 import kotlinx.coroutines.CoroutineScope
@@ -18,6 +19,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.stateIn
 import timber.log.Timber
+import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -107,6 +109,51 @@ internal class AssSubtitleSupport
         ) {
             handler.init(player)
             _handler.value = handler
+        }
+
+        /**
+         * Registers the fonts a **transcoded download** carries beside its ASS sidecar. The server's
+         * re-encode holds video and audio only, so the attachments `withAssMkvSupport` would read out of
+         * an `ORIGINAL` container are not there, and without this every styled line falls back to the
+         * default family. Downloaded items only: a streamed one either still has its attachments in the
+         * container or is a transcode, where subtitles arrive as VTT and libass never runs.
+         *
+         * **Goes to `handler.ass` and not to `AssHandler.addFont`, and the difference decides whether any
+         * of this works.** `AssHandler.addFont` passes a face straight to libass only once the handler
+         * already has tracks, and parks it in a `pendingFonts` list otherwise. That list is drained by
+         * `createTrack` — *after* its first statement, `createRenderIfNeeded()`. libass builds its font
+         * lookup once, inside the `ass_set_fonts` call that creating the renderer makes, and never
+         * revisits it, so a face parked before the first track is handed over one step too late and is
+         * ignored for the whole session. Measured on the test tablet: fonts registered, and every style
+         * still resolved to `Roboto-Bold`. `Ass.addFont` is the same native call without the detour, and
+         * from here it lands in the library while `prepare` is still running — before any track exists,
+         * and so before the renderer that reads it.
+         *
+         * **Blocking, deliberately.** The bytes have to be in the library before the first `createTrack`,
+         * and posting them to another thread reopens by luck exactly the race the paragraph above closes
+         * by construction. It is a local read of a few tens of KB per face on a path that is already
+         * doing file I/O to open the media.
+         *
+         * Never clears: [AssHandler] outlives the item, and dropping the accumulated set would also drop
+         * the attachments an extractor added for a container playing right now. The bound is one video
+         * session's items, at tens of KB a face, and a name collision resolves to the same face anyway.
+         *
+         * A failure is per-font and permanent for that file — a truncated download, a blob FreeType will
+         * not parse — so it is logged and the rest are still offered.
+         */
+        fun addFonts(fonts: List<FontSpec>) {
+            if (fonts.isEmpty()) return
+            val ass = _handler.value?.ass ?: return
+            var loaded = 0
+            fonts.forEach { font ->
+                runCatchingUnlessCancelled {
+                    ass.addFont(font.name, File(font.path).readBytes())
+                    loaded++
+                }.onFailure { error ->
+                    Timber.w(error, "Attached font %s did not load; its styles fall back", font.name)
+                }
+            }
+            Timber.i("Registered %d of %d attached fonts with libass", loaded, fonts.size)
         }
 
         /**

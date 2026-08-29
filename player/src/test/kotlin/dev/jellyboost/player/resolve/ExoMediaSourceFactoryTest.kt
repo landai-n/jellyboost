@@ -6,7 +6,9 @@ import dev.jellyboost.player.PlayerFixtures
 import dev.jellyboost.player.api.StreamUrlFactory
 import dev.jellyboost.player.model.ExternalAudio
 import dev.jellyboost.player.model.ExternalSubtitle
+import dev.jellyboost.player.model.LocalFont
 import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -272,6 +274,36 @@ class ExoMediaSourceFactoryTest {
         spec.audioSidecars.map { it.streamIndex } shouldBe listOf(4, 5)
         spec.audioSidecars.map { it.uri } shouldBe
             listOf("file:///downloads/Arrival/audio.4.fra.m4a", "file:///downloads/Arrival/audio.5.eng.m4a")
+    }
+
+    @Test
+    fun `downloaded fonts reach the spec, and take no merge child`() {
+        val spec =
+            factory.create(
+                PlayerFixtures.localSource(
+                    fonts =
+                        listOf(
+                            LocalFont(name = "font.4.Face.ttf", path = "/data/films/x/font.4.Face.ttf"),
+                            LocalFont(name = "font.5.Other.otf", path = "/data/films/x/font.5.Other.otf"),
+                        ),
+                ),
+            )
+
+        spec.shouldNotBeNull()
+        spec.fonts.map { it.name } shouldContainExactly listOf("font.4.Face.ttf", "font.5.Other.otf")
+        spec.fonts.map { it.path } shouldContainExactly
+            listOf("/data/films/x/font.4.Face.ttf", "/data/films/x/font.5.Other.otf")
+        // A font is not a track: nothing about the merge or the track ids changes because one is here.
+        spec.audioSidecars.shouldBeEmpty()
+        spec.subtitles.shouldBeEmpty()
+    }
+
+    @Test
+    fun `a streamed source never carries fonts`() {
+        val spec = factory.create(PlayerFixtures.remoteSource())
+
+        spec.shouldNotBeNull()
+        spec.fonts.shouldBeEmpty()
     }
 
     @Test

@@ -124,7 +124,7 @@
     "data/downloads/src/main/kotlin/dev/jellyboost/data/downloads/DownloadedMetadataRefresher.kt": 1,
     "data/downloads/src/main/kotlin/dev/jellyboost/data/downloads/model/DownloadItem.kt": 4,
     "data/downloads/src/main/kotlin/dev/jellyboost/data/downloads/model/StorageLocations.kt": 2,
-    "data/downloads/src/main/kotlin/dev/jellyboost/data/downloads/offline/DownloadedMedia.kt": 4,
+    "data/downloads/src/main/kotlin/dev/jellyboost/data/downloads/offline/DownloadedMedia.kt": 5,
     "data/downloads/src/main/kotlin/dev/jellyboost/data/downloads/offline/DownloadedMediaProvider.kt": 1,
     "data/src/main/kotlin/dev/jellyboost/data/ConnectivityRefresher.kt": 2,
     "data/src/main/kotlin/dev/jellyboost/data/JellyfinRepository.kt": 1,

@@ -58,9 +58,11 @@ all 70 files. Reasoning: DECISIONS.md 2026-08-29 (third entry),
 `docs/features/downloads.md` § *Waiting for Wi-Fi*.
 
 Known issues / owed:
-- **`AndroidConnectivityMonitor` has no unit test.** `:core:network` carries no Robolectric and the
-  class is a `registerDefaultNetworkCallback` wrapper; adding a test dependency to the module is a
-  decision to take, not to infer. The delegation below it *is* pinned (`DownloadRepositoryImplTest`).
+- ~~**`AndroidConnectivityMonitor` has no unit test.**~~ DONE — `AndroidConnectivityMonitorTest`,
+  8 cases, no Robolectric: MockK already mocks framework classes here (`LicenceViewModelTest`
+  precedent), so the callback is captured and driven directly. Covers the metered/unmetered seeds,
+  an absent network, a transport with no `NET_CAPABILITY_INTERNET`, Wi-Fi→cellular, `onLost`, the
+  null-`ConnectivityManager` fallback, and that both flows share **one** registration. Mutation-checked.
 - **No instrumented case for the notice.** `:feature:downloads` has no `androidTest` source set (it
   is still on `scripts/a11y-scaffolding-allowlist.json`); the polite live region and the 48dp target
   belong with the suite that allowlist entry owes.

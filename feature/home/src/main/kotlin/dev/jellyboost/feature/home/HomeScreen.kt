@@ -186,6 +186,7 @@ private fun HomeRows(
             heroRow(
                 hero = hero,
                 wide = wide,
+                portrait = maxHeight > maxWidth,
                 height = heroHeight,
                 actions = actions,
             )
@@ -295,6 +296,7 @@ private fun Modifier.reportShorterBy(amount: Dp): Modifier =
 private fun LazyListScope.heroRow(
     hero: JellyfinItem?,
     wide: Boolean,
+    portrait: Boolean,
     height: Dp,
     actions: HomeActions,
 ) {
@@ -304,6 +306,7 @@ private fun LazyListScope.heroRow(
         HomeHero(
             item = hero,
             wide = wide,
+            portrait = portrait,
             height = height,
             onResume = { actions.onPlay(hero) },
             onDetails = { actions.onItemClick(hero) },

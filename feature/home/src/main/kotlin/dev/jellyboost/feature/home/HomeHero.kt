@@ -64,6 +64,7 @@ import dev.jellyboost.core.ui.R as CoreUiR
 internal fun HomeHero(
     item: JellyfinItem,
     wide: Boolean,
+    portrait: Boolean,
     height: Dp,
     onResume: () -> Unit,
     onDetails: () -> Unit,
@@ -89,6 +90,7 @@ internal fun HomeHero(
                 item = item,
                 heroHeight = height,
                 fontScale = fontScale,
+                portrait = portrait,
                 onResume = onResume,
                 onDetails = onDetails,
                 modifier = Modifier.align(Alignment.TopStart),
@@ -190,6 +192,7 @@ private fun WideHeroCopy(
     item: JellyfinItem,
     heroHeight: Dp,
     fontScale: Float,
+    portrait: Boolean,
     onResume: () -> Unit,
     onDetails: () -> Unit,
     modifier: Modifier = Modifier,
@@ -206,7 +209,15 @@ private fun WideHeroCopy(
                 .padding(horizontal = Dimens.SpaceExtraLarge)
                 .padding(top = wideHeroCopyTopInset(heroHeight), bottom = bottomInset)
                 .widthIn(max = WideCopyMaxWidth),
-        verticalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
+        // Anchoring follows the window's orientation, the canvas's split: the portrait mocks seat
+        // the lockup against the banner's bottom edge with the artwork breathing above it, the
+        // landscape mock hangs it from the nav inset with the overview filling downward. A portrait
+        // banner top-anchored strands short copy over a dead band — the mismatch that prompted this.
+        verticalArrangement =
+            Arrangement.spacedBy(
+                Dimens.SpaceMedium,
+                if (portrait) Alignment.Bottom else Alignment.Top,
+            ),
     ) {
         if (showSecondary) HeroEyebrow()
         HeroTitle(

@@ -956,52 +956,67 @@ private fun WaitingForWifiNotice(
     onAllowCellular: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(
+    Column(
         modifier =
             modifier
                 .fillMaxWidth()
                 .padding(horizontal = Dimens.PanelPadding, vertical = Dimens.SpaceSmall)
                 .mSurface(MaterialTheme.colorScheme.surface)
                 .padding(horizontal = Dimens.SpaceLarge, vertical = StatPanelVerticalPadding),
-        horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
-        verticalAlignment = Alignment.CenterVertically,
+        verticalArrangement = Arrangement.spacedBy(StatPanelInnerGap),
     ) {
-        Icon(
-            imageVector = Icons.Outlined.WifiOff,
-            // The merged text node beside it already says all of this; a description here would
-            // make TalkBack read the notice twice.
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(NoticeIconSize),
-        )
-        Column(
-            modifier =
-                Modifier
-                    .weight(1f)
-                    // The text column alone, never the whole row: merging the row would swallow the
-                    // button, which must stay its own focusable action.
-                    .semantics(mergeDescendants = true) {
-                        // Polite, not Assertive — and the difference from `SettingsCategoryScreens`'
-                        // missing-storage-volume warning is deliberate: a vanished volume is losing
-                        // data right now, a metered connection is merely waiting.
-                        liveRegion = LiveRegionMode.Polite
-                    },
-            verticalArrangement = Arrangement.spacedBy(StatPanelInnerGap),
+        // The action sits **under** the text, never beside it. Beside it, the button takes its
+        // intrinsic width before the message gets any, and the message loses that race twice over:
+        // at fontScale 2.0 the English label alone wants more than a 390dp row can spare, and
+        // several translations of it are half again as long as the English ("Yalnızca Wi‑Fi
+        // seçeneğini kapat"), which blows the budget nearer fontScale 1.2. Stacking removes the
+        // contest instead of picking a breakpoint that every new locale re-opens.
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
+            // Top, not centred: at large font scales the body wraps to several lines, and an icon
+            // centred against them floats away from the title it belongs to.
+            verticalAlignment = Alignment.Top,
         ) {
-            Text(
-                text = stringResource(R.string.downloads_wifi_wait_title),
-                style = StatValueSmall,
-                color = MaterialTheme.colorScheme.onBackground,
+            Icon(
+                imageVector = Icons.Outlined.WifiOff,
+                // The merged text node beside it already says all of this; a description here would
+                // make TalkBack read the notice twice.
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(NoticeIconSize),
             )
-            Text(
-                text = stringResource(R.string.downloads_wifi_wait_body),
-                style = StatCaption,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            Column(
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        // The text alone, never the whole notice: merging the notice would swallow
+                        // the button, which must stay its own focusable action.
+                        .semantics(mergeDescendants = true) {
+                            // Polite, not Assertive — and the difference from `SettingsCategoryScreens`'
+                            // missing-storage-volume warning is deliberate: a vanished volume is losing
+                            // data right now, a metered connection is merely waiting.
+                            liveRegion = LiveRegionMode.Polite
+                        },
+                verticalArrangement = Arrangement.spacedBy(StatPanelInnerGap),
+            ) {
+                Text(
+                    text = stringResource(R.string.downloads_wifi_wait_title),
+                    style = StatValueSmall,
+                    color = MaterialTheme.colorScheme.onBackground,
+                )
+                Text(
+                    text = stringResource(R.string.downloads_wifi_wait_body),
+                    style = StatCaption,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
         TextButton(
             onClick = onAllowCellular,
-            modifier = Modifier.defaultMinSize(minHeight = Dimens.MinTouchTarget),
+            modifier =
+                Modifier
+                    .align(Alignment.End)
+                    .defaultMinSize(minHeight = Dimens.MinTouchTarget),
         ) {
             Text(text = stringResource(R.string.downloads_wifi_wait_action))
         }

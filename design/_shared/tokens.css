@@ -15,9 +15,12 @@
 
   --accent-gradient: linear-gradient(90deg, #AA5CC3 0%, #00A4DC 100%);
   --accent-gradient-diagonal: linear-gradient(135deg, #AA5CC3 0%, #00A4DC 100%);
-  /* BackdropScrim — transparent -> background scrim over detail-header artwork
+  /* BackdropScrim — transparent -> background scrim over hero and detail artwork
      (JellyfinGradients.BackdropScrim: Transparent -> Background@65% -> Background). */
   --backdrop-scrim: linear-gradient(180deg, rgba(16, 16, 16, 0) 0%, rgba(16, 16, 16, .65) 60%, #101010 100%);
+  /* StageScrim — the same, for artwork the page's own content is drawn *across* (the wide detail
+     stage). Identical in the dark scheme, where the page colour is already the scrim's ink. */
+  --stage-scrim: var(--backdrop-scrim);
   /* ImagePlaceholder — fill for artwork that hasn't loaded or doesn't exist on the server. */
   --image-placeholder: linear-gradient(135deg, #292929 0%, #202020 100%);
 
@@ -56,9 +59,14 @@
   --error: #B3261E;
   --outline: #788AB0;
 
-  /* Eased, not the dark ramp recoloured: white at the dark alphas fogs artwork instead of
-     shading it, so the light fade starts later and compresses toward the solid edge. */
-  --backdrop-scrim: linear-gradient(180deg, rgba(238, 241, 247, 0) 0%, rgba(238, 241, 247, .18) 50%, rgba(238, 241, 247, .62) 78%, #EEF1F7 100%);
+  /* Pinned ink, not a page-fade: image territory stays dark-scrimmed in both themes and the light
+     surface begins at the artwork's bottom edge (the home-light canvas's doctrine). Fading this to
+     #EEF1F7 milks the picture out and leaves everything drawn on it without a ground. */
+  --backdrop-scrim: linear-gradient(180deg, rgba(12, 14, 20, 0) 0%, rgba(12, 14, 20, .30) 42%, rgba(12, 14, 20, .78) 100%);
+  /* The one exception, and it is a layout fact rather than a theme one: where the page's own
+     content crosses the artwork's foot there is no edge to begin at, so that scrim still reaches
+     the page — eased, because white at the dark ramp's alphas fogs a picture where black shades it. */
+  --stage-scrim: linear-gradient(180deg, rgba(238, 241, 247, 0) 0%, rgba(238, 241, 247, .18) 50%, rgba(238, 241, 247, .62) 78%, #EEF1F7 100%);
   --image-placeholder: linear-gradient(135deg, #E3E8F2 0%, #FFFFFF 100%);
 
   background: var(--background);

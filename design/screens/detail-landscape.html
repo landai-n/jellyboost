@@ -5,7 +5,9 @@
   .tablet { width:1000px; margin:0 auto; position:relative; box-sizing:border-box; }
 
   .backdrop { position:relative; width:100%; height:360px; background:linear-gradient(135deg,#292929,#202020); overflow:hidden; box-sizing:border-box; }
-  .scrim { position:absolute; inset:0; background:var(--backdrop-scrim); }
+  /* StageScrim, not BackdropScrim: the poster and the facts column are drawn across the artwork's
+     bottom edge in page ink, so this one still has to reach the page colour. */
+  .scrim { position:absolute; inset:0; background:var(--stage-scrim); }
   .halo { position:absolute; inset:0; }
 
   .overlay-nav { position:absolute; top:0; left:0; right:0; display:flex; align-items:center; gap:12px; padding:20px; box-sizing:border-box; }

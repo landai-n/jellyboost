@@ -89,6 +89,22 @@ remembers the dynamic scheme, and the three draw-cache lambdas remember what the
 (5) The two brand glows got their light pair, the disabled bulk-action label its light alpha and
 test case, and `settings.md` its missing Playback row.
 
+**Track 4 — image territory (2026-08-29).** The saved `home-light` canvas's doctrine landed and
+supersedes the same-week light scrim page-fade ramps (`ca962094`): **artwork stays dark-scrimmed and
+light-on-image in both schemes, and the light surface begins at the artwork's bottom edge.** New
+`core/ui/theme/OverMedia.kt` carries that half of the palette (pinned ink, glass, accents, and the
+one layout bit `artworkDissolvesIntoPage`); the hero, the wide hero wash, the compact/medium detail
+lockup, the over-artwork pills/chips/badges, the halo (dark strengths in both) and the top-chrome
+band over a hero all read it. Two carve-outs, both recorded in DECISIONS 2026-08-29: the wide detail
+**stage** keeps a page-fading scrim and scheme ink because the poster and facts column are drawn
+across the artwork's foot, and glass over *unscrimmed* artwork takes the chrome tint rather than the
+canvas's 42% in-lockup fill (2.85:1 versus 7.70:1 for white). Whether the app frame's chrome is over
+artwork is threaded through a new `ChromeBackdrop`, written by `HomeScreen` from the list's scroll —
+it is not a theme bit. Ten new `ContrastRatioTest` cases; the ghost pill's over-media edge keeps
+white@40% because the canvas's white@22% measures 2.04:1. **Owed:** this is part of track 4's DoD
+walk — check the hero, the detail header and the action cluster in light at fontScale 2.0, on a
+bright backdrop and on a dark one.
+
 **Track 6 — styled ASS/SSA (2026-08-28, landed on `m14/theme-subs`; device walk owed).** Spike
 verdict: feasible with **no player-engine swap**, so it is implemented rather than only recorded.
 `io.github.peerless2012:ass-media` 0.5.1 on the existing Media3 1.9.0 — no bump: the library's own

@@ -69,4 +69,14 @@
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Titra ASS të stilizuara</string>
     <string name="settings_styled_ass_supporting">Vizaton ASS/SSA me libass: shkronjat, pozicionimin dhe efektet. Eksperimentale; zbatohet te videoja tjetër që nisni kur nuk po luhet asgjë tjetër.</string>
+    <string name="settings_hub_state_on">%1$s ndezur</string>
+    <string name="settings_hub_state_off">%1$s fikur</string>
+    <string name="settings_hub_storage_used">%1$s në këtë pajisje</string>
+    <string name="settings_eyebrow_colour">Ngjyra</string>
+    <string name="settings_eyebrow_during_playback">Gjatë luajtjes</string>
+    <string name="settings_eyebrow_subtitles">Titrat</string>
+    <string name="settings_eyebrow_on_this_device">Në këtë pajisje</string>
+    <string name="settings_eyebrow_over_the_network">Përmes rrjetit</string>
+    <string name="settings_eyebrow_quality">Cilësia</string>
+    <string name="settings_section_network">Rrjeti</string>
 </resources>

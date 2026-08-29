@@ -65,4 +65,14 @@
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">May-estilong ASS na subtitle</string>
     <string name="settings_styled_ass_supporting">Iginuguhit ang ASS/SSA gamit ang libass: mga font, posisyon, at effect. Eksperimental; iniaaplay sa susunod na video na sisimulan mo kapag walang ibang pinapatugtog.</string>
+    <string name="settings_hub_state_on">Naka-on ang %1$s</string>
+    <string name="settings_hub_state_off">Naka-off ang %1$s</string>
+    <string name="settings_hub_storage_used">%1$s sa device na ito</string>
+    <string name="settings_eyebrow_colour">Kulay</string>
+    <string name="settings_eyebrow_during_playback">Habang nagpe-playback</string>
+    <string name="settings_eyebrow_subtitles">Mga subtitle</string>
+    <string name="settings_eyebrow_on_this_device">Sa device na ito</string>
+    <string name="settings_eyebrow_over_the_network">Sa network</string>
+    <string name="settings_eyebrow_quality">Kalidad</string>
+    <string name="settings_section_network">Network</string>
 </resources>

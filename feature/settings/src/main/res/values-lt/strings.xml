@@ -71,4 +71,14 @@
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Stilizuoti ASS subtitrai</string>
     <string name="settings_styled_ass_supporting">Piešia ASS/SSA su libass: šriftai, padėtis ir efektai. Eksperimentinis; taikoma kitam paleistam vaizdo įrašui, kai niekas kitas negrojama.</string>
+    <string name="settings_hub_state_on">%1$s įjungta</string>
+    <string name="settings_hub_state_off">%1$s išjungta</string>
+    <string name="settings_hub_storage_used">%1$s šiame įrenginyje</string>
+    <string name="settings_eyebrow_colour">Spalva</string>
+    <string name="settings_eyebrow_during_playback">Atkūrimo metu</string>
+    <string name="settings_eyebrow_subtitles">Subtitrai</string>
+    <string name="settings_eyebrow_on_this_device">Šiame įrenginyje</string>
+    <string name="settings_eyebrow_over_the_network">Per tinklą</string>
+    <string name="settings_eyebrow_quality">Kokybė</string>
+    <string name="settings_section_network">Tinklas</string>
 </resources>

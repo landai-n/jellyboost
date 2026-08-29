@@ -1,16 +1,24 @@
 package dev.jellyboost.feature.settings
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
@@ -19,16 +27,21 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import dev.jellyboost.core.ui.theme.Dimens
+import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
+import dev.jellyboost.core.ui.theme.mSurface
 
 // The invariant every row here upholds: the *whole* row is the touch target and carries the
 // semantics, and the control it contains (`Switch`, `RadioButton`) is inert. `toggleable`/
@@ -38,30 +51,208 @@ import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
 /** Material's minimum touch target, honoured whether or not the text needs the height. */
 internal val SettingsRowMinHeight: Dp = 48.dp
 
+/** The 36dp glass circle that identifies a category on the hub; never drawn inside a category. */
+private val CategoryIconSize: Dp = 36.dp
+
+private val CategoryGlyphSize: Dp = 18.dp
+
+/** The identity row's face, a step larger than a category glyph because it is a person, not a topic. */
+private val IdentityAvatarSize: Dp = 44.dp
+
+/** Between a row's leading circle and its text, and between its text and a trailing chevron. */
+private val RowGap: Dp = 14.dp
+
+/**
+ * A category page's section heading: an eyebrow rather than [JellyfinTypeExtras.SectionTitle],
+ * because a pushed page already carries a 28sp title and a 17sp primary heading under it competes
+ * with it.
+ *
+ * Uppercased in the **UI locale** and spoken sentence-case, for the reason `KindHeader` states —
+ * a Turkish dotted I is not what the reader should hear, and `heading()` is what lets TalkBack jump
+ * between sections instead of swiping every preference on the page.
+ */
 @Composable
 internal fun SettingsSection(
     title: String,
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    Column(modifier = modifier.fillMaxWidth()) {
+    val locale = LocalConfiguration.current.locales[0]
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
+    ) {
         Text(
-            text = title,
-            style = JellyfinTypeExtras.SectionTitle,
-            color = MaterialTheme.colorScheme.primary,
+            text = title.uppercase(locale),
+            style = JellyfinTypeExtras.Eyebrow,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier =
                 Modifier
-                    .padding(
-                        start = Dimens.ScreenPadding,
-                        end = Dimens.ScreenPadding,
-                        top = Dimens.SpaceLarge,
-                        bottom = Dimens.SpaceSmall,
-                    )
-                    // Settings is the app's longest list and has no other headings: without these, reaching
-                    // "Account" means swiping past every preference above it.
-                    .semantics { heading() },
+                    .padding(horizontal = Dimens.SpaceExtraSmall)
+                    .semantics {
+                        heading()
+                        contentDescription = title
+                    },
         )
-        content()
+        SettingsPanel(content = content)
+    }
+}
+
+/**
+ * The rounded surface a group of rows sits on. Separators live **inside** a panel and never between
+ * two of them: the gap is what says one group ended and another began.
+ */
+@Composable
+internal fun SettingsPanel(
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    Column(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .mSurface(
+                    surfaceColor = MaterialTheme.colorScheme.surface,
+                    radius = Dimens.PanelRadius,
+                ),
+        content = content,
+    )
+}
+
+/** The hairline between two rows of the same panel. */
+@Composable
+internal fun SettingsRowSeparator(modifier: Modifier = Modifier) {
+    HorizontalDivider(
+        modifier = modifier,
+        thickness = GlassDefaults.HairlineWidth,
+        color = GlassDefaults.PanelHairline,
+    )
+}
+
+/**
+ * Hub only. [summary] is the category's **current state** — that sentence is what pays for the extra
+ * tap, and a table of contents would not.
+ *
+ * The chevron is decorative: `clickable` merges the row into one node, so the title, the summary and
+ * the Button role already say what a tap does.
+ */
+@Composable
+internal fun SettingsCategoryRow(
+    icon: ImageVector,
+    title: String,
+    summary: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .heightIn(min = SettingsRowMinHeight)
+                .clickable(role = Role.Button, onClick = onClick)
+                .padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.SpaceMedium),
+        horizontalArrangement = Arrangement.spacedBy(RowGap),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        CategoryIcon(icon = icon)
+        CategoryText(title = title, summary = summary, modifier = Modifier.weight(1f))
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+/**
+ * The hub's Account row. It draws a face rather than a glyph because it names a *person*, and its
+ * summary is the server that person is signed in to.
+ */
+@Composable
+internal fun SettingsIdentityRow(
+    name: String,
+    server: String?,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val locale = LocalConfiguration.current.locales[0]
+    Row(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .heightIn(min = SettingsRowMinHeight)
+                .clickable(role = Role.Button, onClick = onClick)
+                .padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.SpaceMedium),
+        horizontalArrangement = Arrangement.spacedBy(RowGap),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier =
+                Modifier
+                    .size(IdentityAvatarSize)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                // Decorative: the name itself is written beside it inside the same merged row.
+                text = name.take(1).uppercase(locale),
+                modifier = Modifier.clearAndSetSemantics {},
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onPrimary,
+            )
+        }
+        CategoryText(title = name, summary = server, modifier = Modifier.weight(1f))
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+/**
+ * Flat [GlassDefaults.Fill], never `Modifier.glassSurface`, for `QuickAccessChip`'s reason: a real
+ * blur samples the haze source, which is the panel this circle is drawn *on*.
+ */
+@Composable
+private fun CategoryIcon(icon: ImageVector) {
+    Box(
+        modifier =
+            Modifier
+                .size(CategoryIconSize)
+                .background(color = GlassDefaults.Fill, shape = CircleShape)
+                .border(GlassDefaults.HairlineWidth, GlassDefaults.Hairline, CircleShape),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(CategoryGlyphSize),
+        )
+    }
+}
+
+@Composable
+private fun CategoryText(
+    title: String,
+    summary: String?,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.W600),
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        if (!summary.isNullOrEmpty()) {
+            Text(
+                text = summary,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
     }
 }
 

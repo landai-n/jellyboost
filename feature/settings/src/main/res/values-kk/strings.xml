@@ -69,4 +69,14 @@
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Мәнерленген ASS субтитрлері</string>
     <string name="settings_styled_ass_supporting">ASS/SSA пішімін libass арқылы салады: қаріптер, орналасу және әсерлер. Эксперименттік; басқа ештеңе ойнатылмаған кезде келесі бейнеден бастап қолданылады.</string>
+    <string name="settings_hub_state_on">%1$s қосулы</string>
+    <string name="settings_hub_state_off">%1$s өшірулі</string>
+    <string name="settings_hub_storage_used">осы құрылғыда %1$s</string>
+    <string name="settings_eyebrow_colour">Түс</string>
+    <string name="settings_eyebrow_during_playback">Ойнату кезінде</string>
+    <string name="settings_eyebrow_subtitles">Субтитрлер</string>
+    <string name="settings_eyebrow_on_this_device">Осы құрылғыда</string>
+    <string name="settings_eyebrow_over_the_network">Желі арқылы</string>
+    <string name="settings_eyebrow_quality">Сапа</string>
+    <string name="settings_section_network">Желі</string>
 </resources>

@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hasRoute
+import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -39,6 +40,9 @@ import dev.jellyboost.feature.music.PlaylistDetailScreen
 import dev.jellyboost.feature.music.nowplaying.NowPlayingScreen
 import dev.jellyboost.feature.search.SearchScreen
 import dev.jellyboost.feature.settings.LicenceScreen
+import dev.jellyboost.feature.settings.SettingsAccountScreen
+import dev.jellyboost.feature.settings.SettingsCategory
+import dev.jellyboost.feature.settings.SettingsCategoryScreen
 import dev.jellyboost.feature.settings.SettingsScreen
 import dev.jellyboost.feature.settings.ThirdPartyLicencesScreen
 import dev.jellyboost.player.syncplay.ui.SyncPlayGroupsScreen
@@ -150,12 +154,31 @@ internal fun JellyfinNavHost(
             SettingsScreen(
                 viewModel = hiltViewModel(),
                 onBack = { navController.popBackStack() },
-                onHome = { navController.navigateHome() },
+                onOpenCategory = { navController.navigate(it.route()) },
+                onOpenAccount = { navController.navigate(Routes.SettingsAccount) },
                 onOpenLicence = { navController.navigate(Routes.Licence) },
                 onOpenThirdPartyLicences = { navController.navigate(Routes.ThirdPartyLicences) },
                 appVersion = BuildConfig.VERSION_NAME,
             )
         }
+
+        composable<Routes.SettingsAccount> {
+            SettingsAccountScreen(
+                viewModel = hiltViewModel(),
+                onBack = { navController.popBackStack() },
+                appVersion = BuildConfig.VERSION_NAME,
+            )
+        }
+
+        // One destination per category rather than one carrying the category as an argument: each is
+        // its own deep-linkable screen, and a route with no arguments cannot be navigated to with a
+        // category that does not exist. A wide window never reaches these — there the category is
+        // saveable state on `Routes.Settings` — but a pushed one survives the rotation into it.
+        settingsCategory<Routes.SettingsPlayback>(navController, SettingsCategory.PLAYBACK)
+        settingsCategory<Routes.SettingsDownloads>(navController, SettingsCategory.DOWNLOADS)
+        settingsCategory<Routes.SettingsAppearance>(navController, SettingsCategory.APPEARANCE)
+        settingsCategory<Routes.SettingsNetwork>(navController, SettingsCategory.NETWORK)
+        settingsCategory<Routes.SettingsAbout>(navController, SettingsCategory.ABOUT)
 
         composable<Routes.Licence> {
             LicenceScreen(
@@ -325,6 +348,35 @@ private fun SyncPlayLaunchEffect(navController: NavHostController) {
         }
     }
 }
+
+/**
+ * The compact settings path: one destination per category, each drawing the same page body a wide
+ * window draws in its pane. Reified so the route stays type-safe while the five registrations below
+ * stay one line each.
+ */
+private inline fun <reified T : Any> NavGraphBuilder.settingsCategory(
+    navController: NavHostController,
+    category: SettingsCategory,
+) = composable<T> {
+    SettingsCategoryScreen(
+        viewModel = hiltViewModel(),
+        category = category,
+        onBack = { navController.popBackStack() },
+        onOpenLicence = { navController.navigate(Routes.Licence) },
+        onOpenThirdPartyLicences = { navController.navigate(Routes.ThirdPartyLicences) },
+        appVersion = BuildConfig.VERSION_NAME,
+    )
+}
+
+/** The hub's row-to-destination map; the only place a category becomes a route. */
+private fun SettingsCategory.route(): Any =
+    when (this) {
+        SettingsCategory.PLAYBACK -> Routes.SettingsPlayback
+        SettingsCategory.DOWNLOADS -> Routes.SettingsDownloads
+        SettingsCategory.APPEARANCE -> Routes.SettingsAppearance
+        SettingsCategory.NETWORK -> Routes.SettingsNetwork
+        SettingsCategory.ABOUT -> Routes.SettingsAbout
+    }
 
 /** Navigates to [route] and drops everything behind it — used at both ends of the auth flow. */
 private fun NavController.navigateClearingBackStack(route: Any) {

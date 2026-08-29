@@ -69,4 +69,14 @@
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Tyylitellyt ASS-tekstitykset</string>
     <string name="settings_styled_ass_supporting">Piirtää ASS/SSA:n libassilla: fontit, sijoittelu ja tehosteet. Kokeellinen; vaikuttaa seuraavaan käynnistettävään videoon, kun mitään muuta ei toisteta.</string>
+    <string name="settings_hub_state_on">%1$s päällä</string>
+    <string name="settings_hub_state_off">%1$s pois päältä</string>
+    <string name="settings_hub_storage_used">%1$s tällä laitteella</string>
+    <string name="settings_eyebrow_colour">Väri</string>
+    <string name="settings_eyebrow_during_playback">Toiston aikana</string>
+    <string name="settings_eyebrow_subtitles">Tekstitykset</string>
+    <string name="settings_eyebrow_on_this_device">Tällä laitteella</string>
+    <string name="settings_eyebrow_over_the_network">Verkon kautta</string>
+    <string name="settings_eyebrow_quality">Laatu</string>
+    <string name="settings_section_network">Verkko</string>
 </resources>

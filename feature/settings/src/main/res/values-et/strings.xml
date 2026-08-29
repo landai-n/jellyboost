@@ -69,4 +69,14 @@
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Stiliseeritud ASS-subtiitrid</string>
     <string name="settings_styled_ass_supporting">Joonistab ASS/SSA libassiga: fondid, paigutus ja efektid. Katseline; rakendub järgmisele käivitatavale videole, kui midagi muud ei mängi.</string>
+    <string name="settings_hub_state_on">%1$s sees</string>
+    <string name="settings_hub_state_off">%1$s väljas</string>
+    <string name="settings_hub_storage_used">%1$s selles seadmes</string>
+    <string name="settings_eyebrow_colour">Värv</string>
+    <string name="settings_eyebrow_during_playback">Esitamise ajal</string>
+    <string name="settings_eyebrow_subtitles">Subtiitrid</string>
+    <string name="settings_eyebrow_on_this_device">Selles seadmes</string>
+    <string name="settings_eyebrow_over_the_network">Võrgu kaudu</string>
+    <string name="settings_eyebrow_quality">Kvaliteet</string>
+    <string name="settings_section_network">Võrk</string>
 </resources>

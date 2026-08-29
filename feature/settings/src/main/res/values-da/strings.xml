@@ -69,4 +69,14 @@
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Stiliserede ASS-undertekster</string>
     <string name="settings_styled_ass_supporting">Tegner ASS/SSA med libass: skrifttyper, placering og effekter. Eksperimentelt; gælder den næste video, du starter, når intet andet afspilles.</string>
+    <string name="settings_hub_state_on">%1$s til</string>
+    <string name="settings_hub_state_off">%1$s fra</string>
+    <string name="settings_hub_storage_used">%1$s på denne enhed</string>
+    <string name="settings_eyebrow_colour">Farve</string>
+    <string name="settings_eyebrow_during_playback">Under afspilning</string>
+    <string name="settings_eyebrow_subtitles">Undertekster</string>
+    <string name="settings_eyebrow_on_this_device">På denne enhed</string>
+    <string name="settings_eyebrow_over_the_network">Over netværket</string>
+    <string name="settings_eyebrow_quality">Kvalitet</string>
+    <string name="settings_section_network">Netværk</string>
 </resources>

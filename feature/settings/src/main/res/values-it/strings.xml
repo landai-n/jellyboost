@@ -65,4 +65,14 @@
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Sottotitoli ASS con stile</string>
     <string name="settings_styled_ass_supporting">Disegna ASS/SSA con libass: caratteri, posizionamento ed effetti. Sperimentale; vale dal prossimo video avviato quando non è in riproduzione nulla.</string>
+    <string name="settings_hub_state_on">%1$s attivato</string>
+    <string name="settings_hub_state_off">%1$s disattivato</string>
+    <string name="settings_hub_storage_used">%1$s su questo dispositivo</string>
+    <string name="settings_eyebrow_colour">Colore</string>
+    <string name="settings_eyebrow_during_playback">Durante la riproduzione</string>
+    <string name="settings_eyebrow_subtitles">Sottotitoli</string>
+    <string name="settings_eyebrow_on_this_device">Su questo dispositivo</string>
+    <string name="settings_eyebrow_over_the_network">Sulla rete</string>
+    <string name="settings_eyebrow_quality">Qualità</string>
+    <string name="settings_section_network">Rete</string>
 </resources>

@@ -19,8 +19,31 @@ object Routes {
     @Serializable
     data object Downloads
 
+    /**
+     * The category **hub**, and — at ≥840dp — the two-pane shell that draws a category beside it.
+     * The routes below are the compact push path only; a wide window never navigates to them,
+     * which is why the open category is saveable state on this destination rather than a route.
+     */
     @Serializable
     data object Settings
+
+    @Serializable
+    data object SettingsAccount
+
+    @Serializable
+    data object SettingsPlayback
+
+    @Serializable
+    data object SettingsDownloads
+
+    @Serializable
+    data object SettingsAppearance
+
+    @Serializable
+    data object SettingsNetwork
+
+    @Serializable
+    data object SettingsAbout
 
     /** The app's own licence, verbatim — GPL-3.0 §4 requires the binary to convey it. */
     @Serializable

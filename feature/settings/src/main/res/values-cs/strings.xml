@@ -71,4 +71,14 @@
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">Stylované titulky ASS</string>
     <string name="settings_styled_ass_supporting">Vykresluje ASS/SSA pomocí libass: písma, umístění a efekty. Experimentální; projeví se u příštího spuštěného videa, když nic jiného nehraje.</string>
+    <string name="settings_hub_state_on">%1$s zapnuto</string>
+    <string name="settings_hub_state_off">%1$s vypnuto</string>
+    <string name="settings_hub_storage_used">%1$s na tomto zařízení</string>
+    <string name="settings_eyebrow_colour">Barva</string>
+    <string name="settings_eyebrow_during_playback">Během přehrávání</string>
+    <string name="settings_eyebrow_subtitles">Titulky</string>
+    <string name="settings_eyebrow_on_this_device">Na tomto zařízení</string>
+    <string name="settings_eyebrow_over_the_network">Přes síť</string>
+    <string name="settings_eyebrow_quality">Kvalita</string>
+    <string name="settings_section_network">Síť</string>
 </resources>

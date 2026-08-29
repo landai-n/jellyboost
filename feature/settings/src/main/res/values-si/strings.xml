@@ -65,4 +65,14 @@
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">මෝස්තරගත ASS උපසිරැසි</string>
     <string name="settings_styled_ass_supporting">libass මගින් ASS/SSA අඳියි: අකුරු, පිහිටීම සහ ප්‍රයෝග. පර්යේෂණාත්මකයි; වෙනත් කිසිවක් වාදනය නොවන විට ඔබ ඊළඟට ආරම්භ කරන වීඩියෝවට අදාළ වේ.</string>
+    <string name="settings_hub_state_on">%1$s ක්‍රියාත්මකයි</string>
+    <string name="settings_hub_state_off">%1$s අක්‍රියයි</string>
+    <string name="settings_hub_storage_used">මෙම උපාංගයේ %1$s</string>
+    <string name="settings_eyebrow_colour">වර්ණය</string>
+    <string name="settings_eyebrow_during_playback">වාදනය අතරතුර</string>
+    <string name="settings_eyebrow_subtitles">උපසිරැසි</string>
+    <string name="settings_eyebrow_on_this_device">මෙම උපාංගයේ</string>
+    <string name="settings_eyebrow_over_the_network">ජාලය හරහා</string>
+    <string name="settings_eyebrow_quality">ගුණත්වය</string>
+    <string name="settings_section_network">ජාලය</string>
 </resources>

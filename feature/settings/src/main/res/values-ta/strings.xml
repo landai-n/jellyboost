@@ -69,4 +69,14 @@
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
     <string name="settings_styled_ass">வடிவமைக்கப்பட்ட ASS வசன வரிகள்</string>
     <string name="settings_styled_ass_supporting">libass கொண்டு ASS/SSA ஐ வரையும்: எழுத்துருக்கள், இடம் மற்றும் விளைவுகள். சோதனை முறை; வேறு எதுவும் இயங்காதபோது அடுத்து தொடங்கும் வீடியோவுக்குப் பொருந்தும்.</string>
+    <string name="settings_hub_state_on">%1$s இயக்கத்தில்</string>
+    <string name="settings_hub_state_off">%1$s முடக்கத்தில்</string>
+    <string name="settings_hub_storage_used">இந்தச் சாதனத்தில் %1$s</string>
+    <string name="settings_eyebrow_colour">நிறம்</string>
+    <string name="settings_eyebrow_during_playback">பிளேபேக்கின் போது</string>
+    <string name="settings_eyebrow_subtitles">வசன வரிகள்</string>
+    <string name="settings_eyebrow_on_this_device">இந்தச் சாதனத்தில்</string>
+    <string name="settings_eyebrow_over_the_network">நெட்வொர்க் வழியாக</string>
+    <string name="settings_eyebrow_quality">தரம்</string>
+    <string name="settings_section_network">நெட்வொர்க்</string>
 </resources>

@@ -58,9 +58,11 @@ import dev.jellyboost.core.common.music.MusicPlaybackState
 import dev.jellyboost.core.network.ConnectionState
 import dev.jellyboost.core.network.model.SessionState
 import dev.jellyboost.core.ui.component.JellyboostSnackbarHost
+import dev.jellyboost.core.ui.theme.ChromeBackdrop
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinGradients
 import dev.jellyboost.core.ui.theme.LocalAppChromePadding
+import dev.jellyboost.core.ui.theme.LocalChromeBackdrop
 import dev.jellyboost.core.ui.theme.LocalHazeState
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -85,6 +87,11 @@ import kotlinx.coroutines.launch
  * it over `GlassDefaults.style`'s `backgroundColor` — the same role — when the page is empty there.
  * The player is the one screen that must not take it, and does not: `PlayerScreen` fills itself with
  * literal black for its letterbox.
+ *
+ * The chrome is a sibling of the nav host and cannot see what the page under it draws, so
+ * [ChromeBackdrop] is published downward and written by the one screen that puts artwork under the
+ * bars. It decides the band's ink and the cluster's glass — not the theme, which cannot answer a
+ * question whose answer changes as a hero scrolls away.
  *
  * The nav host is the app's only `hazeSource` — every glass surface samples it through
  * [LocalHazeState]. The source is detached on the player: video is a `SurfaceView` composited by the
@@ -147,6 +154,7 @@ internal fun AppScaffold(
     }
 
     val hazeState = remember { HazeState() }
+    val chromeBackdrop = remember { ChromeBackdrop() }
 
     val chrome = AppChromeState(connectionState = connectionState, hasActiveSyncPlayGroup = activeSyncPlayGroup != null)
     val chromeActions =
@@ -175,6 +183,7 @@ internal fun AppScaffold(
         CompositionLocalProvider(
             LocalHazeState provides hazeState,
             LocalAppChromePadding provides chromePadding,
+            LocalChromeBackdrop provides chromeBackdrop,
         ) {
             JellyfinNavHost(
                 startsSignedIn = startsSignedIn,
@@ -195,6 +204,7 @@ internal fun AppScaffold(
             ) {
                 TopChromeScrim(
                     height = topChromeInset + if (bottomNav) ActionClusterHeight else TopNavHeight,
+                    overMedia = chromeBackdrop.overMedia,
                 )
             }
 
@@ -218,7 +228,11 @@ internal fun AppScaffold(
                 exit = fadeOut(tween(NAV_TRANSITION_MILLIS / CHROME_EXIT_DIVISOR)),
                 modifier = Modifier.align(Alignment.TopEnd).topChromeTraversal(),
             ) {
-                AppActionCluster(chrome = chrome, actions = chromeActions)
+                AppActionCluster(
+                    chrome = chrome,
+                    actions = chromeActions,
+                    overMedia = chromeBackdrop.overMedia,
+                )
             }
 
             AnimatedVisibility(
@@ -343,18 +357,25 @@ private fun MusicMessageEffect(snackbarHostState: SnackbarHostState) {
  * deliberately not a background on the bars themselves: inside the `hazeSource` it would be blurred
  * into the very surfaces it protects, and inside a `hazeEffect` it would be sampling an effect
  * rather than a backdrop, which Haze does not do.
+ *
+ * @param overMedia the band has landed on a screen's full-bleed artwork rather than on its page, so
+ *   it takes the pinned dark ink: darkening the page's own colour over a picture is a white haze on
+ *   the light side, which is the reading the saved canvas rejected.
  */
 @Composable
 private fun TopChromeScrim(
     height: Dp,
+    overMedia: Boolean,
     modifier: Modifier = Modifier,
 ) {
+    val brush =
+        if (overMedia) JellyfinGradients.OverMediaTopChromeScrim else JellyfinGradients.TopChromeScrim
     Box(
         modifier =
             modifier
                 .fillMaxWidth()
                 .height(height)
-                .background(JellyfinGradients.TopChromeScrim),
+                .background(brush),
     )
 }
 

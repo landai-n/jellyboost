@@ -33,7 +33,6 @@
         <item quantity="other">Yükləmələr hələ məkanlar arasında köçürülə bilmir, ona görə də bu cihazdakı %1$d ədəd silinəcək. Onları yeni məkana yenidən yükləyə bilərsiniz.</item>
     </plurals>
     <string name="settings_storage_switch_confirm">Sil və dəyiş</string>
-    <string name="settings_section_connectivity">Bağlantı</string>
     <string name="settings_offline_mode">Oflayn rejim</string>
     <string name="settings_offline_mode_supporting">Yalnız bu cihazda artıq olan medianı göstər.</string>
     <string name="settings_section_account">Hesab</string>
@@ -68,7 +67,6 @@
     <string name="settings_hub_state_on">%1$s aktiv</string>
     <string name="settings_hub_state_off">%1$s deaktiv</string>
     <string name="settings_hub_storage_used">Bu cihazda %1$s</string>
-    <string name="settings_eyebrow_colour">Rəng</string>
     <string name="settings_eyebrow_during_playback">Oxudarkən</string>
     <string name="settings_eyebrow_subtitles">Altyazılar</string>
     <string name="settings_eyebrow_on_this_device">Bu cihazda</string>

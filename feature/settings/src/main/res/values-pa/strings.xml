@@ -36,7 +36,6 @@
     </plurals>
     <string name="settings_storage_switch_confirm">ਮਿਟਾਓ ਅਤੇ ਬਦਲੋ</string>
 
-    <string name="settings_section_connectivity">ਕਨੈਕਟੀਵਿਟੀ</string>
     <string name="settings_offline_mode">ਆਫਲਾਈਨ ਮੋਡ</string>
     <string name="settings_offline_mode_supporting">ਸਿਰਫ਼ ਉਹ ਮੀਡੀਆ ਦਿਖਾਓ ਜੋ ਪਹਿਲਾਂ ਤੋਂ ਇਸ ਡਿਵਾਈਸ ਉੱਤੇ ਹੈ।</string>
 
@@ -72,7 +71,6 @@
     <string name="settings_hub_state_on">%1$s ਚਾਲੂ</string>
     <string name="settings_hub_state_off">%1$s ਬੰਦ</string>
     <string name="settings_hub_storage_used">ਇਸ ਡਿਵਾਈਸ ਉੱਤੇ %1$s</string>
-    <string name="settings_eyebrow_colour">ਰੰਗ</string>
     <string name="settings_eyebrow_during_playback">ਪਲੇਬੈਕ ਦੌਰਾਨ</string>
     <string name="settings_eyebrow_subtitles">ਸਬਟਾਈਟਲ</string>
     <string name="settings_eyebrow_on_this_device">ਇਸ ਡਿਵਾਈਸ ਉੱਤੇ</string>

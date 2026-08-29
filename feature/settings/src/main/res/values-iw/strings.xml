@@ -38,7 +38,6 @@
     </plurals>
     <string name="settings_storage_switch_confirm">מחיקה והחלפה</string>
 
-    <string name="settings_section_connectivity">קישוריות</string>
     <string name="settings_offline_mode">מצב לא מקוון</string>
     <string name="settings_offline_mode_supporting">הצגת מדיה שכבר נמצאת במכשיר זה בלבד.</string>
 
@@ -74,7 +73,6 @@
     <string name="settings_hub_state_on">%1$s פעיל</string>
     <string name="settings_hub_state_off">%1$s כבוי</string>
     <string name="settings_hub_storage_used">%1$s במכשיר זה</string>
-    <string name="settings_eyebrow_colour">צבע</string>
     <string name="settings_eyebrow_during_playback">במהלך הפעלה</string>
     <string name="settings_eyebrow_subtitles">כתוביות</string>
     <string name="settings_eyebrow_on_this_device">במכשיר זה</string>

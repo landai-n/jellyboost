@@ -4,9 +4,13 @@ import dev.jellyboost.core.common.model.DownloadQuality
 import dev.jellyboost.core.common.model.SegmentSkipMode
 import dev.jellyboost.core.common.model.ThemeMode
 import dev.jellyboost.data.downloads.model.StorageUsage
+import io.kotest.matchers.floats.plusOrMinus
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+
+/** Slack allowed where a fraction is a division rather than a literal. */
+private const val TOLERANCE = 0.0001f
 
 class SettingsSummariesTest {
     @Test
@@ -143,14 +147,51 @@ class SettingsSummariesTest {
     }
 
     @Test
-    @DisplayName("every category has a title of its own, and Network is not the page's Connectivity")
+    @DisplayName("every category has a title of its own")
     fun everyCategoryHasItsOwnTitle() {
         SettingsCategory.entries
             .map { it.titleRes }
             .distinct()
             .size shouldBe
             SettingsCategory.entries.size
-        SettingsCategory.NETWORK.titleRes shouldBe R.string.settings_section_network
+    }
+
+    @Test
+    @DisplayName("a category is called the same thing on its hub row and on its own page")
+    fun aCategoryHasOneNameNotTwo() {
+        SettingsCategory.entries.forEach { category ->
+            SettingsPane.of(category).titleRes() shouldBe category.titleRes
+        }
+    }
+
+    @Test
+    @DisplayName("an empty volume's meter reads empty, and a full one full")
+    fun theStorageMeterSpansTheWholeVolume() {
+        storageUsedFraction(usedBytes = 0L, availableBytes = 100L) shouldBe 0f
+        storageUsedFraction(usedBytes = 100L, availableBytes = 0L) shouldBe 1f
+        storageUsedFraction(usedBytes = 25L, availableBytes = 75L) shouldBe 0.25f
+    }
+
+    @Test
+    @DisplayName("the meter measures the volume, not the downloads — 12.3 GB of 53.3 GB is 23%")
+    fun theStorageMeterDenominatorIsTheWholeVolume() {
+        storageUsedFraction(
+            usedBytes = 12_300_000_000L,
+            availableBytes = 41_000_000_000L,
+        ) shouldBe (0.2308f plusOrMinus TOLERANCE)
+    }
+
+    @Test
+    @DisplayName("a volume that reports nothing draws an empty track, not a device out of room")
+    fun anUnknownVolumeSizeIsNotAFullOne() {
+        storageUsedFraction(usedBytes = 0L, availableBytes = 0L) shouldBe 0f
+    }
+
+    @Test
+    @DisplayName("nonsense from the platform is clamped rather than overflowing the track")
+    fun theMeterIsClamped() {
+        storageUsedFraction(usedBytes = -5L, availableBytes = 100L) shouldBe 0f
+        storageUsedFraction(usedBytes = 100L, availableBytes = -50L) shouldBe 1f
     }
 
     @Test

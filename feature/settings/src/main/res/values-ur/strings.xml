@@ -36,7 +36,6 @@
     </plurals>
     <string name="settings_storage_switch_confirm">حذف کریں اور تبدیل کریں</string>
 
-    <string name="settings_section_connectivity">کنیکٹیویٹی</string>
     <string name="settings_offline_mode">آف لائن موڈ</string>
     <string name="settings_offline_mode_supporting">صرف وہ میڈیا دکھائیں جو پہلے سے اس ڈیوائس پر موجود ہے۔</string>
 
@@ -72,7 +71,6 @@
     <string name="settings_hub_state_on">%1$s آن</string>
     <string name="settings_hub_state_off">%1$s آف</string>
     <string name="settings_hub_storage_used">اس ڈیوائس پر %1$s</string>
-    <string name="settings_eyebrow_colour">رنگ</string>
     <string name="settings_eyebrow_during_playback">پلے بیک کے دوران</string>
     <string name="settings_eyebrow_subtitles">سب ٹائٹلز</string>
     <string name="settings_eyebrow_on_this_device">اس ڈیوائس پر</string>

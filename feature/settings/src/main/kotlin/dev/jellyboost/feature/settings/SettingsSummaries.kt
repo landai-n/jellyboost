@@ -101,6 +101,25 @@ internal fun appearanceSummary(
             .takeIf { dynamicColorAvailable },
     )
 
+/**
+ * How full the volume is, for the meter under the storage row. The denominator is the whole volume
+ * — used plus free — not the downloads, so the bar answers "how much room is left on this device"
+ * rather than "how much of my downloads have I downloaded".
+ *
+ * A volume that reports nothing draws an empty track rather than a full one: an unknown size is not
+ * a size of zero, and a bar pinned to 100% would read as a device out of room.
+ *
+ * Duplicated arithmetic with `:feature:downloads`' `usageFraction`, and it has to be: features never
+ * depend on each other, and a shared home in `:core:common` for one division is not worth the seam.
+ */
+internal fun storageUsedFraction(
+    usedBytes: Long,
+    availableBytes: Long,
+): Float {
+    val total = usedBytes + availableBytes
+    return if (total <= 0L) 0f else (usedBytes.toFloat() / total).coerceIn(0f, 1f)
+}
+
 internal fun networkSummary(forceOffline: Boolean): List<SummaryPart> =
     listOf(SummaryPart.Toggle(R.string.settings_offline_mode, forceOffline))
 

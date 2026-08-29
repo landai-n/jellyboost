@@ -36,7 +36,6 @@
     </plurals>
     <string name="settings_storage_switch_confirm">Изтрий и премести</string>
 
-    <string name="settings_section_connectivity">Свързаност</string>
     <string name="settings_offline_mode">Офлайн режим</string>
     <string name="settings_offline_mode_supporting">Показвай само медия, която вече е на това устройство.</string>
 
@@ -72,7 +71,6 @@
     <string name="settings_hub_state_on">%1$s включено</string>
     <string name="settings_hub_state_off">%1$s изключено</string>
     <string name="settings_hub_storage_used">%1$s на това устройство</string>
-    <string name="settings_eyebrow_colour">Цвят</string>
     <string name="settings_eyebrow_during_playback">По време на възпроизвеждане</string>
     <string name="settings_eyebrow_subtitles">Субтитри</string>
     <string name="settings_eyebrow_on_this_device">На това устройство</string>

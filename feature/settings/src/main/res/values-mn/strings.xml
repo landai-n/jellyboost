@@ -36,7 +36,6 @@
     </plurals>
     <string name="settings_storage_switch_confirm">Устгаад сэлгэх</string>
 
-    <string name="settings_section_connectivity">Холболт</string>
     <string name="settings_offline_mode">Оффлайн горим</string>
     <string name="settings_offline_mode_supporting">Зөвхөн энэ төхөөрөмж дээр байгаа медиаг харуулна.</string>
 
@@ -72,7 +71,6 @@
     <string name="settings_hub_state_on">%1$s асаалттай</string>
     <string name="settings_hub_state_off">%1$s унтраалттай</string>
     <string name="settings_hub_storage_used">энэ төхөөрөмж дээр %1$s</string>
-    <string name="settings_eyebrow_colour">Өнгө</string>
     <string name="settings_eyebrow_during_playback">Тоглуулах явцад</string>
     <string name="settings_eyebrow_subtitles">Хадмал орчуулга</string>
     <string name="settings_eyebrow_on_this_device">Энэ төхөөрөмж дээр</string>

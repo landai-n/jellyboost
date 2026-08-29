@@ -36,7 +36,6 @@
     </plurals>
     <string name="settings_storage_switch_confirm">حذف و تغییر</string>
 
-    <string name="settings_section_connectivity">اتصال</string>
     <string name="settings_offline_mode">حالت آفلاین</string>
     <string name="settings_offline_mode_supporting">فقط رسانه‌ای که از قبل روی این دستگاه است نمایش داده شود.</string>
 
@@ -72,7 +71,6 @@
     <string name="settings_hub_state_on">%1$s روشن</string>
     <string name="settings_hub_state_off">%1$s خاموش</string>
     <string name="settings_hub_storage_used">%1$s روی این دستگاه</string>
-    <string name="settings_eyebrow_colour">رنگ</string>
     <string name="settings_eyebrow_during_playback">هنگام پخش</string>
     <string name="settings_eyebrow_subtitles">زیرنویس‌ها</string>
     <string name="settings_eyebrow_on_this_device">روی این دستگاه</string>

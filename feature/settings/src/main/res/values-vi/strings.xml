@@ -32,7 +32,6 @@
         <item quantity="other">Hiện chưa thể di chuyển tải xuống giữa các vị trí, vì vậy %1$d mục đã có trên thiết bị này sẽ bị xóa. Bạn có thể tải xuống lại chúng vào vị trí mới.</item>
     </plurals>
     <string name="settings_storage_switch_confirm">Xóa và chuyển</string>
-    <string name="settings_section_connectivity">Kết nối</string>
     <string name="settings_offline_mode">Chế độ ngoại tuyến</string>
     <string name="settings_offline_mode_supporting">Chỉ hiển thị media đã có sẵn trên thiết bị này.</string>
     <string name="settings_section_account">Tài khoản</string>
@@ -67,7 +66,6 @@
     <string name="settings_hub_state_on">%1$s đang bật</string>
     <string name="settings_hub_state_off">%1$s đang tắt</string>
     <string name="settings_hub_storage_used">%1$s trên thiết bị này</string>
-    <string name="settings_eyebrow_colour">Màu sắc</string>
     <string name="settings_eyebrow_during_playback">Trong khi phát</string>
     <string name="settings_eyebrow_subtitles">Phụ đề</string>
     <string name="settings_eyebrow_on_this_device">Trên thiết bị này</string>

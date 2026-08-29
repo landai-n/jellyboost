@@ -36,7 +36,6 @@
     </plurals>
     <string name="settings_storage_switch_confirm">Läschen a wiesselen</string>
 
-    <string name="settings_section_connectivity">Konnektivitéit</string>
     <string name="settings_offline_mode">Offline-Modus</string>
     <string name="settings_offline_mode_supporting">Nëmme Medien weisen, déi schonn op dësem Apparat sinn.</string>
 
@@ -72,7 +71,6 @@
     <string name="settings_hub_state_on">%1$s un</string>
     <string name="settings_hub_state_off">%1$s aus</string>
     <string name="settings_hub_storage_used">%1$s op dësem Apparat</string>
-    <string name="settings_eyebrow_colour">Faarf</string>
     <string name="settings_eyebrow_during_playback">Während der Widderginn</string>
     <string name="settings_eyebrow_subtitles">Ënnertitelen</string>
     <string name="settings_eyebrow_on_this_device">Op dësem Apparat</string>

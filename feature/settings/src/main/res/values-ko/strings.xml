@@ -35,7 +35,6 @@
     </plurals>
     <string name="settings_storage_switch_confirm">삭제하고 전환</string>
 
-    <string name="settings_section_connectivity">연결</string>
     <string name="settings_offline_mode">오프라인 모드</string>
     <string name="settings_offline_mode_supporting">이 기기에 이미 있는 미디어만 표시합니다.</string>
 
@@ -71,7 +70,6 @@
     <string name="settings_hub_state_on">%1$s 켜짐</string>
     <string name="settings_hub_state_off">%1$s 꺼짐</string>
     <string name="settings_hub_storage_used">이 기기에서 %1$s</string>
-    <string name="settings_eyebrow_colour">색상</string>
     <string name="settings_eyebrow_during_playback">재생 중</string>
     <string name="settings_eyebrow_subtitles">자막</string>
     <string name="settings_eyebrow_on_this_device">이 기기</string>

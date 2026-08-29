@@ -35,7 +35,6 @@
     </plurals>
     <string name="settings_storage_switch_confirm">刪除同埋切換</string>
 
-    <string name="settings_section_connectivity">連線</string>
     <string name="settings_offline_mode">離線模式</string>
     <string name="settings_offline_mode_supporting">淨係顯示呢部裝置上已經有嘅媒體。</string>
 
@@ -71,7 +70,6 @@
     <string name="settings_hub_state_on">%1$s 開咗</string>
     <string name="settings_hub_state_off">%1$s 閂咗</string>
     <string name="settings_hub_storage_used">呢部裝置用咗 %1$s</string>
-    <string name="settings_eyebrow_colour">顏色</string>
     <string name="settings_eyebrow_during_playback">播放緊嘅時候</string>
     <string name="settings_eyebrow_subtitles">字幕</string>
     <string name="settings_eyebrow_on_this_device">喺呢部裝置</string>

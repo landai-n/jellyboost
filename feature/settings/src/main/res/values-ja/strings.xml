@@ -35,7 +35,6 @@
     </plurals>
     <string name="settings_storage_switch_confirm">削除して切り替え</string>
 
-    <string name="settings_section_connectivity">接続</string>
     <string name="settings_offline_mode">オフラインモード</string>
     <string name="settings_offline_mode_supporting">この端末にすでにあるメディアのみを表示します。</string>
 
@@ -71,7 +70,6 @@
     <string name="settings_hub_state_on">%1$s オン</string>
     <string name="settings_hub_state_off">%1$s オフ</string>
     <string name="settings_hub_storage_used">この端末で %1$s</string>
-    <string name="settings_eyebrow_colour">カラー</string>
     <string name="settings_eyebrow_during_playback">再生中</string>
     <string name="settings_eyebrow_subtitles">字幕</string>
     <string name="settings_eyebrow_on_this_device">この端末</string>

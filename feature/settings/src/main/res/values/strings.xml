@@ -13,7 +13,6 @@
 
     <!-- Appearance -->
     <string name="settings_section_appearance">Appearance</string>
-    <string name="settings_eyebrow_colour">Colour</string>
     <string name="settings_theme">Theme</string>
     <string name="settings_theme_system">Follow the device</string>
     <string name="settings_theme_light">Light</string>
@@ -69,11 +68,8 @@
     </plurals>
     <string name="settings_storage_switch_confirm">Delete and switch</string>
 
-    <!-- Connectivity -->
-    <!-- The hub's category name for the connectivity rows; `settings_section_connectivity` is the
-         heading *inside* the page, where the longer word has room to read correctly. -->
+    <!-- Network -->
     <string name="settings_section_network">Network</string>
-    <string name="settings_section_connectivity">Connectivity</string>
     <string name="settings_offline_mode">Offline mode</string>
     <string name="settings_offline_mode_supporting">Only show media that is already on this device.</string>
 

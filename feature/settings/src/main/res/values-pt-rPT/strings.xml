@@ -33,7 +33,6 @@
         <item quantity="other">As transferências ainda não podem ser movidas entre locais, pelo que as %1$d já neste dispositivo serão eliminadas. Pode transferi-las novamente para o novo local.</item>
     </plurals>
     <string name="settings_storage_switch_confirm">Eliminar e mudar</string>
-    <string name="settings_section_connectivity">Conetividade</string>
     <string name="settings_offline_mode">Modo offline</string>
     <string name="settings_offline_mode_supporting">Mostrar apenas conteúdo que já está neste dispositivo.</string>
     <string name="settings_section_account">Conta</string>
@@ -68,7 +67,6 @@
     <string name="settings_hub_state_on">%1$s ativado</string>
     <string name="settings_hub_state_off">%1$s desativado</string>
     <string name="settings_hub_storage_used">%1$s neste dispositivo</string>
-    <string name="settings_eyebrow_colour">Cor</string>
     <string name="settings_eyebrow_during_playback">Durante a reprodução</string>
     <string name="settings_eyebrow_subtitles">Legendas</string>
     <string name="settings_eyebrow_on_this_device">Neste dispositivo</string>

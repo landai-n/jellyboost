@@ -38,7 +38,6 @@
     </plurals>
     <string name="settings_storage_switch_confirm">Usuń i przenieś</string>
 
-    <string name="settings_section_connectivity">Łączność</string>
     <string name="settings_offline_mode">Tryb offline</string>
     <string name="settings_offline_mode_supporting">Pokazuj tylko multimedia, które są już na tym urządzeniu.</string>
 
@@ -74,7 +73,6 @@
     <string name="settings_hub_state_on">%1$s włączone</string>
     <string name="settings_hub_state_off">%1$s wyłączone</string>
     <string name="settings_hub_storage_used">%1$s na tym urządzeniu</string>
-    <string name="settings_eyebrow_colour">Kolor</string>
     <string name="settings_eyebrow_during_playback">Podczas odtwarzania</string>
     <string name="settings_eyebrow_subtitles">Napisy</string>
     <string name="settings_eyebrow_on_this_device">Na tym urządzeniu</string>

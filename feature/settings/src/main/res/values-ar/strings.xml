@@ -40,7 +40,6 @@
     </plurals>
     <string name="settings_storage_switch_confirm">حذف والتبديل</string>
 
-    <string name="settings_section_connectivity">الاتصال</string>
     <string name="settings_offline_mode">وضع عدم الاتصال</string>
     <string name="settings_offline_mode_supporting">عرض الوسائط الموجودة بالفعل على هذا الجهاز فقط.</string>
 
@@ -76,7 +75,6 @@
     <string name="settings_hub_state_on">%1$s قيد التشغيل</string>
     <string name="settings_hub_state_off">%1$s متوقف</string>
     <string name="settings_hub_storage_used">%1$s على هذا الجهاز</string>
-    <string name="settings_eyebrow_colour">اللون</string>
     <string name="settings_eyebrow_during_playback">أثناء التشغيل</string>
     <string name="settings_eyebrow_subtitles">الترجمات</string>
     <string name="settings_eyebrow_on_this_device">على هذا الجهاز</string>

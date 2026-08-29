@@ -26,7 +26,6 @@ enum class SettingsCategory(
     DOWNLOADS(R.string.settings_section_downloads),
     APPEARANCE(R.string.settings_section_appearance),
 
-    /** "Network" on the hub; the heading *inside* the page is the longer "Connectivity". */
     NETWORK(R.string.settings_section_network),
     ABOUT(R.string.settings_section_about),
 }
@@ -60,8 +59,9 @@ internal enum class SettingsPane {
 }
 
 /**
- * A pane's own title, which is not always its hub row's: Account has no hub row of its own, and the
- * Network page's own heading is the longer "Connectivity" that its rows read against.
+ * A category is called the same thing on its hub row and on its own page, so this agrees with
+ * [SettingsCategory.titleRes] everywhere the two overlap. Account is the one pane with no hub row of
+ * its own — the identity row opens it — so it needs a title from somewhere.
  */
 @StringRes
 internal fun SettingsPane.titleRes(): Int =

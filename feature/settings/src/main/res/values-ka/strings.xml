@@ -33,7 +33,6 @@
         <item quantity="other">გადმოწერების ადგილებს შორის გადატანა ჯერ არ არის შესაძლებელი, ამიტომ ამ მოწყობილობაზე უკვე არსებული %1$d წაიშლება. შეგიძლიათ ისევ გადმოწეროთ ახალ ადგილას.</item>
     </plurals>
     <string name="settings_storage_switch_confirm">წაშლა და გადართვა</string>
-    <string name="settings_section_connectivity">კავშირი</string>
     <string name="settings_offline_mode">ოფლაინ რეჟიმი</string>
     <string name="settings_offline_mode_supporting">მხოლოდ ამ მოწყობილობაზე უკვე არსებული მედიის ჩვენება.</string>
     <string name="settings_section_account">ანგარიში</string>
@@ -68,7 +67,6 @@
     <string name="settings_hub_state_on">%1$s ჩართულია</string>
     <string name="settings_hub_state_off">%1$s გამორთულია</string>
     <string name="settings_hub_storage_used">%1$s ამ მოწყობილობაზე</string>
-    <string name="settings_eyebrow_colour">ფერი</string>
     <string name="settings_eyebrow_during_playback">დაკვრის დროს</string>
     <string name="settings_eyebrow_subtitles">სუბტიტრები</string>
     <string name="settings_eyebrow_on_this_device">ამ მოწყობილობაზე</string>

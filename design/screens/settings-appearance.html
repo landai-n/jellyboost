@@ -1,4 +1,4 @@
-<!-- @dsCard viewport="400x680" group="Screens" name="Settings — Appearance (portrait, light)" subtitle="Category detail page drawn under data-theme=&quot;light&quot; — the page a user opens to change the theme is the one that must resolve in both. Theme group + wallpaper colours, absent (not disabled) below API 31." -->
+<!-- @dsCard viewport="400x680" group="Screens" name="Settings — Appearance (portrait, light)" subtitle="Category detail page drawn under data-theme=&quot;light&quot; — the page a user opens to change the theme is the one that must resolve in both. One panel, no eyebrow — a section heading only earns its place on a page with more than one section. Theme group + wallpaper colours, absent (not disabled) below API 31." -->
 <link rel="stylesheet" href="../_shared/modern.css">
 <style>
   * { box-sizing:border-box; }
@@ -92,7 +92,6 @@
 
   <div class="content">
     <div class="sec">
-      <div class="eyebrow">Theme</div>
       <div class="panel">
         <div class="grp">
           <div class="grpcap">Theme</div>
@@ -100,12 +99,6 @@
           <div class="crow"><div class="tx"><div class="nm">Light</div></div><div class="radio"></div></div>
           <div class="crow"><div class="tx"><div class="nm">Dark</div></div><div class="radio"></div></div>
         </div>
-      </div>
-    </div>
-
-    <div class="sec">
-      <div class="eyebrow">Colour</div>
-      <div class="panel">
         <div class="row">
           <div class="tx">
             <div class="nm">Use wallpaper colours</div>
@@ -117,6 +110,6 @@
       </div>
     </div>
 
-    <div class="note">Drawn in the <b>light</b> scheme on purpose: this is the one page a user opens to change the theme, so it is the page that must be right in both. Values are JellyfinLightColors as shipped &mdash; #EEF1F7 ground, #FFFFFF panels, #00769E primary, rgba(31,35,48,.78) supporting text, all of which already clear ContrastRatioTest. Flip the theme chip above this artboard to check the dark half.</div>
+    <div class="note">Drawn in the <b>light</b> scheme on purpose: this is the one page a user opens to change the theme, so it is the page that must be right in both. Values are JellyfinLightColors as shipped &mdash; #EEF1F7 ground, #FFFFFF panels, #00769E primary, rgba(31,35,48,.78) supporting text, all of which already clear ContrastRatioTest. Flip the theme chip above this artboard to check the dark half. <b>No eyebrow:</b> a section heading only earns its place on a page carrying more than one section &mdash; here the screen title already says what the panel is, and an eyebrow reading &ldquo;Theme&rdquo; above a group captioned &ldquo;Theme&rdquo; says it twice. Network is a single-section page for the same reason.</div>
   </div>
 </div>

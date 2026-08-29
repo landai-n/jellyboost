@@ -45,6 +45,7 @@ import dev.jellyboost.core.ui.R
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTheme
+import dev.jellyboost.core.ui.theme.OverMedia
 import dev.jellyboost.core.ui.theme.glassSurface
 import dev.jellyboost.core.ui.theme.pageInk
 
@@ -91,6 +92,19 @@ private val GhostPillDisabledContent: Color
     @Composable @ReadOnlyComposable
     get() = pageInk(darkAlpha = 0.48f, lightAlpha = 0.65f)
 
+/** Disabled wins over [OverMedia]: no ghost pill in the app is both disabled and drawn on artwork. */
+@Composable
+@ReadOnlyComposable
+private fun ghostPillContent(
+    enabled: Boolean,
+    overMedia: Boolean,
+): Color =
+    when {
+        !enabled -> GhostPillDisabledContent
+        overMedia -> OverMedia.GlassContent
+        else -> GhostPillContent
+    }
+
 /** 5.65:1 over `ChromeFill` on a white frame in dark, 5.22:1 over the light one on a black frame. */
 internal const val GLASS_ICON_TINT_ALPHA = 0.8f
 
@@ -126,7 +140,11 @@ private val PillLabelSmall =
         fontWeight = FontWeight.W500,
     )
 
-/** @param loading only swaps the leading glyph for a spinner — the caller still disables the pill. */
+/**
+ * @param overMedia the pill is drawn on artwork, so it keeps the dark scheme's inversion — a white
+ *   fill with `#101010` ink — instead of the near-black pill a light *page* asks for.
+ * @param loading only swaps the leading glyph for a spinner — the caller still disables the pill.
+ */
 @Composable
 fun PrimaryPillButton(
     text: String,
@@ -135,19 +153,22 @@ fun PrimaryPillButton(
     enabled: Boolean = true,
     small: Boolean = false,
     leadingIcon: ImageVector? = null,
+    overMedia: Boolean = false,
     loading: Boolean = false,
 ) {
+    val container = if (overMedia) OverMedia.PillFill else PrimaryPillContainer
+    val content = if (overMedia) OverMedia.PillInk else PrimaryPillContent
     PillFrame(
         onClick = onClick,
         enabled = enabled,
         height = if (small) Dimens.PillHeightSmall else Dimens.PillHeight,
         surface =
             Modifier.background(
-                color = if (enabled) PrimaryPillContainer else PrimaryPillDisabledContainer,
+                color = if (enabled) container else PrimaryPillDisabledContainer,
                 shape = CircleShape,
             ),
         contentPadding = pillContentPadding(small),
-        contentColor = if (enabled) PrimaryPillContent else PrimaryPillDisabledContent,
+        contentColor = if (enabled) content else PrimaryPillDisabledContent,
         stateDescription = busyStateDescription(loading),
         modifier = modifier,
     ) {
@@ -156,11 +177,13 @@ fun PrimaryPillButton(
 }
 
 /**
- * @param tint a pill floating over raw video (the player's skip offer) must pass a dark fill —
- *   there is no backdrop there for the blur to pull down.
- * @param contentColor and [borderColor] travel with [tint]: a pill on the film frame is drawn on
- *   something dark in *both* schemes, so its ink and its edge stop following the page. Passing the
- *   fill alone is the half-fix that leaves near-black text and a near-black edge on black glass.
+ * @param overMedia moves the fill, the ink **and** the edge to [OverMedia] in one parameter: a pill
+ *   inside a hero's copy lockup is drawn on something dark in both schemes. Passing the fill alone
+ *   is the half-fix that leaves near-black text and a near-black edge on black glass, which is what
+ *   this exists to make impossible — the three explicit parameters below stay for the player, whose
+ *   fill is stronger still because there is no backdrop under it for the blur to pull down.
+ * @param tint a pill floating over raw video (the player's skip offer) must pass a dark fill.
+ * @param contentColor and [borderColor] travel with [tint], for [overMedia]'s reason.
  * @param loading only swaps the leading glyph for a spinner — the caller still disables the pill.
  */
 @Composable
@@ -171,9 +194,10 @@ fun GhostPillButton(
     enabled: Boolean = true,
     small: Boolean = false,
     leadingIcon: ImageVector? = null,
-    tint: Color = GlassDefaults.Fill,
-    contentColor: Color = if (enabled) GhostPillContent else GhostPillDisabledContent,
-    borderColor: Color = GlassDefaults.GhostBorder,
+    overMedia: Boolean = false,
+    tint: Color = if (overMedia) OverMedia.GlassFill else GlassDefaults.Fill,
+    contentColor: Color = ghostPillContent(enabled = enabled, overMedia = overMedia),
+    borderColor: Color = if (overMedia) OverMedia.GlassBorder else GlassDefaults.GhostBorder,
     loading: Boolean = false,
     progress: Float? = null,
     leadingIconTint: Color? = null,
@@ -202,6 +226,8 @@ fun GhostPillButton(
 /**
  * @param size diameter of the *drawn* circle only; the button always reserves
  *   [Dimens.MinTouchTarget] around it (see this file's header).
+ * @param overMedia the circle floats over artwork the page has not scrimmed, so it takes
+ *   [OverMedia.ChromeFill] and white — the in-lockup [OverMedia.GlassFill] is too weak there.
  */
 @Composable
 fun GlassIconButton(
@@ -210,8 +236,9 @@ fun GlassIconButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     size: Dp = Dimens.PillHeightSmall,
-    tint: Color = GlassIconTint,
-    surfaceTint: Color = GlassDefaults.Fill,
+    overMedia: Boolean = false,
+    tint: Color = if (overMedia) OverMedia.GlassContent else GlassIconTint,
+    surfaceTint: Color = if (overMedia) OverMedia.ChromeFill else GlassDefaults.Fill,
     enabled: Boolean = true,
 ) {
     Box(
@@ -225,8 +252,11 @@ fun GlassIconButton(
             modifier =
                 Modifier
                     .size(size)
-                    .glassSurface(shape = CircleShape, tint = surfaceTint)
-                    .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
+                    .glassSurface(
+                        shape = CircleShape,
+                        borderColor = if (overMedia) OverMedia.ChromeBorder else GlassDefaults.Hairline,
+                        tint = surfaceTint,
+                    ).clickable(enabled = enabled, role = Role.Button, onClick = onClick)
                     .semantics(mergeDescendants = true) {},
             contentAlignment = Alignment.Center,
         ) {

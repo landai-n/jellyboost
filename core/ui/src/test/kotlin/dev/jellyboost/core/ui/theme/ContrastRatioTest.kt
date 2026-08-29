@@ -245,6 +245,23 @@ private val TimeChipOverArtwork = Color.Black.copy(alpha = 0.70f) over BrightArt
 private val RatingOverArtwork = Color.Black.copy(alpha = 0.65f) over BrightArtwork
 private val IndicatorOverArtwork = Color.Black.copy(alpha = 0.60f) over BrightArtwork
 
+/**
+ * The hero and detail scrim where the copy lockup sits: its foot, the alpha the saved canvas names.
+ * Over a fully white backdrop, which is what makes it the worst case rather than a typical one.
+ */
+private val HeroScrimFoot =
+    OverMedia.ScrimInk.copy(alpha = JellyfinGradients.BACKDROP_INK_FOOT_ALPHA) over BrightArtwork
+
+/** The wide hero's left wash at its mid stop — the weakest ground under the wide copy column. */
+private val WideHeroWash =
+    OverMedia.ScrimInk.copy(alpha = JellyfinGradients.WIDE_HERO_MID_ALPHA) over BrightArtwork
+
+/** A pill inside the hero's lockup: its glass is over the scrim, never over raw artwork. */
+private val HeroGlass = OverMedia.GlassFill over HeroScrimFoot
+
+/** Chrome, which *is* over raw artwork — hence the stronger fill. */
+private val OverMediaChrome = OverMedia.ChromeFill over BrightArtwork
+
 private val SeekTrackBand = Color.White.copy(alpha = 0.55f) over ControlsScrim
 
 private val TagFill = JellyfinColors.Primary.copy(alpha = 0.18f) over ControlsScrim
@@ -987,6 +1004,85 @@ private val CASES =
                 ),
             source = "ErrorBanner.BANNER_BORDER_ALPHA on the light error",
         ),
+        // --- Image territory: dark-scrimmed and light-on-image in *both* schemes, so measured once -
+        ContrastCase(
+            name = "hero and detail lockup title over the scrim's foot",
+            foreground = OverMedia.Title over HeroScrimFoot,
+            background = HeroScrimFoot,
+            demand = Demand.Floor(NORMAL_TEXT, "WCAG 1.4.3"),
+            source = "OverMedia.Title on BackdropScrim's 78% foot over a white backdrop — 9.89:1",
+        ),
+        ContrastCase(
+            name = "hero and detail lockup eyebrow over the scrim's foot",
+            foreground = OverMedia.Eyebrow over HeroScrimFoot,
+            background = HeroScrimFoot,
+            demand = Demand.Floor(NORMAL_TEXT, "WCAG 1.4.3"),
+            source = "OverMedia.Eyebrow (white@78%) on the same foot — 6.78:1",
+        ),
+        ContrastCase(
+            name = "hero and detail meta text over the scrim's foot",
+            foreground = OverMedia.Meta over HeroScrimFoot,
+            background = HeroScrimFoot,
+            demand = Demand.Floor(NORMAL_TEXT, "WCAG 1.4.3"),
+            source = "OverMedia.Meta (white@74%) on the same foot — 6.29:1",
+        ),
+        ContrastCase(
+            name = "certificate pill's edge over the scrim's foot",
+            foreground = OverMedia.BadgeBorder over HeroScrimFoot,
+            background = HeroScrimFoot,
+            demand =
+                Demand.Exempt(
+                    recorded = 2.48,
+                    reason =
+                        "the certificate is read from its label, which clears 4.5:1 on this very " +
+                            "ground; the box only holds it apart from the times beside it",
+                ),
+            source = "OverMedia.BadgeBorder (white@32%) on BackdropScrim's foot",
+        ),
+        ContrastCase(
+            name = "wide hero title over the left wash",
+            foreground = OverMedia.Title over WideHeroWash,
+            background = WideHeroWash,
+            demand = Demand.Floor(NORMAL_TEXT, "WCAG 1.4.3"),
+            source = "OverMedia.Title on WideHeroScrim's 72% mid stop over a white backdrop — 7.88:1",
+        ),
+        ContrastCase(
+            name = "wide hero overview and meta over the left wash",
+            foreground = OverMedia.Meta over WideHeroWash,
+            background = WideHeroWash,
+            demand = Demand.Floor(NORMAL_TEXT, "WCAG 1.4.3"),
+            source = "OverMedia.Meta on the same mid stop — 5.20:1",
+        ),
+        ContrastCase(
+            name = "hero pill's label on its over-media glass",
+            foreground = OverMedia.GlassContent over HeroGlass,
+            background = HeroGlass,
+            demand = Demand.Floor(NORMAL_TEXT, "WCAG 1.4.3"),
+            source = "OverMedia.GlassFill (#0A0C12@42%) on the scrim's foot — 13.97:1",
+        ),
+        ContrastCase(
+            name = "hero ghost pill's edge on its over-media glass",
+            foreground = OverMedia.GlassBorder over HeroGlass,
+            background = HeroGlass,
+            demand = Demand.Floor(COMPONENT, "WCAG 1.4.11"),
+            source = "OverMedia.GlassBorder (white@40%) on GlassFill — 3.56:1 (the canvas's 22% would be 2.04:1)",
+        ),
+        ContrastCase(
+            name = "over-media chrome glyph over bright artwork",
+            foreground = OverMedia.GlassContent over OverMediaChrome,
+            background = OverMediaChrome,
+            demand = Demand.Floor(COMPONENT, "WCAG 1.4.11"),
+            source =
+                "OverMedia.ChromeFill — 7.70:1; the in-lockup GlassFill would be 2.85:1 here, " +
+                    "which is why chrome does not take it",
+        ),
+        ContrastCase(
+            name = "over-media primary pill's ink on its white fill",
+            foreground = OverMedia.PillInk over OverMedia.PillFill.flat,
+            background = OverMedia.PillFill.flat,
+            demand = Demand.Floor(NORMAL_TEXT, "WCAG 1.4.3"),
+            source = "OverMedia.PillInk on PillFill — the dark scheme's own inversion, 19.03:1",
+        ),
         ContrastCase(
             name = "snackbar message on the pill at its lightest",
             foreground = Color.White over SnackbarPill,
@@ -1104,6 +1200,14 @@ private val MIRRORED_DECLARATIONS =
             "private val OverMediaDisc = Color.White",
         "feature/music/src/main/kotlin/dev/jellyboost/feature/music/nowplaying/NowPlayingScreen.kt" to
             "private val PlayGlyphColor = Color(0xFF101010)",
+        // The same rule applied to artwork: the hero and the compact detail lockup are written in
+        // `OverMedia`'s ink whatever the page is, which is a claim about their *call sites*.
+        "feature/home/src/main/kotlin/dev/jellyboost/feature/home/HomeHero.kt" to
+            "color = OverMedia.Title,",
+        "feature/home/src/main/kotlin/dev/jellyboost/feature/home/HomeHero.kt" to
+            "overMedia = true,",
+        "feature/detail/src/main/kotlin/dev/jellyboost/feature/detail/ItemDetailHeader.kt" to
+            "overMedia = true,",
     )
 
 /**

@@ -35,16 +35,43 @@ object JellyfinGradients {
         )
 
     /**
-     * Transparent at the top, solid at the bottom: it seats a hero *into* the page below it. It
-     * therefore has to end on whatever the page actually is — a scrim fading to `#101010` over a
-     * light page is a hard seam where the artwork stops, not a transition.
+     * The scrim over a hero or a detail backdrop, and the app's statement of the canvas's doctrine
+     * (`design/screens/home-light.html`): **image territory is dark-scrimmed in both schemes**, and
+     * a light page begins at the artwork's bottom edge rather than being faded into.
      *
-     * The light ramp is not the dark ramp recoloured: white at the dark alphas reads as fog over
-     * the artwork (it raises luminance and desaturates) where black reads as shadow, so the light
-     * side starts its fade later and compresses it toward the bottom edge, where the hero copy
-     * still needs a near-solid ground for its scheme ink.
+     * The dark ramp still ends on the real `colorScheme.background`, because there the page colour
+     * *is* the ink — that also keeps a dynamic-colour dark page seamless. The light ramp cannot do
+     * the same: a scrim fading to `#EEF1F7` milks the picture out and leaves everything drawn on it
+     * with no ground, so the light side rides [OverMedia.ScrimInk] instead and hands the copy on it
+     * over-media white rather than scheme ink.
+     *
+     * Where the page's *own* content is drawn across the artwork's bottom edge there is no edge to
+     * begin at — that is [StageScrim], not this.
      */
     val BackdropScrim: Brush
+        @Composable @ReadOnlyComposable
+        get() =
+            if (LocalIsLightTheme.current) {
+                LightBackdropScrim
+            } else {
+                val background = MaterialTheme.colorScheme.background
+                Brush.verticalGradient(
+                    colors =
+                        listOf(
+                            Color.Transparent,
+                            background.copy(alpha = 0.65f),
+                            background,
+                        ),
+                )
+            }
+
+    /**
+     * [BackdropScrim] for artwork the page overlaps rather than abuts — the wide detail stage, whose
+     * poster and facts column are drawn across the backdrop's bottom edge in scheme ink. Scheme ink
+     * needs the page's own colour under it, so here the light ramp does fade to the page: the eased
+     * one, because white at the dark ramp's alphas fogs a picture where black shades it.
+     */
+    val StageScrim: Brush
         @Composable @ReadOnlyComposable
         get() {
             val background = MaterialTheme.colorScheme.background
@@ -70,6 +97,17 @@ object JellyfinGradients {
             }
         }
 
+    /** The canvas's own ramp: nothing until 42%, then down to 78% at the artwork's foot. */
+    private val LightBackdropScrim: Brush =
+        Brush.verticalGradient(
+            colorStops =
+                arrayOf(
+                    0f to Color.Transparent,
+                    BACKDROP_INK_MID_STOP to OverMedia.ScrimInk.copy(alpha = BACKDROP_INK_MID_ALPHA),
+                    1f to OverMedia.ScrimInk.copy(alpha = BACKDROP_INK_FOOT_ALPHA),
+                ),
+        )
+
     /**
      * Strong on purpose: section titles scroll behind the brand mark and still read through
      * 80%/45%. Must be drawn as a sibling *over* the page and *under* the bars — never inside a
@@ -94,8 +132,8 @@ object JellyfinGradients {
                 Brush.verticalGradient(
                     colors =
                         listOf(
-                            background.copy(alpha = 0.94f),
-                            background.copy(alpha = 0.72f),
+                            background.copy(alpha = TOP_CHROME_NEAR_ALPHA),
+                            background.copy(alpha = TOP_CHROME_MID_ALPHA),
                             Color.Transparent,
                         ),
                 )
@@ -103,24 +141,21 @@ object JellyfinGradients {
         }
 
     /**
-     * The wide hero's left-edge wash: near-solid page under the copy, transparent before the
-     * artwork's focal right half. Lives here, not in the hero, because which ramp it takes is the
-     * same fog-versus-shadow branch as [BackdropScrim] — and that bit is this package's to read.
+     * The wide hero's left-edge wash: near-solid under the copy, transparent before the artwork's
+     * focal right half. Lives here, not in the hero, because it takes the same doctrine as
+     * [BackdropScrim] — dark ink over the picture in both schemes, and never the page colour on the
+     * light side, since the copy it grounds is over-media white either way.
+     *
+     * The stops are one set, not two: only the colour differed between the schemes, and it no longer
+     * does past the light branch's ink.
      */
     val WideHeroScrim: Brush
         @Composable @ReadOnlyComposable
-        get() {
-            val background = MaterialTheme.colorScheme.background
-            return if (LocalIsLightTheme.current) {
-                Brush.horizontalGradient(
-                    colorStops =
-                        arrayOf(
-                            0f to background.copy(alpha = WIDE_HERO_LIGHT_NEAR_ALPHA),
-                            WIDE_HERO_LIGHT_MID_STOP to background.copy(alpha = WIDE_HERO_LIGHT_MID_ALPHA),
-                            WIDE_HERO_LIGHT_END_STOP to Color.Transparent,
-                        ),
-                )
+        get() =
+            if (LocalIsLightTheme.current) {
+                LightWideHeroScrim
             } else {
+                val background = MaterialTheme.colorScheme.background
                 Brush.horizontalGradient(
                     colorStops =
                         arrayOf(
@@ -130,7 +165,32 @@ object JellyfinGradients {
                         ),
                 )
             }
-        }
+
+    private val LightWideHeroScrim: Brush =
+        Brush.horizontalGradient(
+            colorStops =
+                arrayOf(
+                    0f to OverMedia.ScrimInk.copy(alpha = WIDE_HERO_NEAR_ALPHA),
+                    WIDE_HERO_MID_STOP to OverMedia.ScrimInk.copy(alpha = WIDE_HERO_MID_ALPHA),
+                    WIDE_HERO_END_STOP to Color.Transparent,
+                ),
+        )
+
+    /**
+     * [TopChromeScrim] for the band that lands on a hero rather than on the page: the page-coloured
+     * one is a white haze painted over the picture on the light side, which is the reading the canvas
+     * rejected. One brush for both schemes, for [BackdropScrim]'s reason — and the frosted-white
+     * light chrome drawn on it is then over the darkest-artwork case `ContrastRatioTest` pins it at.
+     */
+    val OverMediaTopChromeScrim: Brush =
+        Brush.verticalGradient(
+            colors =
+                listOf(
+                    OverMedia.ScrimInk.copy(alpha = TOP_CHROME_NEAR_ALPHA),
+                    OverMedia.ScrimInk.copy(alpha = TOP_CHROME_MID_ALPHA),
+                    Color.Transparent,
+                ),
+        )
 
     /**
      * A [ShaderBrush], not `Brush.radialGradient`: the radius must derive from the *measured*
@@ -175,6 +235,14 @@ object JellyfinGradients {
 
     internal const val BRAND_GLOW_MID_ALPHA_LIGHT = 0.10f
 
+    /** The canvas's ramp: transparent, then 30% at 42%, then 78% at the artwork's foot. */
+    private const val BACKDROP_INK_MID_STOP = 0.42f
+
+    private const val BACKDROP_INK_MID_ALPHA = 0.30f
+
+    /** What every over-media ink's quoted ratio is measured against. */
+    internal const val BACKDROP_INK_FOOT_ALPHA = 0.78f
+
     /** Nothing but a whisper of page until halfway down the artwork. */
     private const val BACKDROP_LIGHT_ONSET_STOP = 0.50f
 
@@ -183,6 +251,10 @@ object JellyfinGradients {
     private const val BACKDROP_LIGHT_MID_STOP = 0.78f
 
     private const val BACKDROP_LIGHT_MID_ALPHA = 0.62f
+
+    private const val TOP_CHROME_NEAR_ALPHA = 0.94f
+
+    private const val TOP_CHROME_MID_ALPHA = 0.72f
 
     private const val TOP_CHROME_LIGHT_TOP_ALPHA = 0.92f
 
@@ -194,18 +266,10 @@ object JellyfinGradients {
 
     private const val WIDE_HERO_MID_STOP = 0.38f
 
-    private const val WIDE_HERO_MID_ALPHA = 0.72f
+    /** The wash's weakest point under the wide copy column — where [OverMedia.Meta] is measured. */
+    internal const val WIDE_HERO_MID_ALPHA = 0.72f
 
     private const val WIDE_HERO_END_STOP = 0.70f
-
-    /** The copy edge keeps its near-solid ground; only the fade past it lets go earlier and lower. */
-    private const val WIDE_HERO_LIGHT_NEAR_ALPHA = 0.92f
-
-    private const val WIDE_HERO_LIGHT_MID_STOP = 0.30f
-
-    private const val WIDE_HERO_LIGHT_MID_ALPHA = 0.55f
-
-    private const val WIDE_HERO_LIGHT_END_STOP = 0.60f
 
     /** Where the purple centre has become the blue mid-stop, as a fraction of the radius. */
     private const val BRAND_GLOW_MID_STOP = 0.45f
@@ -270,18 +334,14 @@ object JellyfinGradients {
 
     internal const val HERO_HALO_FADE_STOP = 0.72f
 
+    /**
+     * One pair for both schemes, unlike [BRAND_GLOW_CENTER_ALPHA_LIGHT]'s: the halo is drawn on
+     * image territory, which is dark-scrimmed whatever the page is, so there is no light ground for
+     * it to stain. The dimmed light pair it used to carry was answering a page it never sits on.
+     */
     internal const val HERO_HALO_CENTER_ALPHA = 0.35f
     internal const val HERO_HALO_MID_ALPHA = 0.16f
     internal const val HERO_HALO_MID_STOP = 0.42f
-
-    /**
-     * The brand *hues* are the same in both schemes — this is the accent gradient's own purple and
-     * blue — but the alphas are not: 35% of `#AA5CC3` over `#101010` is a glow, and over `#F6F7F8`
-     * the identical wash reads as a stain on the page. Roughly two-fifths is what keeps it a tint.
-     */
-    internal const val HERO_HALO_CENTER_ALPHA_LIGHT = 0.14f
-
-    internal const val HERO_HALO_MID_ALPHA_LIGHT = 0.07f
 
     internal const val SCREEN_GLOW_CENTER_X_FRACTION = 0.22f
 
@@ -291,7 +351,7 @@ object JellyfinGradients {
 
     internal const val SCREEN_GLOW_ALPHA = 0.17f
 
-    /** [HERO_HALO_CENTER_ALPHA_LIGHT]'s reasoning, applied to the screen glow. */
+    /** [BRAND_GLOW_CENTER_ALPHA_LIGHT]'s reasoning, applied to the screen glow — this one is on the page. */
     internal const val SCREEN_GLOW_ALPHA_LIGHT = 0.08f
 
     /** The two card greys of the *active* scheme: an empty poster is a card that has not loaded. */
@@ -364,19 +424,16 @@ fun Modifier.screenGlow(): Modifier {
  * ellipse the fade completes at ~83% of the box height; the top and end edges that still clip it
  * are window edges with no page beyond them.
  *
- * Dithered framework [Paint] for [screenGlow]'s reason, and its `remember` for [screenGlow]'s reason.
+ * Dithered framework [Paint] for [screenGlow]'s reason, and its `remember` for [screenGlow]'s reason —
+ * unkeyed, because the halo's strength is the same in both schemes
+ * ([JellyfinGradients.HERO_HALO_CENTER_ALPHA]).
  * [RadialGradient] cannot express an ellipse, hence the local matrix scaling the circular shader
  * about its own centre.
  */
 @Composable
 fun Modifier.heroHalo(): Modifier {
-    val light = LocalIsLightTheme.current
-    val centerAlpha =
-        if (light) JellyfinGradients.HERO_HALO_CENTER_ALPHA_LIGHT else JellyfinGradients.HERO_HALO_CENTER_ALPHA
-    val midAlpha =
-        if (light) JellyfinGradients.HERO_HALO_MID_ALPHA_LIGHT else JellyfinGradients.HERO_HALO_MID_ALPHA
     val onBuildDrawCache: CacheDrawScope.() -> DrawResult =
-        remember(centerAlpha, midAlpha) {
+        remember {
             {
                 val centerX = size.width * JellyfinGradients.HERO_HALO_CENTER_X_FRACTION
                 val centerY = size.height * JellyfinGradients.HERO_HALO_CENTER_Y_FRACTION
@@ -391,8 +448,12 @@ fun Modifier.heroHalo(): Modifier {
                                 centerY,
                                 radiusX,
                                 intArrayOf(
-                                    JellyfinColors.Secondary.copy(alpha = centerAlpha).toArgb(),
-                                    JellyfinColors.Primary.copy(alpha = midAlpha).toArgb(),
+                                    JellyfinColors.Secondary
+                                        .copy(alpha = JellyfinGradients.HERO_HALO_CENTER_ALPHA)
+                                        .toArgb(),
+                                    JellyfinColors.Primary
+                                        .copy(alpha = JellyfinGradients.HERO_HALO_MID_ALPHA)
+                                        .toArgb(),
                                     android.graphics.Color.TRANSPARENT,
                                 ),
                                 floatArrayOf(

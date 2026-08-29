@@ -7,8 +7,9 @@ system/light/dark preference in Settings. What follows is what actually resolves
 this doc's weight — what deliberately does **not**.
 
 The wrinkle worth naming up front: an app is not one surface. Chrome and pages follow the scheme;
-video frames, album art and the scrims drawn on top of them do not, in either scheme. Getting that
-line in the right place is most of the work.
+video frames, artwork and the scrims drawn on top of them do not, in either scheme. Getting that
+line in the right place is most of the work — see [Image territory](#image-territory) for where it
+runs and what lives on each side of it.
 
 ---
 
@@ -101,6 +102,52 @@ on white:
 
 ---
 
+## Image territory
+
+The doctrine the saved `screens/home-light.html` canvas states, and the one line that decides what a
+surface is written in: **image territory is dark-scrimmed and light-on-image in both schemes, and the
+light page begins at the artwork's bottom edge.** A scrim that fades to `#EEF1F7` does not seat a
+picture into a light page — it raises the picture's luminance until nothing drawn on it has a ground,
+and takes the frosted-white chrome with it (DECISIONS 2026-08-29, superseding the page-fade ramps of
+2026-08-28).
+
+`core/ui/theme/OverMedia.kt` is that half of the palette. Nothing in it branches on the scheme, and
+every ratio it quotes is measured over a fully white backdrop — the worst case a scrim can leave —
+and pinned by `ContrastRatioTest`.
+
+| surface | what it takes |
+|---|---|
+| `JellyfinGradients.BackdropScrim` — the home hero and the compact/medium detail backdrop | dark: transparent → `background`@65% → `background`, because there the page colour *is* the ink (and a dynamic-colour page stays seamless). Light: `OverMedia.ScrimInk` `#0C0E14`, transparent → .30 at 42% → .78 at the foot. |
+| `JellyfinGradients.WideHeroScrim` — the wide hero's left wash | one set of stops for both schemes (.94 → .72 at 38% → transparent at 70%); only the colour ever differed. |
+| `Modifier.heroHalo` — the purple/blue radial on a hero | the dark strengths (.35 / .16) in both. It draws on image territory, so there is no light ground for it to stain; the dimmed light pair is gone. |
+| Hero and compact-detail copy — title, eyebrow, meta, certificate, overview | `OverMedia.Title` / `Eyebrow` / `Meta` / `BadgeBorder`, in both schemes. |
+| Buttons and chips *inside* a copy lockup on artwork | `overMedia = true` on `PrimaryPillButton` (white fill, `#101010` ink), `GhostPillButton` and `ActionPillChip` (`OverMedia.GlassFill`, white content). |
+| Chrome floating over *unscrimmed* artwork — the home action cluster, and the top-chrome band under it | `OverMedia.ChromeFill` (`GlassDefaults.DarkChromeFill`) and `JellyfinGradients.OverMediaTopChromeScrim`. The in-lockup 42% fill is too weak here: over a white frame it leaves white at 2.85:1 against the chrome tint's 7.70:1. |
+
+Two things it deliberately does **not** cover:
+
+- **The wide detail stage** (`ItemDetailHeader.WideStage`) keeps `JellyfinGradients.StageScrim`, which
+  still fades to the page, and its lockup keeps scheme ink. It is the app's one layout where the
+  page's own content is drawn *across* the artwork's foot — the poster and the facts column both
+  start inside the backdrop and finish below it — so there is no edge for a light surface to begin
+  at.
+- **The detail screen's overlay nav and `GlassTopNav`** stay on `GlassDefaults.ChromeFill`. Both
+  schemes' chrome tint is derived against the darkest frame *and* the page, so neither ground breaks
+  it, and pinning it dark would put a black disc on a light page as soon as the page scrolled.
+
+Whether the app frame's chrome *is* over artwork is a scroll question, not a theme one, and the two
+sides cannot see each other — the chrome is a sibling of the nav host. `ChromeBackdrop` is published
+downward by `AppScaffold` and written by `HomeScreen`, which is the only screen that puts full-bleed
+artwork under the bars; it clears on dispose, so every other screen leaves the chrome following the
+scheme.
+
+The same doctrine decides one *layout* question: `OverMedia.artworkDissolvesIntoPage`. The wide
+hero's rail fade and the 48dp overlap of the row below it are only safe where the artwork reaches the
+page colour, so they are dark-only; the wide copy's bottom inset keeps the same 48dp in both schemes,
+which is what leaves `HomeHero`'s calibrated height thresholds measured against one number.
+
+---
+
 ## What stays literal, permanently
 
 These are decisions, not gaps. Each is over media that is dark in both schemes, or draws before a
@@ -112,6 +159,7 @@ preference can be read.
 | `PlayerScreen` (`OVERLAY_SCRIM`, `BACKDROP_SCRIM`, the video surface), `PlayerControls` (`SCRIM`, `VIDEO_GLASS_FILL`, `THUMB_SHADOW_COLOR`), `PlayerGestureLayer`, `TrickplayPreview` | video letterboxing and the scrims over it. A light scrim over a film frame is not a light theme, it is a fogged screen. |
 | Everything *drawn on* those fills: the skip intro/outro pill's ink and edge, the cast glyph, the up-next card and its play pill, the SyncPlay waiting panel's edge, every hairline on `VIDEO_GLASS_FILL`, and `PlayerControls.OVER_MEDIA_ACCENT` (the speed/method tag and the seek bar's played portion) | a fill pinned without its ink is the half-fix: black@80% on black@60% is invisible whatever the fill is doing. The over-media call sites pass `Color.White` / `GlassDefaults.Dark*` / the literal brand blue explicitly, and `ContrastRatioTest`'s mirror list pins the call sites, not just the tokens. |
 | `MediaCardArtwork`'s four scrims and its white-on-scrim text, `DownloadBadge` | always drawn over artwork the card has already scrimmed. |
+| `OverMedia` — every token in it, and the light branches of `BackdropScrim` / `WideHeroScrim` / `OverMediaTopChromeScrim` | [Image territory](#image-territory): a hero and a detail backdrop are pictures, and a picture is not a page in either scheme. |
 | `JellyfinElevation.cardShadow` / `popShadow` | shadows are black-based in light UI too. Deliberately unchanged, recorded here so a future audit does not read it as a missed sibling. |
 | `themes.xml` — `Theme.Jellyboost` and `Theme.Jellyboost.Starting` | **the permanent exception.** Both draw before Compose exists and before DataStore can answer, so there is nothing to read a preference from. `Theme.Jellyboost.Starting` additionally force-sets `windowLightStatusBar=false` to stop `Theme.SplashScreen`'s DayNight parent following the *system* independently of the app. A light-mode user therefore sees one dark splash frame, and nothing after it: the ground below is Compose's, not this (see [The ground](#the-ground)). Closing the frame would mean a synchronous `SharedPreferences` mirror of a DataStore key, kept in step by hand, to save a frame. |
 | `colors.xml`'s `launcher_background` | the brand navy the mark was drawn against, not the app background — its own comment already warns against conflating the two. |

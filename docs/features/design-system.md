@@ -43,13 +43,17 @@ the sync source; `design/_shared/tokens.css` restates the Kotlin tokens).
   `LibraryTileWidth/Height` 232/64, `CastHeadshotSize` 72, `DetailPosterWidth/Height`
   190/285, `RadiusXl` 20).
 - `JellyfinGradients` — adds `HeroHalo` (radial at 78%/18%) and `ScreenGlow` beside
-  `BrandGlow`/`BrandGlowSide`/`BackdropScrim`/`ImagePlaceholder`. All six resolve against the
-  active scheme: the scrims and the placeholder read `MaterialTheme.colorScheme` — a scrim
-  fading to `#101010` over a light page is a seam, not a transition — the halo and the screen
-  glow run at roughly two-fifths of their alpha on a light page, where the same wash reads as
-  a stain, and the two brand glows take the saved canvas's own light pair (.16/.10), which is
-  nearly full strength because the auth page has nothing drawn through them. Each is two
-  prebuilt brushes behind an accessor, so the modifier element still compares equal. The accent gradient is brand and identical in both schemes.
+  `BrandGlow`/`BrandGlowSide`/`BackdropScrim`/`StageScrim`/`ImagePlaceholder`. What each
+  resolves against is decided by *what it is drawn on*, not by the scheme alone
+  (`docs/features/theme.md` ▸ *Image territory*). On the **page**: the placeholder and
+  `StageScrim` read `MaterialTheme.colorScheme`, the screen glow runs at roughly two-fifths
+  of its alpha on a light page where the same wash reads as a stain, and the two brand glows
+  take the saved canvas's own light pair (.16/.10) — nearly full strength, because the auth
+  page has nothing drawn through them. On **artwork**: `BackdropScrim`'s light branch,
+  `WideHeroScrim` and `OverMediaTopChromeScrim` ride `OverMedia.ScrimInk` and the halo keeps
+  its dark .35/.16 in both schemes, because image territory is dark either way. Each is a
+  prebuilt brush behind an accessor, so the modifier element still compares equal. The accent
+  gradient is brand and identical in both schemes.
 
 ## Component layer (`core/ui/component`)
 
@@ -64,9 +68,13 @@ the sync source; `design/_shared/tokens.css` restates the Kotlin tokens).
   literal white, because they sit on video and album art. `colorScheme.primary` deliberately
   stays `#00A4DC` in the dark scheme for progress/selection/links (DECISIONS 2026-08-01);
   the light scheme darkens it to `#00769E` and Material You replaces it while the user has
-  that on (DECISIONS 2026-08-28).
+  that on (DECISIONS 2026-08-28). All three take an `overMedia` flag: drawn on artwork they
+  move fill, ink **and** edge to `theme/OverMedia.kt` together, in both schemes — passing
+  one of the three is the half-fix the flag exists to prevent (`docs/features/theme.md` ▸
+  *Image territory*, DECISIONS 2026-08-29).
 - `PillChip.kt` — pill chips (selected = the brand pill's inversion) + `MPillBadge` mini
-  outlined badge.
+  outlined badge. `ActionPillChip` and `MPillBadge` take the same `overMedia` flag, for the
+  hero and detail lockups that draw them on a backdrop.
 - `JellyfinTextField.kt` — filled field (white@4%, 12dp radius, hairline → white@22% when
   focused/filled), uppercase caption label above the well, leading/trailing icon slots.
   The well is 50dp so a 48dp trailing target (password reveal, search clear) fits *inside*

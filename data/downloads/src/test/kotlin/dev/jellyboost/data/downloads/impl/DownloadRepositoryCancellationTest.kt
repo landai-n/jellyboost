@@ -4,6 +4,7 @@ import dev.jellyboost.core.database.dao.DownloadDao
 import dev.jellyboost.core.database.dao.ItemDao
 import dev.jellyboost.core.datastore.AppPreferences
 import dev.jellyboost.core.network.SessionRepository
+import dev.jellyboost.core.network.connectivity.ConnectivityMonitor
 import dev.jellyboost.core.network.model.SessionState
 import dev.jellyboost.data.cache.ItemEntityMapper
 import dev.jellyboost.data.downloads.DownloadFixtures.NOW
@@ -49,6 +50,7 @@ class DownloadRepositoryCancellationTest {
     private val storage = mockk<DownloadStorage>(relaxed = true)
     private val locations = mockk<StorageLocationManager>(relaxUnitFun = true)
     private val preferences = mockk<AppPreferences>(relaxUnitFun = true)
+    private val connectivity = mockk<ConnectivityMonitor> { every { isMetered } returns flowOf(false) }
     private val sessionRepository = mockk<SessionRepository>()
     private val clock = Clock.fixed(NOW, ZoneOffset.UTC)
 
@@ -141,6 +143,7 @@ class DownloadRepositoryCancellationTest {
             locations = locations,
             preferences = preferences,
             sessionRepository = sessionRepository,
+            connectivity = connectivity,
             clock = clock,
             transactionRunner = directTransactionRunner,
             ioDispatcher = ioDispatcher,

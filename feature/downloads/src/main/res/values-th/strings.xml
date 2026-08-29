@@ -2,7 +2,9 @@
 <resources>
     <string name="downloads_tab_downloaded">ดาวน์โหลดแล้ว</string>
     <string name="downloads_tab_queue">คิว</string>
-    <string name="downloads_wifi_only">Wi‑Fi เท่านั้น</string>
+    <string name="downloads_wifi_wait_title">กำลังรอ Wi‑Fi</string>
+    <string name="downloads_wifi_wait_body">คิวหยุดชั่วคราวบนการเชื่อมต่อมือถือนี้</string>
+    <string name="downloads_wifi_wait_action">ปิด Wi‑Fi เท่านั้น</string>
     <string name="downloads_screen_title">ดาวน์โหลด</string>
     <string name="downloads_section_movies">ภาพยนตร์</string>
     <string name="downloads_section_series">ซีรีส์</string>
@@ -21,13 +23,11 @@
     <string name="downloads_storage_free">เหลือ %1$s</string>
     <string name="downloads_stat_on_device">ในอุปกรณ์นี้</string>
     <string name="downloads_stat_queue">คิว</string>
-    <string name="downloads_stat_network">เครือข่าย</string>
     <string name="downloads_stat_free_of">เหลือ %1$s จาก %2$s</string>
     <plurals name="downloads_stat_queue_items">
         <item quantity="other">%1$d รายการ · %2$s</item>
     </plurals>
     <string name="downloads_stat_eta_about">เหลืออีกประมาณ %1$s</string>
-    <string name="downloads_stat_network_helper">หยุดชั่วคราวโดยอัตโนมัติเมื่อใช้เน็ตมือถือ</string>
     <string name="downloads_usage_storage_label">พื้นที่จัดเก็บที่ใช้ไป</string>
     <string name="downloads_usage_queue_label">ความคืบหน้าของคิว</string>
     <string name="downloads_queue_row_description">%1$s %2$d%% %3$s</string>

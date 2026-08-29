@@ -13,6 +13,7 @@ import dev.jellyboost.core.database.entities.ItemEntity
 import dev.jellyboost.core.database.entities.ItemSource
 import dev.jellyboost.core.datastore.AppPreferences
 import dev.jellyboost.core.network.SessionRepository
+import dev.jellyboost.core.network.connectivity.ConnectivityMonitor
 import dev.jellyboost.core.network.model.SessionState
 import dev.jellyboost.data.cache.ItemEntityMapper
 import dev.jellyboost.data.downloads.DownloadApi
@@ -32,6 +33,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
@@ -72,6 +74,7 @@ class CancelThenRedownloadScenarioTest {
     private val storage = mockk<DownloadStorage>(relaxed = true)
     private val locations = mockk<StorageLocationManager>(relaxUnitFun = true)
     private val preferences = mockk<AppPreferences>(relaxUnitFun = true)
+    private val connectivity = mockk<ConnectivityMonitor> { every { isMetered } returns flowOf(false) }
     private val sessionRepository = mockk<SessionRepository>()
     private val scheduler = mockk<DownloadScheduler>(relaxUnitFun = true)
     private val clock = Clock.fixed(NOW, ZoneOffset.UTC)
@@ -231,6 +234,7 @@ class CancelThenRedownloadScenarioTest {
             locations = locations,
             preferences = preferences,
             sessionRepository = sessionRepository,
+            connectivity = connectivity,
             clock = clock,
             transactionRunner = DownloadFixtures.directTransactionRunner,
             ioDispatcher = UnconfinedTestDispatcher(testScheduler),

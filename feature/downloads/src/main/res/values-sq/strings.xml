@@ -2,7 +2,9 @@
 <resources>
     <string name="downloads_tab_downloaded">Të shkarkuara</string>
     <string name="downloads_tab_queue">Radha</string>
-    <string name="downloads_wifi_only">Vetëm Wi‑Fi</string>
+    <string name="downloads_wifi_wait_title">Në pritje të Wi‑Fi</string>
+    <string name="downloads_wifi_wait_body">Radha është në pauzë në këtë lidhje celulare.</string>
+    <string name="downloads_wifi_wait_action">Çaktivizo Vetëm Wi‑Fi</string>
     <string name="downloads_screen_title">Shkarkimet</string>
 
     <string name="downloads_section_movies">Filma</string>
@@ -25,14 +27,12 @@
     <string name="downloads_storage_free">%1$s të lira</string>
     <string name="downloads_stat_on_device">Në këtë pajisje</string>
     <string name="downloads_stat_queue">Radha</string>
-    <string name="downloads_stat_network">Rrjeti</string>
     <string name="downloads_stat_free_of">%1$s të lira nga %2$s</string>
     <plurals name="downloads_stat_queue_items">
         <item quantity="one">%1$d artikull · %2$s</item>
         <item quantity="other">%1$d artikuj · %2$s</item>
     </plurals>
     <string name="downloads_stat_eta_about">Edhe rreth %1$s</string>
-    <string name="downloads_stat_network_helper">Vihet automatikisht në pauzë me të dhëna celulare</string>
     <string name="downloads_usage_storage_label">Hapësira e përdorur</string>
     <string name="downloads_usage_queue_label">Ecuria e radhës</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>

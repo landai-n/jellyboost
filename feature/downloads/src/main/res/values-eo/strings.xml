@@ -2,7 +2,9 @@
 <resources>
     <string name="downloads_tab_downloaded">Elŝutitaj</string>
     <string name="downloads_tab_queue">Atendovico</string>
-    <string name="downloads_wifi_only">Nur Wi‑Fi</string>
+    <string name="downloads_wifi_wait_title">Atendante Wi‑Fi</string>
+    <string name="downloads_wifi_wait_body">La atendovico paŭzas ĉe ĉi tiu poŝtelefona konekto.</string>
+    <string name="downloads_wifi_wait_action">Malŝalti Nur Wi‑Fi</string>
     <string name="downloads_screen_title">Elŝutoj</string>
     <string name="downloads_section_movies">Filmoj</string>
     <string name="downloads_section_series">Serioj</string>
@@ -23,14 +25,12 @@
     <string name="downloads_storage_free">%1$s liberaj</string>
     <string name="downloads_stat_on_device">Sur ĉi tiu aparato</string>
     <string name="downloads_stat_queue">Atendovico</string>
-    <string name="downloads_stat_network">Reto</string>
     <string name="downloads_stat_free_of">%1$s liberaj el %2$s</string>
     <plurals name="downloads_stat_queue_items">
         <item quantity="one">%1$d ero · %2$s</item>
         <item quantity="other">%1$d eroj · %2$s</item>
     </plurals>
     <string name="downloads_stat_eta_about">proksimume %1$s restas</string>
-    <string name="downloads_stat_network_helper">Aŭtomate paŭzigita ĉe poŝtelefona reto</string>
     <string name="downloads_usage_storage_label">Uzata konservejo</string>
     <string name="downloads_usage_queue_label">Progreso de la atendovico</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>

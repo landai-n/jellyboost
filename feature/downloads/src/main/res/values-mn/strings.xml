@@ -2,7 +2,9 @@
 <resources>
     <string name="downloads_tab_downloaded">Татсан</string>
     <string name="downloads_tab_queue">Дараалал</string>
-    <string name="downloads_wifi_only">Зөвхөн Wi-Fi</string>
+    <string name="downloads_wifi_wait_title">Wi-Fi хүлээж байна</string>
+    <string name="downloads_wifi_wait_body">Мобайл дата холболт дээр дараалал түр зогссон.</string>
+    <string name="downloads_wifi_wait_action">«Зөвхөн Wi-Fi»-г унтраах</string>
     <string name="downloads_screen_title">Татсан</string>
 
     <string name="downloads_section_movies">Кино</string>
@@ -25,14 +27,12 @@
     <string name="downloads_storage_free">%1$s чөлөөтэй</string>
     <string name="downloads_stat_on_device">Энэ төхөөрөмж дээр</string>
     <string name="downloads_stat_queue">Дараалал</string>
-    <string name="downloads_stat_network">Сүлжээ</string>
     <string name="downloads_stat_free_of">%2$s-с %1$s чөлөөтэй</string>
     <plurals name="downloads_stat_queue_items">
         <item quantity="one">%1$d зүйл · %2$s</item>
         <item quantity="other">%1$d зүйл · %2$s</item>
     </plurals>
     <string name="downloads_stat_eta_about">ойролцоогоор %1$s үлдсэн</string>
-    <string name="downloads_stat_network_helper">Мобайл дата дээр автоматаар түр зогсдог</string>
     <string name="downloads_usage_storage_label">Ашигласан сан</string>
     <string name="downloads_usage_queue_label">Дарааллын явц</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>

@@ -2,7 +2,9 @@
 <resources>
     <string name="downloads_tab_downloaded">Staženo</string>
     <string name="downloads_tab_queue">Fronta</string>
-    <string name="downloads_wifi_only">Pouze Wi-Fi</string>
+    <string name="downloads_wifi_wait_title">Čeká se na Wi-Fi</string>
+    <string name="downloads_wifi_wait_body">Fronta je pozastavena na mobilním připojení.</string>
+    <string name="downloads_wifi_wait_action">Vypnout Pouze Wi-Fi</string>
     <string name="downloads_screen_title">Stahování</string>
 
     <string name="downloads_section_movies">Filmy</string>
@@ -29,7 +31,6 @@
     <string name="downloads_storage_free">%1$s volno</string>
     <string name="downloads_stat_on_device">V tomto zařízení</string>
     <string name="downloads_stat_queue">Fronta</string>
-    <string name="downloads_stat_network">Síť</string>
     <string name="downloads_stat_free_of">%1$s volno z %2$s</string>
     <plurals name="downloads_stat_queue_items">
         <item quantity="one">%1$d položka · %2$s</item>
@@ -38,7 +39,6 @@
         <item quantity="other">%1$d položek · %2$s</item>
     </plurals>
     <string name="downloads_stat_eta_about">Zbývá přibližně %1$s</string>
-    <string name="downloads_stat_network_helper">Automaticky pozastaveno u mobilních dat</string>
     <string name="downloads_usage_storage_label">Využité úložiště</string>
     <string name="downloads_usage_queue_label">Průběh fronty</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>

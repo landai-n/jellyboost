@@ -2,7 +2,9 @@
 <resources>
     <string name="downloads_tab_downloaded">Преузето</string>
     <string name="downloads_tab_queue">Ред чекања</string>
-    <string name="downloads_wifi_only">Само Wi‑Fi</string>
+    <string name="downloads_wifi_wait_title">Чека се Wi‑Fi</string>
+    <string name="downloads_wifi_wait_body">Ред је паузиран на овој мобилној вези.</string>
+    <string name="downloads_wifi_wait_action">Искључи „Само Wi‑Fi“</string>
     <string name="downloads_screen_title">Преузимања</string>
 
     <string name="downloads_section_movies">Филмови</string>
@@ -27,7 +29,6 @@
     <string name="downloads_storage_free">%1$s слободно</string>
     <string name="downloads_stat_on_device">На овом уређају</string>
     <string name="downloads_stat_queue">Ред чекања</string>
-    <string name="downloads_stat_network">Мрежа</string>
     <string name="downloads_stat_free_of">%1$s слободно од %2$s</string>
     <plurals name="downloads_stat_queue_items">
         <item quantity="one">%1$d ставка · %2$s</item>
@@ -35,7 +36,6 @@
         <item quantity="other">%1$d ставки · %2$s</item>
     </plurals>
     <string name="downloads_stat_eta_about">Још приближно %1$s</string>
-    <string name="downloads_stat_network_helper">Аутоматски се паузира на мобилним подацима</string>
     <string name="downloads_usage_storage_label">Искоришћено складиште</string>
     <string name="downloads_usage_queue_label">Напредак реда чекања</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>

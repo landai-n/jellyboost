@@ -2,7 +2,9 @@
 <resources>
     <string name="downloads_tab_downloaded">Afgelaai</string>
     <string name="downloads_tab_queue">Wagtou</string>
-    <string name="downloads_wifi_only">Slegs Wi‑Fi</string>
+    <string name="downloads_wifi_wait_title">Wag vir Wi‑Fi</string>
+    <string name="downloads_wifi_wait_body">Die tou is op hierdie selfoonverbinding onderbreek.</string>
+    <string name="downloads_wifi_wait_action">Skakel Slegs Wi‑Fi af</string>
     <string name="downloads_screen_title">Aflaaie</string>
 
     <string name="downloads_section_movies">Flieks</string>
@@ -25,14 +27,12 @@
     <string name="downloads_storage_free">%1$s beskikbaar</string>
     <string name="downloads_stat_on_device">Op hierdie toestel</string>
     <string name="downloads_stat_queue">Wagtou</string>
-    <string name="downloads_stat_network">Netwerk</string>
     <string name="downloads_stat_free_of">%1$s beskikbaar uit %2$s</string>
     <plurals name="downloads_stat_queue_items">
         <item quantity="one">%1$d item · %2$s</item>
         <item quantity="other">%1$d items · %2$s</item>
     </plurals>
     <string name="downloads_stat_eta_about">sowat %1$s oor</string>
-    <string name="downloads_stat_network_helper">Outomaties onderbreek op mobiele data</string>
     <string name="downloads_usage_storage_label">Berging gebruik</string>
     <string name="downloads_usage_queue_label">Wagtouvordering</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>

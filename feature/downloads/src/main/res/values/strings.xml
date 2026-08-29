@@ -2,7 +2,13 @@
 <resources>
     <string name="downloads_tab_downloaded">Downloaded</string>
     <string name="downloads_tab_queue">Queue</string>
-    <string name="downloads_wifi_only">Wi‑Fi only</string>
+    <!-- The waiting-for-Wi‑Fi notice, drawn on the Downloads screen only while the Wi‑Fi-only
+         preference is currently what is holding the queue still. The switch itself lives in
+         Settings > Downloads; the action names that same row, and flips the same persistent
+         preference, so it must not read as a one-time exception. -->
+    <string name="downloads_wifi_wait_title">Waiting for Wi‑Fi</string>
+    <string name="downloads_wifi_wait_body">The queue is paused on this cellular connection.</string>
+    <string name="downloads_wifi_wait_action">Turn off Wi‑Fi only</string>
 
     <!-- Screen header (top-level tab — no back button). -->
     <string name="downloads_screen_title">Downloads</string>
@@ -40,7 +46,6 @@
     <!-- Wide-layout tablet stat panels. Eyebrow labels are uppercased in code. -->
     <string name="downloads_stat_on_device">On this device</string>
     <string name="downloads_stat_queue">Queue</string>
-    <string name="downloads_stat_network">Network</string>
     <!-- "ON THIS DEVICE" panel's caption: available space against the storage total. -->
     <string name="downloads_stat_free_of">%1$s free of %2$s</string>
     <!-- "QUEUE" panel's value line: how many rows are queued and how much is still to transfer. -->
@@ -52,8 +57,6 @@
          (downloads_eta_approx), since the queue's aggregate remainder can carry the same
          projection/ceiling uncertainty any one row's own total does. -->
     <string name="downloads_stat_eta_about">about %1$s left</string>
-    <!-- "NETWORK" panel's caption, shown only while Wi‑Fi-only is on. -->
-    <string name="downloads_stat_network_helper">Paused automatically on cellular</string>
 
     <!-- Screen-reader labels for the two hand-rolled usage bars, which draw a fraction and no text.
          "23 percent" of what is the question the label answers. -->

@@ -2,7 +2,9 @@
 <resources>
     <string name="downloads_tab_downloaded">Lastet ned</string>
     <string name="downloads_tab_queue">Kø</string>
-    <string name="downloads_wifi_only">Bare Wi‑Fi</string>
+    <string name="downloads_wifi_wait_title">Venter på Wi‑Fi</string>
+    <string name="downloads_wifi_wait_body">Køen er satt på pause på denne mobilforbindelsen.</string>
+    <string name="downloads_wifi_wait_action">Slå av Bare Wi‑Fi</string>
     <string name="downloads_screen_title">Nedlastinger</string>
 
     <string name="downloads_section_movies">Filmer</string>
@@ -25,14 +27,12 @@
     <string name="downloads_storage_free">%1$s ledig</string>
     <string name="downloads_stat_on_device">På denne enheten</string>
     <string name="downloads_stat_queue">Kø</string>
-    <string name="downloads_stat_network">Nettverk</string>
     <string name="downloads_stat_free_of">%1$s ledig av %2$s</string>
     <plurals name="downloads_stat_queue_items">
         <item quantity="one">%1$d element · %2$s</item>
         <item quantity="other">%1$d elementer · %2$s</item>
     </plurals>
     <string name="downloads_stat_eta_about">omtrent %1$s igjen</string>
-    <string name="downloads_stat_network_helper">Settes automatisk på pause ved mobildata</string>
     <string name="downloads_usage_storage_label">Brukt lagringsplass</string>
     <string name="downloads_usage_queue_label">Fremdrift i køen</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>

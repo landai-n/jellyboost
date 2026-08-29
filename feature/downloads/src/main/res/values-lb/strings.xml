@@ -2,7 +2,9 @@
 <resources>
     <string name="downloads_tab_downloaded">Erofgeluede</string>
     <string name="downloads_tab_queue">Warteschlaang</string>
-    <string name="downloads_wifi_only">Nëmmen WLAN</string>
+    <string name="downloads_wifi_wait_title">Waarden op WLAN</string>
+    <string name="downloads_wifi_wait_body">D\'Waardeschlaang ass op dëser Mobilfunkverbindung ugehalen.</string>
+    <string name="downloads_wifi_wait_action">Nëmmen WLAN ausschalten</string>
     <string name="downloads_screen_title">Downloads</string>
 
     <string name="downloads_section_movies">Filmer</string>
@@ -25,14 +27,12 @@
     <string name="downloads_storage_free">%1$s fräi</string>
     <string name="downloads_stat_on_device">Op dësem Apparat</string>
     <string name="downloads_stat_queue">Warteschlaang</string>
-    <string name="downloads_stat_network">Netzwierk</string>
     <string name="downloads_stat_free_of">%1$s fräi vun %2$s</string>
     <plurals name="downloads_stat_queue_items">
         <item quantity="one">%1$d Element · %2$s</item>
         <item quantity="other">%1$d Elementer · %2$s</item>
     </plurals>
     <string name="downloads_stat_eta_about">Nach ongeféier %1$s</string>
-    <string name="downloads_stat_network_helper">Gëtt automatesch pauséiert bei mobille Daten</string>
     <string name="downloads_usage_storage_label">Benotzte Späicherplaz</string>
     <string name="downloads_usage_queue_label">Fortschrëtt vun der Warteschlaang</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>

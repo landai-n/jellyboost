@@ -2,7 +2,9 @@
 <resources>
     <string name="downloads_tab_downloaded">Lejupielādēts</string>
     <string name="downloads_tab_queue">Rinda</string>
-    <string name="downloads_wifi_only">Tikai Wi‑Fi</string>
+    <string name="downloads_wifi_wait_title">Gaida Wi‑Fi</string>
+    <string name="downloads_wifi_wait_body">Rinda ir pauzēta šajā mobilo datu savienojumā.</string>
+    <string name="downloads_wifi_wait_action">Izslēgt Tikai Wi‑Fi</string>
     <string name="downloads_screen_title">Lejupielādes</string>
 
     <string name="downloads_section_movies">Filmas</string>
@@ -27,7 +29,6 @@
     <string name="downloads_storage_free">%1$s brīvs</string>
     <string name="downloads_stat_on_device">Šajā ierīcē</string>
     <string name="downloads_stat_queue">Rinda</string>
-    <string name="downloads_stat_network">Tīkls</string>
     <string name="downloads_stat_free_of">%1$s brīvs no %2$s</string>
     <plurals name="downloads_stat_queue_items">
         <item quantity="zero">%1$d vienumu · %2$s</item>
@@ -35,7 +36,6 @@
         <item quantity="other">%1$d vienumi · %2$s</item>
     </plurals>
     <string name="downloads_stat_eta_about">Atlicis aptuveni %1$s</string>
-    <string name="downloads_stat_network_helper">Automātiski tiek pauzēts, izmantojot mobilos datus</string>
     <string name="downloads_usage_storage_label">Izmantotā krātuve</string>
     <string name="downloads_usage_queue_label">Rindas norise</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>

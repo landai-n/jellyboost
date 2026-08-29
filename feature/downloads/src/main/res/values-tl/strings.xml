@@ -2,7 +2,9 @@
 <resources>
     <string name="downloads_tab_downloaded">Na-download</string>
     <string name="downloads_tab_queue">Pila</string>
-    <string name="downloads_wifi_only">Wi‑Fi lang</string>
+    <string name="downloads_wifi_wait_title">Naghihintay ng Wi‑Fi</string>
+    <string name="downloads_wifi_wait_body">Naka-pause ang pila sa mobile data connection na ito.</string>
+    <string name="downloads_wifi_wait_action">I-off ang Wi‑Fi lang</string>
     <string name="downloads_screen_title">Mga Download</string>
     <string name="downloads_section_movies">Mga Pelikula</string>
     <string name="downloads_section_series">Mga Serye</string>
@@ -23,14 +25,12 @@
     <string name="downloads_storage_free">%1$s libre</string>
     <string name="downloads_stat_on_device">Nasa device na ito</string>
     <string name="downloads_stat_queue">Pila</string>
-    <string name="downloads_stat_network">Network</string>
     <string name="downloads_stat_free_of">%1$s libre sa %2$s</string>
     <plurals name="downloads_stat_queue_items">
         <item quantity="one">%1$d item · %2$s</item>
         <item quantity="other">%1$d item · %2$s</item>
     </plurals>
     <string name="downloads_stat_eta_about">mga %1$s na lang</string>
-    <string name="downloads_stat_network_helper">Awtomatikong nape-pause sa mobile data</string>
     <string name="downloads_usage_storage_label">Nagamit na storage</string>
     <string name="downloads_usage_queue_label">Progreso ng pila</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>

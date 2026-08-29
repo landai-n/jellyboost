@@ -2,7 +2,9 @@
 <resources>
     <string name="downloads_tab_downloaded">Heruntergeladen</string>
     <string name="downloads_tab_queue">Warteschlange</string>
-    <string name="downloads_wifi_only">Nur WLAN</string>
+    <string name="downloads_wifi_wait_title">Warten auf WLAN</string>
+    <string name="downloads_wifi_wait_body">Die Warteschlange pausiert in diesem Mobilfunknetz.</string>
+    <string name="downloads_wifi_wait_action">Nur WLAN ausschalten</string>
     <string name="downloads_screen_title">Downloads</string>
 
     <string name="downloads_section_movies">Filme</string>
@@ -25,14 +27,12 @@
     <string name="downloads_storage_free">%1$s frei</string>
     <string name="downloads_stat_on_device">Auf diesem Gerät</string>
     <string name="downloads_stat_queue">Warteschlange</string>
-    <string name="downloads_stat_network">Netzwerk</string>
     <string name="downloads_stat_free_of">%1$s frei von %2$s</string>
     <plurals name="downloads_stat_queue_items">
         <item quantity="one">%1$d Element · %2$s</item>
         <item quantity="other">%1$d Elemente · %2$s</item>
     </plurals>
     <string name="downloads_stat_eta_about">Noch etwa %1$s</string>
-    <string name="downloads_stat_network_helper">Bei mobilen Daten automatisch pausiert</string>
     <string name="downloads_usage_storage_label">Belegter Speicher</string>
     <string name="downloads_usage_queue_label">Fortschritt der Warteschlange</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>

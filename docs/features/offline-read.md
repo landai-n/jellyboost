@@ -26,7 +26,7 @@ AppPreferences ──────┘
 
 | class | question it answers |
 |---|---|
-| `ConnectivityMonitor` / `AndroidConnectivityMonitor` | Is there a network at all? `registerDefaultNetworkCallback`, `NET_CAPABILITY_INTERNET`. |
+| `ConnectivityMonitor` / `AndroidConnectivityMonitor` | Is there a network at all (`hasNetwork`), and is it metered (`isMetered`)? One `registerDefaultNetworkCallback`, `NET_CAPABILITY_INTERNET` and `NET_CAPABILITY_NOT_METERED` off the same capabilities object. `isMetered` is `false` while there is no network — see [downloads](downloads.md#waiting-for-wi-fi), its only consumer. |
 | `ServerReachabilityProbe` | Does *our* server answer? 3 s `getPublicSystemInfo` per candidate address. |
 | `ConnectionStateProvider` | The single `StateFlow<ConnectionState>` everything reads. |
 

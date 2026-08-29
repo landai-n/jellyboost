@@ -105,10 +105,17 @@ internal fun JellyfinNavHost(
                 actions =
                     HomeActions(
                         onItemClick = { item -> navController.navigateToItem(item) },
-                        onPlay = { itemId, startPositionTicks ->
-                            navController.navigate(
-                                Routes.Player(itemId = itemId, startPositionTicks = startPositionTicks),
-                            )
+                        onPlay = { item ->
+                            when (playbackRouteFor(item.type)) {
+                                PlaybackRoute.MUSIC_QUEUE -> music.playResumed(item)
+                                PlaybackRoute.VIDEO_PLAYER ->
+                                    navController.navigate(
+                                        Routes.Player(
+                                            itemId = item.id,
+                                            startPositionTicks = item.userData.playbackPositionTicks,
+                                        ),
+                                    )
+                            }
                         },
                         onLibraryClick = { library -> navController.navigateToLibrary(library) },
                         // A tab switch, not a push: back stack and all, exactly as the nav bar's button.
@@ -136,10 +143,10 @@ internal fun JellyfinNavHost(
             DownloadsScreen(
                 viewModel = hiltViewModel(),
                 onPlay = { itemId, startPositionTicks, item ->
-                    // Routes.Player cannot play audio, so a downloaded track goes to the music queue;
-                    // the video route is the fallback only when the cached item was wiped and the
-                    // type is unknowable.
-                    if (item != null && item.type == ItemType.AUDIO) {
+                    // A wiped cache row leaves the kind unknowable, and only then does the video
+                    // route act as the fallback.
+                    val route = item?.let { playbackRouteFor(it.type) } ?: PlaybackRoute.VIDEO_PLAYER
+                    if (item != null && route == PlaybackRoute.MUSIC_QUEUE) {
                         music.playDownloadedAudio(item, startPositionTicks)
                     } else {
                         navController.navigate(

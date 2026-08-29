@@ -99,7 +99,7 @@ Scope, from the plan's "Confirmed decisions": **downloaded items only**, with on
 | surface | offline definition |
 |---|---|
 | My Media | cached `library_views`, in the server's own order |
-| Continue watching | downloads this device has a resume position for, most recent first |
+| Continue watching | downloaded **movies and episodes** this device has a resume position for, most recent first |
 | Next up | first unwatched downloaded episode of each series |
 | Latest *library* | most recently downloaded items of that library's **kinds**, episodes grouped into their series |
 | Library grid | downloaded items of that library's **kinds**, name-ordered (DECISIONS.md) |

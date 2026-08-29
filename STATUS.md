@@ -186,6 +186,18 @@ before the walk (DECISIONS 2026-08-28).
 
 ## Planned milestone: M13 — Music (approved 2026-08-05; all 6 phases landed, code complete; device DoD owed)
 
+**2026-08-29 — tracks no longer leak into the video resume surfaces (user-reported).**
+An in-progress track was appearing as the home hero, with a *Continue watching* eyebrow
+and an "S1 · E14" line built from its disc and track numbers, and its resume button opened
+the video player. Root cause was `ItemDao.resumeDownloaded`, which filtered on nothing but
+`source` and a position — the offline mirror of *Continue watching* was a superset of
+*Continue listening*, not its complement. It now takes the video kinds explicitly, and both
+online resume rows re-check the kind they asked `mediaTypes` for. Two guards behind it:
+`episodeNumberLabel()` answers only for episodes (the gate is the non-composable
+`episodeNumbering()`, so it is unit-testable), and Home's resume tap dispatches through
+`playbackRouteFor(type)`, which the Downloads row now shares. Continue Listening is
+unchanged.
+
 **2026-08-28 — the downloads presentation wave.** Five user-directed changes in
 one pass. The download row now records its **artist** (`artistName`, Room v11 →
 v12, still an `@AutoMigration`; the metadata refresh backfills older rows through

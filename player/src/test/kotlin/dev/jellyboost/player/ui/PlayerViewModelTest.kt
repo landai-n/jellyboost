@@ -4,6 +4,8 @@ import androidx.media3.common.PlaybackException
 import dev.jellyboost.core.common.AppError
 import dev.jellyboost.core.common.AppResult
 import dev.jellyboost.core.common.model.SegmentSkipMode
+import dev.jellyboost.core.common.model.SubtitleBackground
+import dev.jellyboost.core.common.model.SubtitleTextSize
 import dev.jellyboost.core.ui.text.UiText
 import dev.jellyboost.player.PlayMethod
 import dev.jellyboost.player.PlayerFixtures
@@ -799,5 +801,32 @@ internal class PlayerViewModelTest : PlayerViewModelFixture() {
             // argument is the better answer for it, so nothing is recorded over it.
             handle.get<Long>(PlayerViewModel.KEY_LIVE_POSITION_TICKS).shouldBeNull()
             handle.get<Long>(PlayerViewModel.ARG_START_TICKS) shouldBe RESUME_TICKS
+        }
+    // ---- subtitle appearance ------------------------------------------------------------------
+
+    @Test
+    fun `subtitle appearance starts out following the device`() =
+        runTest(dispatcher) {
+            val model = viewModel()
+            advanceUntilIdle()
+
+            model.uiState.value.subtitleTextSize shouldBe SubtitleTextSize.SYSTEM
+            model.uiState.value.subtitleBackground shouldBe SubtitleBackground.SYSTEM
+        }
+
+    @Test
+    fun `a subtitle appearance changed mid-playback reaches the item on screen`() =
+        runTest(dispatcher) {
+            // The difference from the styled-ASS switch, which is read once per player build: these
+            // two are collected, so Settings changes them under a playing item rather than the next.
+            val model = viewModel()
+            advanceUntilIdle()
+
+            subtitleTextSizeFlow.value = SubtitleTextSize.LARGER
+            subtitleBackgroundFlow.value = SubtitleBackground.NONE
+            advanceUntilIdle()
+
+            model.uiState.value.subtitleTextSize shouldBe SubtitleTextSize.LARGER
+            model.uiState.value.subtitleBackground shouldBe SubtitleBackground.NONE
         }
 }

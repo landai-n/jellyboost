@@ -62,6 +62,17 @@
     <string name="settings_dynamic_color_supporting">Pren la paleta del teu fons de pantalla en lloc del blau de Jellyfin.</string>
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_subtitle_size">Mida del text</string>
+    <string name="settings_subtitle_appearance_supporting">S\'aplica als subtítols que dibuixa Jellyboost. Els subtítols ASS amb estil conserven el seu.</string>
+    <string name="settings_subtitle_follow_device">Segueix el dispositiu</string>
+    <string name="settings_subtitle_size_small">Petita</string>
+    <string name="settings_subtitle_size_normal">Normal</string>
+    <string name="settings_subtitle_size_large">Gran</string>
+    <string name="settings_subtitle_size_larger">Més gran</string>
+    <string name="settings_subtitle_background">Fons</string>
+    <string name="settings_subtitle_background_none">Cap</string>
+    <string name="settings_subtitle_background_translucent">Translúcid</string>
+    <string name="settings_subtitle_background_solid">Sòlid</string>
     <string name="settings_styled_ass">Subtítols ASS amb estil</string>
     <string name="settings_styled_ass_supporting">Dibuixa ASS/SSA amb libass: tipografies, posició i efectes. Experimental; s\'aplica al pròxim vídeo que iniciïs quan no s\'estigui reproduint res més.</string>
     <string name="settings_hub_state_on">%1$s activat</string>

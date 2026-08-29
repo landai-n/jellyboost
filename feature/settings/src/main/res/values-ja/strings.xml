@@ -65,6 +65,17 @@
     <string name="settings_dynamic_color_supporting">Jellyfin のブルーではなく、壁紙から配色を取り込みます。</string>
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_subtitle_size">文字サイズ</string>
+    <string name="settings_subtitle_appearance_supporting">Jellyboost が描画する字幕に適用されます。スタイル付き ASS 字幕は独自のスタイルを保持します。</string>
+    <string name="settings_subtitle_follow_device">デバイスに合わせる</string>
+    <string name="settings_subtitle_size_small">小</string>
+    <string name="settings_subtitle_size_normal">標準</string>
+    <string name="settings_subtitle_size_large">大</string>
+    <string name="settings_subtitle_size_larger">特大</string>
+    <string name="settings_subtitle_background">背景</string>
+    <string name="settings_subtitle_background_none">なし</string>
+    <string name="settings_subtitle_background_translucent">半透明</string>
+    <string name="settings_subtitle_background_solid">不透明</string>
     <string name="settings_styled_ass">スタイル付き ASS 字幕</string>
     <string name="settings_styled_ass_supporting">libass で ASS/SSA を描画します（フォント、配置、エフェクト）。実験的機能で、他に再生中のものがないときに次に再生する動画から有効になります。</string>
     <string name="settings_hub_state_on">%1$s オン</string>

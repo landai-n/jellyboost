@@ -65,6 +65,17 @@
     <string name="settings_dynamic_color_supporting">从你的壁纸取配色，而不是 Jellyfin 蓝。</string>
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_subtitle_size">文字大小</string>
+    <string name="settings_subtitle_appearance_supporting">适用于 Jellyboost 自行绘制的字幕。带样式的 ASS 字幕保留自身样式。</string>
+    <string name="settings_subtitle_follow_device">跟随设备</string>
+    <string name="settings_subtitle_size_small">小</string>
+    <string name="settings_subtitle_size_normal">正常</string>
+    <string name="settings_subtitle_size_large">大</string>
+    <string name="settings_subtitle_size_larger">更大</string>
+    <string name="settings_subtitle_background">背景</string>
+    <string name="settings_subtitle_background_none">无</string>
+    <string name="settings_subtitle_background_translucent">半透明</string>
+    <string name="settings_subtitle_background_solid">不透明</string>
     <string name="settings_styled_ass">带样式的 ASS 字幕</string>
     <string name="settings_styled_ass_supporting">使用 libass 绘制 ASS/SSA：字体、定位与特效。实验性功能，在没有其他内容播放时，下次播放视频时生效。</string>
     <string name="settings_hub_state_on">%1$s 已开启</string>

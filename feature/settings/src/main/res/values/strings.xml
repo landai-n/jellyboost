@@ -33,6 +33,17 @@
     <string name="settings_pip">Picture‑in‑picture</string>
     <string name="settings_pip_supporting">Keep playing in a floating window when you leave the app.</string>
     <!-- "ASS/SSA" and "libass" are format and library names; never translated. -->
+    <string name="settings_subtitle_size">Text size</string>
+    <string name="settings_subtitle_appearance_supporting">Applies to subtitles Jellyboost draws. Styled ASS subtitles keep their own.</string>
+    <string name="settings_subtitle_follow_device">Follow the device</string>
+    <string name="settings_subtitle_size_small">Small</string>
+    <string name="settings_subtitle_size_normal">Normal</string>
+    <string name="settings_subtitle_size_large">Large</string>
+    <string name="settings_subtitle_size_larger">Larger</string>
+    <string name="settings_subtitle_background">Background</string>
+    <string name="settings_subtitle_background_none">None</string>
+    <string name="settings_subtitle_background_translucent">Translucent</string>
+    <string name="settings_subtitle_background_solid">Solid</string>
     <string name="settings_styled_ass">Styled ASS subtitles</string>
     <string name="settings_styled_ass_supporting">Draws ASS/SSA with libass: fonts, positioning and effects. Experimental; applies to the next video you start with nothing else playing.</string>
 

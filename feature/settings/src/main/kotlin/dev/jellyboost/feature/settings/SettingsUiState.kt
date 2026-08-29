@@ -2,6 +2,8 @@ package dev.jellyboost.feature.settings
 
 import dev.jellyboost.core.common.model.DownloadQuality
 import dev.jellyboost.core.common.model.SegmentSkipMode
+import dev.jellyboost.core.common.model.SubtitleBackground
+import dev.jellyboost.core.common.model.SubtitleTextSize
 import dev.jellyboost.core.common.model.ThemeMode
 import dev.jellyboost.data.downloads.model.StorageLocations
 import dev.jellyboost.data.downloads.model.StorageUsage
@@ -16,6 +18,8 @@ data class SettingsUiState(
     val pipOnLeave: Boolean = true,
     /** Read when the player is built, so the switch describes the *next* video, not the one playing. */
     val styledAssSubtitles: Boolean = false,
+    val subtitleTextSize: SubtitleTextSize = SubtitleTextSize.DEFAULT,
+    val subtitleBackground: SubtitleBackground = SubtitleBackground.DEFAULT,
     val downloadOverWifiOnly: Boolean = true,
     /** What future downloads are fetched at; the running queue keeps whatever it was enqueued with. */
     val downloadQuality: DownloadQuality = DownloadQuality.ORIGINAL,

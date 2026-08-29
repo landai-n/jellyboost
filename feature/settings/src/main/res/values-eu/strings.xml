@@ -62,6 +62,17 @@
     <string name="settings_dynamic_color_supporting">Paleta zure horma-paperetik hartzen du Jellyfinen urdinaren ordez.</string>
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_subtitle_size">Testu-tamaina</string>
+    <string name="settings_subtitle_appearance_supporting">Jellyboost-ek marrazten dituen azpitituluei aplikatzen zaie. Estiloa duten ASS azpitituluek berea gordetzen dute.</string>
+    <string name="settings_subtitle_follow_device">Jarraitu gailuari</string>
+    <string name="settings_subtitle_size_small">Txikia</string>
+    <string name="settings_subtitle_size_normal">Normala</string>
+    <string name="settings_subtitle_size_large">Handia</string>
+    <string name="settings_subtitle_size_larger">Handiagoa</string>
+    <string name="settings_subtitle_background">Atzeko planoa</string>
+    <string name="settings_subtitle_background_none">Bat ere ez</string>
+    <string name="settings_subtitle_background_translucent">Zeharrargia</string>
+    <string name="settings_subtitle_background_solid">Trinkoa</string>
     <string name="settings_styled_ass">Estiloa duten ASS azpitituluak</string>
     <string name="settings_styled_ass_supporting">ASS/SSA libass-ekin marrazten du: letra-tipoak, kokapena eta efektuak. Esperimentala; abiaraziko duzun hurrengo bideoari aplikatzen zaio, beste ezer erreproduzitzen ari ez denean.</string>
     <string name="settings_hub_state_on">%1$s aktibatuta</string>

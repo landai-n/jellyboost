@@ -68,6 +68,17 @@
     <string name="settings_dynamic_color_supporting">Převezme paletu z vaší tapety místo modré barvy Jellyfinu.</string>
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_subtitle_size">Velikost textu</string>
+    <string name="settings_subtitle_appearance_supporting">Platí pro titulky, které vykresluje Jellyboost. Stylované titulky ASS si ponechají vlastní styl.</string>
+    <string name="settings_subtitle_follow_device">Podle zařízení</string>
+    <string name="settings_subtitle_size_small">Malá</string>
+    <string name="settings_subtitle_size_normal">Normální</string>
+    <string name="settings_subtitle_size_large">Velká</string>
+    <string name="settings_subtitle_size_larger">Větší</string>
+    <string name="settings_subtitle_background">Pozadí</string>
+    <string name="settings_subtitle_background_none">Žádné</string>
+    <string name="settings_subtitle_background_translucent">Průsvitné</string>
+    <string name="settings_subtitle_background_solid">Plné</string>
     <string name="settings_styled_ass">Stylované titulky ASS</string>
     <string name="settings_styled_ass_supporting">Vykresluje ASS/SSA pomocí libass: písma, umístění a efekty. Experimentální; projeví se u příštího spuštěného videa, když nic jiného nehraje.</string>
     <string name="settings_hub_state_on">%1$s zapnuto</string>

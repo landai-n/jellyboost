@@ -6,6 +6,8 @@ import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.common.model.MediaSegmentKind
 import dev.jellyboost.core.common.model.SegmentSkipMode
+import dev.jellyboost.core.common.model.SubtitleBackground
+import dev.jellyboost.core.common.model.SubtitleTextSize
 import dev.jellyboost.core.datastore.AppPreferences
 import dev.jellyboost.core.network.ConnectionState
 import dev.jellyboost.core.network.connectivity.ConnectionStateProvider
@@ -108,6 +110,13 @@ internal abstract class PlayerViewModelFixture {
      */
     protected val syncPlayLocalSession = mockk<SyncPlayLocalSession>(relaxed = true)
 
+    /**
+     * Writable, unlike the flows above: these two are the only preferences the player is meant to
+     * follow *while* an item plays, so a test has to be able to move them mid-session.
+     */
+    protected val subtitleTextSizeFlow = MutableStateFlow(SubtitleTextSize.SYSTEM)
+    protected val subtitleBackgroundFlow = MutableStateFlow(SubtitleBackground.SYSTEM)
+
     /** The player preferences at their defaults; individual tests override what they exercise. */
     protected val preferences =
         mockk<AppPreferences> {
@@ -115,6 +124,8 @@ internal abstract class PlayerViewModelFixture {
             every { outroSkipMode } returns flowOf(SegmentSkipMode.SHOW_BUTTON)
             every { pipOnLeave } returns flowOf(true)
             every { styledAssSubtitles } returns flowOf(false)
+            every { subtitleTextSize } returns subtitleTextSizeFlow
+            every { subtitleBackground } returns subtitleBackgroundFlow
         }
 
     /** Off, so the handler flow stays null and neither the native library nor the context is touched. */

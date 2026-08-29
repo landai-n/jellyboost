@@ -61,6 +61,17 @@
     <string name="settings_dynamic_color_supporting">Lấy bảng màu từ hình nền của bạn thay cho màu xanh Jellyfin.</string>
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_subtitle_size">Cỡ chữ</string>
+    <string name="settings_subtitle_appearance_supporting">Áp dụng cho phụ đề do Jellyboost tự vẽ. Phụ đề ASS có kiểu dáng giữ kiểu của riêng nó.</string>
+    <string name="settings_subtitle_follow_device">Theo thiết bị</string>
+    <string name="settings_subtitle_size_small">Nhỏ</string>
+    <string name="settings_subtitle_size_normal">Bình thường</string>
+    <string name="settings_subtitle_size_large">Lớn</string>
+    <string name="settings_subtitle_size_larger">Lớn hơn</string>
+    <string name="settings_subtitle_background">Nền</string>
+    <string name="settings_subtitle_background_none">Không có</string>
+    <string name="settings_subtitle_background_translucent">Bán trong suốt</string>
+    <string name="settings_subtitle_background_solid">Đặc</string>
     <string name="settings_styled_ass">Phụ đề ASS có định dạng</string>
     <string name="settings_styled_ass_supporting">Vẽ ASS/SSA bằng libass: phông chữ, vị trí và hiệu ứng. Thử nghiệm; áp dụng cho video bạn mở tiếp theo khi không có gì khác đang phát.</string>
     <string name="settings_hub_state_on">%1$s đang bật</string>

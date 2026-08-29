@@ -9,6 +9,8 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import app.cash.turbine.test
 import dev.jellyboost.core.common.model.DownloadQuality
 import dev.jellyboost.core.common.model.SegmentSkipMode
+import dev.jellyboost.core.common.model.SubtitleBackground
+import dev.jellyboost.core.common.model.SubtitleTextSize
 import dev.jellyboost.core.common.model.ThemeMode
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -447,6 +449,59 @@ class DataStoreAppPreferencesTest {
 
                 preferences.setStyledAssSubtitles(false)
                 awaitItem() shouldBe false
+
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `subtitle appearance defaults to the device's own caption style`() =
+        runTest {
+            // The default has to be SYSTEM and not NORMAL: PlayerView untouched reads Android's
+            // CaptioningManager, so anything else would silently override a caption size a user set
+            // in accessibility settings, and would change how every existing install looks.
+            val preferences = DataStoreAppPreferences(dataStore(this))
+
+            preferences.subtitleTextSize.first() shouldBe SubtitleTextSize.SYSTEM
+            preferences.subtitleBackground.first() shouldBe SubtitleBackground.SYSTEM
+        }
+
+    @Test
+    fun `a chosen subtitle size and background survive a round trip through storage`() =
+        runTest {
+            val store = dataStore(this)
+
+            DataStoreAppPreferences(store).setSubtitleTextSize(SubtitleTextSize.LARGER)
+            DataStoreAppPreferences(store).setSubtitleBackground(SubtitleBackground.NONE)
+
+            DataStoreAppPreferences(store).subtitleTextSize.first() shouldBe SubtitleTextSize.LARGER
+            DataStoreAppPreferences(store).subtitleBackground.first() shouldBe SubtitleBackground.NONE
+        }
+
+    @Test
+    fun `a stored subtitle appearance this build cannot read decodes to the device default`() =
+        runTest {
+            val store = dataStore(this)
+            store.edit {
+                it[stringPreferencesKey(PreferenceKeys.SUBTITLE_TEXT_SIZE)] = "GIGANTIC"
+                it[stringPreferencesKey(PreferenceKeys.SUBTITLE_BACKGROUND)] = "RAINBOW"
+            }
+
+            // A downgrade, or a renamed constant: reads as a fresh install rather than throwing.
+            DataStoreAppPreferences(store).subtitleTextSize.first() shouldBe SubtitleTextSize.SYSTEM
+            DataStoreAppPreferences(store).subtitleBackground.first() shouldBe SubtitleBackground.SYSTEM
+        }
+
+    @Test
+    fun `emits every subtitle size change to observers`() =
+        runTest {
+            val preferences = DataStoreAppPreferences(dataStore(this))
+
+            preferences.subtitleTextSize.test {
+                awaitItem() shouldBe SubtitleTextSize.SYSTEM
+
+                preferences.setSubtitleTextSize(SubtitleTextSize.LARGE)
+                awaitItem() shouldBe SubtitleTextSize.LARGE
 
                 cancelAndIgnoreRemainingEvents()
             }

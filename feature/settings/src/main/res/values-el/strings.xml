@@ -66,6 +66,17 @@
     <string name="settings_dynamic_color_supporting">Παίρνει την παλέτα από την ταπετσαρία σας αντί για το μπλε του Jellyfin.</string>
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_subtitle_size">Μέγεθος κειμένου</string>
+    <string name="settings_subtitle_appearance_supporting">Ισχύει για τους υπότιτλους που σχεδιάζει το Jellyboost. Οι υπότιτλοι ASS με στυλ διατηρούν το δικό τους.</string>
+    <string name="settings_subtitle_follow_device">Παρακολούθηση συσκευής</string>
+    <string name="settings_subtitle_size_small">Μικρό</string>
+    <string name="settings_subtitle_size_normal">Κανονικό</string>
+    <string name="settings_subtitle_size_large">Μεγάλο</string>
+    <string name="settings_subtitle_size_larger">Μεγαλύτερο</string>
+    <string name="settings_subtitle_background">Φόντο</string>
+    <string name="settings_subtitle_background_none">Κανένα</string>
+    <string name="settings_subtitle_background_translucent">Ημιδιαφανές</string>
+    <string name="settings_subtitle_background_solid">Συμπαγές</string>
     <string name="settings_styled_ass">Υπότιτλοι ASS με στυλ</string>
     <string name="settings_styled_ass_supporting">Σχεδιάζει ASS/SSA με libass: γραμματοσειρές, τοποθέτηση και εφέ. Πειραματικό· ισχύει από το επόμενο βίντεο, όταν δεν αναπαράγεται τίποτε άλλο.</string>
     <string name="settings_hub_state_on">%1$s ενεργό</string>

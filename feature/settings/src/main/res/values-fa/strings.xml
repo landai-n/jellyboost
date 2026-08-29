@@ -66,6 +66,17 @@
     <string name="settings_dynamic_color_supporting">پالت را به جای آبی Jellyfin از تصویر زمینه شما می‌گیرد.</string>
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_subtitle_size">اندازهٔ متن</string>
+    <string name="settings_subtitle_appearance_supporting">برای زیرنویس‌هایی که Jellyboost خودش رسم می‌کند اعمال می‌شود. زیرنویس‌های ASS سبک‌دار سبک خود را حفظ می‌کنند.</string>
+    <string name="settings_subtitle_follow_device">پیروی از دستگاه</string>
+    <string name="settings_subtitle_size_small">کوچک</string>
+    <string name="settings_subtitle_size_normal">عادی</string>
+    <string name="settings_subtitle_size_large">بزرگ</string>
+    <string name="settings_subtitle_size_larger">بزرگ‌تر</string>
+    <string name="settings_subtitle_background">پس‌زمینه</string>
+    <string name="settings_subtitle_background_none">بدون</string>
+    <string name="settings_subtitle_background_translucent">نیمه‌شفاف</string>
+    <string name="settings_subtitle_background_solid">توپر</string>
     <string name="settings_styled_ass">زیرنویس‌های ASS سبک‌دار</string>
     <string name="settings_styled_ass_supporting">ASS/SSA را با libass می‌کشد: قلم‌ها، موقعیت و جلوه‌ها. آزمایشی؛ وقتی چیز دیگری در حال پخش نباشد، از ویدیوی بعدی اعمال می‌شود.</string>
     <string name="settings_hub_state_on">%1$s روشن</string>

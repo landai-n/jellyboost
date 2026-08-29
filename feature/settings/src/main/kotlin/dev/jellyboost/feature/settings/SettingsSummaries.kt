@@ -58,8 +58,10 @@ internal sealed interface SummaryPart {
 internal const val SUMMARY_SEPARATOR = " · "
 
 /**
- * Intro rather than outro, and the skip choice before picture-in-picture: one row cannot hold four
- * preferences, so it leads with the two a user is most likely to have changed.
+ * Intro rather than outro, and the skip choice before picture-in-picture: one row cannot hold the
+ * page's six preferences, so it leads with the two a user is most likely to have changed. The
+ * subtitle-appearance pair is deliberately not among them — both default to following the device,
+ * and a summary that named a setting nobody had touched would crowd out the two that say something.
  */
 internal fun playbackSummary(
     introSkipMode: SegmentSkipMode,

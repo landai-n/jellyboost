@@ -62,6 +62,17 @@
     <string name="settings_dynamic_color_supporting">Paleti Jellyfin mavisi yerine duvar kağıdınızdan alır.</string>
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_subtitle_size">Metin boyutu</string>
+    <string name="settings_subtitle_appearance_supporting">Jellyboost\'un kendi çizdiği altyazılar için geçerlidir. Biçemli ASS altyazıları kendi biçemini korur.</string>
+    <string name="settings_subtitle_follow_device">Cihazı izle</string>
+    <string name="settings_subtitle_size_small">Küçük</string>
+    <string name="settings_subtitle_size_normal">Normal</string>
+    <string name="settings_subtitle_size_large">Büyük</string>
+    <string name="settings_subtitle_size_larger">Daha büyük</string>
+    <string name="settings_subtitle_background">Arka plan</string>
+    <string name="settings_subtitle_background_none">Yok</string>
+    <string name="settings_subtitle_background_translucent">Yarı saydam</string>
+    <string name="settings_subtitle_background_solid">Düz</string>
     <string name="settings_styled_ass">Biçimli ASS altyazıları</string>
     <string name="settings_styled_ass_supporting">ASS/SSA\'yı libass ile çizer: yazı tipleri, konumlandırma ve efektler. Deneysel; başka bir şey çalmıyorken başlattığınız bir sonraki videoda geçerli olur.</string>
     <string name="settings_hub_state_on">%1$s açık</string>

@@ -344,11 +344,14 @@ internal fun choiceRowDescription(
  *
  * The caption is drawn but not *spoken*: every row carries [label] in its own description, which is
  * the only association a reader can rely on — a caption above a group is just a nearby sentence.
+ * [supportingText] is silenced for the same reason and stays a visual aid; a group whose caveat a
+ * screen-reader user needs must put it in the rows' own descriptions instead.
  */
 @Composable
 internal fun SettingsChoiceGroup(
     label: String,
     modifier: Modifier = Modifier,
+    supportingText: String? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
@@ -362,9 +365,23 @@ internal fun SettingsChoiceGroup(
                         start = Dimens.ScreenPadding,
                         end = Dimens.ScreenPadding,
                         top = Dimens.SpaceMedium,
-                        bottom = Dimens.SpaceExtraSmall,
+                        bottom = if (supportingText == null) Dimens.SpaceExtraSmall else 0.dp,
                     ).clearAndSetSemantics {},
         )
+        supportingText?.let { caption ->
+            Text(
+                text = caption,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier =
+                    Modifier
+                        .padding(
+                            start = Dimens.ScreenPadding,
+                            end = Dimens.ScreenPadding,
+                            bottom = Dimens.SpaceExtraSmall,
+                        ).clearAndSetSemantics {},
+            )
+        }
         Column(modifier = Modifier.selectableGroup(), content = content)
     }
 }

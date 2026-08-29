@@ -66,6 +66,17 @@
     <string name="settings_dynamic_color_supporting">Jellyfin-ий цэнхэрийн оронд дэлгэцийн зургаас өнгө авна.</string>
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_subtitle_size">Текстийн хэмжээ</string>
+    <string name="settings_subtitle_appearance_supporting">Jellyboost өөрөө зурдаг хадмал дээр үйлчилнэ. Загварласан ASS хадмал өөрийн загвараа хадгална.</string>
+    <string name="settings_subtitle_follow_device">Төхөөрөмжийг дагах</string>
+    <string name="settings_subtitle_size_small">Жижиг</string>
+    <string name="settings_subtitle_size_normal">Хэвийн</string>
+    <string name="settings_subtitle_size_large">Том</string>
+    <string name="settings_subtitle_size_larger">Илүү том</string>
+    <string name="settings_subtitle_background">Дэвсгэр</string>
+    <string name="settings_subtitle_background_none">Байхгүй</string>
+    <string name="settings_subtitle_background_translucent">Хагас тунгалаг</string>
+    <string name="settings_subtitle_background_solid">Дүүрэн</string>
     <string name="settings_styled_ass">Загварчилсан ASS хадмал</string>
     <string name="settings_styled_ass_supporting">ASS/SSA-г libass-ээр зурна: фонт, байрлал, эффект. Туршилтын; өөр юу ч тоглогдоогүй үед дараагийн эхлүүлэх видеонд үйлчилнэ.</string>
     <string name="settings_hub_state_on">%1$s асаалттай</string>

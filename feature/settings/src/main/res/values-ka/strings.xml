@@ -62,6 +62,17 @@
     <string name="settings_dynamic_color_supporting">პალიტრას თქვენი ფონიდან იღებს Jellyfin-ის ლურჯის ნაცვლად.</string>
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_subtitle_size">ტექსტის ზომა</string>
+    <string name="settings_subtitle_appearance_supporting">ვრცელდება სუბტიტრებზე, რომლებსაც Jellyboost თავად ხატავს. სტილიზებული ASS სუბტიტრები ინარჩუნებენ საკუთარს.</string>
+    <string name="settings_subtitle_follow_device">მოწყობილობის მიხედვით</string>
+    <string name="settings_subtitle_size_small">პატარა</string>
+    <string name="settings_subtitle_size_normal">ჩვეულებრივი</string>
+    <string name="settings_subtitle_size_large">დიდი</string>
+    <string name="settings_subtitle_size_larger">უფრო დიდი</string>
+    <string name="settings_subtitle_background">ფონი</string>
+    <string name="settings_subtitle_background_none">არცერთი</string>
+    <string name="settings_subtitle_background_translucent">გამჭვირვალე</string>
+    <string name="settings_subtitle_background_solid">მკვრივი</string>
     <string name="settings_styled_ass">სტილიზებული ASS სუბტიტრები</string>
     <string name="settings_styled_ass_supporting">ხატავს ASS/SSA-ს libass-ით: შრიფტები, განლაგება და ეფექტები. ექსპერიმენტული; ამოქმედდება შემდეგ გაშვებულ ვიდეოზე, როცა სხვა არაფერი უკრავს.</string>
     <string name="settings_hub_state_on">%1$s ჩართულია</string>

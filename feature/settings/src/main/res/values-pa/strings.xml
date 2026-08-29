@@ -66,6 +66,17 @@
     <string name="settings_dynamic_color_supporting">Jellyfin ਦੇ ਨੀਲੇ ਦੀ ਬਜਾਏ ਤੁਹਾਡੇ ਵਾਲਪੇਪਰ ਤੋਂ ਰੰਗ ਲੈਂਦਾ ਹੈ।</string>
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_subtitle_size">ਲਿਖਤ ਦਾ ਆਕਾਰ</string>
+    <string name="settings_subtitle_appearance_supporting">ਉਹਨਾਂ ਸਬਟਾਈਟਲਾਂ ਉੱਤੇ ਲਾਗੂ ਹੁੰਦਾ ਹੈ ਜੋ Jellyboost ਆਪ ਬਣਾਉਂਦਾ ਹੈ। ਸਟਾਈਲ ਕੀਤੇ ASS ਸਬਟਾਈਟਲ ਆਪਣਾ ਸਟਾਈਲ ਰੱਖਦੇ ਹਨ।</string>
+    <string name="settings_subtitle_follow_device">ਡਿਵਾਈਸ ਦੇ ਅਨੁਸਾਰ</string>
+    <string name="settings_subtitle_size_small">ਛੋਟਾ</string>
+    <string name="settings_subtitle_size_normal">ਸਧਾਰਨ</string>
+    <string name="settings_subtitle_size_large">ਵੱਡਾ</string>
+    <string name="settings_subtitle_size_larger">ਹੋਰ ਵੱਡਾ</string>
+    <string name="settings_subtitle_background">ਪਿਛੋਕੜ</string>
+    <string name="settings_subtitle_background_none">ਕੋਈ ਨਹੀਂ</string>
+    <string name="settings_subtitle_background_translucent">ਪਾਰਦਰਸ਼ੀ</string>
+    <string name="settings_subtitle_background_solid">ਠੋਸ</string>
     <string name="settings_styled_ass">ਸਟਾਈਲ ਵਾਲੇ ASS ਸਬਟਾਈਟਲ</string>
     <string name="settings_styled_ass_supporting">libass ਨਾਲ ASS/SSA ਬਣਾਉਂਦਾ ਹੈ: ਫੌਂਟ, ਸਥਿਤੀ ਅਤੇ ਪ੍ਰਭਾਵ। ਪ੍ਰਯੋਗਾਤਮਕ; ਜਦੋਂ ਹੋਰ ਕੁਝ ਨਾ ਚੱਲ ਰਿਹਾ ਹੋਵੇ, ਅਗਲੀ ਵਾਰ ਵੀਡੀਓ ਚਲਾਉਣ \'ਤੇ ਲਾਗੂ ਹੋਵੇਗਾ।</string>
     <string name="settings_hub_state_on">%1$s ਚਾਲੂ</string>

@@ -34,6 +34,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.jellyboost.core.common.model.DownloadQuality
 import dev.jellyboost.core.common.model.SegmentSkipMode
+import dev.jellyboost.core.common.model.SubtitleBackground
+import dev.jellyboost.core.common.model.SubtitleTextSize
 import dev.jellyboost.core.common.model.ThemeMode
 import dev.jellyboost.core.ui.component.ScreenHeader
 import dev.jellyboost.core.ui.component.ScreenHeaderTitle
@@ -89,6 +91,8 @@ data class SettingsActions(
     val onOutroSkipMode: (SegmentSkipMode) -> Unit,
     val onPipOnLeave: (Boolean) -> Unit,
     val onStyledAssSubtitles: (Boolean) -> Unit,
+    val onSubtitleTextSize: (SubtitleTextSize) -> Unit,
+    val onSubtitleBackground: (SubtitleBackground) -> Unit,
     val onWifiOnly: (Boolean) -> Unit,
     val onDownloadQuality: (DownloadQuality) -> Unit,
     val onStorageLocation: (String, Boolean) -> Unit,
@@ -112,6 +116,8 @@ internal fun rememberSettingsActions(viewModel: SettingsViewModel): SettingsActi
             onOutroSkipMode = viewModel::setOutroSkipMode,
             onPipOnLeave = viewModel::setPipOnLeave,
             onStyledAssSubtitles = viewModel::setStyledAssSubtitles,
+            onSubtitleTextSize = viewModel::setSubtitleTextSize,
+            onSubtitleBackground = viewModel::setSubtitleBackground,
             onWifiOnly = viewModel::setDownloadOverWifiOnly,
             onDownloadQuality = viewModel::setDownloadQuality,
             onStorageLocation = viewModel::setStorageLocation,
@@ -348,6 +354,8 @@ private val PreviewActions =
         onOutroSkipMode = {},
         onPipOnLeave = {},
         onStyledAssSubtitles = {},
+        onSubtitleTextSize = {},
+        onSubtitleBackground = {},
         onWifiOnly = {},
         onDownloadQuality = {},
         onStorageLocation = { _, _ -> },

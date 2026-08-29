@@ -30,4 +30,8 @@ object PreferenceKeys {
     const val THEME_MODE = "theme_mode"
     const val DYNAMIC_COLOR_ENABLED = "dynamic_color_enabled"
     const val STYLED_ASS_SUBTITLES = "styled_ass_subtitles"
+
+    const val SUBTITLE_TEXT_SIZE = "subtitle_text_size"
+
+    const val SUBTITLE_BACKGROUND = "subtitle_background"
 }

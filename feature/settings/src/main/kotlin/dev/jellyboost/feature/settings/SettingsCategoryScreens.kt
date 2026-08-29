@@ -42,6 +42,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.jellyboost.core.common.formatBytes
 import dev.jellyboost.core.common.model.DownloadQuality
 import dev.jellyboost.core.common.model.SegmentSkipMode
+import dev.jellyboost.core.common.model.SubtitleBackground
+import dev.jellyboost.core.common.model.SubtitleTextSize
 import dev.jellyboost.core.common.model.ThemeMode
 import dev.jellyboost.core.ui.component.ConfirmDialog
 import dev.jellyboost.core.ui.component.GhostPillButton
@@ -195,10 +197,14 @@ internal fun SettingsCategoryBody(
                     outroSkipMode = state.outroSkipMode,
                     pipOnLeave = state.pipOnLeave,
                     styledAssSubtitles = state.styledAssSubtitles,
+                    subtitleTextSize = state.subtitleTextSize,
+                    subtitleBackground = state.subtitleBackground,
                     onIntroSkipMode = actions.onIntroSkipMode,
                     onOutroSkipMode = actions.onOutroSkipMode,
                     onPipOnLeave = actions.onPipOnLeave,
                     onStyledAssSubtitles = actions.onStyledAssSubtitles,
+                    onSubtitleTextSize = actions.onSubtitleTextSize,
+                    onSubtitleBackground = actions.onSubtitleBackground,
                 )
 
             SettingsPane.DOWNLOADS ->
@@ -254,15 +260,20 @@ private val PageContentPadding =
  * narrow the label column.
  */
 @Composable
+@Suppress("LongParameterList")
 private fun PlaybackPage(
     introSkipMode: SegmentSkipMode,
     outroSkipMode: SegmentSkipMode,
     pipOnLeave: Boolean,
     styledAssSubtitles: Boolean,
+    subtitleTextSize: SubtitleTextSize,
+    subtitleBackground: SubtitleBackground,
     onIntroSkipMode: (SegmentSkipMode) -> Unit,
     onOutroSkipMode: (SegmentSkipMode) -> Unit,
     onPipOnLeave: (Boolean) -> Unit,
     onStyledAssSubtitles: (Boolean) -> Unit,
+    onSubtitleTextSize: (SubtitleTextSize) -> Unit,
+    onSubtitleBackground: (SubtitleBackground) -> Unit,
 ) {
     SettingsSection(title = stringResource(R.string.settings_eyebrow_during_playback)) {
         SkipModeGroup(
@@ -285,12 +296,59 @@ private fun PlaybackPage(
         )
     }
     SettingsSection(title = stringResource(R.string.settings_eyebrow_subtitles)) {
+        SubtitleTextSizeGroup(selected = subtitleTextSize, onSelect = onSubtitleTextSize)
+        SettingsRowSeparator()
+        SubtitleBackgroundGroup(selected = subtitleBackground, onSelect = onSubtitleBackground)
+        SettingsRowSeparator()
         SettingsSwitchRow(
             label = stringResource(R.string.settings_styled_ass),
             supportingText = stringResource(R.string.settings_styled_ass_supporting),
             checked = styledAssSubtitles,
             onCheckedChange = onStyledAssSubtitles,
         )
+    }
+}
+
+/**
+ * The two appearance groups sit *above* the styled-ASS switch on purpose: they apply to every subtitle
+ * the app draws itself, while the switch below hands one format to a renderer that ignores them.
+ */
+@Composable
+private fun SubtitleTextSizeGroup(
+    selected: SubtitleTextSize,
+    onSelect: (SubtitleTextSize) -> Unit,
+) {
+    val label = stringResource(R.string.settings_subtitle_size)
+    SettingsChoiceGroup(
+        label = label,
+        supportingText = stringResource(R.string.settings_subtitle_appearance_supporting),
+    ) {
+        SubtitleTextSize.entries.forEach { size ->
+            SettingsChoiceRow(
+                groupLabel = label,
+                label = stringResource(size.labelRes()),
+                selected = size == selected,
+                onSelect = { onSelect(size) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun SubtitleBackgroundGroup(
+    selected: SubtitleBackground,
+    onSelect: (SubtitleBackground) -> Unit,
+) {
+    val label = stringResource(R.string.settings_subtitle_background)
+    SettingsChoiceGroup(label = label) {
+        SubtitleBackground.entries.forEach { background ->
+            SettingsChoiceRow(
+                groupLabel = label,
+                label = stringResource(background.labelRes()),
+                selected = background == selected,
+                onSelect = { onSelect(background) },
+            )
+        }
     }
 }
 
@@ -752,6 +810,23 @@ private fun openSourceCode(
 }
 
 private const val SOURCE_CODE_URL = "https://github.com/landai-n/jellyboost"
+
+private fun SubtitleTextSize.labelRes(): Int =
+    when (this) {
+        SubtitleTextSize.SYSTEM -> R.string.settings_subtitle_follow_device
+        SubtitleTextSize.SMALL -> R.string.settings_subtitle_size_small
+        SubtitleTextSize.NORMAL -> R.string.settings_subtitle_size_normal
+        SubtitleTextSize.LARGE -> R.string.settings_subtitle_size_large
+        SubtitleTextSize.LARGER -> R.string.settings_subtitle_size_larger
+    }
+
+private fun SubtitleBackground.labelRes(): Int =
+    when (this) {
+        SubtitleBackground.SYSTEM -> R.string.settings_subtitle_follow_device
+        SubtitleBackground.NONE -> R.string.settings_subtitle_background_none
+        SubtitleBackground.TRANSLUCENT -> R.string.settings_subtitle_background_translucent
+        SubtitleBackground.SOLID -> R.string.settings_subtitle_background_solid
+    }
 
 private fun DownloadQuality.labelRes(): Int =
     when (this) {

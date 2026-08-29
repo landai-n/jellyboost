@@ -61,6 +61,17 @@
     <string name="settings_dynamic_color_supporting">ใช้ชุดสีจากวอลเปเปอร์ของคุณแทนสีน้ำเงินของ Jellyfin</string>
 
     <!-- Styled ASS/SSA subtitles (M14 track 6) -->
+    <string name="settings_subtitle_size">ขนาดตัวอักษร</string>
+    <string name="settings_subtitle_appearance_supporting">ใช้กับคำบรรยายที่ Jellyboost วาดเอง คำบรรยาย ASS แบบมีสไตล์จะคงสไตล์ของตัวเองไว้</string>
+    <string name="settings_subtitle_follow_device">ตามอุปกรณ์</string>
+    <string name="settings_subtitle_size_small">เล็ก</string>
+    <string name="settings_subtitle_size_normal">ปกติ</string>
+    <string name="settings_subtitle_size_large">ใหญ่</string>
+    <string name="settings_subtitle_size_larger">ใหญ่ขึ้น</string>
+    <string name="settings_subtitle_background">พื้นหลัง</string>
+    <string name="settings_subtitle_background_none">ไม่มี</string>
+    <string name="settings_subtitle_background_translucent">โปร่งแสง</string>
+    <string name="settings_subtitle_background_solid">ทึบ</string>
     <string name="settings_styled_ass">คำบรรยาย ASS แบบมีสไตล์</string>
     <string name="settings_styled_ass_supporting">วาด ASS/SSA ด้วย libass: ฟอนต์ ตำแหน่ง และเอฟเฟกต์ อยู่ระหว่างทดลอง มีผลกับวิดีโอที่คุณเริ่มเล่นครั้งถัดไปเมื่อไม่มีสิ่งอื่นกำลังเล่นอยู่</string>
     <string name="settings_hub_state_on">%1$s เปิดอยู่</string>

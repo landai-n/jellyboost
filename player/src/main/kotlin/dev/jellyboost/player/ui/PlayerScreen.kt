@@ -68,6 +68,8 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import dev.jellyboost.core.common.model.MediaSegmentKind
+import dev.jellyboost.core.common.model.SubtitleBackground
+import dev.jellyboost.core.common.model.SubtitleTextSize
 import dev.jellyboost.core.ui.component.ErrorState
 import dev.jellyboost.core.ui.component.GhostPillButton
 import dev.jellyboost.core.ui.component.JellyboostSnackbarHost
@@ -217,6 +219,8 @@ internal fun PlayerScreen(
             VideoSurface(
                 player = player,
                 assSubtitleHandler = assSubtitleHandler,
+                subtitleTextSize = state.subtitleTextSize,
+                subtitleBackground = state.subtitleBackground,
                 modifier = Modifier.fillMaxSize(),
             )
         }
@@ -638,6 +642,8 @@ private fun rememberTouchExplorationEnabled(): Boolean {
 private fun VideoSurface(
     player: Player?,
     assSubtitleHandler: AssHandler?,
+    subtitleTextSize: SubtitleTextSize,
+    subtitleBackground: SubtitleBackground,
     modifier: Modifier = Modifier,
 ) {
     // Tracks what is *inside* the PlayerView, so it shares the view's lifetime rather than the
@@ -658,6 +664,10 @@ private fun VideoSurface(
         update = { view ->
             view.player = player
             view.applyAssOverlay(assSubtitleHandler, attached)
+            // In `update`, not `factory`: these two are collected preferences, so a change made in
+            // Settings under a playing item redraws the cue on screen rather than waiting for the
+            // next one. Scalars, so `update` runs only when one of them actually moves.
+            view.subtitleView?.applyAppearance(subtitleTextSize, subtitleBackground)
         },
         onRelease = { view ->
             view.player = null

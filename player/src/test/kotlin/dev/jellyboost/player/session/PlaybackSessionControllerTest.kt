@@ -20,6 +20,7 @@ import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -39,6 +40,7 @@ class PlaybackSessionControllerTest {
         PlaybackSessionController(
             resolver = resolver,
             mediaSourceFactory = mediaSourceFactory,
+            ioDispatcher = UnconfinedTestDispatcher(),
             playerHandle = playerHandle,
             reporter = reporter,
         )
@@ -154,6 +156,7 @@ class PlaybackSessionControllerTest {
                 PlaybackSessionController(
                     resolver = resolver,
                     mediaSourceFactory = mediaSourceFactory,
+                    ioDispatcher = UnconfinedTestDispatcher(),
                     playerHandle = playerHandle,
                     reporter = reporter,
                     handover = handover,
@@ -166,6 +169,44 @@ class PlaybackSessionControllerTest {
             // The report must complete before the player is let go — the arbiter's ordering invariant.
             transcript shouldContainExactly listOf("main hop", "stop report", "main hop")
             playerHandle.stopped shouldBe true
+        }
+
+    @Test
+    fun `the spec is built off the calling thread, because that is where the fonts are read`() =
+        runTest {
+            // Not a style point: `create` opens every attached font, and `open` runs on the main
+            // thread — `prepare` has to, since Media3 binds the player to this looper. Without the hop
+            // an item with a dozen attached faces opens a dozen files on the UI thread at playback
+            // start. The order matters too: the hop is over before `prepare`, so nothing about libass
+            // receiving its faces before the first track changes.
+            val transcript = mutableListOf<String>()
+            val recordingIo =
+                object : CoroutineDispatcher() {
+                    override fun dispatch(
+                        context: CoroutineContext,
+                        block: Runnable,
+                    ) {
+                        transcript += "io hop"
+                        block.run()
+                    }
+                }
+            every { mediaSourceFactory.create(any()) } answers {
+                transcript += "create"
+                spec
+            }
+            val controller =
+                PlaybackSessionController(
+                    resolver = resolver,
+                    mediaSourceFactory = mediaSourceFactory,
+                    ioDispatcher = recordingIo,
+                    playerHandle = playerHandle,
+                    reporter = reporter,
+                )
+
+            controller.open(request(), playWhenReady = true)
+
+            transcript shouldContainExactly listOf("io hop", "create")
+            playerHandle.prepared.size shouldBe 1
         }
 
     // ---- the cast state changing underneath a resolve ---------------------------------------------
@@ -186,6 +227,7 @@ class PlaybackSessionControllerTest {
                 PlaybackSessionController(
                     resolver = resolver,
                     mediaSourceFactory = mediaSourceFactory,
+                    ioDispatcher = UnconfinedTestDispatcher(),
                     playerHandle = playerHandle,
                     reporter = reporter,
                     castStatus = status,
@@ -213,6 +255,7 @@ class PlaybackSessionControllerTest {
                 PlaybackSessionController(
                     resolver = resolver,
                     mediaSourceFactory = mediaSourceFactory,
+                    ioDispatcher = UnconfinedTestDispatcher(),
                     playerHandle = playerHandle,
                     reporter = reporter,
                     castStatus = status,
@@ -232,6 +275,7 @@ class PlaybackSessionControllerTest {
                 PlaybackSessionController(
                     resolver = resolver,
                     mediaSourceFactory = mediaSourceFactory,
+                    ioDispatcher = UnconfinedTestDispatcher(),
                     playerHandle = playerHandle,
                     reporter = reporter,
                     castStatus = status,

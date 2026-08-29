@@ -1,10 +1,12 @@
 package dev.jellyboost.player.resolve
 
 import androidx.media3.common.MimeTypes
+import dev.jellyboost.core.common.runCatchingUnlessCancelled
 import dev.jellyboost.player.PlayMethod
 import dev.jellyboost.player.api.StreamUrlFactory
 import dev.jellyboost.player.model.AudioSidecarSpec
 import dev.jellyboost.player.model.FontSpec
+import dev.jellyboost.player.model.LocalFont
 import dev.jellyboost.player.model.LocalPlaybackMediaSource
 import dev.jellyboost.player.model.PlaybackMediaItemSpec
 import dev.jellyboost.player.model.PlaybackMediaSource
@@ -14,6 +16,7 @@ import dev.jellyboost.player.model.externalSubtitleTrackId
 import org.jellyfin.sdk.model.api.MediaProtocol
 import org.jellyfin.sdk.model.api.MediaStreamProtocol
 import timber.log.Timber
+import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -82,8 +85,24 @@ internal class ExoMediaSourceFactory
                     externalAudio.map { audio ->
                         AudioSidecarSpec(streamIndex = audio.index, uri = audio.uri)
                     },
-                fonts = fonts.map { font -> FontSpec(name = font.name, path = font.path) },
+                fonts = fonts.mapNotNull { font -> font.read() },
             )
+
+        /**
+         * Read here, on whatever thread builds the spec, because the only other place that could is
+         * `ExoPlayerHandle.prepare` — and that one runs on the player's looper.
+         * [PlaybackSessionController][dev.jellyboost.player.session.PlaybackSessionController] calls
+         * [create] on the IO dispatcher for this reason.
+         *
+         * A failure is permanent for that face — a truncated download, a blob FreeType will not parse
+         * — so it is dropped and the rest are still offered; a missing font costs a fallback family,
+         * never the video.
+         */
+        private fun LocalFont.read(): FontSpec? =
+            runCatchingUnlessCancelled { FontSpec(name = name, bytes = File(path).readBytes()) }
+                .onFailure { error ->
+                    Timber.w(error, "Attached font %s could not be read; its styles fall back", name)
+                }.getOrNull()
 
         /** A source the server pulls over HTTP (a live stream) is already a playlist and is handed over as-is. */
         private fun RemotePlaybackMediaSource.directPlayTarget(): Pair<String, String?>? =

@@ -15,6 +15,8 @@ import io.kotest.matchers.shouldBe
 import org.jellyfin.sdk.model.api.MediaProtocol
 import org.jellyfin.sdk.model.api.MediaStreamProtocol
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
+import java.io.File
 import java.util.UUID
 
 /**
@@ -277,25 +279,55 @@ class ExoMediaSourceFactoryTest {
     }
 
     @Test
-    fun `downloaded fonts reach the spec, and take no merge child`() {
+    fun `downloaded fonts are read into the spec, and take no merge child`(
+        @TempDir dir: File,
+    ) {
+        // Read here and not in `prepare`: that one runs on the player's looper, so the bytes have to
+        // already be in hand by the time it hands them to libass.
+        val face = dir.resolve("font.4.Face.ttf").apply { writeBytes(byteArrayOf(0, 1, 2)) }
+        val other = dir.resolve("font.5.Other.otf").apply { writeBytes(byteArrayOf(3, 4)) }
+
         val spec =
             factory.create(
                 PlayerFixtures.localSource(
                     fonts =
                         listOf(
-                            LocalFont(name = "font.4.Face.ttf", path = "/data/films/x/font.4.Face.ttf"),
-                            LocalFont(name = "font.5.Other.otf", path = "/data/films/x/font.5.Other.otf"),
+                            LocalFont(name = "font.4.Face.ttf", path = face.absolutePath),
+                            LocalFont(name = "font.5.Other.otf", path = other.absolutePath),
                         ),
                 ),
             )
 
         spec.shouldNotBeNull()
         spec.fonts.map { it.name } shouldContainExactly listOf("font.4.Face.ttf", "font.5.Other.otf")
-        spec.fonts.map { it.path } shouldContainExactly
-            listOf("/data/films/x/font.4.Face.ttf", "/data/films/x/font.5.Other.otf")
+        spec.fonts.map { it.bytes.toList() } shouldContainExactly
+            listOf(listOf<Byte>(0, 1, 2), listOf<Byte>(3, 4))
         // A font is not a track: nothing about the merge or the track ids changes because one is here.
         spec.audioSidecars.shouldBeEmpty()
         spec.subtitles.shouldBeEmpty()
+    }
+
+    @Test
+    fun `a font whose file is gone is dropped, and the rest still reach the spec`(
+        @TempDir dir: File,
+    ) {
+        // A missing or unreadable face costs a fallback family. Failing the whole spec would cost the
+        // video, which is the wrong trade for a subtitle's typeface.
+        val present = dir.resolve("font.5.Other.otf").apply { writeBytes(byteArrayOf(3, 4)) }
+
+        val spec =
+            factory.create(
+                PlayerFixtures.localSource(
+                    fonts =
+                        listOf(
+                            LocalFont(name = "font.4.Face.ttf", path = dir.resolve("gone.ttf").absolutePath),
+                            LocalFont(name = "font.5.Other.otf", path = present.absolutePath),
+                        ),
+                ),
+            )
+
+        spec.shouldNotBeNull()
+        spec.fonts.map { it.name } shouldContainExactly listOf("font.5.Other.otf")
     }
 
     @Test

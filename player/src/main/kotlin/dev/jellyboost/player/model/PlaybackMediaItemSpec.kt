@@ -24,16 +24,22 @@ internal data class PlaybackMediaItemSpec(
 )
 
 /**
- * One font file on this device, handed to libass rather than to ExoPlayer.
+ * One attached font, already read, on its way to libass rather than to ExoPlayer.
  *
- * @property path an absolute filesystem path, not a URI: the bytes are read by the app and passed to
- *   `Ass.addFont` through `AssSubtitleSupport.addFonts`. **Not `AssHandler.addFont`** — that one parks
- *   a face until after the renderer has already read its font list, which is the bug this exists to
- *   avoid; `AssSubtitleSupport.addFonts` carries the mechanism.
+ * Carries the bytes and not a path because the only thread allowed to hand them over is the main one:
+ * `Ass.addFont` has to land before the first `createTrack`, and `ExoPlayerHandle.prepare` runs on the
+ * player's looper. Reading the file there would put an unbounded number of opens on the UI thread, so
+ * [ExoMediaSourceFactory][dev.jellyboost.player.resolve.ExoMediaSourceFactory] reads them while it
+ * builds the spec — off the main thread — and only the native call is left for `prepare`.
+ *
+ * Not a `data class`: `ByteArray` equality is identity, so a generated `equals` would quietly lie.
+ *
+ * @property name the file name, kept for diagnostics only. libass matches a style to a face by the
+ *   family names it reads out of [bytes], never by this.
  */
-internal data class FontSpec(
+internal class FontSpec(
     val name: String,
-    val path: String,
+    val bytes: ByteArray,
 )
 
 /**

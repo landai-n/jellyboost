@@ -19,7 +19,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.stateIn
 import timber.log.Timber
-import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -129,17 +128,18 @@ internal class AssSubtitleSupport
          * from here it lands in the library while `prepare` is still running — before any track exists,
          * and so before the renderer that reads it.
          *
-         * **Blocking, deliberately.** The bytes have to be in the library before the first `createTrack`,
-         * and posting them to another thread reopens by luck exactly the race the paragraph above closes
-         * by construction. It is a local read of a few tens of KB per face on a path that is already
-         * doing file I/O to open the media.
+         * **Runs on the player's looper, and does no I/O.** The bytes have to reach the library before
+         * the first `createTrack`, so this call cannot be posted elsewhere without reopening by luck the
+         * race the paragraph above closes by construction — which is why [FontSpec] arrives already read.
+         * `ExoMediaSourceFactory` opens the files while it builds the spec, on the IO dispatcher
+         * `PlaybackSessionController` puts it on; what is left here is the native call alone.
          *
          * Never clears: [AssHandler] outlives the item, and dropping the accumulated set would also drop
          * the attachments an extractor added for a container playing right now. The bound is one video
          * session's items, at tens of KB a face, and a name collision resolves to the same face anyway.
          *
-         * A failure is per-font and permanent for that file — a truncated download, a blob FreeType will
-         * not parse — so it is logged and the rest are still offered.
+         * A failure is per-font and permanent for that face — a blob FreeType will not parse — so it is
+         * logged and the rest are still offered.
          */
         fun addFonts(fonts: List<FontSpec>) {
             if (fonts.isEmpty()) return
@@ -147,7 +147,7 @@ internal class AssSubtitleSupport
             var loaded = 0
             fonts.forEach { font ->
                 runCatchingUnlessCancelled {
-                    ass.addFont(font.name, File(font.path).readBytes())
+                    ass.addFont(font.name, font.bytes)
                     loaded++
                 }.onFailure { error ->
                     Timber.w(error, "Attached font %s did not load; its styles fall back", font.name)

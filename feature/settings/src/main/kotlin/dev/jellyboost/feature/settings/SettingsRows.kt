@@ -342,10 +342,14 @@ internal fun choiceRowDescription(
 /**
  * `selectableGroup()` is what tells TalkBack the rows belong together, so it announces "2 of 3".
  *
- * The caption is drawn but not *spoken*: every row carries [label] in its own description, which is
- * the only association a reader can rely on — a caption above a group is just a nearby sentence.
- * [supportingText] is silenced for the same reason and stays a visual aid; a group whose caveat a
- * screen-reader user needs must put it in the rows' own descriptions instead.
+ * [label] is drawn but not *spoken*: every row carries it in its own description already, which is the
+ * only association a reader can rely on — a caption above a group is just a nearby sentence — so
+ * leaving it audible would say it twice per row.
+ *
+ * [supportingText] is the opposite case and stays audible: no row repeats it, so silencing it is the
+ * one way to lose it entirely. It gets one traversal stop of its own, ahead of the rows, which is why
+ * it is for a caveat that governs the whole group and never for a per-row fact — that belongs in
+ * [SettingsChoiceRow]'s own `supportingText`, inside the row's description.
  */
 @Composable
 internal fun SettingsChoiceGroup(
@@ -379,7 +383,7 @@ internal fun SettingsChoiceGroup(
                             start = Dimens.ScreenPadding,
                             end = Dimens.ScreenPadding,
                             bottom = Dimens.SpaceExtraSmall,
-                        ).clearAndSetSemantics {},
+                        ),
             )
         }
         Column(modifier = Modifier.selectableGroup(), content = content)

@@ -2,6 +2,7 @@ package dev.jellyboost.player.session
 
 import dev.jellyboost.core.common.AppError
 import dev.jellyboost.core.common.AppResult
+import dev.jellyboost.core.common.di.IoDispatcher
 import dev.jellyboost.core.common.di.MainDispatcher
 import dev.jellyboost.player.cast.CastStatusHolder
 import dev.jellyboost.player.model.PlaybackMediaSource
@@ -52,6 +53,12 @@ internal class PlaybackSessionController
          * initializes the platform Main dispatcher, which a plain-JVM test cannot do.
          */
         @MainDispatcher private val mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
+        /**
+         * Where the spec is built, because that is where the attached fonts are read. No default,
+         * unlike [mainDispatcher]: nothing stops a plain-JVM test from naming its own, and a default
+         * would let a caller forget the hop that keeps those file reads off the UI thread.
+         */
+        @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     ) {
         /**
          * A cast state that changed underneath the resolve forces a re-resolve: preparing anyway
@@ -86,7 +93,11 @@ internal class PlaybackSessionController
                     is AppResult.Success -> result.value
                 }
 
-            val spec = mediaSourceFactory.create(resolved) ?: return SessionOpenResult.UnsupportedSource
+            // On IO, not here: building the spec reads every attached font off disk, and `open` runs on
+            // the main thread — `prepare` below has to, since Media3 binds the player to this looper.
+            val spec =
+                withContext(ioDispatcher) { mediaSourceFactory.create(resolved) }
+                    ?: return SessionOpenResult.UnsupportedSource
 
             // Must stay immediately before `prepare`: it suspends until whatever held the player
             // has closed its own server session, so a music queue's stop report lands before this

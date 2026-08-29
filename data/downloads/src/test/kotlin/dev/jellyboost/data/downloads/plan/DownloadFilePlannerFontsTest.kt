@@ -145,6 +145,39 @@ class DownloadFilePlannerFontsTest {
     }
 
     @Test
+    fun `an overlong font file name is bounded from the tail, so the extension survives`() {
+        // `takeLast`, not `take`: a name long enough to threaten ENAMETOOLONG is trimmed from the
+        // front, because the end is where the extension is and the front is where the padding is.
+        val plan =
+            planner.plan(
+                movie(
+                    streams = listOf(subtitleStream(index = 3, codec = "ass", external = false)),
+                    attachments = listOf(fontAttachment(index = 4, fileName = "A".repeat(500) + ".ttf")),
+                ),
+                DIRECTORY,
+                quality = DownloadQuality.LOW,
+            )
+
+        val font = plan.single { it.type == DownloadFileType.FONT }
+        font.fileName shouldBe "font.4.${"A".repeat(56)}.ttf"
+    }
+
+    @Test
+    fun `a font file name that sanitises to nothing falls back rather than ending in a dot`() {
+        val plan =
+            planner.plan(
+                movie(
+                    streams = listOf(subtitleStream(index = 3, codec = "ass", external = false)),
+                    attachments = listOf(fontAttachment(index = 4, fileName = "///", mimeType = "font/ttf")),
+                ),
+                DIRECTORY,
+                quality = DownloadQuality.LOW,
+            )
+
+        plan.single { it.type == DownloadFileType.FONT }.fileName shouldBe "font.4.font"
+    }
+
+    @Test
     fun `an attachment with no name is skipped rather than stored under one invented for it`() {
         val plan =
             planner.plan(

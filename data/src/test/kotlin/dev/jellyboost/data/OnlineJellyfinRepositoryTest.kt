@@ -251,6 +251,31 @@ class OnlineJellyfinRepositoryTest {
             request.captured.mediaTypes shouldContainExactly listOf(MediaType.VIDEO)
         }
 
+    /**
+     * `mediaTypes` is the server's to honour, so this is the client keeping its own promise: the row
+     * that says *Continue watching* must not be able to draw a track, whatever came back.
+     */
+    @Test
+    fun `getResumeItems drops audio the server returned anyway, and caches only what it keeps`() =
+        runTest {
+            val cached = slot<List<BaseItemDto>>()
+            coEvery { itemsApi.getResumeItems(any<GetResumeItemsRequest>()) } returns
+                queryResponse(
+                    listOf(
+                        itemDto(BaseItemKind.AUDIO, "Fake Plastic Trees"),
+                        itemDto(BaseItemKind.EPISODE, "Trompe L'Oeil"),
+                        itemDto(BaseItemKind.MOVIE, "Arrival"),
+                    ),
+                )
+
+            val result = repository.getResumeItems()
+
+            (result as AppResult.Success).value.map { it.name } shouldContainExactly
+                listOf("Trompe L'Oeil", "Arrival")
+            verify { browseCache.cacheItems(capture(cached), full = false) }
+            cached.captured.map { it.name } shouldContainExactly listOf("Trompe L'Oeil", "Arrival")
+        }
+
     @Test
     fun `getResumeItems maps an IO failure onto Network`() =
         runTest {
@@ -602,6 +627,24 @@ class OnlineJellyfinRepositoryTest {
             request.captured.limit shouldBe 8
             request.captured.enableUserData shouldBe true
             request.captured.mediaTypes shouldContainExactly listOf(MediaType.AUDIO)
+        }
+
+    /** The mirror of the *Continue watching* guard: neither row may draw the other's kind. */
+    @Test
+    fun `getResumeAudioItems drops video the server returned anyway`() =
+        runTest {
+            coEvery { itemsApi.getResumeItems(any<GetResumeItemsRequest>()) } returns
+                queryResponse(
+                    listOf(
+                        itemDto(BaseItemKind.MOVIE, "Arrival"),
+                        itemDto(BaseItemKind.AUDIO, "Fake Plastic Trees"),
+                    ),
+                )
+
+            val result = repository.getResumeAudioItems()
+
+            (result as AppResult.Success).value.map { it.name } shouldContainExactly
+                listOf("Fake Plastic Trees")
         }
 
     @Test

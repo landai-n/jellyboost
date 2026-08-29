@@ -141,8 +141,11 @@ internal class OnlineJellyfinRepository
                             mediaTypes = listOf(MediaType.VIDEO),
                         ),
                     )
-                browseCache.cacheItems(response.content.items)
-                mapper.toDomain(response.content.items)
+                // Re-checked client-side because the row cannot be honest about being video only
+                // while it trusts a server-side filter to have been applied.
+                val items = response.content.items.filterNot { it.type in AUDIO_RESUME_KINDS }
+                browseCache.cacheItems(items)
+                mapper.toDomain(items)
             }
 
         override suspend fun getNextUp(limit: Int): AppResult<List<JellyfinItem>> =
@@ -484,8 +487,9 @@ internal class OnlineJellyfinRepository
                             mediaTypes = listOf(MediaType.AUDIO),
                         ),
                     )
-                browseCache.cacheItems(response.content.items)
-                mapper.toDomain(response.content.items)
+                val items = response.content.items.filter { it.type in AUDIO_RESUME_KINDS }
+                browseCache.cacheItems(items)
+                mapper.toDomain(items)
             }
 
         // ---- end Continue Listening -------------------------------------------------------------
@@ -543,5 +547,11 @@ internal class OnlineJellyfinRepository
 
             /** Episode rows draw a synopsis, so this is the one list request that pays for `OVERVIEW`. */
             val EPISODE_FIELDS = listOf(ItemFields.PRIMARY_IMAGE_ASPECT_RATIO, ItemFields.OVERVIEW)
+
+            /**
+             * What `mediaTypes = [AUDIO]` names. One set for both resume rows, so *Continue watching*
+             * and *Continue listening* cannot disagree about which side of the line a kind falls on.
+             */
+            val AUDIO_RESUME_KINDS = setOf(BaseItemKind.AUDIO, BaseItemKind.AUDIO_BOOK)
         }
     }

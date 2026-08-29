@@ -20,7 +20,7 @@ Since M14 it is a **category hub plus pushed pages**, not one flat scroll — se
 | Playback | *Skip intro* and *Skip outro* — three-way pickers over `SegmentSkipMode` (`OFF` / `SHOW_BUTTON` / `AUTO_SKIP`); *Picture-in-picture* — enter a floating window when leaving the app mid-playback; *Styled ASS subtitles* — libass rendering for ASS/SSA, experimental and default-off, read once per player build. See [`playback.md`](playback.md). |
 | Downloads | A storage line reporting used/free bytes and where the files live; *Storage location* — one option per mounted volume (internal storage, SD card), shown only on a device that has more than one; *Wi-Fi only* — pause transfers on metered networks; *Download quality*. |
 | Appearance | *Theme* — a three-way picker over `ThemeMode` (`SYSTEM` / `LIGHT` / `DARK`); *Use wallpaper colours* — Material You, **absent below API 31** rather than disabled, because there is no wallpaper palette to derive from there. See [`theme.md`](theme.md). |
-| Network | *Offline mode* — the same force-offline preference the home overflow toggles and the offline banner reports. (The heading inside the page is still *Connectivity*, which is what the row was written for.) |
+| Network | *Offline mode* — the same force-offline preference the home overflow toggles and the offline banner reports. |
 | About | The app version; *Source code*, which opens the repository in a browser; *Licence*, which pushes the app's own GPL-3.0 text; *Third-party licences*, which pushes the generated list of bundled dependencies. |
 
 Every row writes a DataStore key and reads the same key back. Nothing is cached in the screen, so a
@@ -137,6 +137,34 @@ There are **six row types and nothing else** (`design/components/settings-rows.h
 switch, choice group, info, action, danger. A new setting picks one of them; if it fits none, that is
 the signal to talk about it rather than to invent a seventh. The category row is hub-only — inside a
 category, rows carry **no leading icon**, because an icon there only narrows the label column.
+
+Two naming and heading rules ride with them:
+
+- **An eyebrow only earns its place on a page carrying more than one section.** On a single-section
+  page the screen title already does that work, and an eyebrow reading "THEME" over a group
+  captioned "Theme" says it twice. Playback (2 sections) and Downloads (3) draw eyebrows; Appearance,
+  Network, Account and About are one panel each and draw none. A choice group's own caption is not
+  an eyebrow and always stays — it is the group's a11y anchor, repeated into every row's
+  `contentDescription`.
+- **A category is called the same thing on its hub row and on its own page.** No long-form alias
+  waiting inside. `SettingsPane.titleRes()` agrees with `SettingsCategory.titleRes` for every
+  category, and `aCategoryHasOneNameNotTwo` keeps it that way.
+
+### The storage meter
+
+The storage info row draws a 6dp meter under its figures, and it carries **no**
+`progressBarRangeInfo` — it is a picture of the sentence the merged node already speaks, not a datum
+of its own. `MediaCardArtwork.InsetProgressBar` is the same call.
+
+This is deliberately the opposite of `:feature:downloads`' `UsageBar`, which *does* declare an
+explicit range: that one is drawn loose, three to a wide layout, with no text beside it naming the
+volume it measures, so the range is the only thing that makes it speak at all. Height, radius and
+track ink are identical between the two — two meters of the same quantity in one app should not be
+two different objects — and each KDoc names the other so the pair is not "unified" later.
+
+`storageUsedFraction` puts the whole volume in the denominator (used + free), so the bar answers
+"how much room is left on this device". A volume that reports nothing draws an **empty** track: an
+unknown size is not a size of zero, and a full bar would read as a device out of room.
 
 The invariant all of them uphold: **the whole row is the touch target and carries the semantics**,
 and the control inside it is inert.
@@ -373,7 +401,7 @@ where M14 track 5 lands. It is placement, not a spec, and no row exists for it.
 | `SessionRepositoryTest` | (`:core:network`) a caller cancelled mid-goodbye still clearing the credentials and reaching `LoggedOut`; a server that never answers costing the sign-out `SERVER_GOODBYE_TIMEOUT` rather than the session; a hook that hangs being cut short the same way |
 | `LicenceViewModelTest` | the bundled text reaching the screen as paragraphs; an unreadable raw resource leaving the screen empty rather than taking the process down; the packaged copy being byte-identical to the repository's `LICENSE` |
 | `LicenceBlocksTest` | headings standing alone, hard-wrapped prose joining, blank lines separating, and the whole document surviving the reflow word for word |
-| `SettingsSummariesTest` | every hub summary's exact parts; both positions of every switch; the API-31 case where the wallpaper row is absent, so the summary must not name it either; that every category and every pane has a title of its own; that the panes are the categories plus Account |
+| `SettingsSummariesTest` | every hub summary's exact parts; both positions of every switch; the API-31 case where the wallpaper row is absent, so the summary must not name it either; that every category and every pane has a title of its own and that a category's hub row and page agree on it; that the panes are the categories plus Account; the storage meter's arithmetic — empty, full, 12.3 of 53.3 GB, an unknown volume, and clamping |
 | `SettingsSizingTest` | the 840dp two-pane cutoff, the values either side of it, both test-tablet orientations, and that the rail still leaves the pane the larger share of the window |
 
 Instrumented (`connectedDebugAndroidTest`, milestone DoD — not part of `/verify`):
@@ -381,7 +409,7 @@ Instrumented (`connectedDebugAndroidTest`, milestone DoD — not part of `/verif
 | Suite | Covers |
 |---|---|
 | `SettingsHubA11yTest` | ATF sweep of the hub at the default scale and at fontScale 2.0; every category row being one `Role.Button` node that speaks its *summary* as well as its title; the identity row naming the user and the server in one stop; 48dp targets; exactly one Back and no Home |
-| `SettingsCategoryPagesA11yTest` | ATF sweep of every page at both scales; the switch row carrying `Role.Switch` and the toggle state with an inert `Switch` inside it; both skip groups repeating their own name so their identical options can be told apart; the choice row being selectable at row level; the storage info row being one stop and not clickable; the volume picker repeating its group on every row; Back-and-no-Home on every page header |
+| `SettingsCategoryPagesA11yTest` | ATF sweep of every page at both scales; the switch row carrying `Role.Switch` and the toggle state with an inert `Switch` inside it; both skip groups repeating their own name so their identical options can be told apart; the choice row being selectable at row level; the storage info row being one stop and not clickable; **the storage meter adding no progress node**; the volume picker repeating its group on every row; **zero eyebrows on a single-section page and one per section on a multi-section one**; an eyebrow spoken sentence-case; the theme group keeping its caption with no eyebrow above it; Back-and-no-Home on every page header |
 | `SettingsTwoPaneA11yTest` | ATF sweep of the ≥840dp shape at both scales; exactly one Back across rail *and* pane, and no Home; the pane opening on Playback and the rail swapping it without the rail going away; the identity row opening the Account pane rather than pushing a screen |
 
 `:feature:settings` left `scripts/a11y-scaffolding-allowlist.json` with these three suites — the

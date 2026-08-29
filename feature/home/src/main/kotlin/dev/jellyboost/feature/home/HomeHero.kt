@@ -194,7 +194,9 @@ private fun WideHeroCopy(
     onDetails: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val showSecondary = wideHeroShowsSecondary(heroHeight = heroHeight, fontScale = fontScale)
+    val bottomInset = wideHeroCopyBottomInset(OverMedia.artworkDissolvesIntoPage)
+    val showSecondary =
+        wideHeroShowsSecondary(heroHeight = heroHeight, fontScale = fontScale, bottomInset = bottomInset)
 
     Column(
         modifier =
@@ -202,7 +204,7 @@ private fun WideHeroCopy(
                 .fillMaxHeight()
                 .clipToBounds()
                 .padding(horizontal = Dimens.SpaceExtraLarge)
-                .padding(top = wideHeroCopyTopInset(heroHeight), bottom = HeroRailOverlap)
+                .padding(top = wideHeroCopyTopInset(heroHeight), bottom = bottomInset)
                 .widthIn(max = WideCopyMaxWidth),
         verticalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
     ) {
@@ -210,7 +212,7 @@ private fun WideHeroCopy(
         HeroTitle(
             item = item,
             expanded = true,
-            maxLines = wideHeroTitleMaxLines(heroHeight = heroHeight, fontScale = fontScale),
+            maxLines = wideHeroTitleMaxLines(heroHeight = heroHeight, fontScale = fontScale, bottomInset = bottomInset),
         )
         if (showSecondary) HeroMeta(item = item)
         item.overview?.takeIf { it.isNotBlank() }?.let { overview ->
@@ -419,7 +421,9 @@ private val CompactSecondaryMinHeight = 260.dp
 internal fun wideHeroShowsSecondary(
     heroHeight: Dp,
     fontScale: Float = 1f,
-): Boolean = wideHeroCopyHeight(heroHeight) >= WideSecondaryMinBand + WideLockupText * textGrowth(fontScale)
+    bottomInset: Dp = HeroRailOverlap,
+): Boolean =
+    wideHeroCopyHeight(heroHeight, bottomInset) >= WideSecondaryMinBand + WideLockupText * textGrowth(fontScale)
 
 /** The three inter-block gaps plus [WideLockupText]. */
 private val WideSecondaryMinBand = 36.dp + WideLockupText
@@ -441,8 +445,11 @@ private val CompactCondensedMinHeight = 52.dp + CompactCondensedLockupText
 internal fun wideHeroTitleMaxLines(
     heroHeight: Dp,
     fontScale: Float = 1f,
+    bottomInset: Dp = HeroRailOverlap,
 ): Int =
-    if (wideHeroCopyHeight(heroHeight) >= WideCondensedMinBand + WideCondensedLockupText * textGrowth(fontScale)) {
+    if (wideHeroCopyHeight(heroHeight, bottomInset) >=
+        WideCondensedMinBand + WideCondensedLockupText * textGrowth(fontScale)
+    ) {
         TITLE_MAX_LINES
     } else {
         1
@@ -466,8 +473,18 @@ internal fun wideHeroCopyTopInset(heroHeight: Dp): Dp =
  * Not read by the layout, which derives it from the same two insets — but it decides whether the
  * resume button clears the next section, so `HomeSizingTest` pins it.
  */
-internal fun wideHeroCopyHeight(heroHeight: Dp): Dp =
-    (heroHeight - wideHeroCopyTopInset(heroHeight) - HeroRailOverlap).coerceAtLeast(0.dp)
+internal fun wideHeroCopyHeight(
+    heroHeight: Dp,
+    bottomInset: Dp = HeroRailOverlap,
+): Dp = (heroHeight - wideHeroCopyTopInset(heroHeight) - bottomInset).coerceAtLeast(0.dp)
+
+/**
+ * The rail's overlap where the rows climb into the banner; a plain margin where the light ramp ends
+ * the banner on a hard edge and nothing climbs in — holding the overlap there squeezes the copy by
+ * 48dp and leaves the same 48dp as a dead scrimmed band under the buttons.
+ */
+internal fun wideHeroCopyBottomInset(artworkDissolvesIntoPage: Boolean): Dp =
+    if (artworkDissolvesIntoPage) HeroRailOverlap else Dimens.SpaceExtraLarge
 
 private const val WIDE_COPY_TOP_FRACTION = 0.26f
 
@@ -483,8 +500,7 @@ internal val WideCopyEdge = Dimens.SpaceExtraLarge + WideCopyMaxWidth
 /**
  * How far the content rows overlap the wide banner — where the artwork dissolves into the page
  * ([OverMedia.artworkDissolvesIntoPage]); under the light ramp the rows start at the banner's edge
- * instead. It stays the wide copy's bottom inset in **both** schemes, so every height threshold
- * below is calibrated against one number rather than two.
+ * instead, and the copy's bottom inset shrinks with them ([wideHeroCopyBottomInset]).
  */
 internal val HeroRailOverlap = 48.dp
 

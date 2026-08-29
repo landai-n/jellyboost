@@ -86,12 +86,24 @@ class HomeSizingTest {
     }
 
     @Test
-    fun `the copy always stops short of the rail the rows below overlap into`() {
-        listOf(336.dp, 360.dp, 400.dp, 460.dp).forEach { banner ->
-            val band = wideHeroCopyHeight(banner)
-            (band + wideHeroCopyTopInset(banner) + HeroRailOverlap).value shouldBe
-                (banner.value plusOrMinus TOLERANCE)
-            (band.value <= (banner - HeroRailOverlap).value) shouldBe true
+    fun `the light banner returns the rail's reservation to the copy, keeping only a margin`() {
+        wideHeroCopyBottomInset(artworkDissolvesIntoPage = true) shouldBe HeroRailOverlap
+        wideHeroCopyBottomInset(artworkDissolvesIntoPage = false) shouldBe 24.dp
+        // The mocks' banner: 400 - 104 nav inset - 24 margin, the 48dp band no rail climbs into
+        // handed back to the copy instead of sitting dead under the buttons.
+        wideHeroCopyHeight(400.dp, bottomInset = wideHeroCopyBottomInset(false)).value shouldBe
+            (272f plusOrMinus TOLERANCE)
+    }
+
+    @Test
+    fun `the copy always stops short of its bottom inset, whichever scheme sets it`() {
+        listOf(wideHeroCopyBottomInset(true), wideHeroCopyBottomInset(false)).forEach { inset ->
+            listOf(336.dp, 360.dp, 400.dp, 460.dp).forEach { banner ->
+                val band = wideHeroCopyHeight(banner, bottomInset = inset)
+                (band + wideHeroCopyTopInset(banner) + inset).value shouldBe
+                    (banner.value plusOrMinus TOLERANCE)
+                (band.value <= (banner - inset).value) shouldBe true
+            }
         }
     }
 
@@ -222,6 +234,9 @@ class HomeSizingTest {
         wideHeroShowsSecondary(banner, fontScale = 2f) shouldBe false
         wideHeroTitleMaxLines(banner, fontScale = 2f) shouldBe 2
         (wideHeroCopyHeight(banner).value >= WIDE_CONDENSED_LOCKUP_AT_2X) shouldBe true
+        // The light inset only ever grows the band, so its shedding is never harsher than dark's.
+        val lightBand = wideHeroCopyHeight(banner, bottomInset = wideHeroCopyBottomInset(false))
+        (lightBand.value >= wideHeroCopyHeight(banner).value) shouldBe true
     }
 
     @Test

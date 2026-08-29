@@ -651,7 +651,8 @@ private val COMPACT_MAX_WIDTH = 480.dp
 internal fun queueRowCompact(maxWidth: Dp): Boolean = maxWidth < COMPACT_MAX_WIDTH
 
 /**
- * The wide chrome (title, three stat panels, tab row) measures ~260–300dp; a landscape phone is
+ * The wide chrome (title, two stat panels, tab row, and the waiting-for-Wi-Fi notice when it is
+ * drawn) measures ~260–300dp; a landscape phone is
  * ~360–400dp tall but wide enough that [queueRowCompact] answers `false`, so pinning there would
  * leave the queue unreachable — nothing on the screen would scroll.
  *

@@ -654,6 +654,42 @@ class CastSessionCoordinatorTest {
         verify(exactly = 0) { reporter.reportStopDetached(any(), match { !it.isValid }) }
     }
 
+    /**
+     * The device walk's final read: `onCastEnded` reads the routing handle *before* it switches to
+     * local, and a torn-down `RemoteCastPlayer` still claims our item there — at zero. After the switch
+     * the idle local player answers a valid zero too. Neither may reach the detached stop.
+     */
+    @Test
+    fun `a detached session whose final reading is a torn-down zero is closed at the last valid reading`() {
+        castingDetachedAt(ON_THE_TELEVISION)
+        cast.snapshot = PlaybackSnapshot(positionMs = 0L, isValid = true)
+        local.snapshot = PlaybackSnapshot()
+
+        framework.onSessionEnded()
+
+        verify(exactly = 1) { reporter.reportStopDetached(source, ON_THE_TELEVISION) }
+        verify(exactly = 0) { reporter.reportStopDetached(any(), match { it.positionMs == 0L }) }
+    }
+
+    @Test
+    fun `a zero reading after a later valid one is not the receiver's position, for the ticker or the bar`() {
+        castingDetachedAt(ON_THE_TELEVISION)
+        cast.snapshot = PlaybackSnapshot(positionMs = 0L, isValid = true)
+
+        coordinator.readReceiver().isValid shouldBe false
+        coordinator.lastHeld shouldBe ON_THE_TELEVISION
+    }
+
+    @Test
+    fun `a detached receiver that drops the item holding a stale zero is closed at the last valid reading`() {
+        castingDetachedAt(ON_THE_TELEVISION)
+
+        receiverSays(PlayerEvent.RemoteItemMissing(PlaybackSnapshot(positionMs = 0L, isValid = true)))
+        elapse(GRACE_MS + 1L)
+
+        verify(exactly = 1) { reporter.reportStopDetached(source, ON_THE_TELEVISION) }
+    }
+
     @Test
     fun `a screen's last valid reading seeds the detached stop when the receiver answers nothing as it goes`() {
         every { reporter.startReporting(any(), any(), any()) } returns Job()

@@ -32,6 +32,7 @@ import dev.jellyboost.player.model.PlaybackSnapshot
 import dev.jellyboost.player.model.PlaybackSpeed
 import dev.jellyboost.player.model.RemotePlaybackMediaSource
 import dev.jellyboost.player.model.audioTracksFor
+import dev.jellyboost.player.model.contradicts
 import dev.jellyboost.player.model.millisToTicks
 import dev.jellyboost.player.model.subtitleTracksFor
 import dev.jellyboost.player.model.ticksToMillis
@@ -233,15 +234,25 @@ internal class PlayerViewModel
          * idle local player.
          */
         private fun rememberReading(reading: PlaybackSnapshot) {
-            if (reading.isValid) updateSession { it.copy(lastValidReading = reading) }
+            if (vetted(reading).isValid) updateSession { it.copy(lastValidReading = reading) }
         }
 
         /**
-         * The player's reading if it is valid, else the last valid one this session took, else the
-         * invalid reading itself — which a report then carries no position for.
+         * [reading], or the same reading marked **invalid** when it is a zero this session cannot vouch
+         * for ([contradicts] its last valid reading): a torn-down receiver, or the idle local player
+         * routing has already fallen back to. Every reading headed for a report, the scrubber or
+         * [ActiveSession.lastValidReading] passes through here; a seek to 0 ([seekTo]) is what makes a
+         * zero believable.
+         */
+        private fun vetted(reading: PlaybackSnapshot): PlaybackSnapshot =
+            if (reading.contradicts(session?.lastValidReading)) reading.copy(isValid = false) else reading
+
+        /**
+         * The player's reading if it is valid (and [vetted]), else the last valid one this session took,
+         * else the invalid reading itself — which a report then carries no position for.
          */
         private fun vouchedReading(): PlaybackSnapshot {
-            val reading = playerHandle.snapshot()
+            val reading = vetted(playerHandle.snapshot())
             return reading.takeIf { it.isValid } ?: session?.lastValidReading ?: reading
         }
 
@@ -472,7 +483,8 @@ internal class PlayerViewModel
         private fun onCastEnded(at: PlaybackSnapshot) {
             val active = session ?: return
             val current = active.source
-            val known = at.takeIf { it.isValid } ?: active.lastValidReading
+            // Vetted too: a torn-down receiver still claims our item — at zero — and counts as valid.
+            val known = vetted(at).takeIf { it.isValid } ?: active.lastValidReading
             val resumeTicks = known?.positionTicks ?: current.startPositionTicks
             Timber.i("Bringing %s back to this device at %d ticks", current.itemId, resumeTicks)
             openSession(
@@ -491,10 +503,12 @@ internal class PlayerViewModel
          * Ignored while an open is in flight — that open replaces what the receiver holds anyway — and
          * for a session already closed, which is the natural end's case.
          */
-        private fun onCastItemLost(lastHeld: PlaybackSnapshot) {
+        private fun onCastItemLost(reportedLastHeld: PlaybackSnapshot) {
             val active = session ?: return
             if (active.stopReported || active.castItemLostAt != null) return
             if (openJob?.isActive == true) return
+            // The handle's "last held" is any valid reading, a torn-down zero included.
+            val lastHeld = vetted(reportedLastHeld).takeIf { it.isValid } ?: active.lastValidReading ?: reportedLastHeld
             Timber.i(
                 "The receiver stopped %s at %d ms; waiting for the user",
                 active.source.itemId,
@@ -628,6 +642,8 @@ internal class PlayerViewModel
             // Nothing is loaded on the receiver: the position is remembered for the resend instead.
             if (session?.castItemLostAt == null) playerHandle.seekTo(positionMs)
             positionTracker.onSeekTo(positionMs)
+            // The user's own seek is the one way a zero becomes believable ([vetted]).
+            updateSession { it.copy(lastValidReading = it.lastValidReading?.copy(positionMs = positionMs)) }
         }
 
         /**
@@ -636,7 +652,7 @@ internal class PlayerViewModel
          * skip to 0:00. An unknown duration leaves the upper end unclamped rather than clamped to zero.
          */
         internal fun seekBy(deltaMs: Long) {
-            val snapshot = playerHandle.snapshot().takeIf { it.isValid }
+            val snapshot = vetted(playerHandle.snapshot()).takeIf { it.isValid }
             val fromMs = snapshot?.positionMs ?: positionTracker.position.value.positionMs
             val durationMs = snapshot?.durationMs?.takeIf { it > 0L } ?: _uiState.value.durationMs
             val target = (fromMs + deltaMs).coerceAtLeast(0L)
@@ -869,7 +885,8 @@ internal class PlayerViewModel
          * zeroes would flip the play icon, spring the scrubber to 0:00 and feed the segment and
          * up-next decisions a position that belongs to nothing.
          */
-        internal fun onTick(snapshot: PlaybackSnapshot) {
+        internal fun onTick(reading: PlaybackSnapshot) {
+            val snapshot = vetted(reading)
             if (!snapshot.isValid) return
             rememberReading(snapshot)
             val decision = positionTracker.onTick(snapshot, session?.segments.orEmpty(), skipModes)
@@ -1350,8 +1367,9 @@ internal class PlayerViewModel
                         reporter.startReporting(
                             scope = viewModelScope,
                             currentSource = { source },
+                            // Vetted, so a zero this session cannot vouch for is skipped like any invalid tick.
                             snapshot = {
-                                playerHandle.snapshot().also {
+                                vetted(playerHandle.snapshot()).also {
                                     sessionStore.rememberLivePosition(it)
                                     rememberReading(it)
                                 }
@@ -1406,7 +1424,7 @@ internal class PlayerViewModel
             val active = session
             if (active != null && !active.stopReported && !isCasting) {
                 updateSession { it.copy(stopReported = true) }
-                reporter.reportStopDetached(active.source, playerHandle.snapshot())
+                reporter.reportStopDetached(active.source, vouchedReading())
             }
             // After the stop report is handed over, never before: this closes the group's view of a
             // downloaded item and reads the minted id on its way out.

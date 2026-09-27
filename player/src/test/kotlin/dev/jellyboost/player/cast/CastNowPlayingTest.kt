@@ -208,6 +208,50 @@ class CastNowPlayingTest {
         }
 
     @Test
+    fun `a receiver letting go of the film is flagged, not shown buffering, and not toggled`() =
+        runTest(dispatcher) {
+            leftPlaying()
+            watch()
+            // Stopped from the television; another sender's film loads and buffers there.
+            cast.snapshot = PlaybackSnapshot(isValid = false)
+            cast.tryEmit(PlayerEvent.RemoteItemMissing(ON_THE_TELEVISION))
+            cast.tryEmit(PlayerEvent.Buffering(true))
+            runCurrent()
+            advanceTimeBy(1_001L)
+            runCurrent()
+
+            val shown = requireNotNull(nowPlaying.state.value)
+            shown.receiverLetGo shouldBe true
+            shown.isBuffering shouldBe false
+            // Where the player opened from the bar sends the film back from.
+            shown.positionMs shouldBe ON_THE_TELEVISION.positionMs
+
+            nowPlaying.togglePlayPause()
+            runCurrent()
+            cast.pauseCount shouldBe 0
+            cast.playCount shouldBe 0
+        }
+
+    @Test
+    fun `the flag clears when the film comes back`() =
+        runTest(dispatcher) {
+            leftPlaying()
+            watch()
+            cast.tryEmit(PlayerEvent.RemoteItemMissing(ON_THE_TELEVISION))
+            runCurrent()
+            advanceTimeBy(1_001L)
+            runCurrent()
+            nowPlaying.state.value?.receiverLetGo shouldBe true
+
+            cast.tryEmit(PlayerEvent.RemoteItemMissingCleared)
+            runCurrent()
+            advanceTimeBy(1_001L)
+            runCurrent()
+
+            nowPlaying.state.value?.receiverLetGo shouldBe false
+        }
+
+    @Test
     fun `a suspended session says it is reconnecting`() =
         runTest(dispatcher) {
             leftPlaying()

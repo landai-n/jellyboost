@@ -31,6 +31,21 @@
             android:name="com.google.android.gms.cast.framework.OPTIONS_PROVIDER_CLASS_NAME"
             android:value="dev.jellyboost.player.cast.JellyboostCastOptionsProvider" />
 
+        <!--
+          The Cast notification's tap target (cast/CastNotificationActivity.kt). The framework fires
+          it with NEW_TASK | CLEAR_TASK | TASK_ON_HOME; its own taskAffinity is what confines that
+          CLEAR_TASK to this activity's task instead of the app's back stack. It draws nothing and
+          finishes in onCreate, hence NoDisplay, noHistory and excludeFromRecents. Not exported: the
+          notification's PendingIntent is created inside this app's own process.
+        -->
+        <activity
+            android:name=".cast.CastNotificationActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:noHistory="true"
+            android:taskAffinity="${applicationId}.castnotification"
+            android:theme="@android:style/Theme.NoDisplay" />
+
         <service
             android:name=".session.PlaybackService"
             android:exported="false"

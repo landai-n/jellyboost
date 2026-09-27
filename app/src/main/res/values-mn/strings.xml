@@ -30,4 +30,6 @@
     <string name="mini_player_previous">Өмнөх</string>
     <string name="mini_player_dismiss">Тоглуулалтыг зогсоож хаах</string>
     <string name="mini_player_open_now_playing">Одоо тоглуулж байгааг нээх</string>
+    <string name="casting_bar_open_player">Тоглуулагчийг нээх</string>
+    <string name="casting_bar_description">%1$s, %2$s</string>
 </resources>

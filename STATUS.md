@@ -37,6 +37,35 @@ Known issues:
 
 ## Current milestone: M14 — Breadth & theming (approved 2026-08-28; tracks 4 and 6 landed, gate green; Settings hub landed on `m14/settings-hub`)
 
+**Cast: a casting bar, reattach instead of reload, and a notification that keeps the back stack
+(2026-09-27, worktree branch; device walk owed).** Found on a device walk with a Chromecast Ultra.
+(A) With a film on the television and no player screen open, the chrome's bar slot shows a
+**casting bar** — the music `MiniPlayer`'s own surface, row and slot fed by the new GMS-free
+`CastNowPlaying` — with the title/artwork, "Casting to <device>" (or "Reconnecting…"), a progress
+line, an honest play/pause (buffering keeps Pause with a ring) and a tap back to the player; cast
+wins the slot over a music queue. (B) Opening the player for the item the receiver already holds
+**reattaches** (`CastSessionCoordinator.heldSourceFor` → `PlayerViewModel.adoptCastSession`): no
+`PlaybackInfo`, no `prepare`, no start/stop report, the screen's ticker carries on under the same play
+session; anything else reports the replaced **orphan**'s stop exactly once in `attachHost` (it used to
+be dropped silently). (C) The Cast notification targets a new trampoline, `CastNotificationActivity`,
+with its own task affinity, so the framework's `CLEAR_TASK` no longer wipes the back stack; the app is
+reopened as it was and routed to the casting item's player (or left alone / Home). A divergence from
+M12's "no mini-controller in v1": DECISIONS.md 2026-09-27. Two new strings across all 70 `:app` files.
+Details: `docs/features/chromecast.md` › *Getting back to the television*.
+
+Known issues / owed:
+- **Device walk owed (Chromecast)**: (1) cast a film, leave the player → the casting bar shows with
+  title, device and a moving progress line; its button pauses and plays the television, and shows the
+  ring while the receiver buffers. (2) Tap the bar → the player opens at the live position with **no
+  stop/rebuffer on the television** and no second transcode on the server dashboard. (3) Resume the
+  same film from Home or its detail page → same reattach. (4) From inside the player, pull down the
+  Cast notification and tap it → still on the player, and Back still goes to where the player was
+  opened from. (5) From Home (bar showing), tap the notification → the player for that film, Back →
+  Home. (6) Open a *different* film while one is detached → the first one's session closes once on
+  the dashboard. (7) Music playing locally + a film on the television → only the casting bar shows.
+  (8) The instrumented `CastingBarSemanticsTest` on the tablet.
+- After process death there is still no reattach: no bar, and the notification opens Home.
+
 **Cast: honest controls around a receiver's invalid readings, buffering and dropped items
 (2026-09-27, worktree branch; device walk owed).** Found on a device walk with a Chromecast Ultra.
 (A) A receiver's snapshot is invalid (all zeroes) for seconds after every load and whenever it holds

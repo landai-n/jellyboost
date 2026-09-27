@@ -2,6 +2,7 @@ package dev.jellyboost.player.cast
 
 import dev.jellyboost.player.model.PlaybackMediaSource
 import dev.jellyboost.player.model.PlaybackSnapshot
+import java.util.UUID
 
 /**
  * The callbacks carry a [PlaybackSnapshot] because the coordinator is the only caller standing at the routing
@@ -45,7 +46,30 @@ interface CastPlaybackCoordinator {
 
     /** Ignored unless [host] is the attached one, so a stale ViewModel's teardown cannot detach its replacement. */
     fun detachHost(host: CastPlaybackHost)
+
+    /**
+     * What a screen opening [itemId] may adopt instead of negotiating the item again: the source this
+     * app left playing on the receiver when its last screen went, **if the receiver still holds it**.
+     * `null` means open as usual. Asking changes nothing; adopting is attaching with that source as the
+     * host's [CastPlaybackHost.castSource], which is what tells [attachHost] it is not an orphan.
+     */
+    fun heldSourceFor(itemId: UUID): CastReceiverHold? = null
 }
+
+/**
+ * A live receiver session a screen can take over without touching the receiver.
+ *
+ * @property source the very source the receiver was loaded with — its play session id is the one the
+ *   server is already tracking, and the one every later progress and stop report must carry.
+ * @property reading the receiver's reading as the hold was checked; [PlaybackSnapshot.isValid] is `false`
+ *   while it is still buffering the item.
+ * @property isBuffering waiting for data while meaning to play — what the screen's transport shows first.
+ */
+data class CastReceiverHold(
+    val source: PlaybackMediaSource,
+    val reading: PlaybackSnapshot,
+    val isBuffering: Boolean,
+)
 
 object NoCastPlaybackCoordinator : CastPlaybackCoordinator {
     override fun attachHost(host: CastPlaybackHost) = Unit

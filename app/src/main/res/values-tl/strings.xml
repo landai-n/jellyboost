@@ -26,4 +26,6 @@
     <string name="mini_player_previous">Nakaraan</string>
     <string name="mini_player_dismiss">Ihinto ang pag-play at isara</string>
     <string name="mini_player_open_now_playing">Buksan ang Kasalukuyang Pinapatugtog</string>
+    <string name="casting_bar_open_player">Buksan ang player</string>
+    <string name="casting_bar_description">%1$s, %2$s</string>
 </resources>

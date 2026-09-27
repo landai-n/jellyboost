@@ -3,12 +3,14 @@ package dev.jellyboost.player.ui
 import dev.jellyboost.player.cast.CastConnection
 import dev.jellyboost.player.cast.CastPlaybackCoordinator
 import dev.jellyboost.player.cast.CastPlaybackHost
+import dev.jellyboost.player.cast.CastReceiverHold
 import dev.jellyboost.player.cast.CastStatusHolder
 import dev.jellyboost.player.model.PlaybackMediaSource
 import dev.jellyboost.player.model.PlaybackSnapshot
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import java.util.UUID
 
 /**
  * The transfer edges must stay callbacks, not derived from [states]: a collector of the connection
@@ -42,6 +44,9 @@ internal class PlayerCastBridge(
     override fun onCastEnded(at: PlaybackSnapshot) = onEnded(at)
 
     override fun onCastItemLost(lastHeld: PlaybackSnapshot) = onItemLost(lastHeld)
+
+    /** See [CastPlaybackCoordinator.heldSourceFor]; asked once, before the screen's first open. */
+    fun heldSourceFor(itemId: UUID): CastReceiverHold? = if (isCasting) coordinator.heldSourceFor(itemId) else null
 
     /** Attaches even with nothing casting, so a session started later finds a player already open. */
     fun attach() {

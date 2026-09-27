@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -36,8 +37,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -56,12 +62,10 @@ import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.core.ui.theme.glassSurface
 import dev.jellyboost.core.ui.theme.pageInk
 import dev.jellyboost.core.ui.theme.popShadow
+import dev.jellyboost.player.cast.CastingItem
+import dev.jellyboost.player.R as PlayerR
 
-/**
- * The docked bar the chrome shows whenever music is loaded and the user is not already looking at it.
- * Tinted [GlassDefaults.BottomNavFill] rather than the lighter in-content fill, because it floats
- * over full-bleed artwork as often as the nav pill does.
- */
+/** The docked bar the chrome shows whenever music is loaded and the user is not already looking at it. */
 @Composable
 internal fun MiniPlayer(
     state: MusicPlaybackState.Active,
@@ -72,10 +76,91 @@ internal fun MiniPlayer(
     modifier: Modifier = Modifier,
 ) {
     val track = state.currentItem ?: return
-    val shape = RoundedCornerShape(Dimens.RadiusXl)
-    val progressFraction =
-        if (state.durationMs > 0L) (state.positionMs.toFloat() / state.durationMs.toFloat()).coerceIn(0f, 1f) else 0f
+    MiniPlayerSurface(
+        progressFraction = progressFraction(state.positionMs, state.durationMs),
+        modifier = modifier,
+    ) {
+        MiniPlayerRow(
+            artworkUrl = track.primaryImageUrl,
+            title = track.name,
+            subtitle = track.displaySubtitle,
+            onClick = onClick,
+            onClickLabel = stringResource(R.string.mini_player_open_now_playing),
+        ) {
+            MiniPlayerTransport(
+                isPlaying = state.isPlaying,
+                onTogglePlayPause = onTogglePlayPause,
+                onPrevious = onPrevious,
+                onNext = onNext,
+            )
+        }
+    }
+}
 
+/**
+ * The same bar, fed by the receiver instead of the music queue: the film this app left playing on a
+ * television, and the way back to its player. Everything but the transport is [MiniPlayer]'s own
+ * surface, row, sizes and type — only one button, since a film has no previous or next here.
+ *
+ * **One spoken sentence**: the row merges into "<title>, Casting to <device>" (with its tap, "Open
+ * player"), and the play/pause button stays its own stop. While reconnecting the row's sentence says
+ * so and is announced politely; while buffering the button says "Pause", state "Buffering", as the
+ * player's transport does.
+ */
+@Composable
+internal fun CastingBar(
+    state: CastingItem,
+    onTogglePlayPause: () -> Unit,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val device = state.deviceName ?: stringResource(PlayerR.string.player_cast_device_unnamed)
+    val status =
+        stringResource(
+            if (state.isReconnecting) PlayerR.string.player_cast_reconnecting else PlayerR.string.player_casting_to,
+            device,
+        )
+    val title = state.title
+    val sentence = if (title == null) status else stringResource(R.string.casting_bar_description, title, status)
+
+    MiniPlayerSurface(
+        progressFraction = progressFraction(state.positionMs, state.durationMs),
+        modifier = modifier,
+    ) {
+        MiniPlayerRow(
+            artworkUrl = state.artworkUrl,
+            title = title ?: status,
+            subtitle = if (title == null) null else status,
+            onClick = onClick,
+            onClickLabel = stringResource(R.string.casting_bar_open_player),
+            rowSemantics =
+                Modifier.semantics {
+                    contentDescription = sentence
+                    if (state.isReconnecting) liveRegion = LiveRegionMode.Polite
+                },
+            textSemantics = Modifier.clearAndSetSemantics {},
+        ) {
+            CastingBarPlayPause(
+                action = castingBarAction(playWhenReady = state.playWhenReady, isBuffering = state.isBuffering),
+                isBuffering = state.isBuffering,
+                onClick = onTogglePlayPause,
+            )
+        }
+    }
+}
+
+/**
+ * The glass pill and its top progress line, shared by both bars. Tinted [GlassDefaults.BottomNavFill]
+ * rather than the lighter in-content fill, because it floats over full-bleed artwork as often as the
+ * nav pill does.
+ */
+@Composable
+private fun MiniPlayerSurface(
+    progressFraction: Float,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    val shape = RoundedCornerShape(Dimens.RadiusXl)
     Column(
         modifier =
             modifier
@@ -86,7 +171,7 @@ internal fun MiniPlayer(
                 .glassSurface(shape = shape, tint = GlassDefaults.BottomNavFill),
     ) {
         // Decoration, not a second seek bar: no semantics of its own, and the real scrubber is on
-        // `NowPlayingScreen`.
+        // the full-screen view the bar opens.
         Box(modifier = Modifier.fillMaxWidth().height(ProgressLineHeight).background(ProgressTrackColor)) {
             Box(
                 modifier =
@@ -96,17 +181,14 @@ internal fun MiniPlayer(
                         .background(MaterialTheme.colorScheme.primary),
             )
         }
-
-        MiniPlayerRow(
-            track = track,
-            isPlaying = state.isPlaying,
-            onTogglePlayPause = onTogglePlayPause,
-            onPrevious = onPrevious,
-            onNext = onNext,
-            onClick = onClick,
-        )
+        content()
     }
 }
+
+private fun progressFraction(
+    positionMs: Long,
+    durationMs: Long,
+): Float = if (durationMs > 0L) (positionMs.toFloat() / durationMs.toFloat()).coerceIn(0f, 1f) else 0f
 
 /**
  * [MiniPlayer] with the swipe that ends the session. `onDismiss` must *stop* rather than hide: the
@@ -163,42 +245,50 @@ internal fun DismissableMiniPlayer(
     }
 }
 
+/**
+ * @param rowSemantics added to the row's own (merged, clickable) node.
+ * @param textSemantics added to the title column — a bar that speaks one sentence clears the lines it
+ *   would otherwise read out again.
+ */
 @Composable
 private fun MiniPlayerRow(
-    track: JellyfinItem,
-    isPlaying: Boolean,
-    onTogglePlayPause: () -> Unit,
-    onPrevious: () -> Unit,
-    onNext: () -> Unit,
+    artworkUrl: String?,
+    title: String,
+    subtitle: String?,
     onClick: () -> Unit,
+    onClickLabel: String,
+    rowSemantics: Modifier = Modifier,
+    textSemantics: Modifier = Modifier,
+    trailing: @Composable () -> Unit,
 ) {
     Row(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .clickable(onClickLabel = stringResource(R.string.mini_player_open_now_playing), onClick = onClick)
+                .clickable(onClickLabel = onClickLabel, onClick = onClick)
+                .then(rowSemantics)
                 .padding(horizontal = Dimens.SpaceMedium, vertical = Dimens.SpaceSmall),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
     ) {
         JellyfinAsyncImage(
-            url = track.primaryImageUrl,
+            url = artworkUrl,
             contentDescription = null,
             modifier = Modifier.size(ArtSize).clip(RoundedCornerShape(Dimens.CardCornerRadius)),
         )
 
-        Column(modifier = Modifier.weight(1f)) {
+        Column(modifier = Modifier.weight(1f).then(textSemantics)) {
             Text(
-                text = track.name,
+                text = title,
                 style = TitleStyle,
                 color = MaterialTheme.colorScheme.onBackground,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.basicMarquee(),
             )
-            track.displaySubtitle?.let { subtitle ->
+            subtitle?.let {
                 Text(
-                    text = subtitle,
+                    text = it,
                     style = SubtitleStyle,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
@@ -207,12 +297,52 @@ private fun MiniPlayerRow(
             }
         }
 
-        MiniPlayerTransport(
-            isPlaying = isPlaying,
-            onTogglePlayPause = onTogglePlayPause,
-            onPrevious = onPrevious,
-            onNext = onNext,
-        )
+        trailing()
+    }
+}
+
+/**
+ * [MiniPlayerTransport]'s middle button, with the player's buffering treatment: a ring drawn inside
+ * the button's own bounds (so the row never shifts) and the "Buffering" state, announced politely as
+ * it appears. Always a working button — a receiver can buffer for minutes.
+ */
+@Composable
+private fun CastingBarPlayPause(
+    action: CastingBarAction,
+    isBuffering: Boolean,
+    onClick: () -> Unit,
+) {
+    val tint = MaterialTheme.colorScheme.onSurface
+    val buffering = stringResource(PlayerR.string.player_buffering)
+    val pauses = action == CastingBarAction.PAUSE
+    Box(contentAlignment = Alignment.Center) {
+        IconButton(
+            onClick = onClick,
+            modifier =
+                Modifier.semantics {
+                    if (isBuffering) {
+                        stateDescription = buffering
+                        liveRegion = LiveRegionMode.Polite
+                    }
+                },
+        ) {
+            Icon(
+                imageVector = if (pauses) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                contentDescription =
+                    stringResource(
+                        if (pauses) R.string.mini_player_pause else R.string.mini_player_play,
+                    ),
+                tint = tint,
+            )
+        }
+        if (isBuffering) {
+            // Decoration: the button above already carries the state in its semantics.
+            CircularProgressIndicator(
+                color = tint,
+                strokeWidth = BufferingRingStroke,
+                modifier = Modifier.size(BufferingRingSize).clearAndSetSemantics {},
+            )
+        }
     }
 }
 
@@ -258,6 +388,11 @@ internal val MiniPlayerGap = 12.dp
 private val MiniPlayerMaxWidth = 640.dp
 
 private val ArtSize = 44.dp
+
+/** Inside the 48 dp button, round its 24 dp glyph. */
+private val BufferingRingSize = 36.dp
+
+private val BufferingRingStroke = 2.dp
 
 private val ProgressLineHeight = 2.dp
 

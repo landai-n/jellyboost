@@ -17,11 +17,10 @@ internal class JellyboostCastOptionsProvider : OptionsProvider {
         val notificationOptions =
             NotificationOptions
                 .Builder()
-                .apply {
-                    // Resolved at runtime because `:player` must not depend on `:app` to name the
-                    // activity; unset costs the notification only its tap target.
-                    launchActivityClassName(context)?.let(::setTargetActivityClassName)
-                }.build()
+                // The trampoline, never the launcher activity itself: the framework fires this with
+                // `CLEAR_TASK`, which on `MainActivity` wiped the back stack (see the activity's KDoc).
+                .setTargetActivityClassName(CastNotificationActivity::class.java.name)
+                .build()
 
         val mediaOptions =
             CastMediaOptions
@@ -40,10 +39,4 @@ internal class JellyboostCastOptionsProvider : OptionsProvider {
     }
 
     override fun getAdditionalSessionProviders(context: Context): List<SessionProvider> = emptyList()
-
-    private fun launchActivityClassName(context: Context): String? =
-        context.packageManager
-            .getLaunchIntentForPackage(context.packageName)
-            ?.component
-            ?.className
 }

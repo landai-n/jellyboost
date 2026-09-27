@@ -3,6 +3,7 @@ package dev.jellyboost.player.cast
 import dev.jellyboost.player.model.PlaybackSnapshot
 import dev.jellyboost.player.session.PlayerEvent
 import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
@@ -80,6 +81,95 @@ class RemoteItemPresenceTest {
         presence.onReading(notOurs, ready = false)
 
         emitted shouldBe listOf(PlayerEvent.RemoteItemMissing(playing), PlayerEvent.RemoteItemMissingCleared)
+    }
+
+    // ---- a finish is an end, not a drop -----------------------------------------------------------------
+
+    private val finishedAtTheEnd = playing.copy(positionMs = 7_200_000L, isPlaying = false, hasEnded = true)
+
+    @Test
+    fun `the held item finishing is an end, at its duration, said once`() {
+        presence.onLoad()
+        presence.onReading(playing, ready = true)
+
+        val first = presence.onFinished(ReceiverFinish.LOADED_ITEM)
+        val again = presence.onFinished(ReceiverFinish.LOADED_ITEM)
+
+        first shouldBe finishedAtTheEnd
+        again shouldBe finishedAtTheEnd
+        presence.ended shouldBe finishedAtTheEnd
+        emitted shouldBe listOf(PlayerEvent.Ended)
+    }
+
+    @Test
+    fun `a finish status that names nothing is the held item's while it was still held`() {
+        presence.onLoad()
+        presence.onReading(playing, ready = true)
+
+        presence.onFinished(ReceiverFinish.UNNAMED) shouldBe finishedAtTheEnd
+
+        emitted shouldBe listOf(PlayerEvent.Ended)
+    }
+
+    @Test
+    fun `an ended item is never reported missing afterwards`() {
+        presence.onLoad()
+        presence.onReading(playing, ready = true)
+        val ended = presence.onFinished(ReceiverFinish.LOADED_ITEM)
+
+        // What the handle feeds it from then on: the ended reading, not the receiver's empty one.
+        repeat(3) { presence.onReading(requireNotNull(ended), ready = true) }
+
+        emitted shouldBe listOf(PlayerEvent.Ended)
+    }
+
+    @Test
+    fun `a drop noticed just before the finish status is cleared, then ended`() {
+        presence.onLoad()
+        presence.onReading(playing, ready = true)
+        presence.onReading(notOurs, ready = false)
+
+        presence.onFinished(ReceiverFinish.LOADED_ITEM)
+
+        emitted shouldBe
+            listOf(PlayerEvent.RemoteItemMissing(playing), PlayerEvent.RemoteItemMissingCleared, PlayerEvent.Ended)
+    }
+
+    @Test
+    fun `the film before's finish, still on the receiver as the next loads, is not the next one's end`() {
+        presence.onLoad()
+        presence.onReading(playing, ready = true)
+        presence.onFinished(ReceiverFinish.LOADED_ITEM)
+        emitted.clear()
+
+        presence.onLoad()
+        presence.onReading(PlaybackSnapshot(positionMs = 0L), ready = false)
+
+        presence.onFinished(ReceiverFinish.LOADED_ITEM).shouldBeNull()
+        presence.onFinished(ReceiverFinish.UNNAMED).shouldBeNull()
+        presence.ended.shouldBeNull()
+        emitted.shouldBeEmpty()
+    }
+
+    @Test
+    fun `another sender's media finishing is not ours`() {
+        presence.onLoad()
+        presence.onReading(playing, ready = true)
+
+        presence.onFinished(ReceiverFinish.OTHER_ITEM).shouldBeNull()
+
+        emitted.shouldBeEmpty()
+    }
+
+    @Test
+    fun `an unnamed finish after the item was already dropped is not ours`() {
+        presence.onLoad()
+        presence.onReading(playing, ready = true)
+        presence.onReading(notOurs, ready = false)
+
+        presence.onFinished(ReceiverFinish.UNNAMED).shouldBeNull()
+
+        emitted shouldBe listOf(PlayerEvent.RemoteItemMissing(playing))
     }
 
     @Test

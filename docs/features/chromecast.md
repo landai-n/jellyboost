@@ -60,7 +60,7 @@ All in `player/src/main/kotlin/dev/jellyboost/player/cast/` unless stated.
 | `CastPlaybackHost` / `CastPlaybackCoordinator` / `NoCastPlaybackCoordinator` | The public attach/detach seam between the coordinator and a screen, plus the two transfer callbacks. Names only `PlaybackMediaSource` and `PlaybackSnapshot`. |
 | `session/RoutingPlayerHandle` | **The Hilt `PlayerHandle` binding.** Delegates to whichever player is live; `events` through `flatMapLatest`, `player` (the video surface) `null` while casting, `stopInactive()` to silence the one being left. With no cast session it is a pass-through with no branch in it — which is what makes "casting changed nothing about playing alone" a property of the code. The cast handle arrives through a `Provider` so a GMS-less device never constructs one. |
 | `CastPlayerHandle` | `PlayerHandle` over media3-cast's `CastPlayer`. No surface and no `PlaybackService` (the framework publishes its own media session and notification). `selectAudioTrack` always `false`; `selectSubtitleTrack` uses `RemoteMediaClient.setActiveMediaTracks` for a side-loaded VTT — claiming `true` only when the receiver's own `MediaStatus` still offers the track, and logging async rejections (audit CAST-03) — and `false` otherwise; `snapshot()` is only valid while the receiver still holds our item (audit CAST-01); `playWhenReady` is the receiver's intent, readable when the snapshot is not; `supportsPlaybackSpeed` asks the receiver. Every reading it takes — from `snapshot()` and at the end of every callback batch — goes through `RemoteItemPresence`. |
-| `RemoteItemPresence` | Pure. Turns the handle's readings into the two edges `PlayerEvent.RemoteItemMissing(lastHeld)` / `RemoteItemMissingCleared`. **Armed only once the receiver has held the item in `READY` (or `ENDED`) since the last load**, so the several seconds after every `prepare` in which the reading is invalid — and a placeholder that briefly claims the item — never raise it. |
+| `RemoteItemPresence` | Pure. Turns the handle's readings into the two edges `PlayerEvent.RemoteItemMissing(lastHeld)` / `RemoteItemMissingCleared`. **Armed only once the receiver has held the item in `READY` since the last load**, so the several seconds after every `prepare` in which the reading is invalid — and a placeholder that briefly claims the item — never raise it. Also judges the receiver's `IDLE`/`FINISHED` status (`onFinished`): the armed item's finish is an end — `PlayerEvent.Ended` once, and an ended reading until the next load — never a drop. |
 | `CastSpecMapper` | Pure. `PlaybackMediaItemSpec + RemotePlaybackMediaSource + CastMetadata → CastMediaSpec`: the `ApiKey` on every URL the receiver fetches, the content type it will not sniff, and subtitle ids renumbered onto Jellyfin stream indices. All the decisions live here, which is why this is what the tests cover. |
 | `CastMediaSpec` / `CastTrackSpec` / `CastMetadata` | The plain data in between — no GMS type appears in it. |
 | `CastMediaItemConverter` | Mechanical `MediaInfo` / `MediaTrack` / `MediaQueueItem` assembly. Media3's `DefaultMediaItemConverter` ignores `subtitleConfigurations` entirely, which is most of what casting a Jellyfin item is. |
@@ -170,8 +170,9 @@ server transcode. `PlayerViewModel` first asks `heldSourceFor(itemId)`; **"the r
 means: the coordinator's detached source *is* X (compared as a `UUID`, so case never matters), the
 session is connected, no dropped-item grace period is running, and the receiver's reading is valid
 **or** it is buffering. Then the screen adopts that source (`adoptCastSession`): no `PlaybackInfo`,
-no `prepare`, no start or stop report; it attaches with that very instance as its `castSource`,
-which `attachHost` recognises by identity, stops the coordinator's ticker and hands reporting to the
+no `prepare`, no start or stop report; it attaches with that source as its `castSource`, which
+`attachHost` recognises as **the same load** (`PlaybackMediaSource.isSameLoadAs`: item, media source and
+play session — not the selected tracks, which a track chosen in place changes on a copy), stops the coordinator's ticker and hands reporting to the
 screen's under the same play session id. The position shown is the receiver's live reading. Anything
 else — another item, a receiver that let go, nothing held — opens as before, and the source it
 replaces on the receiver is an **orphan**: `attachHost` reports its stop exactly once, at the last
@@ -202,6 +203,8 @@ only while no host is attached.*
 | Screen closes while casting | — | **neither**: `releaseSession` skips the stop report *and* `stop()`/`release()`, because a television is not the screen's to end |
 | Receiver drops the item, screen open | stopped by the screen's `endCurrentSource` | the screen, once, at the last held position (`onCastItemLost`) |
 | Receiver drops the item, no screen | stopped by the coordinator | the coordinator, once, at the last held position; `detachedSource` is cleared as it is sent, so the session's later end finds nothing to report |
+| Receiver plays the film to its end, screen open | stopped by the screen's `onEnded` | the screen, once, **as ended** (played on the server); up next advances on the receiver, or the screen closes |
+| Receiver plays the film to its end, no screen | stopped by the coordinator | the coordinator, once, **as ended** (`onReceiverFinished`); `detachedSource` is cleared as it is sent and the bar goes |
 | Screen reopened for the item the receiver holds (reattach) | handed from the coordinator to the screen, same play session | **none** — the session continues; the screen reports it later like any other |
 | Screen opened for anything else while a source is detached | the coordinator's stops at attach | the coordinator, once, for the **orphan**, at its last valid reading, in `attachHost` |
 | Session ends with a screen attached, receiver already gone (Disconnect from the Cast notification) | stopped by the screen's `endCurrentSource` | the screen, once, at the session's **last valid reading** (`ActiveSession.lastValidReading`, seeded from the coordinator on reattach); the film reopens locally, paused, at that same position, and its start report carries it |
@@ -221,6 +224,24 @@ With a screen attached the item is **not** reloaded — whoever pressed Stop on 
 (the scrubber still works, and moves that position), and Play re-sends the item to the receiver from
 there. With no screen, the stop report goes out and the ticker stops; the connection itself is left
 alone, so the next Resume still casts while the session is up, and opens locally once it has ended.
+
+**A film played to its end is an end, not a drop (2026-09-27, second review).** media3-cast 1.9.0's
+`RemoteCastPlayer.fetchPlaybackState` only ever produces IDLE, BUFFERING and READY — never
+`STATE_ENDED` — so `PlayerEvent.Ended` never fired for a cast, and a finished film left the queue
+exactly like a stopped one: the grace period ran out, the screen said "Playback stopped on <device>"
+and offered a Play that re-sent the film, up next never advanced, and the stop went out positioned
+rather than ended. `CastPlayerHandle` now reads the receiver's own `MediaStatus` (through
+`RemoteMediaClient`, since `CastPlayer` folds it into IDLE): `PLAYER_STATE_IDLE` with
+`IDLE_REASON_FINISHED`. `RemoteItemPresence.onFinished` decides whether that finish is **ours**: the
+item must have been armed (held while ready) since the last load — a receiver keeps saying `FINISHED`
+for the film before while the next one loads, and that can never arm — and the status must name the
+loaded item (its content id or URL is the load's stream URL), or name nothing while the item was still
+held. Then `PlayerEvent.Ended` goes out once and every reading until the next load is the ended one,
+at the item's duration: valid, so presence never reports it missing (a drop noticed a moment before
+the finish status is cleared first). With a screen attached, `PlayerViewModel.onEnded` does what it does
+for a local film (ended stop, up next); with none, the coordinator's `onReceiverFinished` sends the one
+stop, at the ended reading, and forgets the source. Not device-verified yet: whether a Default Media
+Receiver's finished status still carries `mediaInfo` decides which of the two naming rules applies.
 
 One guard sits under all three rows (audit CAST-01): a reading taken off the cast player is only
 *valid* while the receiver still holds our item (`PlaybackSnapshot.isValid`). A Stop pressed on the
@@ -275,8 +296,21 @@ the bar's poll and the detached ticker used to record (and report) the new film'
 held one's, and the orphan's stop carried it. `PlayerHandle.preparedSource` (tracked by
 `CastPlayerHandle`, delegated by `RoutingPlayerHandle`) names the source behind the handle's readings.
 `CastSessionCoordinator.readReceiver` takes a reading as the detached source's only when that is the
-very instance the coordinator holds (identity, as `attachHost` compares), and a buffering receiver holds
+load the coordinator holds (`isSameLoadAs`, as `attachHost` compares), and a buffering receiver holds
 the detached source only on the same condition.
+
+**The same load, not the same instance (2026-09-27, second review).** Both comparisons were identity
+(`===`) at first. A subtitle turned off or a side-loaded subtitle picked while casting succeeds *in
+place* (`CastPlayerHandle.selectSubtitleTrack` returns `true`), and `PlayerViewModel` then replaces
+`session.source` with a `withSelectedSubtitle` copy while `preparedSource` keeps the loaded instance.
+The screen leaving handed the coordinator the copy, and from then on every detached reading was
+invalid: the casting bar and the detached ticker froze at the detach position, `heldSourceFor` answered
+`null` (a reopen reloaded the film and rewound the television), `attachHost` reported the adopted source
+as an orphan, and the session's end reported the stale position, moving the server's resume position
+backwards. `isSameLoadAs` compares what a load *is* — item, media source, play session (for a file on
+disk, its URI) — and leaves out the selected tracks, so an in-place change is the same load while any
+re-negotiation (always a new play session) is not. The audio path has the same shape; it cannot occur
+today (`selectAudioTrack` is always `false` on a receiver) and is covered anyway.
 
 **Loads carry the intent, and the transport's label is the tap's rule (2026-09-27, review).** A
 re-negotiation (`reopenSession`), its failure recovery (`onResolveFailed`) and the local→cast handover
@@ -431,7 +465,11 @@ own rule is that a rule belongs there only when it was shown to be missing.
 | `report/PlaybackReporterTest` | (Cast rows) an invalid stop carries no position, writes nothing locally and is flagged `failed`; an ended item's positionless stop is not. |
 | `:app` `CastingBarTest` | `showsCastingBar` (hidden on Player and Now Playing, and with nothing cast), **cast wins the slot** over an active music queue and gives it back, `castingBarAction` (buffering keeps Pause), and `castNotificationRoute` (the casting item's player, the same player left alone in any case, another player replaced, the attached player left alone, Home with nothing cast, nothing signed out). |
 | `:app` androidTest `CastingBarSemanticsTest` | One merged sentence with the tap and no loose text nodes, the button as its own stop, "Buffering" + polite live region, polite live region while reconnecting. Compiled; device run owed. |
-| `cast/RemoteItemPresenceTest` | The edges only, once each; never armed by a load's invalid window or a placeholder glimpse, only by the item held while ready; the resume point is the last held reading; a new load clears and disarms. |
+| `cast/RemoteItemPresenceTest` | The edges only, once each; never armed by a load's invalid window or a placeholder glimpse, only by the item held while ready; the resume point is the last held reading; a new load clears and disarms. A finish: the held item's is an end at its duration, said once, never missing afterwards (a drop noticed just before is cleared, then ended); an unnamed finish counts only while the item was still held; the film before's leftover finish, another sender's, and an unnamed one after a drop do not. |
+| `model/PlaybackMediaSourceLoadTest` | `isSameLoadAs`: a track chosen in place is the same load; a new play session, another media source or item, or no load is not. |
+| `ui/PlayerViewModelCastInPlaceTrackTest` | A subtitle turned off in place while casting, then the screen leaves: the bar and the detached ticker keep following the television, a reopen adopts without resolving or loading, and the session's end reports the live position; the audio twin keeps following too. |
+| `ui/PlayerViewModelCastFinishTest` | A film finishing on the receiver: with a screen, it ends as played (one ended stop, no "stopped" message, no positioned stop, even with a drop noticed first and the grace period run); an episode advances to the next on the receiver; with no screen, one ended stop from the finish itself, the bar cleared, nothing more at the session's end. |
+| `cast/CastSessionCoordinatorLoadTest` | A copy with a track chosen in place is read as the detached source and adopted without an orphan report; a detached finish is closed once at its ended reading (and cancels a loss already under way); with a screen attached, or for another film loaded since, the coordinator reports nothing. |
 | `session/PlayerEventBridgeTest` | `Buffering` only while buffering *and* meaning to play, cleared by a pause while still buffering and by `READY`, said on change only. |
 | `ui/PlayerTransportTest` | The local sibling: the toggle follows `playWhenReady` (a tap while rebuffering pauses), skips are relative and clamped to a known duration, an unknown duration is not clamped to zero, a local rebuffer reaches the UI state without an `IsPlayingChanged(false)` undoing it, and a rebuffer is drawn as — and answered by — a working Pause. |
 | `ui/PlayerControlsTest` › `BufferingGateTest` | `transportControl`: **buffering keeps a Pause action** with the ring; outside buffering, plain Play/Pause; the ring and spinner gates, receivers included. |

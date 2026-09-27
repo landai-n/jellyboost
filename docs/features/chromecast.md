@@ -77,8 +77,20 @@ All in `player/src/main/kotlin/dev/jellyboost/player/cast/` unless stated.
    (audit CAST-04).
 2. **The cast profile.** `PlaybackInfoResolver` sends `CastDeviceProfile.build(maxStreamingBitrate)`
    instead of the `MediaCodecProbe`-derived one: H.264 High ≤ L4.2, ≤ 1080p, AAC/MP3 in `mp4` and
-   VP8/VP9 in `webm` direct; anything else an HLS **ts** transcode to H.264 + AAC. Subtitles: WebVTT
-   external, everything else burned in.
+   VP8/VP9 in `webm` direct; anything else an HLS **ts** transcode to H.264 + stereo AAC. Subtitles:
+   WebVTT external, everything else burned in. The H.264/HEVC level and size caps are codec
+   profiles with **no container** (as in `DeviceProfileBuilder`), so they bound the `ts` transcode
+   as well as the `mp4` direct play — the transcode comes out at ≤ 1920×1080, level ≤ 4.2 whatever
+   the source was. Beside the profile, a cast `PlaybackInfoDto` sends
+   **`allowVideoStreamCopy = false`**: a cast transcode always re-encodes its video (the server
+   appends `allowVideoStreamCopy=false` to the `TranscodingUrl` itself; direct play and direct
+   stream never consult it; audio copy is untouched). Why is under "Known gaps / measured" below.
+
+   **Auto on a television.** A cast Auto request is not measured (the receiver's link is not this
+   device's), so pass 1 goes out uncapped — the profile's 120 Mbps. A direct play keeps that. A
+   **transcode** is re-negotiated once at `PlaybackQuality.HIGH`'s 20 Mbps rung, exactly as local
+   Auto is (`PlaybackInfoResolver.negotiateUnderTranscodeCeiling`); without it the transcode URL
+   asked the encoder for `VideoBitrate=119616000`. A hand-picked quality is never touched.
 3. **URLs the receiver can actually fetch.** Every stream this app opens is authorised by
    `JellyfinAuthInterceptor`'s header; a receiver has its own network stack with nothing of ours in
    it. `CastSpecMapper` therefore runs the media URL and every subtitle URL through
@@ -167,13 +179,35 @@ falling back to "your TV".
 | not supported | why, and where it is recorded |
 |---|---|
 | **Cast + SyncPlay together** | Mutually exclusive by decision. The button is hidden while in a group, and a session connected from system UI leaves the group with a message. (DECISIONS.md 2026-07-31, milestone entry, decision 4.) |
-| **4K / HEVC beyond direct play** | *Partially lifted 2026-08-15 (M12 phase-2a).* Receivers are classified by **model name** (`CastReceiverClass` — the only capability signal a sender with the Default Media Receiver has; `CastDevice`'s flags say nothing about codecs). The Ultra / Google TV / SHIELD class direct-plays HEVC Main/Main 10 in mp4 up to 4K level 5.1 (Dolby Vision excluded via a `VideoRangeType` condition — it reports "Main 10" but needs a DV pipeline); "Chromecast HD" gets the same at 1080p; every unknown model keeps the old conservative profile byte-for-byte, and the session-start log line records `model → class` so a misclassified 4K device is a one-line allowlist fix. **The transcode target is still H.264+AAC HLS-ts in every class**: CAF's TS demuxer is H.264-only, and the fMP4 segments HEVC would need were device-measured broken on the reference Ultra — an HEVC fMP4 transcode for Google-TV-class receivers is phase-2b, gated on a device walk. (DECISIONS.md 2026-08-15; `CastDeviceProfile`, `CastReceiverClass`.) |
+| **4K / HEVC beyond direct play** | *Partially lifted 2026-08-15 (M12 phase-2a).* Receivers are classified by **model name** (`CastReceiverClass` — the only capability signal a sender with the Default Media Receiver has; `CastDevice`'s flags say nothing about codecs). The Ultra / Google TV / SHIELD class direct-plays HEVC Main/Main 10 in mp4 up to 4K level 5.1 (Dolby Vision excluded via a `VideoRangeType` condition — it reports "Main 10" but needs a DV pipeline); "Chromecast HD" gets the same at 1080p; every unknown model keeps the old conservative profile byte-for-byte, and the session-start log line records `model → class` so a misclassified 4K device is a one-line allowlist fix. **The transcode target is still H.264+AAC HLS-ts in every class** — since 2026-09-27 always a full video re-encode at ≤ 1080p / level 4.2, never a stream copy (see "Known gaps / measured" below): CAF's TS demuxer is H.264-only, and the fMP4 segments HEVC would need were device-measured broken on the reference Ultra — an HEVC fMP4 transcode for Google-TV-class receivers is phase-2b, gated on a device walk. (DECISIONS.md 2026-08-15; `CastDeviceProfile`, `CastReceiverClass`.) |
 | **Surround audio (AAC 5.1, AC3/EAC3 passthrough)** | Device-measured, not assumed: a real Chromecast Ultra's Default Media Receiver rejects any AAC track above 2 channels with CAF error 104 in every container tried, and AC3/EAC3 5.1 passthrough fails outright (`LOAD_FAILED`). The profile caps AAC at stereo on both the transcode (`TranscodingProfile.maxAudioChannels`) and direct play (`CodecProfile` on `VIDEO_AUDIO` and `AUDIO`). A per-device-profile revisit is deferred to M12 phase 2 alongside the 4K/HEVC row above. (DECISIONS.md 2026-08-01; `CastDeviceProfile`.) |
 | **Reattaching to a live session after process death** | If the app is killed mid-cast the receiver keeps playing and reporting simply stops; the server session goes stale until its own timeout. Accepted and documented for v1. (Milestone entry, decision 6.) |
 | **Casting the copy on disk** | A downloaded item is re-resolved *remotely* and streamed from the server. Serving the local file to a receiver would mean running an HTTP server in the app. (Milestone entry, decision 7; `PlaybackSourceResolver`.) |
 | **The decoder fallback ladder** | Every rung of it diagnoses *this device's* decoders. A receiver error surfaces as one message and stops. (Milestone entry, decision 5; DECISIONS.md 2026-07-31, "a cast playback failure reuses `PlayerMessage.PlaybackFailed`".) |
 | **A mini-controller, a styled receiver, the Output Switcher** | Not in v1. The player screen is the remote control; the receiver id is a one-line change in `JellyboostCastOptionsProvider`. |
 | **HLS-fMP4 transcode segments (`SegmentContainer=mp4`)** | Tried and ruled out, not merely unused. On the tested Chromecast Ultra it accepts the `LOAD` but never opens a media session — no playback, no error either — at both 2ch and 6ch. It is not a workaround candidate for the surround-audio row above; MPEG-TS is what stays. (DECISIONS.md 2026-08-01.) |
+
+## Known gaps / measured: stream copy and restarted transcodes
+
+**Measured 2026-09-27, Jellyfin 10.11.11, Chromecast Ultra on the Default Media Receiver.** A typical
+library file — mkv, H.264 1080p, EAC3 5.1 — cannot be direct-played by the cast profile, so the
+server builds an HLS-ts transcode. Left to itself it **stream-copies the video** and converts only
+the audio. For a copy, the server lays `main.m3u8` out on the file's real keyframes (uneven segments,
+roughly 1.4–14 s). But once ffmpeg is (re)started mid-file with `-ss` — every resume, every
+local↔cast transfer, every seek past the encoded range — it cuts at `-hls_time` counted from its
+restart point, so the segment files **stop matching the playlist**: some listed segments are never
+produced (a request is answered with a later segment's content), others have a different duration
+and start than listed. The receiver trusts the playlist and sits in `BUFFERING` forever; this was
+reproduced four times, at four different positions.
+
+Requesting the same stream with no video stream copy, a 20 Mbps video bitrate and a 1920 max width
+makes the server re-encode (hardware, many times realtime on the test server), and the playlist
+becomes fixed-length segments that match the files exactly, even when starting mid-film. That is
+what every cast transcode now asks for (DECISIONS.md 2026-09-27). The cost: a transcode that could
+have been a cheap copy now occupies the encoder, and a server without hardware encoding may not
+keep up with 1080p — `PlaybackQuality` below High is the lever there. Local playback is unchanged:
+ExoPlayer was never measured stalling on the same shape. **Owed:** a device walk on a real
+Chromecast confirming resume, transfer and seek on such a file (STATUS.md).
 
 ## The subtitle profile: WebVTT and nothing else
 
@@ -214,14 +248,14 @@ own rule is that a rule belongs there only when it was shown to be missing.
 
 | File | What it pins |
 |---|---|
-| `cast/CastSpecMapperTest` | The three things a cast session can get wrong invisibly: a token on the media URL and on every subtitle URL (and idempotence where the server already signed one) — and **not** on the poster, which needs none (audit CAST-06); an `external:<index>` id becoming the Jellyfin stream index the picker speaks, and an unaddressable id dropped rather than invented; the MIME type per play method (mp4 / webm / HLS) and the forced `text/vtt`; runtime, resume position and the live-source case; metadata passing through with its words untouched. |
+| `cast/CastSpecMapperTest` | The three things a cast session can get wrong invisibly: a token on the media URL and on every subtitle URL (and idempotence where the server already signed one) — and **not** on the poster, which needs none (audit CAST-06); an `external:<index>` id becoming the Jellyfin stream index the picker speaks, and an unaddressable id dropped rather than invented; the MIME type per play method (mp4 / webm / HLS) and the forced `text/vtt`; runtime, resume position and the live-source case; metadata passing through with its words untouched; the server's `allowVideoStreamCopy=false` surviving on the transcode URL the receiver gets. |
 | `cast/CastMetadataHolderTest` | Published metadata read back under its own id, nothing under another's, replacement when the queue moves on, and case-insensitive UUIDs. |
 | `cast/CastDeviceStateTest` | The `CastState` int → `CastDeviceState` table, including the unknown-code case. |
 | `cast/CastSessionCoordinatorTest` | Connect → routing flip + status; disconnect → stop report, `stopTranscoding` and the flip back; the detached ticker starting only when nobody is attached, and stopping when a screen takes over. |
-| `deviceprofile/CastDeviceProfileTest` | The codec/container/subtitle/bitrate table, the stereo AAC cap on the transcode and on both direct-play shapes (`VIDEO_AUDIO`, `AUDIO`), and the bitrate cap being the only thing `build` changes. |
+| `deviceprofile/CastDeviceProfileTest` | The codec/container/subtitle/bitrate table, the stereo AAC cap on the transcode and on both direct-play shapes (`VIDEO_AUDIO`, `AUDIO`), and the bitrate cap being the only thing `build` changes; the H.264/HEVC video caps carrying no container in every class (so they bound the `ts` transcode) while no VP8/VP9 condition exists to constrain webm. |
 | `session/RoutingPlayerHandleTest` | Delegation of every method, event switching through `flatMapLatest` (Turbine), snapshot routing, `stopInactive` touching only the handle that is not in charge, and a switch leaving the handle it left alone. |
 | `ui/PlayerViewModelCastTest` | The system property, assembled from a real `RoutingPlayerHandle`, a real coordinator and a fake monitor: **exactly one stop report per source** across both transfers; stop-report-then-resolve ordering; `castTarget` on every re-negotiation (audio, subtitle, quality); a side-loaded subtitle never reaching the server; the fallback ladder bypassed; SyncPlay exclusivity; PiP disarmed; the speed picker following the receiver; the backdrop chain; the receiver's metadata published, a cast open waiting for it and a local open not. |
-| `resolve/PlaybackResolveCastTargetTest` | The two things `castTarget` changes: the copy on disk is skipped, and the cast profile is the one sent. |
+| `resolve/PlaybackResolveCastTargetTest` | The four things `castTarget` changes: the copy on disk is skipped, the cast profile is the one sent, `allowVideoStreamCopy = false` is sent (and not for local; direct play still wins), and an Auto transcode is re-negotiated at 20 Mbps while an Auto direct play stays uncapped and a hand-picked cap is sent as picked; a missing cap counts as over the ceiling for cast only. |
 
 Every pre-M12 player test passes **unchanged** — that was the milestone's regression gate, and it is
 what "a routing handle with no cast session is a pass-through" means in practice.

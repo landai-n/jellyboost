@@ -21,7 +21,10 @@ import org.jellyfin.sdk.model.api.TranscodingProfile
  * 4.2 at 1080p with AAC or MP3 in `mp4`, VP8/VP9 in `webm`, and an HLS transcode to H.264 + AAC in
  * `ts` for everything else. An HEVC-capable [CastReceiverClass] adds HEVC **direct play** only: the
  * transcode target is identical in every class because CAF's TS demuxer is H.264-only, and the fMP4
- * segments HEVC would need were measured broken on the reference Ultra.
+ * segments HEVC would need were measured broken on the reference Ultra. That transcode is always a
+ * full video re-encode, bounded by the same H.264 level and 1080p caps as direct play: the profile
+ * cannot say "no stream copy", so `PlaybackInfoResolver` sends `allowVideoStreamCopy = false`
+ * beside it, and walks an Auto transcode back to 20 Mbps.
  *
  * **Audio is capped at stereo AAC everywhere, and that is device-measured, not conservatism.** On a
  * Chromecast Ultra (Default Media Receiver CC1AD845) every AAC stream with more than 2 channels
@@ -118,7 +121,7 @@ internal object CastDeviceProfile {
     private const val MAX_AUDIO_CHANNELS = "2"
 
     /**
-     * Without the `h264`/`mp4` entry "H.264 in mp4" would also claim High 10, 4:2:2 and 4K files,
+     * Without the `h264` entry "H.264 in mp4" would also claim High 10, 4:2:2 and 4K files,
      * which the server would then hand over untranscoded.
      *
      * **Both** `aac` entries are needed: `VIDEO_AUDIO` and `AUDIO` are the two shapes that carry an
@@ -127,6 +130,13 @@ internal object CastDeviceProfile {
      *
      * The `hevc` entry likewise pins [ProfileConditionValue.VIDEO_RANGE_TYPE]: Dolby Vision reports
      * "Main 10" but needs a DV pipeline, so it must transcode rather than black-screen.
+     *
+     * **Both video entries are `container = null`**, as [DeviceProfileBuilder]'s are. The server
+     * matches a codec profile's container against the container it is *producing*, and for a
+     * transcode that is `ts`: scoped to `mp4`, the level and size caps never reached the transcode,
+     * so a 4K source came out as 4K H.264 above level 4.2. Unscoped, they put `MaxWidth`/`MaxHeight`/
+     * `Level` on the `TranscodingUrl`. Direct play is unchanged — `mp4` is the only container either
+     * codec is direct-played in — and the `webm` VP8/VP9 entry is untouched, being keyed on codec.
      */
     private fun codecProfiles(hevc: HevcCeiling?) =
         listOfNotNull(
@@ -134,7 +144,7 @@ internal object CastDeviceProfile {
             CodecProfile(
                 type = CodecType.VIDEO,
                 codec = "h264",
-                container = "mp4",
+                container = null,
                 applyConditions = emptyList(),
                 conditions =
                     listOf(
@@ -192,7 +202,7 @@ internal object CastDeviceProfile {
         CodecProfile(
             type = CodecType.VIDEO,
             codec = "hevc",
-            container = "mp4",
+            container = null,
             applyConditions = emptyList(),
             conditions =
                 listOf(
@@ -228,6 +238,7 @@ internal object CastDeviceProfile {
      * HLS with `ts` segments: CAF's own player decodes H.264 + AAC in MPEG-TS everywhere.
      * `maxAudioChannels = "2"` puts `TranscodingMaxAudioChannels=2` on the `TranscodingUrl` —
      * without it the server transcodes 5.1 sources to 5.1 AAC, which the receiver rejects (104).
+     * The output's H.264 level and size come from the unscoped `h264` codec profile, not from here.
      */
     private val TRANSCODING_PROFILES =
         listOf(

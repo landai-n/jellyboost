@@ -652,6 +652,21 @@ renditions is instant (no reload); check "off" really shows nothing on a fresh t
 a sidecar `.srt` still direct-plays (dashboard: no ffmpeg) rather than burning in; check a
 PGS-only source still burns in and re-resolves as before.
 
+## Cast transcodes re-encode, capped at 20 Mbps and 1080p (2026-09-27 — landed, gate green; Chromecast walk owed)
+
+Fixes casting a typical mkv (H.264 1080p, EAC3 5.1) stalling in `BUFFERING` forever: the
+server's stream-copied HLS-ts segments stop matching its keyframe-based playlist once ffmpeg
+restarts mid-file (resume, transfer, seek). A cast `PlaybackInfoDto` now sends
+`allowVideoStreamCopy = false` (the server appends it to the `TranscodingUrl`); a cast Auto
+transcode is re-negotiated at High's 20 Mbps rung instead of going out at the profile's
+120 Mbps (direct play stays uncapped, manual picks untouched); and the cast H.264/HEVC codec
+profiles are unscoped from `mp4` so their 1080p / level 4.2 caps bound the `ts` transcode.
+`DECISIONS.md` 2026-09-27; `docs/features/chromecast.md` "Known gaps / measured".
+**Chromecast walk owed (orchestrator-run):** on the Ultra, an mkv H.264 + EAC3 5.1 film
+casts, resumes mid-film, survives a local→cast transfer and a seek past the encoded range
+without stalling; the dashboard shows a video *transcode* (not copy) at ≤ 20 Mbps and 1080p;
+an mp4 H.264 + AAC stereo file still direct-plays; a 4K source transcodes to 1080p.
+
 ## M12 phase-2a — 4K/HEVC cast receivers by model name (2026-08-15 — landed, gate green; Chromecast walk owed)
 
 Cast receivers are now classified by `CastDevice.modelName` (`CastReceiverClass`:

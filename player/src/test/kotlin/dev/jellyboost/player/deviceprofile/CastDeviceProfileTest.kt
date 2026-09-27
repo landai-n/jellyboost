@@ -1,6 +1,8 @@
 package dev.jellyboost.player.deviceprofile
 
 import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.collections.shouldBeIn
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -74,6 +76,39 @@ class CastDeviceProfileTest {
         }
         conditions[ProfileConditionValue.WIDTH].shouldNotBeNull().value shouldBe "1920"
         conditions[ProfileConditionValue.HEIGHT].shouldNotBeNull().value shouldBe "1080"
+    }
+
+    @Test
+    fun `the video caps are not scoped to a container, so they bound the ts transcode too`() {
+        // The server matches a codec profile's container against the one it *produces*; scoped to
+        // mp4, the H.264 caps never reached the `ts` transcode and a 4K source came out as 4K
+        // H.264 above level 4.2. DeviceProfileBuilder already made the same fix for local play.
+        CastReceiverClass.entries.forEach { receiver ->
+            val video = CastDeviceProfile.build(receiver = receiver).codecProfiles.filter { it.type == CodecType.VIDEO }
+
+            video.map { it.codec }.shouldContain("h264")
+            video.forEach { it.container shouldBe null }
+        }
+        CastDeviceProfile
+            .build(receiver = CastReceiverClass.ULTRA_4K)
+            .codecProfiles
+            .single { it.codec == "hevc" }
+            .container shouldBe null
+    }
+
+    @Test
+    fun `unscoping the video caps leaves VP8 and VP9 in webm unconstrained`() {
+        // Codec profiles are keyed on codec, so dropping their container cannot reach a webm
+        // direct play: nothing but h264 and hevc carries a video condition, in any class.
+        CastReceiverClass.entries.forEach { receiver ->
+            val codecs =
+                CastDeviceProfile
+                    .build(receiver = receiver)
+                    .codecProfiles
+                    .filter { it.type == CodecType.VIDEO }
+                    .map { it.codec }
+            codecs.forEach { it shouldBeIn listOf("h264", "hevc") }
+        }
     }
 
     @Test

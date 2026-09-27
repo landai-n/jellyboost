@@ -10,6 +10,7 @@ import com.google.android.gms.cast.MediaMetadata
 import com.google.android.gms.cast.MediaQueueItem
 import com.google.android.gms.cast.MediaTrack
 import com.google.android.gms.common.images.WebImage
+import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -122,6 +123,11 @@ internal fun Player.openForCast(
  * contradict the load it travels in, and opens it ([openForCast]). The spec actually sent is returned.
  * `CastPlayerHandle.prepare`'s whole load, kept free of Cast types so the flag's journey into the
  * `MediaItem` the converter reads can be pinned.
+ *
+ * The start is [snapped][HlsSegmentSnap.snapStartMs] for a transcode with a known segment grid
+ * ([CastMediaSpec.hlsSegmentMs]) — both the load's position and the queue item's start time, so the
+ * receiver cannot read one without the other. At most ~2 s earlier than asked; the reported position
+ * then follows the receiver's own readings, so it stays where playback actually is.
  */
 @UnstableApi
 internal fun Player.loadOnReceiver(
@@ -129,8 +135,16 @@ internal fun Player.loadOnReceiver(
     startPositionMs: Long,
     playWhenReady: Boolean,
 ): CastMediaSpec {
-    val sent = mapped.copy(autoplay = playWhenReady)
-    openForCast(sent.toMediaItem(), startPositionMs, playWhenReady)
+    val startMs = HlsSegmentSnap.snapStartMs(startPositionMs, mapped.hlsSegmentMs)
+    if (startMs != startPositionMs) {
+        Timber.i("Cast start %d ms moved to %d ms, early in its HLS segment", startPositionMs, startMs)
+    }
+    val sent =
+        mapped.copy(
+            autoplay = playWhenReady,
+            startPositionMs = HlsSegmentSnap.snapStartMs(mapped.startPositionMs, mapped.hlsSegmentMs),
+        )
+    openForCast(sent.toMediaItem(), startMs, playWhenReady)
     return sent
 }
 

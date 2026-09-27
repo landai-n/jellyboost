@@ -324,8 +324,19 @@ internal class PlaybackInfoResolver
                 selectedSubtitleIndex =
                     request.subtitleStreamIndex?.takeIf { it >= 0 }
                         ?: defaultSubtitleStreamIndex.takeIf { request.subtitleStreamIndex == null },
+                videoFrameRate = streams.firstOrNull { it.type == MediaStreamType.VIDEO }?.frameRate(),
             )
         }
+
+        /**
+         * `RealFrameRate` first: the rate ffmpeg reports for the stream, and the one the transcode's
+         * measured keyframe interval (`-g ceil(3 × fps)`) matches. The other two only stand in for it.
+         * Anything not a positive number below [MAX_PLAUSIBLE_FRAME_RATE] is "unknown" (the server
+         * itself distrusts an `AverageFrameRate` read as 1000 fps).
+         */
+        private fun MediaStream.frameRate(): Float? =
+            sequenceOf(realFrameRate, referenceFrameRate, averageFrameRate)
+                .firstOrNull { it != null && it > 0f && it < MAX_PLAUSIBLE_FRAME_RATE }
 
         private companion object {
             /**
@@ -333,6 +344,8 @@ internal class PlaybackInfoResolver
              * the two paths cannot drift apart.
              */
             val AUTO_TRANSCODE_CEILING: Int = requireNotNull(PlaybackQuality.HIGH.maxStreamingBitrate)
+
+            const val MAX_PLAUSIBLE_FRAME_RATE = 1000f
         }
     }
 

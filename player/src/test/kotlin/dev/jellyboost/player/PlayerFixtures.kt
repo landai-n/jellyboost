@@ -107,6 +107,26 @@ internal object PlayerFixtures {
             supportsExternalStream = false,
         )
 
+    fun videoStream(
+        index: Int = 0,
+        realFrameRate: Float? = null,
+        averageFrameRate: Float? = null,
+    ): MediaStream =
+        MediaStream(
+            type = MediaStreamType.VIDEO,
+            index = index,
+            codec = "h264",
+            realFrameRate = realFrameRate,
+            averageFrameRate = averageFrameRate,
+            isInterlaced = false,
+            isDefault = true,
+            isForced = false,
+            isHearingImpaired = false,
+            isExternal = false,
+            isTextSubtitleStream = false,
+            supportsExternalStream = false,
+        )
+
     @Suppress("LongParameterList")
     fun subtitleStream(
         index: Int,
@@ -150,6 +170,7 @@ internal object PlayerFixtures {
         externalSubtitles: List<ExternalSubtitle> = emptyList(),
         selectedAudioIndex: Int? = null,
         selectedSubtitleIndex: Int? = null,
+        videoFrameRate: Float? = null,
     ): RemotePlaybackMediaSource =
         RemotePlaybackMediaSource(
             itemId = ITEM_ID,
@@ -171,6 +192,7 @@ internal object PlayerFixtures {
             externalSubtitles = externalSubtitles,
             selectedAudioIndex = selectedAudioIndex,
             selectedSubtitleIndex = selectedSubtitleIndex,
+            videoFrameRate = videoFrameRate,
         )
 
     // ---- offline -------------------------------------------------------------------------------

@@ -33,11 +33,12 @@ internal class CastSpecMapper
             spec: PlaybackMediaItemSpec,
             source: RemotePlaybackMediaSource,
             metadata: CastMetadata = CastMetadata(),
-        ): CastMediaSpec =
-            CastMediaSpec(
+        ): CastMediaSpec {
+            val contentType = contentTypeOf(spec, source)
+            return CastMediaSpec(
                 mediaId = spec.mediaId,
                 contentId = urls.withApiKey(spec.uri),
-                contentType = contentTypeOf(spec, source),
+                contentType = contentType,
                 // A runtime the server does not know means a live source: nothing to seek within.
                 streamType = if (source.runTimeTicks > 0L) CastStreamType.Buffered else CastStreamType.Live,
                 durationMs = source.runTimeTicks.ticksToMillis(),
@@ -47,7 +48,46 @@ internal class CastSpecMapper
                 // read. Signing it would leak the token for nothing.
                 metadata = metadata,
                 tracks = spec.tracks(),
+                hlsSegmentMs = hlsSegmentMsOf(source, contentType),
             )
+        }
+
+        /**
+         * The server's segment length, for the one shape whose segments it lays out on a fixed grid: an
+         * HLS transcode that **re-encodes** the video (`allowVideoStreamCopy=false`, which every cast
+         * transcode asks for and the server echoes into the URL). A stream copy is laid out on the
+         * file's keyframes, a URL asking for its own frame rate may be encoded at another one — in both
+         * cases, and whenever the frame rate is unknown, there is no grid to snap to: `null`.
+         * A `SegmentLength` the URL carries replaces the nominal 3 s.
+         */
+        private fun hlsSegmentMsOf(
+            source: RemotePlaybackMediaSource,
+            contentType: String,
+        ): Double? {
+            val onGrid =
+                source.playMethod == PlayMethod.TRANSCODE &&
+                    contentType == MimeTypes.APPLICATION_M3U8 &&
+                    source.runTimeTicks > 0L
+            val query = source.transcodingUrl?.takeIf { onGrid }?.let(::queryOf) ?: return null
+            val reEncoded = query.param("allowVideoStreamCopy").equals("false", ignoreCase = true)
+            val ownFrameRate = query.param("Framerate") != null || query.param("MaxFramerate") != null
+            // An unreadable length is no length (0), never the nominal one.
+            val nominal =
+                query.param("SegmentLength")?.let { it.toIntOrNull() ?: 0 }
+                    ?: HlsSegmentSnap.NOMINAL_SEGMENT_SECONDS
+            return if (reEncoded && !ownFrameRate) HlsSegmentSnap.segmentMs(source.videoFrameRate, nominal) else null
+        }
+
+        private fun queryOf(url: String): List<Pair<String, String>> =
+            url
+                .substringAfter('?', missingDelimiterValue = "")
+                .split('&')
+                .filter { it.isNotEmpty() }
+                .map { it.substringBefore('=') to it.substringAfter('=', "") }
+
+        /** The server's parameter names are case-insensitive. */
+        private fun List<Pair<String, String>>.param(name: String): String? =
+            firstOrNull { it.first.equals(name, ignoreCase = true) }?.second
 
         /**
          * `CastDeviceProfile` allows only the two containers below for direct play/stream; anything

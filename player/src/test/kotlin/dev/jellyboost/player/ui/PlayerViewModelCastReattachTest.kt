@@ -10,9 +10,11 @@ import io.kotest.matchers.shouldBe
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -190,6 +192,54 @@ internal class PlayerViewModelCastReattachTest : PlayerViewModelCastFixture() {
             noReportCarriesZero()
         }
 
+    /**
+     * The device walk, step for step: reattach, follow the television to 663 s, then the Cast
+     * notification's X. media3's `RemoteCastPlayer` drops its client but keeps its timeline, so the
+     * cast handle still claims our item — at zero — when the coordinator reads it (before routing moves),
+     * and once routing is local the idle local player answers a valid zero too. Neither may bring the
+     * film home at 0:00, reach a stop, or reach a progress tick.
+     */
+    @Test
+    fun `the device walk - a torn-down receiver and the idle local player both reading zero change nothing`() =
+        runTest(dispatcher) {
+            leftPlayingOnTheTelevision()
+            val tickerReads = mutableListOf<() -> PlaybackSnapshot>()
+            every { reporter.startReporting(any(), any(), capture(tickerReads)) } returns Job()
+            val model = reattached()
+            model.onTick(AT_663)
+            castHandle.snapshot = TORN_DOWN
+            local.snapshot = PlaybackSnapshot()
+            val requests = echoResolves()
+
+            framework.onSessionEnded()
+            // The screen's own ticker fires between the routing switch and the home open.
+            val lateTick = tickerReads.last().invoke()
+            advanceUntilIdle()
+
+            lateTick.isValid shouldBe false
+            requests.single().startPositionTicks shouldBe AT_663.positionTicks
+            local.prepared.single().startPositionMs shouldBe AT_663.positionMs
+            coVerify(exactly = 1) { reporter.reportStop(source, AT_663) }
+            noReportCarriesZero()
+        }
+
+    @Test
+    fun `a zero read off a torn-down receiver before the end is not remembered as where the film is`() =
+        runTest(dispatcher) {
+            leftPlayingOnTheTelevision()
+            val model = reattached()
+            model.onTick(AT_663)
+            model.onTick(TORN_DOWN)
+            castHandle.snapshot = NOT_OURS
+            val requests = echoResolves()
+
+            framework.onSessionEnded()
+            advanceUntilIdle()
+
+            requests.single().startPositionTicks shouldBe AT_663.positionTicks
+            noReportCarriesZero()
+        }
+
     @Test
     fun `a reattached screen that goes as the receiver stops answering hands its last reading to the coordinator`() =
         runTest(dispatcher) {
@@ -272,6 +322,15 @@ internal class PlayerViewModelCastReattachTest : PlayerViewModelCastFixture() {
 
         /** About 27:20, and playing: where the television had got to when the session was disconnected. */
         val AT_27_20 = PlaybackSnapshot(positionMs = 1_640_000L, durationMs = 7_200_000L, isPlaying = true)
+
+        /** 663 s, where the television was on the device walk when the session was disconnected. */
+        val AT_663 = PlaybackSnapshot(positionMs = 663_000L, durationMs = 7_200_000L, isPlaying = true)
+
+        /**
+         * What a torn-down `RemoteCastPlayer` answers: its stale timeline still holds our item, so the
+         * reading counts as valid, at zero.
+         */
+        val TORN_DOWN = PlaybackSnapshot(positionMs = 0L, isValid = true)
 
         /** A receiver not (yet) holding this item: every field zero, and flagged as belonging to nothing. */
         val NOT_OURS = PlaybackSnapshot(isValid = false)

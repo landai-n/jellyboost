@@ -161,6 +161,10 @@ internal class CastPlayerHandle
         }
 
         private fun CastPlayer.reading(): PlaybackSnapshot {
+            // Once the session is torn down `RemoteCastPlayer` drops its client but keeps its timeline and
+            // state (`setCastSession(null)` updates neither), so our item still looks held — at its last
+            // reported position, zero after a receiver stop. Nothing it says then is live.
+            if (remoteMediaClient() == null) return PlaybackSnapshot(isValid = false)
             val ended = playbackState == Player.STATE_ENDED
             if (!ended && !holdsLoadedItem()) return PlaybackSnapshot(isValid = false)
             return PlaybackSnapshot(

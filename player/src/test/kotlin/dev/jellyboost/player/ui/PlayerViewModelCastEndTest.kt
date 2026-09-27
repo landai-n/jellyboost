@@ -1,14 +1,20 @@
 package dev.jellyboost.player.ui
 
+import dev.jellyboost.player.cast.CastSessionCoordinator
 import dev.jellyboost.player.model.PlaybackQuality
 import dev.jellyboost.player.model.PlaybackSnapshot
+import dev.jellyboost.player.session.PlayerEvent
 import io.kotest.matchers.shouldBe
 import io.mockk.clearMocks
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
@@ -107,7 +113,77 @@ internal class PlayerViewModelCastEndTest : PlayerViewModelCastFixture() {
             requests.last().startPositionTicks shouldBe ON_THE_TELEVISION.positionTicks
         }
 
+    // ---- a torn-down receiver, or the idle local player, answering a *valid* zero -------------------
+
+    @Test
+    fun `a final reading of zero off a torn-down receiver brings the film home at the last valid reading`() =
+        runTest(dispatcher) {
+            castingThenReceiverGone()
+            // `RemoteCastPlayer` keeps its timeline after the session goes: our item, at zero, "valid".
+            castHandle.snapshot = TORN_DOWN
+            val requests = echoResolves()
+
+            framework.onSessionEnded()
+            advanceUntilIdle()
+
+            requests.single().startPositionTicks shouldBe ON_THE_TELEVISION.positionTicks
+            coVerify(exactly = 1) { reporter.reportStop(source, ON_THE_TELEVISION) }
+            coVerify(exactly = 0) { reporter.reportStop(any(), match { it.positionMs == 0L }) }
+        }
+
+    @Test
+    fun `a zero reading is dropped from the screen and the ticker unless the user sought to zero`() =
+        runTest(dispatcher) {
+            val model = castingThenReceiverGone()
+            val tickerReads = mutableListOf<() -> PlaybackSnapshot>()
+            every { reporter.startReporting(any(), any(), capture(tickerReads)) } returns Job()
+            castHandle.snapshot = ON_THE_TELEVISION
+            model.selectQuality(PlaybackQuality.LOW)
+            advanceUntilIdle()
+            model.onTick(ON_THE_TELEVISION)
+            castHandle.snapshot = TORN_DOWN
+
+            model.onTick(TORN_DOWN)
+
+            // Neither the scrubber nor a progress report may take the zero.
+            model.position.value.positionMs shouldBe ON_THE_TELEVISION.positionMs
+            tickerReads.last().invoke().isValid shouldBe false
+        }
+
+    @Test
+    fun `a seek to the start is the user's, so zero is then where the film is`() =
+        runTest(dispatcher) {
+            val model = castingThenReceiverGone()
+            castHandle.snapshot = ON_THE_TELEVISION
+            model.seekTo(0L)
+            model.onTick(castHandle.snapshot)
+            castHandle.snapshot = NOT_OURS
+            val requests = echoResolves()
+
+            framework.onSessionEnded()
+            advanceUntilIdle()
+
+            requests.single().startPositionTicks shouldBe 0L
+            coVerify(exactly = 1) { reporter.reportStop(source, match { it.isValid && it.positionMs == 0L }) }
+        }
+
+    @Test
+    fun `a receiver that drops the item holding a stale zero is closed at the last valid reading`() =
+        runTest(dispatcher) {
+            castingThenReceiverGone()
+            castHandle.emit(PlayerEvent.RemoteItemMissing(TORN_DOWN))
+            runCurrent()
+            advanceTimeBy(CastSessionCoordinator.ITEM_LOST_GRACE.inWholeMilliseconds + 1L)
+            runCurrent()
+
+            coVerify(exactly = 1) { reporter.reportStop(source, ON_THE_TELEVISION) }
+            coVerify(exactly = 0) { reporter.reportStop(any(), match { it.positionMs == 0L }) }
+        }
+
     private companion object {
+        /** What a torn-down `RemoteCastPlayer` answers: its stale timeline still holds our item, at zero. */
+        val TORN_DOWN = PlaybackSnapshot(positionMs = 0L, isValid = true)
+
         /** Fifteen minutes in: where the television got to before it was disconnected. */
         val ON_THE_TELEVISION = PlaybackSnapshot(positionMs = 900_000L, isPlaying = true)
 

@@ -660,8 +660,26 @@ internal class PlayerViewModelCastTest : PlayerViewModelCastFixture() {
             passGrace()
             advanceUntilIdle()
 
-            coVerify(exactly = 1) { reporter.reportStop(source, ON_THE_TELEVISION) }
-            verify(exactly = 0) { reporter.reportStopDetached(any(), any()) }
+            // Detached, not the cancellable `reportStop` path: the message is already on screen by
+            // the time the user could possibly leave it.
+            verify(exactly = 1) { reporter.reportStopDetached(source, ON_THE_TELEVISION) }
+            coVerify(exactly = 0) { reporter.reportStop(source, ON_THE_TELEVISION) }
+        }
+
+    @Test
+    fun `an item-lost report is handed off before the screen could ever cancel it`() =
+        runTest(dispatcher) {
+            val model = castingWithInvalidReading()
+            receiverDropsTheItem()
+            passGrace()
+
+            // The user backs out the instant the "stopped" message shows — before any dispatcher
+            // turn a `viewModelScope.launch`-ed report would need to survive.
+            model.releaseSession()
+            advanceUntilIdle()
+
+            verify(exactly = 1) { reporter.reportStopDetached(source, ON_THE_TELEVISION) }
+            coVerify(exactly = 0) { reporter.reportStop(source, ON_THE_TELEVISION) }
         }
 
     @Test

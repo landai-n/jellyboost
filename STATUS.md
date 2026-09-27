@@ -51,7 +51,10 @@ and the zero-rule entry amended).
   check the first one's stop on the dashboard is at its own position. Change quality while casting
   right after a load: the television keeps playing. In a SyncPlay group, seek the group to 0:00 and
   leave: the resume position is 0. Drop Wi-Fi briefly while casting with TalkBack on: both
-  "Reconnecting…" and the return to "Casting to …" are spoken. Run `CastingBarSemanticsTest`.
+  "Reconnecting…" and the return to "Casting to …" are spoken. `CastingBarSemanticsTest`
+  done — 6/6 on the test tablet, 2026-09-27, once its query was fixed to ask the merged tree
+  (DECISIONS.md 2026-09-27, *CastingBarSemanticsTest: "not read twice" is asked of the merged
+  tree*).
 
 **Cast: the resume-position wipe, second fix, from the device walk (2026-09-27, worktree branch;
 device walk owed).** The first fix (below) was on the device and the wipe still happened: a reattached
@@ -108,7 +111,9 @@ Known issues / owed:
   opened from. (5) From Home (bar showing), tap the notification → the player for that film, Back →
   Home. (6) Open a *different* film while one is detached → the first one's session closes once on
   the dashboard. (7) Music playing locally + a film on the television → only the casting bar shows.
-  (8) The instrumented `CastingBarSemanticsTest` on the tablet.
+  (8) The instrumented `CastingBarSemanticsTest` on the tablet — done: 6/6 on the test tablet,
+  2026-09-27, once its query was fixed to ask the merged tree (DECISIONS.md 2026-09-27,
+  *CastingBarSemanticsTest: "not read twice" is asked of the merged tree*).
 - After process death there is still no reattach: no bar, and the notification opens Home.
 
 **Cast: honest controls around a receiver's invalid readings, buffering and dropped items

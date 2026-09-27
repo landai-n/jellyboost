@@ -10,6 +10,7 @@ import dev.jellyboost.player.model.PlaybackSpeed
 import dev.jellyboost.player.model.PlaybackTrack
 import dev.jellyboost.player.model.TrickplayTiles
 import dev.jellyboost.player.segments.MediaSegment
+import dev.jellyboost.player.session.tapPlays
 import dev.jellyboost.player.syncplay.model.SyncPlayRepeatMode
 import dev.jellyboost.player.upnext.UpNextEpisode
 
@@ -91,15 +92,37 @@ internal data class PlayerUiState(
      * Always `false` locally.
      */
     val receiverSettledPaused: Boolean = false,
+    /**
+     * The player's **intent** (`PlayerHandle.playWhenReady`): with [receiverSettledPaused], the whole of
+     * what the tap decides from (`tapPlays`), so the label is drawn from it too — never from [isPlaying],
+     * which disagrees with the intent whenever the player means to play but is not playing (a transient
+     * audio-focus loss, or a receiver that has let go of the film).
+     */
+    val playWhenReady: Boolean = false,
+    /**
+     * The receiver no longer holds this session's film: inside the cast coordinator's grace period
+     * (`PlayerEvent.RemoteItemMissing`) or after it (`castItemLostAt`). The tap then sends the film back
+     * rather than pausing or playing whatever the receiver now holds, so the label says Play.
+     */
+    val receiverLetGo: Boolean = false,
 ) {
     val isReady: Boolean get() = !isLoading && errorMessage == null
 
     /**
-     * In a group the *group's* state is the truth a tap reverses: an icon drawn from the local
-     * player's `isPlaying` after a missed echo shows the opposite of what the next tap must ask for.
+     * **The tap's own rule** (`PlayerViewModel.togglePlayPause`), so the label never offers the opposite
+     * of what a tap does. In a group the *group's* state is the truth a tap reverses: an icon drawn from
+     * the local player's `isPlaying` after a missed echo shows the opposite of what the next tap must ask
+     * for. Solo, a receiver that has let go is answered by a resend (Play); otherwise the tap is
+     * `tapPlays(playWhenReady, receiverSettledPaused)`. Buffering keeps Pause through `transportControl`,
+     * and is only ever set with `playWhenReady` true, which this already draws as Pause.
      */
     val showsPlaying: Boolean
-        get() = if (syncPlay.inGroup) syncPlay.groupPlaying else isPlaying && !receiverSettledPaused
+        get() =
+            when {
+                syncPlay.inGroup -> syncPlay.groupPlaying
+                receiverLetGo -> false
+                else -> !tapPlays(playWhenReady, receiverSettledPaused)
+            }
 }
 
 /**

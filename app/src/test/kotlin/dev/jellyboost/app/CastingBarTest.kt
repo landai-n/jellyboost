@@ -104,6 +104,59 @@ class CastingBarActionTest {
             }
         }
     }
+
+    @Test
+    @DisplayName("a receiver letting go of the film offers Play that opens the player, whatever its intent says")
+    fun letGoOpensThePlayer() {
+        for (playWhenReady in listOf(true, false)) {
+            for (buffering in listOf(true, false)) {
+                for (settled in listOf(true, false)) {
+                    castingBarAction(playWhenReady, buffering, settled, receiverLetGo = true) shouldBe
+                        CastingBarAction.OPEN_PLAYER
+                }
+            }
+        }
+    }
+
+    @Test
+    @DisplayName("the bar's own item, letting go, is labelled from the flag CastNowPlaying sets")
+    fun letGoItemLabel() {
+        val item = CASTING.copy(playWhenReady = true, receiverLetGo = true)
+
+        castingBarAction(item.playWhenReady, item.isBuffering, item.isSettledPaused, item.receiverLetGo) shouldBe
+            CastingBarAction.OPEN_PLAYER
+    }
+}
+
+class CastingStoppedTest {
+    @Test
+    @DisplayName("the television dropping the film, or the session ending, is announced with the device")
+    fun announcedWhenTheItemGoes() {
+        castingStopped(previous = CASTING, current = null, onPlayer = false) shouldBe
+            CastingStopped(deviceName = "Living Room TV")
+    }
+
+    @Test
+    @DisplayName("an unnamed receiver is still announced; the copy names it generically")
+    fun unnamedDevice() {
+        castingStopped(previous = CASTING.copy(deviceName = null), current = null, onPlayer = false) shouldBe
+            CastingStopped(deviceName = null)
+    }
+
+    @Test
+    @DisplayName("opening the player takes the bar away silently: that screen is now the remote control")
+    fun silentWhenThePlayerOpens() {
+        castingStopped(previous = CASTING, current = null, onPlayer = true) shouldBe null
+    }
+
+    @Test
+    @DisplayName("a bar that stays, changes, or appears is not an exit")
+    fun noExitNoAnnouncement() {
+        val moved = CASTING.copy(positionMs = 905_000L)
+        castingStopped(previous = CASTING, current = moved, onPlayer = false) shouldBe null
+        castingStopped(previous = null, current = CASTING, onPlayer = false) shouldBe null
+        castingStopped(previous = null, current = null, onPlayer = false) shouldBe null
+    }
 }
 
 class CastNotificationRouteTest {

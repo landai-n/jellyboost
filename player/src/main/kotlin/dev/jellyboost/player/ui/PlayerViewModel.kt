@@ -449,6 +449,8 @@ internal class PlayerViewModel
                     // and a session ending before this screen reads the receiver would come home there.
                     lastValidReading = held.lastValidReading,
                     onReceiver = true,
+                    // The coordinator adopts only a source the receiver holds (`heldSourceFor`).
+                    receiverLetGo = false,
                 )
             _videoPlayer.value = playerHandle.player
             val reading = held.reading.takeIf { it.isValid }
@@ -470,6 +472,7 @@ internal class PlayerViewModel
             cast.attach()
             publishSpeedSupport()
             publishPipState()
+            publishTransport()
         }
 
         /**
@@ -570,6 +573,9 @@ internal class PlayerViewModel
                     .asRequest(active.forcedRemote, castTarget = isCasting)
                     .copy(startPositionTicks = resumeMs.millisToTicks()),
                 playWhenReady = true,
+                // Inside the grace period the session is not closed yet: close it where the receiver last
+                // held it before the resend negotiates a new one. Once lost, `onCastItemLost` has.
+                endingAt = vouchedReading().takeIf { active.castItemLostAt == null },
             )
         }
 
@@ -663,8 +669,32 @@ internal class PlayerViewModel
          */
         internal fun togglePlayPause() {
             if (syncPlay.isInGroup) return syncPlay.requestPlayPause()
-            session?.takeIf { it.castItemLostAt != null }?.let { return resendLostCastItem(it) }
+            // Lost, or letting go inside the grace period: the receiver holds another sender's media or
+            // nothing, and a pause or play would act on that. The label says Play ([publishTransport]).
+            session?.takeIf { it.receiverHasLetGo }?.let { return resendLostCastItem(it) }
             playerHandle.togglePlayWhenReady()
+            publishTransport()
+        }
+
+        /**
+         * What the transport's label is drawn from ([PlayerUiState.showsPlaying]) — the tap's own inputs:
+         * the player's intent, its settled-paused state, and whether the receiver has let go. Diffed,
+         * since it runs on every tick and every player event.
+         */
+        private fun publishTransport() {
+            val playWhenReady = playerHandle.playWhenReady
+            val settledPaused = playerHandle.isSettledPaused
+            val letGo = session?.receiverHasLetGo == true
+            val state = _uiState.value
+            if (state.playWhenReady == playWhenReady &&
+                state.receiverSettledPaused == settledPaused &&
+                state.receiverLetGo == letGo
+            ) {
+                return
+            }
+            _uiState.update {
+                it.copy(playWhenReady = playWhenReady, receiverSettledPaused = settledPaused, receiverLetGo = letGo)
+            }
         }
 
         /**
@@ -674,8 +704,8 @@ internal class PlayerViewModel
          */
         internal fun seekTo(positionMs: Long) {
             if (syncPlay.isInGroup) return syncPlay.requestSeek(positionMs)
-            // Nothing is loaded on the receiver: the position is remembered for the resend instead.
-            if (session?.castItemLostAt == null) playerHandle.seekTo(positionMs)
+            // Nothing of ours is loaded on the receiver: the position is remembered for the resend instead.
+            if (session?.receiverHasLetGo != true) playerHandle.seekTo(positionMs)
             positionTracker.onSeekTo(positionMs)
             // The user's own seek is the one way a zero becomes believable ([vetted]).
             updateSession { it.copy(lastValidReading = it.lastValidReading?.copy(positionMs = positionMs)) }
@@ -921,12 +951,10 @@ internal class PlayerViewModel
          * up-next decisions a position that belongs to nothing.
          */
         internal fun onTick(reading: PlaybackSnapshot) {
-            // Before the validity check: the receiver's own paused state is readable when its snapshot
-            // is not, and the transport's label must follow the tap's rule ([tapPlays]) either way.
-            val settledPaused = playerHandle.isSettledPaused
-            if (settledPaused != _uiState.value.receiverSettledPaused) {
-                _uiState.update { it.copy(receiverSettledPaused = settledPaused) }
-            }
+            // Before the validity check: the player's intent and a receiver's own paused state are
+            // readable when its snapshot is not, and the transport's label must follow the tap's rule
+            // ([tapPlays]) either way.
+            publishTransport()
             val snapshot = vetted(reading)
             if (!snapshot.isValid) return
             rememberReading(snapshot)
@@ -1153,6 +1181,8 @@ internal class PlayerViewModel
                             // Read at publish, which follows `prepare` with no suspension between: the
                             // player routing prepared this source on.
                             onReceiver = isCasting,
+                            // A fresh load: presence starts over with it (`RemoteItemPresence.onLoad`).
+                            receiverLetGo = false,
                         )
                     // A re-resolve builds a fresh media item, which starts at 1×; the speed belongs
                     // to the session, not to the media item.
@@ -1164,6 +1194,7 @@ internal class PlayerViewModel
                     // a film opened paused (home from a television) must offer Play.
                     val opening = playerHandle.playWhenReady
                     _uiState.update { it.withSource(resolved, isOnline, message, buffering = opening) }
+                    publishTransport()
                     positionTracker.onSessionOpened(resolved.startPositionTicks.ticksToMillis())
                     // A dismissal belongs to the episode it was made on.
                     upNext.reset()
@@ -1281,8 +1312,10 @@ internal class PlayerViewModel
 
                 // Both players: a receiver can buffer for minutes, a local stream rebuffers, and each
                 // should show a spinner rather than a Play triangle that invites the wrong tap.
+                // Not while the receiver has let go: what it buffers is not ours, and the ring would put a
+                // Pause over the tap that sends the film back.
                 is PlayerEvent.Buffering ->
-                    if (session?.castItemLostAt == null) {
+                    if (session?.receiverHasLetGo != true) {
                         _uiState.update { it.copy(isBuffering = event.isBuffering) }
                     }
 
@@ -1297,9 +1330,17 @@ internal class PlayerViewModel
 
                 is PlayerEvent.Error -> onError(event)
 
-                // `CastSessionCoordinator`'s to judge; it calls back through [onCastItemLost].
-                is PlayerEvent.RemoteItemMissing, PlayerEvent.RemoteItemMissingCleared -> Unit
+                // Whether it is *gone* is `CastSessionCoordinator`'s to judge ([onCastItemLost]); meanwhile
+                // the transport must not act on a receiver that no longer holds this session's film.
+                is PlayerEvent.RemoteItemMissing ->
+                    if (session?.onReceiver == true) {
+                        updateSession { it.copy(receiverLetGo = true) }
+                        _uiState.update { it.copy(isBuffering = false) }
+                    }
+
+                PlayerEvent.RemoteItemMissingCleared -> updateSession { it.copy(receiverLetGo = false) }
             }
+            publishTransport()
         }
 
         /**
@@ -1537,6 +1578,9 @@ internal class PlayerViewModel
  *   loads the item again (`PlayerViewModel.onCastItemLost`).
  * @property onReceiver whether [source] was opened on a Cast receiver: which player's readings are this
  *   session's (`PlayerViewModel.vetted`).
+ * @property receiverLetGo the receiver stopped holding [source] and the cast coordinator's grace period
+ *   runs (`PlayerEvent.RemoteItemMissing`, cleared by `RemoteItemMissingCleared`): the transport acts on
+ *   nothing and Play sends the film back, as it does once [castItemLostAt] is set.
  * @property lastValidReading the last [valid][PlaybackSnapshot.isValid] reading taken for [source] —
  *   the only position this session can vouch for once its player stops answering (a receiver that has
  *   gone). Here and not on the ViewModel or the tracker: its lifetime is exactly this source's, so a
@@ -1558,7 +1602,11 @@ private data class ActiveSession(
     val castItemLostAt: PlaybackSnapshot?,
     val lastValidReading: PlaybackSnapshot?,
     val onReceiver: Boolean,
-)
+    val receiverLetGo: Boolean,
+) {
+    /** Nothing of this session's is on the receiver any more: lost, or letting go inside the grace period. */
+    val receiverHasLetGo: Boolean get() = castItemLostAt != null || receiverLetGo
+}
 
 /**
  * The request that would reproduce what is playing right now; callers `copy()` the one thing they

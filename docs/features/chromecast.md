@@ -163,6 +163,15 @@ round it. Spoken as one sentence ("<title>, Casting to <device>", with the tap "
 the separate button; the button says "Buffering" as a polite live region while buffering, and the
 row is a polite live region while reconnecting.
 
+While the receiver is **letting go of the item** (the 10 s grace period below,
+`CastSessionCoordinator.isLosingItem`), the receiver's intent belongs to whatever it holds now, which
+may be another sender's media. The coordinator refuses the bar's toggle then. `CastingItem.receiverLetGo`
+makes the button "Play", with its click labelled "Open player" (`CastingBarAction.OPEN_PLAYER`), and a
+tap opens the player. Nothing is adopted during the grace, so the player sends the film back from the
+bar's position, playing. **When the bar goes on its own**, because the receiver dropped the film or the
+session ended, the chrome's snackbar says "Playback stopped on <device>" (`castingStopped`,
+`CastingStoppedEffect`), which is a polite live region. Opening the player is the one silent exit.
+
 **Reattach instead of reload.** Opening the player for the item the receiver already holds — from
 the bar, Resume, the detail page or the notification — no longer negotiates it again. Before, a new
 `PlaybackInfo` and a second `prepare` stopped the receiver, rebuffered it and started a second
@@ -224,6 +233,10 @@ With a screen attached the item is **not** reloaded — whoever pressed Stop on 
 (the scrubber still works, and moves that position), and Play re-sends the item to the receiver from
 there. With no screen, the stop report goes out and the ticker stops; the connection itself is left
 alone, so the next Resume still casts while the session is up, and opens locally once it has ended.
+The screen does not wait out the grace period to stop acting on the receiver. From
+`RemoteItemMissing` on (`ActiveSession.receiverLetGo`) the label says Play, and Play re-sends the film,
+first closing the old session at its last vouched reading. A skip moves only the resume point, and the
+receiver's buffering is not drawn. `RemoteItemMissingCleared`, or any new load, ends this.
 
 **A film played to its end is an end, not a drop (2026-09-27, second review).** media3-cast 1.9.0's
 `RemoteCastPlayer.fetchPlaybackState` only ever produces IDLE, BUFFERING and READY — never
@@ -321,6 +334,10 @@ buffers, and `openForCast` honours the flag it is given. The label follows the s
 (`tapPlays`, which `togglePlayWhenReady` runs). The casting bar gets `CastingItem.isSettledPaused` and
 `castingBarAction(…, isSettledPaused)`. The player screen gets `PlayerUiState.receiverSettledPaused`,
 so a receiver settled paused under a stale `playWhenReady = true` shows Play, the action its tap takes.
+Since review 2, the screen also carries `PlayerUiState.playWhenReady`, and `showsPlaying` is exactly
+`!tapPlays(playWhenReady, receiverSettledPaused)`, or Play while the receiver has let go. It never reads
+`isPlaying`, which disagreed with the tap during a transient audio-focus loss and during the item-lost
+grace period.
 Both cast status lines (the bar's row and the player's backdrop label) stay a polite live region from
 the first reconnect on (`rememberCastStatusIsLive`), so the return to "Casting to <device>" is announced
 too.
@@ -470,6 +487,7 @@ own rule is that a rule belongs there only when it was shown to be missing.
 | `ui/PlayerViewModelCastInPlaceTrackTest` | A subtitle turned off in place while casting, then the screen leaves: the bar and the detached ticker keep following the television, a reopen adopts without resolving or loading, and the session's end reports the live position; the audio twin keeps following too. |
 | `ui/PlayerViewModelCastFinishTest` | A film finishing on the receiver: with a screen, it ends as played (one ended stop, no "stopped" message, no positioned stop, even with a drop noticed first and the grace period run); an episode advances to the next on the receiver; with no screen, one ended stop from the finish itself, the bar cleared, nothing more at the session's end. |
 | `cast/CastSessionCoordinatorLoadTest` | A copy with a track chosen in place is read as the detached source and adopted without an orphan report; a detached finish is closed once at its ended reading (and cancels a loss already under way); with a screen attached, or for another film loaded since, the coordinator reports nothing. |
+| Review 2: `ui/PlayerTransportTest`, `ui/PlayerViewModelCastGraceTest`, `cast/CastSessionCoordinatorTest`, `cast/CastNowPlayingTest`, `:app` `CastingBarActionTest` / `CastingStoppedTest` | The transport's label equals its tap in every reachable playWhenReady/settled-paused/buffering state, including an audio-focus loss. Inside the grace period the screen labels Play, and its tap re-sends the film (the old session closed once first) without pausing the receiver. A skip there leaves the receiver alone, and a film that comes back is paused as labelled. The coordinator refuses the bar's toggle during the grace and accepts it once the item is back. `CastingItem.receiverLetGo` is set, and cleared, with buffering hidden. `castingBarAction` gives `OPEN_PLAYER` whatever the intent. `castingStopped` announces the item going (named or unnamed device), stays silent when the player opens, and ignores changes that are not an exit. `CastingBarSemanticsTest` (instrumented, compiled) adds the "Play" button whose click is labelled "Open player" and opens the player. |
 | `session/PlayerEventBridgeTest` | `Buffering` only while buffering *and* meaning to play, cleared by a pause while still buffering and by `READY`, said on change only. |
 | `ui/PlayerTransportTest` | The local sibling: the toggle follows `playWhenReady` (a tap while rebuffering pauses), skips are relative and clamped to a known duration, an unknown duration is not clamped to zero, a local rebuffer reaches the UI state without an `IsPlayingChanged(false)` undoing it, and a rebuffer is drawn as — and answered by — a working Pause. |
 | `ui/PlayerControlsTest` › `BufferingGateTest` | `transportControl`: **buffering keeps a Pause action** with the ring; outside buffering, plain Play/Pause; the ring and spinner gates, receivers included. |

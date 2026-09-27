@@ -42,6 +42,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.TextStyle
@@ -106,7 +107,9 @@ internal fun MiniPlayer(
  * **One spoken sentence**: the row merges into "<title>, Casting to <device>" (with its tap, "Open
  * player"), and the play/pause button stays its own stop. While reconnecting the row's sentence says
  * so and is announced politely, and so is the return to "Casting to <device>"; while buffering the
- * button says "Pause", state "Buffering", as the player's transport does.
+ * button says "Pause", state "Buffering", as the player's transport does. While the receiver is letting
+ * go of the item the button says "Play" and its tap is labelled "Open player": it opens the player,
+ * which sends the film back, rather than acting on whatever the receiver now holds.
  */
 @Composable
 internal fun CastingBar(
@@ -143,15 +146,19 @@ internal fun CastingBar(
                 },
             textSemantics = Modifier.clearAndSetSemantics {},
         ) {
+            val action =
+                castingBarAction(
+                    playWhenReady = state.playWhenReady,
+                    isBuffering = state.isBuffering,
+                    isSettledPaused = state.isSettledPaused,
+                    receiverLetGo = state.receiverLetGo,
+                )
             CastingBarPlayPause(
-                action =
-                    castingBarAction(
-                        playWhenReady = state.playWhenReady,
-                        isBuffering = state.isBuffering,
-                        isSettledPaused = state.isSettledPaused,
-                    ),
+                action = action,
                 isBuffering = state.isBuffering,
-                onClick = onTogglePlayPause,
+                // Letting go, the receiver's intent is not about our film: Play opens the player, which
+                // sends it back ([CastingBarAction.OPEN_PLAYER]).
+                onClick = if (action == CastingBarAction.OPEN_PLAYER) onClick else onTogglePlayPause,
             )
         }
     }
@@ -322,12 +329,23 @@ private fun CastingBarPlayPause(
 ) {
     val tint = MaterialTheme.colorScheme.onSurface
     val buffering = stringResource(PlayerR.string.player_buffering)
+    val openPlayer = stringResource(R.string.casting_bar_open_player)
+    val tap = onClick
     val pauses = action == CastingBarAction.PAUSE
     Box(contentAlignment = Alignment.Center) {
         IconButton(
             onClick = onClick,
             modifier =
                 Modifier.semantics {
+                    // "Play", and where the tap goes: it opens the player rather than playing in place.
+                    // The action is restated rather than `null`: whichever of this and the button's own
+                    // click semantics wins, the tap is the same.
+                    if (action == CastingBarAction.OPEN_PLAYER) {
+                        this.onClick(label = openPlayer) {
+                            tap()
+                            true
+                        }
+                    }
                     if (isBuffering) {
                         stateDescription = buffering
                         liveRegion = LiveRegionMode.Polite

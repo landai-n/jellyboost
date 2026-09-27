@@ -79,7 +79,10 @@ class CastNowPlaying
             return castingItem(held, connected, coordinator.receiverBuffering.value)
         }
 
-        /** Pauses a receiver that means to play (buffering included), plays one that does not. */
+        /**
+         * Pauses a receiver that means to play (buffering included), plays one that does not; does
+         * nothing while the receiver is letting go of the item ([CastingItem.receiverLetGo]).
+         */
         fun togglePlayPause() {
             coordinator.toggleDetachedPlayback()
             refreshes.tryEmit(Unit)
@@ -101,6 +104,8 @@ class CastNowPlaying
         ): CastingItem {
             val reading = coordinator.readReceiver().takeIf { it.isValid } ?: coordinator.lastHeld
             val runtimeMs = held.source.runTimeTicks.ticksToMillis()
+            // What the receiver buffers while letting go of the item is not ours to show.
+            val letGo = coordinator.isLosingItem
             return CastingItem(
                 itemId = held.source.itemId.toString(),
                 title = held.metadata.title,
@@ -109,10 +114,11 @@ class CastNowPlaying
                 deviceName = connected.deviceName,
                 isReconnecting = connected.suspended,
                 playWhenReady = coordinator.receiverPlayWhenReady,
-                isBuffering = buffering,
+                isBuffering = buffering && !letGo,
                 positionMs = reading?.positionMs ?: 0L,
                 durationMs = reading?.durationMs?.takeIf { it > 0L } ?: runtimeMs,
                 isSettledPaused = coordinator.receiverSettledPaused,
+                receiverLetGo = letGo,
             )
         }
 
@@ -135,6 +141,10 @@ class CastNowPlaying
  * @property positionMs the last valid reading's; `0` before one has been taken.
  * @property isSettledPaused the receiver reports itself paused under a stale `playWhenReady = true`: the
  *   toggle then plays (`tapPlays`), so the button must say Play. With [playWhenReady], the tap's whole rule.
+ * @property receiverLetGo the receiver has stopped holding the item and the grace period that decides
+ *   whether it is gone is running (`CastSessionCoordinator.isLosingItem`). The toggle is refused then —
+ *   the receiver's intent belongs to whatever it holds now — so the button says Play and opens the
+ *   player, which sends the film back from [positionMs]. [isBuffering] is `false` throughout.
  */
 data class CastingItem(
     val itemId: String,
@@ -148,6 +158,7 @@ data class CastingItem(
     val positionMs: Long,
     val durationMs: Long,
     val isSettledPaused: Boolean = false,
+    val receiverLetGo: Boolean = false,
 ) {
     /** Where a player opened from the bar starts if the receiver has let go of the item by then. */
     val positionTicks: Long get() = Ticks.millisToTicks(positionMs)

@@ -841,6 +841,34 @@ class CastSessionCoordinatorTest {
     }
 
     @Test
+    fun `the bar's toggle is refused while the receiver is letting go of the item`() {
+        castingDetachedAt(ON_THE_TELEVISION)
+        // Another sender's film, playing: pausing it is not ours to do.
+        cast.playWhenReady = true
+        receiverSays(PlayerEvent.RemoteItemMissing(lastHeld))
+        elapse(GRACE_MS / 2)
+
+        coordinator.isLosingItem shouldBe true
+        coordinator.toggleDetachedPlayback()
+
+        cast.pauseCount shouldBe 0
+        cast.playCount shouldBe 0
+    }
+
+    @Test
+    fun `the bar's toggle works again once the item comes back`() {
+        castingDetachedAt(ON_THE_TELEVISION)
+        cast.playWhenReady = true
+        receiverSays(PlayerEvent.RemoteItemMissing(lastHeld))
+        receiverSays(PlayerEvent.RemoteItemMissingCleared)
+
+        coordinator.isLosingItem shouldBe false
+        coordinator.toggleDetachedPlayback()
+
+        cast.pauseCount shouldBe 1
+    }
+
+    @Test
     fun `the bar's toggle does nothing while a screen owns the transport`() {
         framework.onSessionStarted("Living Room TV")
         coordinator.attachHost(host)

@@ -37,6 +37,26 @@ Known issues:
 
 ## Current milestone: M14 — Breadth & theming (approved 2026-08-28; tracks 4 and 6 landed, gate green; Settings hub landed on `m14/settings-hub`)
 
+**Cast wave: device walk on the test tablet with a Chromecast Ultra (2026-09-27, all merged on
+main).** Walked and passing: a paused receiver loads playing and the transport toggles it; a
+quality change mid-cast reloads it playing at the same position; subtitles turned off in place,
+leave, the bar keeps following, the bar reattaches with no reload, and a disconnect comes home at
+the television's position with the server's resume point kept; a disconnect after reattach never
+writes 0; a Stop from the television with the bar showing turns the bar's button to Play for the
+grace period, then the bar leaves with the snackbar and one stop at the television's position; an
+episode played out with the player open is marked played and the next one starts on the
+receiver; played out with the player closed, the bar leaves and the episode is marked played; the
+exact measured stall (a 24 fps film at 3056.881 s) now starts at 3055.0 s and plays in ~12 s;
+`CastingBarSemanticsTest` 7/7. Found on the walk and fixed: every cast transcode URL carries
+`MaxFramerate`, which the first segment-snap guard treated as "own frame rate", so the snap never
+ran (DECISIONS.md, *Segment snap: a frame-rate cap at or above the source's keeps the grid*).
+- **Still owed:** a 23.976 fps title resumed late in a segment (the 3.003 s grid) on a device;
+  the "Finished on <device>" wording on a detached natural finish (unit-tested only); seeks far
+  past the encoded range late in a segment (seek snap is a follow-up); two senders on one
+  receiver (the bar during another sender's media); TalkBack on the reconnect announcement.
+- The entries below that say "device walk owed" are covered by this walk except where listed
+  above.
+
 **Cast: a transcode load late in an HLS segment no longer stalls (2026-09-27, worktree branch; device
 walk owed).** A cast load of a transcoded HLS stream starting in the last ~0.5 s of a segment sat in
 `BUFFERING` forever (measured at 2.881 s and 2.590 s into 3 s segments). A transcoded HLS load now starts

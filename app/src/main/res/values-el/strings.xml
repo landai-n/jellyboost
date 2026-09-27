@@ -30,4 +30,6 @@
     <string name="mini_player_previous">Προηγούμενο</string>
     <string name="mini_player_dismiss">Διακοπή αναπαραγωγής και κλείσιμο</string>
     <string name="mini_player_open_now_playing">Άνοιγμα αναπαραγωγής</string>
+    <string name="casting_bar_open_player">Άνοιγμα αναπαραγωγού</string>
+    <string name="casting_bar_description">%1$s, %2$s</string>
 </resources>

@@ -30,4 +30,6 @@
     <string name="mini_player_previous">上一首</string>
     <string name="mini_player_dismiss">停止播放并关闭</string>
     <string name="mini_player_open_now_playing">打开正在播放</string>
+    <string name="casting_bar_open_player">打开播放器</string>
+    <string name="casting_bar_description">%1$s, %2$s</string>
 </resources>

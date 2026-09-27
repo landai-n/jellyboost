@@ -26,4 +26,6 @@
     <string name="mini_player_previous">ก่อนหน้า</string>
     <string name="mini_player_dismiss">หยุดเล่นและปิด</string>
     <string name="mini_player_open_now_playing">เปิดหน้ากำลังเล่น</string>
+    <string name="casting_bar_open_player">เปิดตัวเล่น</string>
+    <string name="casting_bar_description">%1$s, %2$s</string>
 </resources>

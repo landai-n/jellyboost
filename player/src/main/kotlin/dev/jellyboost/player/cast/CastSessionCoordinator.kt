@@ -13,9 +13,12 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.time.Duration.Companion.seconds
@@ -36,10 +39,17 @@ import kotlin.time.Duration.Companion.seconds
  * really stopped it: after [ITEM_LOST_GRACE] without it coming back. With a screen attached that is
  * the screen's to handle ([CastPlaybackHost.onCastItemLost]); with none, this sends the stop report —
  * once, since the source is forgotten as it is sent and [onCastEnded] then finds nothing to report.
+ *
+ * **One stop report per source, including a source nobody reopens.** A screen that attaches while a
+ * detached source is held either *adopts* it ([heldSourceFor], then [attachHost] with that very source
+ * as its [CastPlaybackHost.castSource]: no report, the screen's ticker carries on under the same play
+ * session) or replaces it on the receiver, in which case [attachHost] reports the orphan's stop before
+ * forgetting it.
  */
 @Singleton
 class CastSessionCoordinator
     @Inject
+    @Suppress("LongParameterList") // Six collaborators and the metadata the bar reads; each is a seam a test drives.
     internal constructor(
         private val monitor: CastSessionMonitor,
         private val routing: RoutingPlayerHandle,
@@ -47,6 +57,8 @@ class CastSessionCoordinator
         private val status: CastStatusHolder,
         @DetachedPlayerScope detachedScope: CoroutineScope,
         @MainDispatcher mainDispatcher: CoroutineDispatcher,
+        /** Read once per detach, so what the casting bar names cannot be replaced by a later item's fetch. */
+        private val metadata: CastMetadataHolder = CastMetadataHolder(),
     ) : CastPlaybackCoordinator {
         internal val connection: StateFlow<CastConnection> = status.connection
 
@@ -55,8 +67,43 @@ class CastSessionCoordinator
 
         private var host: CastPlaybackHost? = null
 
-        /** Non-`null` only while nobody is attached: then it is the only record the reports have. */
-        private var detachedSource: PlaybackMediaSource? = null
+        // The read-only half is `internal`, not public; ktlint's rule only recognises the public idiom.
+        @Suppress("ktlint:standard:backing-property-naming")
+        private val _detached = MutableStateFlow<DetachedCast?>(null)
+
+        /**
+         * What this app left playing on the receiver when its screen went: non-`null` exactly while
+         * [detachedSource] is. What the chrome's casting bar is drawn from ([CastNowPlaying]).
+         */
+        internal val detached: StateFlow<DetachedCast?> = _detached.asStateFlow()
+
+        /**
+         * Non-`null` only while nobody is attached: then it is the only record the reports have.
+         * Backed by [detached], so the bar and the reports can never disagree about what is held; the
+         * item's metadata is captured with it, and the last held reading is forgotten with it.
+         */
+        private var detachedSource: PlaybackMediaSource?
+            get() = _detached.value?.source
+            set(value) {
+                lastHeldReading = null
+                _detached.value = value?.let { DetachedCast(it, metadata.metadataFor(it.itemId.toString())) }
+            }
+
+        /**
+         * The last *valid* reading taken for [detachedSource] ([readReceiver]). What an orphan's stop
+         * report carries: by the time [attachHost] learns the source was replaced, the receiver has
+         * already been loaded with the next item and its reading belongs to that one.
+         */
+        private var lastHeldReading: PlaybackSnapshot? = null
+
+        @Suppress("ktlint:standard:backing-property-naming")
+        private val _receiverBuffering = MutableStateFlow(false)
+
+        /**
+         * `true` while the receiver is waiting for data and means to play ([PlayerEvent.Buffering]).
+         * Only ever `true` while casting: a local player's buffering is not the receiver's.
+         */
+        internal val receiverBuffering: StateFlow<Boolean> = _receiverBuffering.asStateFlow()
 
         private var tickerJob: Job? = null
 
@@ -91,11 +138,67 @@ class CastSessionCoordinator
             tickerScope.launch { routing.events.collect(::onPlayerEvent) }
         }
 
-        /** Silences this class's own reporting: from here the host's ticker owns the reports. */
+        /**
+         * Silences this class's own reporting: from here the host's ticker owns the reports.
+         *
+         * A detached source the host has not adopted is an **orphan**: the host's own open has
+         * replaced it on the receiver, and nobody else will ever report it. Its stop goes out here,
+         * once, at the last reading held for it — before it is forgotten, and after the ticker that
+         * could have reported it again is stopped.
+         */
         override fun attachHost(host: CastPlaybackHost) {
             this.host = host
-            detachedSource = null
+            // Identity, not equality: adopting hands over the very instance, and anything else — even the same
+            // item renegotiated — is a new server session that replaced this one.
+            val orphan = detachedSource?.takeUnless { it === host.castSource }
+            val lastHeld = lastHeldReading
             stopTicker()
+            detachedSource = null
+            if (orphan != null) {
+                Timber.i("%s was replaced on the receiver; closing its session", orphan.itemId)
+                reporter.reportStopDetached(orphan, lastHeld ?: PlaybackSnapshot(isValid = false))
+            }
+        }
+
+        /**
+         * "The receiver holds [itemId]": the detached source is that item, the session is live and
+         * not in the middle of losing it ([ITEM_LOST_GRACE]), and the receiver either gives a valid
+         * reading for it or is buffering it. An invalid reading with no buffering is a receiver that
+         * holds nothing of ours (stopped from the television, or taken over by another sender), and
+         * adopting that would show a screen with nothing behind it.
+         */
+        override fun heldSourceFor(itemId: UUID): CastReceiverHold? {
+            val held = detachedSource?.takeIf { it.itemId == itemId && isCasting && itemLostJob == null }
+            val reading = held?.let { readReceiver() } ?: return null
+            val buffering = _receiverBuffering.value
+            return CastReceiverHold(source = held, reading = reading, isBuffering = buffering)
+                .takeIf { reading.isValid || buffering }
+        }
+
+        /**
+         * The receiver's reading, remembered when it is valid for a detached source. Every reading
+         * this class or the casting bar takes goes through here, so an orphan's stop report carries the
+         * freshest position anyone saw. Main thread only, as every snapshot is.
+         */
+        internal fun readReceiver(): PlaybackSnapshot {
+            val reading = routing.snapshot()
+            if (reading.isValid && detachedSource != null) lastHeldReading = reading
+            return reading
+        }
+
+        /** The last valid reading for the detached source; `null` when none has been taken. */
+        internal val lastHeld: PlaybackSnapshot? get() = lastHeldReading
+
+        /** The receiver's intent — what the casting bar's toggle reverses, readable when the snapshot is not. */
+        internal val receiverPlayWhenReady: Boolean get() = routing.playWhenReady
+
+        /**
+         * The casting bar's play/pause. Acts only for a detached source: with a screen attached the
+         * transport is the screen's, and with nothing held there is nothing of ours to pause.
+         */
+        internal fun toggleDetachedPlayback() {
+            if (host != null || detachedSource == null || !isCasting) return
+            if (routing.playWhenReady) routing.pause() else routing.play()
         }
 
         /**
@@ -111,6 +214,8 @@ class CastSessionCoordinator
             if (this.host !== host) return
             this.host = null
             detachedSource = host.castSource.takeIf { isCasting }
+            // Seeds the orphan's stop position with where the film was as the screen went.
+            if (detachedSource != null) readReceiver()
             startTicker()
         }
 
@@ -145,6 +250,7 @@ class CastSessionCoordinator
                 receiver,
             )
             val handover = routing.snapshot()
+            _receiverBuffering.value = false
             status.setConnection(CastConnection.Connected(deviceName, receiver))
             routing.setActive(PlaybackTarget.Cast)
             routing.stopInactive()
@@ -163,6 +269,7 @@ class CastSessionCoordinator
             Timber.i("Cast session ended")
             val last = routing.snapshot()
             status.setConnection(CastConnection.None)
+            _receiverBuffering.value = false
             stopTicker()
             cancelItemLost()
 
@@ -200,6 +307,8 @@ class CastSessionCoordinator
                 }
 
                 PlayerEvent.RemoteItemMissingCleared -> cancelItemLost()
+
+                is PlayerEvent.Buffering -> _receiverBuffering.value = event.isBuffering && isCasting
 
                 else -> Unit
             }
@@ -241,7 +350,7 @@ class CastSessionCoordinator
                 reporter.startReporting(
                     scope = tickerScope,
                     currentSource = { detachedSource },
-                    snapshot = { routing.snapshot() },
+                    snapshot = ::readReceiver,
                 )
         }
 

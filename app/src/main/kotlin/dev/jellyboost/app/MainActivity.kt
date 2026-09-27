@@ -2,6 +2,7 @@ package dev.jellyboost.app
 
 import android.Manifest
 import android.app.PictureInPictureParams
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.Color
@@ -31,6 +32,7 @@ import dev.jellyboost.core.network.model.SessionState
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.core.ui.theme.resolvesDark
 import dev.jellyboost.player.cast.CastAvailability
+import dev.jellyboost.player.cast.CastNotificationIntents
 import dev.jellyboost.player.pip.PipController
 import dev.jellyboost.player.pip.PipState
 import kotlinx.coroutines.Dispatchers
@@ -67,6 +69,8 @@ class MainActivity : FragmentActivity() {
 
         observePictureInPictureReadiness()
         startCastStack()
+        // Only on a fresh start: a recreated activity is handed the intent it was first started with.
+        if (savedInstanceState == null) handleLaunchIntent(intent)
 
         setContent {
             val theme by viewModel.themePreference.collectAsStateWithLifecycle()
@@ -76,9 +80,30 @@ class MainActivity : FragmentActivity() {
             JellyfinTheme(themeMode = theme.mode, dynamicColor = theme.dynamicColor) {
                 NotificationPermissionRequest()
                 val sessionState by viewModel.sessionState.collectAsStateWithLifecycle()
-                JellyboostApp(sessionState = sessionState)
+                val castingPlayerRequested by viewModel.openCastingPlayerRequested.collectAsStateWithLifecycle()
+                JellyboostApp(
+                    sessionState = sessionState,
+                    castingPlayerRequested = castingPlayerRequested,
+                    onCastingPlayerRequestHandled = viewModel::consumeCastingPlayerRequest,
+                )
             }
         }
+    }
+
+    /**
+     * `launchMode="singleTop"`: a Cast notification tap while the app is open arrives here, and the
+     * back stack it lands on is the one the user left — which is the point of the trampoline.
+     */
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleLaunchIntent(intent)
+    }
+
+    /** The Cast notification's request, via `CastNotificationActivity`; the graph acts on it. */
+    private fun handleLaunchIntent(intent: Intent?) {
+        if (intent == null) return
+        if (CastNotificationIntents.opensCastingPlayer(intent.action, intent.flags)) viewModel.requestCastingPlayer()
     }
 
     /**
@@ -177,8 +202,16 @@ private fun NotificationPermissionRequest() {
     }
 }
 
+/**
+ * @param castingPlayerRequested a Cast notification tap not yet acted on; see
+ *   `MainViewModel.openCastingPlayerRequested`.
+ */
 @Composable
-internal fun JellyboostApp(sessionState: SessionState) {
+internal fun JellyboostApp(
+    sessionState: SessionState,
+    castingPlayerRequested: Boolean = false,
+    onCastingPlayerRequestHandled: () -> Unit = {},
+) {
     if (sessionState is SessionState.Unknown) return
 
     // Captured once: the start destination must not change under a live NavHost when the session
@@ -188,5 +221,7 @@ internal fun JellyboostApp(sessionState: SessionState) {
     AppScaffold(
         startsSignedIn = startsSignedIn,
         sessionState = sessionState,
+        castingPlayerRequested = castingPlayerRequested,
+        onCastingPlayerRequestHandled = onCastingPlayerRequestHandled,
     )
 }

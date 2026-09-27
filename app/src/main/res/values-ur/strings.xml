@@ -30,4 +30,6 @@
     <string name="mini_player_previous">پچھلا</string>
     <string name="mini_player_dismiss">پلے بیک روکیں اور بند کریں</string>
     <string name="mini_player_open_now_playing">ابھی چل رہا ہے کھولیں</string>
+    <string name="casting_bar_open_player">پلیئر کھولیں</string>
+    <string name="casting_bar_description">%1$s, %2$s</string>
 </resources>

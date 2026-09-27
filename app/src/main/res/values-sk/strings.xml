@@ -30,4 +30,6 @@
     <string name="mini_player_previous">Predchádzajúce</string>
     <string name="mini_player_dismiss">Zastaviť prehrávanie a zavrieť</string>
     <string name="mini_player_open_now_playing">Otvoriť práve prehrávané</string>
+    <string name="casting_bar_open_player">Otvoriť prehrávač</string>
+    <string name="casting_bar_description">%1$s, %2$s</string>
 </resources>

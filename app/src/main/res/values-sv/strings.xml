@@ -30,4 +30,6 @@
     <string name="mini_player_previous">Föregående</string>
     <string name="mini_player_dismiss">Stoppa uppspelning och stäng</string>
     <string name="mini_player_open_now_playing">Öppna Spelas nu</string>
+    <string name="casting_bar_open_player">Öppna spelaren</string>
+    <string name="casting_bar_description">%1$s, %2$s</string>
 </resources>

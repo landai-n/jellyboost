@@ -10,18 +10,10 @@ import dev.jellyboost.player.PlayerFixtures
 import dev.jellyboost.player.R
 import dev.jellyboost.player.cast.CastConnection
 import dev.jellyboost.player.cast.CastMetadata
-import dev.jellyboost.player.cast.CastMetadataHolder
 import dev.jellyboost.player.cast.CastSessionCoordinator
-import dev.jellyboost.player.cast.CastSessionListener
-import dev.jellyboost.player.cast.CastSessionMonitor
-import dev.jellyboost.player.cast.CastStatusHolder
-import dev.jellyboost.player.fallback.DecoderFallbackHandler
 import dev.jellyboost.player.model.PlaybackQuality
 import dev.jellyboost.player.model.PlaybackSnapshot
 import dev.jellyboost.player.model.millisToTicks
-import dev.jellyboost.player.resolve.PlaybackResolveRequest
-import dev.jellyboost.player.session.FakePlayerHandle
-import dev.jellyboost.player.session.PlaybackSessionController
 import dev.jellyboost.player.session.PlayerEvent
 import dev.jellyboost.player.session.RoutingPlayerHandle
 import dev.jellyboost.player.syncplay.SyncPlayPhase
@@ -35,96 +27,20 @@ import io.mockk.coVerify
 import io.mockk.coVerifyOrder
 import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
-import javax.inject.Provider
 
 /**
  * Uses real [RoutingPlayerHandle]/[CastSessionCoordinator] over fakes so "exactly one stop report
  * per source" is verified as a system property, not two independently-mocked halves.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-internal class PlayerViewModelCastTest : PlayerViewModelFixture() {
-    private val local get() = playerHandle
-
-    private val castHandle = FakePlayerHandle()
-
-    private val routing = RoutingPlayerHandle(local, Provider { castHandle })
-
-    private val castStatus = CastStatusHolder()
-
-    /** What the receiver would be loaded with; the handle reads it at `prepare`. */
-    private val castMetadata = CastMetadataHolder()
-
-    /** Captures the coordinator's listener, so a test can be the Cast framework. */
-    private val monitor =
-        object : CastSessionMonitor {
-            var listener: CastSessionListener? = null
-
-            override fun start(listener: CastSessionListener) {
-                this.listener = listener
-            }
-        }
-
-    private val coordinator by lazy {
-        CastSessionCoordinator(
-            monitor = monitor,
-            routing = routing,
-            reporter = reporter,
-            status = castStatus,
-            detachedScope = CoroutineScope(dispatcher),
-            mainDispatcher = dispatcher,
-        ).also { it.start() }
-    }
-
-    private val framework get() = requireNotNull(monitor.listener) { "The coordinator never started watching" }
-
-    /** Own builder, not the fixture's: the handle and the session controller both need the routing one. */
-    private fun castViewModel(): PlayerViewModel =
-        PlayerViewModel(
-            repository = repository,
-            sessionController =
-                PlaybackSessionController(
-                    resolver = resolver,
-                    mediaSourceFactory = mediaSourceFactory,
-                    ioDispatcher = UnconfinedTestDispatcher(),
-                    playerHandle = routing,
-                    reporter = reporter,
-                    // Must be the same holder the coordinator writes: the controller re-checks it at
-                    // prepare time, and a private never-casting default would re-resolve every open.
-                    castStatus = castStatus,
-                ),
-            playerHandle = routing,
-            reporter = reporter,
-            fallback = DecoderFallbackHandler(),
-            trickplayResolver = trickplayResolver,
-            segmentLoader = segmentLoader,
-            upNextResolver = upNextResolver,
-            preferences = preferences,
-            assSubtitles = assSubtitles,
-            pipController = pipController,
-            connectionState = connectionState,
-            syncPlayController = syncPlayController,
-            syncPlayLocalSession = syncPlayLocalSession,
-            savedStateHandle = navArgs(),
-            castStatus = castStatus,
-            castMetadata = castMetadata,
-            castCoordinator = coordinator,
-        )
-
-    private fun recordResolves(): List<PlaybackResolveRequest> {
-        val requests = mutableListOf<PlaybackResolveRequest>()
-        coEvery { resolver.resolve(capture(requests)) } returns AppResult.Success(source)
-        return requests
-    }
-
+internal class PlayerViewModelCastTest : PlayerViewModelCastFixture() {
     // ---- local → cast -----------------------------------------------------------------------------
 
     @Test

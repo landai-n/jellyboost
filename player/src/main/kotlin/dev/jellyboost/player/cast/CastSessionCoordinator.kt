@@ -6,6 +6,7 @@ import dev.jellyboost.player.di.DetachedPlayerScope
 import dev.jellyboost.player.model.PlaybackMediaSource
 import dev.jellyboost.player.model.PlaybackSnapshot
 import dev.jellyboost.player.model.contradicts
+import dev.jellyboost.player.model.isSameLoadAs
 import dev.jellyboost.player.report.PlaybackReporter
 import dev.jellyboost.player.session.PlaybackTarget
 import dev.jellyboost.player.session.PlayerEvent
@@ -41,12 +42,15 @@ import kotlin.time.Duration.Companion.seconds
  * really stopped it: after [ITEM_LOST_GRACE] without it coming back. With a screen attached that is
  * the screen's to handle ([CastPlaybackHost.onCastItemLost]); with none, this sends the stop report —
  * once, since the source is forgotten as it is sent and [onCastEnded] then finds nothing to report.
+ * A film the receiver played to its end is not a loss ([PlayerEvent.Ended], from the receiver's own
+ * finish): with a screen attached the screen ends it as played; with none, [onReceiverFinished] closes
+ * it the same one-report way, at the ended reading.
  *
  * **One stop report per source, including a source nobody reopens.** A screen that attaches while a
- * detached source is held either *adopts* it ([heldSourceFor], then [attachHost] with that very source
- * as its [CastPlaybackHost.castSource]: no report, the screen's ticker carries on under the same play
- * session) or replaces it on the receiver, in which case [attachHost] reports the orphan's stop before
- * forgetting it.
+ * detached source is held either *adopts* it ([heldSourceFor], then [attachHost] with that load as its
+ * [CastPlaybackHost.castSource]: no report, the screen's ticker carries on under the same play session)
+ * or replaces it on the receiver, in which case [attachHost] reports the orphan's stop before forgetting
+ * it.
  */
 @Singleton
 class CastSessionCoordinator
@@ -150,9 +154,10 @@ class CastSessionCoordinator
          */
         override fun attachHost(host: CastPlaybackHost) {
             this.host = host
-            // Identity, not equality: adopting hands over the very instance, and anything else — even the same
-            // item renegotiated — is a new server session that replaced this one.
-            val orphan = detachedSource?.takeUnless { it === host.castSource }
+            // The same load, not equality: an adopting screen may since have chosen a track in place (a copy
+            // of the source), while anything else — even the same item renegotiated — is a new play session
+            // that replaced this one ([isSameLoadAs]).
+            val orphan = detachedSource?.takeUnless { it.isSameLoadAs(host.castSource) }
             val lastHeld = lastHeldReading
             stopTicker()
             detachedSource = null
@@ -206,11 +211,16 @@ class CastSessionCoordinator
         }
 
         /**
-         * Identity, as [attachHost] compares: the very source the receiver was last loaded with. A handle
-         * that tracks no source (`null`) is judged by validity alone.
+         * The receiver's load is the detached source's **load** ([isSameLoadAs], as [attachHost] compares):
+         * same item, media source and play session. Not identity: a track chosen in place (subtitles off, a
+         * side-loaded subtitle) replaces the screen's source with a copy while the receiver's load is
+         * unchanged, and identity then refused every reading once the screen had left. A handle that tracks
+         * no source (`null`) is judged by validity alone.
          */
-        private fun receiverHoldsDetached(): Boolean =
-            routing.preparedSource.let { it == null || it === detachedSource }
+        private fun receiverHoldsDetached(): Boolean {
+            val prepared = routing.preparedSource ?: return true
+            return prepared.isSameLoadAs(detachedSource)
+        }
 
         /** The last valid reading for the detached source; `null` when none has been taken. */
         internal val lastHeld: PlaybackSnapshot? get() = lastHeldReading
@@ -356,6 +366,8 @@ class CastSessionCoordinator
 
                 PlayerEvent.RemoteItemMissingCleared -> cancelItemLost()
 
+                PlayerEvent.Ended -> onReceiverFinished()
+
                 is PlayerEvent.Buffering -> _receiverBuffering.value = event.isBuffering && isCasting
 
                 else -> Unit
@@ -385,6 +397,27 @@ class CastSessionCoordinator
             stopTicker()
             detachedSource = null
             reporter.reportStopDetached(orphaned, at)
+        }
+
+        /**
+         * The receiver played the detached film to its end. Closed here — with no screen, nobody else
+         * will — at the **ended** reading, which is what marks it played on the server; never as a loss,
+         * which would keep a resume position a few seconds from the end. With a screen attached the end
+         * is the screen's (`PlayerViewModel.onEnded`: the played flag, the up-next advance).
+         *
+         * Only for the detached load ([readReceiver] refuses any other): an end of whatever a new screen
+         * has since loaded is not this source's.
+         */
+        private fun onReceiverFinished() {
+            if (!isCasting || host != null) return
+            val finished = detachedSource ?: return
+            val reading = readReceiver()
+            if (!reading.isValid || !reading.hasEnded) return
+            Timber.i("The receiver finished %s with no screen open; closing its session", finished.itemId)
+            cancelItemLost()
+            stopTicker()
+            detachedSource = null
+            reporter.reportStopDetached(finished, reading)
         }
 
         private fun cancelItemLost() {

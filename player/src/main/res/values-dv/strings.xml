@@ -135,8 +135,10 @@
     <string name="player_message_cast_transferred">މިހާރު %1$s ގައި ޕްލޭވަނީ.</string>
     <string name="player_message_cast_left_syncplay">%1$s އަށް ކާސްޓްކުރުމަށް SyncPlay ގްރޫޕް ދޫކޮށްލައިފި.</string>
     <string name="player_message_cast_failed">އެ %1$s ގައި ޕްލޭކުރެވޭގޮތެއް ނުވި.</string>
+    <string name="player_message_cast_stopped">%1$s ގައި ޕްލޭކުރުން ހުއްޓިއްޖެ.</string>
 
     <string name="player_casting_to">%1$s އަށް ކާސްޓްކުރަނީ</string>
+    <string name="player_cast_reconnecting">%1$s އާ އަލުން ގުޅެމުން…</string>
 
     <string name="player_error_server">ސަރވަރއަށް ޕްލޭބެކް ފެށޭގޮތެއް ނުވި.</string>
     <string name="player_error_server_with_code">ސަރވަރއަށް ޕްލޭބެކް ފެށޭގޮތެއް ނުވި (%1$d).</string>

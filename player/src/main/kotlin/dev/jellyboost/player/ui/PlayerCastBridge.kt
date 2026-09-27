@@ -24,6 +24,7 @@ internal class PlayerCastBridge(
     private val currentSource: () -> PlaybackMediaSource?,
     private val onStarted: (deviceName: String?, from: PlaybackSnapshot) -> Unit,
     private val onEnded: (at: PlaybackSnapshot) -> Unit,
+    private val onItemLost: (lastHeld: PlaybackSnapshot) -> Unit = {},
 ) : CastPlaybackHost {
     private var attached = false
 
@@ -39,6 +40,8 @@ internal class PlayerCastBridge(
     ) = onStarted(deviceName, from)
 
     override fun onCastEnded(at: PlaybackSnapshot) = onEnded(at)
+
+    override fun onCastItemLost(lastHeld: PlaybackSnapshot) = onItemLost(lastHeld)
 
     /** Attaches even with nothing casting, so a session started later finds a player already open. */
     fun attach() {
@@ -61,5 +64,6 @@ internal class PlayerCastBridge(
 private fun CastConnection.toPlayerState(): PlayerCastState =
     when (this) {
         CastConnection.None -> PlayerCastState()
-        is CastConnection.Connected -> PlayerCastState(isCasting = true, deviceName = deviceName)
+        is CastConnection.Connected ->
+            PlayerCastState(isCasting = true, deviceName = deviceName, isReconnecting = suspended)
     }

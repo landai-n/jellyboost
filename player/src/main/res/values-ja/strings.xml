@@ -130,8 +130,10 @@
     <string name="player_message_cast_transferred">%1$s で再生中です。</string>
     <string name="player_message_cast_left_syncplay">SyncPlayグループを退出して%1$sにキャストしました。</string>
     <string name="player_message_cast_failed">%1$sでの再生に失敗しました。</string>
+    <string name="player_message_cast_stopped">%1$s での再生が停止しました。</string>
 
     <string name="player_casting_to">%1$s にキャスト中</string>
+    <string name="player_cast_reconnecting">%1$s に再接続しています…</string>
 
     <string name="player_error_server">サーバーが再生を開始できませんでした。</string>
     <string name="player_error_server_with_code">サーバーが再生を開始できませんでした (%1$d)。</string>

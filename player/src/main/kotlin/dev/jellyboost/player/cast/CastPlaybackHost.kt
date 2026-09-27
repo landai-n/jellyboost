@@ -23,6 +23,16 @@ interface CastPlaybackHost {
      * @param at where the **cast** player was before routing went back to local.
      */
     fun onCastEnded(at: PlaybackSnapshot): Unit = Unit
+
+    /**
+     * The receiver let go of the item while the session stayed connected (stopped from the television,
+     * unloaded when idle), and has not taken it back within the coordinator's grace period. Like
+     * [onCastEnded], only ever called on an attached host — the stop report is then the host's; with
+     * none attached the coordinator sends it itself.
+     *
+     * @param lastHeld the last reading taken while the receiver still held the item — always valid.
+     */
+    fun onCastItemLost(lastHeld: PlaybackSnapshot): Unit = Unit
 }
 
 /**

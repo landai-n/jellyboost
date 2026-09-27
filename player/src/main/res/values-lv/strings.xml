@@ -140,8 +140,10 @@
     <string name="player_message_cast_transferred">Tagad tiek atskaņots ierīcē %1$s.</string>
     <string name="player_message_cast_left_syncplay">Pameta SyncPlay grupu, lai apraidītu uz %1$s.</string>
     <string name="player_message_cast_failed">Neizdevās to atskaņot ierīcē %1$s.</string>
+    <string name="player_message_cast_stopped">Atskaņošana ierīcē %1$s ir apturēta.</string>
 
     <string name="player_casting_to">Notiek apraide uz %1$s</string>
+    <string name="player_cast_reconnecting">Atkārtoti savienojas ar %1$s…</string>
 
     <string name="player_error_server">Serveris nevarēja sākt atskaņošanu.</string>
     <string name="player_error_server_with_code">Serveris nevarēja sākt atskaņošanu (%1$d).</string>

@@ -6,6 +6,7 @@ import dev.jellyboost.player.model.PlaybackMediaSource
 import dev.jellyboost.player.model.PlaybackSnapshot
 import dev.jellyboost.player.report.PlaybackReporter
 import dev.jellyboost.player.session.FakePlayerHandle
+import dev.jellyboost.player.session.PlayerEvent
 import dev.jellyboost.player.session.RoutingPlayerHandle
 import io.kotest.matchers.shouldBe
 import io.mockk.every
@@ -17,6 +18,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.test.StandardTestDispatcher
 import org.junit.jupiter.api.Test
 import javax.inject.Provider
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * [CastSessionMonitor] keeps the Cast framework's session lifecycle out of this suite, so these
@@ -245,6 +247,7 @@ class CastSessionCoordinatorTest {
     ) : CastPlaybackHost {
         val started = mutableListOf<Pair<String?, PlaybackSnapshot>>()
         val ended = mutableListOf<PlaybackSnapshot>()
+        val lost = mutableListOf<PlaybackSnapshot>()
 
         override fun onCastStarted(
             deviceName: String?,
@@ -255,6 +258,10 @@ class CastSessionCoordinatorTest {
 
         override fun onCastEnded(at: PlaybackSnapshot) {
             ended += at
+        }
+
+        override fun onCastItemLost(lastHeld: PlaybackSnapshot) {
+            lost += lastHeld
         }
     }
 
@@ -321,5 +328,182 @@ class CastSessionCoordinatorTest {
 
         recording.ended shouldBe emptyList()
         verify(exactly = 1) { reporter.reportStopDetached(any(), any()) }
+    }
+
+    // ---- a receiver that lets go of the item -------------------------------------------------------
+
+    /** Where the receiver last held the film before it let go. */
+    private val lastHeld = PlaybackSnapshot(positionMs = 1_200_000L, durationMs = 7_200_000L, isPlaying = true)
+
+    /** Lets the coordinator's collector subscribe (and follow a routing flip) before and after the event. */
+    private fun receiverSays(event: PlayerEvent) {
+        dispatcher.scheduler.runCurrent()
+        cast.tryEmit(event)
+        dispatcher.scheduler.runCurrent()
+    }
+
+    private fun elapse(ms: Long) {
+        dispatcher.scheduler.advanceTimeBy(ms.milliseconds)
+        dispatcher.scheduler.runCurrent()
+    }
+
+    private fun castingDetached(): Job {
+        val ticker = Job()
+        every { reporter.startReporting(any(), any(), any()) } returns ticker
+        framework.onSessionStarted("Living Room TV")
+        coordinator.attachHost(host)
+        coordinator.detachHost(host)
+        return ticker
+    }
+
+    @Test
+    fun `with no screen, a receiver that stopped the item is closed once the grace period is up`() {
+        val ticker = castingDetached()
+
+        receiverSays(PlayerEvent.RemoteItemMissing(lastHeld))
+        elapse(GRACE_MS)
+
+        verify(exactly = 1) { reporter.reportStopDetached(source, lastHeld) }
+        // Five minutes of "Skipping a progress tick" was the symptom this ends.
+        ticker.isCancelled shouldBe true
+        // The session is still up: the next open must still cast.
+        coordinator.isCasting shouldBe true
+    }
+
+    @Test
+    fun `the grace period is respected — a blink is not a stop`() {
+        castingDetached()
+
+        receiverSays(PlayerEvent.RemoteItemMissing(lastHeld))
+        elapse(GRACE_MS - 100L)
+
+        verify(exactly = 0) { reporter.reportStopDetached(any(), any()) }
+    }
+
+    @Test
+    fun `an item that comes back within the grace period is not stopped`() {
+        castingDetached()
+        receiverSays(PlayerEvent.RemoteItemMissing(lastHeld))
+        elapse(GRACE_MS / 2)
+
+        receiverSays(PlayerEvent.RemoteItemMissingCleared)
+        elapse(GRACE_MS)
+
+        verify(exactly = 0) { reporter.reportStopDetached(any(), any()) }
+    }
+
+    @Test
+    fun `the session ending later finds nothing left to report`() {
+        castingDetached()
+        receiverSays(PlayerEvent.RemoteItemMissing(lastHeld))
+        elapse(GRACE_MS)
+
+        // The television closes its idle session some minutes later.
+        framework.onSessionEnded()
+
+        // One stop report per source: the drop's, and not a second from `onCastEnded`.
+        verify(exactly = 1) { reporter.reportStopDetached(any(), any()) }
+        coordinator.connection.value shouldBe CastConnection.None
+    }
+
+    @Test
+    fun `a session that ends during the grace period is reported by the end alone`() {
+        cast.snapshot = PlaybackSnapshot(isValid = false)
+        castingDetached()
+        receiverSays(PlayerEvent.RemoteItemMissing(lastHeld))
+
+        framework.onSessionEnded()
+        elapse(GRACE_MS)
+
+        verify(exactly = 1) { reporter.reportStopDetached(any(), any()) }
+    }
+
+    @Test
+    fun `with a screen attached the screen is told, and the coordinator reports nothing`() {
+        val recording = RecordingHost(source)
+        coordinator.attachHost(recording)
+        framework.onSessionStarted("Living Room TV")
+
+        receiverSays(PlayerEvent.RemoteItemMissing(lastHeld))
+        elapse(GRACE_MS)
+
+        recording.lost shouldBe listOf(lastHeld)
+        verify(exactly = 0) { reporter.reportStopDetached(any(), any()) }
+    }
+
+    @Test
+    fun `a screen that is not attached any more when the grace period ends is not told`() {
+        every { reporter.startReporting(any(), any(), any()) } returns Job()
+        val recording = RecordingHost(source)
+        coordinator.attachHost(recording)
+        framework.onSessionStarted("Living Room TV")
+        receiverSays(PlayerEvent.RemoteItemMissing(lastHeld))
+
+        coordinator.detachHost(recording)
+        elapse(GRACE_MS)
+
+        recording.lost shouldBe emptyList()
+        verify(exactly = 1) { reporter.reportStopDetached(source, lastHeld) }
+    }
+
+    @Test
+    fun `nothing is judged with no cast session`() {
+        coordinator.attachHost(host)
+        coordinator.detachHost(host)
+
+        receiverSays(PlayerEvent.RemoteItemMissing(lastHeld))
+        elapse(GRACE_MS)
+
+        verify(exactly = 0) { reporter.reportStopDetached(any(), any()) }
+    }
+
+    // ---- a suspended session ------------------------------------------------------------------------
+
+    @Test
+    fun `a suspended session is still casting, and says it is reconnecting`() {
+        framework.onSessionStarted("Salon", "Chromecast Ultra")
+
+        framework.onSessionSuspended()
+
+        coordinator.connection.value shouldBe
+            CastConnection.Connected("Salon", CastReceiverClass.ULTRA_4K, suspended = true)
+        coordinator.isCasting shouldBe true
+        routing.activeHandle.value shouldBe cast
+    }
+
+    @Test
+    fun `a resume clears it without re-running the transfer`() {
+        val recording = RecordingHost(source)
+        coordinator.attachHost(recording)
+        framework.onSessionStarted("Salon")
+        framework.onSessionSuspended()
+
+        // The framework's resume arrives as a start for the same session.
+        framework.onSessionStarted("Salon")
+
+        coordinator.connection.value shouldBe CastConnection.Connected("Salon")
+        recording.started.size shouldBe 1
+    }
+
+    @Test
+    fun `a suspension with nothing connected is ignored`() {
+        framework.onSessionSuspended()
+
+        coordinator.connection.value shouldBe CastConnection.None
+    }
+
+    @Test
+    fun `a session that fails to resume ends like any other`() {
+        framework.onSessionStarted("Salon")
+        framework.onSessionSuspended()
+
+        framework.onSessionEnded()
+
+        coordinator.connection.value shouldBe CastConnection.None
+        routing.activeHandle.value shouldBe local
+    }
+
+    private companion object {
+        val GRACE_MS = CastSessionCoordinator.ITEM_LOST_GRACE.inWholeMilliseconds
     }
 }

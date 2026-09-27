@@ -135,8 +135,10 @@
     <string name="player_message_cast_transferred">Αναπαράγεται τώρα στο %1$s.</string>
     <string name="player_message_cast_left_syncplay">Αποχωρήσατε από την ομάδα SyncPlay για μετάδοση στο %1$s.</string>
     <string name="player_message_cast_failed">Δεν ήταν δυνατή η αναπαραγωγή στο %1$s.</string>
+    <string name="player_message_cast_stopped">Η αναπαραγωγή στο %1$s σταμάτησε.</string>
 
     <string name="player_casting_to">Μετάδοση στο %1$s</string>
+    <string name="player_cast_reconnecting">Επανασύνδεση με %1$s…</string>
 
     <string name="player_error_server">Ο διακομιστής δεν μπόρεσε να ξεκινήσει την αναπαραγωγή.</string>
     <string name="player_error_server_with_code">Ο διακομιστής δεν μπόρεσε να ξεκινήσει την αναπαραγωγή (%1$d).</string>

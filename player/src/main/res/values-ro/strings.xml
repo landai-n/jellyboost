@@ -124,7 +124,9 @@
     <string name="player_message_cast_transferred">Se redă acum pe %1$s.</string>
     <string name="player_message_cast_left_syncplay">Grup SyncPlay părăsit pentru a difuza pe %1$s.</string>
     <string name="player_message_cast_failed">Nu s-a putut reda pe %1$s.</string>
+    <string name="player_message_cast_stopped">Redarea pe %1$s s-a oprit.</string>
     <string name="player_casting_to">Se difuzează pe %1$s</string>
+    <string name="player_cast_reconnecting">Se reconectează la %1$s…</string>
 
     <string name="player_error_server">Serverul nu a putut porni redarea.</string>
     <string name="player_error_server_with_code">Serverul nu a putut porni redarea (%1$d).</string>

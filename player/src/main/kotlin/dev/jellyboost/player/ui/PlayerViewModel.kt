@@ -130,6 +130,7 @@ internal class PlayerViewModel
                 // A session whose stop is already reported (it ended, or the receiver dropped it) has
                 // nothing left for the coordinator to report when this screen goes.
                 currentSource = { session?.takeUnless { it.stopReported }?.source },
+                currentReading = { session?.takeUnless { it.stopReported }?.lastValidReading },
                 onStarted = ::onCastStarted,
                 onEnded = ::onCastEnded,
                 onItemLost = ::onCastItemLost,
@@ -223,6 +224,25 @@ internal class PlayerViewModel
          */
         private fun updateSession(block: (ActiveSession) -> ActiveSession) {
             session = session?.let(block)
+        }
+
+        /**
+         * Every reading this screen takes of its own player passes through here, so the session always
+         * knows the last position it can vouch for ([ActiveSession.lastValidReading]). A transfer home
+         * resolves its position from it synchronously ([onCastEnded]), before the next tick can read the
+         * idle local player.
+         */
+        private fun rememberReading(reading: PlaybackSnapshot) {
+            if (reading.isValid) updateSession { it.copy(lastValidReading = reading) }
+        }
+
+        /**
+         * The player's reading if it is valid, else the last valid one this session took, else the
+         * invalid reading itself — which a report then carries no position for.
+         */
+        private fun vouchedReading(): PlaybackSnapshot {
+            val reading = playerHandle.snapshot()
+            return reading.takeIf { it.isValid } ?: session?.lastValidReading ?: reading
         }
 
         init {
@@ -386,18 +406,23 @@ internal class PlayerViewModel
                     segments = emptyList(),
                     upNext = null,
                     castItemLostAt = null,
+                    // The coordinator's, not the source's start: that is where the film was first sent,
+                    // and a session ending before this screen reads the receiver would come home there.
+                    lastValidReading = held.lastValidReading,
                 )
             _videoPlayer.value = playerHandle.player
             val reading = held.reading.takeIf { it.isValid }
+            val known = held.lastValidReading
             _uiState.update { previous ->
                 val opened = previous.withSource(resolved, isOnline, message = null, buffering = held.isBuffering)
                 opened.copy(
                     isPlaying = reading?.isPlaying == true,
                     // The server's runtime and the receiver's can disagree; the player's wins, as in `onTick`.
-                    durationMs = reading?.durationMs?.takeIf { it > 0L } ?: opened.durationMs,
+                    durationMs = known?.durationMs?.takeIf { it > 0L } ?: opened.durationMs,
                 )
             }
-            positionTracker.onSessionOpened(reading?.positionMs ?: resolved.startPositionTicks.ticksToMillis())
+            // The source's own start only when nobody has ever read a valid position for it.
+            positionTracker.onSessionOpened(known?.positionMs ?: resolved.startPositionTicks.ticksToMillis())
             upNext.reset()
             setReportingActive(true)
             loadPlaybackExtras(resolved)
@@ -437,18 +462,23 @@ internal class PlayerViewModel
          * The film comes home **paused**: a disconnect is not a request to keep watching out loud on
          * the phone. Only ever reached with this screen attached — a session that ends after it has
          * gone is the coordinator's to close (one stop report per source).
+         *
+         * [at] is usually **invalid**: a session ended from the Cast notification ends with the receiver
+         * already gone. The film then comes home — and its stop is reported — at the session's last valid
+         * reading, resolved here, synchronously: routing is already local, and the next tick would record
+         * the idle local player's zero. The source's start position is the fallback only for a session
+         * that never produced a valid reading at all; its stop then carries no position.
          */
         private fun onCastEnded(at: PlaybackSnapshot) {
             val active = session ?: return
             val current = active.source
-            // An invalid snapshot means the receiver no longer held the item (stopped from the
-            // television): its position is meaningless, so resume where this session started.
-            val resumeTicks = if (at.isValid) at.positionTicks else current.startPositionTicks
+            val known = at.takeIf { it.isValid } ?: active.lastValidReading
+            val resumeTicks = known?.positionTicks ?: current.startPositionTicks
             Timber.i("Bringing %s back to this device at %d ticks", current.itemId, resumeTicks)
             openSession(
                 current.asRequest(active.forcedRemote, castTarget = false).copy(startPositionTicks = resumeTicks),
                 playWhenReady = false,
-                endingAt = at,
+                endingAt = known ?: at,
             )
         }
 
@@ -561,10 +591,11 @@ internal class PlayerViewModel
          * Closes the outgoing session before something else takes its place; the stop report is what
          * kills the encoder. Idempotent per source ([ActiveSession.stopReported]).
          *
-         * @param at where to report the stop from. The default asks the player, which is wrong for a
-         *   transfer: by then [playerHandle] is the *other* player.
+         * @param at where to report the stop from. The default asks the player — falling back to the
+         *   session's last valid reading when the player's is not ([vouchedReading]) — which is wrong for
+         *   a transfer: by then [playerHandle] is the *other* player.
          */
-        private suspend fun endCurrentSource(at: PlaybackSnapshot = playerHandle.snapshot()) {
+        private suspend fun endCurrentSource(at: PlaybackSnapshot = vouchedReading()) {
             val active = session ?: return
             setReportingActive(false)
             if (active.stopReported) return
@@ -840,6 +871,7 @@ internal class PlayerViewModel
          */
         internal fun onTick(snapshot: PlaybackSnapshot) {
             if (!snapshot.isValid) return
+            rememberReading(snapshot)
             val decision = positionTracker.onTick(snapshot, session?.segments.orEmpty(), skipModes)
             _uiState.update {
                 it.copy(
@@ -974,6 +1006,8 @@ internal class PlayerViewModel
         ) {
             val previous = session?.source ?: return
             val snapshot = playerHandle.snapshot()
+            // A receiver's invalid reading is at zero; a re-negotiation must not restart the film there.
+            val resumeTicks = vouchedReading().positionTicks
             updateSession { it.copy(forcedRemote = request.forceRemote) }
             setReportingActive(false)
             // `PlayerEvent` has no "buffering", so nothing else can tell the group this member is
@@ -982,7 +1016,7 @@ internal class PlayerViewModel
             val resumed =
                 request.copy(
                     startPositionTicks =
-                        request.startPositionTicks.takeIf { it > 0L } ?: snapshot.positionTicks,
+                        request.startPositionTicks.takeIf { it > 0L } ?: resumeTicks,
                 )
 
             // What to fall back to if the resolve fails: the player is still prepared on
@@ -1054,6 +1088,8 @@ internal class PlayerViewModel
                             upNext = null,
                             // A fresh load: whatever the receiver dropped was the stream this replaces.
                             castItemLostAt = null,
+                            // Nothing has been read from the new stream yet.
+                            lastValidReading = null,
                         )
                     // A re-resolve builds a fresh media item, which starts at 1×; the speed belongs
                     // to the session, not to the media item.
@@ -1109,6 +1145,7 @@ internal class PlayerViewModel
                 updateSession { it.copy(recoverySource = null) }
                 Timber.i("Re-negotiating %s failed; retrying the terms that were playing", previous.itemId)
                 val snapshot = playerHandle.snapshot()
+                val resumeTicks = vouchedReading().positionTicks
                 launchSessionOp {
                     publish(
                         sessionController.open(
@@ -1116,7 +1153,7 @@ internal class PlayerViewModel
                                 // Read here, not captured above: this runs once the predecessor
                                 // operation has been cancelled, and that flag is the one in force.
                                 .asRequest(session?.forcedRemote == true, isCasting)
-                                .copy(startPositionTicks = snapshot.positionTicks),
+                                .copy(startPositionTicks = resumeTicks),
                             playWhenReady = snapshot.isPlaying,
                         ),
                         PlayerMessage.ChangeReverted,
@@ -1313,7 +1350,12 @@ internal class PlayerViewModel
                         reporter.startReporting(
                             scope = viewModelScope,
                             currentSource = { source },
-                            snapshot = { playerHandle.snapshot().also(sessionStore::rememberLivePosition) },
+                            snapshot = {
+                                playerHandle.snapshot().also {
+                                    sessionStore.rememberLivePosition(it)
+                                    rememberReading(it)
+                                }
+                            },
                         )
                 }
         }
@@ -1429,6 +1471,10 @@ internal class PlayerViewModel
  * @property castItemLostAt non-`null` once the receiver has dropped this session's item: the reading it
  *   was last held at. From then on the stop is reported, the transport acts on nothing, and Play
  *   loads the item again (`PlayerViewModel.onCastItemLost`).
+ * @property lastValidReading the last [valid][PlaybackSnapshot.isValid] reading taken for [source] —
+ *   the only position this session can vouch for once its player stops answering (a receiver that has
+ *   gone). Here and not on the ViewModel or the tracker: its lifetime is exactly this source's, so a
+ *   new session can never inherit the last one's position. Seeded from the coordinator on adoption.
  */
 @Suppress("LongParameterList")
 private data class ActiveSession(
@@ -1444,6 +1490,7 @@ private data class ActiveSession(
     // successor by saying nothing.
     val upNext: UpNextEpisode?,
     val castItemLostAt: PlaybackSnapshot?,
+    val lastValidReading: PlaybackSnapshot?,
 )
 
 /**

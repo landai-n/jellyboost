@@ -136,7 +136,7 @@ the old one's title.
 | edge | what happens |
 |---|---|
 | **local → cast** | The coordinator takes a snapshot off the player that is *still* playing, flips the routing handle, stops the local player, and hands the snapshot to the screen. The screen closes the outgoing session — one stop report, which carries the `stopTranscoding` — and then negotiates the item again with `castTarget = true`, resuming at that position and playing if the phone was playing. Both halves run in **one coroutine** so the new `PlaybackInfo` cannot overtake the encoder kill. |
-| **cast → local** | The last snapshot is read off the cast player *before* the routing goes home, and the film reopens on this device **paused** at that position. Paused because a disconnect is not a request to watch: the user pulled the plug or left the room. |
+| **cast → local** | The last snapshot is read off the cast player *before* the routing goes home, and the film reopens on this device **paused** at that position — or, when that snapshot is invalid (the receiver had already gone, as after a Disconnect from the Cast notification), at the session's last valid reading (see *Who reports to the server*). Paused because a disconnect is not a request to watch: the user pulled the plug or left the room. |
 | **in a SyncPlay group** | The group is left first, and its message wins the snackbar — moving to a television is visible a second later, while being thrown out of a group is not. |
 
 Both go through `openSession(..., endingAt = snapshot)` rather than `reopenSession`, because a
@@ -204,6 +204,9 @@ only while no host is attached.*
 | Receiver drops the item, no screen | stopped by the coordinator | the coordinator, once, at the last held position; `detachedSource` is cleared as it is sent, so the session's later end finds nothing to report |
 | Screen reopened for the item the receiver holds (reattach) | handed from the coordinator to the screen, same play session | **none** — the session continues; the screen reports it later like any other |
 | Screen opened for anything else while a source is detached | the coordinator's stops at attach | the coordinator, once, for the **orphan**, at its last valid reading, in `attachHost` |
+| Session ends with a screen attached, receiver already gone (Disconnect from the Cast notification) | stopped by the screen's `endCurrentSource` | the screen, once, at the session's **last valid reading** (`ActiveSession.lastValidReading`, seeded from the coordinator on reattach); the film reopens locally, paused, at that same position, and its start report carries it |
+| Session ends with no screen, receiver already gone | stopped by the coordinator | the coordinator, once, at the **last valid reading** held for the source (`readReceiver`, or the screen's own last reading handed over at detach) |
+| Any stop with no valid reading ever taken | — | carries no position and is sent **`failed = true`**, so the server leaves the user's data alone |
 
 A screen that goes away after its session's stop was already reported — the film played to its end,
 or the receiver dropped it — hands the coordinator **no** source (`PlayerCastBridge.castSource` is
@@ -224,8 +227,23 @@ One guard sits under all three rows (audit CAST-01): a reading taken off the cas
 television or another sender loading its own media leaves the session alive and `CastPlayer`
 answering zero — or the other app's position; `PlaybackReporter` skips such a progress tick
 entirely, and a stop with an invalid reading still closes the server session and kills the encoder
-but carries no position and writes nothing locally, so the ticker's last valid write stays the
-resume position.
+but carries no position and writes nothing locally.
+
+**A stop never goes out positionless when anyone read a valid position (2026-09-27, data-loss
+fix).** The server does *not* treat a stop without `PositionTicks` as "position unknown": with
+`Failed = false` it takes it as played to the end and resets the item's resume position to **0**
+(the server logs "Stopped at unknown"). Found on a device: a reattached film disconnected from the
+Cast notification at about 27:20 had its resume position wiped. So, in order: every stop is sent at
+the last **valid** reading taken for its source — the screen keeps one per session
+(`ActiveSession.lastValidReading`, fed by the UI tick and the reporting ticker, read synchronously
+as the session ends, seeded from the coordinator's `CastReceiverHold.lastValidReading` on
+reattach and handed back via `CastPlaybackHost.lastValidReading` at detach), the coordinator keeps
+one for the detached source (`readReceiver`); only a session that never produced a valid reading at
+all sends a positionless stop, and `PlaybackReporter.reportStop` then flags it `failed = true` so
+the server writes nothing. The film brought home after a session ends reopens at that same last
+valid position — never at the source's `startPositionTicks`, which for a reattached film is where
+it was first sent, not where it is — and a re-negotiation while the receiver's reading is invalid
+resumes from it too.
 
 ## What the player screen becomes
 
@@ -347,7 +365,10 @@ own rule is that a rule belongs there only when it was shown to be missing.
 | `cast/CastSessionCoordinatorTest` › reattach and orphans | "Holds" pinned from every side: a valid reading, the id in any case, a buffering receiver (held) vs an invalid, non-buffering one (not), another item, the drop grace period, no session or a screen attached (not). Adoption sends no report and stops the ticker; an orphan — another item, or the same item renegotiated — gets exactly one stop at its last valid reading (the freshest `readReceiver`, not the detach one) and none again at session end. The detached item's metadata is captured at detach and survives the holder being overwritten; it goes with a drop and with the session; the bar's toggle acts only with no screen attached, and plays a receiver settled paused under a stale intent; receiver buffering is followed while casting only. |
 | `cast/CastNowPlayingTest` | The bar's state over a real coordinator: nothing without a detached source or with a screen attached; title, artwork, device, intent and position; the position following the receiver while collected and keeping the last one over an invalid reading; the toggle reflected at once; buffering and reconnecting; gone on reattach and on session end; `current()` equal to the published state. |
 | `cast/CastNotificationIntentsTest` | The trampoline's action is recognised, a normal launch and a Recents relaunch are not, and the reopen flags carry `NEW_TASK`/`SINGLE_TOP` and never `CLEAR_TASK`/`CLEAR_TOP`. |
-| `ui/PlayerViewModelCastReattachTest` | Reopening the held film: **zero** resolves, prepares and transport calls, zero start/stop reports; one ticker (the screen's) reporting the very same source; the live position, playing state and duration shown; a pause pauses rather than reloads; a buffering receiver is adopted and shown buffering; leaving again and ending the session reports once. Another item: one resolve, one prepare, **one** stop for the orphan at the television's position and none again at session end; a receiver that let go is not adopted and its old session is closed once. |
+| `ui/PlayerViewModelCastReattachTest` | Reopening the held film: **zero** resolves, prepares and transport calls, zero start/stop reports; one ticker (the screen's) reporting the very same source; the live position, playing state and duration shown; a pause pauses rather than reloads; a buffering receiver is adopted and shown buffering, at the coordinator's last valid reading; leaving again and ending the session reports once. Another item: one resolve, one prepare, **one** stop for the orphan at the television's position and none again at session end; a receiver that let go is not adopted and its old session is closed once. The session ending with the receiver gone: home at the screen's last reading (or the coordinator's, when the screen never read one), stop and start reports at it, **no report carrying 0 or an invalid reading**; a screen leaving as the receiver stops answering hands its reading to the coordinator's detached stop. |
+| `ui/PlayerViewModelCastEndTest` | A non-reattached session ended with an invalid final snapshot comes home at the last valid reading, stop and start reported there and never at 0; one that never read a valid position comes home at its start with a positionless stop; a quality change during an invalid reading resumes from the last valid position. |
+| `cast/CastSessionCoordinatorTest` › receiver gone | The detached end with an invalid final snapshot reports at the last `readReceiver` reading, never an invalid one; a screen's last valid reading seeds the detached stop when the receiver answers nothing at detach; a buffering hold carries the last valid reading. |
+| `report/PlaybackReporterTest` | (Cast rows) an invalid stop carries no position, writes nothing locally and is flagged `failed`; an ended item's positionless stop is not. |
 | `:app` `CastingBarTest` | `showsCastingBar` (hidden on Player and Now Playing, and with nothing cast), **cast wins the slot** over an active music queue and gives it back, `castingBarAction` (buffering keeps Pause), and `castNotificationRoute` (the casting item's player, the same player left alone in any case, another player replaced, the attached player left alone, Home with nothing cast, nothing signed out). |
 | `:app` androidTest `CastingBarSemanticsTest` | One merged sentence with the tap and no loose text nodes, the button as its own stop, "Buffering" + polite live region, polite live region while reconnecting. Compiled; device run owed. |
 | `cast/RemoteItemPresenceTest` | The edges only, once each; never armed by a load's invalid window or a placeholder glimpse, only by the item held while ready; the resume point is the last held reading; a new load clears and disarms. |

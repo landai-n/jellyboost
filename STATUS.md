@@ -37,6 +37,22 @@ Known issues:
 
 ## Current milestone: M14 — Breadth & theming (approved 2026-08-28; tracks 4 and 6 landed, gate green; Settings hub landed on `m14/settings-hub`)
 
+**Cast: a session ending with the receiver gone no longer wipes the resume position (2026-09-27,
+worktree branch; data-loss fix, device walk owed).** Found on a device with a Chromecast Ultra: a
+reattached film, disconnected from the Cast notification at about 27:20, reopened locally at 0:00 and
+the server's resume position became 0. The final snapshot at session end is invalid (the receiver has
+gone), so the screen reopened at the source's `startPositionTicks` (0 for that film) and sent a stop
+**with no position**, which the server takes as "played to the end, resume at 0"; the paused local
+reopen then kept reporting 0. Now every stop goes out at the last valid reading for its source — per
+session in `ActiveSession.lastValidReading`, seeded from the coordinator on reattach and handed back at
+detach; the coordinator's detached end uses its own last `readReceiver` reading — the film comes home
+there, and a stop with nothing valid to carry is sent `failed = true` so the server writes nothing.
+DECISIONS.md 2026-09-27; `docs/features/chromecast.md` › *Who reports to the server*.
+- **Device walk owed:** cast a film, leave the player, reopen it via the bar, let it play a few minutes,
+  Disconnect from the Cast notification → the film reopens paused where the television was, and the
+  server's resume position for it is that position (not 0, not marked played). Same with no player
+  screen open (the casting bar showing) → Resume on Home offers the television's position.
+
 **Cast: a casting bar, reattach instead of reload, and a notification that keeps the back stack
 (2026-09-27, worktree branch; device walk owed).** Found on a device walk with a Chromecast Ultra.
 (A) With a film on the television and no player screen open, the chrome's bar slot shows a

@@ -269,9 +269,27 @@ class PlaybackReporterTest {
             )
 
             info.captured.positionTicks shouldBe null
+            // A positionless stop that is not `failed` is read by the server as "played to the end":
+            // it resets the resume position to zero. `failed` is what keeps the user's data untouched.
+            info.captured.failed shouldBe true
             coVerify(exactly = 1) { api.stopEncodingProcess(any(), any()) }
             coVerify(exactly = 0) { userDataRepository.setPosition(any(), any()) }
             coVerify(exactly = 0) { userDataRepository.setPlayed(any(), any()) }
+        }
+
+    @Test
+    fun `an ended item's positionless stop is not flagged failed, so it still counts as watched`() =
+        runTest {
+            val info = slot<PlaybackStopInfo>()
+            coEvery { api.reportPlaybackStopped(capture(info)) } just Runs
+
+            reporter().reportStop(
+                PlayerFixtures.remoteSource(playMethod = PlayMethod.DIRECT_PLAY),
+                PlaybackSnapshot(isValid = false, hasEnded = true),
+            )
+
+            info.captured.positionTicks shouldBe null
+            info.captured.failed shouldBe false
         }
 
     @Test

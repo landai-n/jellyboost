@@ -117,6 +117,23 @@ internal fun Player.openForCast(
     prepare()
 }
 
+/**
+ * Loads [mapped] with its queue item's **autoplay set from [playWhenReady]**, so the item cannot
+ * contradict the load it travels in, and opens it ([openForCast]). The spec actually sent is returned.
+ * `CastPlayerHandle.prepare`'s whole load, kept free of Cast types so the flag's journey into the
+ * `MediaItem` the converter reads can be pinned.
+ */
+@UnstableApi
+internal fun Player.loadOnReceiver(
+    mapped: CastMediaSpec,
+    startPositionMs: Long,
+    playWhenReady: Boolean,
+): CastMediaSpec {
+    val sent = mapped.copy(autoplay = playWhenReady)
+    openForCast(sent.toMediaItem(), startPositionMs, playWhenReady)
+    return sent
+}
+
 /** The spec [toMediaItem] packed, as [CastMediaItemConverter.toMediaQueueItem] reads it back. */
 internal fun MediaItem.castSpec(): CastMediaSpec? = localConfiguration?.tag as? CastMediaSpec
 

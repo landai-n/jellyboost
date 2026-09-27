@@ -306,6 +306,54 @@ class CastSpecMapperTest {
         }
     }
 
+    /**
+     * End to end through the handle's own load ([loadOnReceiver], what `CastPlayerHandle.prepare` calls):
+     * the `MediaItem` the player is given carries the spec the converter reads, with the open's flag —
+     * never the mapper's default of `true`.
+     */
+    @Test
+    fun `a load opened paused hands the player an item whose autoplay is false`() {
+        mockkStatic(Uri::class)
+        try {
+            every { Uri.parse(any()) } returns mockk(relaxed = true)
+            val player = mockk<Player>(relaxed = true)
+            val items = mutableListOf<MediaItem>()
+            every { player.setMediaItem(capture(items), any<Long>()) } returns Unit
+            val mapped = mapper.map(itemSpec(uri = "https://server/Videos/x/stream"), directPlay())
+
+            val sent = player.loadOnReceiver(mapped, startPositionMs = 42_000L, playWhenReady = false)
+
+            mapped.autoplay shouldBe true
+            sent.autoplay shouldBe false
+            items.single().castSpec()?.autoplay shouldBe false
+            verifyOrder {
+                player.playWhenReady = false
+                player.setMediaItem(items.single(), 42_000L)
+                player.prepare()
+            }
+        } finally {
+            unmockkStatic(Uri::class)
+        }
+    }
+
+    @Test
+    fun `a load opened playing hands the player an item whose autoplay is true`() {
+        mockkStatic(Uri::class)
+        try {
+            every { Uri.parse(any()) } returns mockk(relaxed = true)
+            val player = mockk<Player>(relaxed = true)
+            val items = mutableListOf<MediaItem>()
+            every { player.setMediaItem(capture(items), any<Long>()) } returns Unit
+            val mapped = mapper.map(itemSpec(uri = "https://server/Videos/x/stream"), directPlay())
+
+            player.loadOnReceiver(mapped.copy(autoplay = false), startPositionMs = 0L, playWhenReady = true)
+
+            items.single().castSpec()?.autoplay shouldBe true
+        } finally {
+            unmockkStatic(Uri::class)
+        }
+    }
+
     private fun itemSpec(
         uri: String = "https://server/Videos/x/stream?static=true",
         mimeType: String? = null,

@@ -256,13 +256,40 @@ valid zero as well. Three layers now:
 - `CastPlayerHandle.reading()` is invalid once the handle has no `RemoteMediaClient`: nothing a
   torn-down player says is live.
 - **The zero rule** (`PlaybackSnapshot.contradicts`): a valid, not-ended reading at position 0, after
-  a valid reading further in, is treated as invalid wherever a reading is used. In the screen that is
-  `PlayerViewModel.vetted`: the UI tick, the reporting ticker, `lastValidReading`, the stop's snapshot,
-  `onCastEnded`, `onCastItemLost`, `seekBy` and `releaseSession`. In the coordinator it is
-  `readReceiver`, the detached end and the detached dropped item. The one legitimate zero is the user's
-  seek: `seekTo` moves the session's last valid reading first. A receiver sent back to 0:00 by another
-  sender or the television's remote is ignored until it reports a later position, about a second.
+  a valid reading further in, is treated as invalid — **only where no one can vouch for the reading**
+  (narrowed after the wave's review). In the screen (`PlayerViewModel.vetted`) that is a **receiver's**
+  reading for a session opened on the receiver (`ActiveSession.onReceiver`); the screen's own `seekTo`
+  moves the anchor, so a seek to 0 stands. A reading from **the other player** (the idle local player
+  after routing fell back, whatever its position, or a receiver's first readings after a transfer to it)
+  is invalid outright. A **local** player playing its own session is never second-guessed: SyncPlay
+  commands and media-session / notification / Bluetooth seeks move it without passing through `seekTo`,
+  and its zero is real. In the coordinator the rule applies only to the **session end's** final read and
+  a detached dropped item's last held reading. The detached ticker and the casting bar record a receiver
+  restarted from the television's remote as it is.
 - The last valid reading is preferred, as above.
+
+**The detached source's readings must be about it (2026-09-27, review).** The cast handle judges
+validity against its *newest* load. A new screen's open loads its own film on the receiver before it
+attaches: `PlayerViewModel.publish` suspends in the start report before `cast.attach()`. In that window
+the bar's poll and the detached ticker used to record (and report) the new film's position as the
+held one's, and the orphan's stop carried it. `PlayerHandle.preparedSource` (tracked by
+`CastPlayerHandle`, delegated by `RoutingPlayerHandle`) names the source behind the handle's readings.
+`CastSessionCoordinator.readReceiver` takes a reading as the detached source's only when that is the
+very instance the coordinator holds (identity, as `attachHost` compares), and a buffering receiver holds
+the detached source only on the same condition.
+
+**Loads carry the intent, and the transport's label is the tap's rule (2026-09-27, review).** A
+re-negotiation (`reopenSession`), its failure recovery (`onResolveFailed`) and the local→cast handover
+load with the player's **intent** (`playWhenReady && !isSettledPaused`, the handover's read by the
+coordinator off the local player before routing moves and passed as `onCastStarted(…, playWhenReady)`),
+never `snapshot().isPlaying`. That is `false` during a receiver's invalid window and while anything
+buffers, and `openForCast` honours the flag it is given. The label follows the same rule as the tap
+(`tapPlays`, which `togglePlayWhenReady` runs). The casting bar gets `CastingItem.isSettledPaused` and
+`castingBarAction(…, isSettledPaused)`. The player screen gets `PlayerUiState.receiverSettledPaused`,
+so a receiver settled paused under a stale `playWhenReady = true` shows Play, the action its tap takes.
+Both cast status lines (the bar's row and the player's backdrop label) stay a polite live region from
+the first reconnect on (`rememberCastStatusIsLive`), so the return to "Casting to <device>" is announced
+too.
 
 What the `POST /UserItems/{id}/UserData` after every progress tick is: `PlaybackReporter.reportProgress`
 also calls `UserDataRepository.setPosition`, which writes the local row (`toBeSynced`) and immediately
@@ -394,7 +421,12 @@ own rule is that a rule belongs there only when it was shown to be missing.
 | `ui/PlayerViewModelCastReattachTest` | Reopening the held film: **zero** resolves, prepares and transport calls, zero start/stop reports; one ticker (the screen's) reporting the very same source; the live position, playing state and duration shown; a pause pauses rather than reloads; a buffering receiver is adopted and shown buffering, at the coordinator's last valid reading; leaving again and ending the session reports once. Another item: one resolve, one prepare, **one** stop for the orphan at the television's position and none again at session end; a receiver that let go is not adopted and its old session is closed once. The session ending with the receiver gone: home at the screen's last reading (or the coordinator's, when the screen never read one), stop and start reports at it, **no report carrying 0 or an invalid reading**; a screen leaving as the receiver stops answering hands its reading to the coordinator's detached stop. |
 | `ui/PlayerViewModelCastEndTest` | A non-reattached session ended with an invalid final snapshot comes home at the last valid reading, stop and start reported there and never at 0; one that never read a valid position comes home at its start with a positionless stop; a quality change during an invalid reading resumes from the last valid position. The zero rule: a torn-down receiver's valid zero at the end brings the film home at the last valid reading; a zero reading reaches neither the scrubber nor the ticker; a seek to 0 makes zero the position; a dropped item reported at a stale zero is closed at the last valid reading. |
 | `ui/PlayerViewModelCastReattachTest` › device walk | The device sequence: reattach, follow the television to 663 s, then the receiver answers a valid zero before the routing switch and the idle local player a valid zero after it. The screen's ticker firing in between reads nothing valid, the film comes home at 663 s, and the stop is reported there. A torn-down zero read before the end is not remembered either. |
-| `cast/CastSessionCoordinatorTest` › receiver gone | The detached end with an invalid final snapshot reports at the last `readReceiver` reading, never an invalid one; a screen's last valid reading seeds the detached stop when the receiver answers nothing at detach; a buffering hold carries the last valid reading. The zero rule: a torn-down zero at the end (with the local player idle at zero) is closed at the last valid reading; `readReceiver` refuses a zero after a later reading; a detached dropped item reported at a stale zero is closed at the last valid reading. |
+| `cast/CastSessionCoordinatorTest` › receiver gone | The detached end with an invalid final snapshot reports at the last `readReceiver` reading, never an invalid one; a screen's last valid reading seeds the detached stop when the receiver answers nothing at detach; a buffering hold carries the last valid reading. The zero rule: a torn-down zero at the end (with the local player idle at zero) is closed at the last valid reading; a restart from the television's remote while detached is recorded as it is; a detached dropped item reported at a stale zero is closed at the last valid reading. Another film loaded on the receiver before its screen attaches: its reading is not the detached one's, the orphan's stop is not taken from it, and a receiver buffering it does not hold the detached source; the very source loaded is still read. The handover tells the screen the phone meant to play even while buffering. |
+| `ui/PlayerViewModelZeroRuleTest` | The zero rule does not touch a local player playing its own session: a SyncPlay seek to 0 and a media-session seek to 0 while paused are where the film is, on the scrubber and in the stop. |
+| `ui/PlayerViewModelCastIntentTest` | A re-negotiation during an invalid reading reloads the receiver playing, a receiver settled paused under a stale intent reloads paused; a phone buffering toward play hands the film over playing; a receiver settled paused under a stale intent shows Play and its tap plays. |
+| `ui/PlayerViewModelCastReattachTest` › the review's window | Another film loaded before its screen attaches: the bar's reading is invalid, and the orphan's stop carries the replaced film's own last position. |
+| `cast/CastSpecMapperTest` › `loadOnReceiver` | The handle's whole load: the `MediaItem` the player is given carries a spec whose autoplay is the open's `playWhenReady` (false and true), set before the item, then prepared. |
+| `cast/CastNowPlayingTest` › stale intent, `cast/CastStatusAnnouncementTest`, `:app` `CastingBarActionTest` | The bar's item carries `isSettledPaused` and its tap plays; the label equals `tapPlays` in every intent/paused combination; the status line is live while reconnecting and after it, not before. `CastingBarSemanticsTest` (instrumented, compiled) adds the recovery announcement and Play under a stale intent. |
 | `model/PlaybackSnapshotTest` | `contradicts`: a valid zero after a later reading contradicts it; no vouched reading, a vouched zero, a nonzero reading, an ended or invalid reading do not. |
 | `report/PlaybackReporterTest` | (Cast rows) an invalid stop carries no position, writes nothing locally and is flagged `failed`; an ended item's positionless stop is not. |
 | `:app` `CastingBarTest` | `showsCastingBar` (hidden on Player and Now Playing, and with nothing cast), **cast wins the slot** over an active music queue and gives it back, `castingBarAction` (buffering keeps Pause), and `castNotificationRoute` (the casting item's player, the same player left alone in any case, another player replaced, the attached player left alone, Home with nothing cast, nothing signed out). |

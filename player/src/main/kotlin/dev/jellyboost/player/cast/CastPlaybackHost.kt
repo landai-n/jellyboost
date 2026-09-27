@@ -18,10 +18,15 @@ interface CastPlaybackHost {
      */
     val lastValidReading: PlaybackSnapshot? get() = null
 
-    /** @param from the **local** player's position before routing away: the resume point and the stop report's. */
+    /**
+     * @param from the **local** player's position before routing away: the resume point and the stop report's.
+     * @param playWhenReady whether the local player meant to play (its intent, not `from.isPlaying`, which is
+     *   `false` while it buffers): what the receiver is loaded with.
+     */
     fun onCastStarted(
         deviceName: String?,
         from: PlaybackSnapshot,
+        playWhenReady: Boolean,
     ): Unit = Unit
 
     /**

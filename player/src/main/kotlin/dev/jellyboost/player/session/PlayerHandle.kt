@@ -41,6 +41,15 @@ internal interface PlayerHandle {
         playWhenReady: Boolean,
     ) = prepare(spec, startPositionMs, playWhenReady)
 
+    /**
+     * The source this handle was last prepared with through the source overload of [prepare] — what
+     * its [snapshot] describes — or `null` when it does not track one (a local player, which only ever
+     * plays the screen's own session) or has been [stopped][stop]. A reader holding a source of its own
+     * compares it here rather than trusting [PlaybackSnapshot.isValid] alone: a cast handle judges
+     * validity against its *newest* load, which may already be another screen's film. Main thread only.
+     */
+    val preparedSource: PlaybackMediaSource? get() = null
+
     fun play()
 
     fun pause()
@@ -119,8 +128,17 @@ internal interface PlayerHandle {
  * `play`. Pausing it would be a no-op, and the button would look dead.
  */
 internal fun PlayerHandle.togglePlayWhenReady() {
-    if (playWhenReady && !isSettledPaused) pause() else play()
+    if (tapPlays(playWhenReady, isSettledPaused)) play() else pause()
 }
+
+/**
+ * [togglePlayWhenReady]'s decision on its own: `true` when the next tap sends `play`. Public so the
+ * casting bar in `:app` labels its button from the very rule its tap follows.
+ */
+fun tapPlays(
+    playWhenReady: Boolean,
+    isSettledPaused: Boolean,
+): Boolean = !playWhenReady || isSettledPaused
 
 internal sealed interface PlayerEvent {
     data object Ready : PlayerEvent

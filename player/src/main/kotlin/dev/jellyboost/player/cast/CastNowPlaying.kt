@@ -112,6 +112,7 @@ class CastNowPlaying
                 isBuffering = buffering,
                 positionMs = reading?.positionMs ?: 0L,
                 durationMs = reading?.durationMs?.takeIf { it > 0L } ?: runtimeMs,
+                isSettledPaused = coordinator.receiverSettledPaused,
             )
         }
 
@@ -132,6 +133,8 @@ class CastNowPlaying
  *   This, not a snapshot, is what the toggle reverses and what decides Pause over Play.
  * @property isBuffering waiting for data while meaning to play: Pause, with the buffering ring.
  * @property positionMs the last valid reading's; `0` before one has been taken.
+ * @property isSettledPaused the receiver reports itself paused under a stale `playWhenReady = true`: the
+ *   toggle then plays (`tapPlays`), so the button must say Play. With [playWhenReady], the tap's whole rule.
  */
 data class CastingItem(
     val itemId: String,
@@ -144,6 +147,7 @@ data class CastingItem(
     val isBuffering: Boolean,
     val positionMs: Long,
     val durationMs: Long,
+    val isSettledPaused: Boolean = false,
 ) {
     /** Where a player opened from the bar starts if the receiver has let go of the item by then. */
     val positionTicks: Long get() = Ticks.millisToTicks(positionMs)

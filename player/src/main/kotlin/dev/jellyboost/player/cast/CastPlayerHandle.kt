@@ -50,6 +50,10 @@ internal class CastPlayerHandle
         /** The load currently on the receiver; its tracks are what a subtitle selection matches. */
         private var loaded: CastMediaSpec? = null
 
+        /** The negotiated source behind [loaded], forgotten with it. */
+        override var preparedSource: PlaybackMediaSource? = null
+            private set
+
         /** Permanently `null`, not a "before the first prepare" state — see the class docs. */
         override val player: Player? = null
 
@@ -116,14 +120,14 @@ internal class CastPlayerHandle
 
             // The metadata must be published before the open: a receiver is loaded once, and
             // metadata arriving afterwards could only be applied by loading it a second time.
-            val castSpec =
-                specMapper
-                    .map(spec, remote, metadata.metadataFor(spec.mediaId))
-                    .copy(autoplay = playWhenReady)
-            loaded = castSpec
+            val mapped = specMapper.map(spec, remote, metadata.metadataFor(spec.mediaId))
+            // Recorded before the load reaches the receiver: from here the handle's readings are this
+            // source's, and a coordinator still holding an older one must stop taking them as its own.
+            loaded = mapped.copy(autoplay = playWhenReady)
+            preparedSource = remote
             presence.onLoad()
-            Timber.d("Casting %s as %s", castSpec.mediaId, castSpec.contentType)
-            player.openForCast(castSpec.toMediaItem(), startPositionMs, playWhenReady)
+            Timber.d("Casting %s as %s", mapped.mediaId, mapped.contentType)
+            player.loadOnReceiver(mapped, startPositionMs, playWhenReady)
         }
 
         override fun play() {
@@ -270,6 +274,7 @@ internal class CastPlayerHandle
          */
         override fun stop() {
             loaded = null
+            preparedSource = null
             presence.onLoad()
             castPlayer?.run {
                 stop()
@@ -286,6 +291,7 @@ internal class CastPlayerHandle
             val player = castPlayer ?: return
             castPlayer = null
             loaded = null
+            preparedSource = null
             presence.onLoad()
             player.removeListener(listener)
             player.release()

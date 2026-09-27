@@ -86,6 +86,19 @@ internal class FakePlayerHandle : PlayerHandle {
         this.playWhenReady = playWhenReady
     }
 
+    /** Recorded as the real cast handle records it; writable so a coordinator test can load "another film". */
+    override var preparedSource: PlaybackMediaSource? = null
+
+    override fun prepare(
+        source: PlaybackMediaSource,
+        spec: PlaybackMediaItemSpec,
+        startPositionMs: Long,
+        playWhenReady: Boolean,
+    ) {
+        preparedSource = source
+        prepare(spec, startPositionMs, playWhenReady)
+    }
+
     /**
      * Writable so a test can be a receiver left paused under a masked `playWhenReady = true`;
      * cleared by [play], as a receiver that received the play no longer is.
@@ -140,6 +153,8 @@ internal class FakePlayerHandle : PlayerHandle {
 
     override fun stop() {
         stopped = true
+        // As the cast handle does: a stopped player describes nothing.
+        preparedSource = null
     }
 
     override fun release() {

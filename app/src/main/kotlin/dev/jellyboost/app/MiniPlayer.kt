@@ -63,6 +63,7 @@ import dev.jellyboost.core.ui.theme.glassSurface
 import dev.jellyboost.core.ui.theme.pageInk
 import dev.jellyboost.core.ui.theme.popShadow
 import dev.jellyboost.player.cast.CastingItem
+import dev.jellyboost.player.cast.rememberCastStatusIsLive
 import dev.jellyboost.player.R as PlayerR
 
 /** The docked bar the chrome shows whenever music is loaded and the user is not already looking at it. */
@@ -104,8 +105,8 @@ internal fun MiniPlayer(
  *
  * **One spoken sentence**: the row merges into "<title>, Casting to <device>" (with its tap, "Open
  * player"), and the play/pause button stays its own stop. While reconnecting the row's sentence says
- * so and is announced politely; while buffering the button says "Pause", state "Buffering", as the
- * player's transport does.
+ * so and is announced politely, and so is the return to "Casting to <device>"; while buffering the
+ * button says "Pause", state "Buffering", as the player's transport does.
  */
 @Composable
 internal fun CastingBar(
@@ -122,6 +123,7 @@ internal fun CastingBar(
         )
     val title = state.title
     val sentence = if (title == null) status else stringResource(R.string.casting_bar_description, title, status)
+    val statusIsLive = rememberCastStatusIsLive(state.isReconnecting)
 
     MiniPlayerSurface(
         progressFraction = progressFraction(state.positionMs, state.durationMs),
@@ -136,12 +138,18 @@ internal fun CastingBar(
             rowSemantics =
                 Modifier.semantics {
                     contentDescription = sentence
-                    if (state.isReconnecting) liveRegion = LiveRegionMode.Polite
+                    // The recovery is announced too: see `rememberCastStatusIsLive`.
+                    if (statusIsLive) liveRegion = LiveRegionMode.Polite
                 },
             textSemantics = Modifier.clearAndSetSemantics {},
         ) {
             CastingBarPlayPause(
-                action = castingBarAction(playWhenReady = state.playWhenReady, isBuffering = state.isBuffering),
+                action =
+                    castingBarAction(
+                        playWhenReady = state.playWhenReady,
+                        isBuffering = state.isBuffering,
+                        isSettledPaused = state.isSettledPaused,
+                    ),
                 isBuffering = state.isBuffering,
                 onClick = onTogglePlayPause,
             )

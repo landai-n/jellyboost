@@ -85,6 +85,12 @@ internal data class PlayerUiState(
      * before it updates, so it is written a handful of times a session rather than twice a second.
      */
     val upNext: UpNextState? = null,
+    /**
+     * A receiver reporting itself settled paused (`PlayerHandle.isSettledPaused`) while `CastPlayer`'s
+     * masked `isPlaying` still says playing. The tap then plays (`tapPlays`), so the label must say Play.
+     * Always `false` locally.
+     */
+    val receiverSettledPaused: Boolean = false,
 ) {
     val isReady: Boolean get() = !isLoading && errorMessage == null
 
@@ -92,7 +98,8 @@ internal data class PlayerUiState(
      * In a group the *group's* state is the truth a tap reverses: an icon drawn from the local
      * player's `isPlaying` after a missed echo shows the opposite of what the next tap must ask for.
      */
-    val showsPlaying: Boolean get() = if (syncPlay.inGroup) syncPlay.groupPlaying else isPlaying
+    val showsPlaying: Boolean
+        get() = if (syncPlay.inGroup) syncPlay.groupPlaying else isPlaying && !receiverSettledPaused
 }
 
 /**

@@ -95,6 +95,8 @@ internal class RoutingPlayerHandle
 
         override val playWhenReady: Boolean get() = active.playWhenReady
 
+        override val isSettledPaused: Boolean get() = active.isSettledPaused
+
         override fun selectAudioTrack(
             source: PlaybackMediaSource,
             jellyfinIndex: Int,

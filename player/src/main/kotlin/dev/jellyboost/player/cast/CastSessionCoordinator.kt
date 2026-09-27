@@ -9,6 +9,7 @@ import dev.jellyboost.player.report.PlaybackReporter
 import dev.jellyboost.player.session.PlaybackTarget
 import dev.jellyboost.player.session.PlayerEvent
 import dev.jellyboost.player.session.RoutingPlayerHandle
+import dev.jellyboost.player.session.togglePlayWhenReady
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -194,11 +195,12 @@ class CastSessionCoordinator
 
         /**
          * The casting bar's play/pause. Acts only for a detached source: with a screen attached the
-         * transport is the screen's, and with nothing held there is nothing of ours to pause.
+         * transport is the screen's, and with nothing held there is nothing of ours to pause. The
+         * decision itself is [togglePlayWhenReady], the player screen's rule too.
          */
         internal fun toggleDetachedPlayback() {
             if (host != null || detachedSource == null || !isCasting) return
-            if (routing.playWhenReady) routing.pause() else routing.play()
+            routing.togglePlayWhenReady()
         }
 
         /**

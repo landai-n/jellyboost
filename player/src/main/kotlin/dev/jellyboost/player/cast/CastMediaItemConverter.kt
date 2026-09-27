@@ -3,6 +3,7 @@ package dev.jellyboost.player.cast
 import androidx.core.net.toUri
 import androidx.media3.cast.MediaItemConverter
 import androidx.media3.common.MediaItem
+import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import com.google.android.gms.cast.MediaInfo
 import com.google.android.gms.cast.MediaMetadata
@@ -26,11 +27,11 @@ internal class CastMediaItemConverter
     @Inject
     constructor() : MediaItemConverter {
         override fun toMediaQueueItem(mediaItem: MediaItem): MediaQueueItem {
-            val spec = mediaItem.localConfiguration?.tag as? CastMediaSpec
+            val spec = mediaItem.castSpec()
             val info = if (spec != null) mediaInfo(spec) else fallbackMediaInfo(mediaItem)
             return MediaQueueItem
                 .Builder(info)
-                .setAutoplay(true)
+                .setAutoplay(spec?.autoplay ?: true)
                 .setStartTime(((spec?.startPositionMs ?: 0L).coerceAtLeast(0L)) / MILLIS_PER_SECOND)
                 .build()
         }
@@ -96,6 +97,28 @@ internal class CastMediaItemConverter
             const val DEFAULT_CONTENT_TYPE = "video/mp4"
         }
     }
+
+/**
+ * Opens [item] on a receiver with [playWhenReady] set **first**. `RemoteCastPlayer.setMediaItems`
+ * sends the load at once and takes the load's autoplay flag from the player's *current*
+ * `playWhenReady` — which a receiver left paused by an earlier session has synced to `false`. Set
+ * afterwards, the `play` could reach the receiver mid-load and be dropped, leaving it paused under a
+ * masked `playWhenReady = true`. Setting it first on a receiver still holding old media briefly
+ * resumes (or pauses) that media before the load replaces it; that blip is the price of a load that
+ * carries the right flag.
+ */
+internal fun Player.openForCast(
+    item: MediaItem,
+    startPositionMs: Long,
+    playWhenReady: Boolean,
+) {
+    this.playWhenReady = playWhenReady
+    setMediaItem(item, startPositionMs.coerceAtLeast(0L))
+    prepare()
+}
+
+/** The spec [toMediaItem] packed, as [CastMediaItemConverter.toMediaQueueItem] reads it back. */
+internal fun MediaItem.castSpec(): CastMediaSpec? = localConfiguration?.tag as? CastMediaSpec
 
 /** The tag is load-bearing: [CastMediaItemConverter.toMediaQueueItem] reads the spec back off it. */
 @UnstableApi

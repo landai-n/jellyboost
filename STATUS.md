@@ -37,6 +37,19 @@ Known issues:
 
 ## Current milestone: M14 — Breadth & theming (approved 2026-08-28; tracks 4 and 6 landed, gate green; Settings hub landed on `m14/settings-hub`)
 
+**Cast: the resume-position wipe, second fix, from the device walk (2026-09-27, worktree branch;
+device walk owed).** The first fix (below) was on the device and the wipe still happened: a reattached
+film followed to 663 s came home "at 0 ticks" and its stop wrote 0 (and PlayCount went up by one). The
+final reading was not invalid but a **valid-looking zero**. media3's `RemoteCastPlayer` drops its
+client on session end without updating its timeline, so `CastPlayerHandle` still found our item, at
+`lastReportedPositionMs`, which is zero after a receiver stop. The rule is now: a valid zero after a
+later valid reading is never evidence (`PlaybackSnapshot.contradicts`; only the user's seek to 0 makes it
+one). It is enforced for every screen and coordinator reading, and the handle reports nothing once it
+has no `RemoteMediaClient`. DECISIONS.md 2026-09-27 (second entry).
+- **Device walk owed:** repeat the walk exactly: reattach via the bar, let it play, then the
+  notification's X. The film opens paused at the television's position, `PlaybackPositionTicks` on the
+  server stays there, and nothing is logged "at 0 ticks".
+
 **Cast: a session ending with the receiver gone no longer wipes the resume position (2026-09-27,
 worktree branch; data-loss fix, device walk owed).** Found on a device with a Chromecast Ultra: a
 reattached film, disconnected from the Cast notification at about 27:20, reopened locally at 0:00 and

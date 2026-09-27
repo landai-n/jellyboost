@@ -5,6 +5,7 @@ import dev.jellyboost.player.deviceprofile.CastReceiverClass
 import dev.jellyboost.player.di.DetachedPlayerScope
 import dev.jellyboost.player.model.PlaybackMediaSource
 import dev.jellyboost.player.model.PlaybackSnapshot
+import dev.jellyboost.player.model.contradicts
 import dev.jellyboost.player.report.PlaybackReporter
 import dev.jellyboost.player.session.PlaybackTarget
 import dev.jellyboost.player.session.PlayerEvent
@@ -186,7 +187,12 @@ class CastSessionCoordinator
          * freshest position anyone saw. Main thread only, as every snapshot is.
          */
         internal fun readReceiver(): PlaybackSnapshot {
-            val reading = routing.snapshot()
+            val raw = routing.snapshot()
+            // A zero after a later valid reading is a torn-down receiver (or, once routing has gone home,
+            // the idle local player) — never where the film is. Nothing seeks from the bar, so no zero
+            // after a nonzero reading is the user's.
+            val reading =
+                if (detachedSource != null && raw.contradicts(lastHeldReading)) raw.copy(isValid = false) else raw
             if (reading.isValid && detachedSource != null) lastHeldReading = reading
             return reading
         }
@@ -283,7 +289,9 @@ class CastSessionCoordinator
          */
         private fun onCastEnded() {
             Timber.i("Cast session ended")
-            val last = routing.snapshot()
+            // Through [readReceiver], still before routing moves: a torn-down `RemoteCastPlayer` keeps its
+            // timeline, so it can claim our item at zero here; that zero is vetted away.
+            val last = readReceiver()
             status.setConnection(CastConnection.None)
             _receiverBuffering.value = false
             stopTicker()
@@ -347,9 +355,12 @@ class CastSessionCoordinator
             }
             val orphaned = detachedSource ?: return
             Timber.i("The receiver stopped %s with no screen open; closing its session", orphaned.itemId)
+            // Read before the source is forgotten, which forgets its reading too.
+            val known = lastHeldReading
+            val at = lastHeld.takeUnless { it.contradicts(known) } ?: known ?: lastHeld
             stopTicker()
             detachedSource = null
-            reporter.reportStopDetached(orphaned, lastHeld)
+            reporter.reportStopDetached(orphaned, at)
         }
 
         private fun cancelItemLost() {

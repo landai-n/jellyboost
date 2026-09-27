@@ -24,3 +24,14 @@ data class PlaybackSnapshot(
 internal fun Long.ticksToMillis(): Long = Ticks.ticksToMillis(this)
 
 internal fun Long.millisToTicks(): Long = Ticks.millisToTicks(this)
+
+/**
+ * `true` for a reading that claims position 0 while [lastValid] vouched for a later one. That is what
+ * a player that has let go of the item answers while still counting as valid: media3's
+ * `RemoteCastPlayer` once its session is torn down (it drops the client but keeps its timeline, so our
+ * item still looks held, at a stale or zero position), and the idle local player routing falls back to.
+ * Such a reading is never evidence of where the film is and must reach no report. A real return to the
+ * start is the user's seek, which moves [lastValid] to 0 first; an ended reading is exempt.
+ */
+internal fun PlaybackSnapshot.contradicts(lastValid: PlaybackSnapshot?): Boolean =
+    isValid && !hasEnded && positionMs == 0L && (lastValid?.positionMs ?: 0L) > 0L

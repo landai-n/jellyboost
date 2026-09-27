@@ -31,6 +31,10 @@ internal data class PlayerUiState(
      */
     val isLocalPlayback: Boolean = false,
     val isPlaying: Boolean = false,
+    /**
+     * Waiting for data **while meaning to play** — only ever set with the player's `playWhenReady`
+     * true, which is what lets the transport draw it as a Pause button with a ring round it.
+     */
     val isBuffering: Boolean = false,
     /** Slow state: it changes at most twice a session, and the fast position is measured against it. */
     val durationMs: Long = 0L,

@@ -56,6 +56,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.liveRegion
@@ -113,8 +114,7 @@ internal fun PlayerControls(
         TopBar(state = state, onBack = actions.onBack, modifier = Modifier.align(Alignment.TopStart))
 
         TransportRow(
-            isPlaying = state.showsPlaying,
-            isBuffering = state.showsBufferingDisc,
+            control = transportControl(isPlaying = state.showsPlaying, isBuffering = state.showsBufferingRing),
             onPlayPause = actions.onPlayPause,
             onSeekBy = actions.onSeekBy,
             modifier = Modifier.align(Alignment.Center),
@@ -262,8 +262,7 @@ private fun playbackMethodTag(
 
 @Composable
 private fun TransportRow(
-    isPlaying: Boolean,
-    isBuffering: Boolean,
+    control: TransportControl,
     onPlayPause: () -> Unit,
     onSeekBy: (Long) -> Unit,
     modifier: Modifier = Modifier,
@@ -278,8 +277,7 @@ private fun TransportRow(
             contentDescription = stringResource(R.string.player_rewind),
             onClick = { onSeekBy(-SKIP_BACK_MS) },
         )
-        // A Play triangle while the stream is opening invites a tap that *cancels* the start.
-        if (isBuffering) BufferingDisc() else PlayPauseButton(isPlaying = isPlaying, onClick = onPlayPause)
+        PlayPauseButton(control = control, onClick = onPlayPause)
         SeekButton(
             icon = Icons.Filled.Forward30,
             contentDescription = stringResource(R.string.player_forward),
@@ -317,51 +315,53 @@ private fun SeekButton(
     }
 }
 
-/** The same white disc, non-interactive for exactly the window a tap would cancel the start. */
-@Composable
-private fun BufferingDisc() {
-    val label = stringResource(R.string.player_buffering)
-    Box(
-        modifier =
-            Modifier
-                .size(PLAY_BUTTON)
-                .background(OVER_MEDIA_DISC, CircleShape)
-                .semantics {
-                    contentDescription = label
-                    liveRegion = LiveRegionMode.Polite
-                },
-        contentAlignment = Alignment.Center,
-    ) {
-        CircularProgressIndicator(
-            color = PLAY_GLYPH,
-            modifier = Modifier.size(PLAY_ICON),
-        )
-    }
-}
-
-/** The one solid surface on the screen: white fill, `#101010` glyph. */
+/**
+ * The one solid surface on the screen: white fill, `#101010` glyph.
+ *
+ * **Always a working button, buffering or not.** A receiver can buffer for minutes, and a spinner in
+ * place of the button left no way to pause or stop it from here. While buffering it keeps the Pause
+ * glyph and its click, gains a progress ring drawn inside its own bounds (so the row never shifts),
+ * and says both things — "Pause", state "Buffering" — the state announced politely as it appears.
+ */
 @Composable
 private fun PlayPauseButton(
-    isPlaying: Boolean,
+    control: TransportControl,
     onClick: () -> Unit,
 ) {
-    Button(
-        onClick = onClick,
-        modifier = Modifier.size(PLAY_BUTTON),
-        shape = CircleShape,
-        colors =
-            ButtonDefaults.buttonColors(
-                containerColor = OVER_MEDIA_DISC,
-                contentColor = PLAY_GLYPH,
-            ),
-        contentPadding = PaddingValues(0.dp),
-    ) {
-        Icon(
-            imageVector = if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-            contentDescription =
-                stringResource(if (isPlaying) R.string.player_pause else CoreUiR.string.action_play),
-            modifier = Modifier.size(PLAY_ICON),
-        )
+    val buffering = stringResource(R.string.player_buffering)
+    Box(contentAlignment = Alignment.Center) {
+        Button(
+            onClick = onClick,
+            modifier =
+                Modifier.size(PLAY_BUTTON).semantics {
+                    if (control.showsRing) {
+                        stateDescription = buffering
+                        liveRegion = LiveRegionMode.Polite
+                    }
+                },
+            shape = CircleShape,
+            colors =
+                ButtonDefaults.buttonColors(
+                    containerColor = OVER_MEDIA_DISC,
+                    contentColor = PLAY_GLYPH,
+                ),
+            contentPadding = PaddingValues(0.dp),
+        ) {
+            val pauses = control.action == TransportAction.PAUSE
+            Icon(
+                imageVector = if (pauses) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                contentDescription = stringResource(if (pauses) R.string.player_pause else CoreUiR.string.action_play),
+                modifier = Modifier.size(PLAY_ICON),
+            )
+        }
+        if (control.showsRing) {
+            // Decoration: the button above already carries the state in its semantics.
+            CircularProgressIndicator(
+                color = PLAY_GLYPH,
+                strokeWidth = BUFFERING_RING_STROKE,
+                modifier = Modifier.size(PLAY_BUTTON).padding(BUFFERING_RING_INSET).clearAndSetSemantics {},
+            )
+        }
     }
 }
 
@@ -922,6 +922,10 @@ private val SEEK_ICON = 26.dp
 
 private val PLAY_BUTTON = 68.dp
 
+/** Inside the disc's edge, so the ring reads as part of the button and the row keeps its width. */
+private val BUFFERING_RING_INSET = 3.dp
+private val BUFFERING_RING_STROKE = 3.dp
+
 private val PLAY_ICON = 30.dp
 
 /**
@@ -1025,8 +1029,7 @@ private fun ControlsPreview() {
         Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
             TopBar(state = state, onBack = {}, modifier = Modifier.align(Alignment.TopStart))
             TransportRow(
-                isPlaying = true,
-                isBuffering = false,
+                control = transportControl(isPlaying = true, isBuffering = false),
                 onPlayPause = {},
                 onSeekBy = {},
                 modifier = Modifier.align(Alignment.Center),
@@ -1062,10 +1065,34 @@ private fun previewActions() =
     )
 
 /**
- * Whether the transport row draws the spinner disc in place of Play/Pause. A receiver's buffering
- * counts as much as a local stream's — `PlayerEvent.Buffering` comes from both players, and a Play
- * triangle over a television that is loading invites exactly the wrong tap. The group-waiting overlay
- * already names a group's pause better.
+ * Whether the transport's Pause button wears the buffering ring. A receiver's buffering counts as
+ * much as a local stream's — `PlayerEvent.Buffering` comes from both players, and a Play triangle
+ * over a television that is loading invites exactly the wrong tap. The group-waiting overlay already
+ * names a group's pause better.
  */
-internal val PlayerUiState.showsBufferingDisc: Boolean
+internal val PlayerUiState.showsBufferingRing: Boolean
     get() = isBuffering && !syncPlay.isWaitingForGroup
+
+/** What the one tap target in the transport row does next. */
+internal enum class TransportAction { PLAY, PAUSE }
+
+/** The transport button, decided without Compose so its one rule can be pinned. */
+internal data class TransportControl(
+    val action: TransportAction,
+    /** The progress ring round the button, and the "Buffering" state it speaks. */
+    val showsRing: Boolean,
+)
+
+/**
+ * **Buffering keeps a Pause action.** Buffering means waiting for data while meaning to play
+ * (`PlayerUiState.isBuffering`), so the tap that answers it is Pause — the same thing
+ * `PlayerViewModel.togglePlayPause` does with `playWhenReady` true.
+ */
+internal fun transportControl(
+    isPlaying: Boolean,
+    isBuffering: Boolean,
+): TransportControl =
+    TransportControl(
+        action = if (isPlaying || isBuffering) TransportAction.PAUSE else TransportAction.PLAY,
+        showsRing = isBuffering,
+    )

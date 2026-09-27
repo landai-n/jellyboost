@@ -186,10 +186,12 @@ rebuffering.
 
 **Buffering is shown, for a receiver as for a local stream.** The shared `playerEventListener` emits
 `PlayerEvent.Buffering` from `onEvents` — `STATE_BUFFERING && playWhenReady`, on change only — for
-both handles. It drives `PlayerUiState.isBuffering`, which puts the (polite-live-region) buffering
-disc in place of the Play/Pause button, or the spinner when the chrome is hidden; the old "not while
-casting" gate is gone. A receiver can sit there for minutes; a local rebuffer, previously never
-shown at all, gets the same indicator.
+both handles. It drives `PlayerUiState.isBuffering` (set on open only when the open means to play),
+which draws a progress ring round the transport's **Pause** button — still a working button, since
+a receiver can sit there for minutes and must stay pausable from the screen. It speaks "Pause" with
+the state "Buffering", the state announced through a polite live region. With the chrome hidden the
+centre spinner shows instead (non-interactive; a tap brings the controls back). The old "not while
+casting" gate is gone, and a local rebuffer, previously never shown at all, gets the same treatment.
 
 **Reconnecting.** While the session is suspended the backdrop's chip reads "Reconnecting to <device>…"
 (a polite live region while it says so), and returns to "Casting to <device>" on resume.
@@ -256,7 +258,8 @@ own rule is that a rule belongs there only when it was shown to be missing.
 | `cast/CastSessionCoordinatorTest` | Connect → routing flip + status; disconnect → stop report, `stopTranscoding` and the flip back; the detached ticker starting only when nobody is attached, and stopping when a screen takes over. A dropped item: the grace period respected (nothing at 9.9 s, nothing if the item comes back), the detached stop report sent once with the last held reading and the ticker cancelled, no second report when the session later ends, the attached screen told instead, the host read at the end of the grace period. Suspension published, cleared by the resume without re-running the transfer, ignored with nothing connected. |
 | `cast/RemoteItemPresenceTest` | The edges only, once each; never armed by a load's invalid window or a placeholder glimpse, only by the item held while ready; the resume point is the last held reading; a new load clears and disarms. |
 | `session/PlayerEventBridgeTest` | `Buffering` only while buffering *and* meaning to play, cleared by a pause while still buffering and by `READY`, said on change only. |
-| `ui/PlayerTransportTest` | The local sibling: the toggle follows `playWhenReady` (a tap while rebuffering pauses), skips are relative and clamped to a known duration, an unknown duration is not clamped to zero, and a local rebuffer reaches the UI state without an `IsPlayingChanged(false)` undoing it. |
+| `ui/PlayerTransportTest` | The local sibling: the toggle follows `playWhenReady` (a tap while rebuffering pauses), skips are relative and clamped to a known duration, an unknown duration is not clamped to zero, a local rebuffer reaches the UI state without an `IsPlayingChanged(false)` undoing it, and a rebuffer is drawn as — and answered by — a working Pause. |
+| `ui/PlayerControlsTest` › `BufferingGateTest` | `transportControl`: **buffering keeps a Pause action** with the ring; outside buffering, plain Play/Pause; the ring and spinner gates, receivers included. |
 | `deviceprofile/CastDeviceProfileTest` | The codec/container/subtitle/bitrate table, the stereo AAC cap on the transcode and on both direct-play shapes (`VIDEO_AUDIO`, `AUDIO`), and the bitrate cap being the only thing `build` changes. |
 | `session/RoutingPlayerHandleTest` | Delegation of every method, event switching through `flatMapLatest` (Turbine), snapshot routing, `stopInactive` touching only the handle that is not in charge, and a switch leaving the handle it left alone. |
 | `ui/PlayerViewModelCastTest` | The system property, assembled from a real `RoutingPlayerHandle`, a real coordinator and a fake monitor: **exactly one stop report per source** across both transfers; stop-report-then-resolve ordering; `castTarget` on every re-negotiation (audio, subtitle, quality); a side-loaded subtitle never reaching the server; the fallback ladder bypassed; SyncPlay exclusivity; PiP disarmed; the speed picker following the receiver; the backdrop chain; the receiver's metadata published, a cast open waiting for it and a local open not. With an invalid receiver reading: pause pressed sends pause, a skip moves from the last valid position, nothing on screen changes; a receiver's buffering reaches the screen. A dropped item: waited out, announced, not reloaded, stop reported once at the last held position, Play re-sends it from there (or from where the scrubber was moved), and the detached case reported once across the session's end; a natural end is not reported again by the coordinator; a Wi-Fi blip shows as reconnecting and clears on resume. |
@@ -280,8 +283,5 @@ Gaps specific to the drop/buffering/reconnect handling (2026-09-27):
   stopped; the Play button then re-sends it.
 - **A load that never lands is not detected** — only an item the receiver was seen playing can be
   "dropped". A failed load normally arrives as a receiver error (`CastPlaybackFailed`).
-- **The buffering disc is not tappable** (unchanged from local playback, where it covers the open):
-  a receiver buffering for minutes cannot be paused from the screen, only from the keyboard shortcut
-  or by disconnecting.
 - **While reconnecting, taps are still dropped** — the chip now says why. The Cast notification's
   own Play/Pause state during buffering is the framework's, and not addressed here.

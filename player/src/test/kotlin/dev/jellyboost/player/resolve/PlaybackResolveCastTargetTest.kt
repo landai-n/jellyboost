@@ -3,6 +3,7 @@ package dev.jellyboost.player.resolve
 import dev.jellyboost.core.common.AppResult
 import dev.jellyboost.core.network.ConnectionState
 import dev.jellyboost.core.network.connectivity.ConnectionStateProvider
+import dev.jellyboost.player.PlayMethod
 import dev.jellyboost.player.PlayerFixtures
 import dev.jellyboost.player.api.PlayerApi
 import dev.jellyboost.player.bitrate.AutoBitrateDetector
@@ -25,11 +26,14 @@ import io.mockk.slot
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.jellyfin.sdk.model.api.DlnaProfileType
+import org.jellyfin.sdk.model.api.MediaStreamProtocol
 import org.jellyfin.sdk.model.api.PlaybackInfoDto
 import org.junit.jupiter.api.Test
 
 /**
- * What `castTarget` changes about resolving, and it is exactly two things.
+ * What `castTarget` changes about resolving, and it is exactly four things: the copy on disk is
+ * skipped, the receiver's profile is the one sent, video stream copy is forbidden, and an Auto
+ * transcode is walked back to High's rung without this device's link ever being measured.
  *
  * A new file rather than additions to [PlaybackSourceResolverTest] and [PlaybackInfoResolverTest]:
  * both of those state what the *local* pipeline does, and the regression gate is that they keep
@@ -45,8 +49,8 @@ class PlaybackResolveCastTargetTest {
             MediaCodecProbe { DeviceCodecs(videoCodecs = setOf("h264", "hevc"), audioCodecs = setOf("aac")) },
         )
 
-    // Never consulted here: none of these requests is an Auto one, and the cast branch would skip
-    // the detector even if one were.
+    // Never consulted here, and deliberately unstubbed so a call would throw: the cast branch skips
+    // the detector even for the Auto requests below.
     private val autoBitrateDetector = mockk<AutoBitrateDetector>()
 
     /** No session by default, so negotiations describe the conservative legacy receiver. */
@@ -135,4 +139,118 @@ class PlaybackResolveCastTargetTest {
 
             sent.captured.deviceProfile!!.name shouldBe DeviceProfileBuilder.PROFILE_NAME
         }
+
+    // ---- no stream copy, and a transcode ceiling for Auto ----------------------------------------
+
+    @Test
+    fun `a cast negotiation forbids video stream copy, and a local one leaves it to the server`() =
+        runTest {
+            val sent = mutableListOf<PlaybackInfoDto>()
+            coEvery { api.getPlaybackInfo(PlayerFixtures.ITEM_ID, capture(sent)) } returns
+                PlayerFixtures.playbackInfoResponse(listOf(PlayerFixtures.mediaSourceInfo(supportsDirectPlay = true)))
+
+            infoResolver.resolve(request)
+            infoResolver.resolve(PlaybackResolveRequest(itemId = PlayerFixtures.ITEM_ID))
+
+            // A stream-copied cast transcode has segments that stop matching its playlist once
+            // ffmpeg restarts mid-file; the receiver trusts the playlist and buffers forever.
+            sent.map { it.allowVideoStreamCopy } shouldBe listOf(false, null)
+            // Audio copy is not this fix's business: the server's default stands for both.
+            sent.map { it.allowAudioStreamCopy } shouldBe listOf(null, null)
+        }
+
+    @Test
+    fun `a cast direct play is still offered when stream copy is forbidden`() =
+        runTest {
+            coEvery { api.getPlaybackInfo(PlayerFixtures.ITEM_ID, any()) } returns
+                PlayerFixtures.playbackInfoResponse(listOf(PlayerFixtures.mediaSourceInfo(supportsDirectPlay = true)))
+
+            val result = infoResolver.resolve(request)
+
+            // The flag bounds a transcode's plan only; the server never consults it for direct play.
+            result.shouldBeInstanceOf<AppResult.Success<RemotePlaybackMediaSource>>()
+            result.value.playMethod shouldBe PlayMethod.DIRECT_PLAY
+        }
+
+    @Test
+    fun `a cast auto transcode is re-negotiated at High's rung`() =
+        runTest {
+            val sent = mutableListOf<PlaybackInfoDto>()
+            coEvery { api.getPlaybackInfo(PlayerFixtures.ITEM_ID, capture(sent)) } returns
+                PlayerFixtures.playbackInfoResponse(listOf(transcodeOnlySource()))
+
+            val result = infoResolver.resolve(request.copy(autoBitrate = true))
+
+            // Pass 1 goes uncapped — the profile's own 120 Mbps, which measured as a 119.6 Mbps
+            // `VideoBitrate` on the transcode URL — and is walked back to the 20 Mbps rung.
+            sent.map { it.maxStreamingBitrate } shouldBe listOf(null, CEILING)
+            sent.last().deviceProfile?.maxStreamingBitrate shouldBe CEILING
+            sent.last().deviceProfile?.name shouldBe CastDeviceProfile.PROFILE_NAME
+            sent.last().allowVideoStreamCopy shouldBe false
+            result.shouldBeInstanceOf<AppResult.Success<RemotePlaybackMediaSource>>()
+            result.value.maxStreamingBitrate shouldBe CEILING
+            // Still Auto, so the next re-negotiation starts uncapped again.
+            result.value.autoBitrate shouldBe true
+            coVerify(exactly = 0) { autoBitrateDetector.currentCap() }
+        }
+
+    @Test
+    fun `a cast auto direct play keeps the uncapped answer`() =
+        runTest {
+            val sent = mutableListOf<PlaybackInfoDto>()
+            coEvery { api.getPlaybackInfo(PlayerFixtures.ITEM_ID, capture(sent)) } returns
+                PlayerFixtures.playbackInfoResponse(listOf(PlayerFixtures.mediaSourceInfo(supportsDirectPlay = true)))
+
+            val result = infoResolver.resolve(request.copy(autoBitrate = true))
+
+            // The file's own bytes, so no encoder to keep up; the receiver's link is not ours to cap.
+            sent.single().maxStreamingBitrate shouldBe null
+            result.shouldBeInstanceOf<AppResult.Success<RemotePlaybackMediaSource>>()
+            result.value.maxStreamingBitrate shouldBe null
+        }
+
+    @Test
+    fun `a hand-picked cast cap above the ceiling is transcoded at exactly what was asked for`() =
+        runTest {
+            val sent = mutableListOf<PlaybackInfoDto>()
+            coEvery { api.getPlaybackInfo(PlayerFixtures.ITEM_ID, capture(sent)) } returns
+                PlayerFixtures.playbackInfoResponse(listOf(transcodeOnlySource()))
+
+            val result = infoResolver.resolve(request.copy(maxStreamingBitrate = ABOVE_CEILING_CAP))
+
+            // The ceiling second-guesses Auto, never a person — on a television as on the tablet.
+            sent.single().maxStreamingBitrate shouldBe ABOVE_CEILING_CAP
+            result.shouldBeInstanceOf<AppResult.Success<RemotePlaybackMediaSource>>()
+            result.value.maxStreamingBitrate shouldBe ABOVE_CEILING_CAP
+        }
+
+    @Test
+    fun `a missing cap is over the ceiling for cast only, never for an unmeasured local transcode`() =
+        runTest {
+            // Its own resolver: the shared detector stays unstubbed so the cast cases prove it is
+            // never asked.
+            val unmeasured = mockk<AutoBitrateDetector> { coEvery { currentCap() } returns null }
+            val localResolver = PlaybackInfoResolver(api, deviceProfileBuilder, unmeasured, castStatus)
+            coEvery { api.getPlaybackInfo(PlayerFixtures.ITEM_ID, any()) } returns
+                PlayerFixtures.playbackInfoResponse(listOf(transcodeOnlySource()))
+
+            localResolver.resolve(PlaybackResolveRequest(itemId = PlayerFixtures.ITEM_ID, autoBitrate = true))
+
+            // Locally, a measurement the detector could not make is its call, not this rule's.
+            coVerify(exactly = 1) { api.getPlaybackInfo(any(), any()) }
+        }
+
+    /** A source the server will only transcode — both cheaper methods refused. */
+    private fun transcodeOnlySource() =
+        PlayerFixtures.mediaSourceInfo(
+            transcodingUrl = "/videos/x/master.m3u8",
+            transcodingSubProtocol = MediaStreamProtocol.HLS,
+        )
+
+    private companion object {
+        /** `PlaybackQuality.HIGH`'s rung, spelled out here so the test pins the number, not the enum. */
+        const val CEILING = 20_000_000
+
+        const val ABOVE_CEILING_CAP = 64_000_000
+    }
 }

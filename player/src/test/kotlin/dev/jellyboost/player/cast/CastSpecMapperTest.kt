@@ -74,6 +74,22 @@ class CastSpecMapperTest {
     }
 
     @Test
+    fun `the server's no-stream-copy flag reaches the receiver on the transcode URL`() {
+        // The resolver's `allowVideoStreamCopy = false` travels as a query parameter the *server*
+        // appends to `TranscodingUrl` (10.11: MediaInfoHelper). A stream-copied cast transcode has
+        // segments that stop matching its playlist once ffmpeg restarts mid-file, so the mapper
+        // must hand the URL over with it intact.
+        val url =
+            "https://server/videos/x/master.m3u8?PlaySessionId=s&VideoCodec=h264&MaxWidth=1920" +
+                "&allowVideoStreamCopy=false"
+
+        val spec = mapper.map(itemSpec(uri = url, mimeType = MimeTypes.APPLICATION_M3U8), transcode())
+
+        spec.contentId shouldContain "&allowVideoStreamCopy=false"
+        spec.contentId shouldBe "$url&ApiKey=$TOKEN"
+    }
+
+    @Test
     fun `every subtitle URL is signed too, since the receiver fetches those as well`() {
         val spec =
             mapper.map(

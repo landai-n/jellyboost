@@ -57,7 +57,9 @@ internal class CastSpecMapper
          * HLS transcode that **re-encodes** the video (`allowVideoStreamCopy=false`, which every cast
          * transcode asks for and the server echoes into the URL). A stream copy is laid out on the
          * file's keyframes, a URL asking for its own frame rate may be encoded at another one — in both
-         * cases, and whenever the frame rate is unknown, there is no grid to snap to: `null`.
+         * cases, and whenever the frame rate is unknown, there is no grid to snap to: `null`. A
+         * `MaxFramerate` cap at or above the source's rate (which every cast transcode URL carries) moves
+         * nothing and keeps the grid.
          * A `SegmentLength` the URL carries replaces the nominal 3 s.
          */
         private fun hlsSegmentMsOf(
@@ -70,7 +72,15 @@ internal class CastSpecMapper
                     source.runTimeTicks > 0L
             val query = source.transcodingUrl?.takeIf { onGrid }?.let(::queryOf) ?: return null
             val reEncoded = query.param("allowVideoStreamCopy").equals("false", ignoreCase = true)
-            val ownFrameRate = query.param("Framerate") != null || query.param("MaxFramerate") != null
+            // A cap at or above the source's own rate leaves it alone (the cast profile always sends
+            // one): only a cap below it, an unreadable one or an explicit rate moves the grid.
+            val sourceFps = source.videoFrameRate
+            val ownFrameRate =
+                query.param("Framerate") != null ||
+                    query.param("MaxFramerate")?.let { cap ->
+                        val capFps = cap.toFloatOrNull()
+                        capFps == null || sourceFps == null || capFps < sourceFps - FRAME_RATE_TOLERANCE
+                    } == true
             // An unreadable length is no length (0), never the nominal one.
             val nominal =
                 query.param("SegmentLength")?.let { it.toIntOrNull() ?: 0 }
@@ -130,5 +140,11 @@ internal class CastSpecMapper
         private companion object {
             const val MP4_CONTENT_TYPE = "video/mp4"
             const val WEBM_CONTENT_TYPE = "video/webm"
+
+            /**
+             * Float rounding only: a 23.976 cap on a 24 fps source is a real cap (it moves the grid to
+             * 3.003 s), so the slack stays well under that 0.024 fps gap.
+             */
+            const val FRAME_RATE_TOLERANCE = 0.001f
         }
     }

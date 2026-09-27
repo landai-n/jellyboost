@@ -4860,3 +4860,9 @@ Seeded from the approved plan; listed for traceability, no divergence:
 - **Positions:** the tracker opens at the requested start and then follows the receiver's readings, which are at the snapped start; nothing compares a reading with the requested start, and a snapped start is never 0 for a nonzero request, so the zero rule is not triggered (pinned in `HlsSegmentSnapTest`).
 - **Tests:** none weakened or changed in expectation. With the snap removed from `loadOnReceiver` (mapper and pure function kept), `CastSpecMapperTest` › *a transcode load late in a segment carries the snapped start* fails (the load went out at 3 056 881 ms instead of 3 055 000 ms).
 - **Owed:** a device walk: resume a transcoded film at a position late in a segment (24 fps and 23.976 fps) and confirm it plays.
+
+## 2026-09-27 — Segment snap: a frame-rate cap at or above the source's keeps the grid
+- **Scope:** `cast/CastSpecMapper.kt` (`hlsSegmentMsOf`); `CastSpecMapperTest`.
+- **Plan said:** the entry "A cast transcode starts early in its segment" skipped the snap for any URL naming `Framerate` or `MaxFramerate`.
+- **Done instead:** only an explicit `Framerate`, an unreadable cap, or a `MaxFramerate` below the source's own rate turns the snap off. The cast profile puts a `MaxFramerate` on every transcode URL (the measured stall's was `MaxFramerate=24` on a 24 fps film), so the first rule disabled the snap for every real load; the device walk showed the load still going out at 3056.881 s and stalling.
+- **Tests:** none changed. New: a cap at or above the source's rate keeps the 3.000 s / 3.003 s grid; an unreadable cap and an explicit rate still give none. The existing "23.976 cap on a 24 fps source gives none" case still holds (tolerance is float rounding only).

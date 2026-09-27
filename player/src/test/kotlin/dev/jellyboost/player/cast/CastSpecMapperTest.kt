@@ -385,6 +385,32 @@ class CastSpecMapperTest {
             .hlsSegmentMs shouldBe null
     }
 
+    /**
+     * Every real cast transcode URL carries a `MaxFramerate` cap (the device measurement's had
+     * `MaxFramerate=24` on a 24 fps film). A cap at or above the source's rate leaves the grid where
+     * it is; treating any cap as "own frame rate" switched the snap off for every real load.
+     */
+    @Test
+    fun `a frame rate cap at or above the source's keeps the segment grid`() {
+        mapper
+            .map(hlsItem(), reEncode(frameRate = 24f, url = "$TRANSCODE_URL&MaxFramerate=24"))
+            .hlsSegmentMs shouldBe 3_000.0
+        mapper
+            .map(hlsItem(), reEncode(frameRate = 24f, url = "$TRANSCODE_URL&MaxFramerate=60"))
+            .hlsSegmentMs shouldBe 3_000.0
+        requireNotNull(
+            mapper
+                .map(hlsItem(), reEncode(frameRate = 23.976025f, url = "$TRANSCODE_URL&MaxFramerate=24"))
+                .hlsSegmentMs,
+        ) shouldBe (3_003.0 plusOrMinus 0.01)
+        mapper
+            .map(hlsItem(), reEncode(frameRate = 24f, url = "$TRANSCODE_URL&MaxFramerate=abc"))
+            .hlsSegmentMs shouldBe null
+        mapper
+            .map(hlsItem(), reEncode(frameRate = 24f, url = "$TRANSCODE_URL&Framerate=24"))
+            .hlsSegmentMs shouldBe null
+    }
+
     @Test
     fun `a segment length the transcode URL names replaces the nominal 3 s`() {
         mapper.map(hlsItem(), reEncode(frameRate = 24f, url = "$TRANSCODE_URL&SegmentLength=6")).hlsSegmentMs shouldBe

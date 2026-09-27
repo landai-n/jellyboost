@@ -5,6 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.hasClickAction
@@ -12,6 +13,7 @@ import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.player.cast.CastingItem
@@ -34,6 +36,10 @@ class CastingBarSemanticsTest {
 
     private var state by mutableStateOf(CASTING)
 
+    private var toggles = 0
+
+    private var opens = 0
+
     /** Resolved, not literal: the device may not be in English. */
     private fun text(
         id: Int,
@@ -48,7 +54,7 @@ class CastingBarSemanticsTest {
     fun composeTheBar() {
         rule.setContent {
             JellyfinTheme {
-                CastingBar(state = state, onTogglePlayPause = {}, onClick = {})
+                CastingBar(state = state, onTogglePlayPause = { toggles++ }, onClick = { opens++ })
             }
         }
     }
@@ -118,6 +124,22 @@ class CastingBarSemanticsTest {
         rule.waitForIdle()
 
         rule.onNodeWithContentDescription(text(R.string.mini_player_play)).assertExists()
+    }
+
+    @Test
+    fun aReceiverLettingGoOffersPlayThatSaysItOpensThePlayer() {
+        state = CASTING.copy(playWhenReady = true, receiverLetGo = true)
+        rule.waitForIdle()
+
+        val button = rule.onNodeWithContentDescription(text(R.string.mini_player_play))
+        val onClick = button.fetchSemanticsNode().config.getOrNull(SemanticsActions.OnClick)
+        assertEquals(text(R.string.casting_bar_open_player), onClick?.label)
+
+        button.performClick()
+        rule.waitForIdle()
+        // The player is opened (it sends the film back); the receiver is not toggled.
+        assertEquals(1, opens)
+        assertEquals(0, toggles)
     }
 
     private companion object {

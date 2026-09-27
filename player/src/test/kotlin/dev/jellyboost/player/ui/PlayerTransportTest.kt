@@ -52,6 +52,72 @@ internal class PlayerTransportTest : PlayerViewModelFixture() {
             playerHandle.playCount shouldBe 0
         }
 
+    /**
+     * A transient audio-focus loss: the player means to play (`playWhenReady` stays `true`) but is
+     * neither playing nor buffering. The tap pauses (`tapPlays`), so the label must say Pause.
+     */
+    @Test
+    fun `a player that means to play but is not playing shows what its tap does`() =
+        runTest(dispatcher) {
+            val model = viewModel()
+            advanceUntilIdle()
+            playerHandle.emit(PlayerEvent.Ready)
+            playerHandle.emit(PlayerEvent.IsPlayingChanged(true))
+            advanceUntilIdle()
+            playerHandle.playWhenReady = true
+            playerHandle.emit(PlayerEvent.IsPlayingChanged(false))
+            advanceUntilIdle()
+            val state = model.uiState.value
+
+            val label = transportControl(state.showsPlaying, state.showsBufferingRing).action
+            model.togglePlayPause()
+
+            label shouldBe TransportAction.PAUSE
+            playerHandle.pauseCount shouldBe 1
+            playerHandle.playCount shouldBe 0
+        }
+
+    /**
+     * Every state the transport can be in, label against tap. Buffering is only ever reported with
+     * `playWhenReady` true and never alongside settled-paused (a receiver settled paused has stopped
+     * buffering), so those combinations are not states at all.
+     */
+    @Test
+    fun `the label and the tap agree in every playWhenReady, settled-paused and buffering state`() =
+        runTest(dispatcher) {
+            val states =
+                listOf(
+                    Triple(true, false, false),
+                    Triple(true, true, false),
+                    Triple(false, false, false),
+                    Triple(false, true, false),
+                    Triple(true, false, true),
+                )
+            val model = viewModel()
+            advanceUntilIdle()
+            playerHandle.emit(PlayerEvent.Ready)
+            for ((playWhenReady, settledPaused, buffering) in states) {
+                // `isPlaying` deliberately disagrees with the intent: it is not what the tap reads.
+                playerHandle.emit(PlayerEvent.IsPlayingChanged(!playWhenReady))
+                advanceUntilIdle()
+                playerHandle.playWhenReady = playWhenReady
+                playerHandle.isSettledPaused = settledPaused
+                playerHandle.emit(PlayerEvent.Buffering(buffering))
+                advanceUntilIdle()
+                model.onTick(playerHandle.snapshot)
+                val state = model.uiState.value
+                playerHandle.resetCalls()
+
+                val label = transportControl(state.showsPlaying, state.showsBufferingRing).action
+                model.togglePlayPause()
+
+                val tapped = if (playerHandle.playCount == 1) TransportAction.PLAY else TransportAction.PAUSE
+                (playerHandle.playCount + playerHandle.pauseCount) shouldBe 1
+                "$label for $playWhenReady/$settledPaused/$buffering" shouldBe
+                    "$tapped for $playWhenReady/$settledPaused/$buffering"
+            }
+        }
+
     // ---- skips ------------------------------------------------------------------------------------
 
     @Test

@@ -136,6 +136,7 @@
     <string name="player_message_cast_left_syncplay">%1$sకు కాస్ట్ చేయడానికి SyncPlay గ్రూప్ నుండి నిష్క్రమించారు.</string>
     <string name="player_message_cast_failed">%1$sలో దాన్ని ప్లే చేయలేకపోయాం.</string>
     <string name="player_message_cast_stopped">%1$sలో ప్లేబ్యాక్ ఆగిపోయింది.</string>
+    <string name="player_message_cast_finished">%1$sలో ప్లేబ్యాక్ ముగిసింది.</string>
 
     <string name="player_casting_to">%1$sకు కాస్ట్ చేస్తోంది</string>
     <string name="player_cast_reconnecting">%1$sకు మళ్లీ కనెక్ట్ అవుతోంది…</string>

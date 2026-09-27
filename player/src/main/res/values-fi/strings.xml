@@ -136,6 +136,7 @@
     <string name="player_message_cast_left_syncplay">Poistuttiin SyncPlay-ryhmästä striimatakseen laitteelle %1$s.</string>
     <string name="player_message_cast_failed">Toisto laitteella %1$s epäonnistui.</string>
     <string name="player_message_cast_stopped">Toisto laitteella %1$s pysähtyi.</string>
+    <string name="player_message_cast_finished">Toisto laitteella %1$s päättyi.</string>
 
     <string name="player_casting_to">Striimataan laitteelle %1$s</string>
     <string name="player_cast_reconnecting">Yhdistetään uudelleen laitteeseen %1$s…</string>

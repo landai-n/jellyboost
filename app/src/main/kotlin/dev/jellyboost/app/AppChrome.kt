@@ -20,6 +20,7 @@ import androidx.navigation.NavDestination.Companion.hasRoute
 import dev.jellyboost.core.common.Routes
 import dev.jellyboost.core.common.music.MusicPlaybackState
 import dev.jellyboost.core.ui.theme.Dimens
+import dev.jellyboost.player.cast.CastExitReason
 import dev.jellyboost.player.cast.CastingItem
 import dev.jellyboost.player.session.tapPlays
 
@@ -137,25 +138,38 @@ internal fun showsCastingBar(
  * device it was on. Without it the bar slides out in silence and a TalkBack user loses the film.
  *
  * @property deviceName `null` when the framework never named the receiver; the copy says "your TV".
+ * @property reason [CastExitReason.FINISHED] only for a film the receiver played to its end on its
+ *   own; [CastExitReason.STOPPED] for the television dropping it, the item going missing, or the cast
+ *   session simply ending — "stopped" is accurate for all three, so they share one wording.
  */
 internal data class CastingStopped(
     val deviceName: String?,
+    val reason: CastExitReason = CastExitReason.STOPPED,
 )
 
 /**
  * `non-null → null` of [CastNowPlaying][dev.jellyboost.player.cast.CastNowPlaying]'s item is the
- * receiver dropping the film (stopped from the television, or left idle) or the cast session ending.
- * **The one silent exit is the player route**: opening the player — from the bar, the notification, or
- * any other film — attaches a screen, which clears the item because that screen is now the remote
- * control. A route change alone (the item still non-`null`) is not an exit at all.
+ * receiver dropping the film (stopped from the television, or left idle), the receiver finishing it
+ * on its own, or the cast session ending. **The one silent exit is the player route**: opening the
+ * player — from the bar, the notification, or any other film — attaches a screen, which clears the
+ * item because that screen is now the remote control. A route change alone (the item still
+ * non-`null`) is not an exit at all.
  *
  * @param onPlayer whether the player route is on top *now*: it is by the time a screen it hosts attaches.
+ * @param reason which of the two the last clear was — `CastNowPlaying.lastExitReason()`'s value at
+ *   the instant [current] turned `null`; unread, and irrelevant, whenever this returns `null`.
  */
 internal fun castingStopped(
     previous: CastingItem?,
     current: CastingItem?,
     onPlayer: Boolean,
-): CastingStopped? = if (previous != null && current == null && !onPlayer) CastingStopped(previous.deviceName) else null
+    reason: CastExitReason = CastExitReason.STOPPED,
+): CastingStopped? =
+    if (previous != null && current == null && !onPlayer) {
+        CastingStopped(previous.deviceName, reason)
+    } else {
+        null
+    }
 
 /** What the casting bar's one button does next — [MiniPlayer]'s transport rule, and the player's. */
 internal enum class CastingBarAction {

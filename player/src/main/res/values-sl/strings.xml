@@ -146,6 +146,7 @@
     <string name="player_message_cast_left_syncplay">Zapustili ste skupino SyncPlay za predvajanje na %1$s.</string>
     <string name="player_message_cast_failed">Predvajanje na %1$s ni uspelo.</string>
     <string name="player_message_cast_stopped">Predvajanje na %1$s se je ustavilo.</string>
+    <string name="player_message_cast_finished">Predvajanje na %1$s je zaključeno.</string>
 
     <string name="player_casting_to">Predvajanje na %1$s</string>
     <string name="player_cast_reconnecting">Vnovično povezovanje z %1$s…</string>

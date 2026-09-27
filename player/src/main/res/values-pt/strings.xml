@@ -123,6 +123,7 @@
     <string name="player_message_cast_left_syncplay">Saiu do grupo SyncPlay para transmitir para %1$s.</string>
     <string name="player_message_cast_failed">Não foi possível reproduzir isso em %1$s.</string>
     <string name="player_message_cast_stopped">A reprodução parou em %1$s.</string>
+    <string name="player_message_cast_finished">A reprodução terminou em %1$s.</string>
     <string name="player_casting_to">A transmitir para %1$s</string>
     <string name="player_cast_reconnecting">A restabelecer a ligação a %1$s…</string>
 

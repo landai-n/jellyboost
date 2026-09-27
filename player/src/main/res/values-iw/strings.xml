@@ -143,6 +143,7 @@
     <string name="player_message_cast_left_syncplay">עזבת את קבוצת SyncPlay כדי להעביר ל-%1$s.</string>
     <string name="player_message_cast_failed">לא ניתן היה להפעיל את זה ב-%1$s.</string>
     <string name="player_message_cast_stopped">ההפעלה ב-%1$s הופסקה.</string>
+    <string name="player_message_cast_finished">ההפעלה ב-%1$s הסתיימה.</string>
 
     <string name="player_casting_to">מעביר אל %1$s</string>
     <string name="player_cast_reconnecting">מתחבר מחדש אל %1$s…</string>

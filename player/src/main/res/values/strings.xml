@@ -204,6 +204,11 @@
     <string name="player_message_cast_left_syncplay">Left the SyncPlay group to cast to %1$s.</string>
     <string name="player_message_cast_failed">Couldn\'t play that on %1$s.</string>
     <string name="player_message_cast_stopped">Playback stopped on %1$s.</string>
+    <!--
+      The one time the casting bar's exit is not a stop: the receiver played the film to its
+      end on its own, with no player screen open to advance to up-next itself.
+    -->
+    <string name="player_message_cast_finished">Finished on %1$s.</string>
 
     <!--
       Drawn over the item's artwork, where the video would be, for as long as a

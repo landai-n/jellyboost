@@ -168,9 +168,13 @@ While the receiver is **letting go of the item** (the 10 s grace period below,
 may be another sender's media. The coordinator refuses the bar's toggle then. `CastingItem.receiverLetGo`
 makes the button "Play", with its click labelled "Open player" (`CastingBarAction.OPEN_PLAYER`), and a
 tap opens the player. Nothing is adopted during the grace, so the player sends the film back from the
-bar's position, playing. **When the bar goes on its own**, because the receiver dropped the film or the
-session ended, the chrome's snackbar says "Playback stopped on <device>" (`castingStopped`,
-`CastingStoppedEffect`), which is a polite live region. Opening the player is the one silent exit.
+bar's position, playing. **When the bar goes on its own**, the chrome's snackbar names why
+(`castingStopped`, `CastingStoppedEffect`), a polite live region: the receiver dropping the film, the
+item going missing, or the cast session simply ending, all say "Playback stopped on <device>"; the
+receiver playing the film to its end on its own says "Finished on <device>" instead
+(`CastExitReason`, set on `CastSessionCoordinator.lastDetachExit` at the same three sites that clear
+the detached source with no screen open, read once from `CastNowPlaying.lastExitReason()` at the
+instant the bar's item turns `null`). Opening the player is the one silent exit.
 
 **Reattach instead of reload.** Opening the player for the item the receiver already holds — from
 the bar, Resume, the detail page or the notification — no longer negotiates it again. Before, a new

@@ -136,6 +136,7 @@
     <string name="player_message_cast_left_syncplay">%1$s ಗೆ ಕ್ಯಾಸ್ಟ್ ಮಾಡಲು SyncPlay ಗುಂಪನ್ನು ಬಿಡಲಾಗಿದೆ.</string>
     <string name="player_message_cast_failed">ಅದನ್ನು %1$s ನಲ್ಲಿ ಪ್ಲೇ ಮಾಡಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ.</string>
     <string name="player_message_cast_stopped">%1$s ನಲ್ಲಿ ಪ್ಲೇಬ್ಯಾಕ್ ನಿಂತಿದೆ.</string>
+    <string name="player_message_cast_finished">%1$s ನಲ್ಲಿ ಪ್ಲೇಬ್ಯಾಕ್ ಮುಗಿದಿದೆ.</string>
 
     <string name="player_casting_to">%1$s ಗೆ ಕ್ಯಾಸ್ಟ್ ಮಾಡಲಾಗುತ್ತಿದೆ</string>
     <string name="player_cast_reconnecting">%1$s ಗೆ ಮರುಸಂಪರ್ಕಿಸಲಾಗುತ್ತಿದೆ…</string>

@@ -130,8 +130,10 @@
     <string name="player_message_cast_transferred">지금 %1$s에서 재생 중입니다.</string>
     <string name="player_message_cast_left_syncplay">SyncPlay 그룹을 나가고 %1$s(으)로 캐스트했습니다.</string>
     <string name="player_message_cast_failed">%1$s에서 재생할 수 없습니다.</string>
+    <string name="player_message_cast_stopped">%1$s에서 재생이 중지되었습니다.</string>
 
     <string name="player_casting_to">%1$s(으)로 캐스트 중</string>
+    <string name="player_cast_reconnecting">%1$s에 다시 연결하는 중…</string>
 
     <string name="player_error_server">서버가 재생을 시작하지 못했습니다.</string>
     <string name="player_error_server_with_code">서버가 재생을 시작하지 못했습니다 (%1$d).</string>

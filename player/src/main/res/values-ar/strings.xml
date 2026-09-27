@@ -155,8 +155,10 @@
     <string name="player_message_cast_transferred">التشغيل الآن على %1$s.</string>
     <string name="player_message_cast_left_syncplay">تمت مغادرة مجموعة SyncPlay للبث إلى %1$s.</string>
     <string name="player_message_cast_failed">تعذّر تشغيل ذلك على %1$s.</string>
+    <string name="player_message_cast_stopped">توقّف التشغيل على %1$s.</string>
 
     <string name="player_casting_to">جارٍ البث إلى %1$s</string>
+    <string name="player_cast_reconnecting">جارٍ إعادة الاتصال بـ %1$s…</string>
 
     <string name="player_error_server">تعذّر على الخادم بدء التشغيل.</string>
     <string name="player_error_server_with_code">تعذّر على الخادم بدء التشغيل (%1$d).</string>

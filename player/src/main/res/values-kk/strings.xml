@@ -135,8 +135,10 @@
     <string name="player_message_cast_transferred">Қазір %1$s құрылғысында ойнатылуда.</string>
     <string name="player_message_cast_left_syncplay">%1$s құрылғысына тарату үшін SyncPlay тобынан шықты.</string>
     <string name="player_message_cast_failed">Мұны %1$s құрылғысында ойнату мүмкін болмады.</string>
+    <string name="player_message_cast_stopped">%1$s құрылғысында ойнату тоқтады.</string>
 
     <string name="player_casting_to">%1$s құрылғысына таратылуда</string>
+    <string name="player_cast_reconnecting">%1$s құрылғысына қайта қосылуда…</string>
 
     <string name="player_error_server">Сервер ойнатуды бастай алмады.</string>
     <string name="player_error_server_with_code">Сервер ойнатуды бастай алмады (%1$d).</string>

@@ -37,6 +37,30 @@ Known issues:
 
 ## Current milestone: M14 — Breadth & theming (approved 2026-08-28; tracks 4 and 6 landed, gate green; Settings hub landed on `m14/settings-hub`)
 
+**Cast: honest controls around a receiver's invalid readings, buffering and dropped items
+(2026-09-27, worktree branch; device walk owed).** Found on a device walk with a Chromecast Ultra.
+(A) A receiver's snapshot is invalid (all zeroes) for seconds after every load and whenever it holds
+nothing of ours: play/pause now reverses `PlayerHandle.playWhenReady` (new, on both handles and the
+routing one) instead of `snapshot.isPlaying`, so a pause no longer turns into a play; ±10/30 s skips
+measure from the last valid position and never clamp to an unknown duration (they used to seek to
+0:00); the UI tick ignores invalid readings. (B) New `PlayerEvent.Buffering`, from the shared
+listener for both handles, drives the existing buffering disc/spinner — no longer gated off while
+casting, and a local rebuffer (previously never shown) gets it too. (C) A receiver that drops the
+item while the session stays up is noticed (`RemoteItemPresence`, armed only once the item was held
+while ready) and judged gone after a 10 s grace period by `CastSessionCoordinator`: with the screen
+open, "Playback stopped on <device>", paused at the last position, Play re-sends it; with no screen,
+one stop report and the detached ticker stops (no second report at session end). A screen leaving
+after its stop was already reported no longer hands the coordinator a source. (D) A suspended session
+shows "Reconnecting to <device>…" until it resumes. Two new strings across all 70 files. Details:
+`docs/features/chromecast.md`.
+
+Known issues / owed:
+- **Device walk owed (Chromecast)** — Stop from the TV with the screen open and backed out of,
+  a long receiver buffer, a Wi-Fi blip; and the 10 s grace period against a real receiver.
+- A receiver buffering for minutes still cannot be paused from the screen (the disc is not
+  tappable); the Cast notification's Play/Pause during buffering is the framework's (a later
+  "now casting" bar/notification change owns it).
+
 **Subtitle appearance: size and background for the subtitles the app draws itself (2026-08-29, on
 `main`; adversarial review run, device walk owed).** Two preferences in Settings › Playback ›
 Subtitles, above the styled-ASS switch: **Text size** (Follow the device / Small / Normal / Large /

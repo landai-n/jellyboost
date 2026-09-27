@@ -122,7 +122,9 @@
     <string name="player_message_cast_transferred">Reproduciendo ahora en %1$s.</string>
     <string name="player_message_cast_left_syncplay">Saliste de SyncPlay para transmitir a %1$s.</string>
     <string name="player_message_cast_failed">No se pudo reproducir eso en %1$s.</string>
+    <string name="player_message_cast_stopped">Se detuvo la reproducción en %1$s.</string>
     <string name="player_casting_to">Transmitiendo a %1$s</string>
+    <string name="player_cast_reconnecting">Reconectando con %1$s…</string>
 
     <string name="player_error_server">El servidor no pudo iniciar la reproducción.</string>
     <string name="player_error_server_with_code">El servidor no pudo iniciar la reproducción (%1$d).</string>

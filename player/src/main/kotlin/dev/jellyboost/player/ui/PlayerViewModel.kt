@@ -31,6 +31,7 @@ import dev.jellyboost.player.model.PlaybackSnapshot
 import dev.jellyboost.player.model.PlaybackSpeed
 import dev.jellyboost.player.model.RemotePlaybackMediaSource
 import dev.jellyboost.player.model.audioTracksFor
+import dev.jellyboost.player.model.millisToTicks
 import dev.jellyboost.player.model.subtitleTracksFor
 import dev.jellyboost.player.model.ticksToMillis
 import dev.jellyboost.player.pip.PipController
@@ -124,9 +125,12 @@ internal class PlayerViewModel
             PlayerCastBridge(
                 status = castStatus,
                 coordinator = castCoordinator,
-                currentSource = { source },
+                // A session whose stop is already reported (it ended, or the receiver dropped it) has
+                // nothing left for the coordinator to report when this screen goes.
+                currentSource = { session?.takeUnless { it.stopReported }?.source },
                 onStarted = ::onCastStarted,
                 onEnded = ::onCastEnded,
+                onItemLost = ::onCastItemLost,
             )
 
         private val positionTracker = PlaybackPositionTracker()
@@ -384,6 +388,48 @@ internal class PlayerViewModel
             )
         }
 
+        /**
+         * The receiver dropped the item while the session stayed up. Deliberately **not** reloaded:
+         * whoever pressed Stop on the television meant it. The session is closed at [lastHeld] (its
+         * stop report kills the encoder the receiver no longer reads) and the screen is left paused
+         * there, so Play sends the film back ([resendLostCastItem]).
+         *
+         * Ignored while an open is in flight — that open replaces what the receiver holds anyway — and
+         * for a session already closed, which is the natural end's case.
+         */
+        private fun onCastItemLost(lastHeld: PlaybackSnapshot) {
+            val active = session ?: return
+            if (active.stopReported || active.castItemLostAt != null) return
+            if (openJob?.isActive == true) return
+            Timber.i(
+                "The receiver stopped %s at %d ms; waiting for the user",
+                active.source.itemId,
+                lastHeld.positionMs,
+            )
+            updateSession { it.copy(castItemLostAt = lastHeld) }
+            positionTracker.onSeekTo(lastHeld.positionMs)
+            _uiState.update {
+                it.copy(isPlaying = false, isBuffering = false, userMessage = PlayerMessage.CastPlaybackStopped)
+            }
+            publishPipState()
+            viewModelScope.launch { endCurrentSource(lastHeld) }
+        }
+
+        /**
+         * From the position the screen shows — where the receiver stopped, or wherever the user has
+         * since dragged the scrubber — and playing, since this is the answer to a tap on Play.
+         */
+        private fun resendLostCastItem(active: ActiveSession) {
+            val resumeMs = positionTracker.position.value.positionMs
+            Timber.i("Sending %s back to the receiver at %d ms", active.source.itemId, resumeMs)
+            openSession(
+                active.source
+                    .asRequest(active.forcedRemote, castTarget = isCasting)
+                    .copy(startPositionTicks = resumeMs.millisToTicks()),
+                playWhenReady = true,
+            )
+        }
+
         // ---- SyncPlay host ------------------------------------------------------------------------
 
         /**
@@ -464,10 +510,16 @@ internal class PlayerViewModel
 
         // ---- user actions -------------------------------------------------------------------------
 
+        /**
+         * Reverses the player's **intent** ([PlayerHandle.playWhenReady]), never a snapshot: a player
+         * buffering toward play is not playing, yet a tap on it means "pause", and a receiver's
+         * snapshot is invalid (all zeroes) for seconds after every load — reading `isPlaying` there
+         * turned every pause into a play.
+         */
         internal fun togglePlayPause() {
             if (syncPlay.isInGroup) return syncPlay.requestPlayPause()
-            val snapshot = playerHandle.snapshot()
-            if (snapshot.isPlaying) playerHandle.pause() else playerHandle.play()
+            session?.takeIf { it.castItemLostAt != null }?.let { return resendLostCastItem(it) }
+            if (playerHandle.playWhenReady) playerHandle.pause() else playerHandle.play()
         }
 
         /**
@@ -477,13 +529,22 @@ internal class PlayerViewModel
          */
         internal fun seekTo(positionMs: Long) {
             if (syncPlay.isInGroup) return syncPlay.requestSeek(positionMs)
-            playerHandle.seekTo(positionMs)
+            // Nothing is loaded on the receiver: the position is remembered for the resend instead.
+            if (session?.castItemLostAt == null) playerHandle.seekTo(positionMs)
             positionTracker.onSeekTo(positionMs)
         }
 
+        /**
+         * Measured from the last *valid* reading. A receiver's snapshot is invalid — position and
+         * duration both zero — for seconds after every load, and clamping to that duration sent every
+         * skip to 0:00. An unknown duration leaves the upper end unclamped rather than clamped to zero.
+         */
         internal fun seekBy(deltaMs: Long) {
-            val snapshot = playerHandle.snapshot()
-            seekTo((snapshot.positionMs + deltaMs).coerceIn(0L, snapshot.durationMs.coerceAtLeast(0L)))
+            val snapshot = playerHandle.snapshot().takeIf { it.isValid }
+            val fromMs = snapshot?.positionMs ?: positionTracker.position.value.positionMs
+            val durationMs = snapshot?.durationMs?.takeIf { it > 0L } ?: _uiState.value.durationMs
+            val target = (fromMs + deltaMs).coerceAtLeast(0L)
+            seekTo(if (durationMs > 0L) target.coerceAtMost(durationMs) else target)
         }
 
         /**
@@ -707,8 +768,13 @@ internal class PlayerViewModel
         /**
          * The position itself goes to [PlaybackPositionTracker], not into [uiState]; only what the
          * *slow* state has to learn lands here. `internal` so a test can hand it a position.
+         *
+         * An invalid reading is dropped whole: it is a receiver not (yet) holding this item, and its
+         * zeroes would flip the play icon, spring the scrubber to 0:00 and feed the segment and
+         * up-next decisions a position that belongs to nothing.
          */
         internal fun onTick(snapshot: PlaybackSnapshot) {
+            if (!snapshot.isValid) return
             val decision = positionTracker.onTick(snapshot, session?.segments.orEmpty(), skipModes)
             _uiState.update {
                 it.copy(
@@ -921,6 +987,8 @@ internal class PlayerViewModel
                             segments = emptyList(),
                             // The previous episode's successor is this one; offering it again loops.
                             upNext = null,
+                            // A fresh load: whatever the receiver dropped was the stream this replaces.
+                            castItemLostAt = null,
                         )
                     // A re-resolve builds a fresh media item, which starts at 1×; the speed belongs
                     // to the session, not to the media item.
@@ -1034,10 +1102,21 @@ internal class PlayerViewModel
                     publishSpeedSupport()
                 }
 
+                // Only `true` settles buffering: a rebuffer's `false` arrives alongside `Buffering(true)`,
+                // and must not be what clears it.
                 is PlayerEvent.IsPlayingChanged -> {
-                    _uiState.update { it.copy(isPlaying = event.isPlaying, isBuffering = false) }
+                    _uiState.update {
+                        it.copy(isPlaying = event.isPlaying, isBuffering = it.isBuffering && !event.isPlaying)
+                    }
                     publishPipState()
                 }
+
+                // Both players: a receiver can buffer for minutes, a local stream rebuffers, and each
+                // should show a spinner rather than a Play triangle that invites the wrong tap.
+                is PlayerEvent.Buffering ->
+                    if (session?.castItemLostAt == null) {
+                        _uiState.update { it.copy(isBuffering = event.isBuffering) }
+                    }
 
                 is PlayerEvent.TracksChanged -> applyPendingTrackSelections()
 
@@ -1049,6 +1128,9 @@ internal class PlayerViewModel
                 is PlayerEvent.Ended -> onEnded()
 
                 is PlayerEvent.Error -> onError(event)
+
+                // `CastSessionCoordinator`'s to judge; it calls back through [onCastItemLost].
+                is PlayerEvent.RemoteItemMissing, PlayerEvent.RemoteItemMissingCleared -> Unit
             }
         }
 
@@ -1276,6 +1358,9 @@ internal class PlayerViewModel
  *   session being replaced, and the screen going away — against reporting it twice.
  * @property upNext `null` for a non-episode, the last episode of a series, in a group, and while the
  *   prefetch is in flight.
+ * @property castItemLostAt non-`null` once the receiver has dropped this session's item: the reading it
+ *   was last held at. From then on the stop is reported, the transport acts on nothing, and Play
+ *   loads the item again (`PlayerViewModel.onCastItemLost`).
  */
 @Suppress("LongParameterList")
 private data class ActiveSession(
@@ -1290,6 +1375,7 @@ private data class ActiveSession(
     // No default, deliberately: one would let a construction site inherit the *previous* episode's
     // successor by saying nothing.
     val upNext: UpNextEpisode?,
+    val castItemLostAt: PlaybackSnapshot?,
 )
 
 /**

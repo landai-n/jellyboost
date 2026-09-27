@@ -4,16 +4,21 @@ import dev.jellyboost.core.common.di.MainDispatcher
 import dev.jellyboost.player.deviceprofile.CastReceiverClass
 import dev.jellyboost.player.di.DetachedPlayerScope
 import dev.jellyboost.player.model.PlaybackMediaSource
+import dev.jellyboost.player.model.PlaybackSnapshot
 import dev.jellyboost.player.report.PlaybackReporter
 import dev.jellyboost.player.session.PlaybackTarget
+import dev.jellyboost.player.session.PlayerEvent
 import dev.jellyboost.player.session.RoutingPlayerHandle
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Owns the cast session: what it is, which player it puts in charge, and who tells the server
@@ -26,6 +31,11 @@ import javax.inject.Singleton
  * Transfers themselves belong to the screen that holds the source. What this owes it is the one
  * thing only it can see: where the outgoing player was at the instant playback was routed away
  * ([CastPlaybackHost.onCastStarted], [CastPlaybackHost.onCastEnded]).
+ *
+ * It also decides when a receiver that let go of the item ([PlayerEvent.RemoteItemMissing]) has
+ * really stopped it: after [ITEM_LOST_GRACE] without it coming back. With a screen attached that is
+ * the screen's to handle ([CastPlaybackHost.onCastItemLost]); with none, this sends the stop report —
+ * once, since the source is forgotten as it is sent and [onCastEnded] then finds nothing to report.
  */
 @Singleton
 class CastSessionCoordinator
@@ -50,6 +60,9 @@ class CastSessionCoordinator
 
         private var tickerJob: Job? = null
 
+        /** Running between a receiver dropping the item and the grace period deciding it is gone. */
+        private var itemLostJob: Job? = null
+
         /**
          * Main-dispatched because every tick reads [RoutingPlayerHandle.snapshot] and `PlayerHandle`
          * snapshots are main-thread-only. Built over the detached scope's *context* rather than a
@@ -65,10 +78,17 @@ class CastSessionCoordinator
                 ) = onCastStarted(deviceName, modelName)
 
                 override fun onSessionEnded() = onCastEnded()
+
+                override fun onSessionSuspended() = onCastSuspended()
             }
 
+        /**
+         * The player events are collected here as well as by the screen, for the one kind only this
+         * class acts on: a receiver dropping the item must be noticed whether or not a screen exists.
+         */
         fun start() {
             monitor.start(sessionListener)
+            tickerScope.launch { routing.events.collect(::onPlayerEvent) }
         }
 
         /** Silences this class's own reporting: from here the host's ticker owns the reports. */
@@ -110,6 +130,10 @@ class CastSessionCoordinator
         ) {
             if (isCasting) {
                 Timber.d("Cast session already connected; ignoring a repeated start from %s", deviceName)
+                // …apart from what the repeat means: a resumed session is reachable again.
+                (status.connection.value as? CastConnection.Connected)
+                    ?.takeIf { it.suspended }
+                    ?.let { status.setConnection(it.copy(suspended = false)) }
                 return
             }
             val receiver = CastReceiverClass.fromModelName(modelName)
@@ -140,6 +164,7 @@ class CastSessionCoordinator
             val last = routing.snapshot()
             status.setConnection(CastConnection.None)
             stopTicker()
+            cancelItemLost()
 
             val orphaned = detachedSource
             if (host == null && orphaned != null) {
@@ -151,6 +176,60 @@ class CastSessionCoordinator
             // its media items and the `loaded` spec a later subtitle selection would match against.
             routing.stopInactive()
             host?.onCastEnded(last)
+        }
+
+        /** Nothing is torn down: the receiver plays on, and the session usually resumes within seconds. */
+        private fun onCastSuspended() {
+            val connected = status.connection.value as? CastConnection.Connected ?: return
+            if (connected.suspended) return
+            Timber.i("Cast session suspended; commands wait for it to resume")
+            status.setConnection(connected.copy(suspended = true))
+        }
+
+        private fun onPlayerEvent(event: PlayerEvent) {
+            when (event) {
+                is PlayerEvent.RemoteItemMissing -> {
+                    if (!isCasting) return
+                    cancelItemLost()
+                    itemLostJob =
+                        tickerScope.launch {
+                            delay(ITEM_LOST_GRACE)
+                            itemLostJob = null
+                            onItemLost(event.lastHeld)
+                        }
+                }
+
+                PlayerEvent.RemoteItemMissingCleared -> cancelItemLost()
+
+                else -> Unit
+            }
+        }
+
+        /**
+         * The host is read now, not when the item went missing: a screen that came or went during the
+         * grace period is the one that owns the reports by now.
+         *
+         * Detached, [detachedSource] is cleared as the report is sent — that is what keeps it to one
+         * report per source: [onCastEnded] later finds nothing, and the ticker has nothing to tick for.
+         * The connection is left alone: the session is still up, so the next open still casts.
+         */
+        private fun onItemLost(lastHeld: PlaybackSnapshot) {
+            if (!isCasting) return
+            host?.let { attached ->
+                Timber.i("The receiver stopped the item; telling the screen")
+                attached.onCastItemLost(lastHeld)
+                return
+            }
+            val orphaned = detachedSource ?: return
+            Timber.i("The receiver stopped %s with no screen open; closing its session", orphaned.itemId)
+            stopTicker()
+            detachedSource = null
+            reporter.reportStopDetached(orphaned, lastHeld)
+        }
+
+        private fun cancelItemLost() {
+            itemLostJob?.cancel()
+            itemLostJob = null
         }
 
         private fun startTicker() {
@@ -169,5 +248,13 @@ class CastSessionCoordinator
         private fun stopTicker() {
             tickerJob?.cancel()
             tickerJob = null
+        }
+
+        internal companion object {
+            /**
+             * Long enough for a receiver to reload or re-report an item it only blinked out of, short
+             * enough that a stopped television is noticed while the user is still looking.
+             */
+            val ITEM_LOST_GRACE = 10.seconds
         }
     }

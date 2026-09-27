@@ -140,8 +140,10 @@
     <string name="player_message_cast_transferred">Сада се репродукује на %1$s.</string>
     <string name="player_message_cast_left_syncplay">Напустили сте SyncPlay групу да бисте пребацили на %1$s.</string>
     <string name="player_message_cast_failed">Није могуће пустити то на %1$s.</string>
+    <string name="player_message_cast_stopped">Репродукција на %1$s је заустављена.</string>
 
     <string name="player_casting_to">Пребацивање на %1$s</string>
+    <string name="player_cast_reconnecting">Поновно повезивање са %1$s…</string>
 
     <string name="player_error_server">Сервер није могао да покрене репродукцију.</string>
     <string name="player_error_server_with_code">Сервер није могао да покрене репродукцију (%1$d).</string>

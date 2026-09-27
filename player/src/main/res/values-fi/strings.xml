@@ -135,8 +135,10 @@
     <string name="player_message_cast_transferred">Toistetaan nyt laitteella %1$s.</string>
     <string name="player_message_cast_left_syncplay">Poistuttiin SyncPlay-ryhmästä striimatakseen laitteelle %1$s.</string>
     <string name="player_message_cast_failed">Toisto laitteella %1$s epäonnistui.</string>
+    <string name="player_message_cast_stopped">Toisto laitteella %1$s pysähtyi.</string>
 
     <string name="player_casting_to">Striimataan laitteelle %1$s</string>
+    <string name="player_cast_reconnecting">Yhdistetään uudelleen laitteeseen %1$s…</string>
 
     <string name="player_error_server">Palvelin ei voinut aloittaa toistoa.</string>
     <string name="player_error_server_with_code">Palvelin ei voinut aloittaa toistoa (%1$d).</string>

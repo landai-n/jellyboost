@@ -51,6 +51,16 @@ internal interface PlayerHandle {
     fun snapshot(): PlaybackSnapshot
 
     /**
+     * What the player has been asked to do, as opposed to what it is doing: `true` while it is
+     * playing **or buffering toward playing**, `false` once paused. This, not
+     * [PlaybackSnapshot.isPlaying], is what a play/pause toggle reverses — a player waiting for data
+     * is not playing, yet a tap on it means "pause". Unlike [snapshot] it stays readable while a
+     * receiver's reading is [invalid][PlaybackSnapshot.isValid]. `false` before the first [prepare].
+     * Main thread only.
+     */
+    val playWhenReady: Boolean
+
+    /**
      * @return `false` when the track is absent from the current stream and the caller must re-resolve
      *   — always the case while transcoding: the server sends only the audio track it was asked for.
      */
@@ -103,6 +113,33 @@ internal sealed interface PlayerEvent {
     ) : PlayerEvent
 
     data object TracksChanged : PlayerEvent
+
+    /**
+     * `true` while the player is waiting for data **and means to play once it has it**
+     * (`STATE_BUFFERING` with `playWhenReady`) — a paused player filling its buffer is not "buffering"
+     * to anyone looking at it. Emitted on change only, by the shared listener for both players: a
+     * receiver can sit here for minutes, and a local rebuffer is the same state.
+     */
+    data class Buffering(
+        val isBuffering: Boolean,
+    ) : PlayerEvent
+
+    /**
+     * Cast only: the receiver has stopped holding the item this app loaded on it — stopped from the
+     * television, unloaded after an idle timeout, or replaced by another sender — while the session
+     * stays connected. Armed only once the receiver has been seen holding the item since the last
+     * load, so the few seconds a load takes to appear never raise it. The handle only *notices*;
+     * `CastSessionCoordinator` decides, after a grace period, that the item is really gone.
+     *
+     * @param lastHeld the last reading taken while the receiver still held the item — always
+     *   [valid][PlaybackSnapshot.isValid], so it can carry a resume position.
+     */
+    data class RemoteItemMissing(
+        val lastHeld: PlaybackSnapshot,
+    ) : PlayerEvent
+
+    /** Cast only: whatever raised [RemoteItemMissing] is over — the item came back, or a new load replaced it. */
+    data object RemoteItemMissingCleared : PlayerEvent
 
     /** Picture-in-picture needs this: the floating window is created with the decoded aspect ratio. */
     data class VideoSizeChanged(

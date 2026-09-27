@@ -135,8 +135,10 @@
     <string name="player_message_cast_transferred">اکنون روی %1$s در حال پخش است.</string>
     <string name="player_message_cast_left_syncplay">برای پخش روی %1$s گروه SyncPlay ترک شد.</string>
     <string name="player_message_cast_failed">پخش آن روی %1$s ممکن نبود.</string>
+    <string name="player_message_cast_stopped">پخش روی %1$s متوقف شد.</string>
 
     <string name="player_casting_to">در حال پخش روی %1$s</string>
+    <string name="player_cast_reconnecting">در حال اتصال دوباره به %1$s…</string>
 
     <string name="player_error_server">سرور نتوانست پخش را آغاز کند.</string>
     <string name="player_error_server_with_code">سرور نتوانست پخش را آغاز کند (%1$d).</string>

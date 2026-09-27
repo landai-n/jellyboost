@@ -154,6 +154,9 @@ internal class PlayerSyncPlayTest : PlayerViewModelFixture() {
             val model = viewModel()
             advanceUntilIdle()
             playerHandle.resetCalls()
+            // A paused player, so the tap is a play: the toggle reverses the player's intent, and the
+            // open left it meaning to play (DECISIONS.md 2026-09-27).
+            playerHandle.playWhenReady = false
 
             model.togglePlayPause()
             model.seekTo(90_000L)

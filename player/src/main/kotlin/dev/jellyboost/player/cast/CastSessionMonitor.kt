@@ -30,6 +30,12 @@ internal interface CastSessionListener {
     )
 
     fun onSessionEnded()
+
+    /**
+     * The receiver is unreachable but the session is not over; a resume arrives as [onSessionStarted]
+     * for the same session, a failure as [onSessionEnded].
+     */
+    fun onSessionSuspended() = Unit
 }
 
 /**
@@ -94,7 +100,10 @@ internal class GmsCastSessionMonitor
                 override fun onSessionSuspended(
                     session: CastSession,
                     reason: Int,
-                ) = Unit
+                ) {
+                    Timber.i("Cast session suspended (reason %d); waiting for it to resume", reason)
+                    listener.onSessionSuspended()
+                }
 
                 override fun onSessionStarting(session: CastSession) = Unit
 

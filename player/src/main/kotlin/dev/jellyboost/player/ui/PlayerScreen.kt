@@ -426,22 +426,18 @@ private fun WaitingForGroupOverlay(
 }
 
 /**
- * The mid-playback rebuffer spinner. Four gates keep it honest, and each answers a frozen frame
- * better than a spinner would: the session still opening (`LoadingState`), the group waiting
- * ([WaitingForGroupOverlay]), a receiver holding the film (whose buffering this device cannot see),
- * and the chrome being visible (the transport row draws its own disc — the caller's guard).
+ * The mid-playback rebuffer spinner — a local stream's or a receiver's, both reported through
+ * `PlayerEvent.Buffering`. Three gates keep it honest, and each answers a frozen frame better than a
+ * spinner would: the session still opening (`LoadingState`), the group waiting
+ * ([WaitingForGroupOverlay]), and the chrome being visible (the transport row draws its own disc —
+ * the caller's guard).
  */
 @Composable
 private fun BufferingIndicator(
     state: PlayerUiState,
     modifier: Modifier = Modifier,
 ) {
-    val visible =
-        state.isBuffering &&
-            state.isReady &&
-            !state.syncPlay.isWaitingForGroup &&
-            !state.cast.isCasting
-    if (!visible) return
+    if (!state.showsBufferingIndicator) return
 
     val label = stringResource(R.string.player_buffering)
 
@@ -486,6 +482,10 @@ private fun SkipSegmentButton(
  * Two wanted consequences: the screen may sleep again (`keepScreenOn` belonged to the `PlayerView`),
  * and picture-in-picture has nothing to float, which `PlayerViewModel.publishPipState` disarms.
  *
+ * While the session is suspended the label says "Reconnecting to …" instead, announced politely: a
+ * Wi-Fi blip otherwise looks like controls that silently stopped working. The wording is a pure
+ * function ([labelRes]) a test can pin.
+ *
  * The label is offset above centre because the transport row owns the middle of this screen;
  * measuring *from* the centre keeps it clear of the top bar in phone landscape too.
  */
@@ -495,6 +495,7 @@ private fun CastingBackdrop(
     modifier: Modifier = Modifier,
 ) {
     val device = state.cast.deviceName ?: stringResource(R.string.player_cast_device_unnamed)
+    val label = stringResource(state.cast.labelRes, device)
 
     Box(modifier = modifier) {
         // Fitted, not cropped: the artwork may be a wide backdrop or a 2:3 poster depending on what
@@ -513,7 +514,11 @@ private fun CastingBackdrop(
                 Modifier
                     .align(Alignment.Center)
                     .offset(y = -CAST_LABEL_OFFSET)
-                    .background(OVERLAY_SCRIM, RoundedCornerShape(Dimens.CardCornerRadius))
+                    // Live only while reconnecting: at session start the transfer snackbar already
+                    // says where the film went, and a second announcement would talk over it.
+                    .semantics(mergeDescendants = true) {
+                        if (state.cast.isReconnecting) liveRegion = LiveRegionMode.Polite
+                    }.background(OVERLAY_SCRIM, RoundedCornerShape(Dimens.CardCornerRadius))
                     .padding(horizontal = Dimens.SpaceLarge, vertical = Dimens.SpaceMedium),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
@@ -525,7 +530,7 @@ private fun CastingBackdrop(
                 modifier = Modifier.size(CAST_LABEL_ICON),
             )
             Text(
-                text = stringResource(R.string.player_casting_to, device),
+                text = label,
                 style = MaterialTheme.typography.titleMedium,
                 color = Color.White,
             )
@@ -775,7 +780,16 @@ private fun PlayerMessage.textRes(): Int =
         PlayerMessage.CastTransferred -> R.string.player_message_cast_transferred
         PlayerMessage.CastLeftSyncPlayGroup -> R.string.player_message_cast_left_syncplay
         PlayerMessage.CastPlaybackFailed -> R.string.player_message_cast_failed
+        PlayerMessage.CastPlaybackStopped -> R.string.player_message_cast_stopped
     }
+
+/** The chrome-hidden spinner's gates; see [BufferingIndicator]. Receivers included. */
+internal val PlayerUiState.showsBufferingIndicator: Boolean
+    get() = isBuffering && isReady && !syncPlay.isWaitingForGroup
+
+/** What the casting backdrop's label says: where the film is, or that the session is reconnecting. */
+internal val PlayerCastState.labelRes: Int
+    get() = if (isReconnecting) R.string.player_cast_reconnecting else R.string.player_casting_to
 
 /** Enough contrast for white text over a bright frame, without blacking the video out. */
 private val OVERLAY_SCRIM = Color.Black.copy(alpha = 0.6f)

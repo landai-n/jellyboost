@@ -66,21 +66,35 @@ internal class FakePlayerHandle : PlayerHandle {
         _events.emit(event)
     }
 
+    /** For a test with no coroutine of its own to suspend in; the buffer takes it synchronously. */
+    fun tryEmit(event: PlayerEvent) {
+        check(_events.tryEmit(event)) { "The fake's event buffer is full" }
+    }
+
+    /**
+     * Moved by [prepare], [play] and [pause] as a real player's is, and writable so a test can be a
+     * receiver whose intent and snapshot disagree — playing, while its reading is invalid.
+     */
+    override var playWhenReady: Boolean = false
+
     override fun prepare(
         spec: PlaybackMediaItemSpec,
         startPositionMs: Long,
         playWhenReady: Boolean,
     ) {
         prepared += PreparedItem(spec, startPositionMs, playWhenReady)
+        this.playWhenReady = playWhenReady
     }
 
     override fun play() {
         playCount++
+        playWhenReady = true
         snapshot = snapshot.copy(isPlaying = true)
     }
 
     override fun pause() {
         pauseCount++
+        playWhenReady = false
         snapshot = snapshot.copy(isPlaying = false)
     }
 

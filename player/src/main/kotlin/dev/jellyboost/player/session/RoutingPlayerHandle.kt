@@ -93,6 +93,8 @@ internal class RoutingPlayerHandle
 
         override fun snapshot(): PlaybackSnapshot = active.snapshot()
 
+        override val playWhenReady: Boolean get() = active.playWhenReady
+
         override fun selectAudioTrack(
             source: PlaybackMediaSource,
             jellyfinIndex: Int,

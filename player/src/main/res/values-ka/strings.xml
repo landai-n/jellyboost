@@ -119,7 +119,9 @@
     <string name="player_message_cast_transferred">ახლა უკრავს %1$s-ზე.</string>
     <string name="player_message_cast_left_syncplay">SyncPlay ჯგუფი დატოვებულია %1$s-ზე გადასაცემად.</string>
     <string name="player_message_cast_failed">ვერ დაუკრავს ამას %1$s-ზე.</string>
+    <string name="player_message_cast_stopped">%1$s-ზე დაკვრა შეჩერდა.</string>
     <string name="player_casting_to">მიმდინარეობს გადაცემა %1$s-ზე</string>
+    <string name="player_cast_reconnecting">ხელახლა უკავშირდება %1$s-ს…</string>
 
     <string name="player_error_server">სერვერმა ვერ დაიწყო დაკვრა.</string>
     <string name="player_error_server_with_code">სერვერმა ვერ დაიწყო დაკვრა (%1$d).</string>

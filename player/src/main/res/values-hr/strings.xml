@@ -140,8 +140,10 @@
     <string name="player_message_cast_transferred">Sada se reproducira na %1$s.</string>
     <string name="player_message_cast_left_syncplay">Napuštena SyncPlay grupa radi emitiranja na %1$s.</string>
     <string name="player_message_cast_failed">Nije moguće reproducirati na %1$s.</string>
+    <string name="player_message_cast_stopped">Reprodukcija na %1$s je zaustavljena.</string>
 
     <string name="player_casting_to">Emitiranje na %1$s</string>
+    <string name="player_cast_reconnecting">Ponovno povezivanje s %1$s…</string>
 
     <string name="player_error_server">Poslužitelj nije mogao pokrenuti reprodukciju.</string>
     <string name="player_error_server_with_code">Poslužitelj nije mogao pokrenuti reprodukciju (%1$d).</string>

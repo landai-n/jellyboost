@@ -558,7 +558,14 @@ internal class PlayerViewModel
                 it.copy(isPlaying = false, isBuffering = false, userMessage = PlayerMessage.CastPlaybackStopped)
             }
             publishPipState()
-            viewModelScope.launch { endCurrentSource(lastHeld) }
+            setReportingActive(false)
+            updateSession { it.copy(stopReported = true) }
+            // The detached scope, not `viewModelScope`: the user can leave the screen the instant this
+            // message shows, cancelling this scope before a `viewModelScope`-launched report ever ran
+            // `reportStop`'s HTTP call and `stopTranscoding` — and `stopReported` is already armed, so
+            // nothing would ever resend it. Same hand-off as `releaseSession` and the coordinator's own
+            // orphan path.
+            reporter.reportStopDetached(active.source, lastHeld)
         }
 
         /**

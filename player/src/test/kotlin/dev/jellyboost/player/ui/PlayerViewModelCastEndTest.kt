@@ -176,8 +176,52 @@ internal class PlayerViewModelCastEndTest : PlayerViewModelCastFixture() {
             advanceTimeBy(CastSessionCoordinator.ITEM_LOST_GRACE.inWholeMilliseconds + 1L)
             runCurrent()
 
-            coVerify(exactly = 1) { reporter.reportStop(source, ON_THE_TELEVISION) }
-            coVerify(exactly = 0) { reporter.reportStop(any(), match { it.positionMs == 0L }) }
+            // Detached, not the cancellable `reportStop` path: the message is already on screen by
+            // the time the user could possibly leave it.
+            verify(exactly = 1) { reporter.reportStopDetached(source, ON_THE_TELEVISION) }
+            verify(exactly = 0) { reporter.reportStopDetached(any(), match { it.positionMs == 0L }) }
+            coVerify(exactly = 0) { reporter.reportStop(any(), any()) }
+        }
+
+    // ---- vetted's `foreign` term: a non-zero reading from the wrong player -------------------------
+
+    /**
+     * The idle local player answers a **valid, non-zero** reading the instant routing falls back to
+     * it — whatever it happened to be sitting on before the transfer, unrelated to the television's
+     * own position. `staleZero` never sees this: it only fires at position zero. Only `vetted`'s
+     * `foreign` term (`ActiveSession.onReceiver != isCasting`) catches a reading from the player the
+     * session was not opened on.
+     */
+    @Test
+    fun `a non-zero reading from the idle local player right after the transfer is invalid`() =
+        runTest(dispatcher) {
+            val tickerReads = mutableListOf<() -> PlaybackSnapshot>()
+            every { reporter.startReporting(any(), any(), capture(tickerReads)) } returns Job()
+            val model = castViewModel()
+            advanceUntilIdle()
+            framework.onSessionStarted("Living Room TV")
+            advanceUntilIdle()
+            castHandle.snapshot = AT_40_MIN
+            model.onTick(AT_40_MIN)
+            // Left over from whatever this device was doing before the transfer; the idle local
+            // player never touches it again on its own.
+            local.snapshot = STALE_LOCAL_READING
+            val requests = echoResolves()
+
+            framework.onSessionEnded()
+            // Routing has already fallen back to the idle local player; the home open that would
+            // replace this session — and start a fresh ticker for it — has not run yet.
+            val lateTick = tickerReads.last().invoke()
+            advanceUntilIdle()
+
+            lateTick.isValid shouldBe false
+            requests.single().startPositionTicks shouldBe AT_40_MIN.positionTicks
+            coVerify(exactly = 0) {
+                reporter.reportStop(any(), match { it.positionMs == STALE_LOCAL_READING.positionMs })
+            }
+            coVerify(exactly = 0) {
+                reporter.reportStart(match { it.startPositionTicks == STALE_LOCAL_READING.positionTicks }, any())
+            }
         }
 
     private companion object {
@@ -189,5 +233,14 @@ internal class PlayerViewModelCastEndTest : PlayerViewModelCastFixture() {
 
         /** A receiver not (yet) holding this item: every field zero, and flagged as belonging to nothing. */
         val NOT_OURS = PlaybackSnapshot(isValid = false)
+
+        /** Forty minutes in: where the television actually is when the session ends. */
+        val AT_40_MIN = PlaybackSnapshot(positionMs = 2_400_000L, isPlaying = true)
+
+        /**
+         * Ten minutes in: whatever this device was doing before it was cast — not zero, so the
+         * `staleZero` rule alone would wave it through unchallenged.
+         */
+        val STALE_LOCAL_READING = PlaybackSnapshot(positionMs = 600_000L, isPlaying = false)
     }
 }

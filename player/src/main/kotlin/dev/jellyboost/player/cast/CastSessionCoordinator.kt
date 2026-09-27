@@ -172,8 +172,12 @@ class CastSessionCoordinator
             val held = detachedSource?.takeIf { it.itemId == itemId && isCasting && itemLostJob == null }
             val reading = held?.let { readReceiver() } ?: return null
             val buffering = _receiverBuffering.value
-            return CastReceiverHold(source = held, reading = reading, isBuffering = buffering)
-                .takeIf { reading.isValid || buffering }
+            return CastReceiverHold(
+                source = held,
+                reading = reading,
+                isBuffering = buffering,
+                lastValidReading = lastHeldReading,
+            ).takeIf { reading.isValid || buffering }
         }
 
         /**
@@ -216,8 +220,13 @@ class CastSessionCoordinator
             if (this.host !== host) return
             this.host = null
             detachedSource = host.castSource.takeIf { isCasting }
-            // Seeds the orphan's stop position with where the film was as the screen went.
-            if (detachedSource != null) readReceiver()
+            // Seeds the orphan's stop position with where the film was as the screen went: the screen's
+            // own last valid reading first (after the setter above cleared the previous source's), then
+            // the receiver's, which replaces it when it is valid.
+            if (detachedSource != null) {
+                lastHeldReading = host.lastValidReading?.takeIf { it.isValid }
+                readReceiver()
+            }
             startTicker()
         }
 
@@ -266,6 +275,11 @@ class CastSessionCoordinator
          * [PlaybackReporter.reportStopDetached] carries the encoder kill with it, which is what
          * stops a cast transcode outliving its session. With a screen attached that report is the
          * screen's instead, from the snapshot handed to it.
+         *
+         * A session ended from the Cast notification usually ends with the receiver already gone, so
+         * that final snapshot is invalid. The detached stop then goes out at the **last valid
+         * reading** held for the source ([readReceiver]) — never positionless when one exists, since
+         * the server reads a positionless stop as a resume position of zero.
          */
         private fun onCastEnded() {
             Timber.i("Cast session ended")
@@ -277,7 +291,7 @@ class CastSessionCoordinator
 
             val orphaned = detachedSource
             if (host == null && orphaned != null) {
-                reporter.reportStopDetached(orphaned, last)
+                reporter.reportStopDetached(orphaned, last.takeIf { it.isValid } ?: lastHeldReading ?: last)
             }
             detachedSource = null
             routing.setActive(PlaybackTarget.Local)

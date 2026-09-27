@@ -97,4 +97,15 @@ internal abstract class PlayerViewModelCastFixture : PlayerViewModelFixture() {
         coEvery { resolver.resolve(capture(requests)) } returns AppResult.Success(source)
         return requests
     }
+
+    /**
+     * Like [recordResolves], but the resolved source starts where it was asked to, as the real resolver's
+     * does — so a start report's position (read off the resolved source) can be asserted.
+     */
+    protected fun echoResolves(): List<PlaybackResolveRequest> {
+        val requests = mutableListOf<PlaybackResolveRequest>()
+        coEvery { resolver.resolve(capture(requests)) } answers
+            { AppResult.Success(source.copy(startPositionTicks = requests.last().startPositionTicks)) }
+        return requests
+    }
 }

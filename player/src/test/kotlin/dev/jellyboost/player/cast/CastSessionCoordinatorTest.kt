@@ -635,6 +635,56 @@ class CastSessionCoordinatorTest {
         verify(exactly = 1) { reporter.reportStopDetached(source, ON_THE_TELEVISION) }
     }
 
+    // ---- a session that ends with the receiver already gone -----------------------------------------
+
+    @Test
+    fun `a detached session ended with the receiver gone is closed at the last valid reading, not positionless`() {
+        castingDetachedAt(ON_THE_TELEVISION)
+        // The casting bar kept reading the receiver while the film played on.
+        val later = ON_THE_TELEVISION.copy(positionMs = TWENTY_SEVEN_MINUTES_MS)
+        cast.snapshot = later
+        coordinator.readReceiver()
+        // Disconnected from the Cast notification: the final snapshot belongs to nothing.
+        cast.snapshot = PlaybackSnapshot(isValid = false)
+
+        framework.onSessionEnded()
+
+        // A positionless stop is "played to the end, resume at zero" to the server.
+        verify(exactly = 1) { reporter.reportStopDetached(source, later) }
+        verify(exactly = 0) { reporter.reportStopDetached(any(), match { !it.isValid }) }
+    }
+
+    @Test
+    fun `a screen's last valid reading seeds the detached stop when the receiver answers nothing as it goes`() {
+        every { reporter.startReporting(any(), any(), any()) } returns Job()
+        val seen = ON_THE_TELEVISION.copy(positionMs = TWENTY_SEVEN_MINUTES_MS)
+        val screen =
+            object : CastPlaybackHost {
+                override val castSource: PlaybackMediaSource = source
+                override val lastValidReading: PlaybackSnapshot = seen
+            }
+        framework.onSessionStarted("Living Room TV")
+        coordinator.attachHost(screen)
+        cast.snapshot = PlaybackSnapshot(isValid = false)
+        coordinator.detachHost(screen)
+
+        framework.onSessionEnded()
+
+        verify(exactly = 1) { reporter.reportStopDetached(source, seen) }
+    }
+
+    @Test
+    fun `a buffering hold carries the last valid reading, not the source's start`() {
+        castingDetachedAt(ON_THE_TELEVISION)
+        cast.snapshot = PlaybackSnapshot(isValid = false)
+        receiverSays(PlayerEvent.Buffering(true))
+
+        val held = coordinator.heldSourceFor(source.itemId)
+
+        held?.reading?.isValid shouldBe false
+        held?.lastValidReading shouldBe ON_THE_TELEVISION
+    }
+
     // ---- what the casting bar reads ----------------------------------------------------------------
 
     @Test
@@ -727,6 +777,9 @@ class CastSessionCoordinatorTest {
 
         /** Fifteen minutes in, on the television. */
         val ON_THE_TELEVISION = PlaybackSnapshot(positionMs = 900_000L, durationMs = 7_200_000L, isPlaying = true)
+
+        /** About 27:20 — where the television had got to when the session was disconnected on the device. */
+        const val TWENTY_SEVEN_MINUTES_MS = 1_640_000L
 
         val OTHER_ITEM: UUID = UUID.fromString("9e8d7c6b-5a49-4382-a1b0-c9d8e7f6a5b4")
     }

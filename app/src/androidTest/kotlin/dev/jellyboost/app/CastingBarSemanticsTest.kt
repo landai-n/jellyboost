@@ -90,6 +90,30 @@ class CastingBarSemanticsTest {
         assertEquals(LiveRegionMode.Polite, config.getOrNull(SemanticsProperties.LiveRegion))
     }
 
+    @Test
+    fun theReturnFromReconnectingIsAnnouncedPolitelyToo() {
+        state = CASTING.copy(isReconnecting = true)
+        rule.waitForIdle()
+        state = CASTING
+        rule.waitForIdle()
+
+        // Switched off with the recovery, the region would never say "Casting to" again.
+        val config =
+            rule
+                .onNode(hasContentDescription(sentence(PlayerR.string.player_casting_to)) and hasClickAction())
+                .fetchSemanticsNode()
+                .config
+        assertEquals(LiveRegionMode.Polite, config.getOrNull(SemanticsProperties.LiveRegion))
+    }
+
+    @Test
+    fun aReceiverSettledPausedUnderAStaleIntentOffersPlay() {
+        state = CASTING.copy(playWhenReady = true, isSettledPaused = true)
+        rule.waitForIdle()
+
+        rule.onNodeWithContentDescription(text(R.string.mini_player_play)).assertExists()
+    }
+
     private companion object {
         const val TITLE = "Arrival"
         const val DEVICE = "Living Room TV"

@@ -27,7 +27,7 @@ internal class PlayerCastBridge(
     private val coordinator: CastPlaybackCoordinator,
     private val currentSource: () -> PlaybackMediaSource?,
     private val currentReading: () -> PlaybackSnapshot? = { null },
-    private val onStarted: (deviceName: String?, from: PlaybackSnapshot) -> Unit,
+    private val onStarted: (deviceName: String?, from: PlaybackSnapshot, playWhenReady: Boolean) -> Unit,
     private val onEnded: (at: PlaybackSnapshot) -> Unit,
     private val onItemLost: (lastHeld: PlaybackSnapshot) -> Unit = {},
 ) : CastPlaybackHost {
@@ -44,7 +44,8 @@ internal class PlayerCastBridge(
     override fun onCastStarted(
         deviceName: String?,
         from: PlaybackSnapshot,
-    ) = onStarted(deviceName, from)
+        playWhenReady: Boolean,
+    ) = onStarted(deviceName, from, playWhenReady)
 
     override fun onCastEnded(at: PlaybackSnapshot) = onEnded(at)
 

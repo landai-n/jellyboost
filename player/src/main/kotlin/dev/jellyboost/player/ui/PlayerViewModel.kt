@@ -49,6 +49,7 @@ import dev.jellyboost.player.session.PlaybackSessionController
 import dev.jellyboost.player.session.PlayerEvent
 import dev.jellyboost.player.session.PlayerHandle
 import dev.jellyboost.player.session.SessionOpenResult
+import dev.jellyboost.player.session.tapPlays
 import dev.jellyboost.player.session.togglePlayWhenReady
 import dev.jellyboost.player.syncplay.SyncPlayController
 import dev.jellyboost.player.syncplay.SyncPlayHostSnapshot
@@ -238,14 +239,35 @@ internal class PlayerViewModel
         }
 
         /**
-         * [reading], or the same reading marked **invalid** when it is a zero this session cannot vouch
-         * for ([contradicts] its last valid reading): a torn-down receiver, or the idle local player
-         * routing has already fallen back to. Every reading headed for a report, the scrubber or
-         * [ActiveSession.lastValidReading] passes through here; a seek to 0 ([seekTo]) is what makes a
-         * zero believable.
+         * [reading], or the same reading marked **invalid** when it cannot be this session's. Every
+         * reading headed for a report, the scrubber or [ActiveSession.lastValidReading] passes through
+         * here. Two cases, and only these:
+         * - **the player answering is not the one the session was opened on** ([ActiveSession.onReceiver]
+         *   against [isCasting]): the idle local player after routing fell back from a receiver, at zero or
+         *   at whatever it held before the cast — or a receiver's first readings after a transfer to it;
+         * - **a receiver's zero after a later valid reading** ([contradicts]): a torn-down `RemoteCastPlayer`
+         *   still claims our item there. The screen's own [seekTo] moves the anchor, so a seek to 0 stands.
+         *
+         * A local player playing its own session is never second-guessed: SyncPlay commands and
+         * media-session seeks move it without passing through [seekTo], and its zero is real.
          */
-        private fun vetted(reading: PlaybackSnapshot): PlaybackSnapshot =
-            if (reading.contradicts(session?.lastValidReading)) reading.copy(isValid = false) else reading
+        private fun vetted(reading: PlaybackSnapshot): PlaybackSnapshot {
+            val active = session ?: return reading
+            val foreign = active.onReceiver != isCasting
+            val staleZero = active.onReceiver && reading.contradicts(active.lastValidReading)
+            return if (reading.isValid && (foreign || staleZero)) reading.copy(isValid = false) else reading
+        }
+
+        /**
+         * [vetted] for a reading the coordinator took **on the receiver** and handed over — at the
+         * session's end, before routing moved (so [isCasting] is already `false` by the time it arrives),
+         * or as a dropped item's last held one. Only the zero rule applies: it is the right player's.
+         */
+        private fun receiverVetted(
+            reading: PlaybackSnapshot,
+            active: ActiveSession,
+        ): PlaybackSnapshot =
+            if (reading.contradicts(active.lastValidReading)) reading.copy(isValid = false) else reading
 
         /**
          * The player's reading if it is valid (and [vetted]), else the last valid one this session took,
@@ -255,6 +277,12 @@ internal class PlayerViewModel
             val reading = vetted(playerHandle.snapshot())
             return reading.takeIf { it.isValid } ?: session?.lastValidReading ?: reading
         }
+
+        /**
+         * Whether the player means to play: its intent, unless it reports itself settled paused under
+         * a stale one ([PlayerHandle.isSettledPaused]) — the same rule as the play/pause tap.
+         */
+        private fun meansToPlay(): Boolean = !tapPlays(playerHandle.playWhenReady, playerHandle.isSettledPaused)
 
         init {
             observePlayerEvents()
@@ -420,6 +448,7 @@ internal class PlayerViewModel
                     // The coordinator's, not the source's start: that is where the film was first sent,
                     // and a session ending before this screen reads the receiver would come home there.
                     lastValidReading = held.lastValidReading,
+                    onReceiver = true,
                 )
             _videoPlayer.value = playerHandle.player
             val reading = held.reading.takeIf { it.isValid }
@@ -452,6 +481,7 @@ internal class PlayerViewModel
         private fun onCastStarted(
             deviceName: String?,
             from: PlaybackSnapshot,
+            playWhenReady: Boolean,
         ) {
             val active = session ?: return
             val current = active.source
@@ -463,7 +493,9 @@ internal class PlayerViewModel
             Timber.i("Moving %s to %s at %d ms", current.itemId, deviceName ?: "a receiver", from.positionMs)
             openSession(
                 current.asRequest(active.forcedRemote, castTarget = true).copy(startPositionTicks = from.positionTicks),
-                playWhenReady = from.isPlaying,
+                // The local player's intent, carried by the coordinator: `from.isPlaying` is `false` while
+                // the phone buffers toward play, and the receiver is loaded once, with whatever it is told.
+                playWhenReady = playWhenReady,
                 message = if (leftGroup) PlayerMessage.CastLeftSyncPlayGroup else PlayerMessage.CastTransferred,
                 endingAt = from,
             )
@@ -484,7 +516,7 @@ internal class PlayerViewModel
             val active = session ?: return
             val current = active.source
             // Vetted too: a torn-down receiver still claims our item — at zero — and counts as valid.
-            val known = vetted(at).takeIf { it.isValid } ?: active.lastValidReading
+            val known = receiverVetted(at, active).takeIf { it.isValid } ?: active.lastValidReading
             val resumeTicks = known?.positionTicks ?: current.startPositionTicks
             Timber.i("Bringing %s back to this device at %d ticks", current.itemId, resumeTicks)
             openSession(
@@ -508,7 +540,10 @@ internal class PlayerViewModel
             if (active.stopReported || active.castItemLostAt != null) return
             if (openJob?.isActive == true) return
             // The handle's "last held" is any valid reading, a torn-down zero included.
-            val lastHeld = vetted(reportedLastHeld).takeIf { it.isValid } ?: active.lastValidReading ?: reportedLastHeld
+            val lastHeld =
+                receiverVetted(reportedLastHeld, active).takeIf { it.isValid }
+                    ?: active.lastValidReading
+                    ?: reportedLastHeld
             Timber.i(
                 "The receiver stopped %s at %d ms; waiting for the user",
                 active.source.itemId,
@@ -886,6 +921,12 @@ internal class PlayerViewModel
          * up-next decisions a position that belongs to nothing.
          */
         internal fun onTick(reading: PlaybackSnapshot) {
+            // Before the validity check: the receiver's own paused state is readable when its snapshot
+            // is not, and the transport's label must follow the tap's rule ([tapPlays]) either way.
+            val settledPaused = playerHandle.isSettledPaused
+            if (settledPaused != _uiState.value.receiverSettledPaused) {
+                _uiState.update { it.copy(receiverSettledPaused = settledPaused) }
+            }
             val snapshot = vetted(reading)
             if (!snapshot.isValid) return
             rememberReading(snapshot)
@@ -1022,7 +1063,9 @@ internal class PlayerViewModel
             message: PlayerMessage? = null,
         ) {
             val previous = session?.source ?: return
-            val snapshot = playerHandle.snapshot()
+            // The intent, never `snapshot().isPlaying`: a receiver's reading is invalid (not playing) for
+            // seconds after every load and while it buffers, and `openForCast` honours the flag it is given.
+            val meantToPlay = meansToPlay()
             // A receiver's invalid reading is at zero; a re-negotiation must not restart the film there.
             val resumeTicks = vouchedReading().positionTicks
             updateSession { it.copy(forcedRemote = request.forceRemote) }
@@ -1045,7 +1088,7 @@ internal class PlayerViewModel
                     sessionController.reopen(
                         previous = previous,
                         request = resumed,
-                        playWhenReady = snapshot.isPlaying,
+                        playWhenReady = meantToPlay,
                     )
                 publish(result, message)
             }
@@ -1107,6 +1150,9 @@ internal class PlayerViewModel
                             castItemLostAt = null,
                             // Nothing has been read from the new stream yet.
                             lastValidReading = null,
+                            // Read at publish, which follows `prepare` with no suspension between: the
+                            // player routing prepared this source on.
+                            onReceiver = isCasting,
                         )
                     // A re-resolve builds a fresh media item, which starts at 1×; the speed belongs
                     // to the session, not to the media item.
@@ -1161,7 +1207,7 @@ internal class PlayerViewModel
             if (previous != null) {
                 updateSession { it.copy(recoverySource = null) }
                 Timber.i("Re-negotiating %s failed; retrying the terms that were playing", previous.itemId)
-                val snapshot = playerHandle.snapshot()
+                val meantToPlay = meansToPlay()
                 val resumeTicks = vouchedReading().positionTicks
                 launchSessionOp {
                     publish(
@@ -1171,7 +1217,7 @@ internal class PlayerViewModel
                                 // operation has been cancelled, and that flag is the one in force.
                                 .asRequest(session?.forcedRemote == true, isCasting)
                                 .copy(startPositionTicks = resumeTicks),
-                            playWhenReady = snapshot.isPlaying,
+                            playWhenReady = meantToPlay,
                         ),
                         PlayerMessage.ChangeReverted,
                     )
@@ -1489,6 +1535,8 @@ internal class PlayerViewModel
  * @property castItemLostAt non-`null` once the receiver has dropped this session's item: the reading it
  *   was last held at. From then on the stop is reported, the transport acts on nothing, and Play
  *   loads the item again (`PlayerViewModel.onCastItemLost`).
+ * @property onReceiver whether [source] was opened on a Cast receiver: which player's readings are this
+ *   session's (`PlayerViewModel.vetted`).
  * @property lastValidReading the last [valid][PlaybackSnapshot.isValid] reading taken for [source] —
  *   the only position this session can vouch for once its player stops answering (a receiver that has
  *   gone). Here and not on the ViewModel or the tracker: its lifetime is exactly this source's, so a
@@ -1509,6 +1557,7 @@ private data class ActiveSession(
     val upNext: UpNextEpisode?,
     val castItemLostAt: PlaybackSnapshot?,
     val lastValidReading: PlaybackSnapshot?,
+    val onReceiver: Boolean,
 )
 
 /**

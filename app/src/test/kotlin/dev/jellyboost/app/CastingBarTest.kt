@@ -5,6 +5,7 @@ import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.common.music.MusicPlaybackState
 import dev.jellyboost.core.common.music.MusicRepeatMode
 import dev.jellyboost.player.cast.CastingItem
+import dev.jellyboost.player.session.tapPlays
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -84,6 +85,24 @@ class CastingBarActionTest {
     fun bufferingKeepsPause() {
         castingBarAction(playWhenReady = true, isBuffering = true) shouldBe CastingBarAction.PAUSE
         castingBarAction(playWhenReady = false, isBuffering = true) shouldBe CastingBarAction.PAUSE
+    }
+
+    @Test
+    @DisplayName("a television settled paused under a stale play intent offers Play, since the tap plays it")
+    fun staleIntentOffersPlay() {
+        castingBarAction(playWhenReady = true, isBuffering = false, isSettledPaused = true) shouldBe
+            CastingBarAction.PLAY
+    }
+
+    @Test
+    @DisplayName("the label is the tap's own rule in every state the bar can be in")
+    fun labelFollowsTheTap() {
+        for (playWhenReady in listOf(true, false)) {
+            for (settled in listOf(true, false)) {
+                val expected = if (tapPlays(playWhenReady, settled)) CastingBarAction.PLAY else CastingBarAction.PAUSE
+                castingBarAction(playWhenReady, isBuffering = false, isSettledPaused = settled) shouldBe expected
+            }
+        }
     }
 }
 

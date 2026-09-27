@@ -81,6 +81,7 @@ import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.player.R
+import dev.jellyboost.player.cast.rememberCastStatusIsLive
 import dev.jellyboost.player.syncplay.ui.SyncPlayGroupSheet
 import dev.jellyboost.player.syncplay.ui.SyncPlayQueueSheet
 import io.github.peerless2012.ass.media.AssHandler
@@ -496,6 +497,7 @@ private fun CastingBackdrop(
 ) {
     val device = state.cast.deviceName ?: stringResource(R.string.player_cast_device_unnamed)
     val label = stringResource(state.cast.labelRes, device)
+    val statusIsLive = rememberCastStatusIsLive(state.cast.isReconnecting)
 
     Box(modifier = modifier) {
         // Fitted, not cropped: the artwork may be a wide backdrop or a 2:3 poster depending on what
@@ -514,10 +516,10 @@ private fun CastingBackdrop(
                 Modifier
                     .align(Alignment.Center)
                     .offset(y = -CAST_LABEL_OFFSET)
-                    // Live only while reconnecting: at session start the transfer snackbar already
-                    // says where the film went, and a second announcement would talk over it.
+                    // Not live at session start (the transfer snackbar already says where the film went);
+                    // live from the first reconnect on, so the recovery is announced too.
                     .semantics(mergeDescendants = true) {
-                        if (state.cast.isReconnecting) liveRegion = LiveRegionMode.Polite
+                        if (statusIsLive) liveRegion = LiveRegionMode.Polite
                     }.background(OVERLAY_SCRIM, RoundedCornerShape(Dimens.CardCornerRadius))
                     .padding(horizontal = Dimens.SpaceLarge, vertical = Dimens.SpaceMedium),
             verticalAlignment = Alignment.CenterVertically,

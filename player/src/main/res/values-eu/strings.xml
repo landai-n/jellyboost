@@ -120,6 +120,7 @@
     <string name="player_message_cast_left_syncplay">SyncPlay taldea utzi da %1$s(e)ra igortzeko.</string>
     <string name="player_message_cast_failed">Ezin izan da hori %1$s(e)n erreproduzitu.</string>
     <string name="player_message_cast_stopped">Erreprodukzioa gelditu egin da hemen: %1$s.</string>
+    <string name="player_message_cast_finished">Erreprodukzioa amaitu da hemen: %1$s.</string>
     <string name="player_casting_to">%1$s(e)ra igortzen</string>
     <string name="player_cast_reconnecting">Berriro konektatzen hona: %1$s…</string>
 

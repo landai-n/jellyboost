@@ -146,6 +146,7 @@
     <string name="player_message_cast_left_syncplay">Palikote „SyncPlay“ grupę, kad transliuotumėte į %1$s.</string>
     <string name="player_message_cast_failed">Nepavyko to paleisti įrenginyje %1$s.</string>
     <string name="player_message_cast_stopped">Atkūrimas įrenginyje %1$s sustabdytas.</string>
+    <string name="player_message_cast_finished">Atkūrimas įrenginyje %1$s baigtas.</string>
 
     <string name="player_casting_to">Transliuojama į %1$s</string>
     <string name="player_cast_reconnecting">Iš naujo jungiamasi prie %1$s…</string>

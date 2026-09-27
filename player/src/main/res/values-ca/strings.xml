@@ -123,6 +123,7 @@
     <string name="player_message_cast_left_syncplay">Has sortit de SyncPlay per transmetre a %1$s.</string>
     <string name="player_message_cast_failed">No s\'ha pogut reproduir això a %1$s.</string>
     <string name="player_message_cast_stopped">La reproducció s\'ha aturat a %1$s.</string>
+    <string name="player_message_cast_finished">La reproducció ha acabat a %1$s.</string>
     <string name="player_casting_to">Transmetent a %1$s</string>
     <string name="player_cast_reconnecting">S\'està tornant a connectar a %1$s…</string>
 

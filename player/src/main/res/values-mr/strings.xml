@@ -136,6 +136,7 @@
     <string name="player_message_cast_left_syncplay">%1$s वर कास्ट करण्यासाठी SyncPlay गट सोडला.</string>
     <string name="player_message_cast_failed">%1$s वर ते प्ले करता आले नाही.</string>
     <string name="player_message_cast_stopped">%1$s वर प्लेबॅक थांबले.</string>
+    <string name="player_message_cast_finished">%1$s वर प्लेबॅक पूर्ण झाले.</string>
 
     <string name="player_casting_to">%1$s वर कास्ट करत आहे</string>
     <string name="player_cast_reconnecting">%1$s शी पुन्हा कनेक्ट करत आहे…</string>

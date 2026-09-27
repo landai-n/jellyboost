@@ -102,6 +102,17 @@ class CastSessionCoordinator
          */
         private var lastHeldReading: PlaybackSnapshot? = null
 
+        /**
+         * Why [detachedSource] was last cleared with nobody attached — what the chrome's casting-bar
+         * exit announcement tells apart. Set synchronously, right before the clear, in each of the
+         * three places that can do it with no screen open ([onCastEnded], `onItemLost`,
+         * [onReceiverFinished]); [CastExitReason.STOPPED] otherwise. Read on demand
+         * ([CastNowPlaying.lastExitReason]), like [lastHeld] — never through a flow, since nothing
+         * else writes it between the clear and whoever asks.
+         */
+        internal var lastDetachExit: CastExitReason = CastExitReason.STOPPED
+            private set
+
         @Suppress("ktlint:standard:backing-property-naming")
         private val _receiverBuffering = MutableStateFlow(false)
 
@@ -342,6 +353,7 @@ class CastSessionCoordinator
 
             val orphaned = detachedSource
             if (host == null && orphaned != null) {
+                lastDetachExit = CastExitReason.STOPPED
                 reporter.reportStopDetached(orphaned, last.takeIf { it.isValid } ?: lastHeldReading ?: last)
             }
             detachedSource = null
@@ -403,6 +415,7 @@ class CastSessionCoordinator
             // Read before the source is forgotten, which forgets its reading too.
             val known = lastHeldReading
             val at = lastHeld.takeUnless { it.contradicts(known) } ?: known ?: lastHeld
+            lastDetachExit = CastExitReason.STOPPED
             stopTicker()
             detachedSource = null
             reporter.reportStopDetached(orphaned, at)
@@ -424,6 +437,7 @@ class CastSessionCoordinator
             if (!reading.isValid || !reading.hasEnded) return
             Timber.i("The receiver finished %s with no screen open; closing its session", finished.itemId)
             cancelItemLost()
+            lastDetachExit = CastExitReason.FINISHED
             stopTicker()
             detachedSource = null
             reporter.reportStopDetached(finished, reading)

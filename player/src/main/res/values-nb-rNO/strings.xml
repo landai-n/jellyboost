@@ -136,6 +136,7 @@
     <string name="player_message_cast_left_syncplay">Forlot SyncPlay-gruppen for å caste til %1$s.</string>
     <string name="player_message_cast_failed">Kunne ikke spille det på %1$s.</string>
     <string name="player_message_cast_stopped">Avspillingen på %1$s stoppet.</string>
+    <string name="player_message_cast_finished">Avspillingen på %1$s er fullført.</string>
 
     <string name="player_casting_to">Caster til %1$s</string>
     <string name="player_cast_reconnecting">Kobler til %1$s på nytt…</string>

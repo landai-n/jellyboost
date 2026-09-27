@@ -146,6 +146,7 @@
     <string name="player_message_cast_left_syncplay">Opuštěna skupina SyncPlay kvůli odeslání na %1$s.</string>
     <string name="player_message_cast_failed">Nepodařilo se to přehrát na %1$s.</string>
     <string name="player_message_cast_stopped">Přehrávání na %1$s bylo zastaveno.</string>
+    <string name="player_message_cast_finished">Přehrávání na %1$s bylo dokončeno.</string>
 
     <string name="player_casting_to">Odesíláno na %1$s</string>
     <string name="player_cast_reconnecting">Obnovování připojení k %1$s…</string>

@@ -136,6 +136,7 @@
     <string name="player_message_cast_left_syncplay">Die SyncPlay-Gruppe verlassen, um auf %1$s zu übertragen.</string>
     <string name="player_message_cast_failed">Wiedergabe auf %1$s fehlgeschlagen.</string>
     <string name="player_message_cast_stopped">Wiedergabe auf %1$s wurde beendet.</string>
+    <string name="player_message_cast_finished">Wiedergabe auf %1$s ist fertig.</string>
 
     <string name="player_casting_to">Wird auf %1$s übertragen</string>
     <string name="player_cast_reconnecting">Verbindung zu %1$s wird wiederhergestellt…</string>

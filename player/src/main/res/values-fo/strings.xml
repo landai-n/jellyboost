@@ -136,6 +136,7 @@
     <string name="player_message_cast_left_syncplay">Fór úr SyncPlay bólkinum fyri at senda til %1$s.</string>
     <string name="player_message_cast_failed">Kundi ikki spæla hetta á %1$s.</string>
     <string name="player_message_cast_stopped">Avspæling á %1$s steðgaði.</string>
+    <string name="player_message_cast_finished">Avspæling á %1$s endaði.</string>
 
     <string name="player_casting_to">Sendir til %1$s</string>
     <string name="player_cast_reconnecting">Bindur aftur í %1$s…</string>

@@ -136,6 +136,7 @@
     <string name="player_message_cast_left_syncplay">Kilépett a SyncPlay csoportból, hogy erre küldjön: %1$s.</string>
     <string name="player_message_cast_failed">Nem sikerült lejátszani ezen: %1$s.</string>
     <string name="player_message_cast_stopped">A lejátszás leállt ezen: %1$s.</string>
+    <string name="player_message_cast_finished">A lejátszás véget ért ezen: %1$s.</string>
 
     <string name="player_casting_to">Küldés erre: %1$s</string>
     <string name="player_cast_reconnecting">Újracsatlakozás ehhez: %1$s…</string>

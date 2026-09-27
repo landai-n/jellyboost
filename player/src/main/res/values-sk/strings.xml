@@ -146,6 +146,7 @@
     <string name="player_message_cast_left_syncplay">Opustili ste skupinu SyncPlay a odosielate na %1$s.</string>
     <string name="player_message_cast_failed">Nepodarilo sa to prehrať na %1$s.</string>
     <string name="player_message_cast_stopped">Prehrávanie na %1$s sa zastavilo.</string>
+    <string name="player_message_cast_finished">Prehrávanie na %1$s sa skončilo.</string>
 
     <string name="player_casting_to">Odosielanie na %1$s</string>
     <string name="player_cast_reconnecting">Obnovuje sa pripojenie k %1$s…</string>

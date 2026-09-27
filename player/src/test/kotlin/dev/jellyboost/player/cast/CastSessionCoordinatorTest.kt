@@ -209,6 +209,7 @@ class CastSessionCoordinatorTest {
         // that never played anything.
         verify(exactly = 1) { reporter.reportStopDetached(source, onTheTelevision) }
         routing.activeHandle.value shouldBe local
+        coordinator.lastDetachExit shouldBe CastExitReason.STOPPED
     }
 
     @Test
@@ -386,6 +387,8 @@ class CastSessionCoordinatorTest {
         ticker.isCancelled shouldBe true
         // The session is still up: the next open must still cast.
         coordinator.isCasting shouldBe true
+        // A drop is a stop, not a finish: the casting bar's exit announcement says so.
+        coordinator.lastDetachExit shouldBe CastExitReason.STOPPED
     }
 
     @Test

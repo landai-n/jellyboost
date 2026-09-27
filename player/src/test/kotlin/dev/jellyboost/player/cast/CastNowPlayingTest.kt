@@ -280,6 +280,22 @@ class CastNowPlayingTest {
             framework.onSessionEnded()
             runCurrent()
             nowPlaying.state.value shouldBe null
+            // The session simply ended — a stop, not a finish — is what the exit announcement says.
+            nowPlaying.lastExitReason() shouldBe CastExitReason.STOPPED
+        }
+
+    @Test
+    fun `the exit reason names a natural finish, not a stop`() =
+        runTest(dispatcher) {
+            leftPlaying()
+            watch()
+            cast.snapshot = ON_THE_TELEVISION.copy(positionMs = ON_THE_TELEVISION.durationMs, hasEnded = true)
+
+            cast.tryEmit(PlayerEvent.Ended)
+            runCurrent()
+
+            nowPlaying.state.value shouldBe null
+            nowPlaying.lastExitReason() shouldBe CastExitReason.FINISHED
         }
 
     @Test

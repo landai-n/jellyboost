@@ -80,6 +80,13 @@ class CastNowPlaying
         }
 
         /**
+         * Why [state]'s last `non-null → null` happened. Read the same way as [current] — on demand,
+         * never cached — because [CastSessionCoordinator.lastDetachExit] only holds the reason for the
+         * *most recent* clear, and nothing else writes it in between.
+         */
+        fun lastExitReason(): CastExitReason = coordinator.lastDetachExit
+
+        /**
          * Pauses a receiver that means to play (buffering included), plays one that does not; does
          * nothing while the receiver is letting go of the item ([CastingItem.receiverLetGo]).
          */
@@ -162,6 +169,19 @@ data class CastingItem(
 ) {
     /** Where a player opened from the bar starts if the receiver has let go of the item by then. */
     val positionTicks: Long get() = Ticks.millisToTicks(positionMs)
+}
+
+/**
+ * Why the item [CastNowPlaying.state] was showing stopped being held with no screen open — what the
+ * chrome's casting-bar exit announcement tells apart.
+ */
+enum class CastExitReason {
+    /** The receiver stopped the item before it was done — from the television, a dropped item, or
+     * the cast session simply ending. */
+    STOPPED,
+
+    /** The receiver played the item to its end, on its own. */
+    FINISHED,
 }
 
 /**

@@ -2,6 +2,7 @@ package dev.jellyboost.app
 
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dev.jellyboost.player.cast.CastExitReason
 import dev.jellyboost.player.cast.CastNowPlaying
 import dev.jellyboost.player.cast.CastingItem
 import kotlinx.coroutines.flow.StateFlow
@@ -21,6 +22,9 @@ class CastingBarViewModel
 
         /** What is on the receiver right now, read fresh — for a notification tap, not for drawing. */
         fun current(): CastingItem? = castNowPlaying.current()
+
+        /** Why [state]'s last `non-null → null` happened — read fresh, at the moment it is asked for. */
+        fun lastExitReason(): CastExitReason = castNowPlaying.lastExitReason()
 
         fun togglePlayPause() = castNowPlaying.togglePlayPause()
     }

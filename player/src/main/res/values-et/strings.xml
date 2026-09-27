@@ -136,6 +136,7 @@
     <string name="player_message_cast_left_syncplay">Lahkuti SyncPlay grupist, et kanda üle seadmesse %1$s.</string>
     <string name="player_message_cast_failed">Ei õnnestunud esitada seda seadmes %1$s.</string>
     <string name="player_message_cast_stopped">Taasesitus seadmes %1$s peatus.</string>
+    <string name="player_message_cast_finished">Taasesitus seadmes %1$s lõppes.</string>
 
     <string name="player_casting_to">Kantakse üle seadmesse %1$s</string>
     <string name="player_cast_reconnecting">Ühendan uuesti seadmega %1$s…</string>

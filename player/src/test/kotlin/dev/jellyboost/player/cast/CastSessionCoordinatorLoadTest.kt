@@ -133,6 +133,8 @@ class CastSessionCoordinatorLoadTest {
         verify(exactly = 1) { reporter.reportStopDetached(source, finished) }
         coordinator.detached.value shouldBe null
         coordinator.heldSourceFor(source.itemId) shouldBe null
+        // A natural end is not a stop: the casting bar's exit announcement tells them apart.
+        coordinator.lastDetachExit shouldBe CastExitReason.FINISHED
 
         framework.onSessionEnded()
 

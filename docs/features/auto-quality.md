@@ -36,7 +36,8 @@ measured number is not surfaced in the UI (user choice; see DECISIONS.md, 2026-0
   encoder-plus-link chain can produce it in realtime — measured 0.76× realtime at a
   64.7 Mbps target versus 2.50× at 20 Mbps. Direct play and direct stream keep the full
   measured cap (no re-encode to keep up with, and the high cap is the whole point);
-  manual picks and cast are never touched; the re-negotiated request keeps
+  manual picks are never touched, and since 2026-09-27 cast Auto is walked back too (its
+  uncapped pass 1 is the profile's 120 Mbps; see below); the re-negotiated request keeps
   `autoBitrate = true`, so the chip still reads "Auto". The abandoned first negotiation
   starts no encode — ffmpeg spawns on the first segment fetch, not on `PlaybackInfo`.
 - Auto-ness travels as an explicit `autoBitrate` flag on `PlaybackResolveRequest` and
@@ -57,10 +58,13 @@ measured number is not surfaced in the UI (user choice; see DECISIONS.md, 2026-0
   transcode (DECISIONS.md, 2026-08-15 second amendment and 2026-08-16 third amendment).
   Known edge: decoders report per-axis ranges (2560×2560), so portrait 4K video is
   under-constrained on the height axis.
-- Cast Auto is deliberately unchanged (uncapped bitrate, `CastDeviceProfile`'s own
-  per-receiver-class ceilings — see `docs/features/chromecast.md`): the link and decoder
-  that decide whether a receiver copes are the receiver's, not this device's.
-  Measured-cap-for-cast is a noted follow-up.
+- Cast Auto is deliberately **unmeasured** (`CastDeviceProfile`'s own per-receiver-class
+  ceilings — see `docs/features/chromecast.md`): the link and decoder that decide whether a
+  receiver copes are the receiver's, not this device's. Measured-cap-for-cast is a noted
+  follow-up. It is not exempt from the transcode ceiling, though (2026-09-27): a cast Auto
+  negotiation goes out uncapped, a direct play keeps that, and a **transcode** — which for
+  cast always re-encodes its video — is re-negotiated at the same 20 Mbps rung. An absent
+  cap counts as over the ceiling for cast only.
 - The decoder-fallback ladder (`DecoderFallbackHandler`) steps a non-rung measured cap
   down to the next rung below it; when the ladder fires, the retry request clears the
   flag so the chip shows the rung that is actually playing.
@@ -113,7 +117,9 @@ remote Auto resolve happens with no in-memory measurement.
   detector; a hand-picked cap is never second-guessed. Plus the transcode ceiling: an
   Auto transcode above the rung is negotiated twice (second at 20 Mbps, flag kept), a
   direct play keeps the full measured cap, and an Auto transcode already under the
-  ceiling or a manual cap above it is negotiated once.
+  ceiling or a manual cap above it is negotiated once. The cast side of the ceiling (Auto
+  transcode walked back, Auto direct play uncapped, manual cap untouched, `null` cap over
+  the ceiling for cast only) is in `PlaybackResolveCastTargetTest`.
 - `PlayerAutoQualityTest` (`player/src/test/.../ui/`) — the flag/guard decoupling: a
   measurement landing exactly on Medium's rung still reads as Auto, tapping that rung
   is still a real change, returning to Auto sends flag + null cap, Auto→Auto is a

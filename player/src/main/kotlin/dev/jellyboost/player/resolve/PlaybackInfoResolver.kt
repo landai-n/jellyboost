@@ -59,6 +59,14 @@ internal class PlaybackInfoResolver
          * So an Auto *transcode* above that rung is re-negotiated at it; direct play and direct
          * stream keep the full measured cap, and a hand-picked cap is never touched.
          *
+         * **Cast included.** A cast Auto request arrives uncapped ([withMeasuredCap]), and `null` is
+         * the profile's own 120 Mbps — MEASURED as `VideoBitrate=119616000` on a cast transcode URL.
+         * Every cast transcode re-encodes its video (`allowVideoStreamCopy`, see
+         * [toPlaybackInfoDto]), and asking an encoder for that bitrate is the 0.76× stall above
+         * waiting to happen, so a cast Auto transcode is walked back to the same rung. A cast direct
+         * play keeps the uncapped answer: its bytes are the file's, and the receiver's link is not
+         * ours to cap.
+         *
          * The abandoned negotiation costs one round trip and no encoder: ffmpeg is spawned by the
          * first *segment* fetch. The retry keeps `autoBitrate`, so the chip does not become "High".
          */
@@ -67,26 +75,30 @@ internal class PlaybackInfoResolver
         ): AppResult<RemotePlaybackMediaSource> {
             val negotiated = negotiate(request)
             val cap = request.maxStreamingBitrate
+            // `null` is "over" for cast only: a local Auto request carries a measurement, and one
+            // the detector could not make is not this rule's to second-guess.
+            val capOverCeiling = if (cap == null) request.castTarget else cap > AUTO_TRANSCODE_CEILING
             val overCeiling =
                 negotiated is AppResult.Success &&
                     negotiated.value.playMethod == PlayMethod.TRANSCODE &&
                     request.autoBitrate &&
-                    !request.castTarget &&
-                    cap != null &&
-                    cap > AUTO_TRANSCODE_CEILING
+                    capOverCeiling
             if (!overCeiling) return negotiated
 
             Timber.i(
-                "Auto measured %d bps but the server chose to transcode; re-negotiating at %d",
-                cap,
+                "Auto cap %s bps (cast=%b) but the server chose to transcode; re-negotiating at %d",
+                cap?.toString() ?: "uncapped",
+                request.castTarget,
                 AUTO_TRANSCODE_CEILING,
             )
             return negotiate(request.copy(maxStreamingBitrate = AUTO_TRANSCODE_CEILING))
         }
 
         /**
-         * Cast Auto stays uncapped on purpose: the link that decides whether a receiver copes is the
-         * receiver's, so measuring here would cap a television by this device's Wi-Fi.
+         * Cast Auto stays unmeasured on purpose: the link that decides whether a receiver copes is
+         * the receiver's, so measuring here would cap a television by this device's Wi-Fi. It is not
+         * uncapped end to end, though: a cast *transcode* is walked back to [AUTO_TRANSCODE_CEILING]
+         * by [negotiateUnderTranscodeCeiling], and only a direct play keeps the profile's ceiling.
          */
         private suspend fun PlaybackResolveRequest.withMeasuredCap(): PlaybackResolveRequest =
             when {
@@ -247,6 +259,16 @@ internal class PlaybackInfoResolver
                 autoOpenLiveStream = true,
                 enableDirectPlay = enableDirectPlay,
                 enableDirectStream = enableDirectStream,
+                // A cast transcode always re-encodes its video. MEASURED against 10.11.11: a
+                // stream-copied HLS-ts playlist is laid out on the file's own keyframes, but an
+                // ffmpeg restarted mid-file (resume, transfer, a seek past what is encoded) cuts at
+                // `-hls_time` from its restart point, so segments go missing or change length under
+                // the playlist, and a receiver that trusts the playlist buffers forever. Re-encoded,
+                // the segments are fixed-length and match it. The server plans no copy and appends
+                // `allowVideoStreamCopy=false` to the `TranscodingUrl` itself; direct play and
+                // direct stream never consult the flag, and audio copy is left alone. Local playback
+                // keeps the server's default: ExoPlayer was never measured stalling on it.
+                allowVideoStreamCopy = if (castTarget) false else null,
             )
 
         /**

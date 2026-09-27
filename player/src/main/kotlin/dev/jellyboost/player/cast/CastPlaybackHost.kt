@@ -11,6 +11,13 @@ import java.util.UUID
 interface CastPlaybackHost {
     val castSource: PlaybackMediaSource?
 
+    /**
+     * The last [valid][PlaybackSnapshot.isValid] reading the host took for [castSource], `null` when it
+     * has none. Handed to the coordinator as the host detaches, so a session that ends before the
+     * coordinator reads the receiver itself is still closed at a position someone vouched for.
+     */
+    val lastValidReading: PlaybackSnapshot? get() = null
+
     /** @param from the **local** player's position before routing away: the resume point and the stop report's. */
     fun onCastStarted(
         deviceName: String?,
@@ -64,11 +71,16 @@ interface CastPlaybackCoordinator {
  * @property reading the receiver's reading as the hold was checked; [PlaybackSnapshot.isValid] is `false`
  *   while it is still buffering the item.
  * @property isBuffering waiting for data while meaning to play — what the screen's transport shows first.
+ * @property lastValidReading the freshest valid reading anyone took for [source] — [reading] itself when
+ *   that is valid. What the adopting screen's position starts from, and what a session ending before
+ *   the screen reads a valid position of its own is closed and brought home at. **Never** the source's
+ *   `startPositionTicks`: that is where the film was first sent, not where it is.
  */
 data class CastReceiverHold(
     val source: PlaybackMediaSource,
     val reading: PlaybackSnapshot,
     val isBuffering: Boolean,
+    val lastValidReading: PlaybackSnapshot? = reading.takeIf { it.isValid },
 )
 
 object NoCastPlaybackCoordinator : CastPlaybackCoordinator {

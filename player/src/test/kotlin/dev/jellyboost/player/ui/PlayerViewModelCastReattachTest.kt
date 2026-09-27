@@ -121,8 +121,90 @@ internal class PlayerViewModelCastReattachTest : PlayerViewModelCastFixture() {
 
             requests.shouldBeEmpty()
             model.uiState.value.showsBufferingRing shouldBe true
-            // The invalid reading carried no position: the source's own start stands in for it.
-            model.position.value.positionMs shouldBe source.startPositionTicks / TICKS_PER_MS
+            // The invalid reading carried no position: the last valid one the coordinator held stands in
+            // for it — not the source's own start, which is where the film was first sent.
+            model.position.value.positionMs shouldBe ON_THE_TELEVISION.positionMs
+        }
+
+    // ---- the session ending under a reattached screen ------------------------------------------------
+
+    /** A reattached screen, and nothing recorded before the session ends. */
+    private suspend fun TestScope.reattached(): PlayerViewModel {
+        val model = castViewModel()
+        advanceUntilIdle()
+        local.resetCalls()
+        clearMocks(reporter, answers = false)
+        return model
+    }
+
+    /** No report may carry zero, or a position nobody read: either is what wiped the resume position. */
+    private fun noReportCarriesZero() {
+        coVerify(exactly = 0) { reporter.reportStop(any(), match { !it.isValid || it.positionMs == 0L }) }
+        coVerify(exactly = 0) { reporter.reportStart(match { it.startPositionTicks == 0L }, any()) }
+        verify(exactly = 0) { reporter.reportStopDetached(any(), match { !it.isValid || it.positionMs == 0L }) }
+    }
+
+    @Test
+    fun `a reattached film whose session ends with the receiver gone comes home where the screen last read it`() =
+        runTest(dispatcher) {
+            leftPlayingOnTheTelevision()
+            val model = reattached()
+            // The television plays on, and the screen follows it.
+            model.onTick(AT_27_20)
+            castHandle.snapshot = NOT_OURS
+            val requests = echoResolves()
+
+            framework.onSessionEnded()
+            advanceUntilIdle()
+
+            requests.single().castTarget shouldBe false
+            requests.single().startPositionTicks shouldBe AT_27_20.positionTicks
+            local.prepared.single().startPositionMs shouldBe AT_27_20.positionMs
+            coVerify(exactly = 1) { reporter.reportStop(source, AT_27_20) }
+            coVerify(exactly = 1) {
+                reporter.reportStart(match { it.startPositionTicks == AT_27_20.positionTicks }, any())
+            }
+            noReportCarriesZero()
+        }
+
+    @Test
+    fun `a reattached film ending before the screen reads it comes home where the coordinator last saw it`() =
+        runTest(dispatcher) {
+            leftPlayingOnTheTelevision()
+            // The casting bar read the television at 27:20, then it went back to buffering.
+            castHandle.snapshot = AT_27_20
+            coordinator.readReceiver()
+            castHandle.snapshot = NOT_OURS
+            castHandle.emit(PlayerEvent.Buffering(true))
+            advanceUntilIdle()
+            val model = reattached()
+            val requests = echoResolves()
+
+            framework.onSessionEnded()
+            advanceUntilIdle()
+
+            model.uiState.value.cast.isCasting shouldBe false
+            // The source's start, which the old code fell back to, is where the film was first sent.
+            requests.single().startPositionTicks shouldBe AT_27_20.positionTicks
+            coVerify(exactly = 1) { reporter.reportStop(source, AT_27_20) }
+            noReportCarriesZero()
+        }
+
+    @Test
+    fun `a reattached screen that goes as the receiver stops answering hands its last reading to the coordinator`() =
+        runTest(dispatcher) {
+            leftPlayingOnTheTelevision()
+            val model = reattached()
+            model.onTick(AT_27_20)
+            castHandle.snapshot = NOT_OURS
+
+            model.releaseSession()
+            advanceUntilIdle()
+            framework.onSessionEnded()
+            advanceUntilIdle()
+
+            verify(exactly = 1) { reporter.reportStopDetached(source, AT_27_20) }
+            noReportCarriesZero()
         }
 
     @Test
@@ -188,12 +270,13 @@ internal class PlayerViewModelCastReattachTest : PlayerViewModelCastFixture() {
         /** Fifteen minutes in: where the television got to before the screen went. */
         val ON_THE_TELEVISION = PlaybackSnapshot(positionMs = 900_000L, isPlaying = true)
 
+        /** About 27:20, and playing: where the television had got to when the session was disconnected. */
+        val AT_27_20 = PlaybackSnapshot(positionMs = 1_640_000L, durationMs = 7_200_000L, isPlaying = true)
+
         /** A receiver not (yet) holding this item: every field zero, and flagged as belonging to nothing. */
         val NOT_OURS = PlaybackSnapshot(isValid = false)
 
         const val TWO_HOURS_MS = 7_200_000L
-
-        const val TICKS_PER_MS = 10_000L
 
         val OTHER_ITEM: UUID = UUID.fromString("9e8d7c6b-5a49-4382-a1b0-c9d8e7f6a5b4")
     }

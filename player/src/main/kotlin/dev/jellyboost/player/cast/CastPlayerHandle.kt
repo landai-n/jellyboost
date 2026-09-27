@@ -5,6 +5,7 @@ import androidx.media3.common.C
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
+import com.google.android.gms.cast.MediaStatus
 import com.google.android.gms.cast.framework.media.RemoteMediaClient
 import com.google.android.gms.common.api.PendingResult
 import dev.jellyboost.player.model.PlaybackMediaItemSpec
@@ -147,7 +148,9 @@ internal class CastPlayerHandle
          * or a takeover by another sender, `CastPlayer` keeps answering — at zero, or at the other
          * app's position — and a ticker would write that over this item's resume position. The
          * `contentId` arm exists because the framework's round-trip rebuilds items with the content
-         * URL as their id. A natural finish is exempt: that reading marks the item watched.
+         * URL as their id. A natural finish is exempt: that reading marks the item watched, and it is
+         * the receiver's own `IDLE` / `FINISHED` status that says so ([finishedMedia]) — media3-cast
+         * 1.9.0 never reports `STATE_ENDED`, and the finished item leaves the queue like a stopped one.
          */
         override fun snapshot(): PlaybackSnapshot {
             val current = castPlayer ?: return PlaybackSnapshot(isValid = false)
@@ -168,20 +171,44 @@ internal class CastPlayerHandle
             // Once the session is torn down `RemoteCastPlayer` drops its client but keeps its timeline and
             // state (`setCastSession(null)` updates neither), so our item still looks held — at its last
             // reported position, zero after a receiver stop. Nothing it says then is live.
-            if (remoteMediaClient() == null) return PlaybackSnapshot(isValid = false)
-            val ended = playbackState == Player.STATE_ENDED
-            if (!ended && !holdsLoadedItem()) return PlaybackSnapshot(isValid = false)
-            return PlaybackSnapshot(
-                positionMs = currentPosition.coerceAtLeast(0L),
-                durationMs = duration.takeIf { it != C.TIME_UNSET }?.coerceAtLeast(0L) ?: 0L,
-                bufferedMs = bufferedPosition.coerceAtLeast(0L),
-                isPlaying = isPlaying,
-                hasEnded = ended,
-            )
+            val client = remoteMediaClient() ?: return PlaybackSnapshot(isValid = false)
+            // Before the item check: a finished item is gone from the queue by the time it is read.
+            val ended = presence.ended ?: client.finishedMedia()?.let(presence::onFinished)
+            return when {
+                ended != null -> ended
+                !holdsLoadedItem() -> PlaybackSnapshot(isValid = false)
+                else ->
+                    PlaybackSnapshot(
+                        positionMs = currentPosition.coerceAtLeast(0L),
+                        durationMs = duration.takeIf { it != C.TIME_UNSET }?.coerceAtLeast(0L) ?: 0L,
+                        bufferedMs = bufferedPosition.coerceAtLeast(0L),
+                        isPlaying = isPlaying,
+                    )
+            }
         }
 
-        private fun CastPlayer.isReadyOrEnded(): Boolean =
-            playbackState == Player.STATE_READY || playbackState == Player.STATE_ENDED
+        /**
+         * `null` unless the receiver's own status is `IDLE` with idle reason `FINISHED`; then which media
+         * it finished, matched against [loaded] as the load names it (its content id and URL are both the
+         * stream URL). Read from `RemoteMediaClient` because `CastPlayer` maps that status to plain IDLE.
+         */
+        private fun RemoteMediaClient.finishedMedia(): ReceiverFinish? {
+            val status =
+                mediaStatus?.takeIf {
+                    it.playerState == MediaStatus.PLAYER_STATE_IDLE && it.idleReason == MediaStatus.IDLE_REASON_FINISHED
+                } ?: return null
+            val info = status.mediaInfo
+            val spec = loaded
+            return when {
+                info == null -> ReceiverFinish.UNNAMED
+                spec != null && (info.contentId == spec.contentId || info.contentUrl == spec.contentId) ->
+                    ReceiverFinish.LOADED_ITEM
+                else -> ReceiverFinish.OTHER_ITEM
+            }
+        }
+
+        /** `STATE_ENDED` never comes from media3-cast 1.9.0; the receiver's finish stands in for it. */
+        private fun CastPlayer.isReadyOrEnded(): Boolean = playbackState == Player.STATE_READY || presence.ended != null
 
         /**
          * The receiver's intent, readable even while [snapshot] is not: the play/pause toggle must not

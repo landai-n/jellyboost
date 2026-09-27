@@ -30,4 +30,6 @@
     <string name="mini_player_previous">మునుపటిది</string>
     <string name="mini_player_dismiss">ప్లేబ్యాక్ ఆపి మూసివేయండి</string>
     <string name="mini_player_open_now_playing">ఇప్పుడు ప్లే అవుతున్నది తెరవండి</string>
+    <string name="casting_bar_open_player">ప్లేయర్‌ను తెరవండి</string>
+    <string name="casting_bar_description">%1$s, %2$s</string>
 </resources>

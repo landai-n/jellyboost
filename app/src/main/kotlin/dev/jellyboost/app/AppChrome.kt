@@ -20,6 +20,7 @@ import androidx.navigation.NavDestination.Companion.hasRoute
 import dev.jellyboost.core.common.Routes
 import dev.jellyboost.core.common.music.MusicPlaybackState
 import dev.jellyboost.core.ui.theme.Dimens
+import dev.jellyboost.player.cast.CastingItem
 
 // The sizes live here, not inside the two bar composables, because `AppScaffold` builds
 // `LocalAppChromePadding` from them and a screen's first row rests at the edge of the glass only
@@ -111,4 +112,34 @@ internal fun showsMiniPlayer(
     musicState: MusicPlaybackState,
     onPlayer: Boolean,
     onNowPlaying: Boolean,
-): Boolean = musicState is MusicPlaybackState.Active && !onPlayer && !onNowPlaying
+    castingBarShown: Boolean = false,
+): Boolean = musicState is MusicPlaybackState.Active && !onPlayer && !onNowPlaying && !castingBarShown
+
+/**
+ * The casting bar takes [MiniPlayer]'s slot whenever this app has a film on a receiver and no player
+ * screen is open for it — [casting] is non-`null` exactly then — except on the two full-screen
+ * players, as the music bar is: [Routes.Player] *is* the remote control, and [Routes.NowPlaying] has
+ * its own transport where the bar would dock.
+ *
+ * **Cast wins the slot.** Music never casts (M13), but it can play on this device while a film plays
+ * on the television once the film's screen has closed; the two bars would stack in one slot, and the
+ * television is the session that has no other way back. Pass the result to [showsMiniPlayer].
+ */
+internal fun showsCastingBar(
+    casting: CastingItem?,
+    onPlayer: Boolean,
+    onNowPlaying: Boolean,
+): Boolean = casting != null && !onPlayer && !onNowPlaying
+
+/** What the casting bar's one button does next — [MiniPlayer]'s transport rule, and the player's. */
+internal enum class CastingBarAction { PLAY, PAUSE }
+
+/**
+ * **Buffering keeps a Pause action**, exactly as the player's transport does: buffering means waiting
+ * while meaning to play, so the tap that answers it is Pause. Reads the receiver's intent, never a
+ * snapshot, which is all zeroes for seconds after every load.
+ */
+internal fun castingBarAction(
+    playWhenReady: Boolean,
+    isBuffering: Boolean,
+): CastingBarAction = if (playWhenReady || isBuffering) CastingBarAction.PAUSE else CastingBarAction.PLAY

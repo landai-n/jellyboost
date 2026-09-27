@@ -41,4 +41,15 @@
     <string name="mini_player_previous">Previous</string>
     <string name="mini_player_dismiss">Stop playback and dismiss</string>
     <string name="mini_player_open_now_playing">Open now playing</string>
+
+    <!--
+      The chrome's casting bar: the film this app left playing on a television, docked where the
+      music mini-player sits. The bar's tap opens the player for it again.
+    -->
+    <string name="casting_bar_open_player">Open player</string>
+    <!--
+      What a screen reader says for the whole bar, in one sentence: %1$s is the film's title,
+      %2$s the bar's status line ("Casting to Living Room TV" or "Reconnecting to …").
+    -->
+    <string name="casting_bar_description">%1$s, %2$s</string>
 </resources>

@@ -569,15 +569,21 @@ Full detail: [`docs/features/chromecast.md`](features/chromecast.md).
 same reason SyncPlay is: it needs the resolvers, the reporter and `PlayerHandle`, all of which live
 there. What is new is that `:player` is the **only** module that may name a
 `com.google.android.gms` type, and inside it only `cast/` may — `:app` calls
-`CastAvailability.initialize(this)` from `MainActivity.onCreate` and knows nothing else about it.
+`CastAvailability.initialize(this)` from `MainActivity.onCreate`, and since 2026-09-27 reads two
+GMS-free things more: `CastNowPlaying` (a `StateFlow<CastingItem?>` + play/pause, what the chrome's
+casting bar draws) and `CastNotificationIntents` (the action the notification trampoline reopens
+`MainActivity` with). It names no Cast type.
 
 ```
 :player/cast
  ├── JellyboostCastOptionsProvider   framework config; instantiated reflectively from the manifest
+ ├── CastNotificationActivity        the notification's trampoline: own task affinity, reopens the app
+ ├── CastNowPlaying                  what is left on the receiver, for :app's casting bar (GMS-free)
  ├── CastAvailability                the one CastContext, the GoogleApiAvailability guard,
  │                                   CastDeviceState for the UI
  ├── CastSessionMonitor + GmsCastSessionMonitor   "a receiver appeared / went away", GMS-free seam
- ├── CastSessionCoordinator          routing, the detached ticker, the final stop report
+ ├── CastSessionCoordinator          routing, the detached ticker, the final stop report,
+ │                                   adoption (heldSourceFor) and the orphan's stop
  ├── CastStatusHolder                isCasting + device name, for everyone outside cast/
  ├── CastMetadataHolder              title / episode line / poster, for the receiver's own screen
  ├── CastPlaybackHost                the attach/detach + transfer seam a screen implements

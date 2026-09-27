@@ -33,6 +33,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,6 +53,8 @@ import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navOptions
+import androidx.navigation.toRoute
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
 import dev.jellyboost.core.common.Routes
@@ -66,6 +69,7 @@ import dev.jellyboost.core.ui.theme.JellyfinGradients
 import dev.jellyboost.core.ui.theme.LocalAppChromePadding
 import dev.jellyboost.core.ui.theme.LocalChromeBackdrop
 import dev.jellyboost.core.ui.theme.LocalHazeState
+import dev.jellyboost.player.cast.CastingItem
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
@@ -113,6 +117,8 @@ import kotlinx.coroutines.launch
 internal fun AppScaffold(
     startsSignedIn: Boolean,
     sessionState: SessionState,
+    castingPlayerRequested: Boolean = false,
+    onCastingPlayerRequestHandled: () -> Unit = {},
 ) {
     val navController: NavHostController = rememberNavController()
     val currentDestination = navController.currentBackStackEntryAsState().value?.destination
@@ -135,8 +141,27 @@ internal fun AppScaffold(
     // calls in `MusicMessageEffect` and `JellyfinNavHost` all resolve the same Activity-scoped instance.
     val musicViewModel: MusicPlaybackViewModel = hiltViewModel()
     val musicState by musicViewModel.state.collectAsStateWithLifecycle()
+
+    // The same Activity-scoped resolution as the music one above: the receiver's session belongs to no
+    // destination either.
+    val castingViewModel: CastingBarViewModel = hiltViewModel()
+    val casting by castingViewModel.state.collectAsStateWithLifecycle()
+    // Kept at this level, not inside the bar's `AnimatedVisibility`: the state turns `null` the moment
+    // the bar should go, and the exit animation still has to draw what it was showing.
+    var lastCasting by remember { mutableStateOf<CastingItem?>(null) }
+    casting?.let { lastCasting = it }
+    val showCastingBar = showsCastingBar(casting, onPlayer, onNowPlaying)
+
     // Not gated on `isTopLevel`: playback starts on album/artist/playlist screens, all of them pushed.
-    val showMiniPlayer = showsMiniPlayer(musicState, onPlayer, onNowPlaying)
+    val showMiniPlayer = showsMiniPlayer(musicState, onPlayer, onNowPlaying, castingBarShown = showCastingBar)
+
+    CastNotificationEffect(
+        requested = castingPlayerRequested,
+        navController = navController,
+        signedIn = sessionState is SessionState.LoggedIn,
+        currentCasting = castingViewModel::current,
+        onHandled = onCastingPlayerRequestHandled,
+    )
 
     val snackbarHostState = remember { SnackbarHostState() }
     val showConnectionStatus =
@@ -180,7 +205,12 @@ internal fun AppScaffold(
     ) {
         val bottomNav = useBottomNav(maxWidth)
         val chromePadding =
-            chromePadding(isTopLevel = isTopLevel, bottomNav = bottomNav, showMiniPlayer = showMiniPlayer)
+            chromePadding(
+                isTopLevel = isTopLevel,
+                bottomNav = bottomNav,
+                // One slot, whichever bar holds it: the clearance is the same.
+                showMiniPlayer = showMiniPlayer || showCastingBar,
+            )
 
         CompositionLocalProvider(
             LocalHazeState provides hazeState,
@@ -277,10 +307,79 @@ internal fun AppScaffold(
                 }
             }
 
+            // `MiniPlayer`'s slot, entrance and exit, for the film on the television.
+            AnimatedVisibility(
+                visible = showCastingBar,
+                enter = slideInVertically { it } + fadeIn(tween(NAV_TRANSITION_MILLIS)),
+                exit = slideOutVertically { it } + fadeOut(tween(NAV_TRANSITION_MILLIS / CHROME_EXIT_DIVISOR)),
+                modifier =
+                    Modifier
+                        .align(Alignment.BottomCenter)
+                        .navigationBarsPadding()
+                        .padding(horizontal = Dimens.ScreenPadding)
+                        .padding(bottom = miniPlayerBottomOffset(isTopLevel = isTopLevel, bottomNav = bottomNav)),
+            ) {
+                lastCasting?.let { item ->
+                    CastingBar(
+                        state = item,
+                        onTogglePlayPause = castingViewModel::togglePlayPause,
+                        onClick = {
+                            navController.navigate(
+                                Routes.Player(itemId = item.itemId, startPositionTicks = item.positionTicks),
+                                navOptions { launchSingleTop = true },
+                            )
+                        },
+                    )
+                }
+            }
+
             JellyboostSnackbarHost(
                 hostState = snackbarHostState,
                 modifier = Modifier.align(Alignment.BottomCenter),
             )
+        }
+    }
+}
+
+/**
+ * Acts on a Cast notification tap ([castNotificationRoute]) once there is a graph to act on. Consumed
+ * before it is acted on, so a recomposition mid-navigation cannot act twice.
+ *
+ * The item is read fresh ([currentCasting]) rather than from the bar's collected state, which stops
+ * with the activity and has not caught up in the instant the tap brings it back.
+ */
+@Composable
+private fun CastNotificationEffect(
+    requested: Boolean,
+    navController: NavHostController,
+    signedIn: Boolean,
+    currentCasting: () -> CastingItem?,
+    onHandled: () -> Unit,
+) {
+    val entry = navController.currentBackStackEntryAsState().value
+    val hasGraph = entry != null
+    val currentSignedIn by rememberUpdatedState(signedIn)
+    val readCasting by rememberUpdatedState(currentCasting)
+    val handled by rememberUpdatedState(onHandled)
+
+    LaunchedEffect(requested, hasGraph) {
+        if (!requested || !hasGraph) return@LaunchedEffect
+        handled()
+        val top = navController.currentBackStackEntry
+        val playerItemId = top?.takeIf { it.destination.hasRoute<Routes.Player>() }?.toRoute<Routes.Player>()?.itemId
+        when (val route = castNotificationRoute(readCasting(), playerItemId, currentSignedIn)) {
+            is CastNotificationRoute.OpenPlayer ->
+                navController.navigate(
+                    Routes.Player(itemId = route.itemId, startPositionTicks = route.startPositionTicks),
+                    navOptions {
+                        launchSingleTop = true
+                        if (route.replacePlayer) popUpTo<Routes.Player> { inclusive = true }
+                    },
+                )
+
+            CastNotificationRoute.Home -> navController.navigateHome()
+
+            CastNotificationRoute.StayPut -> Unit
         }
     }
 }

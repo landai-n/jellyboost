@@ -62,6 +62,7 @@ All in `player/src/main/kotlin/dev/jellyboost/player/cast/` unless stated.
 | `CastPlayerHandle` | `PlayerHandle` over media3-cast's `CastPlayer`. No surface and no `PlaybackService` (the framework publishes its own media session and notification). `selectAudioTrack` always `false`; `selectSubtitleTrack` uses `RemoteMediaClient.setActiveMediaTracks` for a side-loaded VTT — claiming `true` only when the receiver's own `MediaStatus` still offers the track, and logging async rejections (audit CAST-03) — and `false` otherwise; `snapshot()` is only valid while the receiver still holds our item (audit CAST-01); `playWhenReady` is the receiver's intent, readable when the snapshot is not; `supportsPlaybackSpeed` asks the receiver. Every reading it takes — from `snapshot()` and at the end of every callback batch — goes through `RemoteItemPresence`. |
 | `RemoteItemPresence` | Pure. Turns the handle's readings into the two edges `PlayerEvent.RemoteItemMissing(lastHeld)` / `RemoteItemMissingCleared`. **Armed only once the receiver has held the item in `READY` since the last load**, so the several seconds after every `prepare` in which the reading is invalid — and a placeholder that briefly claims the item — never raise it. Also judges the receiver's `IDLE`/`FINISHED` status (`onFinished`): the armed item's finish is an end — `PlayerEvent.Ended` once, and an ended reading until the next load — never a drop. |
 | `CastSpecMapper` | Pure. `PlaybackMediaItemSpec + RemotePlaybackMediaSource + CastMetadata → CastMediaSpec`: the `ApiKey` on every URL the receiver fetches, the content type it will not sniff, and subtitle ids renumbered onto Jellyfin stream indices. All the decisions live here, which is why this is what the tests cover. |
+| `HlsSegmentSnap` | Pure. The server's HLS segment length for a frame rate (`ceil(3 × fps) / fps`) and the load start that stays within 1 s of its segment's start — see *A start late in a segment*. |
 | `CastMediaSpec` / `CastTrackSpec` / `CastMetadata` | The plain data in between — no GMS type appears in it. |
 | `CastMediaItemConverter` | Mechanical `MediaInfo` / `MediaTrack` / `MediaQueueItem` assembly. Media3's `DefaultMediaItemConverter` ignores `subtitleConfigurations` entirely, which is most of what casting a Jellyfin item is. |
 | `deviceprofile/CastDeviceProfile` | The static, conservative profile a cast `PlaybackInfo` is negotiated against. |
@@ -416,12 +417,49 @@ reproduced four times, at four different positions.
 
 Requesting the same stream with no video stream copy, a 20 Mbps video bitrate and a 1920 max width
 makes the server re-encode (hardware, many times realtime on the test server), and the playlist
-becomes fixed-length segments that match the files exactly, even when starting mid-film. That is
+becomes fixed-length segments that match the files exactly, even when starting mid-film. "Fixed" means
+a whole number of frames, so the length **depends on the frame rate**: `ceil(3 × fps) / fps` — 3.000 s at
+24 fps (72 frames) and 25 fps (75), 3.003 s at 23.976 fps (72); restarts land on that grid (`-ss N × 3.003` for a 23.976 fps film, with `-g 72` either way). That is
 what every cast transcode now asks for (DECISIONS.md 2026-09-27). The cost: a transcode that could
 have been a cheap copy now occupies the encoder, and a server without hardware encoding may not
 keep up with 1080p — `PlaybackQuality` below High is the lever there. Local playback is unchanged:
 ExoPlayer was never measured stalling on the same shape. **Owed:** a device walk on a real
 Chromecast confirming resume, transfer and seek on such a file (STATUS.md).
+
+## Known gaps / measured: a start late in a segment
+
+**Measured 2026-09-27, same setup.** Even on the re-encoded grid above, a load whose start falls in the
+last ~0.5 s of a segment stalls in `BUFFERING` forever. A 24 fps film (3.000 s segments): starts
+2.881 s and 2.590 s into their segments stalled; starts 0.648 s, 0.711 s (an episode), 1.307 s, 1.59 s
+and 1.88 s in played — the last two were −10 s seeks that recovered the stalls. The server restarts
+ffmpeg at the segment's start (`-ss N × segment -start_number N`) and those segments are correct; the
+job the receiver starts first (for `0.ts`, no `-ss`) was probed at a +83 ms timestamp shift against the
+restarted ones, which likely pushes a late target past the first restarted segment's audio.
+
+**The fix: a transcoded HLS load starts at most 1 s into its segment** (`HlsSegmentSnap`, applied by
+`loadOnReceiver`): `offset = pos mod segment; start = pos − offset + min(offset, 1 s)`, so a load is
+never later than asked and at most ~2 s earlier (never at 0 unless asked, which the zero rule would
+read as a torn-down receiver). The same snapped start goes into the load and the queue item's start
+time. It applies only when `CastSpecMapper` can name the grid (`CastMediaSpec.hlsSegmentMs`): a
+`TRANSCODE` HLS source with a known runtime whose `TranscodingUrl` carries the server's
+`allowVideoStreamCopy=false` (a copy is laid out on keyframes, not a grid) and no `Framerate` /
+`MaxFramerate` of its own, and whose video stream has a known frame rate
+(`RemotePlaybackMediaSource.videoFrameRate`: `RealFrameRate`, else `ReferenceFrameRate`, else
+`AverageFrameRate`). The segment length is `ceil(nominal × fps) / fps`, nominal 3 s or the URL's
+`SegmentLength`. Direct play, direct stream and an unknown frame rate load exactly where asked. No
+extra request is made before the load. (DECISIONS.md 2026-09-27, "a cast transcode starts early in its
+segment".)
+
+**Reported positions stay honest.** The player's position tracker opens at the requested start, and
+from the receiver's first valid reading on everything — scrubber, progress, `lastValidReading`, the
+stop — follows the receiver, which is at the snapped start: up to ~2 s earlier than asked, and where
+the film really is. Nothing compares a reading with the requested start.
+
+**Not snapped: seeks.** An app-initiated seek while casting a transcode goes to the receiver as asked.
+No seek was measured stalling (the two measured seeks were the recoveries, landing early in their
+segments), and a seek inside the encoded range does not restart ffmpeg. **Follow-up:** a device walk
+seeking far ahead (past the encoded range) to a position late in a segment; if it stalls, apply the
+same snap in `CastPlayerHandle.seekTo` for a spec with `hlsSegmentMs`.
 
 ## The subtitle profile: WebVTT and nothing else
 
@@ -463,6 +501,9 @@ own rule is that a rule belongs there only when it was shown to be missing.
 | File | What it pins |
 |---|---|
 | `cast/CastSpecMapperTest` | The three things a cast session can get wrong invisibly: a token on the media URL and on every subtitle URL (and idempotence where the server already signed one) — and **not** on the poster, which needs none (audit CAST-06); an `external:<index>` id becoming the Jellyfin stream index the picker speaks, and an unaddressable id dropped rather than invented; the MIME type per play method (mp4 / webm / HLS) and the forced `text/vtt`; runtime, resume position and the live-source case; metadata passing through with its words untouched; the server's `allowVideoStreamCopy=false` surviving on the transcode URL the receiver gets. |
+| `cast/HlsSegmentSnapTest` | The segment length at 24, 25, 23.976, 29.97 and 59.94 fps (the 23.976 grid checked against the server's own `-ss` restarts) and none for an unknown rate; the two measured stalls moved to 1 s into their segments; early starts, exact boundaries (0, 1 s, 1 s + 1 ms, the last millisecond, the next segment), the 3.003 s grid used rather than 3.000 s; never later, never ≥ 2 s earlier, never 0; no segment length, no snap. |
+| `cast/CastSpecMapperTest` › a start late in an HLS segment | The segment grid only for a re-encoded HLS transcode with a known frame rate and runtime (not direct play, not without `allowVideoStreamCopy=false`, not with a URL frame rate), `SegmentLength` honoured; a transcode load late in a segment carries the snapped start in both the player's position and the queue item; an early transcode start and a direct-play start load where asked. |
+| `resolve/PlaybackInfoResolverFrameRateTest` | The source's `videoFrameRate` is the video stream's `RealFrameRate`, else its average; none when nothing plausible is reported (0, an average of 1000 fps, no video stream). |
 | `cast/CastMetadataHolderTest` | Published metadata read back under its own id, nothing under another's, replacement when the queue moves on, and case-insensitive UUIDs. |
 | `cast/CastDeviceStateTest` | The `CastState` int → `CastDeviceState` table, including the unknown-code case. |
 | `cast/CastSessionCoordinatorTest` | Connect → routing flip + status; disconnect → stop report, `stopTranscoding` and the flip back; the detached ticker starting only when nobody is attached, and stopping when a screen takes over. A dropped item: the grace period respected (nothing at 9.9 s, nothing if the item comes back), the detached stop report sent once with the last held reading and the ticker cancelled, no second report when the session later ends, the attached screen told instead, the host read at the end of the grace period. Suspension published, cleared by the resume without re-running the transfer, ignored with nothing connected. |

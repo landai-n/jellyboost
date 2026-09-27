@@ -72,6 +72,7 @@ import dev.jellyboost.core.ui.theme.LocalHazeState
 import dev.jellyboost.player.cast.CastingItem
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import dev.jellyboost.player.R as PlayerR
 
 /**
  * The app's outer frame: the [JellyfinNavHost] with the app's floating chrome drawn *over* it.
@@ -173,6 +174,7 @@ internal fun AppScaffold(
         )
 
     MusicMessageEffect(snackbarHostState = snackbarHostState)
+    CastingStoppedEffect(casting = casting, onPlayer = onPlayer, snackbarHostState = snackbarHostState)
 
     // The network may well have changed while nothing was listening.
     LifecycleResumeEffect(Unit) {
@@ -449,6 +451,36 @@ private fun MusicMessageEffect(snackbarHostState: SnackbarHostState) {
                     is MusicMessage.RadioFailed -> radioFailed.format(message.itemName)
                 }
             snackbarHostState.showSnackbar(message = text, duration = SnackbarDuration.Short)
+        }
+    }
+}
+
+/**
+ * Says so when the casting bar goes away on its own ([castingStopped]): the snackbar host is a polite
+ * live region, so TalkBack reads "Playback stopped on <device>" where the bar used to be. The player
+ * screen's own copy of the same notice, reused.
+ *
+ * The previous item is kept here, at the scaffold's lifetime, not in the bar's `AnimatedVisibility`;
+ * and the snackbar runs in this composable's scope rather than the effect's, so the next item arriving
+ * (a new cast, a second later) does not cut the notice short.
+ */
+@Composable
+private fun CastingStoppedEffect(
+    casting: CastingItem?,
+    onPlayer: Boolean,
+    snackbarHostState: SnackbarHostState,
+) {
+    val stoppedOn = stringResource(PlayerR.string.player_message_cast_stopped)
+    val unnamed = stringResource(PlayerR.string.player_cast_device_unnamed)
+    val currentOnPlayer by rememberUpdatedState(onPlayer)
+    val previous = remember { mutableStateOf(casting) }
+    val scope = rememberCoroutineScope()
+    LaunchedEffect(casting) {
+        val stopped = castingStopped(previous.value, casting, currentOnPlayer)
+        previous.value = casting
+        if (stopped != null) {
+            val text = stoppedOn.format(stopped.deviceName ?: unnamed)
+            scope.launch { snackbarHostState.showSnackbar(message = text, duration = SnackbarDuration.Short) }
         }
     }
 }

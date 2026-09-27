@@ -132,19 +132,61 @@ internal fun showsCastingBar(
     onNowPlaying: Boolean,
 ): Boolean = casting != null && !onPlayer && !onNowPlaying
 
+/**
+ * The casting bar went away and the user did not send it: what to announce, politely, naming the
+ * device it was on. Without it the bar slides out in silence and a TalkBack user loses the film.
+ *
+ * @property deviceName `null` when the framework never named the receiver; the copy says "your TV".
+ */
+internal data class CastingStopped(
+    val deviceName: String?,
+)
+
+/**
+ * `non-null → null` of [CastNowPlaying][dev.jellyboost.player.cast.CastNowPlaying]'s item is the
+ * receiver dropping the film (stopped from the television, or left idle) or the cast session ending.
+ * **The one silent exit is the player route**: opening the player — from the bar, the notification, or
+ * any other film — attaches a screen, which clears the item because that screen is now the remote
+ * control. A route change alone (the item still non-`null`) is not an exit at all.
+ *
+ * @param onPlayer whether the player route is on top *now*: it is by the time a screen it hosts attaches.
+ */
+internal fun castingStopped(
+    previous: CastingItem?,
+    current: CastingItem?,
+    onPlayer: Boolean,
+): CastingStopped? = if (previous != null && current == null && !onPlayer) CastingStopped(previous.deviceName) else null
+
 /** What the casting bar's one button does next — [MiniPlayer]'s transport rule, and the player's. */
-internal enum class CastingBarAction { PLAY, PAUSE }
+internal enum class CastingBarAction {
+    PLAY,
+    PAUSE,
+
+    /**
+     * Drawn and spoken as Play, but the tap **opens the player** instead of toggling: the receiver has let
+     * go of the item ([CastingItem.receiverLetGo]) and holds another sender's media or nothing, which the
+     * coordinator refuses to pause or play. The player then sends the film back from the bar's position,
+     * as the player's own Play does in the same window.
+     */
+    OPEN_PLAYER,
+}
 
 /**
  * **The label is the tap's own rule** ([tapPlays], which the toggle runs): a receiver settled paused
  * under a stale `playWhenReady = true` is played by the tap, so the button says Play. **Buffering keeps
  * a Pause action**, exactly as the player's transport does: buffering means waiting while meaning to
  * play, so the tap that answers it is Pause. Reads the receiver's intent, never a snapshot, which is
- * all zeroes for seconds after every load.
+ * all zeroes for seconds after every load. A receiver letting go of the item overrides all of it:
+ * its intent is no longer about our film ([CastingBarAction.OPEN_PLAYER]).
  */
 internal fun castingBarAction(
     playWhenReady: Boolean,
     isBuffering: Boolean,
     isSettledPaused: Boolean = false,
+    receiverLetGo: Boolean = false,
 ): CastingBarAction =
-    if (isBuffering || !tapPlays(playWhenReady, isSettledPaused)) CastingBarAction.PAUSE else CastingBarAction.PLAY
+    when {
+        receiverLetGo -> CastingBarAction.OPEN_PLAYER
+        isBuffering || !tapPlays(playWhenReady, isSettledPaused) -> CastingBarAction.PAUSE
+        else -> CastingBarAction.PLAY
+    }

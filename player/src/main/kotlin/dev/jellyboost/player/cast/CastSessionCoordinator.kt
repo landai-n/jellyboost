@@ -232,12 +232,21 @@ class CastSessionCoordinator
         internal val receiverSettledPaused: Boolean get() = routing.isSettledPaused
 
         /**
-         * The casting bar's play/pause. Acts only for a detached source: with a screen attached the
-         * transport is the screen's, and with nothing held there is nothing of ours to pause. The
-         * decision itself is [togglePlayWhenReady], the player screen's rule too.
+         * `true` between a receiver letting go of the item ([PlayerEvent.RemoteItemMissing]) and the grace
+         * period either deciding it is gone or seeing it come back: the receiver then holds another
+         * sender's media, or nothing. What the casting bar labels Play and answers by reopening the player.
+         */
+        internal val isLosingItem: Boolean get() = itemLostJob != null
+
+        /**
+         * The casting bar's play/pause. Acts only for a detached source the receiver still holds: with a
+         * screen attached the transport is the screen's, with nothing held there is nothing of ours to
+         * pause, and inside the grace period ([isLosingItem]) the receiver's intent is someone else's —
+         * [heldSourceFor]'s rule too. The decision itself is [togglePlayWhenReady], the player screen's.
          */
         internal fun toggleDetachedPlayback() {
             if (host != null || detachedSource == null || !isCasting) return
+            if (isLosingItem) return
             routing.togglePlayWhenReady()
         }
 

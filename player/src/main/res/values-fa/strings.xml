@@ -136,6 +136,7 @@
     <string name="player_message_cast_left_syncplay">برای پخش روی %1$s گروه SyncPlay ترک شد.</string>
     <string name="player_message_cast_failed">پخش آن روی %1$s ممکن نبود.</string>
     <string name="player_message_cast_stopped">پخش روی %1$s متوقف شد.</string>
+    <string name="player_message_cast_finished">پخش روی %1$s به پایان رسید.</string>
 
     <string name="player_casting_to">در حال پخش روی %1$s</string>
     <string name="player_cast_reconnecting">در حال اتصال دوباره به %1$s…</string>

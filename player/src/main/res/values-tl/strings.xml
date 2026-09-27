@@ -120,6 +120,7 @@
     <string name="player_message_cast_left_syncplay">Umalis sa grupo ng SyncPlay para mag-cast sa %1$s.</string>
     <string name="player_message_cast_failed">Hindi ma-play iyon sa %1$s.</string>
     <string name="player_message_cast_stopped">Huminto ang pag-play sa %1$s.</string>
+    <string name="player_message_cast_finished">Natapos ang pag-play sa %1$s.</string>
     <string name="player_casting_to">Nagka-cast sa %1$s</string>
     <string name="player_cast_reconnecting">Muling kumokonekta sa %1$s…</string>
 

@@ -136,6 +136,7 @@
     <string name="player_message_cast_left_syncplay">%1$s ਉੱਤੇ ਕਾਸਟ ਕਰਨ ਲਈ SyncPlay ਗਰੁੱਪ ਛੱਡ ਦਿੱਤਾ।</string>
     <string name="player_message_cast_failed">ਉਹ %1$s ਉੱਤੇ ਨਹੀਂ ਚਲਾਇਆ ਜਾ ਸਕਿਆ।</string>
     <string name="player_message_cast_stopped">%1$s ਉੱਤੇ ਪਲੇਬੈਕ ਰੁਕ ਗਿਆ।</string>
+    <string name="player_message_cast_finished">%1$s ਉੱਤੇ ਪਲੇਬੈਕ ਖ਼ਤਮ ਹੋ ਗਿਆ।</string>
 
     <string name="player_casting_to">%1$s ਉੱਤੇ ਕਾਸਟ ਹੋ ਰਿਹਾ ਹੈ</string>
     <string name="player_cast_reconnecting">%1$s ਨਾਲ ਮੁੜ ਕਨੈਕਟ ਹੋ ਰਿਹਾ ਹੈ…</string>

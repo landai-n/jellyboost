@@ -115,6 +115,7 @@
     <string name="player_message_cast_left_syncplay">Đã rời nhóm SyncPlay để truyền tới %1$s.</string>
     <string name="player_message_cast_failed">Không thể phát nội dung đó trên %1$s.</string>
     <string name="player_message_cast_stopped">Đã dừng phát trên %1$s.</string>
+    <string name="player_message_cast_finished">Đã phát xong trên %1$s.</string>
     <string name="player_casting_to">Đang truyền tới %1$s</string>
     <string name="player_cast_reconnecting">Đang kết nối lại với %1$s…</string>
 

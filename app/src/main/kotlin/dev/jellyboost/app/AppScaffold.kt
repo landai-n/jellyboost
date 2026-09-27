@@ -69,6 +69,7 @@ import dev.jellyboost.core.ui.theme.JellyfinGradients
 import dev.jellyboost.core.ui.theme.LocalAppChromePadding
 import dev.jellyboost.core.ui.theme.LocalChromeBackdrop
 import dev.jellyboost.core.ui.theme.LocalHazeState
+import dev.jellyboost.player.cast.CastExitReason
 import dev.jellyboost.player.cast.CastingItem
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -174,7 +175,12 @@ internal fun AppScaffold(
         )
 
     MusicMessageEffect(snackbarHostState = snackbarHostState)
-    CastingStoppedEffect(casting = casting, onPlayer = onPlayer, snackbarHostState = snackbarHostState)
+    CastingStoppedEffect(
+        casting = casting,
+        onPlayer = onPlayer,
+        lastExitReason = castingViewModel::lastExitReason,
+        snackbarHostState = snackbarHostState,
+    )
 
     // The network may well have changed while nothing was listening.
     LifecycleResumeEffect(Unit) {
@@ -457,29 +463,38 @@ private fun MusicMessageEffect(snackbarHostState: SnackbarHostState) {
 
 /**
  * Says so when the casting bar goes away on its own ([castingStopped]): the snackbar host is a polite
- * live region, so TalkBack reads "Playback stopped on <device>" where the bar used to be. The player
- * screen's own copy of the same notice, reused.
+ * live region, so TalkBack reads "Playback stopped on <device>" where the bar used to be, or
+ * "Finished on <device>" when the receiver played the film to its end rather than dropping it. The
+ * "stopped" wording is the player screen's own copy of the same notice, reused; "finished" has no
+ * screen-attached counterpart, since a film that ends with a screen open advances to up-next instead.
  *
  * The previous item is kept here, at the scaffold's lifetime, not in the bar's `AnimatedVisibility`;
  * and the snackbar runs in this composable's scope rather than the effect's, so the next item arriving
  * (a new cast, a second later) does not cut the notice short.
+ *
+ * @param lastExitReason [CastingBarViewModel.lastExitReason], read fresh inside the effect rather than
+ *   collected: it only matters at the instant [casting] turns `null`, and the coordinator sets it,
+ *   synchronously, in the very call that clears the item behind that transition.
  */
 @Composable
 private fun CastingStoppedEffect(
     casting: CastingItem?,
     onPlayer: Boolean,
+    lastExitReason: () -> CastExitReason,
     snackbarHostState: SnackbarHostState,
 ) {
     val stoppedOn = stringResource(PlayerR.string.player_message_cast_stopped)
+    val finishedOn = stringResource(PlayerR.string.player_message_cast_finished)
     val unnamed = stringResource(PlayerR.string.player_cast_device_unnamed)
     val currentOnPlayer by rememberUpdatedState(onPlayer)
     val previous = remember { mutableStateOf(casting) }
     val scope = rememberCoroutineScope()
     LaunchedEffect(casting) {
-        val stopped = castingStopped(previous.value, casting, currentOnPlayer)
+        val stopped = castingStopped(previous.value, casting, currentOnPlayer, lastExitReason())
         previous.value = casting
         if (stopped != null) {
-            val text = stoppedOn.format(stopped.deviceName ?: unnamed)
+            val template = if (stopped.reason == CastExitReason.FINISHED) finishedOn else stoppedOn
+            val text = template.format(stopped.deviceName ?: unnamed)
             scope.launch { snackbarHostState.showSnackbar(message = text, duration = SnackbarDuration.Short) }
         }
     }

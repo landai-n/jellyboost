@@ -120,6 +120,7 @@
     <string name="player_message_cast_left_syncplay">Saíches do grupo SyncPlay para emitir a %1$s.</string>
     <string name="player_message_cast_failed">Non foi posible reproducir iso en %1$s.</string>
     <string name="player_message_cast_stopped">Detívose a reprodución en %1$s.</string>
+    <string name="player_message_cast_finished">Rematou a reprodución en %1$s.</string>
     <string name="player_casting_to">Emitindo a %1$s</string>
     <string name="player_cast_reconnecting">Reconectando con %1$s…</string>
 

@@ -136,6 +136,7 @@
     <string name="player_message_cast_left_syncplay">%1$s рүү дамжуулахын тулд SyncPlay бүлгээс гарлаа.</string>
     <string name="player_message_cast_failed">%1$s дээр үүнийг тоглуулж чадсангүй.</string>
     <string name="player_message_cast_stopped">%1$s дээр тоглуулалт зогслоо.</string>
+    <string name="player_message_cast_finished">%1$s дээр тоглуулалт дуусав.</string>
 
     <string name="player_casting_to">%1$s рүү дамжуулж байна</string>
     <string name="player_cast_reconnecting">%1$s руу дахин холбогдож байна…</string>

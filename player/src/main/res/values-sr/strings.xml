@@ -141,6 +141,7 @@
     <string name="player_message_cast_left_syncplay">Напустили сте SyncPlay групу да бисте пребацили на %1$s.</string>
     <string name="player_message_cast_failed">Није могуће пустити то на %1$s.</string>
     <string name="player_message_cast_stopped">Репродукција на %1$s је заустављена.</string>
+    <string name="player_message_cast_finished">Репродукција на %1$s је завршена.</string>
 
     <string name="player_casting_to">Пребацивање на %1$s</string>
     <string name="player_cast_reconnecting">Поновно повезивање са %1$s…</string>

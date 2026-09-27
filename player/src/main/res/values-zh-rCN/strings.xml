@@ -131,6 +131,7 @@
     <string name="player_message_cast_left_syncplay">已离开 SyncPlay 群组，投放到 %1$s。</string>
     <string name="player_message_cast_failed">无法在 %1$s 上播放该内容。</string>
     <string name="player_message_cast_stopped">%1$s 上的播放已停止。</string>
+    <string name="player_message_cast_finished">%1$s 上的播放已结束。</string>
 
     <string name="player_casting_to">正在投放到 %1$s</string>
     <string name="player_cast_reconnecting">正在重新连接到 %1$s…</string>

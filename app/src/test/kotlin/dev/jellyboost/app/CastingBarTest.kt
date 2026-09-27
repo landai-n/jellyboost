@@ -4,6 +4,7 @@ import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.common.music.MusicPlaybackState
 import dev.jellyboost.core.common.music.MusicRepeatMode
+import dev.jellyboost.player.cast.CastExitReason
 import dev.jellyboost.player.cast.CastingItem
 import dev.jellyboost.player.session.tapPlays
 import io.kotest.matchers.shouldBe
@@ -130,23 +131,39 @@ class CastingBarActionTest {
 
 class CastingStoppedTest {
     @Test
-    @DisplayName("the television dropping the film, or the session ending, is announced with the device")
+    @DisplayName("the television dropping the film, or the session ending, is announced with the device, as a stop")
     fun announcedWhenTheItemGoes() {
         castingStopped(previous = CASTING, current = null, onPlayer = false) shouldBe
-            CastingStopped(deviceName = "Living Room TV")
+            CastingStopped(deviceName = "Living Room TV", reason = CastExitReason.STOPPED)
+    }
+
+    @Test
+    @DisplayName("the default reason, with none named, is a stop — every stop site passes STOPPED explicitly")
+    fun defaultsToStopped() {
+        castingStopped(previous = CASTING, current = null, onPlayer = false) shouldBe
+            castingStopped(previous = CASTING, current = null, onPlayer = false, reason = CastExitReason.STOPPED)
+    }
+
+    @Test
+    @DisplayName("a film the receiver finished on its own is announced as finished, not stopped")
+    fun announcedAsFinished() {
+        castingStopped(previous = CASTING, current = null, onPlayer = false, reason = CastExitReason.FINISHED) shouldBe
+            CastingStopped(deviceName = "Living Room TV", reason = CastExitReason.FINISHED)
     }
 
     @Test
     @DisplayName("an unnamed receiver is still announced; the copy names it generically")
     fun unnamedDevice() {
         castingStopped(previous = CASTING.copy(deviceName = null), current = null, onPlayer = false) shouldBe
-            CastingStopped(deviceName = null)
+            CastingStopped(deviceName = null, reason = CastExitReason.STOPPED)
     }
 
     @Test
     @DisplayName("opening the player takes the bar away silently: that screen is now the remote control")
     fun silentWhenThePlayerOpens() {
         castingStopped(previous = CASTING, current = null, onPlayer = true) shouldBe null
+        castingStopped(previous = CASTING, current = null, onPlayer = true, reason = CastExitReason.FINISHED) shouldBe
+            null
     }
 
     @Test

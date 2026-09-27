@@ -48,6 +48,7 @@ import dev.jellyboost.player.session.PlaybackSessionController
 import dev.jellyboost.player.session.PlayerEvent
 import dev.jellyboost.player.session.PlayerHandle
 import dev.jellyboost.player.session.SessionOpenResult
+import dev.jellyboost.player.session.togglePlayWhenReady
 import dev.jellyboost.player.syncplay.SyncPlayController
 import dev.jellyboost.player.syncplay.SyncPlayHostSnapshot
 import dev.jellyboost.player.syncplay.SyncPlayLocalSession
@@ -577,12 +578,13 @@ internal class PlayerViewModel
          * Reverses the player's **intent** ([PlayerHandle.playWhenReady]), never a snapshot: a player
          * buffering toward play is not playing, yet a tap on it means "pause", and a receiver's
          * snapshot is invalid (all zeroes) for seconds after every load — reading `isPlaying` there
-         * turned every pause into a play.
+         * turned every pause into a play. The one exception, a receiver settled paused under a stale
+         * intent, is [togglePlayWhenReady]'s — the casting bar applies the same rule.
          */
         internal fun togglePlayPause() {
             if (syncPlay.isInGroup) return syncPlay.requestPlayPause()
             session?.takeIf { it.castItemLostAt != null }?.let { return resendLostCastItem(it) }
-            if (playerHandle.playWhenReady) playerHandle.pause() else playerHandle.play()
+            playerHandle.togglePlayWhenReady()
         }
 
         /**

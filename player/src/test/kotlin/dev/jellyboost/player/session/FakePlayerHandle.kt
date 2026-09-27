@@ -86,9 +86,16 @@ internal class FakePlayerHandle : PlayerHandle {
         this.playWhenReady = playWhenReady
     }
 
+    /**
+     * Writable so a test can be a receiver left paused under a masked `playWhenReady = true`;
+     * cleared by [play], as a receiver that received the play no longer is.
+     */
+    override var isSettledPaused: Boolean = false
+
     override fun play() {
         playCount++
         playWhenReady = true
+        isSettledPaused = false
         snapshot = snapshot.copy(isPlaying = true)
     }
 

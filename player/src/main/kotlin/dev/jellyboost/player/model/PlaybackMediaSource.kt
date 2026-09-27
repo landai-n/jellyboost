@@ -139,6 +139,29 @@ internal data class LocalPlaybackMediaSource(
 }
 
 /**
+ * Whether [other] is the same negotiated **load** as this source: same item, same media source, same
+ * play session (for a file on disk, the same file). The selected tracks are deliberately left out: they
+ * change *in place* on the load a player already holds ([PlaybackMediaSource.withSelectedAudio] and
+ * [PlaybackMediaSource.withSelectedSubtitle] return copies), while every re-negotiation is a new
+ * `PlaybackInfo` answer with a new play session. What the cast coordinator compares a held source with
+ * the source the receiver was loaded with: identity broke at the first in-place track change.
+ */
+internal fun PlaybackMediaSource.isSameLoadAs(other: PlaybackMediaSource?): Boolean =
+    when (this) {
+        is RemotePlaybackMediaSource ->
+            other is RemotePlaybackMediaSource &&
+                itemId == other.itemId &&
+                mediaSourceId == other.mediaSourceId &&
+                playSessionId == other.playSessionId
+
+        is LocalPlaybackMediaSource ->
+            other is LocalPlaybackMediaSource &&
+                itemId == other.itemId &&
+                mediaSourceId == other.mediaSourceId &&
+                mediaUri == other.mediaUri
+    }
+
+/**
  * Online, a downloaded item offers every track of the source — one the file lacks is satisfied by
  * streaming it (`PlaybackResolveRequest.forceRemote`); offline, only the playable subset.
  */

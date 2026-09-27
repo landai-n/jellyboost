@@ -21,6 +21,7 @@ import dev.jellyboost.core.common.Routes
 import dev.jellyboost.core.common.music.MusicPlaybackState
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.player.cast.CastingItem
+import dev.jellyboost.player.session.tapPlays
 
 // The sizes live here, not inside the two bar composables, because `AppScaffold` builds
 // `LocalAppChromePadding` from them and a screen's first row rests at the edge of the glass only
@@ -135,11 +136,15 @@ internal fun showsCastingBar(
 internal enum class CastingBarAction { PLAY, PAUSE }
 
 /**
- * **Buffering keeps a Pause action**, exactly as the player's transport does: buffering means waiting
- * while meaning to play, so the tap that answers it is Pause. Reads the receiver's intent, never a
- * snapshot, which is all zeroes for seconds after every load.
+ * **The label is the tap's own rule** ([tapPlays], which the toggle runs): a receiver settled paused
+ * under a stale `playWhenReady = true` is played by the tap, so the button says Play. **Buffering keeps
+ * a Pause action**, exactly as the player's transport does: buffering means waiting while meaning to
+ * play, so the tap that answers it is Pause. Reads the receiver's intent, never a snapshot, which is
+ * all zeroes for seconds after every load.
  */
 internal fun castingBarAction(
     playWhenReady: Boolean,
     isBuffering: Boolean,
-): CastingBarAction = if (playWhenReady || isBuffering) CastingBarAction.PAUSE else CastingBarAction.PLAY
+    isSettledPaused: Boolean = false,
+): CastingBarAction =
+    if (isBuffering || !tapPlays(playWhenReady, isSettledPaused)) CastingBarAction.PAUSE else CastingBarAction.PLAY

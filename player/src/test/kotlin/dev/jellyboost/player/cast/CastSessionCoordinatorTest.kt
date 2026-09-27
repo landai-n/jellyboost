@@ -249,14 +249,17 @@ class CastSessionCoordinatorTest {
         override var castSource: PlaybackMediaSource?,
     ) : CastPlaybackHost {
         val started = mutableListOf<Pair<String?, PlaybackSnapshot>>()
+        val startedMeaningToPlay = mutableListOf<Boolean>()
         val ended = mutableListOf<PlaybackSnapshot>()
         val lost = mutableListOf<PlaybackSnapshot>()
 
         override fun onCastStarted(
             deviceName: String?,
             from: PlaybackSnapshot,
+            playWhenReady: Boolean,
         ) {
             started += deviceName to from
+            startedMeaningToPlay += playWhenReady
         }
 
         override fun onCastEnded(at: PlaybackSnapshot) {
@@ -279,6 +282,18 @@ class CastSessionCoordinatorTest {
 
         // A screen that took its own snapshot would be asking a cast player that has not started.
         recording.started shouldBe listOf("Living Room TV" to onThePhone)
+    }
+
+    @Test
+    fun `the screen is told the phone meant to play, even while it was buffering`() {
+        val recording = RecordingHost(source)
+        coordinator.attachHost(recording)
+        local.playWhenReady = true
+        local.snapshot = PlaybackSnapshot(positionMs = 600_000L, isPlaying = false)
+
+        framework.onSessionStarted("Living Room TV")
+
+        recording.startedMeaningToPlay shouldBe listOf(true)
     }
 
     @Test
@@ -672,12 +687,61 @@ class CastSessionCoordinatorTest {
     }
 
     @Test
-    fun `a zero reading after a later valid one is not the receiver's position, for the ticker or the bar`() {
+    fun `a restart from the television's remote while detached is where the film is, for the ticker and the bar`() {
         castingDetachedAt(ON_THE_TELEVISION)
-        cast.snapshot = PlaybackSnapshot(positionMs = 0L, isValid = true)
+        val restarted = PlaybackSnapshot(positionMs = 0L, isPlaying = true)
+        cast.snapshot = restarted
+
+        // The zero rule is the session end's alone: a live receiver's zero is a real restart.
+        coordinator.readReceiver() shouldBe restarted
+        coordinator.lastHeld shouldBe restarted
+    }
+
+    // ---- another film loaded on the receiver before its screen attaches ------------------------------
+
+    @Test
+    fun `a reading of another film loaded on the receiver is not the detached one's`() {
+        castingDetachedAt(ON_THE_TELEVISION)
+        cast.preparedSource = source
+        // A new screen's open has loaded another film; it has not attached yet.
+        cast.preparedSource = PlayerFixtures.remoteSource().copy(itemId = OTHER_ITEM)
+        cast.snapshot = ON_THE_TELEVISION.copy(positionMs = 300_000L)
 
         coordinator.readReceiver().isValid shouldBe false
         coordinator.lastHeld shouldBe ON_THE_TELEVISION
+    }
+
+    @Test
+    fun `the orphan's stop is not taken from the film that replaced it on the receiver`() {
+        castingDetachedAt(ON_THE_TELEVISION)
+        val other = PlayerFixtures.remoteSource().copy(itemId = OTHER_ITEM)
+        cast.preparedSource = other
+        cast.snapshot = ON_THE_TELEVISION.copy(positionMs = 300_000L)
+        coordinator.readReceiver()
+
+        coordinator.attachHost(screenFor(other))
+
+        verify(exactly = 1) { reporter.reportStopDetached(source, ON_THE_TELEVISION) }
+    }
+
+    @Test
+    fun `a receiver buffering another film does not hold the detached one`() {
+        castingDetachedAt(ON_THE_TELEVISION)
+        cast.preparedSource = PlayerFixtures.remoteSource().copy(itemId = OTHER_ITEM)
+        cast.snapshot = PlaybackSnapshot(isValid = false)
+        receiverSays(PlayerEvent.Buffering(true))
+
+        coordinator.heldSourceFor(source.itemId) shouldBe null
+    }
+
+    @Test
+    fun `the very source the receiver was loaded with is still read as the detached one`() {
+        castingDetachedAt(ON_THE_TELEVISION)
+        cast.preparedSource = source
+        val later = ON_THE_TELEVISION.copy(positionMs = 960_000L)
+        cast.snapshot = later
+
+        coordinator.readReceiver() shouldBe later
     }
 
     @Test

@@ -37,6 +37,22 @@ Known issues:
 
 ## Current milestone: M14 — Breadth & theming (approved 2026-08-28; tracks 4 and 6 landed, gate green; Settings hub landed on `m14/settings-hub`)
 
+**Cast: the wave's review fixes (2026-09-27, worktree branch; device walk owed).** Five fixes from the
+adversarial review of the whole cast wave. (1) The coordinator takes a receiver reading as the detached
+film's only when the receiver was loaded with that very source, so a new screen's film can no longer
+lend its position to the one it replaced (`PlayerHandle.preparedSource`). (2) The zero rule applies only
+to receiver readings and the other player's, so a SyncPlay or media-session seek to 0 is reported as
+0. (3) Re-negotiations and the handover load with the player's intent, not `snapshot().isPlaying`, so a
+quality change during a receiver's invalid window no longer reloads it paused. (4) The casting bar's and
+the player's play/pause label follow the tap's rule (`tapPlays`), and the return from "Reconnecting…"
+is announced. (5) The queue item's autoplay is pinned end to end. DECISIONS.md 2026-09-27 (review entry,
+and the zero-rule entry amended).
+- **Device walk owed:** with a film on the television and the bar showing, open a *different* film and
+  check the first one's stop on the dashboard is at its own position. Change quality while casting
+  right after a load: the television keeps playing. In a SyncPlay group, seek the group to 0:00 and
+  leave: the resume position is 0. Drop Wi-Fi briefly while casting with TalkBack on: both
+  "Reconnecting…" and the return to "Casting to …" are spoken. Run `CastingBarSemanticsTest`.
+
 **Cast: the resume-position wipe, second fix, from the device walk (2026-09-27, worktree branch;
 device walk owed).** The first fix (below) was on the device and the wipe still happened: a reattached
 film followed to 663 s came home "at 0 ticks" and its stop wrote 0 (and PlayCount went up by one). The

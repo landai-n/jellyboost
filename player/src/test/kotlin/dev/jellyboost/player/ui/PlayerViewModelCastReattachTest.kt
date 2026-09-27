@@ -13,6 +13,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.slot
 import io.mockk.verify
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.test.TestScope
@@ -295,6 +296,36 @@ internal class PlayerViewModelCastReattachTest : PlayerViewModelCastFixture() {
             verify(exactly = 1) { reporter.reportStopDetached(source, any()) }
         }
 
+    /**
+     * The window the review found: the new screen's open has already loaded the other film on the
+     * receiver, but `publish` is still suspended in the start report, so `cast.attach()` has not run and
+     * the coordinator still holds the old source. The casting bar's poll (and the detached ticker) read
+     * the receiver there — and must not take the other film's position as the held one's.
+     */
+    @Test
+    fun `another film loaded before the new screen attaches cannot lend its position to the one it replaces`() =
+        runTest(dispatcher) {
+            leftPlayingOnTheTelevision()
+            val other = source.copy(itemId = OTHER_ITEM, playSessionId = "other-session")
+            coEvery { resolver.resolve(any()) } returns AppResult.Success(other)
+            val startReported = CompletableDeferred<Unit>()
+            coEvery { reporter.reportStart(any(), any()) } coAnswers { startReported.await() }
+
+            castViewModel(navArgs(PlayerViewModel.ARG_ITEM_ID to OTHER_ITEM.toString()))
+            advanceUntilIdle()
+            castHandle.prepared.size shouldBe 1
+            castHandle.snapshot = OTHER_FILM_READING
+            val barReading = coordinator.readReceiver()
+            startReported.complete(Unit)
+            advanceUntilIdle()
+
+            barReading.isValid shouldBe false
+            verify(
+                exactly = 1,
+            ) { reporter.reportStopDetached(source, ON_THE_TELEVISION.copy(durationMs = TWO_HOURS_MS)) }
+            verify(exactly = 0) { reporter.reportStopDetached(source, OTHER_FILM_READING) }
+        }
+
     @Test
     fun `a television that has let go of the film is not reattached to, and its old session is closed`() =
         runTest(dispatcher) {
@@ -322,6 +353,9 @@ internal class PlayerViewModelCastReattachTest : PlayerViewModelCastFixture() {
 
         /** About 27:20, and playing: where the television had got to when the session was disconnected. */
         val AT_27_20 = PlaybackSnapshot(positionMs = 1_640_000L, durationMs = 7_200_000L, isPlaying = true)
+
+        /** Five minutes into the *other* film the new screen loaded. */
+        val OTHER_FILM_READING = PlaybackSnapshot(positionMs = 300_000L, durationMs = 5_400_000L, isPlaying = true)
 
         /** 663 s, where the television was on the device walk when the session was disconnected. */
         val AT_663 = PlaybackSnapshot(positionMs = 663_000L, durationMs = 7_200_000L, isPlaying = true)

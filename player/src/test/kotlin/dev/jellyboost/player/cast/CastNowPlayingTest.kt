@@ -7,6 +7,7 @@ import dev.jellyboost.player.report.PlaybackReporter
 import dev.jellyboost.player.session.FakePlayerHandle
 import dev.jellyboost.player.session.PlayerEvent
 import dev.jellyboost.player.session.RoutingPlayerHandle
+import dev.jellyboost.player.session.tapPlays
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
@@ -172,6 +173,24 @@ class CastNowPlayingTest {
 
             cast.playCount shouldBe 1
             nowPlaying.state.value?.playWhenReady shouldBe true
+        }
+
+    @Test
+    fun `a television settled paused under a stale intent is shown as one the tap plays, and the tap plays it`() =
+        runTest(dispatcher) {
+            leftPlaying()
+            cast.isSettledPaused = true
+            watch()
+            val shown = requireNotNull(nowPlaying.state.value)
+
+            nowPlaying.togglePlayPause()
+            runCurrent()
+
+            shown.isSettledPaused shouldBe true
+            // What the bar labels its button from, and what the tap just did: one rule.
+            tapPlays(shown.playWhenReady, shown.isSettledPaused) shouldBe true
+            cast.playCount shouldBe 1
+            cast.pauseCount shouldBe 0
         }
 
     @Test

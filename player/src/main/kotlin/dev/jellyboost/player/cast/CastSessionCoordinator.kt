@@ -178,7 +178,7 @@ class CastSessionCoordinator
                 reading = reading,
                 isBuffering = buffering,
                 lastValidReading = lastHeldReading,
-            ).takeIf { reading.isValid || buffering }
+            ).takeIf { reading.isValid || (buffering && receiverHoldsDetached()) }
         }
 
         /**
@@ -187,21 +187,39 @@ class CastSessionCoordinator
          * freshest position anyone saw. Main thread only, as every snapshot is.
          */
         internal fun readReceiver(): PlaybackSnapshot {
-            val raw = routing.snapshot()
-            // A zero after a later valid reading is a torn-down receiver (or, once routing has gone home,
-            // the idle local player) — never where the film is. Nothing seeks from the bar, so no zero
-            // after a nonzero reading is the user's.
-            val reading =
-                if (detachedSource != null && raw.contradicts(lastHeldReading)) raw.copy(isValid = false) else raw
+            val reading = detachedReading()
             if (reading.isValid && detachedSource != null) lastHeldReading = reading
             return reading
         }
+
+        /**
+         * The receiver's reading, **invalid unless it is about the detached source**. The cast handle
+         * judges validity against its newest load, and a new screen's open loads its own film there
+         * before it attaches (its `publish` suspends in the start report first): taken at face value, the
+         * bar's poll and the detached ticker would record, and report, that film's position as the held
+         * one's — and the orphan's stop would carry it.
+         */
+        private fun detachedReading(): PlaybackSnapshot {
+            val reading = routing.snapshot()
+            if (detachedSource == null || receiverHoldsDetached()) return reading
+            return reading.copy(isValid = false)
+        }
+
+        /**
+         * Identity, as [attachHost] compares: the very source the receiver was last loaded with. A handle
+         * that tracks no source (`null`) is judged by validity alone.
+         */
+        private fun receiverHoldsDetached(): Boolean =
+            routing.preparedSource.let { it == null || it === detachedSource }
 
         /** The last valid reading for the detached source; `null` when none has been taken. */
         internal val lastHeld: PlaybackSnapshot? get() = lastHeldReading
 
         /** The receiver's intent — what the casting bar's toggle reverses, readable when the snapshot is not. */
         internal val receiverPlayWhenReady: Boolean get() = routing.playWhenReady
+
+        /** The other half of the toggle's rule ([togglePlayWhenReady]): the receiver's own paused state. */
+        internal val receiverSettledPaused: Boolean get() = routing.isSettledPaused
 
         /**
          * The casting bar's play/pause. Acts only for a detached source: with a screen attached the
@@ -267,11 +285,14 @@ class CastSessionCoordinator
                 receiver,
             )
             val handover = routing.snapshot()
+            // The intent, not `handover.isPlaying`: a phone buffering toward play is not playing, and the
+            // receiver is loaded once, with whatever it is told.
+            val wasMeaningToPlay = routing.playWhenReady && !routing.isSettledPaused
             _receiverBuffering.value = false
             status.setConnection(CastConnection.Connected(deviceName, receiver))
             routing.setActive(PlaybackTarget.Cast)
             routing.stopInactive()
-            host?.onCastStarted(deviceName, handover)
+            host?.onCastStarted(deviceName, handover, wasMeaningToPlay)
         }
 
         /**
@@ -289,9 +310,12 @@ class CastSessionCoordinator
          */
         private fun onCastEnded() {
             Timber.i("Cast session ended")
-            // Through [readReceiver], still before routing moves: a torn-down `RemoteCastPlayer` keeps its
-            // timeline, so it can claim our item at zero here; that zero is vetted away.
-            val last = readReceiver()
+            // Still before routing moves. The zero rule applies here and only here: a torn-down
+            // `RemoteCastPlayer` keeps its timeline, so it can claim our item at zero, and no later reading
+            // will correct it. Everywhere else a zero from the receiver (a restart from the television's
+            // remote) is simply where the film is.
+            val raw = detachedReading()
+            val last = if (raw.contradicts(lastHeldReading)) raw.copy(isValid = false) else raw
             status.setConnection(CastConnection.None)
             _receiverBuffering.value = false
             stopTicker()

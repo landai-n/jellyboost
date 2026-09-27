@@ -19,11 +19,14 @@ import java.util.UUID
  *
  * @param currentSource asked rather than held — the ViewModel's `source` is replaced by every
  *   re-negotiation, so a copy taken here would be the one before it.
+ * @param currentReading the session's last valid reading, asked for the same reason.
  */
+@Suppress("LongParameterList") // Two live readers and three transfer edges; a bundle would hide which is which.
 internal class PlayerCastBridge(
     private val status: CastStatusHolder,
     private val coordinator: CastPlaybackCoordinator,
     private val currentSource: () -> PlaybackMediaSource?,
+    private val currentReading: () -> PlaybackSnapshot? = { null },
     private val onStarted: (deviceName: String?, from: PlaybackSnapshot) -> Unit,
     private val onEnded: (at: PlaybackSnapshot) -> Unit,
     private val onItemLost: (lastHeld: PlaybackSnapshot) -> Unit = {},
@@ -35,6 +38,8 @@ internal class PlayerCastBridge(
     val states: Flow<PlayerCastState> = status.connection.map { it.toPlayerState() }.distinctUntilChanged()
 
     override val castSource: PlaybackMediaSource? get() = currentSource()
+
+    override val lastValidReading: PlaybackSnapshot? get() = currentReading()
 
     override fun onCastStarted(
         deviceName: String?,

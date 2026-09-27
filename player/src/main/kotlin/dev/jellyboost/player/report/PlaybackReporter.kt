@@ -129,14 +129,20 @@ internal class PlaybackReporter
          *
          * A stop whose snapshot is not [valid][PlaybackSnapshot.isValid] still closes the session
          * and kills the encoder — both are about the *session* — but carries no position and writes
-         * nothing locally, since the reading is not this source's.
+         * nothing locally, since the reading is not this source's. It is sent **flagged `failed`**:
+         * the server reads a stop without a position as "played to the end" and resets the item's
+         * resume position to zero, while a failed stop leaves the user's data untouched. Callers that
+         * hold a position they can vouch for (the last valid reading) pass that instead.
          */
         suspend fun reportStop(
             source: PlaybackMediaSource,
             snapshot: PlaybackSnapshot,
         ) {
             if (!snapshot.isValid) {
-                source.serverTarget()?.let { sendStopReport(it, positionTicks = null) }
+                // An ended item has no position to lose: the server's "played to the end" is the truth.
+                source.serverTarget()?.let {
+                    sendStopReport(it, positionTicks = null, keepUserData = !snapshot.hasEnded)
+                }
                 stopTranscoding(source)
                 return
             }
@@ -336,9 +342,15 @@ internal class PlaybackReporter
             )
         }
 
+        /**
+         * @param keepUserData sent as `failed`, the only field that stops the server writing the
+         *   user's data at all — a stop with no position is otherwise taken as "played to the end,
+         *   resume at zero".
+         */
         private suspend fun sendStopReport(
             target: ServerReportTarget,
             positionTicks: Long?,
+            keepUserData: Boolean = false,
         ) = runReport("stop") {
             api.reportPlaybackStopped(
                 PlaybackStopInfo(
@@ -347,7 +359,7 @@ internal class PlaybackReporter
                     playSessionId = target.playSessionId,
                     liveStreamId = target.liveStreamId,
                     mediaSourceId = target.mediaSourceId,
-                    failed = false,
+                    failed = keepUserData,
                 ),
             )
         }

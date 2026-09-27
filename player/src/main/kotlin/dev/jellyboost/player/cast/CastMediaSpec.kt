@@ -8,6 +8,8 @@ package dev.jellyboost.player.cast
  * @property contentType required, unlike for ExoPlayer: a receiver does not sniff, and an HLS
  *   playlist offered without `application/x-mpegURL` is fetched as a progressive file and fails.
  * @property durationMs `0` when the server does not know it.
+ * @property autoplay the queue item's autoplay, set from the open's `playWhenReady` so it cannot
+ *   contradict the load request's (which `CastPlayer` takes from its own `playWhenReady`).
  */
 internal data class CastMediaSpec(
     val mediaId: String,
@@ -18,6 +20,7 @@ internal data class CastMediaSpec(
     val startPositionMs: Long,
     val metadata: CastMetadata,
     val tracks: List<CastTrackSpec>,
+    val autoplay: Boolean = true,
 )
 
 internal enum class CastStreamType {

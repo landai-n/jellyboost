@@ -116,15 +116,14 @@ internal class CastPlayerHandle
 
             // The metadata must be published before the open: a receiver is loaded once, and
             // metadata arriving afterwards could only be applied by loading it a second time.
-            val castSpec = specMapper.map(spec, remote, metadata.metadataFor(spec.mediaId))
+            val castSpec =
+                specMapper
+                    .map(spec, remote, metadata.metadataFor(spec.mediaId))
+                    .copy(autoplay = playWhenReady)
             loaded = castSpec
             presence.onLoad()
             Timber.d("Casting %s as %s", castSpec.mediaId, castSpec.contentType)
-            with(player) {
-                setMediaItem(castSpec.toMediaItem(), startPositionMs.coerceAtLeast(0L))
-                this.playWhenReady = playWhenReady
-                prepare()
-            }
+            player.openForCast(castSpec.toMediaItem(), startPositionMs, playWhenReady)
         }
 
         override fun play() {
@@ -181,6 +180,16 @@ internal class CastPlayerHandle
          * flip to "play" just because the receiver's reading is momentarily not ours.
          */
         override val playWhenReady: Boolean get() = castPlayer?.playWhenReady == true
+
+        /**
+         * Read from the receiver's own `PAUSED` status, never from `CastPlayer`: its `isPlaying` is
+         * derived from the masked `playWhenReady` (`STATE_READY` covers both PLAYING and PAUSED), so
+         * it reports playing in exactly the state this exists to detect. `PAUSED` excludes
+         * buffering and loading, which a tap must still answer with pause. Accepted cost: a second
+         * tap landing before the receiver has acknowledged a play resends play instead of pausing.
+         */
+        override val isSettledPaused: Boolean
+            get() = castPlayer != null && remoteMediaClient()?.isPaused == true
 
         private fun CastPlayer.holdsLoadedItem(): Boolean {
             val spec = loaded ?: return false

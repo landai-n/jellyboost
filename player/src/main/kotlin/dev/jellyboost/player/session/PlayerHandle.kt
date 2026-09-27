@@ -61,6 +61,15 @@ internal interface PlayerHandle {
     val playWhenReady: Boolean
 
     /**
+     * `true` only when the player reports **from its own state, not from [playWhenReady]**, that it
+     * has settled paused: neither playing nor buffering. A local player's intent *is* its state, so
+     * the default is `false`. A Cast receiver can disagree with the intent `CastPlayer` masks — a
+     * `play` dropped while a load was in flight leaves `playWhenReady` `true` over a paused
+     * receiver — and this is what [togglePlayWhenReady] breaks that tie with. Main thread only.
+     */
+    val isSettledPaused: Boolean get() = false
+
+    /**
      * @return `false` when the track is absent from the current stream and the caller must re-resolve
      *   — always the case while transcoding: the server sends only the audio track it was asked for.
      */
@@ -101,6 +110,16 @@ internal interface PlayerHandle {
      * order) and must leave the handle usable again: the next session builds a fresh player lazily.
      */
     fun release()
+}
+
+/**
+ * The one play/pause rule, shared by the player screen and the casting bar so the two cannot
+ * disagree: reverse the player's **intent** ([PlayerHandle.playWhenReady]) — except that a player
+ * meaning to play while it reports itself [settled paused][PlayerHandle.isSettledPaused] is sent
+ * `play`. Pausing it would be a no-op, and the button would look dead.
+ */
+internal fun PlayerHandle.togglePlayWhenReady() {
+    if (playWhenReady && !isSettledPaused) pause() else play()
 }
 
 internal sealed interface PlayerEvent {

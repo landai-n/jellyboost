@@ -1,6 +1,9 @@
 package dev.jellyboost.player.cast
 
+import android.net.Uri
+import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
+import androidx.media3.common.Player
 import dev.jellyboost.player.PlayMethod
 import dev.jellyboost.player.PlayerFixtures
 import dev.jellyboost.player.api.StreamUrlFactory
@@ -10,6 +13,11 @@ import dev.jellyboost.player.model.externalSubtitleTrackId
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
+import io.mockk.verifyOrder
 import org.junit.jupiter.api.Test
 import java.util.UUID
 
@@ -245,6 +253,57 @@ class CastSpecMapperTest {
         val spec = mapper.map(itemSpec(), directPlay())
 
         spec.metadata shouldBe CastMetadata()
+    }
+
+    // ---- opening it on the receiver ----------------------------------------------------------------
+
+    @Test
+    fun `a cast open sets playWhenReady before the media item, so the load carries the autoplay`() {
+        // `RemoteCastPlayer.setMediaItems` loads at once with `setAutoplay(getPlayWhenReady())`:
+        // after a receiver left paused, a flag set afterwards loaded the film paused.
+        val player = mockk<Player>(relaxed = true)
+        val item = MediaItem.Builder().setMediaId("film").build()
+
+        player.openForCast(item, startPositionMs = 42_000L, playWhenReady = true)
+
+        verifyOrder {
+            player.playWhenReady = true
+            player.setMediaItem(item, 42_000L)
+            player.prepare()
+        }
+    }
+
+    @Test
+    fun `a negative start position opens from the beginning`() {
+        val player = mockk<Player>(relaxed = true)
+        val item = MediaItem.Builder().setMediaId("film").build()
+
+        player.openForCast(item, startPositionMs = -1L, playWhenReady = false)
+
+        verifyOrder {
+            player.playWhenReady = false
+            player.setMediaItem(item, 0L)
+        }
+    }
+
+    @Test
+    fun `the open's playWhenReady travels to the converter as the queue item's autoplay`() {
+        // `toUri` is an Android stub off a device; the URI itself is not what is under test. The
+        // converter's own `MediaQueueItem` needs Play services, so the pin stops at what it reads.
+        mockkStatic(Uri::class)
+        try {
+            every { Uri.parse(any()) } returns mockk(relaxed = true)
+            val spec = mapper.map(itemSpec(uri = "https://server/Videos/x/stream"), directPlay())
+
+            spec.autoplay shouldBe true
+            val paused = spec.copy(autoplay = false).toMediaItem()
+            val playing = spec.copy(autoplay = true).toMediaItem()
+
+            paused.castSpec()?.autoplay shouldBe false
+            playing.castSpec()?.autoplay shouldBe true
+        } finally {
+            unmockkStatic(Uri::class)
+        }
     }
 
     private fun itemSpec(

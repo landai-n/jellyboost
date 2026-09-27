@@ -679,6 +679,18 @@ class CastSessionCoordinatorTest {
     }
 
     @Test
+    fun `the bar's toggle plays a receiver left paused under a stale play intent, as the screen's does`() {
+        castingDetachedAt(ON_THE_TELEVISION)
+        cast.playWhenReady = true
+        cast.isSettledPaused = true
+
+        coordinator.toggleDetachedPlayback()
+
+        cast.playCount shouldBe 1
+        cast.pauseCount shouldBe 0
+    }
+
+    @Test
     fun `the bar's toggle does nothing while a screen owns the transport`() {
         framework.onSessionStarted("Living Room TV")
         coordinator.attachHost(host)

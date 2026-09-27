@@ -551,6 +551,24 @@ internal class PlayerViewModelCastTest : PlayerViewModelCastFixture() {
         }
 
     @Test
+    fun `a tap on a receiver left paused under a stale play intent plays it, and the next pauses`() =
+        runTest(dispatcher) {
+            val model = castingWithInvalidReading()
+            // The open's play was dropped mid-load: CastPlayer still masks `playWhenReady = true`,
+            // but the receiver reports itself PAUSED. Reversing the intent sent a pause — a no-op.
+            castHandle.isSettledPaused = true
+
+            model.togglePlayPause()
+
+            castHandle.playCount shouldBe 1
+            castHandle.pauseCount shouldBe 0
+
+            model.togglePlayPause()
+
+            castHandle.pauseCount shouldBe 1
+        }
+
+    @Test
     fun `a skip while the reading is invalid moves from the last valid position, not from zero`() =
         runTest(dispatcher) {
             val model = castingWithInvalidReading()

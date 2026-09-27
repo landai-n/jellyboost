@@ -41,9 +41,13 @@ internal sealed interface CastConnection {
      * @property deviceName `null` when the framework has not published one — callers show a generic
      *   "casting" rather than an empty label.
      * @property receiver resolved from the model name once at session start.
+     * @property suspended `true` while the framework has lost the receiver without ending the session
+     *   (a Wi-Fi blip): still casting — the receiver plays on and the session usually resumes — but
+     *   no command reaches it until it does, which the screen says rather than dropping taps silently.
      */
     data class Connected(
         val deviceName: String?,
         val receiver: CastReceiverClass = CastReceiverClass.LEGACY_1080P,
+        val suspended: Boolean = false,
     ) : CastConnection
 }

@@ -145,8 +145,10 @@
     <string name="player_message_cast_transferred">Trenutno predvajano na %1$s.</string>
     <string name="player_message_cast_left_syncplay">Zapustili ste skupino SyncPlay za predvajanje na %1$s.</string>
     <string name="player_message_cast_failed">Predvajanje na %1$s ni uspelo.</string>
+    <string name="player_message_cast_stopped">Predvajanje na %1$s se je ustavilo.</string>
 
     <string name="player_casting_to">Predvajanje na %1$s</string>
+    <string name="player_cast_reconnecting">Vnovično povezovanje z %1$s…</string>
 
     <string name="player_error_server">Strežnik ni mogel začeti predvajanja.</string>
     <string name="player_error_server_with_code">Strežnik ni mogel začeti predvajanja (%1$d).</string>

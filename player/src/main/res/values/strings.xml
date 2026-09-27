@@ -203,12 +203,18 @@
     <string name="player_message_cast_transferred">Now playing on %1$s.</string>
     <string name="player_message_cast_left_syncplay">Left the SyncPlay group to cast to %1$s.</string>
     <string name="player_message_cast_failed">Couldn\'t play that on %1$s.</string>
+    <string name="player_message_cast_stopped">Playback stopped on %1$s.</string>
 
     <!--
       Drawn over the item's artwork, where the video would be, for as long as a
       receiver has the film. Takes the same unnamed-device fallback as the messages above.
     -->
     <string name="player_casting_to">Casting to %1$s</string>
+    <!--
+      Replaces the label above while the Cast session is suspended (a Wi-Fi blip): still
+      casting, but nothing reaches the receiver until the session resumes.
+    -->
+    <string name="player_cast_reconnecting">Reconnecting to %1$s…</string>
 
     <!--
       The player's overrides on the shared failure copy (`AppError.toUiText`). A server that

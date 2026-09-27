@@ -135,8 +135,10 @@
     <string name="player_message_cast_transferred">اب %1$s پر چل رہا ہے۔</string>
     <string name="player_message_cast_left_syncplay">%1$s پر کاسٹ کرنے کے لیے SyncPlay گروپ چھوڑ دیا۔</string>
     <string name="player_message_cast_failed">وہ %1$s پر چلانا ممکن نہیں تھا۔</string>
+    <string name="player_message_cast_stopped">%1$s پر پلے بیک رک گیا۔</string>
 
     <string name="player_casting_to">%1$s پر کاسٹ ہو رہا ہے</string>
+    <string name="player_cast_reconnecting">%1$s سے دوبارہ منسلک ہو رہا ہے…</string>
 
     <string name="player_error_server">سرور پلے بیک شروع نہیں کر سکا۔</string>
     <string name="player_error_server_with_code">سرور پلے بیک شروع نہیں کر سکا (%1$d)۔</string>

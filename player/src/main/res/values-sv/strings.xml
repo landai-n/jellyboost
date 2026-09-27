@@ -135,8 +135,10 @@
     <string name="player_message_cast_transferred">Spelas nu upp på %1$s.</string>
     <string name="player_message_cast_left_syncplay">Lämnade SyncPlay-gruppen för att casta till %1$s.</string>
     <string name="player_message_cast_failed">Kunde inte spela upp det på %1$s.</string>
+    <string name="player_message_cast_stopped">Uppspelningen på %1$s stoppades.</string>
 
     <string name="player_casting_to">Castar till %1$s</string>
+    <string name="player_cast_reconnecting">Återansluter till %1$s…</string>
 
     <string name="player_error_server">Servern kunde inte starta uppspelningen.</string>
     <string name="player_error_server_with_code">Servern kunde inte starta uppspelningen (%1$d).</string>

@@ -180,4 +180,16 @@ class RoutingPlayerHandleTest {
         cast.stopped shouldBe false
         local.stopped shouldBe false
     }
+
+    @Test
+    fun `the play intent is whichever player is actually in charge`() {
+        // The toggle reverses this, so reading the idle player's would pause a playing receiver.
+        local.playWhenReady = true
+        cast.playWhenReady = false
+        handle.playWhenReady shouldBe true
+
+        handle.setActive(PlaybackTarget.Cast)
+
+        handle.playWhenReady shouldBe false
+    }
 }

@@ -119,7 +119,9 @@
     <string name="player_message_cast_transferred">İndi %1$s-də oxudulur.</string>
     <string name="player_message_cast_left_syncplay">%1$s-ə yayımlamaq üçün SyncPlay qrupundan çıxıldı.</string>
     <string name="player_message_cast_failed">Bu %1$s-də oxudula bilmədi.</string>
+    <string name="player_message_cast_stopped">%1$s cihazında oxutma dayandı.</string>
     <string name="player_casting_to">%1$s-ə yayımlanır</string>
+    <string name="player_cast_reconnecting">%1$s ilə yenidən qoşulur…</string>
 
     <string name="player_error_server">Server oxutmanı başlada bilmədi.</string>
     <string name="player_error_server_with_code">Server oxutmanı başlada bilmədi (%1$d).</string>

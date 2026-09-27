@@ -53,6 +53,9 @@ internal class CastPlayerHandle
         /** Permanently `null`, not a "before the first prepare" state — see the class docs. */
         override val player: Player? = null
 
+        /** Fed every reading this handle takes, from callbacks and from [snapshot] alike. */
+        private val presence = RemoteItemPresence(emit = { _events.tryEmit(it) })
+
         /**
          * `forwardVideoSize = false`: `CastPlayer` reports `VideoSize.UNKNOWN` throughout, so
          * forwarding it would overwrite a good aspect ratio with nothing.
@@ -62,6 +65,7 @@ internal class CastPlayerHandle
                 emit = { _events.tryEmit(it) },
                 forwardVideoSize = false,
                 errorLogPrefix = "Cast playback error",
+                afterEvents = { checkPresence() },
             )
 
         /**
@@ -114,6 +118,7 @@ internal class CastPlayerHandle
             // metadata arriving afterwards could only be applied by loading it a second time.
             val castSpec = specMapper.map(spec, remote, metadata.metadataFor(spec.mediaId))
             loaded = castSpec
+            presence.onLoad()
             Timber.d("Casting %s as %s", castSpec.mediaId, castSpec.contentType)
             with(player) {
                 setMediaItem(castSpec.toMediaItem(), startPositionMs.coerceAtLeast(0L))
@@ -143,16 +148,39 @@ internal class CastPlayerHandle
          */
         override fun snapshot(): PlaybackSnapshot {
             val current = castPlayer ?: return PlaybackSnapshot(isValid = false)
-            val ended = current.playbackState == Player.STATE_ENDED
-            if (!ended && !current.holdsLoadedItem()) return PlaybackSnapshot(isValid = false)
+            return current.reading().also { presence.onReading(it, ready = current.isReadyOrEnded()) }
+        }
+
+        /**
+         * Also asked at the end of every callback batch, so a receiver dropping the item is noticed
+         * when it says so rather than at the next progress tick.
+         */
+        private fun checkPresence() {
+            val current = castPlayer ?: return
+            if (loaded == null) return
+            presence.onReading(current.reading(), ready = current.isReadyOrEnded())
+        }
+
+        private fun CastPlayer.reading(): PlaybackSnapshot {
+            val ended = playbackState == Player.STATE_ENDED
+            if (!ended && !holdsLoadedItem()) return PlaybackSnapshot(isValid = false)
             return PlaybackSnapshot(
-                positionMs = current.currentPosition.coerceAtLeast(0L),
-                durationMs = current.duration.takeIf { it != C.TIME_UNSET }?.coerceAtLeast(0L) ?: 0L,
-                bufferedMs = current.bufferedPosition.coerceAtLeast(0L),
-                isPlaying = current.isPlaying,
+                positionMs = currentPosition.coerceAtLeast(0L),
+                durationMs = duration.takeIf { it != C.TIME_UNSET }?.coerceAtLeast(0L) ?: 0L,
+                bufferedMs = bufferedPosition.coerceAtLeast(0L),
+                isPlaying = isPlaying,
                 hasEnded = ended,
             )
         }
+
+        private fun CastPlayer.isReadyOrEnded(): Boolean =
+            playbackState == Player.STATE_READY || playbackState == Player.STATE_ENDED
+
+        /**
+         * The receiver's intent, readable even while [snapshot] is not: the play/pause toggle must not
+         * flip to "play" just because the receiver's reading is momentarily not ours.
+         */
+        override val playWhenReady: Boolean get() = castPlayer?.playWhenReady == true
 
         private fun CastPlayer.holdsLoadedItem(): Boolean {
             val spec = loaded ?: return false
@@ -223,12 +251,17 @@ internal class CastPlayerHandle
         override val supportsPlaybackSpeed: Boolean
             get() = castPlayer?.isCommandAvailable(Player.COMMAND_SET_SPEED_AND_PITCH) == true
 
+        /**
+         * Forgets [loaded] *before* stopping: the stop's own callbacks would otherwise find the
+         * loaded item gone and report it missing.
+         */
         override fun stop() {
+            loaded = null
+            presence.onLoad()
             castPlayer?.run {
                 stop()
                 clearMediaItems()
             }
-            loaded = null
         }
 
         /**
@@ -240,6 +273,7 @@ internal class CastPlayerHandle
             val player = castPlayer ?: return
             castPlayer = null
             loaded = null
+            presence.onLoad()
             player.removeListener(listener)
             player.release()
             Timber.d("Released the cast player")

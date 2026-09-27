@@ -119,7 +119,9 @@
     <string name="player_message_cast_transferred">Nun ludante sur %1$s.</string>
     <string name="player_message_cast_left_syncplay">Forlasis la SyncPlay-grupon por dissendi al %1$s.</string>
     <string name="player_message_cast_failed">Ne eblis ludi tion sur %1$s.</string>
+    <string name="player_message_cast_stopped">Ludado ĉesis ĉe %1$s.</string>
     <string name="player_casting_to">Dissendante al %1$s</string>
+    <string name="player_cast_reconnecting">Rekonektante al %1$s…</string>
 
     <string name="player_error_server">La servilo ne povis komenci ludadon.</string>
     <string name="player_error_server_with_code">La servilo ne povis komenci ludadon (%1$d).</string>

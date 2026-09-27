@@ -49,10 +49,12 @@ All in `player/src/main/kotlin/dev/jellyboost/player/cast/` unless stated.
 
 | Class | Responsibility |
 |---|---|
-| `JellyboostCastOptionsProvider` | The framework's configuration, instantiated **reflectively** from the `OPTIONS_PROVIDER_CLASS_NAME` meta-data in `:player`'s manifest (the merger carries it into `:app`). Default receiver id, `setResumeSavedSession(true)`, `NotificationOptions` targeting the launcher activity resolved at runtime (`getLaunchIntentForPackage`, so `:player` needs no dependency on `:app`), and deliberately **no** expanded-controller activity — the app's own player screen is the remote control. |
+| `JellyboostCastOptionsProvider` | The framework's configuration, instantiated **reflectively** from the `OPTIONS_PROVIDER_CLASS_NAME` meta-data in `:player`'s manifest (the merger carries it into `:app`). Default receiver id, `setResumeSavedSession(true)`, `NotificationOptions` targeting **`CastNotificationActivity`** (the trampoline below, never the launcher activity itself), and deliberately **no** expanded-controller activity — the app's own player screen is the remote control. |
+| `CastNotificationActivity` + `CastNotificationIntents` | The Cast notification's tap target: a `Theme.NoDisplay` trampoline with its own `taskAffinity`, `noHistory` and `excludeFromRecents`, so the framework's `CLEAR_TASK` clears only its own task. It starts the launcher activity (resolved at runtime with `getLaunchIntentForPackage`, so `:player` needs no dependency on `:app`) with `NEW_TASK | SINGLE_TOP` and `ACTION_OPEN_CASTING_PLAYER`, and finishes. `CastNotificationIntents` is the contract `MainActivity` reads. See *Getting back to the television*. |
+| `CastNowPlaying` / `CastingItem` | **The only cast surface `:app` reads.** A GMS-free `StateFlow<CastingItem?>` — non-`null` exactly while a session is connected and the coordinator holds a detached source — with the title/artwork captured at detach, the device name, `isReconnecting`, the receiver's intent (`playWhenReady`), `isBuffering`, and a position polled once a second while anyone is collecting (`WhileSubscribed`). Plus `togglePlayPause()` and `current()` (read fresh, for a notification tap). |
 | `CastAvailability` | The single door to Google Cast. Owns the process-wide `CastContext`, created once from `MainActivity.onCreate` behind a `GoogleApiAvailability` guard, and publishes `CastDeviceState` (`Unavailable / NoDevices / Available / Connecting / Connected(name)`) — a GMS-free view the UI can observe on a device that has no Cast stack at all. `castDeviceStateOf` is the pure mapping, tested on its own. |
 | `CastSessionMonitor` + `GmsCastSessionMonitor` | "A receiver appeared", "it went away", with no Cast type in the signature — the seam that makes the coordinator unit-testable. Waits for `CastAvailability` before registering, reports an **already-connected** session as a start (the framework does not replay it, and connect-then-play is the everyday case), and folds `onSessionResumed` into the same event. `onSessionSuspended` (a Wi-Fi blip) is surfaced as its own event rather than ignored. |
-| `CastSessionCoordinator` | `SyncPlayController`-shaped `@Singleton`, started from `JellyboostApplication`: flips `RoutingPlayerHandle`, stops the player being left, publishes `CastStatusHolder`, keeps the progress ticker running on `@DetachedPlayerScope` when no screen is attached, and sends the final stop report (which kills the transcode) when a session ends with nobody watching. A start for an already-connected session (a resumed/suspended one, or the monitor's start-time replay) is dropped rather than re-run as a transfer (audit CAST-05); a detaching screen's source is only remembered while a session is live, so a failed cast attempt cannot stop-report a film that was never cast (audit CAST-02); and the cast player is stopped once the session ends, clearing its listener and stale media (audit CAST-08). It also judges a receiver that **drops the item** while the session stays up: `PlayerEvent.RemoteItemMissing` starts a 10 s grace period (`ITEM_LOST_GRACE`), `RemoteItemMissingCleared` cancels it, and at the end of it the attached screen is told (`CastPlaybackHost.onCastItemLost`) or — with none — the coordinator sends the stop report itself and stops its ticker (see *Who reports to the server*). A suspension marks the connection `suspended` until the framework's resume, which arrives as a repeated start. |
+| `CastSessionCoordinator` | `SyncPlayController`-shaped `@Singleton`, started from `JellyboostApplication`: flips `RoutingPlayerHandle`, stops the player being left, publishes `CastStatusHolder`, keeps the progress ticker running on `@DetachedPlayerScope` when no screen is attached, and sends the final stop report (which kills the transcode) when a session ends with nobody watching. A start for an already-connected session (a resumed/suspended one, or the monitor's start-time replay) is dropped rather than re-run as a transfer (audit CAST-05); a detaching screen's source is only remembered while a session is live, so a failed cast attempt cannot stop-report a film that was never cast (audit CAST-02); and the cast player is stopped once the session ends, clearing its listener and stale media (audit CAST-08). It also judges a receiver that **drops the item** while the session stays up: `PlayerEvent.RemoteItemMissing` starts a 10 s grace period (`ITEM_LOST_GRACE`), `RemoteItemMissingCleared` cancels it, and at the end of it the attached screen is told (`CastPlaybackHost.onCastItemLost`) or — with none — the coordinator sends the stop report itself and stops its ticker (see *Who reports to the server*). A suspension marks the connection `suspended` until the framework's resume, which arrives as a repeated start. Since the casting bar: it publishes the detached source (`detached`, with the item's metadata captured as the screen went), answers `heldSourceFor(itemId)` for a screen that may **adopt** it, reports an **orphan**'s stop in `attachHost` (a detached source the attaching screen did not adopt), follows the receiver's buffering, and remembers the last valid reading taken for the detached source (`readReceiver`). |
 | `CastStatusHolder` | The one fact the rest of the app needs — `isCasting`, plus the device name and whether the session is `suspended` — modelled on `SyncPlayStatusHolder`. It is what keeps every `com.google.android.gms` type out of `PlayerViewModel`. A suspended session is still `Connected`: the receiver plays on and the next open still casts. |
 | `CastMetadataHolder` | The other direction: what the *television* should say this is. A `PlaybackInfo` response names nothing, so the ViewModel's item fetch publishes title, episode line and poster here, keyed by media id, and `CastPlayerHandle` reads it at prepare. |
 | `CastPlaybackHost` / `CastPlaybackCoordinator` / `NoCastPlaybackCoordinator` | The public attach/detach seam between the coordinator and a screen, plus the two transfer callbacks. Names only `PlaybackMediaSource` and `PlaybackSnapshot`. |
@@ -141,6 +143,53 @@ Both go through `openSession(..., endingAt = snapshot)` rather than `reopenSessi
 re-negotiation reads the *current* player for its resume position and `playWhenReady`, and across a
 routing flip both readings are the wrong player's.
 
+## Getting back to the television
+
+Leaving the player while casting leaves the television playing — the coordinator's detached ticker
+keeps the server informed — and three things lead back to it. (DECISIONS.md 2026-09-27, "a casting
+bar in the chrome, reattach instead of reload, and a notification that keeps the back stack".)
+
+**The casting bar.** Whenever the coordinator holds a detached source (a session is connected and no
+player screen is attached), `AppScaffold` docks a bar in the music mini-player's slot: the item's
+artwork and title, "Casting to <device>" ("Reconnecting to <device>…" while suspended), a progress
+line, one play/pause button that drives the receiver, and a tap that opens the player for the item.
+It is the `MiniPlayer`'s own surface and row (`MiniPlayerSurface` / `MiniPlayerRow`, shared), fed by
+`CastNowPlaying` instead of the music queue — no new visual design. It is hidden on the player (that
+screen is the remote control) and on Now Playing, as the music bar is. **Cast wins the slot**: music
+never casts, but it can play on this device once the film's screen has closed, and then only the
+casting bar shows (`showsMiniPlayer(castingBarShown = …)`). The button follows the player's honest
+transport: it reverses the receiver's **intent**, and buffering keeps a Pause action with a ring
+round it. Spoken as one sentence ("<title>, Casting to <device>", with the tap "Open player") plus
+the separate button; the button says "Buffering" as a polite live region while buffering, and the
+row is a polite live region while reconnecting.
+
+**Reattach instead of reload.** Opening the player for the item the receiver already holds — from
+the bar, Resume, the detail page or the notification — no longer negotiates it again. Before, a new
+`PlaybackInfo` and a second `prepare` stopped the receiver, rebuffered it and started a second
+server transcode. `PlayerViewModel` first asks `heldSourceFor(itemId)`; **"the receiver holds X"**
+means: the coordinator's detached source *is* X (compared as a `UUID`, so case never matters), the
+session is connected, no dropped-item grace period is running, and the receiver's reading is valid
+**or** it is buffering. Then the screen adopts that source (`adoptCastSession`): no `PlaybackInfo`,
+no `prepare`, no start or stop report; it attaches with that very instance as its `castSource`,
+which `attachHost` recognises by identity, stops the coordinator's ticker and hands reporting to the
+screen's under the same play session id. The position shown is the receiver's live reading. Anything
+else — another item, a receiver that let go, nothing held — opens as before, and the source it
+replaces on the receiver is an **orphan**: `attachHost` reports its stop exactly once, at the last
+valid reading anyone took for it (seeded as the screen left, refreshed by the detached ticker and
+the bar), since by then the receiver's reading belongs to the new item.
+
+**The notification.** The framework fires the notification's content intent with
+`NEW_TASK | CLEAR_TASK | TASK_ON_HOME`; aimed at `MainActivity` that wiped the back stack (the
+player screen included) and landed on Home. It now targets `CastNotificationActivity`, whose own
+task affinity confines the `CLEAR_TASK`; it reopens the app as it was left (`NEW_TASK | SINGLE_TOP`)
+with `ACTION_OPEN_CASTING_PLAYER`. `MainActivity` turns that into `MainViewModel.openCastingPlayerRequested`
+(in `onCreate` on a fresh start — a Recents relaunch is ignored — and in `onNewIntent`), a state
+rather than an event so a tap during the splash waits for the graph. `AppScaffold` routes it
+(`castNotificationRoute`, pure): the casting item's player (reattaching as above), left alone if a
+player for it is already on top and replacing a player for another item; nothing if the player on
+top is the attached one — it *is* the remote control; Home if nothing is cast; nothing while signed
+out.
+
 ## Who reports to the server
 
 **Exactly one stop report per source**, and the rule that guarantees it is: *the coordinator reports
@@ -153,6 +202,8 @@ only while no host is attached.*
 | Screen closes while casting | — | **neither**: `releaseSession` skips the stop report *and* `stop()`/`release()`, because a television is not the screen's to end |
 | Receiver drops the item, screen open | stopped by the screen's `endCurrentSource` | the screen, once, at the last held position (`onCastItemLost`) |
 | Receiver drops the item, no screen | stopped by the coordinator | the coordinator, once, at the last held position; `detachedSource` is cleared as it is sent, so the session's later end finds nothing to report |
+| Screen reopened for the item the receiver holds (reattach) | handed from the coordinator to the screen, same play session | **none** — the session continues; the screen reports it later like any other |
+| Screen opened for anything else while a source is detached | the coordinator's stops at attach | the coordinator, once, for the **orphan**, at its last valid reading, in `attachHost` |
 
 A screen that goes away after its session's stop was already reported — the film played to its end,
 or the receiver dropped it — hands the coordinator **no** source (`PlayerCastBridge.castSource` is
@@ -219,10 +270,10 @@ falling back to "your TV".
 | **Cast + SyncPlay together** | Mutually exclusive by decision. The button is hidden while in a group, and a session connected from system UI leaves the group with a message. (DECISIONS.md 2026-07-31, milestone entry, decision 4.) |
 | **4K / HEVC beyond direct play** | *Partially lifted 2026-08-15 (M12 phase-2a).* Receivers are classified by **model name** (`CastReceiverClass` — the only capability signal a sender with the Default Media Receiver has; `CastDevice`'s flags say nothing about codecs). The Ultra / Google TV / SHIELD class direct-plays HEVC Main/Main 10 in mp4 up to 4K level 5.1 (Dolby Vision excluded via a `VideoRangeType` condition — it reports "Main 10" but needs a DV pipeline); "Chromecast HD" gets the same at 1080p; every unknown model keeps the old conservative profile byte-for-byte, and the session-start log line records `model → class` so a misclassified 4K device is a one-line allowlist fix. **The transcode target is still H.264+AAC HLS-ts in every class** — since 2026-09-27 always a full video re-encode at ≤ 1080p / level 4.2, never a stream copy (see "Known gaps / measured" below): CAF's TS demuxer is H.264-only, and the fMP4 segments HEVC would need were device-measured broken on the reference Ultra — an HEVC fMP4 transcode for Google-TV-class receivers is phase-2b, gated on a device walk. (DECISIONS.md 2026-08-15; `CastDeviceProfile`, `CastReceiverClass`.) |
 | **Surround audio (AAC 5.1, AC3/EAC3 passthrough)** | Device-measured, not assumed: a real Chromecast Ultra's Default Media Receiver rejects any AAC track above 2 channels with CAF error 104 in every container tried, and AC3/EAC3 5.1 passthrough fails outright (`LOAD_FAILED`). The profile caps AAC at stereo on both the transcode (`TranscodingProfile.maxAudioChannels`) and direct play (`CodecProfile` on `VIDEO_AUDIO` and `AUDIO`). A per-device-profile revisit is deferred to M12 phase 2 alongside the 4K/HEVC row above. (DECISIONS.md 2026-08-01; `CastDeviceProfile`.) |
-| **Reattaching to a live session after process death** | If the app is killed mid-cast the receiver keeps playing and reporting simply stops; the server session goes stale until its own timeout. Accepted and documented for v1. (Milestone entry, decision 6.) |
+| **Reattaching to a live session after process death** | If the app is killed mid-cast the receiver keeps playing and reporting simply stops; the server session goes stale until its own timeout. The in-process reattach above does not cover it: the detached source dies with the process, so after a restart there is no casting bar and the notification opens Home. Accepted and documented for v1. (Milestone entry, decision 6.) |
 | **Casting the copy on disk** | A downloaded item is re-resolved *remotely* and streamed from the server. Serving the local file to a receiver would mean running an HTTP server in the app. (Milestone entry, decision 7; `PlaybackSourceResolver`.) |
 | **The decoder fallback ladder** | Every rung of it diagnoses *this device's* decoders. A receiver error surfaces as one message and stops. (Milestone entry, decision 5; DECISIONS.md 2026-07-31, "a cast playback failure reuses `PlayerMessage.PlaybackFailed`".) |
-| **A mini-controller, a styled receiver, the Output Switcher** | Not in v1. The player screen is the remote control; the receiver id is a one-line change in `JellyboostCastOptionsProvider`. |
+| **A styled receiver, the Output Switcher** | Not in v1. The receiver id is a one-line change in `JellyboostCastOptionsProvider`. (The mini-controller that used to share this row landed as the casting bar, 2026-09-27.) |
 | **HLS-fMP4 transcode segments (`SegmentContainer=mp4`)** | Tried and ruled out, not merely unused. On the tested Chromecast Ultra it accepts the `LOAD` but never opens a media session — no playback, no error either — at both 2ch and 6ch. It is not a workaround candidate for the surround-audio row above; MPEG-TS is what stays. (DECISIONS.md 2026-08-01.) |
 
 ## Known gaps / measured: stream copy and restarted transcodes
@@ -290,6 +341,12 @@ own rule is that a rule belongs there only when it was shown to be missing.
 | `cast/CastMetadataHolderTest` | Published metadata read back under its own id, nothing under another's, replacement when the queue moves on, and case-insensitive UUIDs. |
 | `cast/CastDeviceStateTest` | The `CastState` int → `CastDeviceState` table, including the unknown-code case. |
 | `cast/CastSessionCoordinatorTest` | Connect → routing flip + status; disconnect → stop report, `stopTranscoding` and the flip back; the detached ticker starting only when nobody is attached, and stopping when a screen takes over. A dropped item: the grace period respected (nothing at 9.9 s, nothing if the item comes back), the detached stop report sent once with the last held reading and the ticker cancelled, no second report when the session later ends, the attached screen told instead, the host read at the end of the grace period. Suspension published, cleared by the resume without re-running the transfer, ignored with nothing connected. |
+| `cast/CastSessionCoordinatorTest` › reattach and orphans | "Holds" pinned from every side: a valid reading, the id in any case, a buffering receiver (held) vs an invalid, non-buffering one (not), another item, the drop grace period, no session or a screen attached (not). Adoption sends no report and stops the ticker; an orphan — another item, or the same item renegotiated — gets exactly one stop at its last valid reading (the freshest `readReceiver`, not the detach one) and none again at session end. The detached item's metadata is captured at detach and survives the holder being overwritten; it goes with a drop and with the session; the bar's toggle acts only with no screen attached; receiver buffering is followed while casting only. |
+| `cast/CastNowPlayingTest` | The bar's state over a real coordinator: nothing without a detached source or with a screen attached; title, artwork, device, intent and position; the position following the receiver while collected and keeping the last one over an invalid reading; the toggle reflected at once; buffering and reconnecting; gone on reattach and on session end; `current()` equal to the published state. |
+| `cast/CastNotificationIntentsTest` | The trampoline's action is recognised, a normal launch and a Recents relaunch are not, and the reopen flags carry `NEW_TASK`/`SINGLE_TOP` and never `CLEAR_TASK`/`CLEAR_TOP`. |
+| `ui/PlayerViewModelCastReattachTest` | Reopening the held film: **zero** resolves, prepares and transport calls, zero start/stop reports; one ticker (the screen's) reporting the very same source; the live position, playing state and duration shown; a pause pauses rather than reloads; a buffering receiver is adopted and shown buffering; leaving again and ending the session reports once. Another item: one resolve, one prepare, **one** stop for the orphan at the television's position and none again at session end; a receiver that let go is not adopted and its old session is closed once. |
+| `:app` `CastingBarTest` | `showsCastingBar` (hidden on Player and Now Playing, and with nothing cast), **cast wins the slot** over an active music queue and gives it back, `castingBarAction` (buffering keeps Pause), and `castNotificationRoute` (the casting item's player, the same player left alone in any case, another player replaced, the attached player left alone, Home with nothing cast, nothing signed out). |
+| `:app` androidTest `CastingBarSemanticsTest` | One merged sentence with the tap and no loose text nodes, the button as its own stop, "Buffering" + polite live region, polite live region while reconnecting. Compiled; device run owed. |
 | `cast/RemoteItemPresenceTest` | The edges only, once each; never armed by a load's invalid window or a placeholder glimpse, only by the item held while ready; the resume point is the last held reading; a new load clears and disarms. |
 | `session/PlayerEventBridgeTest` | `Buffering` only while buffering *and* meaning to play, cleared by a pause while still buffering and by `READY`, said on change only. |
 | `ui/PlayerTransportTest` | The local sibling: the toggle follows `playWhenReady` (a tap while rebuffering pauses), skips are relative and clamped to a known duration, an unknown duration is not clamped to zero, a local rebuffer reaches the UI state without an `IsPlayingChanged(false)` undoing it, and a rebuffer is drawn as — and answered by — a working Pause. |
@@ -308,6 +365,17 @@ volume keys, the framework's own notification, and the minified build on a recei
 walk in `docs/notes/chromecast-m12-plan.md` § Verification. `CastMediaItemConverter`,
 `GmsCastSessionMonitor` and `CastPlayerHandle`'s GMS half are untested by construction — they are the
 mechanical assembly the decisions were deliberately lifted out of.
+
+Gaps specific to the casting bar, reattach and notification routing (2026-09-27):
+- **Device walk owed**: leave the player while casting → the bar shows; tap it → the player
+  reattaches with no reload on the television; the notification tap from inside the player and from
+  Home → the player, with the back stack intact. The trampoline's task behaviour (and the background
+  activity-start allowance it relies on) is device-only.
+- **The orphan's stop position can be up to one ticker interval stale** when nothing read the receiver
+  since the last tick (the bar reads it every second while visible); the server keeps that tick's
+  position either way.
+- **Metadata is captured at detach.** A film whose item fetch never answered shows "Casting to
+  <device>" as its title line.
 
 Gaps specific to the drop/buffering/reconnect handling (2026-09-27):
 - **Device walk owed**: Stop from the television mid-film (screen open and backed out of), a

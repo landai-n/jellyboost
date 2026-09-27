@@ -30,4 +30,6 @@
     <string name="mini_player_previous">قبلی</string>
     <string name="mini_player_dismiss">توقف پخش و بستن</string>
     <string name="mini_player_open_now_playing">باز کردن در حال پخش</string>
+    <string name="casting_bar_open_player">باز کردن پخش‌کننده</string>
+    <string name="casting_bar_description">%1$s, %2$s</string>
 </resources>

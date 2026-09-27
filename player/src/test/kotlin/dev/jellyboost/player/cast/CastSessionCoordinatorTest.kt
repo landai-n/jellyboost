@@ -17,6 +17,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.test.StandardTestDispatcher
 import org.junit.jupiter.api.Test
+import java.util.UUID
 import javax.inject.Provider
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -34,6 +35,7 @@ class CastSessionCoordinatorTest {
 
     private val reporter = mockk<PlaybackReporter>(relaxed = true)
     private val status = CastStatusHolder()
+    private val metadata = CastMetadataHolder()
 
     /** Captures the coordinator's listener so a test can be the Cast framework. */
     private val monitor =
@@ -53,6 +55,7 @@ class CastSessionCoordinatorTest {
             status = status,
             detachedScope = CoroutineScope(dispatcher),
             mainDispatcher = dispatcher,
+            metadata = metadata,
         ).also { it.start() }
 
     private val framework get() = requireNotNull(monitor.listener) { "The coordinator never started watching" }
@@ -503,7 +506,216 @@ class CastSessionCoordinatorTest {
         routing.activeHandle.value shouldBe local
     }
 
+    // ---- a screen coming back to what the receiver holds ------------------------------------------
+
+    /** Casting [source], screen gone, receiver reading valid at [at]. */
+    private fun castingDetachedAt(at: PlaybackSnapshot): Job {
+        cast.snapshot = at
+        return castingDetached()
+    }
+
+    /** A second screen, for whatever it opened: the receiver's own source (adopted) or another. */
+    private fun screenFor(opened: PlaybackMediaSource?) =
+        object : CastPlaybackHost {
+            override val castSource: PlaybackMediaSource? = opened
+        }
+
+    @Test
+    fun `the receiver holds the item it is playing, and a screen for it adopts it without a report`() {
+        val ticker = castingDetachedAt(ON_THE_TELEVISION)
+
+        val held = coordinator.heldSourceFor(source.itemId)
+
+        held shouldBe CastReceiverHold(source = source, reading = ON_THE_TELEVISION, isBuffering = false)
+        coordinator.attachHost(screenFor(held?.source))
+        // The screen's ticker carries on under the same play session: no stop, and no second ticker.
+        verify(exactly = 0) { reporter.reportStopDetached(any(), any()) }
+        ticker.isCancelled shouldBe true
+        coordinator.detached.value shouldBe null
+    }
+
+    @Test
+    fun `the id is compared as a UUID, so its case does not matter`() {
+        castingDetachedAt(ON_THE_TELEVISION)
+
+        val upper = UUID.fromString(source.itemId.toString().uppercase(java.util.Locale.ROOT))
+
+        coordinator.heldSourceFor(upper)?.source shouldBe source
+    }
+
+    @Test
+    fun `a receiver still buffering the item holds it too`() {
+        castingDetachedAt(PlaybackSnapshot(isValid = false))
+        receiverSays(PlayerEvent.Buffering(true))
+
+        coordinator.heldSourceFor(source.itemId) shouldBe
+            CastReceiverHold(source = source, reading = PlaybackSnapshot(isValid = false), isBuffering = true)
+    }
+
+    @Test
+    fun `a receiver with no valid reading and no buffering holds nothing of ours`() {
+        // Stopped from the television, or taken over by another sender: adopting it would open a
+        // screen with nothing behind it.
+        castingDetachedAt(PlaybackSnapshot(isValid = false))
+
+        coordinator.heldSourceFor(source.itemId) shouldBe null
+    }
+
+    @Test
+    fun `another item is not held`() {
+        castingDetachedAt(ON_THE_TELEVISION)
+
+        coordinator.heldSourceFor(OTHER_ITEM) shouldBe null
+    }
+
+    @Test
+    fun `nothing is held while the receiver is losing the item`() {
+        castingDetachedAt(ON_THE_TELEVISION)
+        receiverSays(PlayerEvent.RemoteItemMissing(lastHeld))
+
+        coordinator.heldSourceFor(source.itemId) shouldBe null
+    }
+
+    @Test
+    fun `nothing is held with no session, or with a screen attached`() {
+        coordinator.heldSourceFor(source.itemId) shouldBe null
+
+        framework.onSessionStarted("Living Room TV")
+        coordinator.attachHost(host)
+
+        coordinator.heldSourceFor(source.itemId) shouldBe null
+    }
+
+    @Test
+    fun `a screen that opens something else reports the orphan's stop once, where it was last held`() {
+        val ticker = castingDetachedAt(ON_THE_TELEVISION)
+        // The other screen's open has already loaded the receiver: its reading is not the orphan's.
+        cast.snapshot = PlaybackSnapshot(isValid = false)
+
+        coordinator.attachHost(screenFor(PlayerFixtures.remoteSource().copy(itemId = OTHER_ITEM)))
+
+        verify(exactly = 1) { reporter.reportStopDetached(source, ON_THE_TELEVISION) }
+        ticker.isCancelled shouldBe true
+        coordinator.detached.value shouldBe null
+    }
+
+    @Test
+    fun `the orphan's stop is not sent again when the session ends`() {
+        castingDetachedAt(ON_THE_TELEVISION)
+        val other = screenFor(PlayerFixtures.remoteSource().copy(itemId = OTHER_ITEM))
+        coordinator.attachHost(other)
+        coordinator.detachHost(other)
+
+        framework.onSessionEnded()
+
+        // One for the orphan, one for the other item the second screen left behind — never two for one.
+        verify(exactly = 1) { reporter.reportStopDetached(source, any()) }
+    }
+
+    @Test
+    fun `the orphan's stop carries the freshest reading anyone took, not the one at detach`() {
+        castingDetachedAt(ON_THE_TELEVISION)
+        val later = ON_THE_TELEVISION.copy(positionMs = 960_000L)
+        cast.snapshot = later
+        coordinator.readReceiver()
+        cast.snapshot = PlaybackSnapshot(isValid = false)
+
+        coordinator.attachHost(screenFor(null))
+
+        verify(exactly = 1) { reporter.reportStopDetached(source, later) }
+    }
+
+    @Test
+    fun `a same-item screen that negotiated its own stream still closes the one it replaced`() {
+        // Same item, new play session: not the receiver's source, so it is an orphan all the same.
+        castingDetachedAt(ON_THE_TELEVISION)
+
+        coordinator.attachHost(screenFor(source.copy(playSessionId = "another-session")))
+
+        verify(exactly = 1) { reporter.reportStopDetached(source, ON_THE_TELEVISION) }
+    }
+
+    // ---- what the casting bar reads ----------------------------------------------------------------
+
+    @Test
+    fun `the detached item carries what the receiver was told it is, captured as the screen went`() {
+        val poster = CastMetadata(title = "Arrival", subtitle = "2016", posterUrl = "https://server/p.jpg")
+        metadata.publish(source.itemId.toString(), poster)
+        castingDetachedAt(ON_THE_TELEVISION)
+
+        // Another screen's fetch replaces the holder's one entry; the bar keeps its own.
+        metadata.publish(OTHER_ITEM.toString(), CastMetadata(title = "Something else"))
+
+        coordinator.detached.value shouldBe DetachedCast(source, poster)
+    }
+
+    @Test
+    fun `the detached item goes with the session, and with a dropped item`() {
+        castingDetachedAt(ON_THE_TELEVISION)
+        receiverSays(PlayerEvent.RemoteItemMissing(lastHeld))
+        elapse(GRACE_MS)
+
+        coordinator.detached.value shouldBe null
+
+        coordinator.attachHost(host)
+        coordinator.detachHost(host)
+        coordinator.detached.value?.source shouldBe source
+
+        framework.onSessionEnded()
+
+        coordinator.detached.value shouldBe null
+    }
+
+    @Test
+    fun `the bar's toggle pauses a receiver that means to play, and plays one that does not`() {
+        castingDetachedAt(ON_THE_TELEVISION)
+        cast.playWhenReady = true
+
+        coordinator.toggleDetachedPlayback()
+        cast.pauseCount shouldBe 1
+
+        coordinator.toggleDetachedPlayback()
+        cast.playCount shouldBe 1
+    }
+
+    @Test
+    fun `the bar's toggle does nothing while a screen owns the transport`() {
+        framework.onSessionStarted("Living Room TV")
+        coordinator.attachHost(host)
+        cast.playWhenReady = true
+
+        coordinator.toggleDetachedPlayback()
+
+        cast.pauseCount shouldBe 0
+        cast.playCount shouldBe 0
+    }
+
+    @Test
+    fun `receiver buffering is followed while casting, and forgotten when the session ends`() {
+        framework.onSessionStarted("Living Room TV")
+
+        receiverSays(PlayerEvent.Buffering(true))
+        coordinator.receiverBuffering.value shouldBe true
+
+        framework.onSessionEnded()
+        coordinator.receiverBuffering.value shouldBe false
+    }
+
+    @Test
+    fun `a local player's buffering is not the receiver's`() {
+        dispatcher.scheduler.runCurrent()
+        local.tryEmit(PlayerEvent.Buffering(true))
+        dispatcher.scheduler.runCurrent()
+
+        coordinator.receiverBuffering.value shouldBe false
+    }
+
     private companion object {
         val GRACE_MS = CastSessionCoordinator.ITEM_LOST_GRACE.inWholeMilliseconds
+
+        /** Fifteen minutes in, on the television. */
+        val ON_THE_TELEVISION = PlaybackSnapshot(positionMs = 900_000L, durationMs = 7_200_000L, isPlaying = true)
+
+        val OTHER_ITEM: UUID = UUID.fromString("9e8d7c6b-5a49-4382-a1b0-c9d8e7f6a5b4")
     }
 }

@@ -87,6 +87,21 @@ class MainViewModelTest {
             }
         }
 
+    @Test
+    @DisplayName("a Cast notification tap waits as state until the graph consumes it")
+    fun castNotificationRequestWaitsUntilConsumed() =
+        runTest {
+            val model = viewModel()
+
+            model.openCastingPlayerRequested.value shouldBe false
+            // Arriving while the splash still holds the graph back: it must not be dropped.
+            model.requestCastingPlayer()
+            model.openCastingPlayerRequested.value shouldBe true
+
+            model.consumeCastingPlayerRequest()
+            model.openCastingPlayerRequested.value shouldBe false
+        }
+
     // Sign-out belongs to `:feature:settings`; `SettingsViewModelTest` covers it.
 
     private fun viewModel() = MainViewModel(sessionRepository, appPreferences)

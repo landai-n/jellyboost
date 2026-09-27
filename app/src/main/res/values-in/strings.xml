@@ -26,4 +26,6 @@
     <string name="mini_player_previous">Sebelumnya</string>
     <string name="mini_player_dismiss">Hentikan pemutaran dan tutup</string>
     <string name="mini_player_open_now_playing">Buka Sedang Diputar</string>
+    <string name="casting_bar_open_player">Buka pemutar</string>
+    <string name="casting_bar_description">%1$s, %2$s</string>
 </resources>

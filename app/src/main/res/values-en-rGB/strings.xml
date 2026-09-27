@@ -26,4 +26,6 @@
     <string name="mini_player_previous">Previous</string>
     <string name="mini_player_dismiss">Stop playback and dismiss</string>
     <string name="mini_player_open_now_playing">Open now playing</string>
+    <string name="casting_bar_open_player">Open player</string>
+    <string name="casting_bar_description">%1$s, %2$s</string>
 </resources>

@@ -30,4 +30,6 @@
     <string name="mini_player_previous">ކުރީ</string>
     <string name="mini_player_dismiss">ޕްލޭބެކް ހުއްޓާލައި ބަންދުކުރޭ</string>
     <string name="mini_player_open_now_playing">މިހާރު ޖަހަނީ ހުޅުވާ</string>
+    <string name="casting_bar_open_player">ޕްލޭޔަރ ހުޅުވާ</string>
+    <string name="casting_bar_description">%1$s, %2$s</string>
 </resources>

@@ -30,4 +30,6 @@
     <string name="mini_player_previous">Предыдущий</string>
     <string name="mini_player_dismiss">Остановить воспроизведение и закрыть</string>
     <string name="mini_player_open_now_playing">Открыть текущее воспроизведение</string>
+    <string name="casting_bar_open_player">Открыть плеер</string>
+    <string name="casting_bar_description">%1$s, %2$s</string>
 </resources>

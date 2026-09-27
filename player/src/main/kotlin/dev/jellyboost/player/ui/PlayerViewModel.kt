@@ -20,6 +20,7 @@ import dev.jellyboost.player.R
 import dev.jellyboost.player.cast.CastMetadata
 import dev.jellyboost.player.cast.CastMetadataHolder
 import dev.jellyboost.player.cast.CastPlaybackCoordinator
+import dev.jellyboost.player.cast.CastReceiverHold
 import dev.jellyboost.player.cast.CastStatusHolder
 import dev.jellyboost.player.cast.NoCastPlaybackCoordinator
 import dev.jellyboost.player.fallback.DecoderFallbackHandler
@@ -230,16 +231,24 @@ internal class PlayerViewModel
             observeSyncPlay()
             observeCast()
             loadTitleAndArtwork()
-            openSession(
-                playbackResolveRequest(
-                    itemId = sessionStore.itemId,
-                    mediaSourceId = sessionStore.mediaSourceId,
-                    startPositionTicks = sessionStore.startPositionTicks,
-                ).copy(castTarget = isCasting),
-                // In a group, **paused**: the group decides when playback starts, and a member that
-                // started on its own would be out of sync from the first frame.
-                playWhenReady = sessionStore.playWhenReady && !syncPlay.isInGroup,
-            )
+            val held =
+                runCatchingUnlessCancelled { UUID.fromString(sessionStore.itemId) }
+                    .getOrNull()
+                    ?.let(cast::heldSourceFor)
+            if (held != null) {
+                adoptCastSession(held)
+            } else {
+                openSession(
+                    playbackResolveRequest(
+                        itemId = sessionStore.itemId,
+                        mediaSourceId = sessionStore.mediaSourceId,
+                        startPositionTicks = sessionStore.startPositionTicks,
+                    ).copy(castTarget = isCasting),
+                    // In a group, **paused**: the group decides when playback starts, and a member that
+                    // started on its own would be out of sync from the first frame.
+                    playWhenReady = sessionStore.playWhenReady && !syncPlay.isInGroup,
+                )
+            }
         }
 
         /**
@@ -342,6 +351,60 @@ internal class PlayerViewModel
         }
 
         // ---- cast transfers -----------------------------------------------------------------------
+
+        /**
+         * Reattaches to the item the receiver is already playing instead of opening it again: **no
+         * `PlaybackInfo`, no `prepare`, no start report**. Opening it again stopped the receiver,
+         * rebuffered it and started a second server transcode, for a film that was playing fine.
+         *
+         * The held source is the receiver's own, play session id and all, so this screen's ticker
+         * carries on reporting the session the coordinator's ticker was reporting; attaching it as
+         * [PlayerCastBridge.castSource] is what tells the coordinator to stop its ticker without a stop
+         * report. The track pickers offer what that source was negotiated with, and the position comes
+         * from the receiver's live reading — the navigation argument's start position means nothing to
+         * a film already playing.
+         *
+         * Deliberately not claimed through the video/music handover: nothing is prepared on this
+         * device's player, so there is nothing for a music queue to be stopped for.
+         */
+        private fun adoptCastSession(held: CastReceiverHold) {
+            val resolved = held.source
+            Timber.i("Reattaching to %s, already playing on the receiver", resolved.itemId)
+            session =
+                ActiveSession(
+                    source = resolved,
+                    // Applied when this source was opened; the receiver is playing them now.
+                    pendingAudioIndex = null,
+                    pendingSubtitleApply = false,
+                    // Unknowable from the source, and moot while casting (`castTarget` always streams); a
+                    // later cast→local transfer may therefore pick the copy on disk again.
+                    localSource = null,
+                    forcedRemote = false,
+                    recoverySource = null,
+                    stopReported = false,
+                    segments = emptyList(),
+                    upNext = null,
+                    castItemLostAt = null,
+                )
+            _videoPlayer.value = playerHandle.player
+            val reading = held.reading.takeIf { it.isValid }
+            _uiState.update { previous ->
+                val opened = previous.withSource(resolved, isOnline, message = null, buffering = held.isBuffering)
+                opened.copy(
+                    isPlaying = reading?.isPlaying == true,
+                    // The server's runtime and the receiver's can disagree; the player's wins, as in `onTick`.
+                    durationMs = reading?.durationMs?.takeIf { it > 0L } ?: opened.durationMs,
+                )
+            }
+            positionTracker.onSessionOpened(reading?.positionMs ?: resolved.startPositionTicks.ticksToMillis())
+            upNext.reset()
+            setReportingActive(true)
+            loadPlaybackExtras(resolved)
+            syncPlay.attach()
+            cast.attach()
+            publishSpeedSupport()
+            publishPipState()
+        }
 
         /**
          * Order is load-bearing: the outgoing session is stopped and reported at [from] — killing its

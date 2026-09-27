@@ -7,8 +7,10 @@ import dev.jellyboost.core.common.model.ThemeMode
 import dev.jellyboost.core.datastore.AppPreferences
 import dev.jellyboost.core.network.SessionRepository
 import dev.jellyboost.core.network.model.SessionState
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -52,6 +54,24 @@ class MainViewModel
                     started = SharingStarted.WhileSubscribed(SUBSCRIPTION_TIMEOUT_MS),
                     initialValue = ThemePreference(),
                 )
+
+        private val castingPlayerRequest = MutableStateFlow(false)
+
+        /**
+         * `true` from a Cast notification tap until the navigation graph has acted on it. A state, not
+         * an event: the tap can arrive before there is a graph to act (the splash is still up while
+         * the session restores), and it must wait there rather than be dropped. Here, not in the
+         * activity, so a rotation between the tap and the graph cannot lose it.
+         */
+        val openCastingPlayerRequested: StateFlow<Boolean> = castingPlayerRequest.asStateFlow()
+
+        fun requestCastingPlayer() {
+            castingPlayerRequest.value = true
+        }
+
+        fun consumeCastingPlayerRequest() {
+            castingPlayerRequest.value = false
+        }
 
         init {
             viewModelScope.launch { sessionRepository.restoreSession() }

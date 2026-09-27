@@ -114,12 +114,7 @@ internal fun PlayerControls(
 
         TransportRow(
             isPlaying = state.showsPlaying,
-            // A receiver's buffering is unknowable from here, and the group-waiting overlay already
-            // names that pause better.
-            isBuffering =
-                state.isBuffering &&
-                    !state.syncPlay.isWaitingForGroup &&
-                    !state.cast.isCasting,
+            isBuffering = state.showsBufferingDisc,
             onPlayPause = actions.onPlayPause,
             onSeekBy = actions.onSeekBy,
             modifier = Modifier.align(Alignment.Center),
@@ -1065,3 +1060,12 @@ private fun previewActions() =
         onDismissUpNext = {},
         onBack = {},
     )
+
+/**
+ * Whether the transport row draws the spinner disc in place of Play/Pause. A receiver's buffering
+ * counts as much as a local stream's — `PlayerEvent.Buffering` comes from both players, and a Play
+ * triangle over a television that is loading invites exactly the wrong tap. The group-waiting overlay
+ * already names a group's pause better.
+ */
+internal val PlayerUiState.showsBufferingDisc: Boolean
+    get() = isBuffering && !syncPlay.isWaitingForGroup

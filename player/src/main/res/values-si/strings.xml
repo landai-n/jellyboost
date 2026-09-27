@@ -119,7 +119,9 @@
     <string name="player_message_cast_transferred">දැන් %1$s මත වාදනය වේ.</string>
     <string name="player_message_cast_left_syncplay">%1$s වෙත විකාශනය කිරීමට SyncPlay කණ්ඩායමෙන් ඉවත් විය.</string>
     <string name="player_message_cast_failed">%1$s මත එය වාදනය කළ නොහැකි විය.</string>
+    <string name="player_message_cast_stopped">%1$s හි වාදනය නතර විය.</string>
     <string name="player_casting_to">%1$s වෙත විකාශනය කරමින්</string>
+    <string name="player_cast_reconnecting">%1$s වෙත නැවත සම්බන්ධ වෙමින්…</string>
 
     <string name="player_error_server">සේවාදායකයට වාදනය ආරම්භ කළ නොහැකි විය.</string>
     <string name="player_error_server_with_code">සේවාදායකයට වාදනය ආරම්භ කළ නොහැකි විය (%1$d).</string>

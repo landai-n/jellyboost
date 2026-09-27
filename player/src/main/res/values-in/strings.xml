@@ -114,7 +114,9 @@
     <string name="player_message_cast_transferred">Sekarang diputar di %1$s.</string>
     <string name="player_message_cast_left_syncplay">Keluar dari grup SyncPlay untuk melakukan cast ke %1$s.</string>
     <string name="player_message_cast_failed">Tidak dapat memutar itu di %1$s.</string>
+    <string name="player_message_cast_stopped">Pemutaran di %1$s berhenti.</string>
     <string name="player_casting_to">Melakukan cast ke %1$s</string>
+    <string name="player_cast_reconnecting">Menghubungkan ulang ke %1$s…</string>
 
     <string name="player_error_server">Server tidak dapat memulai pemutaran.</string>
     <string name="player_error_server_with_code">Server tidak dapat memulai pemutaran (%1$d).</string>

@@ -145,8 +145,10 @@
     <string name="player_message_cast_transferred">Зараз відтворюється на %1$s.</string>
     <string name="player_message_cast_left_syncplay">Залишено групу SyncPlay для трансляції на %1$s.</string>
     <string name="player_message_cast_failed">Не вдалося відтворити це на %1$s.</string>
+    <string name="player_message_cast_stopped">Відтворення на %1$s зупинено.</string>
 
     <string name="player_casting_to">Трансляція на %1$s</string>
+    <string name="player_cast_reconnecting">Повторне підключення до %1$s…</string>
 
     <string name="player_error_server">Серверу не вдалося почати відтворення.</string>
     <string name="player_error_server_with_code">Серверу не вдалося почати відтворення (%1$d).</string>

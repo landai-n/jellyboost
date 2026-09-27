@@ -119,7 +119,9 @@
     <string name="player_message_cast_transferred">Now playing on %1$s.</string>
     <string name="player_message_cast_left_syncplay">Left the SyncPlay group to cast to %1$s.</string>
     <string name="player_message_cast_failed">Couldn\'t play that on %1$s.</string>
+    <string name="player_message_cast_stopped">Playback stopped on %1$s.</string>
     <string name="player_casting_to">Casting to %1$s</string>
+    <string name="player_cast_reconnecting">Reconnecting to %1$s…</string>
 
     <string name="player_error_server">The server could not start playback.</string>
     <string name="player_error_server_with_code">The server could not start playback (%1$d).</string>

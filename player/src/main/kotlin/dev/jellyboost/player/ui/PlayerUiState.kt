@@ -108,6 +108,11 @@ internal data class UpNextState(
 internal data class PlayerCastState(
     val isCasting: Boolean = false,
     val deviceName: String? = null,
+    /**
+     * The session is suspended (a Wi-Fi blip): still casting, but no command reaches the receiver
+     * until it resumes, so the casting label says "Reconnecting…" instead of taps silently vanishing.
+     */
+    val isReconnecting: Boolean = false,
 )
 
 /**
@@ -222,6 +227,12 @@ internal enum class PlayerMessage {
      * device's* decoders, so none of it was retried.
      */
     CastPlaybackFailed,
+
+    /**
+     * The receiver dropped the item while the session stayed connected (stopped from the television,
+     * or unloaded when idle). The screen is left paused on the last position; play loads it again.
+     */
+    CastPlaybackStopped,
 }
 
 /** Bundled so the composables stay under the parameter limit. */

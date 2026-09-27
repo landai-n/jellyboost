@@ -135,8 +135,10 @@
     <string name="player_message_cast_transferred">Afspiller nu på %1$s.</string>
     <string name="player_message_cast_left_syncplay">Forlod SyncPlay-gruppen for at caste til %1$s.</string>
     <string name="player_message_cast_failed">Kunne ikke afspille det på %1$s.</string>
+    <string name="player_message_cast_stopped">Afspilningen på %1$s er stoppet.</string>
 
     <string name="player_casting_to">Caster til %1$s</string>
+    <string name="player_cast_reconnecting">Genopretter forbindelsen til %1$s…</string>
 
     <string name="player_error_server">Serveren kunne ikke starte afspilningen.</string>
     <string name="player_error_server_with_code">Serveren kunne ikke starte afspilningen (%1$d).</string>

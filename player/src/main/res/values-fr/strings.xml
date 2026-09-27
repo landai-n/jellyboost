@@ -122,7 +122,9 @@
     <string name="player_message_cast_transferred">Lecture en cours sur %1$s.</string>
     <string name="player_message_cast_left_syncplay">Groupe SyncPlay quitté pour diffuser vers %1$s.</string>
     <string name="player_message_cast_failed">Impossible de lire cela sur %1$s.</string>
+    <string name="player_message_cast_stopped">Lecture arrêtée sur %1$s.</string>
     <string name="player_casting_to">Diffusion vers %1$s</string>
+    <string name="player_cast_reconnecting">Reconnexion à %1$s…</string>
 
     <string name="player_error_server">Le serveur n\'a pas pu démarrer la lecture.</string>
     <string name="player_error_server_with_code">Le serveur n\'a pas pu démarrer la lecture (%1$d).</string>

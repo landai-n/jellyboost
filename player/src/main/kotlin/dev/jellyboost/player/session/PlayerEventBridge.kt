@@ -10,17 +10,42 @@ import timber.log.Timber
 
 /**
  * Shared by both [PlayerHandle] implementations so a new event cannot be added to one and forgotten
- * in the other; differences between them belong here as arguments.
+ * in the other; differences between them belong here as arguments. Holds per-player state (the last
+ * buffering verdict), so each player gets its own instance.
  *
  * @param forwardVideoSize `false` on Cast, permanently: `CastPlayer` reports `VideoSize.UNKNOWN`
  *   throughout, so forwarding it would overwrite a good aspect ratio with nothing.
+ * @param afterEvents called with the player at the end of every callback batch, after this
+ *   listener's own events: the cast handle re-checks there whether its receiver still holds the item.
  */
 internal fun playerEventListener(
     emit: (PlayerEvent) -> Unit,
     forwardVideoSize: Boolean = true,
     errorLogPrefix: String = "Playback error",
+    afterEvents: (Player) -> Unit = {},
 ): Player.Listener =
     object : Player.Listener {
+        /** What was last said, so [PlayerEvent.Buffering] goes out on change only. */
+        private var buffering = false
+
+        /**
+         * `onEvents`, not `onPlaybackStateChanged`: buffering is a function of two properties, and a
+         * pause while the state stays `BUFFERING` changes only the second. It arrives after every
+         * individual callback of its batch, so a rebuffer's `IsPlayingChanged(false)` can never land
+         * after — and undo — the `Buffering(true)` it accompanies.
+         */
+        override fun onEvents(
+            player: Player,
+            events: Player.Events,
+        ) {
+            val now = player.playbackState == Player.STATE_BUFFERING && player.playWhenReady
+            if (now != buffering) {
+                buffering = now
+                emit(PlayerEvent.Buffering(now))
+            }
+            afterEvents(player)
+        }
+
         override fun onPlaybackStateChanged(playbackState: Int) {
             when (playbackState) {
                 Player.STATE_READY -> emit(PlayerEvent.Ready)

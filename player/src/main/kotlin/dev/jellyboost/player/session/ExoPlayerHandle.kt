@@ -220,6 +220,9 @@ internal class ExoPlayerHandle
             )
         }
 
+        /** Read, never built: asking must not create a player. */
+        override val playWhenReady: Boolean get() = exoPlayer?.playWhenReady == true
+
         override fun selectAudioTrack(
             source: PlaybackMediaSource,
             jellyfinIndex: Int,

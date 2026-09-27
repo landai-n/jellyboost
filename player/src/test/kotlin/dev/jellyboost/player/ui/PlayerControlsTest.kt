@@ -1,6 +1,7 @@
 package dev.jellyboost.player.ui
 
 import androidx.compose.ui.unit.dp
+import dev.jellyboost.player.R
 import dev.jellyboost.player.model.PlaybackTrack
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
@@ -344,5 +345,64 @@ class ScrubberSemanticsTest {
     @Test
     fun `a negative position is read as the start rather than as a negative time`() {
         (-5_000L).asSpokenTimeParts() shouldBe listOf(SpokenTimePart(SpokenTimeUnit.SECONDS, 0L))
+    }
+}
+
+/**
+ * The spinner's gates. A receiver buffering used to be drawn as a paused Play triangle — the Cast
+ * gate assumed its buffering was unknowable — and a tap on it sent the wrong command.
+ */
+class BufferingGateTest {
+    private val casting = PlayerCastState(isCasting = true, deviceName = "Living Room TV")
+
+    private fun state(
+        buffering: Boolean,
+        cast: PlayerCastState = PlayerCastState(),
+        waitingForGroup: Boolean = false,
+    ) = PlayerUiState(
+        isLoading = false,
+        isBuffering = buffering,
+        cast = cast,
+        syncPlay =
+            if (waitingForGroup) {
+                PlayerSyncPlayState(inGroup = true, phase = PlayerSyncPlayPhase.WAITING)
+            } else {
+                PlayerSyncPlayState()
+            },
+    )
+
+    @Test
+    fun `a buffering receiver gets the disc, as a local stream does`() {
+        state(buffering = true, cast = casting).showsBufferingDisc shouldBe true
+        state(buffering = true).showsBufferingDisc shouldBe true
+    }
+
+    @Test
+    fun `and the chrome-hidden spinner too`() {
+        state(buffering = true, cast = casting).showsBufferingIndicator shouldBe true
+        state(buffering = true).showsBufferingIndicator shouldBe true
+    }
+
+    @Test
+    fun `nothing buffering draws Play or Pause`() {
+        state(buffering = false, cast = casting).showsBufferingDisc shouldBe false
+        state(buffering = false).showsBufferingIndicator shouldBe false
+    }
+
+    @Test
+    fun `a group waiting says so with its own overlay instead`() {
+        state(buffering = true, waitingForGroup = true).showsBufferingDisc shouldBe false
+        state(buffering = true, waitingForGroup = true).showsBufferingIndicator shouldBe false
+    }
+
+    @Test
+    fun `an opening session's spinner is the loading state's, not the rebuffer one`() {
+        state(buffering = true).copy(isLoading = true).showsBufferingIndicator shouldBe false
+    }
+
+    @Test
+    fun `the casting label turns into reconnecting while the session is suspended`() {
+        casting.labelRes shouldBe R.string.player_casting_to
+        casting.copy(isReconnecting = true).labelRes shouldBe R.string.player_cast_reconnecting
     }
 }

@@ -136,6 +136,7 @@
     <string name="player_message_cast_left_syncplay">U largua nga grupi SyncPlay për të transmetuar te %1$s.</string>
     <string name="player_message_cast_failed">Nuk u luajt dot te %1$s.</string>
     <string name="player_message_cast_stopped">Luajtja në %1$s ndaloi.</string>
+    <string name="player_message_cast_finished">Luajtja në %1$s përfundoi.</string>
 
     <string name="player_casting_to">Duke transmetuar te %1$s</string>
     <string name="player_cast_reconnecting">Po rilidhet me %1$s…</string>

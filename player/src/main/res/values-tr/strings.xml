@@ -120,6 +120,7 @@
     <string name="player_message_cast_left_syncplay">SyncPlay grubundan çıkılarak %1$s cihazına yayın başlatıldı.</string>
     <string name="player_message_cast_failed">Bu, %1$s üzerinde oynatılamadı.</string>
     <string name="player_message_cast_stopped">%1$s üzerinde oynatma durdu.</string>
+    <string name="player_message_cast_finished">%1$s üzerinde oynatma tamamlandı.</string>
     <string name="player_casting_to">%1$s\'e yayınlanıyor</string>
     <string name="player_cast_reconnecting">%1$s cihazına yeniden bağlanılıyor…</string>
 

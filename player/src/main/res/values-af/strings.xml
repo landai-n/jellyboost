@@ -136,6 +136,7 @@
     <string name="player_message_cast_left_syncplay">Het die SyncPlay-groep verlaat om na %1$s te stuur.</string>
     <string name="player_message_cast_failed">Kon nie dit op %1$s speel nie.</string>
     <string name="player_message_cast_stopped">Weergawe op %1$s het gestop.</string>
+    <string name="player_message_cast_finished">Klaar op %1$s.</string>
 
     <string name="player_casting_to">Stuur tans na %1$s</string>
     <string name="player_cast_reconnecting">Koppel weer aan %1$s…</string>

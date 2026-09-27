@@ -146,6 +146,7 @@
     <string name="player_message_cast_left_syncplay">Покинули группу SyncPlay для трансляции на %1$s.</string>
     <string name="player_message_cast_failed">Не удалось воспроизвести это на %1$s.</string>
     <string name="player_message_cast_stopped">Воспроизведение на %1$s остановлено.</string>
+    <string name="player_message_cast_finished">Воспроизведение на %1$s завершено.</string>
 
     <string name="player_casting_to">Трансляция на %1$s</string>
     <string name="player_cast_reconnecting">Повторное подключение к %1$s…</string>

@@ -136,6 +136,7 @@
     <string name="player_message_cast_left_syncplay">D\'SyncPlay-Grupp verlooss fir op %1$s ze streamen.</string>
     <string name="player_message_cast_failed">Konnt dat net op %1$s ofspillen.</string>
     <string name="player_message_cast_stopped">Ofspillen op %1$s ass gestoppt.</string>
+    <string name="player_message_cast_finished">Ofspillen op %1$s ass fäerdeg.</string>
 
     <string name="player_casting_to">Gëtt op %1$s gestreamt</string>
     <string name="player_cast_reconnecting">Nei Verbindung mat %1$s…</string>

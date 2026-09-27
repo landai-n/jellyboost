@@ -156,6 +156,7 @@
     <string name="player_message_cast_left_syncplay">تمت مغادرة مجموعة SyncPlay للبث إلى %1$s.</string>
     <string name="player_message_cast_failed">تعذّر تشغيل ذلك على %1$s.</string>
     <string name="player_message_cast_stopped">توقّف التشغيل على %1$s.</string>
+    <string name="player_message_cast_finished">انتهى التشغيل على %1$s.</string>
 
     <string name="player_casting_to">جارٍ البث إلى %1$s</string>
     <string name="player_cast_reconnecting">جارٍ إعادة الاتصال بـ %1$s…</string>

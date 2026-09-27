@@ -146,6 +146,7 @@
     <string name="player_message_cast_left_syncplay">Opuszczono grupę SyncPlay, aby przesyłać na %1$s.</string>
     <string name="player_message_cast_failed">Nie udało się odtworzyć tego na %1$s.</string>
     <string name="player_message_cast_stopped">Odtwarzanie na %1$s zostało zatrzymane.</string>
+    <string name="player_message_cast_finished">Odtwarzanie na %1$s zostało zakończone.</string>
 
     <string name="player_casting_to">Przesyłanie na %1$s</string>
     <string name="player_cast_reconnecting">Ponowne łączenie z %1$s…</string>

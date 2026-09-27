@@ -136,6 +136,7 @@
     <string name="player_message_cast_left_syncplay">Напуснахте SyncPlay групата, за да прехвърлите на %1$s.</string>
     <string name="player_message_cast_failed">Не можа да се пусне това на %1$s.</string>
     <string name="player_message_cast_stopped">Възпроизвеждането на %1$s спря.</string>
+    <string name="player_message_cast_finished">Възпроизвеждането на %1$s приключи.</string>
 
     <string name="player_casting_to">Прехвърляне на %1$s</string>
     <string name="player_cast_reconnecting">Повторно свързване с %1$s…</string>

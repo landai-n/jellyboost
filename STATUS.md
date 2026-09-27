@@ -57,9 +57,9 @@ shows "Reconnecting to <device>…" until it resumes. Two new strings across all
 Known issues / owed:
 - **Device walk owed (Chromecast)** — Stop from the TV with the screen open and backed out of,
   a long receiver buffer, a Wi-Fi blip; and the 10 s grace period against a real receiver.
-- A receiver buffering for minutes still cannot be paused from the screen (the disc is not
-  tappable); the Cast notification's Play/Pause during buffering is the framework's (a later
-  "now casting" bar/notification change owns it).
+- The Cast notification's Play/Pause during buffering is the framework's (a later "now casting"
+  bar/notification change owns it). The transport button stays a working Pause while buffering
+  (ring round it, "Pause, Buffering" spoken) — review follow-up, same branch.
 
 **Subtitle appearance: size and background for the subtitles the app draws itself (2026-08-29, on
 `main`; adversarial review run, device walk owed).** Two preferences in Settings › Playback ›

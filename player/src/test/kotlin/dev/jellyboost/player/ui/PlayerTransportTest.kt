@@ -114,11 +114,45 @@ internal class PlayerTransportTest : PlayerViewModelFixture() {
             advanceUntilIdle()
 
             model.uiState.value.isBuffering shouldBe true
-            model.uiState.value.showsBufferingDisc shouldBe true
+            model.uiState.value.showsBufferingRing shouldBe true
 
             playerHandle.emit(PlayerEvent.Ready)
             playerHandle.emit(PlayerEvent.IsPlayingChanged(true))
             playerHandle.emit(PlayerEvent.Buffering(false))
+            advanceUntilIdle()
+
+            model.uiState.value.isBuffering shouldBe false
+        }
+
+    @Test
+    fun `a rebuffer is answered by a working pause`() =
+        runTest(dispatcher) {
+            val model = viewModel()
+            advanceUntilIdle()
+            playerHandle.emit(PlayerEvent.Ready)
+            playerHandle.emit(PlayerEvent.IsPlayingChanged(false))
+            playerHandle.emit(PlayerEvent.Buffering(true))
+            advanceUntilIdle()
+            val state = model.uiState.value
+
+            // What the transport row draws and what a tap on it does must agree: pause.
+            transportControl(state.showsPlaying, state.showsBufferingRing) shouldBe
+                TransportControl(action = TransportAction.PAUSE, showsRing = true)
+            model.togglePlayPause()
+            playerHandle.pauseCount shouldBe 1
+            playerHandle.playCount shouldBe 0
+        }
+
+    @Test
+    fun `an open that means to play is shown buffering until the player is ready`() =
+        runTest(dispatcher) {
+            val model = viewModel()
+            advanceUntilIdle()
+
+            playerHandle.prepared.single().playWhenReady shouldBe true
+            model.uiState.value.isBuffering shouldBe true
+
+            playerHandle.emit(PlayerEvent.Ready)
             advanceUntilIdle()
 
             model.uiState.value.isBuffering shouldBe false

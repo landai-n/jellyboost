@@ -244,6 +244,24 @@ internal class PlayerViewModelCastTest : PlayerViewModelFixture() {
         }
 
     @Test
+    fun `a film brought home paused offers play, not a buffering pause`() =
+        runTest(dispatcher) {
+            val model = castViewModel()
+            advanceUntilIdle()
+            framework.onSessionStarted("Living Room TV")
+            advanceUntilIdle()
+            castHandle.snapshot = ON_THE_TELEVISION
+
+            framework.onSessionEnded()
+            advanceUntilIdle()
+
+            // `isBuffering` draws a Pause glyph; on a paused open that would invert the tap.
+            val state = model.uiState.value
+            state.isBuffering shouldBe false
+            transportControl(state.showsPlaying, state.showsBufferingRing).action shouldBe TransportAction.PLAY
+        }
+
+    @Test
     fun `the screen sends the stop report for the cast session, and the coordinator does not`() =
         runTest(dispatcher) {
             castViewModel()
@@ -654,12 +672,12 @@ internal class PlayerViewModelCastTest : PlayerViewModelFixture() {
             advanceUntilIdle()
 
             model.uiState.value.isBuffering shouldBe true
-            model.uiState.value.showsBufferingDisc shouldBe true
+            model.uiState.value.showsBufferingRing shouldBe true
 
             castHandle.emit(PlayerEvent.Buffering(false))
             advanceUntilIdle()
 
-            model.uiState.value.showsBufferingDisc shouldBe false
+            model.uiState.value.showsBufferingRing shouldBe false
         }
 
     // ---- a receiver that lets go of the item -------------------------------------------------------

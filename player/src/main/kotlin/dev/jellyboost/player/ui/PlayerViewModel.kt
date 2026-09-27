@@ -996,7 +996,10 @@ internal class PlayerViewModel
                         .takeIf { !it.isNormal }
                         ?.let { playerHandle.setPlaybackSpeed(it.rate) }
                     _videoPlayer.value = playerHandle.player
-                    _uiState.update { it.withSource(resolved, isOnline, message) }
+                    // Buffering only if the open means to play: `isBuffering` draws a Pause glyph, and
+                    // a film opened paused (home from a television) must offer Play.
+                    val opening = playerHandle.playWhenReady
+                    _uiState.update { it.withSource(resolved, isOnline, message, buffering = opening) }
                     positionTracker.onSessionOpened(resolved.startPositionTicks.ticksToMillis())
                     // A dismissal belongs to the episode it was made on.
                     upNext.reset()
@@ -1414,10 +1417,11 @@ private fun PlayerUiState.withSource(
     source: PlaybackMediaSource,
     online: Boolean,
     message: PlayerMessage?,
+    buffering: Boolean,
 ): PlayerUiState =
     copy(
         isLoading = false,
-        isBuffering = true,
+        isBuffering = buffering,
         errorMessage = null,
         hasEnded = false,
         playMethod = source.playMethod,

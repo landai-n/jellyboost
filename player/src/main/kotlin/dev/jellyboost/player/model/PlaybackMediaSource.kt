@@ -68,6 +68,12 @@ internal data class RemotePlaybackMediaSource(
     override val externalSubtitles: List<ExternalSubtitle> = emptyList(),
     override val selectedAudioIndex: Int? = null,
     override val selectedSubtitleIndex: Int? = null,
+    /**
+     * The source video stream's frame rate as the server reports it (`RealFrameRate`, falling back to
+     * `ReferenceFrameRate` / `AverageFrameRate`); `null` when unknown. A cast transcode's HLS segment
+     * length is derived from it (`HlsSegmentSnap`).
+     */
+    val videoFrameRate: Float? = null,
 ) : PlaybackMediaSource {
     override fun withSelectedAudio(jellyfinIndex: Int?): PlaybackMediaSource = copy(selectedAudioIndex = jellyfinIndex)
 
@@ -89,7 +95,8 @@ internal data class RemotePlaybackMediaSource(
             "runTimeTicks=$runTimeTicks, " +
             "startPositionTicks=$startPositionTicks, audioTracks=$audioTracks, " +
             "subtitleTracks=$subtitleTracks, externalSubtitles=${externalSubtitles.size}, " +
-            "selectedAudioIndex=$selectedAudioIndex, selectedSubtitleIndex=$selectedSubtitleIndex)"
+            "selectedAudioIndex=$selectedAudioIndex, selectedSubtitleIndex=$selectedSubtitleIndex, " +
+            "videoFrameRate=$videoFrameRate)"
 
     private companion object {
         /** `null` stays readable — its absence is a fact about the source, not a secret. */

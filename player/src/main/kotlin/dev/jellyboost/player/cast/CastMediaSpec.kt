@@ -10,6 +10,9 @@ package dev.jellyboost.player.cast
  * @property durationMs `0` when the server does not know it.
  * @property autoplay the queue item's autoplay, set from the open's `playWhenReady` so it cannot
  *   contradict the load request's (which `CastPlayer` takes from its own `playWhenReady`).
+ * @property hlsSegmentMs the server's segment length, set **only** for a re-encoded HLS transcode
+ *   whose frame rate is known; `null` means the load starts exactly where it was asked to
+ *   ([HlsSegmentSnap.snapStartMs]).
  */
 internal data class CastMediaSpec(
     val mediaId: String,
@@ -21,6 +24,7 @@ internal data class CastMediaSpec(
     val metadata: CastMetadata,
     val tracks: List<CastTrackSpec>,
     val autoplay: Boolean = true,
+    val hlsSegmentMs: Double? = null,
 )
 
 internal enum class CastStreamType {

@@ -37,6 +37,16 @@ Known issues:
 
 ## Current milestone: M14 — Breadth & theming (approved 2026-08-28; tracks 4 and 6 landed, gate green; Settings hub landed on `m14/settings-hub`)
 
+**Cast: a transcode load late in an HLS segment no longer stalls (2026-09-27, worktree branch; device
+walk owed).** A cast load of a transcoded HLS stream starting in the last ~0.5 s of a segment sat in
+`BUFFERING` forever (measured at 2.881 s and 2.590 s into 3 s segments). A transcoded HLS load now starts
+at most 1 s into its segment (at most ~2 s earlier than asked); the segment length comes from the video
+stream's frame rate, `ceil(3 × fps) / fps` (3.000 s at 24 fps, 3.003 s at 23.976 fps). Direct play and
+seeks are unchanged (seeks: follow-up). DECISIONS.md 2026-09-27, *A cast transcode starts early in its
+segment*; `docs/features/chromecast.md` › *A start late in a segment*.
+- **Device walk owed:** resume a transcoded film on a Chromecast late in a segment (e.g. 2.8 s past a
+  multiple of 3 s at 24 fps) → it plays from up to 2 s earlier, and the dashboard's position follows.
+
 **Cast: the wave's review fixes (2026-09-27, worktree branch; device walk owed).** Five fixes from the
 adversarial review of the whole cast wave. (1) The coordinator takes a receiver reading as the detached
 film's only when the receiver was loaded with that very source, so a new screen's film can no longer

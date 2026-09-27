@@ -11,6 +11,7 @@ import dev.jellyboost.player.model.PlaybackMediaItemSpec
 import dev.jellyboost.player.model.SubtitleSpec
 import dev.jellyboost.player.model.externalSubtitleTrackId
 import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.doubles.plusOrMinus
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.mockk.every
@@ -354,6 +355,112 @@ class CastSpecMapperTest {
         }
     }
 
+    // ---- a start late in an HLS segment ------------------------------------------------------
+
+    @Test
+    fun `a re-encoded HLS transcode with a known frame rate carries the server's segment length`() {
+        mapper.map(hlsItem(), reEncode(frameRate = 24f)).hlsSegmentMs shouldBe 3_000.0
+        requireNotNull(mapper.map(hlsItem(), reEncode(frameRate = 23.976025f)).hlsSegmentMs) shouldBe
+            (3_003.0 plusOrMinus 0.01)
+        // The server reads its parameters case-insensitively, and so does the mapper.
+        mapper
+            .map(hlsItem(), reEncode(frameRate = 24f, url = "/videos/x/master.m3u8?AllowVideoStreamCopy=False"))
+            .hlsSegmentMs shouldBe 3_000.0
+    }
+
+    @Test
+    fun `no segment grid for direct play, an unknown frame rate, a stream copy or a URL setting its own frame rate`() {
+        mapper.map(itemSpec(), directPlay().copy(videoFrameRate = 24f)).hlsSegmentMs shouldBe null
+        mapper.map(hlsItem(), reEncode(frameRate = null)).hlsSegmentMs shouldBe null
+        // Without the server's own allowVideoStreamCopy=false the video may be copied, and a copy is
+        // laid out on the file's keyframes, not on a fixed grid.
+        mapper
+            .map(hlsItem(), reEncode(frameRate = 24f, url = "/videos/x/master.m3u8?VideoCodec=h264"))
+            .hlsSegmentMs shouldBe null
+        mapper
+            .map(hlsItem(), reEncode(frameRate = 24f, url = "$TRANSCODE_URL&MaxFramerate=23.976"))
+            .hlsSegmentMs shouldBe null
+        mapper
+            .map(hlsItem(), reEncode(frameRate = 24f).copy(runTimeTicks = 0L))
+            .hlsSegmentMs shouldBe null
+    }
+
+    @Test
+    fun `a segment length the transcode URL names replaces the nominal 3 s`() {
+        mapper.map(hlsItem(), reEncode(frameRate = 24f, url = "$TRANSCODE_URL&SegmentLength=6")).hlsSegmentMs shouldBe
+            6_000.0
+        mapper.map(hlsItem(), reEncode(frameRate = 24f, url = "$TRANSCODE_URL&SegmentLength=x")).hlsSegmentMs shouldBe
+            null
+    }
+
+    /**
+     * The device-measured stall: a 24 fps transcode loaded 2.881 s into segment 1018 sat in BUFFERING
+     * forever. The load must carry a start 1 s into that segment — as the player's position and as the
+     * queue item's start time the converter reads.
+     */
+    @Test
+    fun `a transcode load late in a segment carries the snapped start`() {
+        mockkStatic(Uri::class)
+        try {
+            every { Uri.parse(any()) } returns mockk(relaxed = true)
+            val player = mockk<Player>(relaxed = true)
+            val items = mutableListOf<MediaItem>()
+            every { player.setMediaItem(capture(items), any<Long>()) } returns Unit
+            val mapped =
+                mapper.map(hlsItem(), reEncode(frameRate = 24f, startPositionTicks = 3_056_881L * TICKS_PER_MS))
+
+            val sent = player.loadOnReceiver(mapped, startPositionMs = 3_056_881L, playWhenReady = true)
+
+            sent.startPositionMs shouldBe 3_055_000L
+            items.single().castSpec()?.startPositionMs shouldBe 3_055_000L
+            verifyOrder {
+                player.playWhenReady = true
+                player.setMediaItem(items.single(), 3_055_000L)
+                player.prepare()
+            }
+        } finally {
+            unmockkStatic(Uri::class)
+        }
+    }
+
+    @Test
+    fun `a transcode load early in a segment, and a direct play load anywhere, start where they were asked to`() {
+        mockkStatic(Uri::class)
+        try {
+            every { Uri.parse(any()) } returns mockk(relaxed = true)
+            val player = mockk<Player>(relaxed = true)
+            val items = mutableListOf<MediaItem>()
+            every { player.setMediaItem(capture(items), any<Long>()) } returns Unit
+            val early =
+                mapper.map(hlsItem(), reEncode(frameRate = 24f, startPositionTicks = 3_054_648L * TICKS_PER_MS))
+            val direct =
+                mapper.map(
+                    itemSpec(),
+                    directPlay(startPositionTicks = 3_056_881L * TICKS_PER_MS).copy(videoFrameRate = 24f),
+                )
+
+            player.loadOnReceiver(early, startPositionMs = 3_054_648L, playWhenReady = true)
+            player.loadOnReceiver(direct, startPositionMs = 3_056_881L, playWhenReady = true)
+
+            items.map { it.castSpec()?.startPositionMs } shouldBe listOf(3_054_648L, 3_056_881L)
+            verifyOrder {
+                player.setMediaItem(items[0], 3_054_648L)
+                player.setMediaItem(items[1], 3_056_881L)
+            }
+        } finally {
+            unmockkStatic(Uri::class)
+        }
+    }
+
+    /** A cast transcode as the server hands it back: re-encoding, the flag echoed into its URL. */
+    private fun reEncode(
+        frameRate: Float?,
+        url: String = TRANSCODE_URL,
+        startPositionTicks: Long = 0L,
+    ) = transcode(frameRate = frameRate, url = url, startPositionTicks = startPositionTicks)
+
+    private fun hlsItem() = itemSpec(uri = "https://server$TRANSCODE_URL", mimeType = MimeTypes.APPLICATION_M3U8)
+
     private fun itemSpec(
         uri: String = "https://server/Videos/x/stream?static=true",
         mimeType: String? = null,
@@ -385,14 +492,23 @@ class CastSpecMapperTest {
         startPositionTicks = startPositionTicks,
     )
 
-    private fun transcode() =
-        PlayerFixtures.remoteSource(
-            playMethod = PlayMethod.TRANSCODE,
-            transcodingUrl = "/videos/x/master.m3u8",
-        )
+    private fun transcode(
+        frameRate: Float? = null,
+        url: String = "/videos/x/master.m3u8",
+        startPositionTicks: Long = 0L,
+    ) = PlayerFixtures.remoteSource(
+        playMethod = PlayMethod.TRANSCODE,
+        transcodingUrl = url,
+        videoFrameRate = frameRate,
+        startPositionTicks = startPositionTicks,
+    )
 
     private companion object {
         const val TOKEN = "tok3n"
+        const val TICKS_PER_MS = 10_000L
+
+        /** What the server hands a cast negotiation: it echoes the re-encode flag into the URL. */
+        const val TRANSCODE_URL = "/videos/x/master.m3u8?VideoCodec=h264&allowVideoStreamCopy=false"
         const val SUBTITLES = "https://server/Videos/x/Subtitles"
     }
 }

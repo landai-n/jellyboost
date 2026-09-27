@@ -58,8 +58,14 @@ class CastingBarSemanticsTest {
         rule
             .onNode(hasContentDescription(sentence(PlayerR.string.player_casting_to)) and hasClickAction())
             .assertExists()
-        // The title and status lines are drawn, but only the row's sentence speaks them.
-        assertEquals(0, rule.onAllNodesWithText(TITLE, useUnmergedTree = true).fetchSemanticsNodes().size)
+        // The title and status lines are drawn, but only the row's sentence speaks them. Asked of the
+        // merged tree, the one TalkBack reads: the unmerged tree keeps the lines as children of the
+        // clearing node (they are drawn there), so it cannot tell cleared text from spoken text.
+        val status = text(PlayerR.string.player_casting_to, DEVICE)
+        for (line in listOf(TITLE, status)) {
+            assertEquals(1, rule.onAllNodesWithText(line, useUnmergedTree = true).fetchSemanticsNodes().size)
+            assertEquals(0, rule.onAllNodesWithText(line, substring = true).fetchSemanticsNodes().size)
+        }
     }
 
     @Test

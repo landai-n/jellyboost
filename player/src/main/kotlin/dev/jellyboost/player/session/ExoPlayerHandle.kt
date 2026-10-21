@@ -32,6 +32,8 @@ import javax.inject.Singleton
  *
  * - `EXTENSION_RENDERER_MODE_PREFER` must stay paired with the forced audio codecs in
  *   `DeviceProfileBuilder`: it is what makes the advertised AC3/DTS/TrueHD actually decodable.
+ *   [JellyboostRenderersFactory] changes only the audio sink: a larger PCM buffer and an in-app
+ *   stereo fold of surround PCM when no output can render it.
  * - `setEnableDecoderFallback(true)` only covers a decoder that fails to *initialise*; the
  *   mid-stream case is `DecoderFallbackHandler`'s.
  * - libass wraps rather than replaces: [AssSubtitleSupport] hands back a handler only when the
@@ -49,6 +51,7 @@ internal class ExoPlayerHandle
         private val dataSourceFactory: DataSource.Factory,
         private val serviceState: PlaybackServiceState,
         private val assSubtitles: AssSubtitleSupport,
+        private val surroundOutput: AudioManagerSurroundOutputDetector,
     ) : PlayerHandle {
         private val _events = playerEventFlow()
 
@@ -95,7 +98,7 @@ internal class ExoPlayerHandle
 
         private fun buildPlayer(): ExoPlayer {
             val defaultRenderers =
-                DefaultRenderersFactory(context)
+                JellyboostRenderersFactory(context, surroundOutput)
                     .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
                     .setEnableDecoderFallback(true)
             val assHandler = assSubtitles.createHandler()
@@ -111,6 +114,7 @@ internal class ExoPlayerHandle
                 .apply {
                     assHandler?.let { assSubtitles.attach(it, this) }
                     addListener(listener)
+                    addAnalyticsListener(PlaybackHealthLogger)
                     setAudioAttributes(
                         AudioAttributes
                             .Builder()

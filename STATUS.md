@@ -35,6 +35,37 @@ Known issues:
   files under `build/` may carry future timestamps; nothing reads them (the commit gate
   compares only tracked `*.kt`/`*.kts`).
 
+## Offline playback bug wave: sticky brightness indicator + audio sink hardening (2026-10-21 — landed, gate green; device walk owed)
+
+Three reports from an offline DTS 5.1 film on the test tablet. What landed:
+
+- **Brightness/volume swipe indicator stuck on screen** — root cause found and fixed.
+  The linger timer was keyed on the indicator *value*; at a saturated 0 %/100 % every drag
+  event wrote an equal value, so a hide and a same-value show in one frame left the overlay
+  with no timer. `GestureIndicatorState` now bumps a revision on every write and the linger
+  keys on that (`GestureIndicatorStateTest`). Side effect: the overlay no longer times out
+  mid-drag at a saturated value.
+- **Half-second sound cuts / A-V desync** — not reproduced: a 13-minute instrumented
+  session on the speaker (AudioFlinger underrun counters, decoder stats, CPU per thread,
+  brightness and volume swipes mid-play) showed zero underruns, zero dropped frames and no
+  Media3 warnings. The one thing the affected film does differently is its audio path:
+  ffmpeg decodes DTS 5.1 to six-channel PCM, Media3 opens a six-channel `AudioTrack` with a
+  250 ms buffer, and the OEM ROM runs that through its downmixer and a per-session Dolby
+  effect. Hardening landed on that path (DECISIONS.md 2026-10-21): a 500 ms PCM buffer
+  floor, an in-app stereo fold of 3–8 channel PCM whenever no HDMI/USB/dock output can take
+  more, and a `PlaybackHealthLogger` that writes underruns, dropped frames and sink errors to
+  Timber. Media3 1.9.0's own `createForConstantPower(n, 2)` turned out to be stored
+  transposed relative to how `AudioMixingUtil.mix` reads it (centre to the left only); the
+  fold spells its coefficients out and a canary test pins the finding.
+
+Known issues / owed:
+- Device walk: a full offline DTS 5.1 film on the test tablet with a debug build, reading the
+  `PlaybackHealthLogger` lines; and a check of the A-V offset on Bluetooth, which the report
+  did not say was in use.
+- Seen in passing: after the playback service tears the player down in the background, a
+  still-open player screen shows the transport at 0:00 with a Play button that does nothing
+  (the player has no media items). Not fixed here.
+
 ## Current milestone: M14 — Breadth & theming (approved 2026-08-28; tracks 4 and 6 landed, gate green; Settings hub landed on `m14/settings-hub`)
 
 **Cast wave: device walk on the test tablet with a Chromecast Ultra (2026-09-27, all merged on

@@ -90,9 +90,10 @@ internal fun PlayerGestureLayer(
 
     val indicatorState = remember { GestureIndicatorState() }
     LaunchedEffect(indicatorState.revision) {
+        val shown = indicatorState.revision
         if (indicatorState.indicator != null) {
             delay(INDICATOR_LINGER_MS)
-            indicatorState.hide()
+            indicatorState.hide(shown)
         }
     }
 

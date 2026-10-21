@@ -13,7 +13,7 @@ internal data class GestureIndicator(
 /**
  * The linger timer must key on [revision], not on [indicator]: equal values do not notify, and a
  * [hide] followed by a same-value [show] within one frame would otherwise leave the overlay visible
- * with no timer running.
+ * with no timer running. A timer may only hide the show it was started for.
  */
 internal class GestureIndicatorState {
     var indicator: GestureIndicator? by mutableStateOf(null)
@@ -30,7 +30,7 @@ internal class GestureIndicatorState {
         revision++
     }
 
-    fun hide() {
-        indicator = null
+    fun hide(revision: Int) {
+        if (this.revision == revision) indicator = null
     }
 }

@@ -56,6 +56,18 @@ class ControlsAutoHideTest {
     }
 
     @Test
+    fun `a reveal after a hide in the same frame still changes the key`() {
+        // The hide and the reveal both leave `armed` true; only the bumped counter tells the two
+        // compositions apart, so without it the effect is not relaunched and the bar never hides.
+        val beforeHide = timer(interactions = 5)
+        val afterReveal = timer(interactions = 6)
+
+        afterReveal.armed shouldBe beforeHide.armed
+        afterReveal.timeoutMs shouldBe beforeHide.timeoutMs
+        afterReveal shouldNotBe beforeHide
+    }
+
+    @Test
     fun `nothing happening does not restart the timer`() {
         // A recomposition that changes none of the inputs must leave the countdown alone, or the
         // controls would never hide at all.

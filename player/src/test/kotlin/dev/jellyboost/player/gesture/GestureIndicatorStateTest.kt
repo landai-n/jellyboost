@@ -29,11 +29,23 @@ class GestureIndicatorStateTest {
         val state = GestureIndicatorState()
         state.show(SwipeTarget.BRIGHTNESS, 0.5f)
 
-        state.hide()
+        state.hide(state.revision)
         state.indicator.shouldBeNull()
 
         state.show(SwipeTarget.BRIGHTNESS, 0.5f)
         state.indicator shouldBe GestureIndicator(SwipeTarget.BRIGHTNESS, 0.5f)
         state.revision shouldBe 2
+    }
+
+    @Test
+    fun `a stale hide leaves an indicator shown after it started`() {
+        val state = GestureIndicatorState()
+        state.show(SwipeTarget.VOLUME, 0.3f)
+        val stale = state.revision
+        state.show(SwipeTarget.VOLUME, 0.3f)
+
+        state.hide(stale)
+
+        state.indicator shouldBe GestureIndicator(SwipeTarget.VOLUME, 0.3f)
     }
 }

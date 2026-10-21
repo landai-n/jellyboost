@@ -182,7 +182,13 @@ internal fun PlayerScreen(
     var rootFocused by remember { mutableStateOf(false) }
     val focusClaimed = remember { mutableStateOf(false) }
 
-    val runKeyCommand = remember(actions) { playerKeyRunner(actions) { controlsVisible = true } }
+    val runKeyCommand =
+        remember(actions) {
+            playerKeyRunner(actions) {
+                controlsVisible = true
+                interactions++
+            }
+        }
 
     LaunchedEffect(state.hasEnded) {
         if (state.hasEnded) onBack()
@@ -230,7 +236,10 @@ internal fun PlayerScreen(
         // every sibling appended after it.
         if (!inPictureInPicture) {
             PlayerGestureLayer(
-                onToggleControls = { controlsVisible = !controlsVisible },
+                onToggleControls = {
+                    controlsVisible = !controlsVisible
+                    interactions++
+                },
                 onSeekBy = actions.onSeekBy,
                 // Both vertical swipes act on *this* device, so while a receiver has the film they
                 // are meaningless; the receiver's volume is the hardware keys' job, routed by the
@@ -548,7 +557,8 @@ private fun CastingBackdrop(
  *
  * **[interactions] must stay in the effect key.** A key of `(armed, timeoutMs)` would not restart
  * the timer — neither changes on an interaction — so the bar would hide four seconds after it first
- * appeared no matter what was done with it.
+ * appeared no matter what was done with it. A reveal bumps the counter too, so a hide and a
+ * same-frame reveal never compose to an equal key.
  */
 @Composable
 private fun ControlsAutoHideEffect(

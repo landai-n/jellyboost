@@ -63,13 +63,17 @@ internal class StereoDownmixAudioProcessor(
         const val SIDE = 0.7071f
         const val LFE = 0.5f
 
-        /** Left and right rows, in ffmpeg's default channel order for each count. */
+        /**
+         * Left and right rows, following ffmpeg's default layout for each count: 2.1 at three
+         * channels is folded as 3.0, which is harmless. A count alone cannot tell 6.1 back from
+         * 6.1 side, so seven channels assume ffmpeg's default 6.1.
+         */
         val ROWS: List<Pair<FloatArray, FloatArray>> =
             listOf(
                 // FL FR FC
                 floatArrayOf(FRONT, 0f, SIDE) to floatArrayOf(0f, FRONT, SIDE),
-                // FL FR BL BR
-                floatArrayOf(FRONT, 0f, SIDE, 0f) to floatArrayOf(0f, FRONT, 0f, SIDE),
+                // FL FR FC BC (ffmpeg's 4.0; quad folds its rears to a phantom centre)
+                floatArrayOf(FRONT, 0f, SIDE, SIDE) to floatArrayOf(0f, FRONT, SIDE, SIDE),
                 // FL FR FC SL SR
                 floatArrayOf(FRONT, 0f, SIDE, SIDE, 0f) to floatArrayOf(0f, FRONT, SIDE, 0f, SIDE),
                 // FL FR FC LFE BL BR

@@ -79,6 +79,40 @@ class AudioManagerSurroundOutputDetectorTest {
     }
 
     @Test
+    @DisplayName("API 33: an HDMI dock connected while media is routed to Bluetooth is not surround")
+    fun routedOutputWinsOnTiramisu() {
+        val hdmi = device(AudioDeviceInfo.TYPE_HDMI, 2, 8)
+        val a2dp = device(AudioDeviceInfo.TYPE_BLUETOOTH_A2DP, 2)
+        val audioManager = mockk<AudioManager>()
+        every { audioManager.getAudioDevicesForAttributes(any()) } returns listOf(a2dp)
+        every { audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS) } returns arrayOf(hdmi, a2dp)
+
+        mediaOutputIsSurround(audioManager, sdkInt = 33) { mockk() } shouldBe false
+    }
+
+    @Test
+    @DisplayName("API 33: media routed to a multichannel HDMI output is surround")
+    fun routedHdmiOnTiramisu() {
+        val audioManager = mockk<AudioManager>()
+        every { audioManager.getAudioDevicesForAttributes(any()) } returns listOf(device(AudioDeviceInfo.TYPE_HDMI, 8))
+
+        mediaOutputIsSurround(audioManager, sdkInt = 33) { mockk() } shouldBe true
+    }
+
+    @Test
+    @DisplayName("before API 33 every connected output counts: an HDMI dock beside Bluetooth is surround")
+    fun connectedOutputsBeforeTiramisu() {
+        val hdmi = device(AudioDeviceInfo.TYPE_HDMI, 2, 8)
+        val a2dp = device(AudioDeviceInfo.TYPE_BLUETOOTH_A2DP, 2)
+        val audioManager = mockk<AudioManager>()
+        every { audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS) } returns arrayOf(hdmi, a2dp)
+
+        val surround = mediaOutputIsSurround(audioManager, sdkInt = 31) { error("read only on API 33+") }
+
+        surround shouldBe true
+    }
+
+    @Test
     @DisplayName("HDMI eARC counts only on API 31 and later")
     fun hdmiEarcGuarded() {
         isSurroundCapable(AudioDeviceInfo.TYPE_HDMI_EARC, intArrayOf(6), sdkInt = 31) shouldBe true

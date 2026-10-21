@@ -6,6 +6,7 @@ import androidx.media3.common.Format
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.audio.DefaultAudioSink
 import io.kotest.matchers.comparables.shouldBeBetween
+import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 
@@ -34,6 +35,19 @@ class PlayerAudioTrackBufferSizeTest {
     @DisplayName("a tiny platform minimum still gets the 500 ms floor")
     fun tinyMinimumKeepsFloor() {
         sixChannelBufferBytes(minBufferSizeInBytes = 1_200).shouldBeBetween(FIVE_HUNDRED_MS, SEVEN_FIFTY_MS)
+    }
+
+    @Test
+    @DisplayName("a large platform minimum is cut to the 750 ms ceiling")
+    fun largeMinimumHitsCeiling() {
+        sixChannelBufferBytes(minBufferSizeInBytes = 100_000) shouldBe SEVEN_FIFTY_MS
+    }
+
+    @Test
+    @DisplayName("between floor and ceiling the platform minimum is multiplied by 8")
+    fun midRangeMinimumIsMultiplied() {
+        // 320 000 bytes, rounded up to whole 12-byte frames by Media3.
+        sixChannelBufferBytes(minBufferSizeInBytes = 40_000) shouldBe 320_004
     }
 
     private companion object {

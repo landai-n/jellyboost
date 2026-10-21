@@ -229,10 +229,12 @@ share:
 - **Stereo fold:** `StereoDownmixAudioProcessor` folds 3–8 channel 16-bit or float PCM to stereo
   with constant-power coefficients at a 0.5 gain. It stays inactive when `SurroundOutputDetector`
   finds an HDMI, HDMI ARC/eARC, USB device, dock, digital line or aux line output that reports
-  more than two channels, or reports none. The speaker, wired and USB headsets and Bluetooth
-  never count. Anything it cannot fold passes through untouched; it never fails the sink. Its
-  matrices are written out by hand because Media3 1.9.0's `createForConstantPower(n, 2)` is read
-  transposed by `AudioMixingUtil.mix`.
+  more than two channels, or reports none. On API 33+ only the devices media is routed to are
+  checked; before that, every connected output is. The speaker, wired and USB headsets and
+  Bluetooth never count. Four channels are folded as ffmpeg's default 4.0 (FL FR FC BC), so a
+  true quad source's rears become a phantom centre. Anything it cannot fold passes through
+  untouched; it never fails the sink. Its matrices are written out by hand because Media3 1.9.0's
+  `createForConstantPower(n, 2)` is read transposed by `AudioMixingUtil.mix`.
 - **Health log:** `PlaybackHealthLogger` writes audio underruns, dropped video frames and audio
   sink errors to Timber.
 

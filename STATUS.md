@@ -58,6 +58,12 @@ Three reports from an offline DTS 5.1 film on the test tablet. What landed:
   transposed relative to how `AudioMixingUtil.mix` reads it (centre to the left only); the
   fold spells its coefficients out and a canary test pins the finding.
 
+Adversarial review (3 lenses, 8 findings confirmed, 0 refuted, all fixed before the final
+checkpoint): the 4-channel fold now follows ffmpeg's 4.0 layout; the swipe linger can no longer
+hide a newer show; a controls reveal counts as an interaction (the same equal-key gap in the
+auto-hide timer); the surround detector reads the devices media is routed to on API 33+; the
+buffer ceiling, factor and 6.1 back-centre are pinned by tests.
+
 Known issues / owed:
 - Device walk: a full offline DTS 5.1 film on the test tablet with a debug build, reading the
   `PlaybackHealthLogger` lines; and a check of the A-V offset on Bluetooth, which the report

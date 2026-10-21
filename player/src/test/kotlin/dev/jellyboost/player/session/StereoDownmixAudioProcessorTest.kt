@@ -129,6 +129,32 @@ class StereoDownmixAudioProcessorTest {
     }
 
     @Test
+    @DisplayName("4.0: the centre and the back centre each land on both sides")
+    fun fourZeroCentres() {
+        for (index in 2..3) {
+            val (left, right) = processor().fold16(4, index to 20_000)
+
+            left.toInt().shouldBeBetween(7_070, 7_072)
+            right.toInt().shouldBeBetween(7_070, 7_072)
+        }
+    }
+
+    @Test
+    @DisplayName("6.1: the back centre lands on both sides and each side channel stays on its own")
+    fun sixOneBackCentreAndSides() {
+        val (backCentreL, backCentreR) = processor().fold16(7, 4 to 20_000)
+        val (sideLeftL, sideLeftR) = processor().fold16(7, 5 to 20_000)
+        val (sideRightL, sideRightR) = processor().fold16(7, 6 to 20_000)
+
+        backCentreL.toInt().shouldBeBetween(7_070, 7_072)
+        backCentreR.toInt().shouldBeBetween(7_070, 7_072)
+        sideLeftL.toInt().shouldBeBetween(7_070, 7_072)
+        sideLeftR shouldBe 0.toShort()
+        sideRightL shouldBe 0.toShort()
+        sideRightR.toInt().shouldBeBetween(7_070, 7_072)
+    }
+
+    @Test
     @DisplayName("loud summed channels saturate rather than wrap")
     fun loudPassageSaturates() {
         val loud = Short.MAX_VALUE

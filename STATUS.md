@@ -35,42 +35,41 @@ Known issues:
   files under `build/` may carry future timestamps; nothing reads them (the commit gate
   compares only tracked `*.kt`/`*.kts`).
 
-## Offline playback bug wave: sticky brightness indicator + audio sink hardening (2026-10-21 — landed, gate green; device walk owed)
+## Offline playback bug wave: sticky brightness indicator; audio cuts investigated (2026-10-21 — landed, gate green; device walk owed)
 
 Three reports from an offline DTS 5.1 film on the test tablet. What landed:
 
 - **Brightness/volume swipe indicator stuck on screen** — root cause found and fixed.
   The linger timer was keyed on the indicator *value*; at a saturated 0 %/100 % every drag
   event wrote an equal value, so a hide and a same-value show in one frame left the overlay
-  with no timer. `GestureIndicatorState` now bumps a revision on every write and the linger
-  keys on that (`GestureIndicatorStateTest`). Side effect: the overlay no longer times out
-  mid-drag at a saturated value.
-- **Half-second sound cuts / A-V desync** — not reproduced: a 13-minute instrumented
-  session on the speaker (AudioFlinger underrun counters, decoder stats, CPU per thread,
-  brightness and volume swipes mid-play) showed zero underruns, zero dropped frames and no
-  Media3 warnings. The one thing the affected film does differently is its audio path:
-  ffmpeg decodes DTS 5.1 to six-channel PCM, Media3 opens a six-channel `AudioTrack` with a
-  250 ms buffer, and the OEM ROM runs that through its downmixer and a per-session Dolby
-  effect. Hardening landed on that path (DECISIONS.md 2026-10-21): a 500 ms PCM buffer
-  floor, an in-app stereo fold of 3–8 channel PCM whenever no HDMI/USB/dock output can take
-  more, and a `PlaybackHealthLogger` that writes underruns, dropped frames and sink errors to
-  Timber. Media3 1.9.0's own `createForConstantPower(n, 2)` turned out to be stored
-  transposed relative to how `AudioMixingUtil.mix` reads it (centre to the left only); the
-  fold spells its coefficients out and a canary test pins the finding.
-
-Adversarial review (3 lenses, 8 findings confirmed, 0 refuted, all fixed before the final
-checkpoint): the 4-channel fold now follows ffmpeg's 4.0 layout; the swipe linger can no longer
-hide a newer show; a controls reveal counts as an interaction (the same equal-key gap in the
-auto-hide timer); the surround detector reads the devices media is routed to on API 33+; the
-buffer ceiling, factor and 6.1 back-centre are pinned by tests.
+  with no timer. `GestureIndicatorState` now bumps a revision on every write, the linger keys
+  on that, and a timer can only hide the show it was started for
+  (`GestureIndicatorStateTest`). Sibling with the same equal-key gap: the controls auto-hide
+  now counts every reveal as an interaction (`ControlsAutoHideTest`).
+- **Half-second sound cuts / A-V desync** — not reproduced, nothing shipped. A 13-minute
+  instrumented session on the speaker (AudioFlinger underrun counters, decoder stats, CPU per
+  thread, brightness and volume swipes mid-play) showed zero underruns, zero dropped frames
+  and no Media3 warnings. Facts gathered for the next attempt: the film is HEVC Main 10
+  1080p with two DTS 5.1 tracks; ffmpeg decodes to six-channel PCM; Media3 opens a
+  six-channel `AudioTrack` with a 250 ms buffer; the OEM ROM runs it through its own
+  downmixer and a per-session Dolby effect. A defensive change (500 ms buffer floor, in-app
+  stereo fold) was built, reviewed and then dropped by decision, since nothing proved it
+  addressed the cause; it is in history under `1c254405`/`8c5d1773` if the walk below ever
+  points at the six-channel path. Finding worth keeping: Media3 1.9.0's
+  `ChannelMixingMatrix.createForConstantPower(n, 2)` stores its stereo coefficients
+  output-major while `AudioMixingUtil.mix` reads them input-major, so it must not be used for
+  a stereo fold on this Media3 version.
 
 Known issues / owed:
-- Device walk: a full offline DTS 5.1 film on the test tablet with a debug build, reading the
-  `PlaybackHealthLogger` lines; and a check of the A-V offset on Bluetooth, which the report
-  did not say was in use.
+- Device walk: reproduce the cuts on the test tablet with a debug build and `adb logcat`
+  (Media3 logs sink warnings at `W`), noting whether Bluetooth is in use and whether the
+  desync is a constant offset or grows; the tablet had no Wi-Fi that day, so only the
+  release build's offline copy could be played.
 - Seen in passing: after the playback service tears the player down in the background, a
   still-open player screen shows the transport at 0:00 with a Play button that does nothing
   (the player has no media items). Not fixed here.
+- Flaky: `MusicPlaybackViewModelTest` ("play forwards the track list …") failed once in a
+  local gate run on this tree and passed on every other run the same day; not investigated.
 
 ## Current milestone: M14 — Breadth & theming (approved 2026-08-28; tracks 4 and 6 landed, gate green; Settings hub landed on `m14/settings-hub`)
 

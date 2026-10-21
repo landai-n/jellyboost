@@ -218,29 +218,6 @@ then fail on the first frame (docs/PLAN.md, risk #5).
 The budget resets whenever playback gets going again, so an unrelated failure an hour later does
 not inherit an exhausted one.
 
-## The audio sink (DECISIONS.md 2026-10-21)
-
-`JellyboostRenderersFactory` keeps the plan's `EXTENSION_RENDERER_MODE_PREFER` and decoder
-fallback and changes only the `DefaultAudioSink`, which the platform and ffmpeg audio renderers
-share:
-
-- **PCM buffer:** at least 500 ms, at most 750 ms (`PLAYER_AUDIO_TRACK_BUFFER_SIZE`). Media3's
-  250 ms floor left a six-channel track one short stall away from an audible gap.
-- **Stereo fold:** `StereoDownmixAudioProcessor` folds 3–8 channel 16-bit or float PCM to stereo
-  with constant-power coefficients at a 0.5 gain. It stays inactive when `SurroundOutputDetector`
-  finds an HDMI, HDMI ARC/eARC, USB device, dock, digital line or aux line output that reports
-  more than two channels, or reports none. On API 33+ only the devices media is routed to are
-  checked; before that, every connected output is. The speaker, wired and USB headsets and
-  Bluetooth never count. Four channels are folded as ffmpeg's default 4.0 (FL FR FC BC), so a
-  true quad source's rears become a phantom centre. Anything it cannot fold passes through
-  untouched; it never fails the sink. Its matrices are written out by hand because Media3 1.9.0's
-  `createForConstantPower(n, 2)` is read transposed by `AudioMixingUtil.mix`.
-- **Health log:** `PlaybackHealthLogger` writes audio underruns, dropped video frames and audio
-  sink errors to Timber.
-
-This is hardening against the half-second cuts reported on DTS 5.1 downloads on the test tablet,
-not a verified root-cause fix: a 13-minute instrumented session did not reproduce them.
-
 ## How the M5 definition of done maps to code
 
 | DoD | Where |

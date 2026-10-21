@@ -25,10 +25,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,6 +44,8 @@ import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.player.R
 import dev.jellyboost.player.gesture.BrightnessCurve
 import dev.jellyboost.player.gesture.GestureConfig
+import dev.jellyboost.player.gesture.GestureIndicator
+import dev.jellyboost.player.gesture.GestureIndicatorState
 import dev.jellyboost.player.gesture.PlayerGestureController
 import dev.jellyboost.player.gesture.SwipeTarget
 import kotlinx.coroutines.delay
@@ -89,12 +88,11 @@ internal fun PlayerGestureLayer(
             )
         }
 
-    var indicator by remember { mutableStateOf<GestureIndicator?>(null) }
-    // Keyed on the indicator so a continuing swipe restarts the linger rather than timing out mid-drag.
-    LaunchedEffect(indicator) {
-        if (indicator != null) {
+    val indicatorState = remember { GestureIndicatorState() }
+    LaunchedEffect(indicatorState.revision) {
+        if (indicatorState.indicator != null) {
             delay(INDICATOR_LINGER_MS)
-            indicator = null
+            indicatorState.hide()
         }
     }
 
@@ -137,7 +135,7 @@ internal fun PlayerGestureLayer(
                                 SwipeTarget.VOLUME -> audioManager.setVolumeFraction(value)
                                 SwipeTarget.BRIGHTNESS -> activity.setBrightnessFraction(value)
                             }
-                            indicator = GestureIndicator(current, value)
+                            indicatorState.show(current, value)
                         }
                     },
                 )
@@ -170,14 +168,9 @@ internal fun PlayerGestureLayer(
                     )
                 }.then(swipes),
     ) {
-        indicator?.let { GestureIndicatorOverlay(it, Modifier.align(Alignment.Center)) }
+        indicatorState.indicator?.let { GestureIndicatorOverlay(it, Modifier.align(Alignment.Center)) }
     }
 }
-
-private data class GestureIndicator(
-    val target: SwipeTarget,
-    val value: Float,
-)
 
 /**
  * Labelled rather than semantics-cleared: this panel is the only feedback a swipe gives, so as a

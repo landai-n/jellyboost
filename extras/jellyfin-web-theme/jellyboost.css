@@ -1470,6 +1470,42 @@ html[data-theme="appletv"] .itemDetailPage .itemBackdrop {
     color: #fff !important;
 }
 
+/* Volume/brightness feedback: web pins it top-right; the app centres an icon + bar capsule. */
+.iconOsd {
+    top: 50%;
+    left: 50%;
+    right: auto;
+    transform: translate(-50%, -50%);
+    display: flex;
+    align-items: center;
+    gap: 1em;
+    padding: 0.9em 1.3em;
+    border-radius: var(--jb-radius-xl);
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(24px) saturate(1.3);
+    -webkit-backdrop-filter: blur(24px) saturate(1.3);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.09);
+}
+
+.iconOsdIcon {
+    margin: 0;
+    font-size: 200%;
+}
+
+.iconOsdProgressOuter {
+    width: 9em;
+    height: 0.3em;
+    margin: 0;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.18);
+    overflow: hidden;
+}
+
+.iconOsdProgressInner {
+    border-radius: 999px;
+    background: #00a4dc;
+}
+
 .osdPoster {
     border-radius: var(--jb-radius-card);
     overflow: hidden;

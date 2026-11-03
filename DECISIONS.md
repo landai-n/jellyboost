@@ -4873,3 +4873,9 @@ Seeded from the approved plan; listed for traceability, no divergence:
 - **Done instead:** a server-side companion that runs the other direction — it restyles jellyfin-web toward Jellyboost's design system (tokens from `core/ui/theme` and `design/_shared/`: both schemes, glass chrome, pill tabs, 12dp cards, the brand mark) so the web client a household also uses looks like the app. It lives under `extras/`, outside every Gradle module, and nothing in the client depends on it.
 - **Reason:** user request. Kept out of the app so the plan's scope (a native client) is unchanged; the files are static assets with no gate to wire. The splash's background is computed and dithered in `render-splash.py` rather than rasterised from the SVG, because an 8-bit render of the faint glow banded visibly; its stops are a copy of the SVG's and must be kept in step by hand (noted in the script).
 - **Limits, measured against the live server:** jellyfin-web does not load Branding CSS on the admin dashboard, so the dashboard keeps its stock look; detail-page logo placement uses CSS anchor positioning where supported, with fixed spacing as the fallback (a movie with both logo art and an original-title line is unverified in browsers without anchor positioning).
+
+## 2026-11-03 — The jellyfin-web theme moves out of this repo
+- **Scope:** removes `extras/jellyfin-web-theme/` (added 2026-11-02); its four files now live in the separate `jellyboost-server` folder beside this checkout.
+- **Plan said:** "We are building **Jellyboost**: a brand-new, 100% native Android app (zero WebView) with a UI similar to jellyfin-web".
+- **Done instead:** the server-side theme is kept outside the client repo entirely rather than under `extras/`.
+- **Reason:** user request. It brings the repo back to the plan's scope; the 2026-11-02 entry stays as the record of the theme's design and limits.

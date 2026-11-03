@@ -35,25 +35,12 @@ Known issues:
   files under `build/` may carry future timestamps; nothing reads them (the commit gate
   compares only tracked `*.kt`/`*.kts`).
 
-## jellyfin-web Branding theme + splash (2026-11-02 — landed; outside the client)
+## jellyfin-web Branding theme + splash (moved out 2026-11-03)
 
-`extras/jellyfin-web-theme/` restyles jellyfin-web 10.11 toward Jellyboost: `jellyboost.css` is
-pasted into Dashboard → General → Branding → Custom CSS; `jellyboost-splash.png` (1920×1080, rebuilt
-by `render-splash.py` from `jellyboost-splash.svg`) is the Branding splash. No app module depends on
-it (DECISIONS 2026-11-02).
-- **Done:** both schemes keyed on jellyfin-web's `html[data-theme]` (Light / Apple TV → light, the
-  rest → dark) plus its MUI `--jf-*` variables and the Discoverr plugin's; glass top bar with tabs
-  merged into it when wide and floating under it when narrow; Jellyboost mark + wordmark in place
-  of the Jellyfin banner; library tiles, left-aligned card text, round cast, panelled episodes;
-  detail lockup with a labelled Play pill, genre chips, logo art preferred over the text title.
-  Iterated live against the dev server through a local proxy that swaps the Branding CSS; in-page
-  audits (text against a border, overlapping text, card layers whose corners differ) clean on
-  home, a library, movie/series/episode detail and settings, dark at 800 px and light at 1440 px.
-- **Known issues:** jellyfin-web never loads Branding CSS on the admin dashboard, so it keeps its
-  stock look; below ~1000 px web loads no detail backdrop (the theme fills that band with the brand
-  halo); in browsers without CSS anchor positioning the detail logo uses fixed spacing, unverified
-  for a movie that has both logo art and an original-title line.
-- **Next:** paste the final `jellyboost.css` into the server's Branding and upload the splash.
+The jellyfin-web Branding theme (`jellyboost.css`, the 1920×1080 splash, its SVG source and
+`render-splash.py`) lived under `extras/jellyfin-web-theme/` from 2026-11-02 and now lives in the
+separate `jellyboost-server` folder beside this checkout. Nothing in the client depended on it.
+See DECISIONS 2026-11-02 and 2026-11-03.
 
 ## Offline playback bug wave: sticky brightness indicator; audio cuts investigated (2026-10-21 — landed, gate green; device walk owed)
 

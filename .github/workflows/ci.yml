@@ -24,6 +24,11 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+    inputs:
+      force_cloud:
+        description: Use GitHub-hosted Ubuntu instead of a local VM
+        type: boolean
+        default: false
 
 concurrency:
   # One run per branch; a new push cancels the in-flight run for the same ref.
@@ -36,9 +41,16 @@ env:
   GRADLE_OPTS: -Dorg.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m -Dorg.gradle.daemon=false
 
 jobs:
+  runner:
+    name: Select execution environment
+    uses: ./.github/workflows/runner-routing.yml
+    with:
+      force_cloud: ${{ inputs.force_cloud || false }}
+
   gate:
     name: Quality gate + release build
-    runs-on: ubuntu-latest
+    needs: runner
+    runs-on: ${{ needs.runner.outputs.runner }}
     timeout-minutes: 60
 
     steps:
@@ -94,7 +106,10 @@ jobs:
           cache-read-only: ${{ github.ref != 'refs/heads/main' }}
           validate-wrappers: true
 
-      # Android SDK components. The runner image ships an SDK, but this project compiles against a
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3
+
+      # Android SDK components. This project compiles against a
       # preview-minor SDK (compileSdk 37.1, see libs.versions.toml), so let Gradle's own
       # auto-download handle it rather than pinning package names here.
       - name: Accept Android SDK licences

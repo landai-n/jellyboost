@@ -1,0 +1,64 @@
+name: Select CI runner
+
+on:
+  workflow_call:
+    inputs:
+      force_cloud:
+        description: Use GitHub-hosted Ubuntu even when a local VM is available
+        type: boolean
+        default: false
+    outputs:
+      runner:
+        description: Runner label selected for this workflow
+        value: ${{ jobs.select.outputs.runner }}
+
+permissions: {}
+
+jobs:
+  select:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    outputs:
+      runner: ${{ steps.select.outputs.runner }}
+    steps:
+      - name: Prefer an available disposable VM
+        id: select
+        env:
+          FORCE_CLOUD: ${{ inputs.force_cloud }}
+          LOCAL_ENABLED: ${{ vars.CI_VM_ENABLED }}
+          VM_STATUS: ${{ vars.CI_VM_STATUS }}
+          EXTERNAL_PR: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
+        shell: python
+        run: |
+          import json
+          import os
+          import time
+
+          runner = "ubuntu-24.04"
+          reason = "Local VM routing is disabled."
+          if os.environ["FORCE_CLOUD"].lower() == "true":
+              reason = "Cloud execution was requested."
+          elif os.environ["EXTERNAL_PR"].lower() == "true":
+              reason = "External pull requests use GitHub-hosted runners."
+          elif os.environ["LOCAL_ENABLED"].lower() == "true":
+              reason = "No fresh local-capacity heartbeat; using GitHub-hosted Ubuntu."
+              try:
+                  status = json.loads(os.environ["VM_STATUS"] or "{}")
+                  remaining = int(status.get("expires_at", 0)) - int(time.time())
+                  ready = (
+                      status.get("ready") is True
+                      and 0 < remaining <= 180
+                      and int(status.get("free_slots", 0)) > 0
+                      and status.get("image") == "ubuntu-24.04"
+                  )
+                  if ready:
+                      runner = "lenewt-ci-vm"
+                      reason = "The disposable Ubuntu VM controller has capacity."
+              except (ValueError, TypeError, AttributeError):
+                  reason = "Invalid local-capacity heartbeat; using GitHub-hosted Ubuntu."
+
+          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+              output.write(f"runner={runner}\n")
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as summary:
+              summary.write(f"Selected runner: `{runner}`\n\n{reason}\n")
+          print(f"Selected {runner}: {reason}")
